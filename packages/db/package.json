@@ -1,0 +1,42 @@
+{
+  "name": "@restorationx/db",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "version": "0.0.0",
+  "dependencies": {
+    "@prisma/client": "4.13.0",
+    "@restorationx/templates": "*",
+    "@restorationx/utils": "*",
+    "date-fns": "^2.29.3",
+    "node-html-parser": "^6.1.5",
+    "stripe": "^11.13.0",
+    "superjson": "^1.12.2",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@restorationx/eslint-config": "*",
+    "@restorationx/templates": "*",
+    "@restorationx/tsconfig": "*",
+    "@restorationx/utils": "*",
+    "dotenv-cli": "^7.1.0",
+    "prisma": "4.13.0",
+    "typescript": "4.8.4"
+  },
+  "scripts": {
+    "clean": "git clean -xdf .next .turbo node_modules",
+    "with-env": "dotenv -e ../../.env --",
+    "prisma:generate": "yarn with-env prisma generate dev",
+    "prisma:migrate": "yarn with-env prisma migrate dev",
+    "ci:generate": "DATABASE_URL=${MIGRATION_DATABASE} prisma generate",
+    "ci:migrate-deploy": "DATABASE_URL=${MIGRATION_DATABASE} prisma migrate deploy",
+    "prod:generate": "DATABASE_URL=postgresql://postgres:1bc128bf37b1da6366afbf5cc4a80a01ce628379a73e23367c2c14d7b68ffb11@db.assryutwyfriduafbeyu.supabase.co:5432/postgres prisma generate",
+    "prod:migrate-deploy": "DATABASE_URL=postgresql://postgres:1bc128bf37b1da6366afbf5cc4a80a01ce628379a73e23367c2c14d7b68ffb11@db.assryutwyfriduafbeyu.supabase.co:5432/postgres prisma migrate deploy",
+    "prod:push": "DATABASE_URL=postgresql://postgres:1bc128bf37b1da6366afbf5cc4a80a01ce628379a73e23367c2c14d7b68ffb11@db.assryutwyfriduafbeyu.supabase.co:5432/postgres prisma db push",
+    "dev:generate": "DATABASE_URL=postgres://postgres:2mxnBciuL4iyDpnp6HR6BthWrtDUB9voJv9zwmZvciHXNJidegMhyNVJ7qDs@db.ajkybybwzavpsehcfpea.supabase.co:5432/postgres prisma generate dev",
+    "dev:migrate": "DATABASE_URL=postgres://postgres:2mxnBciuL4iyDpnp6HR6BthWrtDUB9voJv9zwmZvciHXNJidegMhyNVJ7qDs@db.ajkybybwzavpsehcfpea.supabase.co:5432/postgres prisma migrate dev",
+    "dev:push": "DATABASE_URL=postgres://postgres:2mxnBciuL4iyDpnp6HR6BthWrtDUB9voJv9zwmZvciHXNJidegMhyNVJ7qDs@db.ajkybybwzavpsehcfpea.supabase.co:5432/postgres prisma db push",
+    "dev:migrate:create": "DATABASE_URL=postgres://postgres:2mxnBciuL4iyDpnp6HR6BthWrtDUB9voJv9zwmZvciHXNJidegMhyNVJ7qDs@db.ajkybybwzavpsehcfpea.supabase.co:5432/postgres prisma migrate dev --create-only",
+    "dev:migrate:diff": "DATABASE_URL=postgres://postgres:2mxnBciuL4iyDpnp6HR6BthWrtDUB9voJv9zwmZvciHXNJidegMhyNVJ7qDs@db.ajkybybwzavpsehcfpea.supabase.co:5432/postgres prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/init/migration.sql",
+    "dev:migrate:pull": "DATABASE_URL=postgres://postgres:2mxnBciuL4iyDpnp6HR6BthWrtDUB9voJv9zwmZvciHXNJidegMhyNVJ7qDs@db.ajkybybwzavpsehcfpea.supabase.co:5432/postgres prisma db pull"
+  }
+}

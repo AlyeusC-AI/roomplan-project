@@ -1,0 +1,25 @@
+{
+  "name": "@restorationx/eslint-config",
+  "version": "0.1.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "clean": "git clean -xdf .next .turbo node_modules"
+  },
+  "dependencies": {
+    "@types/eslint": "^8.37.0",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
+    "@typescript-eslint/parser": "^5.57.1",
+    "eslint-config-next": "^13.2.4",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-config-turbo": "^1.8.8",
+    "eslint-plugin-react": "7.32.2",
+    "eslint-plugin-simple-import-sort": "8.0.0",
+    "eslint-plugin-storybook": "0.6.7",
+    "eslint-plugin-unused-imports": "2.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.37.0",
+    "typescript": "^5.0.3"
+  }
+}

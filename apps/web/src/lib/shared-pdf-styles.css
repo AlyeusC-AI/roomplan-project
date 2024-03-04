@@ -1,0 +1,240 @@
+/*
+  Common report styles. These styles will work in a browser or using the HTML
+  to PDF anvil endpoint.
+*/
+
+.pdf-reset {
+  font-size: 16px;
+}
+
+.pdf {
+  all: reset;
+}
+
+.pdf table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pdf .bold {
+  font-weight: bold;
+}
+
+.pdf .right {
+  text-align: right;
+}
+
+.pdf .large {
+  font-size: 1.75em;
+}
+
+.pdf .total {
+  font-weight: bold;
+  color: #fb7578;
+}
+
+.pdf .logo-container {
+  margin: 20px 0 70px 0;
+}
+
+.pdf .invoice-info-container {
+  font-size: 0.875em;
+  margin-bottom: 64px;
+}
+.pdf .invoice-info-container td {
+  padding: 4px 0;
+}
+
+.pdf .client-name {
+  font-size: 2em;
+  vertical-align: top;
+}
+
+.pdf .line-items-container {
+  margin: 70px 0;
+  font-size: 0.875em;
+}
+
+.pdf .line-items-container th {
+  text-align: left;
+  color: #999;
+  border-bottom: 2px solid #ddd;
+  padding: 10px 0 15px 0;
+  font-size: 0.75em;
+  text-transform: uppercase;
+}
+
+.pdf .line-items-container th:last-child {
+  text-align: right;
+}
+
+.pdf .line-items-container td {
+  padding: 15px 0;
+}
+
+.pdf .line-items-container tbody tr:first-child td {
+  padding-top: 25px;
+}
+
+.pdf .line-items-container.has-bottom-border tbody tr:last-child td {
+  padding-bottom: 25px;
+  border-bottom: 2px solid #ddd;
+}
+
+.pdf .line-items-container.has-bottom-border {
+  margin-bottom: 0;
+}
+
+.pdf .line-items-container th.heading-quantity {
+  width: 50px;
+}
+.pdf .line-items-container th.heading-price {
+  text-align: right;
+  width: 100px;
+}
+.pdf .line-items-container th.heading-subtotal {
+  width: 100px;
+}
+
+.pdf .payment-info {
+  width: 38%;
+  font-size: 0.75em;
+  line-height: 1.5;
+}
+
+.pdf .footer {
+  margin-top: 100px;
+}
+
+.pdf .footer-thanks {
+  font-size: 1.125em;
+}
+
+.pdf .footer-thanks img {
+  display: inline-block;
+  position: relative;
+  top: 1px;
+  width: 16px;
+  margin-right: 4px;
+}
+
+.pdf .footer-info {
+  float: right;
+  margin-top: 5px;
+  font-size: 0.75em;
+  color: #ccc;
+}
+
+.pdf .footer-info span {
+  padding: 0 5px;
+  color: black;
+}
+
+.pdf .footer-info span:last-child {
+  padding-right: 0;
+}
+
+.pdf .page-container {
+  display: none;
+}
+
+.pdf .title-page-identishot-header {
+  font-size: 16px;
+  text-align: left !important;
+}
+
+.pdf .title-page-identishot-header img {
+  height: 32px;
+  width: 32px;
+  display: inline;
+  margin-right: 16px;
+}
+
+.pdf .title-page-logo-wrapper {
+  display: inline-block;
+}
+
+.pdf .title-page-header {
+  margin-bottom: 62px;
+}
+
+.pdf .company-title-header {
+  text-align: center;
+  font-size: 40px;
+  margin: 32px;
+}
+
+.pdf .title-page-summary-section {
+  margin: 16px 0;
+}
+
+.pdf .title-page-summary-section h3 {
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.new-page {
+  page-break-before: always;
+}
+
+.pdf .room-section-title {
+  font-size: 30px;
+  padding-bottom: 25px;
+}
+
+.pdf .room-section-subtitle {
+  font-size: 24px;
+  padding-bottom: 8px;
+  margin-bottom: 5px;
+}
+
+.major-break {
+  border-bottom: 2px solid #ddd;
+}
+
+.minor-break {
+  border-bottom: 1px solid #ddd;
+}
+
+.title-spacing {
+  margin-top: 32px !important;
+  margin-bottom: 32px !important;
+}
+
+.subtitle-spacing {
+  margin-top: 16px !important;
+  margin-bottom: 16px !important;
+}
+
+.section-spacing {
+  margin-top: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+.pdf .room-section-minortitle {
+  font-size: 20px;
+  padding-bottom: 8px;
+  margin-bottom: 5px;
+  text-transform: capitalize;
+}
+
+.pdf .notes-body {
+  padding-left: 8px;
+  border-left: 2px solid #ddd;
+  white-space: pre-wrap;
+}
+
+.pdf .image-section {
+  text-align: center;
+}
+
+.pdf .image-section .image-container {
+  max-width: 60%;
+  margin: 0 auto;
+}
+
+.pdf .image-section .image-div {
+  width: 30%;
+  margin: 8px;
+  float: left;
+}
