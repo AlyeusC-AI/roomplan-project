@@ -1,4 +1,4 @@
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { atom } from 'recoil'
 
 const subscriptionStatusState = atom<SubscriptionStatus>({

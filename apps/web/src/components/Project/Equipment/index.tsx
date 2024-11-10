@@ -1,5 +1,5 @@
 import { trpc } from '@utils/trpc'
-import { RouterOutputs } from '@restorationx/api'
+import { RouterOutputs } from '@servicegeek/api'
 
 import { useRouter } from 'next/router'
 

@@ -15,7 +15,7 @@ import { useUser } from '@supabase/auth-helpers-react'
 import useMentionsMetadata, {
   MentionMetadata,
 } from '@components/DesignSystem/Mentions/useMentionsMetadata'
-import { RouterOutputs } from '@restorationx/api'
+import { RouterOutputs } from '@servicegeek/api'
 
 export default function Notes({
   notesData,
@@ -89,9 +89,7 @@ export default function Notes({
               {title}
             </h3>
             {subTitle && (
-              <p className="mt-1 mb-1 text-sm text-gray-600">
-                {subTitle}
-              </p>
+              <p className="mt-1 mb-1 text-sm text-gray-600">{subTitle}</p>
             )}
           </div>
         )}

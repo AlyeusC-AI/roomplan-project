@@ -2,16 +2,16 @@ import AppContainer from '@components/layouts/AppContainer'
 import ProjectsNavigationContainer from '@components/Projects/ProjectsNavigationContainer'
 import Organization from '@components/Settings/Organization'
 import { Invitation, Member } from '@components/Settings/Organization/types'
-import getInvitations from '@restorationx/db/queries/invitations/getInvitations'
-import getMembers from '@restorationx/db/queries/organization/getMembers'
-import getOrganization from '@restorationx/db/queries/organization/getOrganization'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
+import getInvitations from '@servicegeek/db/queries/invitations/getInvitations'
+import getMembers from '@servicegeek/db/queries/organization/getMembers'
+import getOrganization from '@servicegeek/db/queries/organization/getOrganization'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
 import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import getUserInfo, { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
 import getUserWithAuthStatus, {
   ORG_ACCESS_LEVEL,
 } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
-import { AccessLevel, SubscriptionStatus } from '@restorationx/db'
+import { AccessLevel, SubscriptionStatus } from '@servicegeek/db'
 import type {
   GetServerSidePropsContext,
   NextApiRequest,
@@ -23,7 +23,7 @@ import { RecoilRoot } from 'recoil'
 import initRecoilAtoms from '@atoms/initRecoilAtoms'
 import superjson from 'superjson'
 import ManageEquipment from '@components/Settings/ManageEquipment'
-import { appRouter, RouterOutputs } from '@restorationx/api'
+import { appRouter, RouterOutputs } from '@servicegeek/api'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import ManageWorkflow from '@components/Settings/Workflow'
 
@@ -54,7 +54,7 @@ const WorkflowPage: NextPage<WorkflowPageProps> = ({
         renderSecondaryNavigation={() => <ProjectsNavigationContainer />}
       >
         <Head>
-          <title>RestorationX - Workflow Settings</title>
+          <title>ServiceGeek - Workflow Settings</title>
           <meta name="description" content="Manage your project statuses" />
           <link rel="icon" href="/favicon.ico" />
         </Head>

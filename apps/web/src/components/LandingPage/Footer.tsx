@@ -5,152 +5,152 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 const navigation = {
-    solutions: [
-        { name: 'Job Management', href: '#' },
-        { name: 'Restoration', href: '#' },
-    ],
-    support: [
-        { name: 'Pricing', href: '/pricing' },
-        {
-            name: 'Documentation',
-            href: 'https://knowledge.restorationx.app/',
-        },
-        {
-            name: 'Guides',
-            href: 'https://knowledge.restorationx.app/',
-        },
-    ],
-    company: [
-        { name: 'About', href: '/about-us' },
-        { name: 'Blog', href: 'https://blog.restorationx.app' },
-    ],
-    legal: [
-        { name: 'Privacy', href: '/privacy' },
-        { name: 'Terms', href: '/terms' },
-    ],
-    social: [
-        {
-            name: 'Linkedin',
-            href: 'https://www.linkedin.com/company/identishot/',
-            icon: () => (
-                <Image
-                    src="/social/linkedin.png"
-                    alt="Linkedin"
-                    height={158 / 8}
-                    width={582 / 8}
-                />
-            ),
-        },
-    ],
+  solutions: [
+    { name: 'Job Management', href: '#' },
+    { name: 'Restoration', href: '#' },
+  ],
+  support: [
+    { name: 'Pricing', href: '/pricing' },
+    {
+      name: 'Documentation',
+      href: 'https://knowledge.servicegeek.app/',
+    },
+    {
+      name: 'Guides',
+      href: 'https://knowledge.servicegeek.app/',
+    },
+  ],
+  company: [
+    { name: 'About', href: '/about-us' },
+    { name: 'Blog', href: 'https://blog.servicegeek.app' },
+  ],
+  legal: [
+    { name: 'Privacy', href: '/privacy' },
+    { name: 'Terms', href: '/terms' },
+  ],
+  social: [
+    {
+      name: 'Linkedin',
+      href: 'https://www.linkedin.com/company/servicegeek/',
+      icon: () => (
+        <Image
+          src="/social/linkedin.png"
+          alt="Linkedin"
+          height={158 / 8}
+          width={582 / 8}
+        />
+      ),
+    },
+  ],
 }
 
 export function Footer() {
-
-    return (
-        <footer className="bg-white" aria-labelledby="footer-heading">
-            <h2 id="footer-heading" className="sr-only">
-                Footer
-            </h2>
-            <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
-                <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-                    <div className="space-y-8 xl:col-span-1">
-                        <div className=" w-36 !justify-start">
-                            <LogoTextBlue />
-                        </div>
-
-                        <p className="text-base text-gray-500">
-                            Helping companies manage their jobs, and write estimates faster.
-                        </p>
-                        <div className="flex space-x-6">
-                            {navigation.social.map((item) => (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    className="text-gray-400 hover:text-gray-500"
-                                >
-                                    <span className="sr-only">{item.name}</span>
-                                    <item.icon />
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
-                        <div className="md:grid md:grid-cols-2 md:gap-8">
-                            <div>
-                                <h3 className="text-base font-medium text-gray-900">
-                                    Solutions
-                                </h3>
-                                <ul role="list" className="mt-4 space-y-4">
-                                    {navigation.solutions.map((item) => (
-                                        <li key={item.name}>
-                                            <Link
-                                                href={item.href}
-                                                className="text-base text-gray-500 hover:text-gray-900"
-                                            >
-                                                {item.name}
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                            <div className="mt-12 md:mt-0">
-                                <h3 className="text-base font-medium text-gray-900">Support</h3>
-                                <ul role="list" className="mt-4 space-y-4">
-                                    {navigation.support.map((item) => (
-                                        <li key={item.name}>
-                                            <Link
-                                                href={item.href}
-                                                className="text-base text-gray-500 hover:text-gray-900"
-                                            >
-                                                {item.name}
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-                        <div className="md:grid md:grid-cols-2 md:gap-8">
-                            <div>
-                                <h3 className="text-base font-medium text-gray-900">Company</h3>
-                                <ul role="list" className="mt-4 space-y-4">
-                                    {navigation.company.map((item) => (
-                                        <li key={item.name}>
-                                            <Link
-                                                href={item.href}
-                                                className="text-base text-gray-500 hover:text-gray-900"
-                                            >
-                                                {item.name}
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                            <div className="mt-12 md:mt-0">
-                                <h3 className="text-base font-medium text-gray-900">Legal</h3>
-                                <ul role="list" className="mt-4 space-y-4">
-                                    {navigation.legal.map((item) => (
-                                        <li key={item.name}>
-                                            <Link
-                                                href={item.href}
-                                                className="text-base text-gray-500 hover:text-gray-900"
-                                            >
-                                                {item.name}
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="mt-12 border-t border-gray-200 pt-8">
-                    <p className="text-base text-gray-400 xl:text-center">
-                        &copy; {new Date().getFullYear()} Halo Solutions, Inc. All rights reserved.
-                    </p>
-                </div>
+  return (
+    <footer className="bg-white" aria-labelledby="footer-heading">
+      <h2 id="footer-heading" className="sr-only">
+        Footer
+      </h2>
+      <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
+        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
+          <div className="space-y-8 xl:col-span-1">
+            <div className=" w-36 !justify-start">
+              <LogoTextBlue />
             </div>
-        </footer>
-    )
+
+            <p className="text-base text-gray-500">
+              Helping companies manage their jobs, and write estimates faster.
+            </p>
+            <div className="flex space-x-6">
+              {navigation.social.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <span className="sr-only">{item.name}</span>
+                  <item.icon />
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
+            <div className="md:grid md:grid-cols-2 md:gap-8">
+              <div>
+                <h3 className="text-base font-medium text-gray-900">
+                  Solutions
+                </h3>
+                <ul role="list" className="mt-4 space-y-4">
+                  {navigation.solutions.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        className="text-base text-gray-500 hover:text-gray-900"
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-12 md:mt-0">
+                <h3 className="text-base font-medium text-gray-900">Support</h3>
+                <ul role="list" className="mt-4 space-y-4">
+                  {navigation.support.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        className="text-base text-gray-500 hover:text-gray-900"
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="md:grid md:grid-cols-2 md:gap-8">
+              <div>
+                <h3 className="text-base font-medium text-gray-900">Company</h3>
+                <ul role="list" className="mt-4 space-y-4">
+                  {navigation.company.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        className="text-base text-gray-500 hover:text-gray-900"
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-12 md:mt-0">
+                <h3 className="text-base font-medium text-gray-900">Legal</h3>
+                <ul role="list" className="mt-4 space-y-4">
+                  {navigation.legal.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        className="text-base text-gray-500 hover:text-gray-900"
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="mt-12 border-t border-gray-200 pt-8">
+          <p className="text-base text-gray-400 xl:text-center">
+            &copy; {new Date().getFullYear()} Halo Solutions, Inc. All rights
+            reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+  )
 }
 
 // export function Footer() {
@@ -165,7 +165,7 @@ export function Footer() {
 //               <NavLink href="/pricing">Pricing</NavLink>
 //               <NavLink href="/about-us">About Us</NavLink>
 //               <NavLink href="/blog">Blog</NavLink>
-//               <NavLink href="https://identishot.notion.site/RestorationX-Help-Center-e1322c5a167e4778bc85a81f37dc43c7">
+//               <NavLink href="https://servicegeek.notion.site/ServiceGeek-Help-Center-e1322c5a167e4778bc85a81f37dc43c7">
 //                 Support
 //               </NavLink>
 //             </div>
@@ -199,7 +199,7 @@ export function Footer() {
 //             </Link>
 //           </div>
 //           <p className="mt-6 text-sm text-slate-500 sm:mt-0">
-//             Copyright &copy; {new Date().getFullYear()} RestorationX. All rights
+//             Copyright &copy; {new Date().getFullYear()} ServiceGeek. All rights
 //             reserved.
 //           </p>
 //         </div>

@@ -9,7 +9,7 @@ const AccessRevokedPage: NextPage<{}> = () => {
   return (
     <PageContainer>
       <Head>
-        <title>RestorationX - Dashboard</title>
+        <title>ServiceGeek - Dashboard</title>
         <meta name="description" content="Access Denied" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

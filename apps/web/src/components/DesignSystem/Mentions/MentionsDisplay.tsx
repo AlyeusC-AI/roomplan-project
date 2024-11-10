@@ -2,7 +2,7 @@ import { Fragment } from 'react'
 import useMentionsMetadata from './useMentionsMetadata'
 
 export default function MentionsDisplay({ message }: { message: string }) {
-  // sample text: "hello @[matt@identishot.com](2d6bfc8a-29ef-4ffc-88ff-741bd0bd38bb) !"
+  // sample text: "hello @[matt@servicegeek.com](2d6bfc8a-29ef-4ffc-88ff-741bd0bd38bb) !"
   const metadata = useMentionsMetadata(message, (params) => {
     return `#?userId=${params}`
   })
@@ -25,6 +25,6 @@ export default function MentionsDisplay({ message }: { message: string }) {
           )
         })}
       </span>
-    </div >
+    </div>
   )
 }

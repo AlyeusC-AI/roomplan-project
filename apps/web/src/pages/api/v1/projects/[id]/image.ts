@@ -1,18 +1,18 @@
 import { Rekognition } from '@aws-sdk/client-rekognition'
-import createInference from '@restorationx/db/queries/inference/createInference'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
-import addImageToProject from '@restorationx/db/queries/project/addImageToProject'
+import createInference from '@servicegeek/db/queries/inference/createInference'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
+import addImageToProject from '@servicegeek/db/queries/project/addImageToProject'
 import getOrCreateRoom, {
   getRoomById,
-} from '@restorationx/db/queries/room/getOrCreateRoom'
-import { default as getRestorationXUser } from '@restorationx/db/queries/user/getUser'
+} from '@servicegeek/db/queries/room/getOrCreateRoom'
+import { default as getRestorationXUser } from '@servicegeek/db/queries/user/getUser'
 import {
   AUTOMATIC_ROOM_DETECTION,
   UNKNOWN_ROOM,
 } from '@lib/image-processing/constants'
 import queueInference from '@lib/qstash/queueInference'
 import { supabaseServiceRole } from '@lib/supabase/supabaseServiceRoleClient'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import formidable, { File } from 'formidable'
 import { NextApiRequest, NextApiResponse } from 'next'
@@ -116,7 +116,7 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
 
     console.log('imageBuffer', imageBuffer)
 
-    const identishotUser = await getRestorationXUser(user.id)
+    const servicegeekUser = await getRestorationXUser(user.id)
     console.log(file.mimetype)
     let ext = '.png'
     if (
@@ -125,7 +125,7 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
     ) {
       ext = '.jpg'
     }
-    const supabasePath = `${identishotUser?.org?.organization.publicId}/${
+    const supabasePath = `${servicegeekUser?.org?.organization.publicId}/${
       req.query.id
     }/${uuidv4()}_${file.originalFilename ? file.originalFilename : ext}`
 

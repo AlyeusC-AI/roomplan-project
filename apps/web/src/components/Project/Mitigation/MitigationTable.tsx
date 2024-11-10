@@ -10,7 +10,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
 } from '@heroicons/react/24/outline'
-import { GroupByViews, PhotoViews } from '@restorationx/db'
+import { GroupByViews, PhotoViews } from '@servicegeek/db'
 import useFilterParams from '@utils/hooks/useFilterParams'
 import { trpc } from '@utils/trpc'
 import { useRouter } from 'next/router'

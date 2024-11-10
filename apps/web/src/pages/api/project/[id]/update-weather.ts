@@ -1,4 +1,4 @@
-import updateWeatherForProject from '@restorationx/db/queries/project/updateWeatherForProject'
+import updateWeatherForProject from '@servicegeek/db/queries/project/updateWeatherForProject'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

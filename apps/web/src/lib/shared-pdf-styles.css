@@ -138,12 +138,12 @@
   display: none;
 }
 
-.pdf .title-page-identishot-header {
+.pdf .title-page-servicegeek-header {
   font-size: 16px;
   text-align: left !important;
 }
 
-.pdf .title-page-identishot-header img {
+.pdf .title-page-servicegeek-header img {
   height: 32px;
   width: 32px;
   display: inline;

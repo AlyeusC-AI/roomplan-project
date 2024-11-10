@@ -5,14 +5,14 @@ import TabNavigation from '@components/layouts/TabNavigation'
 import FirstTimePhotos from '@components/Onboarding/FirstTimePhotos'
 import Mitigation from '@components/Project/Mitigation'
 import ProjectNavigationContainer from '@components/Project/ProjectNavigationContainer'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
 import {
   getInferenceList,
   getRoomList,
   RoomData,
   RoomDataWithoutInferences,
-} from '@restorationx/db/queries/project/getProjectDetections'
-import getProjectForOrg from '@restorationx/db/queries/project/getProjectForOrg'
+} from '@servicegeek/db/queries/project/getProjectDetections'
+import getProjectForOrg from '@servicegeek/db/queries/project/getProjectForOrg'
 import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import getProjectInfo, {
   ProjectInfo,
@@ -22,7 +22,7 @@ import getUserWithAuthStatus, {
   ORG_ACCESS_LEVEL,
 } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
 import getPresignedUrlMapFromInferenceList from '@lib/supabase/getPresignedUrlMapFromInferenceList'
-import { GroupByViews, PhotoViews, SubscriptionStatus } from '@restorationx/db'
+import { GroupByViews, PhotoViews, SubscriptionStatus } from '@servicegeek/db'
 import { User } from '@supabase/auth-helpers-nextjs'
 import { trpc } from '@utils/trpc'
 import {
@@ -34,7 +34,7 @@ import type { GetServerSidePropsContext, NextPage } from 'next'
 import Head from 'next/head'
 import { RecoilRoot } from 'recoil'
 import initRecoilAtoms from '@atoms/initRecoilAtoms'
-import getMembers from '@restorationx/db/queries/organization/getMembers'
+import getMembers from '@servicegeek/db/queries/organization/getMembers'
 import superjson from 'superjson'
 import { Member } from '@components/Settings/Organization/types'
 
@@ -101,7 +101,7 @@ const EstimatePage: NextPage<EstimatePageProps> = ({
         renderSecondaryNavigation={() => <ProjectNavigationContainer />}
       >
         <Head>
-          <title>RestorationX - Estimate</title>
+          <title>ServiceGeek - Estimate</title>
           <meta name="description" content="Project Estimate and Details" />
           <link rel="icon" href="/favicon.ico" />
         </Head>
@@ -219,8 +219,8 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const roomArr = roomList?.rooms || []
     console.log(inferences)
 
- const members = (await getMembers(orgId)) as unknown as Member[]
- const serializedMembers = superjson.serialize(members)
+    const members = (await getMembers(orgId)) as unknown as Member[]
+    const serializedMembers = superjson.serialize(members)
 
     return {
       props: {

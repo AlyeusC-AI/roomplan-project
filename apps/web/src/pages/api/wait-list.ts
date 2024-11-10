@@ -1,4 +1,4 @@
-import addToWaitlist from '@restorationx/db/queries/wait-list/addToWaitlist'
+import addToWaitlist from '@servicegeek/db/queries/wait-list/addToWaitlist'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {

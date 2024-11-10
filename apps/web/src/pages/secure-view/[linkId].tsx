@@ -1,12 +1,12 @@
 import { Header } from '@components/LandingPage/Header'
 import MainContent from '@components/layouts/MainContent'
 import SecureView from '@components/SecureView'
-import getProjectIdFromAccessLink from '@restorationx/db/queries/photo-access-link/getPhotoAccessLink'
+import getProjectIdFromAccessLink from '@servicegeek/db/queries/photo-access-link/getPhotoAccessLink'
 import {
   getInferenceList,
   RoomData,
-} from '@restorationx/db/queries/project/getProjectDetections'
-import { prisma } from '@restorationx/db'
+} from '@servicegeek/db/queries/project/getProjectDetections'
+import { prisma } from '@servicegeek/db'
 
 import getProjectInfo, {
   ProjectInfo,
@@ -41,7 +41,7 @@ const SecureViewPage: NextPage<SecureViewPageProps> = ({
       })}
     >
       <Head>
-        <title>RestorationX - Estimate</title>
+        <title>ServiceGeek - Estimate</title>
         <meta name="description" content="Project Estimate and Details" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

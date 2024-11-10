@@ -1,7 +1,7 @@
 import { useId, useMemo } from 'react'
 import Select from 'react-select/creatable'
 import AutoSaveTextInput from '@components/DesignSystem/TextInput/AutoSaveTextInput'
-import { RoomDataWithoutInferences } from '@restorationx/db/queries/project/getProjectDetections'
+import { RoomDataWithoutInferences } from '@servicegeek/db/queries/project/getProjectDetections'
 import clsx from 'clsx'
 import produce from 'immer'
 import { useRouter } from 'next/router'

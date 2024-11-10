@@ -1,5 +1,5 @@
-import getOrgWithAccessLevel from '@restorationx/db/queries/organization/getOrgWithAccessLevel'
-import getUser from '@restorationx/db/queries/user/getUser'
+import getOrgWithAccessLevel from '@servicegeek/db/queries/organization/getOrgWithAccessLevel'
+import getUser from '@servicegeek/db/queries/user/getUser'
 import getSupabaseUser from '@lib/supabase/getSupabaseUser'
 import { GetServerSidePropsContext } from 'next'
 

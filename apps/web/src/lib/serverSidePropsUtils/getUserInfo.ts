@@ -1,5 +1,5 @@
-import getUser from '@restorationx/db/queries/user/getUser'
-import { AccessLevel, DashboardViews } from '@restorationx/db'
+import getUser from '@servicegeek/db/queries/user/getUser'
+import { AccessLevel, DashboardViews } from '@servicegeek/db'
 
 export interface UserInfo {
   email: string

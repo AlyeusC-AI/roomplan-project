@@ -1,6 +1,6 @@
-import createCost from '@restorationx/db/queries/cost/createCost'
-import deleteCost from '@restorationx/db/queries/cost/deleteCost'
-import updateCost from '@restorationx/db/queries/cost/updateCost'
+import createCost from '@servicegeek/db/queries/cost/createCost'
+import deleteCost from '@servicegeek/db/queries/cost/deleteCost'
+import updateCost from '@servicegeek/db/queries/cost/updateCost'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

@@ -1,6 +1,6 @@
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
 import deleteFileFromProject from '@lib/supabase/deleteFileFromProject'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

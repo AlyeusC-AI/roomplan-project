@@ -22,7 +22,7 @@ const Terms = () => (
           <p>
             <strong>Application</strong> means the software program provided by
             the Company downloaded by You on any electronic device, named
-            RestorationX
+            ServiceGeek
           </p>
         </li>
         <li>
@@ -124,13 +124,13 @@ const Terms = () => (
         </li>
         <li>
           <p>
-            <strong>Website</strong> refers to RestorationX, accessible from{' '}
+            <strong>Website</strong> refers to ServiceGeek, accessible from{' '}
             <a
-              href="http://www.restorationx.app"
+              href="http://www.servicegeek.app"
               rel="external nofollow noopener noreferrer"
               target="_blank"
             >
-              http://www.restorationx.app
+              http://www.servicegeek.app
             </a>
           </p>
         </li>
@@ -403,8 +403,8 @@ const Terms = () => (
         believe that the copyrighted work has been copied in a way that
         constitutes copyright infringement that is taking place through the
         Service, You must submit Your notice in writing to the attention of our
-        copyright agent via email at support@restorationx.app and include in
-        Your notice a detailed description of the alleged infringement.
+        copyright agent via email at support@servicegeek.app and include in Your
+        notice a detailed description of the alleged infringement.
       </p>
       <p>
         You may be held accountable for damages (including costs and
@@ -444,7 +444,7 @@ const Terms = () => (
       </ul>
       <p>
         You can contact our copyright agent via email at
-        support@restorationx.app. Upon receipt of a notification, the Company
+        support@servicegeek.app. Upon receipt of a notification, the Company
         will take whatever action, in its sole discretion, it deems appropriate,
         including removal of the challenged content from the Service.
       </p>
@@ -642,7 +642,7 @@ const Terms = () => (
         contact us:
       </p>
       <ul>
-        <li>By email: support@restorationx.app</li>
+        <li>By email: support@servicegeek.app</li>
       </ul>
     </div>
   </div>

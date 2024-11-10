@@ -1,4 +1,4 @@
-import { RoomDataWithoutInferences } from '@restorationx/db/queries/project/getProjectDetections'
+import { RoomDataWithoutInferences } from '@servicegeek/db/queries/project/getProjectDetections'
 
 import Note from './Note'
 

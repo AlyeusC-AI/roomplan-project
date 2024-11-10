@@ -1,4 +1,4 @@
-import { RoomData } from '@restorationx/db/queries/project/getProjectDetections'
+import { RoomData } from '@servicegeek/db/queries/project/getProjectDetections'
 import { atom } from 'recoil'
 
 export const defaultInferencesState = []

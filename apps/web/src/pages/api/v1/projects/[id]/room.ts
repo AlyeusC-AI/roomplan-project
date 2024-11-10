@@ -1,4 +1,4 @@
-import createRoom from '@restorationx/db/queries/room/createRoom'
+import createRoom from '@servicegeek/db/queries/room/createRoom'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

@@ -1,6 +1,4 @@
-
-
 module.exports = {
-    root: true,
-    extends: ["restorationx"],
-};
+  root: true,
+  extends: ['servicegeek'],
+}

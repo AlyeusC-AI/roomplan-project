@@ -1,6 +1,6 @@
 import React, { Dispatch, SetStateAction } from 'react'
 import { ListBulletIcon, TableCellsIcon } from '@heroicons/react/24/outline'
-import { DashboardViews } from '@restorationx/db'
+import { DashboardViews } from '@servicegeek/db'
 import clsx from 'clsx'
 
 export default function ViewSwitcher({

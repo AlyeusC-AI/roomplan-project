@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 
 import Content from './Content'
 import Header from './Header'

@@ -1,5 +1,5 @@
 import { ProjectInfo } from '@lib/serverSidePropsUtils/getProjectInfo'
-import { ProjectStatus } from '@restorationx/db'
+import { ProjectStatus } from '@servicegeek/db'
 import { atom } from 'recoil'
 
 export const defaultProjectInfoState = {

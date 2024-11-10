@@ -1,11 +1,11 @@
-import createInvitation from '@restorationx/db/queries/organization/createInvitation'
-import deleteInvitation from '@restorationx/db/queries/organization/deleteInvitation'
-import getUser from '@restorationx/db/queries/user/getUser'
-import { prisma } from '@restorationx/db'
+import createInvitation from '@servicegeek/db/queries/organization/createInvitation'
+import deleteInvitation from '@servicegeek/db/queries/organization/deleteInvitation'
+import getUser from '@servicegeek/db/queries/user/getUser'
+import { prisma } from '@servicegeek/db'
 
 import { getStripePriceFromClientID } from '@lib/stripe/getStripePriceFromClientID'
 import { supabaseServiceRole } from '@lib/supabase/supabaseServiceRoleClient'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 import Stripe from 'stripe'
@@ -30,9 +30,9 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
     return
   }
 
-  const identishotUser = await getUser(user.id)
+  const servicegeekUser = await getUser(user.id)
 
-  const org = identishotUser?.org?.organization
+  const org = servicegeekUser?.org?.organization
   if (!org?.id) {
     console.error('err', 'no org')
     res.status(500).json({ status: 'failed' })

@@ -1,4 +1,4 @@
-import { Stakeholders } from '@restorationx/db/queries/project/getUsersForProject'
+import { Stakeholders } from '@servicegeek/db/queries/project/getUsersForProject'
 import { atom } from 'recoil'
 
 export const defaultStakeholderState = []

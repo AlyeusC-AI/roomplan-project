@@ -9,7 +9,7 @@ import {
   View,
 } from '@react-pdf/renderer'
 var parser = require('parse-address')
-import { RoomData } from '@restorationx/db/queries/project/getProjectDetections'
+import { RoomData } from '@servicegeek/db/queries/project/getProjectDetections'
 import { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import { ProjectInfo } from '@lib/serverSidePropsUtils/getProjectInfo'
 
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   logo: {
     width: '150px',
   },
-  identishotLogo: {
+  servicegeekLogo: {
     height: '25px',
     width: '25px',
   },
@@ -140,10 +140,10 @@ const PDFExport = ({
       <Page size="A4" style={styles.page}>
         <View>
           <Image
-            src="/images/brand/restorationx.svg"
-            style={styles.identishotLogo}
+            src="/images/brand/servicegeek.svg"
+            style={styles.servicegeekLogo}
           />
-          <Text>RestorationX</Text>
+          <Text>ServiceGeek</Text>
         </View>
         <View style={styles.companyOverview}>
           <View style={styles.companyOverviewData}>

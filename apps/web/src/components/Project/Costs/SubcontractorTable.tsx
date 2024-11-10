@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CostType } from '@restorationx/db'
+import { CostType } from '@servicegeek/db'
 import { useRouter } from 'next/router'
 import { useRecoilState } from 'recoil'
 import { subcontractorCostsState } from '@atoms/costsState'

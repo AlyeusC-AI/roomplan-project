@@ -1,4 +1,4 @@
-import { ProjectType } from '@restorationx/db/queries/project/listProjects'
+import { ProjectType } from '@servicegeek/db/queries/project/listProjects'
 import { atom } from 'recoil'
 
 export const defaultInferencesState = []

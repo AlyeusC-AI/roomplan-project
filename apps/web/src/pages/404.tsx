@@ -34,7 +34,7 @@ export default function Example() {
                   Go back home
                 </Link>
                 <Link
-                  href="mailto:support@restorationx.app"
+                  href="mailto:support@servicegeek.app"
                   className="inline-flex items-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-primary hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                 >
                   Contact support

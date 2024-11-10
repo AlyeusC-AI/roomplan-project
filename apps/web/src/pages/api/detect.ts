@@ -13,13 +13,13 @@ export type DetectionObject = {
 }
 
 const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
-  // const identishotToken = req.headers['x-identishot-detection-token']
+  // const servicegeekToken = req.headers['x-servicegeek-detection-token']
 
   // if (!process.env.X_IDENTISHOT_DETECTION_TOKEN) {
   //   res.status(500).send('Invalid API token.')
   //   return
   // }
-  // if (identishotToken !== process.env.X_IDENTISHOT_DETECTION_TOKEN) {
+  // if (servicegeekToken !== process.env.X_IDENTISHOT_DETECTION_TOKEN) {
   //   res.status(500).send('Invalid API token')
   //   return
   // }
@@ -59,7 +59,7 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
   //       }),
   //       headers: {
   //         Authorization: process.env.ECS_API_KEY || '',
-  //         'RestorationX-jwt': '',
+  //         'ServiceGeek-jwt': '',
   //         'Content-Type': 'application/json',
   //       },
   //     }

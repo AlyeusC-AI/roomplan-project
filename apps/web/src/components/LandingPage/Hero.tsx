@@ -1,4 +1,4 @@
-import { useState } from 'react';  
+import { useEffect, useState } from 'react';  
 import PrimaryLink from '@components/DesignSystem/Links/PrimaryLink'  
 import { Container } from '@components/LandingPage/Container'  
 import { useUser } from '@supabase/auth-helpers-react'  
@@ -29,7 +29,7 @@ export function Hero() {
   return (  
     <Container className="pb-16 pt-3 text-center">  
       <h1 className="mx-auto max-w-full font-display text-5xl font-medium tracking-tight text-slate-900 sm:text-7xl">  
-        Restoration<RestorationDescription>X</RestorationDescription>  
+        Service Geek
       </h1>  
       <h2 className="mx-auto my-4 max-w-4xl font-display text-4xl font-medium tracking-tight text-slate-900">  
         The value we provide{' '}  

@@ -1,6 +1,6 @@
 import { createNextApiHandler } from '@trpc/server/adapters/next'
 
-import { appRouter, createContext } from '@restorationx/api'
+import { appRouter, createContext } from '@servicegeek/api'
 
 // export API handler
 export default createNextApiHandler({

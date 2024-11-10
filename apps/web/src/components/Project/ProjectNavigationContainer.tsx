@@ -10,7 +10,7 @@ import {
   NewspaperIcon,
   PhotoIcon,
 } from '@heroicons/react/24/outline'
-import { AccessLevel } from '@restorationx/db'
+import { AccessLevel } from '@servicegeek/db'
 import { useRouter } from 'next/router'
 import { useRecoilState } from 'recoil'
 import userInfoState from '@atoms/userInfoState'

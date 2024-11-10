@@ -2,7 +2,7 @@ import { useState } from 'react'
 import TertiaryButton from '@components/DesignSystem/Buttons/TertiaryButton'
 import Typeography from '@components/DesignSystem/Typeography'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
-import { RoomData } from '@restorationx/db/queries/project/getProjectDetections'
+import { RoomData } from '@servicegeek/db/queries/project/getProjectDetections'
 
 import MobileImage from './MobileImage'
 

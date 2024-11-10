@@ -17,11 +17,11 @@ import {
   DashboardViews,
   OrganizationInvitation,
   SubscriptionStatus,
-} from '@restorationx/db'
-import getInvitation from '@restorationx/db/queries/invitations/getInvitation'
-import getMembers from '@restorationx/db/queries/organization/getMembers'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
-import { ProjectType } from '@restorationx/db/queries/project/listProjects'
+} from '@servicegeek/db'
+import getInvitation from '@servicegeek/db/queries/invitations/getInvitation'
+import getMembers from '@servicegeek/db/queries/organization/getMembers'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
+import { ProjectType } from '@servicegeek/db/queries/project/listProjects'
 import { User } from '@supabase/auth-helpers-nextjs'
 import clsx from 'clsx'
 import type { GetServerSidePropsContext, NextPage } from 'next'
@@ -89,18 +89,18 @@ const ProjectPage: NextPage<ProjectPageProps> = ({
       })}
     >
       <AppContainer
-    subscriptionStatus={subscriptionStatus}
-    overflow={
-      userInfo && userInfo.savedDashboardView === DashboardViews.boardView
-        ? false
-        : true
-    }
-/>
+        subscriptionStatus={subscriptionStatus}
+        overflow={
+          userInfo && userInfo.savedDashboardView === DashboardViews.boardView
+            ? false
+            : true
+        }
+      >
         <Head>
-          <title>RestorationX - Dashboard</title>
+          <title>ServiceGeek - Dashboard</title>
           <meta
             name="description"
-            content="Access projects that you have integrated with RestorationX"
+            content="Access projects that you have integrated with ServiceGeek"
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>

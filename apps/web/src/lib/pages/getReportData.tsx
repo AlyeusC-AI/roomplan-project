@@ -1,4 +1,4 @@
-import { prisma } from '@restorationx/db'
+import { prisma } from '@servicegeek/db'
 
 import { ORG_ACCESS_LEVEL } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'

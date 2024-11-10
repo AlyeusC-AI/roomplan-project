@@ -1,7 +1,7 @@
 import { Dispatch, Fragment, SetStateAction, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
-import { NotificationType } from '@restorationx/db'
+import { NotificationType } from '@servicegeek/db'
 import clsx from 'clsx'
 
 import ActivityList from './ActivityList'

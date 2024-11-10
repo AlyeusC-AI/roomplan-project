@@ -2,8 +2,8 @@
 import { useState } from 'react'
 import TertiaryButton from '@components/DesignSystem/Buttons/TertiaryButton'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
-import { GroupByViews, PhotoViews } from '@restorationx/db'
-import { RouterOutputs } from '@restorationx/api'
+import { GroupByViews, PhotoViews } from '@servicegeek/db'
+import { RouterOutputs } from '@servicegeek/api'
 import clsx from 'clsx'
 
 import Photo from './Photo'

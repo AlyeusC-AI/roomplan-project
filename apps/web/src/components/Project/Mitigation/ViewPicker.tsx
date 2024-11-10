@@ -5,7 +5,7 @@ import {
   ListBulletIcon,
   Squares2X2Icon,
 } from '@heroicons/react/24/outline'
-import { PhotoViews } from '@restorationx/db'
+import { PhotoViews } from '@servicegeek/db'
 import { trpc } from '@utils/trpc'
 
 import FilterLabel from './FilterLabel'

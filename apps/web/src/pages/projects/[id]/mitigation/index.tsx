@@ -4,13 +4,13 @@ import MainContent from '@components/layouts/MainContent'
 import TabNavigation from '@components/layouts/TabNavigation'
 import ProjectNavigationContainer from '@components/Project/ProjectNavigationContainer'
 import Readings from '@components/Project/Readings'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
 import {
   getRoomList,
   RoomDataWithoutInferences,
-} from '@restorationx/db/queries/project/getProjectDetections'
-import getProjectForOrg from '@restorationx/db/queries/project/getProjectForOrg'
-import getRoomReadings from '@restorationx/db/queries/room/reading/getRoomReadings'
+} from '@servicegeek/db/queries/project/getProjectDetections'
+import getProjectForOrg from '@servicegeek/db/queries/project/getProjectForOrg'
+import getRoomReadings from '@servicegeek/db/queries/room/reading/getRoomReadings'
 import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import getProjectInfo, {
   ProjectInfo,
@@ -19,10 +19,10 @@ import getUserInfo, { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
 import getUserWithAuthStatus, {
   ORG_ACCESS_LEVEL,
 } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { User } from '@supabase/auth-helpers-nextjs'
 import { trpc } from '@utils/trpc'
-import { RouterOutputs } from '@restorationx/api'
+import { RouterOutputs } from '@servicegeek/api'
 import type { GetServerSidePropsContext, NextPage } from 'next'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
@@ -76,7 +76,7 @@ const EstimatePage: NextPage<EstimatePageProps> = ({
         renderSecondaryNavigation={() => <ProjectNavigationContainer />}
       >
         <Head>
-          <title>RestorationX - Estimate</title>
+          <title>ServiceGeek - Estimate</title>
           <meta name="description" content="Project Estimate and Details" />
           <link rel="icon" href="/favicon.ico" />
         </Head>

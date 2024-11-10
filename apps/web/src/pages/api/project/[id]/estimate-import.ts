@@ -3,9 +3,9 @@ import {
   StartDocumentAnalysisCommand,
   TextractClient,
 } from '@aws-sdk/client-textract' // ES Modules import
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
-import getUser from '@restorationx/db/queries/user/getUser'
-import { SubscriptionStatus } from '@restorationx/db'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
+import getUser from '@servicegeek/db/queries/user/getUser'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import formidable, { File as FormidableFile } from 'formidable'
 import { NextApiRequest, NextApiResponse } from 'next'
@@ -60,12 +60,12 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
     return
   }
 
-  const identishotUser = await getUser(user.id)
-  if (!identishotUser) {
+  const servicegeekUser = await getUser(user.id)
+  if (!servicegeekUser) {
     res.redirect('/register')
     return
   }
-  if (!identishotUser.org?.organizationId) {
+  if (!servicegeekUser.org?.organizationId) {
     res.redirect('/projects')
     return
   }
@@ -99,7 +99,7 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
     const S3Object = {
       Bucket: 'estimateimports',
       Key: `${
-        identishotUser.org?.organization.publicId
+        servicegeekUser.org?.organization.publicId
       }/${uuidv4()}-estimate.pdf`,
     }
     const bucketParams = {

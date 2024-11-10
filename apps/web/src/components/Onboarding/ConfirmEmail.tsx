@@ -7,7 +7,7 @@ export default function ConfirmEmail() {
         <div className="flex flex-col items-center justify-center sm:mx-auto sm:w-full sm:max-w-md">
           <Image
             className="mx-auto w-auto"
-            src="/images/brand/restorationx.svg"
+            src="/images/brand/servicegeek.svg"
             alt="Your Company"
             height={60}
             width={60}

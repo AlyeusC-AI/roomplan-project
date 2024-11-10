@@ -37,7 +37,7 @@ export default function PostBody({ content }: { content: any }) {
         )}
       >
         <p>
-          RestorationX offers a job management platform for the insurance
+          ServiceGeek offers a job management platform for the insurance
           restoration industry.{' '}
           <Link
             href="/register"

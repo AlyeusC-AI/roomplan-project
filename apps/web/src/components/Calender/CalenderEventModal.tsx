@@ -12,7 +12,7 @@ import {
   UserIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
-import { Stakeholders } from '@restorationx/db/queries/project/getUsersForProject'
+import { Stakeholders } from '@servicegeek/db/queries/project/getUsersForProject'
 import { ProjectInfo } from '@lib/serverSidePropsUtils/getProjectInfo'
 import {
   CalendarEventPatchBody,

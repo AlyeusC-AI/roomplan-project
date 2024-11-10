@@ -81,10 +81,10 @@ function MobileNavigation() {
             <MobileNavLink href="/#features">Features</MobileNavLink>
             <MobileNavLink href="/#pricing">Pricing</MobileNavLink>
             <MobileNavLink href="/about-us">About Us</MobileNavLink>
-            <MobileNavLink href="https://blog.restorationx.app">
+            <MobileNavLink href="https://blog.servicegeek.app">
               Blog
             </MobileNavLink>
-            <MobileNavLink href="https://knowledge.restorationx.app/">
+            <MobileNavLink href="https://knowledge.servicegeek.app/">
               Learn
             </MobileNavLink>
             <MobileNavLink href="/demo">Book a Demo</MobileNavLink>
@@ -124,13 +124,13 @@ export function Header() {
               </NavLink>
               <NavLink
                 className="hidden lg:block"
-                href="https://blog.restorationx.app"
+                href="https://blog.servicegeek.app"
               >
                 Blog
               </NavLink>
               <NavLink
                 className="hidden xl:block"
-                href="https://knowledge.restorationx.app/"
+                href="https://knowledge.servicegeek.app/"
               >
                 Learn
               </NavLink>

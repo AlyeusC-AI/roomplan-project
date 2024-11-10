@@ -1,4 +1,4 @@
-import updateOrCreateRoomAffectedArea from '@restorationx/db/queries/room/updateOrCreateRoomAffectedArea'
+import updateOrCreateRoomAffectedArea from '@servicegeek/db/queries/room/updateOrCreateRoomAffectedArea'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

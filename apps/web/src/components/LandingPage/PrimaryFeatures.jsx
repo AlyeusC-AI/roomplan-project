@@ -11,7 +11,7 @@ const features = [
   {
     title: 'Job management',
     description:
-      'Organize and document all of your jobs in one simple to use software. RestorationX will give you the tools to make sure you are always paid for the work you do.',
+      'Organize and document all of your jobs in one simple to use software. ServiceGeek will give you the tools to make sure you are always paid for the work you do.',
     image: screenshotRoomDetection,
   },
   {
@@ -70,7 +70,8 @@ export function PrimaryFeatures() {
             Stop switching between multiple apps
           </h2>
           <p className="mt-6 text-lg tracking-tight text-neutral-600">
-            Streamline your company's profits with technology that has all the tools you need in a simple-to-use package.
+            Streamline your company's profits with technology that has all the
+            tools you need in a simple-to-use package.
           </p>
         </div>
         <Tab.Group

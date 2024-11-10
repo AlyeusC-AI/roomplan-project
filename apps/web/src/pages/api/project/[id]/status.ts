@@ -1,4 +1,4 @@
-import setProjectStatus from '@restorationx/db/queries/project/setProjectStatus'
+import setProjectStatus from '@servicegeek/db/queries/project/setProjectStatus'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

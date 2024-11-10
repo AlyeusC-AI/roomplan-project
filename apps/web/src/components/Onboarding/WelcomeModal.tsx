@@ -68,7 +68,7 @@ export default function WelcomeModal() {
                             src="/images/onboarding/welcome.png"
                             height={992}
                             width={1308}
-                            alt="Welcome to RestorationX"
+                            alt="Welcome to ServiceGeek"
                           />
                         </div>
                       </div>
@@ -76,12 +76,12 @@ export default function WelcomeModal() {
                         as="h3"
                         className="text-3xl font-medium leading-6 text-gray-900"
                       >
-                        Welcome to Restoration<GradientText>X</GradientText>!
+                        Welcome to Service Geek!
                       </Dialog.Title>
                       <div className="mt-8 flex flex-col items-center justify-center text-center">
                         <p className="max-w-sm text-base text-gray-800">
                           Let&apos;s get started. You and your team can now use
-                          RestorationX for free for 14 days.
+                          ServiceGeek for free for 14 days.
                         </p>
                       </div>
                     </div>
@@ -138,9 +138,9 @@ export default function WelcomeModal() {
                       </Dialog.Title>
                       <div className="mt-8 flex items-center justify-center text-center">
                         <p className="max-w-sm text-base text-gray-800">
-                          Download the RestorationX mobile application to
-                          quickly snap photos, take notes, and record readings
-                          while in the field.
+                          Download the ServiceGeek mobile application to quickly
+                          snap photos, take notes, and record readings while in
+                          the field.
                         </p>
                       </div>
                     </div>

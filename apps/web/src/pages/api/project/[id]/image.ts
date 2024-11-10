@@ -1,4 +1,4 @@
-import deleteImagesFromProject from '@restorationx/db/queries/project/deleteImagesFromProject'
+import deleteImagesFromProject from '@servicegeek/db/queries/project/deleteImagesFromProject'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

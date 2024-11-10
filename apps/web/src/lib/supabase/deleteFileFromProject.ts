@@ -1,5 +1,5 @@
-import getProjectForOrg from '@restorationx/db/queries/project/getProjectForOrg'
-import getUser from '@restorationx/db/queries/user/getUser'
+import getProjectForOrg from '@servicegeek/db/queries/project/getProjectForOrg'
+import getUser from '@servicegeek/db/queries/user/getUser'
 const fs = require('fs')
 const { promisify } = require('util')
 
@@ -10,8 +10,8 @@ const deleteFileFromProject = async (
   projectPublicId: string,
   filename: string
 ) => {
-  const identishotUser = await getUser(userId)
-  const organizationId = identishotUser?.org?.organization.id
+  const servicegeekUser = await getUser(userId)
+  const organizationId = servicegeekUser?.org?.organization.id
   if (!organizationId) return null
   const project = await getProjectForOrg(projectPublicId, organizationId)
   if (!project) {

@@ -71,7 +71,7 @@ export default function UpdatePassword() {
   return (
     <>
       <Head>
-        <title>Reset Password - RestorationX</title>
+        <title>Reset Password - ServiceGeek</title>
       </Head>
       <AuthLayout>
         {emailSent ? (
@@ -80,7 +80,7 @@ export default function UpdatePassword() {
               Password Reset Email Sent
             </h2>
             <p className="mt-2 text-sm text-gray-700">
-              Check your inbox to find your password reset link to RestorationX.
+              Check your inbox to find your password reset link to ServiceGeek.
             </p>
             <p className="mt-2 text-sm text-gray-700">
               Remembered your password?{' '}

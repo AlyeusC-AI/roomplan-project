@@ -1,5 +1,5 @@
 import userInfoState from '@atoms/userInfoState'
-import { DashboardViews } from '@restorationx/db'
+import { DashboardViews } from '@servicegeek/db'
 import clsx from 'clsx'
 import { useRouter } from 'next/router'
 import { ReactNode } from 'react'

@@ -35,13 +35,13 @@ export default function ProjectInformation() {
         }))
       } else {
         toast.error(
-          'Updated Failed. If the error persists please contact support@restorationx.app'
+          'Updated Failed. If the error persists please contact support@servicegeek.app'
         )
       }
     } catch (error) {
       console.error(error)
       toast.error(
-        'Updated Failed. If the error persists please contact support@restorationx.app'
+        'Updated Failed. If the error persists please contact support@servicegeek.app'
       )
     }
   }

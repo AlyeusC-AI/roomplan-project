@@ -1,5 +1,5 @@
-import acceptInvitation from '@restorationx/db/queries/invitations/acceptInvitation'
-import updateUser from '@restorationx/db/queries/user/updateUser'
+import acceptInvitation from '@servicegeek/db/queries/invitations/acceptInvitation'
+import updateUser from '@servicegeek/db/queries/user/updateUser'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

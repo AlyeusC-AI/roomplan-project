@@ -16,10 +16,10 @@ const CheckoutSuccessPage: NextPage<CheckoutSuccessProps> = () => {
   return (
     <PageContainer>
       <Head>
-        <title>RestorationX - Dashboard</title>
+        <title>ServiceGeek - Dashboard</title>
         <meta
           name="description"
-          content="Access projects that you have integrated with RestorationX"
+          content="Access projects that you have integrated with ServiceGeek"
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -52,11 +52,11 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 
     return { props: {} }
 
-    // const publicOrgId = identishotUser.org?.organization.publicId || null
+    // const publicOrgId = servicegeekUser.org?.organization.publicId || null
     // let projects = null
-    // if (identishotUser.org?.organization.id) {
+    // if (servicegeekUser.org?.organization.id) {
     //   const orgWithProjects = await listProjects(
-    //     identishotUser.org?.organization.id
+    //     servicegeekUser.org?.organization.id
     //   )
     //   projects = superjson.serialize(orgWithProjects?.projects)
     //     .json as unknown as ProjectType[]

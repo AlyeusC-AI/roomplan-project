@@ -1,6 +1,6 @@
-import removeMember from '@restorationx/db/queries/organization/removeMember'
-import updateAccessLevel from '@restorationx/db/queries/organization/updateAccessLevel'
-import { AccessLevel } from '@restorationx/db'
+import removeMember from '@servicegeek/db/queries/organization/removeMember'
+import updateAccessLevel from '@servicegeek/db/queries/organization/updateAccessLevel'
+import { AccessLevel } from '@servicegeek/db'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

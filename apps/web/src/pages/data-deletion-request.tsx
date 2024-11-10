@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>RestorationX - Request Account Deletion</title>
+        <title>ServiceGeek - Request Account Deletion</title>
         <meta
           name="description"
           content="A job management platform built for restoration"

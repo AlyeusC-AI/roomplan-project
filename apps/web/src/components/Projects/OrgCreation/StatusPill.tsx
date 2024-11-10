@@ -1,5 +1,5 @@
 import Pill from '@components/DesignSystem/Pills/Pill'
-import { ProjectStatus } from '@restorationx/db'
+import { ProjectStatus } from '@servicegeek/db'
 
 export const getStatusColor = (status?: ProjectStatus | null) => {
   if (status === ProjectStatus.active) {

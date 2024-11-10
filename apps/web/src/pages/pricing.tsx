@@ -14,8 +14,8 @@ const PricingPage: NextPage<PricingPageProps> = () => {
   return (
     <PageContainer>
       <Head>
-        <title>RestorationX - Pricing</title>
-        <meta name="description" content="RestorationX pricing" />
+        <title>ServiceGeek - Pricing</title>
+        <meta name="description" content="ServiceGeek pricing" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Header />

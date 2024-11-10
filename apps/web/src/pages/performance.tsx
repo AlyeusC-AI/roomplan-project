@@ -3,14 +3,14 @@ import AppContainer from '@components/layouts/AppContainer'
 import MainContent from '@components/layouts/MainContent'
 import PerformanceStats from '@components/PerformanceStats'
 import OrgCreation from '@components/Projects/OrgCreation'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
-import getProjectStats from '@restorationx/db/queries/project/getProjectStats'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
+import getProjectStats from '@servicegeek/db/queries/project/getProjectStats'
 import getProjectsData from '@lib/pages/getProjectsData'
 import { getQueueTime } from '@lib/qstash/queueInference'
 import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import getUserInfo, { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
 import { ORG_ACCESS_LEVEL } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { User } from '@supabase/auth-helpers-nextjs'
 import type { GetServerSidePropsContext, NextPage } from 'next'
 import Head from 'next/head'
@@ -56,10 +56,10 @@ const PerformancePage: NextPage<PerformancePageProps> = ({
     >
       <AppContainer subscriptionStatus={subscriptionStatus}>
         <Head>
-          <title>RestorationX - Dashboard</title>
+          <title>ServiceGeek - Dashboard</title>
           <meta
             name="description"
-            content="Access projects that you have integrated with RestorationX"
+            content="Access projects that you have integrated with ServiceGeek"
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>

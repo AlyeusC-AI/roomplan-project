@@ -9,9 +9,7 @@ const sendRoofPaymentSlackMsg = async (
   try {
     const dev = process.env.NODE_ENV !== 'production'
 
-    const server = dev
-      ? 'http://localhost:3002'
-      : 'https://www.restorationx.app'
+    const server = dev ? 'http://localhost:3002' : 'https://www.servicegeek.app'
     // invoke post request to /api/tickets to create a new ticket
     console.log('sending to hubspot')
     const hubspotRequestBody = {
@@ -60,7 +58,7 @@ const sendRoofPaymentSlackMsg = async (
                 },
                 {
                   type: 'mrkdwn',
-                  text: `*Link:*\nhttps://www.restorationx.app/projects/${projectId}/roofing`,
+                  text: `*Link:*\nhttps://www.servicegeek.app/projects/${projectId}/roofing`,
                 },
               ],
             },

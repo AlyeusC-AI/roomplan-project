@@ -11,7 +11,7 @@ import {
   MapIcon,
 } from '@heroicons/react/24/outline'
 import { GOOGLE_MAPS_API_KEY } from '@lib/constants'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { trpc } from '@utils/trpc'
 import clsx from 'clsx'
 import { useRouter } from 'next/router'

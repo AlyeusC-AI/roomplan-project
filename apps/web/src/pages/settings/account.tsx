@@ -1,13 +1,13 @@
 import AppContainer from '@components/layouts/AppContainer'
 import ProjectsNavigationContainer from '@components/Projects/ProjectsNavigationContainer'
 import Account from '@components/Settings/Account'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
 import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import getUserInfo, { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
 import getUserWithAuthStatus, {
   ORG_ACCESS_LEVEL,
 } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import type { GetServerSidePropsContext, NextPage } from 'next'
 import Head from 'next/head'
 import { RecoilRoot } from 'recoil'
@@ -36,8 +36,8 @@ const AccountPage: NextPage<AccountPageProps> = ({
         renderSecondaryNavigation={() => <ProjectsNavigationContainer />}
       >
         <Head>
-          <title>RestorationX - Account Settings</title>
-          <meta name="description" content="RestorationX account settings" />
+          <title>ServiceGeek - Account Settings</title>
+          <meta name="description" content="ServiceGeek account settings" />
           <link rel="icon" href="/favicon.ico" />
         </Head>
         <Account isAdmin={isAdmin} emailConfirmed={emailConfirmed} />

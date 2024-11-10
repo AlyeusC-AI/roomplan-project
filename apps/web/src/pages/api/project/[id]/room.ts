@@ -1,6 +1,6 @@
-import updateRoomForInference from '@restorationx/db/queries/inference/updateRoomForInference'
-import createRoom from '@restorationx/db/queries/room/createRoom'
-import deleteRoom from '@restorationx/db/queries/room/deleteRoom'
+import updateRoomForInference from '@servicegeek/db/queries/inference/updateRoomForInference'
+import createRoom from '@servicegeek/db/queries/room/createRoom'
+import deleteRoom from '@servicegeek/db/queries/room/deleteRoom'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

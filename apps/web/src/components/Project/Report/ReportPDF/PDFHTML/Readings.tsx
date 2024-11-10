@@ -1,4 +1,4 @@
-import { GenericRoomReading, RoomReading } from '@restorationx/db'
+import { GenericRoomReading, RoomReading } from '@servicegeek/db'
 import { format } from 'date-fns'
 
 import PDFTableTd from './PDFTable/PDFTableTd'

@@ -1,5 +1,5 @@
-import { getInferenceList } from '@restorationx/db/queries/project/getProjectDetections'
-import getUser from '@restorationx/db/queries/user/getUser'
+import { getInferenceList } from '@servicegeek/db/queries/project/getProjectDetections'
+import getUser from '@servicegeek/db/queries/user/getUser'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 
@@ -24,8 +24,8 @@ const handleGet = async (req: NextApiRequest, res: NextApiResponse) => {
   }
 
   try {
-    const identishotUser = await getUser(user.id)
-    const organizationId = identishotUser?.org?.organization.id
+    const servicegeekUser = await getUser(user.id)
+    const organizationId = servicegeekUser?.org?.organization.id
     if (!organizationId) {
       res.status(500).json({ status: 'failed' })
       return

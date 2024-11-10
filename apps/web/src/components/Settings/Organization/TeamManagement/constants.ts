@@ -1,4 +1,4 @@
-import { AccessLevel } from '@restorationx/db'
+import { AccessLevel } from '@servicegeek/db'
 
 export const RoleToDescription = {
   [AccessLevel.admin]: 'Account Administrator',

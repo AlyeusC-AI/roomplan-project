@@ -1,6 +1,6 @@
-import { prisma } from '@restorationx/db'
+import { prisma } from '@servicegeek/db'
 
-import { DashboardViews } from '@restorationx/db'
+import { DashboardViews } from '@servicegeek/db'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

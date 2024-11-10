@@ -1,6 +1,6 @@
-import updateUser from '@restorationx/db/queries/user/updateUser'
+import updateUser from '@servicegeek/db/queries/user/updateUser'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
-import { isNullOrUndefined } from '@restorationx/utils/isNullOrUndefined'
+import { isNullOrUndefined } from '@servicegeek/utils/isNullOrUndefined'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 const handlePatch = async (req: NextApiRequest, res: NextApiResponse) => {

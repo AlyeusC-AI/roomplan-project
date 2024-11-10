@@ -1,7 +1,7 @@
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
-import { prisma } from '@restorationx/db'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
+import { prisma } from '@servicegeek/db'
 
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

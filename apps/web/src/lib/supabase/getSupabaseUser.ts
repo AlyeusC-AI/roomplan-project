@@ -1,4 +1,4 @@
-import getUser from '@restorationx/db/queries/user/getUser'
+import getUser from '@servicegeek/db/queries/user/getUser'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import {
   GetServerSidePropsContext,

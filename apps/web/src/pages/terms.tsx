@@ -7,7 +7,7 @@ export default function TermsPage() {
   return (
     <>
       <Head>
-        <title>RestorationX - Terms of Service</title>
+        <title>ServiceGeek - Terms of Service</title>
         <meta
           name="description"
           content="A job management platform built for restoration"

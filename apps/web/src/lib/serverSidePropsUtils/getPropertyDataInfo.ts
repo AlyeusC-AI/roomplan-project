@@ -1,5 +1,5 @@
 import { PropertyData } from '@lib/realty-mole/collectPropertyData'
-import { PropertyData as PrismaPropertyData } from '@restorationx/db'
+import { PropertyData as PrismaPropertyData } from '@servicegeek/db'
 import { PropertyDataInfo } from '@atoms/propertyDataInfoState'
 import superjson from 'superjson'
 

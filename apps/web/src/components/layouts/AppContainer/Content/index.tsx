@@ -16,7 +16,7 @@ import {
   CogIcon,
   MapIcon,
 } from '@heroicons/react/24/outline'
-import { AccessLevel, SubscriptionStatus } from '@restorationx/db'
+import { AccessLevel, SubscriptionStatus } from '@servicegeek/db'
 import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { trpc } from '@utils/trpc'
 import clsx from 'clsx'
@@ -40,7 +40,7 @@ const sidebarNavigation = [
 const resourcesNav = [
   {
     name: 'Learn',
-    href: 'https://knowledge.restorationx.app/',
+    href: 'https://knowledge.servicegeek.app/',
     icon: BookOpenIcon,
     target: '_blank',
   },

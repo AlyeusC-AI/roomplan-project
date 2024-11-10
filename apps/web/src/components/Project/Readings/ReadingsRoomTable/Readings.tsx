@@ -1,6 +1,6 @@
 import DatePicker from 'react-datepicker'
 import AutoSaveTextInput from '@components/DesignSystem/TextInput/AutoSaveTextInput'
-import { RoomDataWithoutInferences } from '@restorationx/db/queries/project/getProjectDetections'
+import { RoomDataWithoutInferences } from '@servicegeek/db/queries/project/getProjectDetections'
 import { trpc } from '@utils/trpc'
 import produce from 'immer'
 import { useRouter } from 'next/router'

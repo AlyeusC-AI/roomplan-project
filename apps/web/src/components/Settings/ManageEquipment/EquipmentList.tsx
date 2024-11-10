@@ -3,7 +3,7 @@ import Table from '@components/DesignSystem/Table/Table'
 import TableBody from '@components/DesignSystem/Table/TableBody'
 import TableHead from '@components/DesignSystem/Table/TableHead'
 import TableHeader from '@components/DesignSystem/Table/TableHeader'
-import { RouterOutputs } from '@restorationx/api'
+import { RouterOutputs } from '@servicegeek/api'
 
 import EquipmentItem from './EquipmentItem'
 

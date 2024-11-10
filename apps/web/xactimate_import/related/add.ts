@@ -1,4 +1,4 @@
-import { prisma } from '@restorationx/db'
+import { prisma } from '@servicegeek/db'
 import { v4 as uuidv4 } from 'uuid'
 
 // const csv = require('csv-parser')

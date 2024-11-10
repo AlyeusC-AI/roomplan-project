@@ -73,7 +73,7 @@ export default function ResetPasswordRequest() {
   return (
     <>
       <Head>
-        <title>Sign In - RestorationX</title>
+        <title>Sign In - ServiceGeek</title>
       </Head>
       <AuthLayout>
         <div className="flex flex-col">

@@ -1,5 +1,5 @@
 import { Member } from '@components/Settings/Organization/types'
-import { Stakeholders } from '@restorationx/db/queries/project/getUsersForProject'
+import { Stakeholders } from '@servicegeek/db/queries/project/getUsersForProject'
 import { atom, selector } from 'recoil'
 
 export const defaultTeamMembersState = []

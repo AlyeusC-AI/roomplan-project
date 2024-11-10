@@ -1,8 +1,8 @@
-import createProject from '@restorationx/db/queries/project/createProject'
+import createProject from '@servicegeek/db/queries/project/createProject'
 import listProjects, {
   listProjectsForUser,
-} from '@restorationx/db/queries/project/listProjects'
-import { default as getRestorationXUser } from '@restorationx/db/queries/user/getUser'
+} from '@servicegeek/db/queries/project/listProjects'
+import { default as getRestorationXUser } from '@servicegeek/db/queries/user/getUser'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 import superjson from 'superjson'
@@ -28,8 +28,8 @@ const handleGet = async (req: NextApiRequest, res: NextApiResponse) => {
     return
   }
   try {
-    const identishotUser = await getRestorationXUser(user.id)
-    const org = identishotUser?.org?.organization
+    const servicegeekUser = await getRestorationXUser(user.id)
+    const org = servicegeekUser?.org?.organization
     if (!org?.id) {
       console.error('err', 'no org')
       res.status(204).send('Account set incomplete')

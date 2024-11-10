@@ -1,4 +1,4 @@
-import { prisma } from '@restorationx/db'
+import { prisma } from '@servicegeek/db'
 
 import { Novu } from '@novu/node'
 import { verifySignature } from '@upstash/qstash/nextjs'

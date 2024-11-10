@@ -8,12 +8,12 @@ import AppContainer from '@components/layouts/AppContainer'
 import MainContent from '@components/layouts/MainContent'
 import { Dialog, Transition } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
-import getCalendarEvents from '@restorationx/db/queries/calendar-event/getCalendarEvents'
-import getInvitation from '@restorationx/db/queries/invitations/getInvitation'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
+import getCalendarEvents from '@servicegeek/db/queries/calendar-event/getCalendarEvents'
+import getInvitation from '@servicegeek/db/queries/invitations/getInvitation'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
 import listProjects, {
   ProjectType,
-} from '@restorationx/db/queries/project/listProjects'
+} from '@servicegeek/db/queries/project/listProjects'
 import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import getUserInfo, { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
 import getUserWithAuthStatus, {
@@ -23,7 +23,7 @@ import {
   OrganizationInvitation,
   Project,
   SubscriptionStatus,
-} from '@restorationx/db'
+} from '@servicegeek/db'
 import type { GetServerSidePropsContext, NextPage } from 'next'
 import Head from 'next/head'
 import { RecoilRoot } from 'recoil'
@@ -114,7 +114,7 @@ const ProjectPage: NextPage<ProjectPageProps> = ({
     >
       <AppContainer subscriptionStatus={subscriptionStatus}>
         <Head>
-          <title>RestorationX - Calender</title>
+          <title>ServiceGeek - Calender</title>
           <meta
             name="description"
             content="Access the organization's calender"
@@ -246,7 +246,7 @@ const ProjectPage: NextPage<ProjectPageProps> = ({
                                       Project assignees
                                     </label>
                                     <div className="sm:col-span-2">
-                                      <div className="flex mt-2">
+                                      <div className="mt-2 flex">
                                         <StakeholdersCalendarLegend
                                           stakeholders={currentAssignees}
                                         />

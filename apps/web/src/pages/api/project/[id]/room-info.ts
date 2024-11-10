@@ -1,4 +1,4 @@
-import updateRoomName from '@restorationx/db/queries/room/updateRoomName'
+import updateRoomName from '@servicegeek/db/queries/room/updateRoomName'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

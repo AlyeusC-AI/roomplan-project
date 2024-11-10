@@ -1,15 +1,15 @@
 import AppContainer from '@components/layouts/AppContainer'
 import ProjectsNavigationContainer from '@components/Projects/ProjectsNavigationContainer'
 import ManageEquipment from '@components/Settings/ManageEquipment'
-import getAllOrganizationEquipment from '@restorationx/db/queries/equipment/getAllOrganizationEquipment'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
+import getAllOrganizationEquipment from '@servicegeek/db/queries/equipment/getAllOrganizationEquipment'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
 import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import getUserInfo, { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
 import getUserWithAuthStatus, {
   ORG_ACCESS_LEVEL,
 } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
-import { SubscriptionStatus } from '@restorationx/db'
-import { RouterOutputs } from '@restorationx/api'
+import { SubscriptionStatus } from '@servicegeek/db'
+import { RouterOutputs } from '@servicegeek/api'
 import type { GetServerSidePropsContext, NextPage } from 'next'
 import Head from 'next/head'
 import { RecoilRoot } from 'recoil'
@@ -35,8 +35,8 @@ const EquipmentPage: NextPage<EquipmentPageProps> = ({
         renderSecondaryNavigation={() => <ProjectsNavigationContainer />}
       >
         <Head>
-          <title>RestorationX - Manage Equipment</title>
-          <meta name="description" content="RestorationX account settings" />
+          <title>ServiceGeek - Manage Equipment</title>
+          <meta name="description" content="ServiceGeek account settings" />
           <link rel="icon" href="/favicon.ico" />
         </Head>
         <ManageEquipment

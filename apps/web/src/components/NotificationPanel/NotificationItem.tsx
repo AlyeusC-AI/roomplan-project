@@ -2,7 +2,7 @@ import { Fragment } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { EllipsisVerticalIcon } from '@heroicons/react/20/solid'
 import { BellAlertIcon, BellIcon } from '@heroicons/react/24/outline'
-import { RouterOutputs } from '@restorationx/api'
+import { RouterOutputs } from '@servicegeek/api'
 import clsx from 'clsx'
 import { format } from 'date-fns'
 

@@ -1,5 +1,5 @@
-import getCustomer from '@restorationx/db/queries/customers/getCustomer'
-import getUser from '@restorationx/db/queries/user/getUser'
+import getCustomer from '@servicegeek/db/queries/customers/getCustomer'
+import getUser from '@servicegeek/db/queries/user/getUser'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 import Stripe from 'stripe'
@@ -22,22 +22,22 @@ const createPortalLink = async (req: NextApiRequest, res: NextApiResponse) => {
 
       if (!user) throw Error('Could not get user')
 
-      const identishotUser = await getUser(user.id)
-      if (!identishotUser) {
+      const servicegeekUser = await getUser(user.id)
+      if (!servicegeekUser) {
         res.redirect('/register')
         return
       }
-      if (!identishotUser.org?.organizationId) {
+      if (!servicegeekUser.org?.organizationId) {
         res.redirect('/projects')
         return
       }
 
-      const customer = await getCustomer(identishotUser.org.organizationId)
+      const customer = await getCustomer(servicegeekUser.org.organizationId)
 
       if (!customer) throw Error('Could not get customer')
       const { url } = await stripe.billingPortal.sessions.create({
         customer: customer.customerId,
-        return_url: `https://www.restorationx.app/settings/billing`,
+        return_url: `https://www.servicegeek.app/settings/billing`,
       })
 
       return res.status(200).json({ url })

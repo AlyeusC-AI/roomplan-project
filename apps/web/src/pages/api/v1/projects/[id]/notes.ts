@@ -1,6 +1,6 @@
-import createRoomNote from '@restorationx/db/queries/room/notes/createRoomNote'
-import deleteRoomNote from '@restorationx/db/queries/room/notes/deleteRoomNote'
-import updateRoomNote from '@restorationx/db/queries/room/notes/updateRoomNote'
+import createRoomNote from '@servicegeek/db/queries/room/notes/createRoomNote'
+import deleteRoomNote from '@servicegeek/db/queries/room/notes/deleteRoomNote'
+import updateRoomNote from '@servicegeek/db/queries/room/notes/updateRoomNote'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

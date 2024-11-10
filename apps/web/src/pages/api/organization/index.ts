@@ -1,6 +1,6 @@
-import createInvitation from '@restorationx/db/queries/organization/createInvitation'
-import updateOrganizationName from '@restorationx/db/queries/organization/updateOrganizationName'
-import createOrg from '@restorationx/db/queries/user/createOrg'
+import createInvitation from '@servicegeek/db/queries/organization/createInvitation'
+import updateOrganizationName from '@servicegeek/db/queries/organization/updateOrganizationName'
+import createOrg from '@servicegeek/db/queries/user/createOrg'
 import { supabaseServiceRole } from '@lib/supabase/supabaseServiceRoleClient'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
@@ -19,7 +19,7 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     const org = await createOrg(user.id, body.orgName, body.orgSize, body.role)
     try {
-      const supportUser = `support+${org.org?.organization.publicId}@restorationx.app`
+      const supportUser = `support+${org.org?.organization.publicId}@servicegeek.app`
       const invitation = await createInvitation(user.id, supportUser)
       const result = await supabaseServiceRole.auth.admin.inviteUserByEmail(
         supportUser,
@@ -28,7 +28,7 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
             orgId: invitation.orgId,
             inviteId: invitation.inviteId,
             isSupportUser: true,
-            firstName: 'RestorationX',
+            firstName: 'ServiceGeek',
             lastName: 'Support',
           },
         }

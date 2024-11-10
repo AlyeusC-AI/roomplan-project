@@ -3,7 +3,7 @@ import toast from 'react-hot-toast'
 import PrimaryButton from '@components/DesignSystem/Buttons/PrimaryButton'
 import Card from '@components/DesignSystem/Card'
 import { trpc } from '@utils/trpc'
-import { RouterOutputs } from '@restorationx/api'
+import { RouterOutputs } from '@servicegeek/api'
 import { v4 } from 'uuid'
 import { colorHash } from '@utils/color-hash'
 import WorkflowStatus from './WorkflowStatus'
@@ -22,7 +22,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { getRndInteger } from '@restorationx/utils'
+import { getRndInteger } from '@servicegeek/utils'
 import { InformationCircleIcon } from '@heroicons/react/24/outline'
 
 export default function ManageWorkflow({

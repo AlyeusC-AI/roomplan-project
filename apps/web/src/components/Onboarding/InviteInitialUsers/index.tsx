@@ -16,7 +16,6 @@ import orgInfoState from '@atoms/orgInfoState'
 import teamMembersState from '@atoms/teamMembers'
 import PrimaryButton from '@components/DesignSystem/Buttons/PrimaryButton'
 import TertiaryButton from '@components/DesignSystem/Buttons/TertiaryButton'
-import GradientText from '@components/DesignSystem/GradientText'
 import OrgMembersSection from '@components/Settings/Organization/TeamManagement/OrgMembersSection'
 import { ArrowRightIcon } from '@heroicons/react/24/outline'
 import { trpc } from '@utils/trpc'
@@ -77,7 +76,7 @@ export default function InviteInitialUsers() {
         </div>
         <div>
           <h1 className="text-3xl sm:max-w-md">
-            Welcome to Restoration<GradientText>X</GradientText>,
+            Welcome to Service Geek,
           </h1>
           <h1 className="text-3xl sm:max-w-md">
             <span className="font-bold">{orgInfo.name}</span>!

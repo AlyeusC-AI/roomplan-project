@@ -173,8 +173,8 @@ export default function MobileNav() {
                 <div className="flex h-16 items-center justify-between px-4 md:px-6">
                   <img
                     className="block h-8 w-auto"
-                    src="/images/brand/restorationx.svg"
-                    alt="RestorationX"
+                    src="/images/brand/servicegeek.svg"
+                    alt="ServiceGeek"
                   />
                   <button
                     type="button"

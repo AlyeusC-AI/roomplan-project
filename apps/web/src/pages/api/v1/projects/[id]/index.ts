@@ -1,6 +1,6 @@
-import { getInferenceList } from '@restorationx/db/queries/project/getProjectDetections'
-import getProjectForOrg from '@restorationx/db/queries/project/getProjectForOrg'
-import { default as getRestorationXUser } from '@restorationx/db/queries/user/getUser'
+import { getInferenceList } from '@servicegeek/db/queries/project/getProjectDetections'
+import getProjectForOrg from '@servicegeek/db/queries/project/getProjectForOrg'
+import { default as getRestorationXUser } from '@servicegeek/db/queries/user/getUser'
 import getProjectInfo from '@lib/serverSidePropsUtils/getProjectInfo'
 import getPresignedUrlMapFromInferenceList from '@lib/supabase/getPresignedUrlMapFromInferenceList'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
@@ -31,8 +31,8 @@ const handleGet = async (req: NextApiRequest, res: NextApiResponse) => {
     return
   }
   try {
-    const identishotUser = await getRestorationXUser(user.id)
-    const org = identishotUser?.org?.organization
+    const servicegeekUser = await getRestorationXUser(user.id)
+    const org = servicegeekUser?.org?.organization
     if (!org?.id) {
       console.error('err', 'no org')
       res.status(500).json({ status: 'failed' })

@@ -10,10 +10,10 @@ import { Loader } from '@googlemaps/js-api-loader'
 import { Dialog, Transition } from '@headlessui/react'
 import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { GOOGLE_MAPS_API_KEY } from '@lib/constants'
-import getInvitation from '@restorationx/db/queries/invitations/getInvitation'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
-import getProjectStats from '@restorationx/db/queries/project/getProjectStats'
-import { ProjectType } from '@restorationx/db/queries/project/listProjects'
+import getInvitation from '@servicegeek/db/queries/invitations/getInvitation'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
+import getProjectStats from '@servicegeek/db/queries/project/getProjectStats'
+import { ProjectType } from '@servicegeek/db/queries/project/listProjects'
 import getProjectsData from '@lib/pages/getProjectsData'
 import { getQueueTime } from '@lib/qstash/queueInference'
 import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
@@ -21,7 +21,7 @@ import getUserInfo, { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
 import { ORG_ACCESS_LEVEL } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
 import { supabaseServiceRole } from '@lib/supabase/supabaseServiceRoleClient'
 import { PresignedUrlMap } from '@pages/projects/[id]/photos'
-import { OrganizationInvitation, SubscriptionStatus } from '@restorationx/db'
+import { OrganizationInvitation, SubscriptionStatus } from '@servicegeek/db'
 import { User } from '@supabase/auth-helpers-nextjs'
 import clsx from 'clsx'
 import dateFormat from 'dateformat'
@@ -170,10 +170,10 @@ const ProjectMapView: NextPage<ProjectPageProps> = ({
     >
       <AppContainer subscriptionStatus={subscriptionStatus}>
         <Head>
-          <title>RestorationX - Dashboard</title>
+          <title>ServiceGeek - Dashboard</title>
           <meta
             name="description"
-            content="Access projects that you have integrated with RestorationX"
+            content="Access projects that you have integrated with ServiceGeek"
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>

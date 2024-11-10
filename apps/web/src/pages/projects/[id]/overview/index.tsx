@@ -5,8 +5,8 @@ import TabNavigation from '@components/layouts/TabNavigation'
 import EstimateDetails from '@components/Project/EstimateDetails'
 import ProjectNavigationContainer from '@components/Project/ProjectNavigationContainer'
 import { Member } from '@components/Settings/Organization/types'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
-import { Stakeholders } from '@restorationx/db/queries/project/getUsersForProject'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
+import { Stakeholders } from '@servicegeek/db/queries/project/getUsersForProject'
 import getOverViewData from '@lib/pages/getOverviewData'
 import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import getProjectInfo, {
@@ -15,7 +15,7 @@ import getProjectInfo, {
 import getPropertyDataInfo from '@lib/serverSidePropsUtils/getPropertyDataInfo'
 import getUserInfo, { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
 import { ORG_ACCESS_LEVEL } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { User } from '@supabase/auth-helpers-nextjs'
 import type { GetServerSidePropsContext, NextPage } from 'next'
 import Head from 'next/head'
@@ -66,7 +66,7 @@ const EstimateDetailsPage: NextPage<EstimatePageProps> = ({
         renderSecondaryNavigation={() => <ProjectNavigationContainer />}
       >
         <Head>
-          <title>RestorationX - Estimate Details</title>
+          <title>ServiceGeek - Estimate Details</title>
           <meta name="description" content="Project Estimate and Details" />
           <link rel="icon" href="/favicon.ico" />
         </Head>

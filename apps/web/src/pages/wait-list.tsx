@@ -23,7 +23,7 @@ export default function WaitListPage() {
   return (
     <>
       <Head>
-        <title>RestorationX - Wait List</title>
+        <title>ServiceGeek - Wait List</title>
         <meta
           name="description"
           content="A job management platform built for restoration"

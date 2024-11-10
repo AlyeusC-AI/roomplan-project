@@ -1,5 +1,5 @@
-import { RoomAffectedArea } from '@restorationx/db/queries/project/getProjectDetections'
-import { AreaAffectedType } from '@restorationx/db'
+import { RoomAffectedArea } from '@servicegeek/db/queries/project/getProjectDetections'
+import { AreaAffectedType } from '@servicegeek/db'
 
 export default function AreasAffected({
   affectedAreas,

@@ -1,5 +1,5 @@
-import getProjectForOrg from '@restorationx/db/queries/project/getProjectForOrg'
-import getUser from '@restorationx/db/queries/user/getUser'
+import getProjectForOrg from '@servicegeek/db/queries/project/getProjectForOrg'
+import getUser from '@servicegeek/db/queries/user/getUser'
 import { File } from 'formidable'
 const fs = require('fs').promises
 
@@ -10,8 +10,8 @@ const uploadFileToProject = async (
   projectPublicId: string,
   file: File
 ) => {
-  const identishotUser = await getUser(userId)
-  const organizationId = identishotUser?.org?.organization.id
+  const servicegeekUser = await getUser(userId)
+  const organizationId = servicegeekUser?.org?.organization.id
   if (!organizationId) return null
   const project = await getProjectForOrg(projectPublicId, organizationId)
   if (!project) {
@@ -23,12 +23,12 @@ const uploadFileToProject = async (
 
   console.log(
     'uploading data',
-    `${identishotUser.org?.organization.publicId}/${projectPublicId}/${file.originalFilename}`
+    `${servicegeekUser.org?.organization.publicId}/${projectPublicId}/${file.originalFilename}`
   )
   const { data, error } = await supabaseServiceRole.storage
     .from('user-files')
     .upload(
-      `${identishotUser.org?.organization.publicId}/${projectPublicId}/${file.originalFilename}`,
+      `${servicegeekUser.org?.organization.publicId}/${projectPublicId}/${file.originalFilename}`,
       inputBuffer,
       {
         upsert: true,

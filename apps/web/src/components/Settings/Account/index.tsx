@@ -26,8 +26,8 @@ export default function Account({ isAdmin, emailConfirmed }: AccountProps) {
 
           <p className="text-md mt-6 leading-6 text-gray-900">
             Contact{' '}
-            <a href="mailto:support@restorationx.app" className="underline">
-              support@restorationx.app
+            <a href="mailto:support@servicegeek.app" className="underline">
+              support@servicegeek.app
             </a>
           </p>
         </Card>

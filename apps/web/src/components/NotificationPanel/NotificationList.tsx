@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { MoonLoader } from 'react-spinners'
 import { InboxIcon } from '@heroicons/react/24/outline'
-import { NotificationType } from '@restorationx/db'
+import { NotificationType } from '@servicegeek/db'
 import { trpc } from '@utils/trpc'
 
 import NotificationItem from './NotificationItem'

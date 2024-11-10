@@ -1,4 +1,4 @@
-import { Room } from '@restorationx/db'
+import { Room } from '@servicegeek/db'
 
 import PDFTableTd from './PDFTable/PDFTableTd'
 import PDFTableTh from './PDFTable/PDFTableTh'

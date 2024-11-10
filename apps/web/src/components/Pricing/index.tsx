@@ -63,7 +63,7 @@ export default function Pricing({ isAuthed = false }: { isAuthed?: boolean }) {
             name="Enterprise"
             price="Contact Us"
             description="For large enterprise companies requiring many seats and intensive image processing capabilities"
-            href="https://calendly.com/identishot/30min"
+            href="https://calendly.com/servicegeek/30min"
             features={[
               'Create unlimited projects a month',
               'Analyze unlimited images a month',

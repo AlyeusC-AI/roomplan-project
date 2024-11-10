@@ -1,7 +1,7 @@
-import createCalendarEvent from '@restorationx/db/queries/calendar-event/createCalendarEvent'
-import deleteCalendarEvent from '@restorationx/db/queries/calendar-event/deleteCalendarEvent'
-import getCalendarEvents from '@restorationx/db/queries/calendar-event/getCalendarEvents'
-import updateCalendarEvent from '@restorationx/db/queries/calendar-event/updateCalendarEvent'
+import createCalendarEvent from '@servicegeek/db/queries/calendar-event/createCalendarEvent'
+import deleteCalendarEvent from '@servicegeek/db/queries/calendar-event/deleteCalendarEvent'
+import getCalendarEvents from '@servicegeek/db/queries/calendar-event/getCalendarEvents'
+import updateCalendarEvent from '@servicegeek/db/queries/calendar-event/updateCalendarEvent'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

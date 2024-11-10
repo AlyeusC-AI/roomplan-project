@@ -4,8 +4,8 @@ import MainContent from '@components/layouts/MainContent'
 import TabNavigation from '@components/layouts/TabNavigation'
 import Files from '@components/Project/Files'
 import ProjectNavigationContainer from '@components/Project/ProjectNavigationContainer'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
-import getProjectForOrg from '@restorationx/db/queries/project/getProjectForOrg'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
+import getProjectForOrg from '@servicegeek/db/queries/project/getProjectForOrg'
 import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import getProjectInfo, {
   ProjectInfo,
@@ -16,7 +16,7 @@ import getUserWithAuthStatus, {
 } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
 import getPresignedUrlMapFromFileObjectList from '@lib/supabase/getPresignedUrlMapFromFileObjectList'
 import { supabaseServiceRole } from '@lib/supabase/supabaseServiceRoleClient'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { User } from '@supabase/auth-helpers-nextjs'
 import { FileObject } from '@supabase/storage-js'
 import type { GetServerSidePropsContext, NextPage } from 'next'
@@ -74,7 +74,7 @@ const FilesPage: NextPage<FilesPageProps> = ({
         renderSecondaryNavigation={() => <ProjectNavigationContainer />}
       >
         <Head>
-          <title>RestorationX - Project Files</title>
+          <title>ServiceGeek - Project Files</title>
           <meta name="description" content="Project Files" />
           <link rel="icon" href="/favicon.ico" />
         </Head>

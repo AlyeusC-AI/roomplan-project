@@ -1,4 +1,4 @@
-import getTemplates from '@restorationx/db/queries/room/getTemplates'
+import getTemplates from '@servicegeek/db/queries/room/getTemplates'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

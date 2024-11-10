@@ -1,4 +1,4 @@
-import { RoomData } from '@restorationx/db/queries/project/getProjectDetections'
+import { RoomData } from '@servicegeek/db/queries/project/getProjectDetections'
 import { PresignedUrlMap } from '@pages/projects/[id]/photos'
 
 import { supabaseServiceRole } from './supabaseServiceRoleClient'

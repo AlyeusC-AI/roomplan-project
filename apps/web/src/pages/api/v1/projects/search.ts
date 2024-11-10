@@ -1,5 +1,5 @@
-import { default as getRestorationXUser } from '@restorationx/db/queries/user/getUser'
-import { prisma } from '@restorationx/db'
+import { default as getRestorationXUser } from '@servicegeek/db/queries/user/getUser'
+import { prisma } from '@servicegeek/db'
 
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
@@ -33,8 +33,8 @@ const handleGet = async (req: NextApiRequest, res: NextApiResponse) => {
   }
 
   try {
-    const identishotUser = await getRestorationXUser(user.id)
-    const org = identishotUser?.org?.organization
+    const servicegeekUser = await getRestorationXUser(user.id)
+    const org = servicegeekUser?.org?.organization
     if (!org?.id) {
       console.error('err', 'no org')
       res.status(500).json({ status: 'failed' })

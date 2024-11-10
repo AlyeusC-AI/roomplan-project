@@ -32,7 +32,7 @@ export default function BlogPage({
   return (
     <>
       <Head>
-        <title>{post.title} | RestorationX Blog</title>
+        <title>{post.title} | ServiceGeek Blog</title>
         <meta name="description" content={post.excerpt} />
       </Head>
       <Header />

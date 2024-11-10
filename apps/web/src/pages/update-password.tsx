@@ -94,7 +94,7 @@ export default function UpdatePassword() {
   return (
     <>
       <Head>
-        <title>Update Password - RestorationX</title>
+        <title>Update Password - ServiceGeek</title>
       </Head>
       <AuthLayout>
         <div className="flex flex-col">

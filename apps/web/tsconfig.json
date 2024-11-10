@@ -1,5 +1,5 @@
 {
-  "extends": "@restorationx/tsconfig/nextjs.json",
+  "extends": "@servicegeek/tsconfig/nextjs.json",
   "compilerOptions": {
     "esModuleInterop": true,
     "baseUrl": ".",

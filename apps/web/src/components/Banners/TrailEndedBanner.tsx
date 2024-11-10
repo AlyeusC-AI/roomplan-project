@@ -1,5 +1,5 @@
 import Banner from '@components/DesignSystem/Banner'
-import { AccessLevel } from '@restorationx/db'
+import { AccessLevel } from '@servicegeek/db'
 import { useRecoilState } from 'recoil'
 import userInfoState from '@atoms/userInfoState'
 
@@ -21,13 +21,12 @@ const TrailEndedBanner = () => {
       <>
         {userInfo?.accessLevel === AccessLevel.admin || userInfo?.isAdmin ? (
           <>
-            Please upgrade to a paid subscription to continue to use
-            RestorationX
+            Please upgrade to a paid subscription to continue to use ServiceGeek
           </>
         ) : (
           <>
             Please contact your account administrator to upgrade to a paid
-            subscription to continue to use RestorationX
+            subscription to continue to use ServiceGeek
           </>
         )}
       </>

@@ -1,4 +1,4 @@
-import { prisma } from '@restorationx/db'
+import { prisma } from '@servicegeek/db'
 
 import collectPropertyData from '@lib/realty-mole/collectPropertyData'
 import { verifySignature } from '@upstash/qstash/nextjs'

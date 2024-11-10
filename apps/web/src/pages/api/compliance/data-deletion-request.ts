@@ -1,4 +1,4 @@
-import addDataDeletionRequest from '@restorationx/db/queries/data-deletion-request/addDataDeletionRequest'
+import addDataDeletionRequest from '@servicegeek/db/queries/data-deletion-request/addDataDeletionRequest'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {

@@ -1,6 +1,6 @@
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
 import uploadFileToProject from '@lib/supabase/uploadFileToProject'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import formidable, { File as FormidableFile } from 'formidable'
 import { NextApiRequest, NextApiResponse } from 'next'

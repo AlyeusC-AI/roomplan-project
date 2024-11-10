@@ -4,7 +4,7 @@ import PrimaryButton from '@components/DesignSystem/Buttons/PrimaryButton'
 import SecondaryButton from '@components/DesignSystem/Buttons/SecondaryButton'
 import Modal from '@components/DesignSystem/Modal'
 import { ClipboardIcon, ShareIcon } from '@heroicons/react/24/outline'
-import { AccessLinkExpiration } from '@restorationx/utils/types'
+import { AccessLinkExpiration } from '@servicegeek/utils/types'
 import { useRouter } from 'next/router'
 
 const expirationOptions = {
@@ -60,7 +60,7 @@ const CreateAccessLink = () => {
   }
 
   const getLinkUrl = () =>
-    `https://www.restorationx.app/secure-view/${accessLinkId}`
+    `https://www.servicegeek.app/secure-view/${accessLinkId}`
 
   const onCopyClick = () => {
     navigator.clipboard.writeText(getLinkUrl())

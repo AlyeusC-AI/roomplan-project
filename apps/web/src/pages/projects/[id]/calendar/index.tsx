@@ -7,13 +7,13 @@ import TabNavigation from '@components/layouts/TabNavigation'
 import ProjectNavigationContainer from '@components/Project/ProjectNavigationContainer'
 import { Member } from '@components/Settings/Organization/types'
 import { Dialog, Transition } from '@headlessui/react'
-import getMembers from '@restorationx/db/queries/organization/getMembers'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
-import { getInferenceList } from '@restorationx/db/queries/project/getProjectDetections'
-import getProjectForOrg from '@restorationx/db/queries/project/getProjectForOrg'
+import getMembers from '@servicegeek/db/queries/organization/getMembers'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
+import { getInferenceList } from '@servicegeek/db/queries/project/getProjectDetections'
+import getProjectForOrg from '@servicegeek/db/queries/project/getProjectForOrg'
 import getUsersForProject, {
   Stakeholders,
-} from '@restorationx/db/queries/project/getUsersForProject'
+} from '@servicegeek/db/queries/project/getUsersForProject'
 import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import getProjectInfo, {
   ProjectInfo,
@@ -22,7 +22,7 @@ import getUserInfo, { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
 import getUserWithAuthStatus, {
   ORG_ACCESS_LEVEL,
 } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { User } from '@supabase/auth-helpers-nextjs'
 import useScheduler, { calenderEvents } from '@utils/hooks/useScheduler'
 import type { GetServerSidePropsContext, NextPage } from 'next'
@@ -126,7 +126,7 @@ const CalenderPage: NextPage<EstimatePageProps> = ({
         renderSecondaryNavigation={() => <ProjectNavigationContainer />}
       >
         <Head>
-          <title>RestorationX - Estimate</title>
+          <title>ServiceGeek - Estimate</title>
           <meta name="description" content="Project Estimate and Details" />
           <link rel="icon" href="/favicon.ico" />
         </Head>

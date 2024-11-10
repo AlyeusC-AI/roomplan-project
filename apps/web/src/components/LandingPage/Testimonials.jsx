@@ -7,7 +7,7 @@ const testimonials = [
   [
     {
       content:
-        'We order 300 roof measurements a year. It cost us almost $20,000 and because of RestorationX, I was able to put that money back into the business and I cant thank them enough for that.',
+        'We order 300 roof measurements a year. It cost us almost $20,000 and because of ServiceGeek, I was able to put that money back into the business and I cant thank them enough for that.',
       author: {
         name: 'Brian Anderson',
         role: 'Wolf Home Services',
@@ -16,7 +16,7 @@ const testimonials = [
     },
     {
       content:
-        'I got to sit down with the owners of RestorationX and tell them what I needed in an app. They immediately got to work building out what I requested and Ive never had such personalized service',
+        'I got to sit down with the owners of ServiceGeek and tell them what I needed in an app. They immediately got to work building out what I requested and Ive never had such personalized service',
       author: {
         name: 'Nicole LaCroix',
         role: 'Independent Adjuster',
@@ -27,7 +27,7 @@ const testimonials = [
   [
     {
       content:
-        'RestorationX has streamlined our process and made us much more profitable. I cant remember what we did without it.',
+        'ServiceGeek has streamlined our process and made us much more profitable. I cant remember what we did without it.',
       author: {
         name: 'Mike Litchauer',
         role: 'Owner, MDL Restoration Inc.',
@@ -66,7 +66,7 @@ export function Testimonials() {
                 <path d="M9.352 4C4.456 7.456 1 13.12 1 19.36c0 5.088 3.072 8.064 6.624 8.064 3.36 0 5.856-2.688 5.856-5.856 0-3.168-2.208-5.472-5.088-5.472-.576 0-1.344.096-1.536.192.48-3.264 3.552-7.104 6.624-9.024L9.352 4zm16.512 0c-4.8 3.456-8.256 9.12-8.256 15.36 0 5.088 3.072 8.064 6.624 8.064 3.264 0 5.856-2.688 5.856-5.856 0-3.168-2.304-5.472-5.184-5.472-.576 0-1.248.096-1.44.192.48-3.264 3.456-7.104 6.528-9.024L25.864 4z" />
               </svg>
               <p className="relative">
-                I got to sit down with the owners of RestorationX and tell them
+                I got to sit down with the owners of ServiceGeek and tell them
                 what I needed in an app. They immediately got to work building
                 out what I requested and I&apos;ve never had such personalized
                 service.
@@ -107,9 +107,9 @@ export function Testimonials() {
                 <path d="M9.352 4C4.456 7.456 1 13.12 1 19.36c0 5.088 3.072 8.064 6.624 8.064 3.36 0 5.856-2.688 5.856-5.856 0-3.168-2.208-5.472-5.088-5.472-.576 0-1.344.096-1.536.192.48-3.264 3.552-7.104 6.624-9.024L9.352 4zm16.512 0c-4.8 3.456-8.256 9.12-8.256 15.36 0 5.088 3.072 8.064 6.624 8.064 3.264 0 5.856-2.688 5.856-5.856 0-3.168-2.304-5.472-5.184-5.472-.576 0-1.248.096-1.44.192.48-3.264 3.456-7.104 6.528-9.024L25.864 4z" />
               </svg>
               <p className="relative">
-                'We order 300 roof measurements a year. It cost us almost $20,000
-                and because of RestorationX, I was able to put that money back
-                into the business and I cant thank them enough for that.'
+                'We order 300 roof measurements a year. It cost us almost
+                $20,000 and because of ServiceGeek, I was able to put that money
+                back into the business and I cant thank them enough for that.'
               </p>
             </div>
             <footer className="mt-8">

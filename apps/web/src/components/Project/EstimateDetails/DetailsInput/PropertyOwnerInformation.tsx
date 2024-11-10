@@ -49,13 +49,13 @@ export default function ProjectOwnerInformation() {
         }))
       } else {
         toast.error(
-          'Updated Failed. If the error persists please contact support@restorationx.app'
+          'Updated Failed. If the error persists please contact support@servicegeek.app'
         )
       }
     } catch (error) {
       console.error(error)
       toast.error(
-        'Updated Failed. If the error persists please contact support@restorationx.app'
+        'Updated Failed. If the error persists please contact support@servicegeek.app'
       )
     }
   }
@@ -78,7 +78,7 @@ export default function ProjectOwnerInformation() {
           description="Record the property location as well as point of contact information
             for your records."
         >
-          <>
+          
             <AutoSaveTextInput
               className="col-span-6 sm:col-span-3"
               defaultValue={projectInfo.clientName}
@@ -122,7 +122,7 @@ export default function ProjectOwnerInformation() {
               onSave={(refferal) => onSave({ refferal })}
               name="Refferal"
               isTextArea={true}
-              title="Refferal
+              title="Refferal"
             />
 
               
@@ -165,7 +165,7 @@ export default function ProjectOwnerInformation() {
                 />
               </div>
             </div>
-          </>
+          
         </Form>
       </FormContainer>
       <FormContainer className="col-span-10 lg:col-span-4">

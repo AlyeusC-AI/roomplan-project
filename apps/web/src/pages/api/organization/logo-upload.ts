@@ -1,8 +1,8 @@
-import getUser from '@restorationx/db/queries/user/getUser'
-import { prisma } from '@restorationx/db'
+import getUser from '@servicegeek/db/queries/user/getUser'
+import { prisma } from '@servicegeek/db'
 
 import { supabaseServiceRole } from '@lib/supabase/supabaseServiceRoleClient'
-import { AccessLevel } from '@restorationx/db'
+import { AccessLevel } from '@servicegeek/db'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import formidable, { File as FormidableFile } from 'formidable'
 import { NextApiRequest, NextApiResponse } from 'next'
@@ -29,8 +29,8 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
     res.status(500).json({ status: 'failed' })
     return
   }
-  const identishotUser = await getUser(user.id)
-  const organizationId = identishotUser?.org?.organization.id
+  const servicegeekUser = await getUser(user.id)
+  const organizationId = servicegeekUser?.org?.organization.id
   if (!organizationId) {
     res.status(500).json({ status: 'failed' })
     return
@@ -38,8 +38,8 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
 
   if (
     !(
-      identishotUser.org?.accessLevel === AccessLevel.admin ||
-      identishotUser.org?.accessLevel === AccessLevel.accountManager
+      servicegeekUser.org?.accessLevel === AccessLevel.admin ||
+      servicegeekUser.org?.accessLevel === AccessLevel.accountManager
     )
   ) {
     res.status(500).json({ status: 'failed' })
@@ -74,7 +74,7 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
     const { data, error } = await supabaseServiceRole.storage
       .from('org-pictures')
       .upload(
-        `${identishotUser.org.organization.publicId}/${logoId}.png`,
+        `${servicegeekUser.org.organization.publicId}/${logoId}.png`,
         imageBuffer,
         {
           cacheControl: '3600',
@@ -84,7 +84,7 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
 
     await prisma.organization.update({
       where: {
-        id: identishotUser.org.organizationId,
+        id: servicegeekUser.org.organizationId,
       },
       data: {
         logoId,

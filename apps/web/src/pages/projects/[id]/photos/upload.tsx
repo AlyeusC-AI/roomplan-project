@@ -1,10 +1,10 @@
 import Camera from '@components/Project/Camera'
-import getProjectForOrg from '@restorationx/db/queries/project/getProjectForOrg'
+import getProjectForOrg from '@servicegeek/db/queries/project/getProjectForOrg'
 import { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
 import getUserWithAuthStatus, {
   ORG_ACCESS_LEVEL,
 } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { User } from '@supabase/auth-helpers-nextjs'
 import type { GetServerSidePropsContext, NextPage } from 'next'
 import Head from 'next/head'
@@ -21,7 +21,7 @@ const EstimateDetailsPage: NextPage<EstimatePageProps> = () => {
   return (
     <>
       <Head>
-        <title>RestorationX - Upload Images</title>
+        <title>ServiceGeek - Upload Images</title>
         <meta name="description" content="Project Estimate and Details" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

@@ -2,16 +2,16 @@ import AppContainer from '@components/layouts/AppContainer'
 import ProjectsNavigationContainer from '@components/Projects/ProjectsNavigationContainer'
 import Organization from '@components/Settings/Organization'
 import { Invitation, Member } from '@components/Settings/Organization/types'
-import getInvitations from '@restorationx/db/queries/invitations/getInvitations'
-import getMembers from '@restorationx/db/queries/organization/getMembers'
-import getOrganization from '@restorationx/db/queries/organization/getOrganization'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
+import getInvitations from '@servicegeek/db/queries/invitations/getInvitations'
+import getMembers from '@servicegeek/db/queries/organization/getMembers'
+import getOrganization from '@servicegeek/db/queries/organization/getOrganization'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
 import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import getUserInfo, { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
 import getUserWithAuthStatus, {
   ORG_ACCESS_LEVEL,
 } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
-import { AccessLevel, SubscriptionStatus } from '@restorationx/db'
+import { AccessLevel, SubscriptionStatus } from '@servicegeek/db'
 import type { GetServerSidePropsContext, NextPage } from 'next'
 import Head from 'next/head'
 import { RecoilRoot } from 'recoil'
@@ -45,7 +45,7 @@ const OrganizationPage: NextPage<OrganizationPageProps> = ({
         renderSecondaryNavigation={() => <ProjectsNavigationContainer />}
       >
         <Head>
-          <title>RestorationX - Organization Settings</title>
+          <title>ServiceGeek - Organization Settings</title>
           <meta
             name="description"
             content="Access organization settings and manage your team"

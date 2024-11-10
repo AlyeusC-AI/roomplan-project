@@ -4,8 +4,8 @@ const LogoTextBlue = () => (
   <Image
     height={575}
     width={2965}
-    src="/images/brand/restorationx-long.svg"
-    alt="RestorationX"
+    src="/images/brand/servicegeek-long.svg"
+    alt="ServiceGeek"
   />
 )
 

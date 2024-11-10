@@ -1,4 +1,4 @@
-import { prisma } from '@restorationx/db'
+import { prisma } from '@servicegeek/db'
 
 const csv = require('csv-parser')
 const fs = require('fs')

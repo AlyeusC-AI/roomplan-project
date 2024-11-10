@@ -3,7 +3,8 @@ import { CheckIcon } from '@heroicons/react/24/outline'
 const features = [
   {
     name: 'Track leads',
-    description: 'Utilizing our fully customizable Kan-Ban board, track all of your leads, projects and clients',
+    description:
+      'Utilizing our fully customizable Kan-Ban board, track all of your leads, projects and clients',
   },
   {
     name: 'Weather maps/data',
@@ -17,8 +18,7 @@ const features = [
   },
   {
     name: 'Job site photos',
-    description:
-      'Quickly and easily navigate through your job site images',
+    description: 'Quickly and easily navigate through your job site images',
   },
   {
     name: 'Roof measurements',
@@ -57,7 +57,8 @@ export default function PlatformFeatures() {
             All-in-one platform
           </p>
           <p className="mt-4 text-lg text-gray-500">
-            Stop paying for over-priced and complicated software. Join RestorationX today. 
+            Stop paying for over-priced and complicated software. Join
+            ServiceGeek today.
           </p>
         </div>
         <div className="mt-12 lg:col-span-2 lg:mt-0">

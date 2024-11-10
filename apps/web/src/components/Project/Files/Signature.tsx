@@ -4,7 +4,7 @@ import UpgradeModal from '@components/UpgradeModal'
 import { Dialog, Transition } from '@headlessui/react'
 import { EllipsisHorizontalIcon } from '@heroicons/react/24/outline'
 import ExpressUtils from '@pdftron/pdfjs-express-utils'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { useRouter } from 'next/router'
 import { useRecoilState } from 'recoil'
 export default function Signature({

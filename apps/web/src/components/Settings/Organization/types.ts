@@ -1,4 +1,4 @@
-import { AccessLevel } from '@restorationx/db'
+import { AccessLevel } from '@servicegeek/db'
 
 export interface Member {
   createdAt?: Date

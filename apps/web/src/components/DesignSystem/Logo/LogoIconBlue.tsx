@@ -4,8 +4,8 @@ const LogoIconBlue = () => (
   <Image
     height={1843}
     width={1613}
-    src="/images/brand/restorationx.svg"
-    alt="RestorationX"
+    src="/images/brand/servicegeek.svg"
+    alt="ServiceGeek"
   />
 )
 

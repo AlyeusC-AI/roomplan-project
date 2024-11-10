@@ -2,7 +2,7 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import SecondaryButton from '@components/DesignSystem/Buttons/SecondaryButton'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline'
-import { InferenceMetaData } from '@restorationx/db/queries/project/getProjectDetections'
+import { InferenceMetaData } from '@servicegeek/db/queries/project/getProjectDetections'
 import { saveAs } from 'file-saver'
 import { useRecoilState } from 'recoil'
 import presignedUrlMapState from '@atoms/presignedUrlMapState'
@@ -71,7 +71,7 @@ const DownloadRoomImages = ({
         console.error(e)
         setIsDownloading(false)
         toast.error(
-          'Failed to download images. Please contact support@restorationx.app if this error persists'
+          'Failed to download images. Please contact support@servicegeek.app if this error persists'
         )
       })
   }

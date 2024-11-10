@@ -1,6 +1,6 @@
-import createGenericRoomReading from '@restorationx/db/queries/room/generic-reading/createGenericRoomReading'
-import deleteGenericRoomReading from '@restorationx/db/queries/room/generic-reading/deleteGenericRoomReading'
-import updateGenericRoomReading from '@restorationx/db/queries/room/generic-reading/updateGenericRoomReading'
+import createGenericRoomReading from '@servicegeek/db/queries/room/generic-reading/createGenericRoomReading'
+import deleteGenericRoomReading from '@servicegeek/db/queries/room/generic-reading/deleteGenericRoomReading'
+import updateGenericRoomReading from '@servicegeek/db/queries/room/generic-reading/updateGenericRoomReading'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

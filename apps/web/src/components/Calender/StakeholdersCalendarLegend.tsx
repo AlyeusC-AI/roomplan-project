@@ -1,5 +1,5 @@
 import UserAvatar from '@components/DesignSystem/UserAvatar'
-import { Stakeholders } from '@restorationx/db/queries/project/getUsersForProject'
+import { Stakeholders } from '@servicegeek/db/queries/project/getUsersForProject'
 import clsx from 'clsx'
 
 const StakeholdersCalendarLegend = ({

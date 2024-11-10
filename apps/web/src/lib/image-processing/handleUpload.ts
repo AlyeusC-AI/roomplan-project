@@ -1,16 +1,16 @@
-import createInference from '@restorationx/db/queries/inference/createInference'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
-import addImageToProject from '@restorationx/db/queries/project/addImageToProject'
+import createInference from '@servicegeek/db/queries/inference/createInference'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
+import addImageToProject from '@servicegeek/db/queries/project/addImageToProject'
 import getOrCreateRoom, {
   getRoomById,
-} from '@restorationx/db/queries/room/getOrCreateRoom'
-import { default as getRestorationXUser } from '@restorationx/db/queries/user/getUser'
+} from '@servicegeek/db/queries/room/getOrCreateRoom'
+import { default as getRestorationXUser } from '@servicegeek/db/queries/user/getUser'
 import {
   AUTOMATIC_ROOM_DETECTION,
   UNKNOWN_ROOM,
 } from '@lib/image-processing/constants'
 import { supabaseServiceRole } from '@lib/supabase/supabaseServiceRoleClient'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import formidable, { File } from 'formidable'
 import { NextApiRequest, NextApiResponse } from 'next'
@@ -86,8 +86,8 @@ const handleUpload = async (req: NextApiRequest, res: NextApiResponse) => {
     const fsdata = await fs.readFile(file.filepath)
     const imageBuffer = Buffer.from(fsdata)
 
-    const identishotUser = await getRestorationXUser(user.id)
-    const supabasePath = `${identishotUser?.org?.organization.publicId}/${
+    const servicegeekUser = await getRestorationXUser(user.id)
+    const supabasePath = `${servicegeekUser?.org?.organization.publicId}/${
       req.query.id
     }/${uuidv4()}_${file.originalFilename}`
 

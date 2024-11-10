@@ -5,7 +5,7 @@ import {
   PropertyData,
   Room,
   RoomReading,
-} from '@restorationx/db'
+} from '@servicegeek/db'
 import { atom } from 'recoil'
 
 export const defaultProjectReportDataState = null

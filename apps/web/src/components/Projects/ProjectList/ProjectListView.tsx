@@ -19,7 +19,7 @@ const Pagination = dynamic(() => import('./Pagination'), {
 import { MoonLoader } from 'react-spinners'
 
 import ProjectListImage from './ProjectListImage'
-import { RouterOutputs } from '@restorationx/api'
+import { RouterOutputs } from '@servicegeek/api'
 const ProjectListView = ({
   redirectTo = 'overview',
   hidePagination,

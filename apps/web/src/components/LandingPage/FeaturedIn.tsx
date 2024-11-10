@@ -51,7 +51,7 @@ export default function FeaturedIn() {
           <blockquote className="mt-10">
             <div className="mx-auto max-w-3xl text-center text-2xl font-medium leading-9 text-gray-900">
               <p>
-                &ldquo;RestorationX offers a feature rich job management
+                &ldquo;ServiceGeek offers a feature rich job management
                 platform.&rdquo;
               </p>
             </div>
@@ -59,7 +59,7 @@ export default function FeaturedIn() {
               <div className="md:flex md:items-center md:justify-center">
                 <div className="mt-3 text-center md:mt-0 md:ml-4 md:flex md:items-center">
                   <div className="text-base font-medium text-gray-900 underline">
-                    <a href="https://candrmagazine.com/announcing-identishot/">
+                    <a href="https://candrmagazine.com/announcing-servicegeek/">
                       Read the full article
                     </a>
                   </div>

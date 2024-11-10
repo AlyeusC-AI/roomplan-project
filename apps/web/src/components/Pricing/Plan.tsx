@@ -109,7 +109,7 @@ function Plan({
           ) : (
             <>
               <PrimaryLink
-                href="mailto:sales@restorationx.app"
+                href="mailto:sales@servicegeek.app"
                 variant={featured ? 'swag' : 'invert-swag'}
                 className="mt-8"
                 aria-label={`Get started with ${name} plan for ${price}`}

@@ -1,6 +1,6 @@
-// import { Organization, User, UserToOrganization } from '@restorationx/db'
+// import { Organization, User, UserToOrganization } from '@servicegeek/db'
 
-import { Project, ProjectStatus } from '@restorationx/db'
+import { Project, ProjectStatus } from '@servicegeek/db'
 
 export interface ProjectInfo {
   name: string

@@ -2,13 +2,13 @@ import { Member } from '@components/Settings/Organization/types'
 import {
   RoomData,
   RoomDataWithoutInferences,
-} from '@restorationx/db/queries/project/getProjectDetections'
-import { Stakeholders } from '@restorationx/db/queries/project/getUsersForProject'
-import { ProjectType } from '@restorationx/db/queries/project/listProjects'
+} from '@servicegeek/db/queries/project/getProjectDetections'
+import { Stakeholders } from '@servicegeek/db/queries/project/getUsersForProject'
+import { ProjectType } from '@servicegeek/db/queries/project/listProjects'
 import { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import { ProjectInfo } from '@lib/serverSidePropsUtils/getProjectInfo'
 import { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { FileObject } from '@supabase/storage-js'
 import { MutableSnapshot } from 'recoil'
 import { PresignedUrlMap } from '@pages/projects/[id]/photos'

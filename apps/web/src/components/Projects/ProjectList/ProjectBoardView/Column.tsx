@@ -1,5 +1,5 @@
 import { useDrop } from 'react-dnd'
-import { ProjectType } from '@restorationx/db/queries/project/listProjects'
+import { ProjectType } from '@servicegeek/db/queries/project/listProjects'
 import clsx from 'clsx'
 
 import Card from './Card'

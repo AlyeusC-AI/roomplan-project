@@ -1,6 +1,6 @@
-import assignUserToProject from '@restorationx/db/queries/project/assignUserToProject'
-import getUsersForProject from '@restorationx/db/queries/project/getUsersForProject'
-import removeUserFromToProject from '@restorationx/db/queries/project/removeUserFromProject'
+import assignUserToProject from '@servicegeek/db/queries/project/assignUserToProject'
+import getUsersForProject from '@servicegeek/db/queries/project/getUsersForProject'
+import removeUserFromToProject from '@servicegeek/db/queries/project/removeUserFromProject'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

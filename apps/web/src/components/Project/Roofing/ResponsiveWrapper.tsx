@@ -11,7 +11,7 @@ import PrimaryButton from '@components/DesignSystem/Buttons/PrimaryButton'
 import MainContent from '@components/layouts/MainContent'
 import { json } from 'micro'
 import subscriptionStatusState from '@atoms/subscriptionStatusState'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import UpgradeModal from '@components/UpgradeModal'
 import { useState } from 'react'
 import PrimaryLink from '@components/DesignSystem/Links/PrimaryLink'
@@ -113,7 +113,7 @@ const ResponsiveWrapper = ({ accessToken }: { accessToken: string }) => {
             subscription_status: subscriptionStatus,
             customer_email: userInfo?.email,
             report_type: 'free', // this block is for free reports
-            support_email: `support+${orgInfo.publicId}@restorationx.app`,
+            support_email: `support+${orgInfo.publicId}@servicegeek.app`,
           }),
         })
         if (ticketRes.ok) {
@@ -124,9 +124,8 @@ const ResponsiveWrapper = ({ accessToken }: { accessToken: string }) => {
           console.error(ticketRes)
         }
 
-
         const supportemail = encodeURIComponent(
-          `support+${orgInfo.publicId}@restorationx.app`
+          `support+${orgInfo.publicId}@servicegeek.app`
         )
         const res = await fetch(
           'https://hooks.slack.com/services/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',
@@ -139,7 +138,7 @@ const ResponsiveWrapper = ({ accessToken }: { accessToken: string }) => {
                   type: 'section',
                   text: {
                     type: 'mrkdwn',
-                    text: `(free) New roof request for ${projectInfo.location}\n\n<https://www.restorationx.app/projects/${router.query.id}/roofing|View Roof>`,
+                    text: `(free) New roof request for ${projectInfo.location}\n\n<https://www.servicegeek.app/projects/${router.query.id}/roofing|View Roof>`,
                   },
                 },
                 {
@@ -156,7 +155,7 @@ const ResponsiveWrapper = ({ accessToken }: { accessToken: string }) => {
                       emoji: true,
                     },
                     value: 'login',
-                    url: `https://www.restorationx.app/login?email=${supportemail}&redirect_type=roof`,
+                    url: `https://www.servicegeek.app/login?email=${supportemail}&redirect_type=roof`,
                     action_id: 'login',
                   },
                 },
@@ -194,7 +193,7 @@ const ResponsiveWrapper = ({ accessToken }: { accessToken: string }) => {
       )
     } catch (e) {
       toast.error(
-        'Roof report request failed. If the error persists please contact support@restorationx.app'
+        'Roof report request failed. If the error persists please contact support@servicegeek.app'
       )
     }
   }
@@ -281,7 +280,7 @@ const ResponsiveWrapper = ({ accessToken }: { accessToken: string }) => {
                   <input
                     type="hidden"
                     name="support_email"
-                    value={`support+${orgInfo.publicId}@restorationx.apps`}
+                    value={`support+${orgInfo.publicId}@servicegeek.apps`}
                   />
                   <PrimaryButton type="submit">
                     Purchase ESX Report

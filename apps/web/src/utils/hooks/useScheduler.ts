@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Project } from '@restorationx/db'
+import { Project } from '@servicegeek/db'
 
 export type createCalenderEventBody = {
   subject: string

@@ -16,7 +16,7 @@ import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import Image from 'next/image'
 import { ClipLoader } from 'react-spinners'
 
-export const BETA_COOKIE = 'identishot_beta_enabled'
+export const BETA_COOKIE = 'servicegeek_beta_enabled'
 
 export default function Login() {
   const router = useRouter()
@@ -76,7 +76,7 @@ export default function Login() {
     return (
       <>
         <Head>
-          <title>Sign In - RestorationX</title>
+          <title>Sign In - ServiceGeek</title>
         </Head>
         <AuthLayout>
           <div className="mt-20">
@@ -84,7 +84,7 @@ export default function Login() {
               Magic link email sent
             </h2>
             <p className="mt-2 text-sm text-gray-700">
-              Check your inbox to find your login link to RestorationX.
+              Check your inbox to find your login link to ServiceGeek.
             </p>
             <p className="mt-2 text-sm text-gray-700">
               Didn&apos;t get an email?{' '}
@@ -114,7 +114,7 @@ export default function Login() {
   return (
     <>
       <Head>
-        <title>Sign In - RestorationX</title>
+        <title>Sign In - ServiceGeek</title>
       </Head>
       <AuthLayout>
         <div className="flex flex-col">

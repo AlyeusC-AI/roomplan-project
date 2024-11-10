@@ -43,9 +43,9 @@ export default function Document(props) {
         <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5" />
         <meta name="msapplication-TileColor" content="#da532c" />
         <meta name="theme-color" content="#ffffff" />
-        <meta property="og:image" content="/images/brand/restorationx.svg" />
-        <meta property="og:url" content="https://www.restorationx.app" />
-        <meta property="og:title" content="RestorationX" />
+        <meta property="og:image" content="/images/brand/servicegeek.svg" />
+        <meta property="og:url" content="https://www.servicegeek.app" />
+        <meta property="og:title" content="ServiceGeek" />
       </Head>
       <body className="flex h-screen flex-col bg-gray-50">
         <Main />

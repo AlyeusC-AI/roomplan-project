@@ -9,7 +9,7 @@ export default function BlogPage({ allPosts }: { allPosts: Post[] }) {
   return (
     <>
       <Head>
-        <title>RestorationX - Blog</title>
+        <title>ServiceGeek - Blog</title>
         <meta
           name="description"
           content="Read about how we are revolutionizing the restoration industry"

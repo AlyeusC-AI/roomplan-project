@@ -1,5 +1,5 @@
 import SecondaryButton from '@components/DesignSystem/Buttons/SecondaryButton'
-import { CostType } from '@restorationx/db'
+import { CostType } from '@servicegeek/db'
 import { SetterOrUpdater } from 'recoil'
 import { CostDataType } from '@atoms/costsState'
 

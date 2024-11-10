@@ -1,4 +1,4 @@
-import createPhotoAccessLink from '@restorationx/db/queries/photo-access-link/createPhotoAccessLink'
+import createPhotoAccessLink from '@servicegeek/db/queries/photo-access-link/createPhotoAccessLink'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

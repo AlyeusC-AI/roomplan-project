@@ -4,10 +4,10 @@ import MainContent from '@components/layouts/MainContent'
 import TabNavigation from '@components/layouts/TabNavigation'
 import ProjectEquipment from '@components/Project/Equipment'
 import ProjectNavigationContainer from '@components/Project/ProjectNavigationContainer'
-import getAllOrganizationEquipment from '@restorationx/db/queries/equipment/getAllOrganizationEquipment'
-import getallProjectEquipment from '@restorationx/db/queries/equipment/getAllProjectEquipment'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
-import getProjectForOrg from '@restorationx/db/queries/project/getProjectForOrg'
+import getAllOrganizationEquipment from '@servicegeek/db/queries/equipment/getAllOrganizationEquipment'
+import getallProjectEquipment from '@servicegeek/db/queries/equipment/getAllProjectEquipment'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
+import getProjectForOrg from '@servicegeek/db/queries/project/getProjectForOrg'
 import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import getProjectInfo, {
   ProjectInfo,
@@ -16,8 +16,8 @@ import getUserInfo, { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
 import getUserWithAuthStatus, {
   ORG_ACCESS_LEVEL,
 } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
-import { SubscriptionStatus } from '@restorationx/db'
-import { RouterOutputs } from '@restorationx/api'
+import { SubscriptionStatus } from '@servicegeek/db'
+import { RouterOutputs } from '@servicegeek/api'
 import type { GetServerSidePropsContext, NextPage } from 'next'
 import Head from 'next/head'
 import { RecoilRoot } from 'recoil'
@@ -57,7 +57,7 @@ const EquipmentPage: NextPage<EquipmentPageProps> = ({
         renderSecondaryNavigation={() => <ProjectNavigationContainer />}
       >
         <Head>
-          <title>RestorationX - Project Files</title>
+          <title>ServiceGeek - Project Files</title>
           <meta name="description" content="Project Files" />
           <link rel="icon" href="/favicon.ico" />
         </Head>

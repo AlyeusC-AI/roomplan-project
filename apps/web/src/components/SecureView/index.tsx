@@ -22,7 +22,7 @@ const SecureView = ({ noAccess }: { noAccess: boolean }) => {
   }
   return (
     <div>
-      <h1 className="mb-6 text-4xl">RestorationX Secure View</h1>
+      <h1 className="mb-6 text-4xl">ServiceGeek Secure View</h1>
       <div className="grid grid-cols-2 border border-gray-200 shadow-sm ">
         <div className="col-span-2 p-3">
           <h4 className="text-lg font-medium">Project Information</h4>

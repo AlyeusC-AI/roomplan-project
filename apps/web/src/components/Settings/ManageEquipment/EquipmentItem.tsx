@@ -4,7 +4,7 @@ import TableData from '@components/DesignSystem/Table/TableData'
 import TableRow from '@components/DesignSystem/Table/TableRow'
 import AutoSaveTextInput from '@components/DesignSystem/TextInput/AutoSaveTextInput'
 import { trpc } from '@utils/trpc'
-import { RouterOutputs } from '@restorationx/api'
+import { RouterOutputs } from '@servicegeek/api'
 import produce from 'immer'
 
 const EquipmentItem = ({

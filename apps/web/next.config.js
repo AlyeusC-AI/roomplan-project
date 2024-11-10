@@ -13,12 +13,12 @@ intercept(interceptStdout)
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  webpack: (config, { isServer}) => {
-    config.resolve.fallback = { fs: false };
+  webpack: (config, { isServer }) => {
+    config.resolve.fallback = { fs: false }
     if (isServer) {
       config.plugins = [...config.plugins, new PrismaPlugin()]
     }
-    return config;
+    return config
   },
   reactStrictMode: true,
   eslint: {
@@ -29,23 +29,22 @@ const nextConfig = {
   productionBrowserSourceMaps: true,
   images: {
     domains: [
-      'ajkybybwzavpsehcfpea.supabase.co',
+      'zmvdimcemmhesgabixlf.supabase.co',
       'assryutwyfriduafbeyu.supabase.co',
       'bit.ly',
     ],
   },
   transpilePackages: [
-    "@restorationx/api",
-    "@restorationx/db",
-    "@restorationx/utils",
+    '@servicegeek/api',
+    '@servicegeek/db',
+    '@servicegeek/utils',
     '@fullcalendar/core',
     '@fullcalendar/common',
     '@fullcalendar/react',
     '@fullcalendar/daygrid',
     '@fullcalendar/timegrid',
-    '@fullcalendar/interaction'
+    '@fullcalendar/interaction',
   ],
-
 }
 
 module.exports = nextConfig

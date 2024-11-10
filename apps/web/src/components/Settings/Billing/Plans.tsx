@@ -26,7 +26,7 @@ const Plans = () => (
       name="Pro"
       price="Contact Us"
       description="For large businesses requiring many seats and large amount of photo storage"
-      href="https://calendly.com/identishot/30min"
+      href="https://calendly.com/servicegeek/30min"
       features={[
         'Create unlimited projects a month',
         'Analyze unlimited images a month',

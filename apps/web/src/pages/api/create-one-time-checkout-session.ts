@@ -1,6 +1,6 @@
-import createCustomer from '@restorationx/db/queries/customers/createCustomer'
-import getCustomer from '@restorationx/db/queries/customers/getCustomer'
-import getUser from '@restorationx/db/queries/user/getUser'
+import createCustomer from '@servicegeek/db/queries/customers/createCustomer'
+import getCustomer from '@servicegeek/db/queries/customers/getCustomer'
+import getUser from '@servicegeek/db/queries/user/getUser'
 import { getStripePriceFromClientID } from '@lib/stripe/getStripePriceFromClientID'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
@@ -40,22 +40,22 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
       return
     }
 
-    const identishotUser = await getUser(user.id)
-    if (!identishotUser) {
+    const servicegeekUser = await getUser(user.id)
+    if (!servicegeekUser) {
       res.redirect('/register')
       return
     }
-    if (!identishotUser.org?.organizationId) {
+    if (!servicegeekUser.org?.organizationId) {
       res.redirect('/projects')
       return
     }
-    const teamMembers = identishotUser.org.organization.users
-    const customer = await getCustomer(identishotUser.org.organizationId)
+    const teamMembers = servicegeekUser.org.organization.users
+    const customer = await getCustomer(servicegeekUser.org.organizationId)
     let customerId = customer ? customer.customerId : null
     if (!customerId) {
       customerId = await createCustomer(
-        identishotUser.org.organizationId,
-        identishotUser.email
+        servicegeekUser.org.organizationId,
+        servicegeekUser.email
       )
     }
     // Create Checkout Sessions from body params.
@@ -63,7 +63,7 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
       mode: 'payment',
       success_url: `${req.headers.origin}/projects/${projectId}/files?alert=roof_report_ordered`,
       customer: customerId,
-      client_reference_id: `${identishotUser.org.organizationId}`,
+      client_reference_id: `${servicegeekUser.org.organizationId}`,
       line_items: [
         {
           price: stripePriceId,

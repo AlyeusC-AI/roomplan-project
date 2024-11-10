@@ -4,7 +4,7 @@ import {
   ChevronDownIcon,
   HomeIcon,
 } from '@heroicons/react/24/outline'
-import { GroupByViews } from '@restorationx/db'
+import { GroupByViews } from '@servicegeek/db'
 import { trpc } from '@utils/trpc'
 
 import FilterLabel from './FilterLabel'

@@ -43,12 +43,12 @@ const UpdateInfo = ({ emailConfirmed }: { emailConfirmed: boolean }) => {
         }))
       } else {
         toast.error(
-          'Updated Failed. If the error persists please contact support@restorationx.app'
+          'Updated Failed. If the error persists please contact support@servicegeek.app'
         )
       }
     } catch (error) {
       toast.error(
-        'Updated Failed. If the error persists please contact support@restorationx.app'
+        'Updated Failed. If the error persists please contact support@servicegeek.app'
       )
     }
   }

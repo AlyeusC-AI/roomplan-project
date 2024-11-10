@@ -1,5 +1,5 @@
 import { ScaleLoader } from 'react-spinners'
-import { GroupByViews, PhotoViews } from '@restorationx/db'
+import { GroupByViews, PhotoViews } from '@servicegeek/db'
 import dynamic from 'next/dynamic'
 
 const ResponsiveWrapper = dynamic(() => import('./ResponsiveWrapper'), {

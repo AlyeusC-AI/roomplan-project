@@ -34,8 +34,9 @@ class ErrorBoundary extends React.Component {
                     <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
                       Something went wrong
                     </h1>
-                    <p className="mt-1 text-base max-w-md text-gray-500">
-                      Please clear your cache and refresh the page. If the issue persists, please contact support.
+                    <p className="mt-1 max-w-md text-base text-gray-500">
+                      Please clear your cache and refresh the page. If the issue
+                      persists, please contact support.
                     </p>
                   </div>
                   <div className="mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6">
@@ -46,7 +47,7 @@ class ErrorBoundary extends React.Component {
                       Go back home
                     </Link>
                     <Link
-                      href="mailto:support@restorationx.app"
+                      href="mailto:support@servicegeek.app"
                       className="inline-flex items-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
                       Contact support

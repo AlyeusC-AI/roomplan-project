@@ -9,7 +9,7 @@ import {
 import BlurImage from '@components/DesignSystem/BlurImage'
 import { Dialog, Transition } from '@headlessui/react'
 import useSupabaseImage from '@utils/hooks/useSupabaseImage'
-import { RouterOutputs } from '@restorationx/api'
+import { RouterOutputs } from '@servicegeek/api'
 import ParentSize from '@visx/responsive/lib/components/ParentSize'
 import clsx from 'clsx'
 import probe from 'probe-image-size'

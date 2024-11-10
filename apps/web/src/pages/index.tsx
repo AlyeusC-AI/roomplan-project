@@ -14,9 +14,9 @@ export default function Home() {
   return (
     <>
       <Head>
-        <meta name="identishot" content="app-id=6444232239"></meta>
+        <meta name="servicegeek" content="app-id=6444232239"></meta>
         <title>
-          RestorationX - A job management platform built for restoration
+          ServiceGeek - A job management platform built for restoration
         </title>
         <meta
           name="description"

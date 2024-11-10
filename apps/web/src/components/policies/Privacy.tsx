@@ -46,7 +46,7 @@ const Privacy = () => (
           <p>
             <strong>Application</strong> means the software program provided by
             the Company downloaded by You on any electronic device, named
-            RestorationX
+            ServiceGeek
           </p>
         </li>
         <li>
@@ -174,13 +174,13 @@ const Privacy = () => (
         </li>
         <li>
           <p>
-            <strong>Website</strong> refers to RestorationX, accessible from{' '}
+            <strong>Website</strong> refers to ServiceGeek, accessible from{' '}
             <a
-              href="https://www.restorationx.app"
+              href="https://www.servicegeek.app"
               rel="external nofollow noopener noreferrer"
               target="_blank"
             >
-              https://www.restorationx.app
+              https://www.servicegeek.app
             </a>
           </p>
         </li>
@@ -1487,7 +1487,7 @@ const Privacy = () => (
         California resident, You can contact Us:
       </p>
       <ul>
-        <li>By email: support@restorationx.app</li>
+        <li>By email: support@servicegeek.app</li>
       </ul>
       <p>
         Only You, or a person registered with the California Secretary of State
@@ -1703,7 +1703,7 @@ const Privacy = () => (
         If you have any questions about this Privacy Policy, You can contact us:
       </p>
       <ul>
-        <li>By email: support@restorationx.app</li>
+        <li>By email: support@servicegeek.app</li>
       </ul>
     </div>
   </div>

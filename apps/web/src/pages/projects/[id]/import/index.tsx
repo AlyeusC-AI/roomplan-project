@@ -4,12 +4,12 @@ import MainContent from '@components/layouts/MainContent'
 import TabNavigation from '@components/layouts/TabNavigation'
 import Import from '@components/Project/Import'
 import ProjectNavigationContainer from '@components/Project/ProjectNavigationContainer'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
-import getProjectForOrg from '@restorationx/db/queries/project/getProjectForOrg'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
+import getProjectForOrg from '@servicegeek/db/queries/project/getProjectForOrg'
 import getUserWithAuthStatus, {
   ORG_ACCESS_LEVEL,
 } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import type { GetServerSidePropsContext, NextPage } from 'next'
 import Head from 'next/head'
 import { RecoilRoot } from 'recoil'
@@ -32,7 +32,7 @@ const ImportPage: NextPage<ImportPageProps> = ({ subscriptionStatus }) => {
         renderSecondaryNavigation={() => <ProjectNavigationContainer />}
       >
         <Head>
-          <title>RestorationX - Import</title>
+          <title>ServiceGeek - Import</title>
           <meta name="description" content="Import an xactimate estimate" />
           <link rel="icon" href="/favicon.ico" />
         </Head>

@@ -1,4 +1,4 @@
-import { Equipment } from '@restorationx/db'
+import { Equipment } from '@servicegeek/db'
 import { atom } from 'recoil'
 
 export type EquipmentStateType = Omit<Equipment, 'id' | 'organizationId'>

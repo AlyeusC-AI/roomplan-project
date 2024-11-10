@@ -9,7 +9,7 @@
     <mj-section>
       <mj-column>
         <mj-image
-          src="https://www.restorationx.app/images/brand/restorationx.png"
+          src="https://www.servicegeek.app/images/brand/servicegeek.png"
           width="200px"
         />
       </mj-column>
@@ -17,10 +17,10 @@
     <mj-section>
       <mj-column width="400px">
         <mj-text align="center" font-size="24px"
-          >You've been invited to RestorationX</mj-text
+          >You've been invited to ServiceGeek</mj-text
         >
         <mj-text align="center" font-size="14px" color="#525252">
-          You have been invited to join an organization on RestorationX. Please
+          You have been invited to join an organization on ServiceGeek. Please
           follow the link below to join your team.
         </mj-text>
         <mj-button background-color="#2563eb" href="{{ .ConfirmationURL }}"
@@ -31,7 +31,7 @@
     <mj-section>
       <mj-column>
         <mj-text align="center" font-size="12px" color="#626262"
-          >RestorationX © 2022 Halo Solutions, Inc. All Rights Reserved.</mj-text
+          >ServiceGeek © 2022 Halo Solutions, Inc. All Rights Reserved.</mj-text
         >
         <mj-text align="center" font-size="12px" color="#626262"
           >614 N Dupont Highway Suite 210 Dover, De 19901Company’s</mj-text

@@ -1,4 +1,4 @@
-import updateRoomDimensionData from '@restorationx/db/queries/room/updateRoomDimension'
+import updateRoomDimensionData from '@servicegeek/db/queries/room/updateRoomDimension'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 

@@ -4,11 +4,11 @@ import MainContent from '@components/layouts/MainContent'
 import TabNavigation from '@components/layouts/TabNavigation'
 import ProjectNavigationContainer from '@components/Project/ProjectNavigationContainer'
 import Report from '@components/Project/Report'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
 import {
   RoomData,
   RoomDataWithoutInferences,
-} from '@restorationx/db/queries/project/getProjectDetections'
+} from '@servicegeek/db/queries/project/getProjectDetections'
 import getReportData from '@lib/pages/getReportData'
 import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import getProjectInfo, {
@@ -16,7 +16,7 @@ import getProjectInfo, {
 } from '@lib/serverSidePropsUtils/getProjectInfo'
 import getUserInfo, { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
 import getPresignedUrlMapFromInferenceList from '@lib/supabase/getPresignedUrlMapFromInferenceList'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import { User } from '@supabase/auth-helpers-nextjs'
 import type { GetServerSidePropsContext, NextPage } from 'next'
 import Head from 'next/head'
@@ -77,7 +77,7 @@ const ReportPage: NextPage<ReportPageProps> = ({
         renderSecondaryNavigation={() => <ProjectNavigationContainer />}
       >
         <Head>
-          <title>RestorationX - Estimate</title>
+          <title>ServiceGeek - Estimate</title>
           <meta name="description" content="Project Estimate and Details" />
           <link rel="icon" href="/favicon.ico" />
         </Head>

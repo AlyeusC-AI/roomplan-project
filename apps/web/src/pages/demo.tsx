@@ -8,7 +8,7 @@ export default function Demo() {
     <>
       <Head>
         <title>
-          RestorationX - A job management platform built for restoration
+          ServiceGeek - A job management platform built for restoration
         </title>
         <meta
           name="description"

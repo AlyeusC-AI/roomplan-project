@@ -45,7 +45,7 @@ export function Faqs() {
           <p className="mt-4 text-lg tracking-tight text-slate-700">
             If you can&rsquo;t find what you&rsquo;re looking for, email our
             {` `}
-            <a href="mailto:support@restorationx.app" className="text-primary">
+            <a href="mailto:support@servicegeek.app" className="text-primary">
               support team
             </a>{' '}
             and we will get back to you.

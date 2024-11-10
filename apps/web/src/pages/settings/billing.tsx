@@ -1,17 +1,17 @@
 import AppContainer from '@components/layouts/AppContainer'
 import ProjectsNavigationContainer from '@components/Projects/ProjectsNavigationContainer'
 import Billing from '@components/Settings/Billing'
-import getOrganization from '@restorationx/db/queries/organization/getOrganization'
-import getSubcriptionStatus from '@restorationx/db/queries/organization/getSubscriptionStatus'
-import getPrice from '@restorationx/db/queries/prices/getPrice'
-import getProduct from '@restorationx/db/queries/products/getProduct'
-import getSubscriptions from '@restorationx/db/queries/subscriptions/getSubscriptions'
+import getOrganization from '@servicegeek/db/queries/organization/getOrganization'
+import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
+import getPrice from '@servicegeek/db/queries/prices/getPrice'
+import getProduct from '@servicegeek/db/queries/products/getProduct'
+import getSubscriptions from '@servicegeek/db/queries/subscriptions/getSubscriptions'
 import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
 import getUserInfo, { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
 import getUserWithAuthStatus, {
   ORG_ACCESS_LEVEL,
 } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
-import { SubscriptionStatus } from '@restorationx/db'
+import { SubscriptionStatus } from '@servicegeek/db'
 import type { GetServerSidePropsContext, NextPage } from 'next'
 import Head from 'next/head'
 import { RecoilRoot } from 'recoil'
@@ -54,7 +54,7 @@ const BillingPage: NextPage<BillingPageProps> = ({
         renderSecondaryNavigation={() => <ProjectsNavigationContainer />}
       >
         <Head>
-          <title>RestorationX - Organization Settings</title>
+          <title>ServiceGeek - Organization Settings</title>
           <meta
             name="description"
             content="Access organization settings and manage your team"

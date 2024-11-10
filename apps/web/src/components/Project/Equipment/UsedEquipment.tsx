@@ -7,7 +7,7 @@ import TableHead from '@components/DesignSystem/Table/TableHead'
 import TableHeader from '@components/DesignSystem/Table/TableHeader'
 import TableRow from '@components/DesignSystem/Table/TableRow'
 import { trpc } from '@utils/trpc'
-import { RouterOutputs } from '@restorationx/api'
+import { RouterOutputs } from '@servicegeek/api'
 import produce from 'immer'
 import { useRouter } from 'next/router'
 

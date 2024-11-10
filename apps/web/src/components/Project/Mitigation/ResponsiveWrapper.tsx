@@ -1,5 +1,5 @@
 import { useMediaQuery } from 'react-responsive'
-import { GroupByViews, PhotoViews } from '@restorationx/db'
+import { GroupByViews, PhotoViews } from '@servicegeek/db'
 import { useRouter } from 'next/router'
 
 import MitigationTable from './MitigationTable'

@@ -1,5 +1,5 @@
 import { supabaseServiceRole } from '@lib/supabase/supabaseServiceRoleClient'
-import prisma from '@restorationx/db'
+import prisma from '@servicegeek/db'
 import { v4 } from 'uuid'
 
 const main = async () => {

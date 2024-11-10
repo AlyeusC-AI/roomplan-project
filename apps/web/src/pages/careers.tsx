@@ -12,7 +12,7 @@ export default function Careers() {
     <>
       <Head>
         <title>
-          RestorationX - A job management platform built for restoration
+          ServiceGeek - A job management platform built for restoration
         </title>
         <meta
           name="description"
@@ -148,7 +148,7 @@ export default function Careers() {
                           <Menu.Item>
                             {({ active }) => (
                               <a
-                                href="mailto:matt@restorationx.app"
+                                href="mailto:matt@servicegeek.app"
                                 className={classNames(
                                   active
                                     ? 'bg-gray-100 text-gray-900'

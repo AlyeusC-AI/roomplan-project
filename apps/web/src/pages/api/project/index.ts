@@ -1,4 +1,4 @@
-import createProject from '@restorationx/db/queries/project/createProject'
+import createProject from '@servicegeek/db/queries/project/createProject'
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 
