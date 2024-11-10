@@ -36,9 +36,9 @@ export default function SettingsScreen({
         data: { session },
       } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
-      const identishotUrl = getConstants().identishotUrl!;
+      const servicegeekUrl = getConstants().servicegeekUrl!;
 
-      const res = await fetch(`${identishotUrl}/api/v1/user`, {
+      const res = await fetch(`${servicegeekUrl}/api/v1/user`, {
         method: "DELETE",
         headers: {
           "auth-token": accessToken || "",
@@ -72,7 +72,7 @@ export default function SettingsScreen({
       <View mt="3" p="2" borderColor="red.600" borderWidth="4">
         <Heading size="md">Danger Zone</Heading>
         <Text pt="2" pb="2">
-          To delete RestorationX account
+          To delete ServiceGeek account
         </Text>
         <Button
           colorScheme="red"

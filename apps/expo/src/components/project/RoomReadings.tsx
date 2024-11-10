@@ -248,7 +248,7 @@ export default function RoomReadings({
           <HStack direction="row" space="2">
             <Text color="white">
               Could not add reading. If this error persits, please contact
-              support@restorationx.com
+              support@servicegeek.com
             </Text>
           </HStack>
         ),
@@ -272,7 +272,7 @@ export default function RoomReadings({
           <HStack direction="row" space="2">
             <Text color="white">
               Could not add reading. If this error persits, please contact
-              support@restorationx.com
+              support@servicegeek.com
             </Text>
           </HStack>
         ),

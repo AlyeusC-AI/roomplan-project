@@ -12,10 +12,10 @@ import React from "react";
 import FilterByAssignees from "./FilterByAssignees";
 import { getConstants } from "../../lib/constants";
 import { Assets, Icon } from "react-native-ui-lib";
-import { useDebounce } from "@restorationx/utils";
-import { RouterOutputs } from "@restorationx/api";
+import { useDebounce } from "@servicegeek/utils";
+import { RouterOutputs } from "@servicegeek/api";
 
-const identishotUrl = getConstants().identishotUrl!;
+const servicegeekUrl = getConstants().servicegeekUrl!;
 
 export default function DashboardHeader({
   teamMembers,

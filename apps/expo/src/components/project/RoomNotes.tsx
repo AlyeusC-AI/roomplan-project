@@ -25,7 +25,7 @@ import TrashIcon from "../../../assets/icons/Trash.svg";
 import { api, RouterOutputs } from "../../utils/api";
 import { useRecoilState } from "recoil";
 import userSessionState from "../../atoms/user";
-import { useDebounce } from "@restorationx/utils";
+import { useDebounce } from "@servicegeek/utils";
 import produce from "immer";
 
 export function RoomTextArea({

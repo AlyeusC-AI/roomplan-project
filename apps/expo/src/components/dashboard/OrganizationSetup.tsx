@@ -27,7 +27,7 @@ import { api } from "../../utils/api";
 import { useRecoilState } from "recoil";
 import userSessionState from "../../atoms/user";
 
-const identishotUrl = getConstants().identishotUrl!;
+const servicegeekUrl = getConstants().servicegeekUrl!;
 
 const sizes = [
   { id: "1", size: "1-10" },
@@ -76,7 +76,7 @@ export default function OrganizationSetup({
           <HStack direction="row" space="2">
             <Text color="white">
               Could not create organization. If this error persits, please
-              contact support@restorationx.com
+              contact support@servicegeek.com
             </Text>
           </HStack>
         ),

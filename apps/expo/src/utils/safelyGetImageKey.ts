@@ -1,4 +1,4 @@
-import { RouterOutputs } from "@restorationx/api";
+import { RouterOutputs } from "@servicegeek/api";
 
 const safelyGetImageUrl = (
   urlMap: RouterOutputs["mobile"]["getDashboardData"]["urlMap"],

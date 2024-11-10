@@ -1,6 +1,6 @@
 import { Box, Center, Select, View } from "native-base";
 import React from "react";
-import { RouterOutputs } from "@restorationx/api";
+import { RouterOutputs } from "@servicegeek/api";
 import { Assets, Icon } from "react-native-ui-lib";
 import { SvgUri } from "react-native-svg";
 

@@ -19,7 +19,7 @@ import {
   useCameraDevices,
 } from "react-native-vision-camera";
 import { getConstants } from "../lib/constants";
-import { RouterOutputs } from "@restorationx/api";
+import { RouterOutputs } from "@servicegeek/api";
 import RoomSelection from "../components/RoomSelection";
 import { useRecoilState } from "recoil";
 import userSessionState from "../atoms/user";
@@ -27,7 +27,7 @@ import { createClient } from "@supabase/supabase-js";
 import uuid from "react-native-uuid";
 import { api } from "../utils/api";
 
-const identishotUrl = getConstants().identishotUrl!;
+const servicegeekUrl = getConstants().servicegeekUrl!;
 
 export const supabaseServiceRole = createClient(
   getConstants().supabaseUrl,

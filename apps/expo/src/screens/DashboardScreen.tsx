@@ -21,7 +21,7 @@ import OrganizationSetup from "../components/dashboard/OrganizationSetup";
 import ProjectListItem from "../components/ProjectListItem";
 import DashboardHeader from "../components/dashboard/Header";
 
-const identishotUrl = getConstants().identishotUrl!;
+const servicegeekUrl = getConstants().servicegeekUrl!;
 
 export default function Dashboard({
   navigation,

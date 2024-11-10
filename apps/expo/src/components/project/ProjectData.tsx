@@ -23,7 +23,7 @@ import { RootStackParamList } from "../../types/Navigation";
 import { api } from "../../utils/api";
 
 import { Linking, Platform, StyleSheet } from "react-native";
-import { useDebounce } from "@restorationx/utils";
+import { useDebounce } from "@servicegeek/utils";
 import Collapsible from "react-native-collapsible";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 // @ts-expect-error

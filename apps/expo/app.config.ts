@@ -1,16 +1,19 @@
 import { ExpoConfig } from "@expo/config-types";
 
 const config: ExpoConfig = {
-  name: "RestorationX",
-  slug: "identishot-mobile",
-  owner: "maxidentishot",
+  name: "ServiceGeek",
+  slug: "sevicegeek-mobile",
+  owner: "servicegeek",
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
   version: "2.1.0",
   updates: {
     fallbackToCacheTimeout: 0,
-    url: "https://u.expo.dev/eb906afc-2727-4535-b90d-14aa443fce6e",
+    url: "https://u.expo.dev/f62cbfa4-7182-478d-b382-e6077f40db9b",
+  },
+  runtimeVersion: {
+    policy: "sdkVersion",
   },
   // runtimeVersion: "1.0.0",
   assetBundlePatterns: ["**/*"],
@@ -20,7 +23,7 @@ const config: ExpoConfig = {
     backgroundColor: "#ffffff",
   },
   android: {
-    package: "com.maxidentishot.identishotmobile",
+    package: "com.servicegeek.servicegeekmobile",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#FFFFFF",
@@ -28,7 +31,7 @@ const config: ExpoConfig = {
     permissions: ["com.google.android.gms.permission.AD_ID"],
   },
   ios: {
-    bundleIdentifier: "com.maxidentishot.identishotmobile",
+    bundleIdentifier: "com.servicegeek.servicegeekmobile",
     supportsTablet: true,
   },
   web: {
@@ -36,7 +39,7 @@ const config: ExpoConfig = {
   },
   extra: {
     eas: {
-      projectId: "eb906afc-2727-4535-b90d-14aa443fce6e",
+      projectId: "f62cbfa4-7182-478d-b382-e6077f40db9b",
     },
   },
   plugins: [

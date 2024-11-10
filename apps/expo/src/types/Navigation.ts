@@ -1,4 +1,4 @@
-import { RouterOutputs } from "@restorationx/api";
+import { RouterOutputs } from "@servicegeek/api";
 import { RoomData } from "./ProjectType";
 
 export type RootStackParamList = {

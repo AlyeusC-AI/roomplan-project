@@ -55,12 +55,10 @@ export default function LoginScreen({
           alignItems="center"
           justifyContent="center"
         >
-          <View w="100%" h={70}>
+          <View w={300} h={100}>
             <Image
-              source={{
-                uri: "https://restorationx.app/images/brand/restorationx-long.png",
-              }}
-              alt="RestorationX Logo"
+              source={require("../../assets/large_logo.png")}
+              alt="ServiceGeek Logo"
               margin={2}
               style={{
                 flex: 1,

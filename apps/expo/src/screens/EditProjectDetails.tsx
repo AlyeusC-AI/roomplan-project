@@ -21,7 +21,7 @@ import userSessionState from "../atoms/user";
 import { api } from "../utils/api";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 
-const identishotUrl = getConstants().identishotUrl!;
+const servicegeekUrl = getConstants().servicegeekUrl!;
 
 export default function EditProjectDetails({
   navigation,
@@ -74,7 +74,7 @@ export default function EditProjectDetails({
           <HStack direction="row" space="2">
             <Text color="white">
               Could not update project. If this error persits, please contact
-              support@restorationx.com
+              support@servicegeek.com
             </Text>
           </HStack>
         ),

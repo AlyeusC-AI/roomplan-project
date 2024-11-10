@@ -119,7 +119,7 @@ export default function ProjectPhotos({
             <Text color="white">
               Could not open the camera. It's possible camera access was denied
               for this application. If the issue persists, please contact
-              support@restorationx.com
+              support@servicegeek.com
             </Text>
           </HStack>
         ),

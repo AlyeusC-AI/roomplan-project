@@ -19,7 +19,7 @@ import {
 import { ScrollView } from "react-native";
 import safelyGetImageUrl from "../../utils/safelyGetImageKey";
 import { MaterialIcons } from "@expo/vector-icons";
-import { RouterOutputs } from "@restorationx/api";
+import { RouterOutputs } from "@servicegeek/api";
 
 type Inferences = NonNullable<
   RouterOutputs["mobile"]["getProjectImages"]["rooms"]

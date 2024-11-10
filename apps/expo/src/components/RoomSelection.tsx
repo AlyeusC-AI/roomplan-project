@@ -3,7 +3,7 @@ import React from "react";
 import { Entypo } from "@expo/vector-icons";
 import { TeamMember } from "../types/ProjectType";
 import { Platform } from "react-native";
-import { RouterOutputs } from "@restorationx/api";
+import { RouterOutputs } from "@servicegeek/api";
 
 const RoomSelection = ({
   rooms,

@@ -4,7 +4,7 @@ import { formatDistance } from "date-fns";
 import { ColorSchemeType } from "native-base/lib/typescript/components/types";
 import Address from "./Address";
 import { Platform } from "react-native";
-import { RouterOutputs } from "@restorationx/api";
+import { RouterOutputs } from "@servicegeek/api";
 import safelyGetImageUrl from "../utils/safelyGetImageKey";
 
 // @ts-expect-error

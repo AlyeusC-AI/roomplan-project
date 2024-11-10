@@ -20,7 +20,7 @@ import { useRecoilState } from "recoil";
 import userSessionState from "../atoms/user";
 import { api } from "../utils/api";
 
-const identishotUrl = getConstants().identishotUrl!;
+const servicegeekUrl = getConstants().servicegeekUrl!;
 
 export default function RoomCreationScreen({
   navigation,
@@ -53,7 +53,7 @@ export default function RoomCreationScreen({
             {/* <MaterialIcons name="error" size={24} color="red" /> */}
             <Text color="white">
               Could not create room. If this error persits, please contact
-              support@restorationx.com
+              support@servicegeek.com
             </Text>
           </HStack>
         ),

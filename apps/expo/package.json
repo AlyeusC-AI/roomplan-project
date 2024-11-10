@@ -1,5 +1,5 @@
 {
-  "name": "@restorationx/expo",
+  "name": "@servicegeek/expo",
   "version": "0.1.0",
   "main": "index.js",
   "scripts": {
@@ -29,9 +29,9 @@
     "@react-navigation/drawer": "6.5.0",
     "@react-navigation/native": "6.0.13",
     "@react-navigation/native-stack": "6.9.1",
-    "@restorationx/api": "*",
-    "@restorationx/db": "*",
-    "@restorationx/utils": "*",
+    "@servicegeek/api": "*",
+    "@servicegeek/db": "*",
+    "@servicegeek/utils": "*",
     "@supabase/supabase-js": "2.14.0",
     "@tanstack/react-query": "4.28.0",
     "@trpc/client": "10.18.0",
@@ -79,9 +79,9 @@
   },
   "devDependencies": {
     "@babel/core": "7.12.9",
-    "@restorationx/eslint-config": "*",
-    "@restorationx/tailwind-config": "*",
-    "@restorationx/tsconfig": "*",
+    "@servicegeek/eslint-config": "*",
+    "@servicegeek/tailwind-config": "*",
+    "@servicegeek/tsconfig": "*",
     "@types/react": "18.0.14",
     "@types/react-native": "0.69.1",
     "react-native-codegen": "^0.69.2",

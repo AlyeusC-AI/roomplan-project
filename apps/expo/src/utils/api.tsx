@@ -5,13 +5,13 @@ import { httpBatchLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import superjson from "superjson";
 
-import { type AppRouter } from "@restorationx/api";
+import { type AppRouter } from "@servicegeek/api";
 
 /**
  * A set of typesafe hooks for consuming your API.
  */
 export const api = createTRPCReact<AppRouter>();
-export { type RouterInputs, type RouterOutputs } from "@restorationx/api";
+export { type RouterInputs, type RouterOutputs } from "@servicegeek/api";
 
 /**
  * Extend this function when going to production by
@@ -27,7 +27,7 @@ const getBaseUrl = () => {
    * baseUrl to your production API URL.
    */
   if (!__DEV__) {
-    return "https://restorationx.app";
+    return "https://servicegeek.app";
   }
   // REPLACE WITH NGROK URL FOR LOCAL TESTING
   // return `http://localhost:3002`;

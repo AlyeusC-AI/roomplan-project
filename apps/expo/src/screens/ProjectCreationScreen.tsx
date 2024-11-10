@@ -22,7 +22,7 @@ import { api } from "../utils/api";
 import { useRecoilState } from "recoil";
 import userSessionState from "../atoms/user";
 
-const identishotUrl = getConstants().identishotUrl!;
+const servicegeekUrl = getConstants().servicegeekUrl!;
 
 export default function ProjectCreationScreen({
   navigation,
@@ -52,7 +52,7 @@ export default function ProjectCreationScreen({
           <HStack direction="row" space="2">
             <Text color="white">
               Could not create project. If this error persits, please contact
-              support@restorationx.com
+              support@servicegeek.com
             </Text>
           </HStack>
         ),

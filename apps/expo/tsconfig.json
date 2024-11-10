@@ -1,5 +1,5 @@
 {
-  "extends": "@restorationx/tsconfig/base.json",
+  "extends": "@servicegeek/tsconfig/base.json",
   "compilerOptions": {
     "jsx": "react-native",
     "types": ["nativewind/types", "webpack-env"]
