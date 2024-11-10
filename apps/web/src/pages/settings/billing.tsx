@@ -62,11 +62,13 @@ const BillingPage: NextPage<BillingPageProps> = ({
           <link rel="icon" href="/favicon.ico" />
         </Head>
 
-        <Billing
-          status={status}
-          planInfo={planInfo}
-          productInfo={productInfo}
-        />
+        {process.env.PRICING_ENABLED === 'true' && (
+          <Billing
+            status={status}
+            planInfo={planInfo}
+            productInfo={productInfo}
+          />
+        )}
       </AppContainer>
     </RecoilRoot>
   )

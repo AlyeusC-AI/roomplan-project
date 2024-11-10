@@ -79,14 +79,14 @@ function MobileNavigation() {
             className="absolute inset-x-0 top-full mt-4 flex origin-top flex-col rounded-2xl bg-white p-4 text-lg tracking-tight text-slate-900 shadow-xl ring-1 ring-slate-900/5"
           >
             <MobileNavLink href="/#features">Features</MobileNavLink>
-            <MobileNavLink href="/#pricing">Pricing</MobileNavLink>
+            {process.env.PRICING_ENABLED === "true" && <MobileNavLink href="/#pricing">Pricing</MobileNavLink>}
             <MobileNavLink href="/about-us">About Us</MobileNavLink>
             <MobileNavLink href="https://blog.servicegeek.app">
               Blog
             </MobileNavLink>
-            <MobileNavLink href="https://knowledge.servicegeek.app/">
+            {/* <MobileNavLink href="https://knowledge.servicegeek.app/">
               Learn
-            </MobileNavLink>
+            </MobileNavLink> */}
             <MobileNavLink href="/demo">Book a Demo</MobileNavLink>
           </Popover.Panel>
         </Transition.Child>
@@ -118,7 +118,7 @@ export function Header() {
             </Link>
             <div className="hidden md:flex md:gap-x-4">
               <NavLink href="/#features">Features</NavLink>
-              <NavLink href="/#pricing">Pricing</NavLink>
+              {process.env.PRICING_ENABLED == "true" && <NavLink href="/#pricing">Pricing</NavLink>}
               <NavLink className="hidden lg:block" href="/about-us">
                 About Us
               </NavLink>
@@ -128,12 +128,12 @@ export function Header() {
               >
                 Blog
               </NavLink>
-              <NavLink
+              {/* <NavLink
                 className="hidden xl:block"
                 href="https://knowledge.servicegeek.app/"
               >
                 Learn
-              </NavLink>
+              </NavLink> */}
               <NavLink href="/demo">Book a Demo</NavLink>
               <NavLink className="hidden xl:block" href="/careers">
                 Careers

@@ -44,7 +44,7 @@ export function Hero() {
       >  
         <iframe  
           className="absolute inset-0 h-full w-full"  
-          src="https://www.youtube.com/watch?v=5NQXaLtI-6M"  
+          src="https://www.youtube.com/embed?v=5NQXaLtI-6M"  
           frameBorder="0"  
         ></iframe>  
       </div>  

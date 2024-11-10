@@ -226,7 +226,7 @@ export default function Content({
                   )
                 })}
               </div>
-              <h4 className="mt-8 mb-2 text-sm font-bold text-white">
+              {/* <h4 className="mt-8 mb-2 text-sm font-bold text-white">
                 Resources
               </h4>
               <div className="flex flex-col space-y-3">
@@ -251,9 +251,9 @@ export default function Content({
                     </div>
                   </Link>
                 ))}
-              </div>
+              </div> */}
             </div>
-            <div className="flex flex-col">
+            {process.env.PRICING_ENABLED === "true" && <div className="flex flex-col">
               {(userInfo?.isAdmin ||
                 userInfo?.accessLevel === AccessLevel.admin) && (
                 <PrimaryLink
@@ -264,7 +264,7 @@ export default function Content({
                   Upgrade
                 </PrimaryLink>
               )}
-            </div>
+            </div>}
           </div>
         </nav>
       )}

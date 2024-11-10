@@ -57,7 +57,7 @@ const Terms = () => (
           <p>
             <strong>Company</strong> (referred to as either &quot;the
             Company&quot;, &quot;We&quot;, &quot;Us&quot; or &quot;Our&quot; in
-            this Agreement) refers to Halo Solutions INC, 614 N. Dupont Highway,
+            this Agreement) refers to HOSK Media INC, 614 N. Dupont Highway,
             Suite 210, Kent, Delaware 19901.
           </p>
         </li>

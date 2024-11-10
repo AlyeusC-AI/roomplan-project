@@ -58,7 +58,10 @@ export default function ProjectsNavigationContainer() {
         icon: ArrowPathIcon,
       })
     }
-    if (userInfo?.isAdmin || userInfo?.accessLevel === AccessLevel.admin) {
+    if (
+      process.env.PRICING_ENABLED === 'true' &&
+      (userInfo?.isAdmin || userInfo?.accessLevel === AccessLevel.admin)
+    ) {
       navList.push({
         name: 'Plan & Billing',
         href: '/settings/billing',

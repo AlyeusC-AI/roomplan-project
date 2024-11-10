@@ -87,7 +87,7 @@ function Plan({
           </li>
         ))}
       </ul>
-      {isAuthed ? (
+      {isAuthed && process.env.PRICING_ENABLED === "true" ? (
         <>
           {priceId ? (
             <form

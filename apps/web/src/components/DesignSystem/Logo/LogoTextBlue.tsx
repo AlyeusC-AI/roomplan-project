@@ -2,8 +2,9 @@ import Image from 'next/image'
 
 const LogoTextBlue = () => (
   <Image
-    height={575}
-    width={2965}
+    height={100}
+    width={250}
+    style={{ alignContent: "start" }}
     src="/images/brand/servicegeek-long.svg"
     alt="ServiceGeek"
   />

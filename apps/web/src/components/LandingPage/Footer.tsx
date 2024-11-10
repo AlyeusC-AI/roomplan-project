@@ -9,17 +9,17 @@ const navigation = {
     { name: 'Job Management', href: '#' },
     { name: 'Restoration', href: '#' },
   ],
-  support: [
-    { name: 'Pricing', href: '/pricing' },
-    {
-      name: 'Documentation',
-      href: 'https://knowledge.servicegeek.app/',
-    },
-    {
-      name: 'Guides',
-      href: 'https://knowledge.servicegeek.app/',
-    },
-  ],
+  // support: [
+  //   { name: 'Pricing', href: '/pricing' },
+  //   {
+  //     name: 'Documentation',
+  //     href: 'https://knowledge.servicegeek.app/',
+  //   },
+  //   {
+  //     name: 'Guides',
+  //     href: 'https://knowledge.servicegeek.app/',
+  //   },
+  // ],
   company: [
     { name: 'About', href: '/about-us' },
     { name: 'Blog', href: 'https://blog.servicegeek.app' },
@@ -144,7 +144,7 @@ export function Footer() {
         </div>
         <div className="mt-12 border-t border-gray-200 pt-8">
           <p className="text-base text-gray-400 xl:text-center">
-            &copy; {new Date().getFullYear()} Halo Solutions, Inc. All rights
+            &copy; {new Date().getFullYear()} HOSK Media, Inc. All rights
             reserved.
           </p>
         </div>

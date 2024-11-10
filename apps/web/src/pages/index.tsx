@@ -28,7 +28,7 @@ export default function Home() {
         <Hero />
         <PrimaryFeatures />
         <PlatformFeatures />
-        <PricingOptions />
+        {process.env.PRICING_ENABLED === 'true' && <PricingOptions />}
         <FeaturedIn />
         <Testimonials />
         <Partners />
