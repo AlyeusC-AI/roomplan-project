@@ -1,5 +1,5 @@
-import { type RoomReadingType } from "@restorationx/db";
-import createGenericRoomReading from "@restorationx/db/queries/room/generic-reading/createGenericRoomReading";
+import { type RoomReadingType } from "@servicegeek/db";
+import createGenericRoomReading from "@servicegeek/db/queries/room/generic-reading/createGenericRoomReading";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../trpc";

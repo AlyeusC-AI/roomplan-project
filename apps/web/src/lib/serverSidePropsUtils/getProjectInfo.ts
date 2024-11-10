@@ -31,6 +31,7 @@ export interface ProjectInfo {
     roofPitch: string
   }
   id: number
+  refferal?: string
 }
 
 const getProjectInfo = (project: Project) => {

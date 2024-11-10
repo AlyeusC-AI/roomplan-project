@@ -1,11 +1,8 @@
 import { useState } from 'react'
-import { useState } from 'react'
-import SecondaryButton, {
-  ButtonProps,
-} from '@components/DesignSystem/Buttons/SecondaryButton'
+import SecondaryButton from '@components/DesignSystem/Buttons/SecondaryButton'
 import TertiaryButton from '@components/DesignSystem/Buttons/TertiaryButton'
 import AutoSaveTextInput from '@components/DesignSystem/TextInput/AutoSaveTextInput'
-import { TrashIcon } from '@heroicons/react/solid'
+import TrashIcon from '@heroicons/react/24/solid/TrashIcon'
 import { RoomDataWithoutInferences } from '@servicegeek/db/queries/project/getProjectDetections'
 import { RoomReadingType } from '@servicegeek/db'
 import useAmplitudeTrack from '@utils/hooks/useAmplitudeTrack'
@@ -148,13 +145,13 @@ const GenericRoomReadings = ({
         <h5 className="mt-4">Dehumidifier Readings</h5>
       )}
       <div className="mt-4 flex items-center justify-start">
-        <SecondaryButton<ButtonProps>
+        <SecondaryButton
           loading={isCreatingGeneric}
           onClick={() => onCreateGenericReading()}
         >
           Add Dehumidifer Reading
         </SecondaryButton>
-        <TertiaryButton<ButtonProps>
+        <TertiaryButton
           variant="danger"
           loading={isDeletingReading}
           onClick={() => onDeleteReadings()}

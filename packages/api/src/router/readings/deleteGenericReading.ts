@@ -1,4 +1,4 @@
-import { default as removeGenericRoomReading } from "@restorationx/db/queries/room/generic-reading/deleteGenericRoomReading";
+import { default as removeGenericRoomReading } from "@servicegeek/db/queries/room/generic-reading/deleteGenericRoomReading";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../trpc";

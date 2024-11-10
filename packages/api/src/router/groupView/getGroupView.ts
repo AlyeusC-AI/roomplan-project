@@ -1,4 +1,4 @@
-import { prisma } from "@restorationx/db";
+import { prisma } from "@servicegeek/db";
 
 import { protectedProcedure } from "../../trpc";
 import requireUser from "../../utils/requireUser";

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
 import requireUser from "../../utils/requireUser";
-import addNoteToImage from "@restorationx/db/queries/project/addNoteToImage";
+import addNoteToImage from "@servicegeek/db/queries/project/addNoteToImage";
 
 const createImageNote = protectedProcedure
   .input(
@@ -19,7 +19,7 @@ const createImageNote = protectedProcedure
       input.projectPublicId,
       input.imageId,
       input.body,
-      input.mentions,
+      input.mentions
     );
   });
 

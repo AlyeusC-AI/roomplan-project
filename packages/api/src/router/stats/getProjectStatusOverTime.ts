@@ -1,5 +1,5 @@
-import getClosedChartData from "@restorationx/db/queries/project/stats/getClosedChartData";
-import getOpenedChartData from "@restorationx/db/queries/project/stats/getOpenedChartData";
+import getClosedChartData from "@servicegeek/db/queries/project/stats/getClosedChartData";
+import getOpenedChartData from "@servicegeek/db/queries/project/stats/getOpenedChartData";
 
 import { protectedProcedure } from "../../trpc";
 import requireOrganization from "../../utils/requireOrganization";

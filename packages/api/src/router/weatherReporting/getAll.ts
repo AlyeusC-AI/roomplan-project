@@ -1,4 +1,4 @@
-import getAllWeatherReportItemsByProject from "@restorationx/db/queries/weather-reporting/getAllWeatherReportItemsByProject";
+import getAllWeatherReportItemsByProject from "@servicegeek/db/queries/weather-reporting/getAllWeatherReportItemsByProject";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../trpc";

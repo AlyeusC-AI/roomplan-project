@@ -1,4 +1,4 @@
-import { prisma } from "@restorationx/db";
+import { prisma } from "@servicegeek/db";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../trpc";

@@ -1,4 +1,4 @@
-import { default as createNotificationHelper } from "@restorationx/db/queries/notification/createNotification";
+import { default as createNotificationHelper } from "@servicegeek/db/queries/notification/createNotification";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../trpc";

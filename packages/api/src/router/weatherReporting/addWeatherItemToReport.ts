@@ -1,4 +1,4 @@
-import createWeatherReportItem from "@restorationx/db/queries/weather-reporting/createWeatherReportItem";
+import createWeatherReportItem from "@servicegeek/db/queries/weather-reporting/createWeatherReportItem";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../trpc";

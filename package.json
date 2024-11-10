@@ -13,7 +13,7 @@
     "build:dev:ios": "turbo build:dev:ios"
   },
   "devDependencies": {
-    "@restorationx/eslint-config": "*",
+    "@servicegeek/eslint-config": "*",
     "eslint": "^8.37.0",
     "prettier": "^2.5.1",
     "turbo": "latest"

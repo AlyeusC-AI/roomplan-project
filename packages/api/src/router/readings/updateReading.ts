@@ -1,4 +1,4 @@
-import updateRoomReading from "@restorationx/db/queries/room/reading/updateRoomReading";
+import updateRoomReading from "@servicegeek/db/queries/room/reading/updateRoomReading";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../trpc";

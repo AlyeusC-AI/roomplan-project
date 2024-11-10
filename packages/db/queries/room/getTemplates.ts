@@ -1,6 +1,6 @@
 import { prisma } from "../../";
 
-import templates from "@restorationx/templates";
+import templates from "@servicegeek/templates";
 
 import getProjectForOrg from "../project/getProjectForOrg";
 import getUser from "../user/getUser";
@@ -11,8 +11,8 @@ const getTemplates = async (
   roomId: string,
   fetchAll: boolean = false
 ) => {
-  const identishotUser = await getUser(userId);
-  const organizationId = identishotUser?.org?.organization.id;
+  const servicegeekUser = await getUser(userId);
+  const organizationId = servicegeekUser?.org?.organization.id;
   if (!organizationId) return { failed: true, reason: "no-org" };
 
   const project = await getProjectForOrg(projectPublicId, organizationId);

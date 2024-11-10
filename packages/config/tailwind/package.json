@@ -1,5 +1,5 @@
 {
-  "name": "@restorationx/tailwind-config",
+  "name": "@servicegeek/tailwind-config",
   "version": "0.1.0",
   "main": "index.ts",
   "license": "MIT",

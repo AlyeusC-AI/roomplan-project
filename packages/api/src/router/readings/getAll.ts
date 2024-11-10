@@ -1,4 +1,4 @@
-import getAllRoomReadings from "@restorationx/db/queries/room/reading/getAllRoomReadings";
+import getAllRoomReadings from "@servicegeek/db/queries/room/reading/getAllRoomReadings";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../trpc";

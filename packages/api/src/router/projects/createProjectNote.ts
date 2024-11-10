@@ -1,4 +1,4 @@
-import addNoteToProject from "@restorationx/db/queries/project/addNoteToProject";
+import addNoteToProject from "@servicegeek/db/queries/project/addNoteToProject";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../trpc";

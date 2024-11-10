@@ -1,4 +1,4 @@
-import getallProjectEquipment from "@restorationx/db/queries/equipment/getAllProjectEquipment";
+import getallProjectEquipment from "@servicegeek/db/queries/equipment/getAllProjectEquipment";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../trpc";

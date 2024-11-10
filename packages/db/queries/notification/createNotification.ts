@@ -23,8 +23,8 @@ const createNotification = async ({
   projectPublicId?: string;
   excludeCreator?: boolean;
 }) => {
-  const identishotUser = await getUser(userId);
-  const organizationId = identishotUser?.org?.organization.id;
+  const servicegeekUser = await getUser(userId);
+  const organizationId = servicegeekUser?.org?.organization.id;
   if (!organizationId) return null;
 
   // Create Notifications for every assignee of a project
@@ -63,7 +63,7 @@ const createNotification = async ({
 
   // Create Notifications for every assignee of a organization
   if (notify === "everyone") {
-    let userIds = identishotUser?.org?.organization.users.map(
+    let userIds = servicegeekUser?.org?.organization.users.map(
       (member) => member.user.id
     );
     if (!userIds) return null;

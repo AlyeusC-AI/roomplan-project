@@ -1,4 +1,4 @@
-import createProject from "@restorationx/db/queries/project/createProject";
+import createProject from "@servicegeek/db/queries/project/createProject";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../trpc";

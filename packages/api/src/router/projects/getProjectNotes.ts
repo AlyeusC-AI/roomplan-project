@@ -1,10 +1,10 @@
-import { prisma } from "@restorationx/db";
+import { prisma } from "@servicegeek/db";
 import { z } from "zod";
 
 import { mobileProcedure, protectedProcedure } from "../../trpc";
 import requireOrganization from "../../utils/requireOrganization";
 import requireUser from "../../utils/requireUser";
-import getProjectNotesForProject from "@restorationx/db/queries/project/getProjectNotesForProject";
+import getProjectNotesForProject from "@servicegeek/db/queries/project/getProjectNotesForProject";
 const PAGE_COUNT = 10;
 
 const getProjectNotes = protectedProcedure
@@ -15,9 +15,9 @@ const getProjectNotes = protectedProcedure
   )
   .query(async ({ input, ctx }) => {
     const user = await requireUser(ctx.user?.id);
- 
+
     const data = await getProjectNotesForProject(input.projectId);
-    console.log('getProjectNotes', data)
+    console.log("getProjectNotes", data);
     return data;
   });
 

@@ -8,8 +8,8 @@ export type ReadingData = {
 };
 
 const getRoomReadings = async (userId: string, projectPublicId: string) => {
-  const identishotUser = await getUser(userId);
-  const organizationId = identishotUser?.org?.organization.id;
+  const servicegeekUser = await getUser(userId);
+  const organizationId = servicegeekUser?.org?.organization.id;
   if (!organizationId) {
     console.error("No org");
     return [];

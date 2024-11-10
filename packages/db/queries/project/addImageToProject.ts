@@ -32,8 +32,8 @@ const addImageToProject = async (
   projectPublicId: string,
   key: string
 ) => {
-  const identishotUser = await getUser(userId);
-  const organizationId = identishotUser?.org?.organization.id;
+  const servicegeekUser = await getUser(userId);
+  const organizationId = servicegeekUser?.org?.organization.id;
   if (!organizationId) return null;
   return addImageToProjectByOrganizationId(
     organizationId,

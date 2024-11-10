@@ -78,94 +78,91 @@ export default function ProjectOwnerInformation() {
           description="Record the property location as well as point of contact information
             for your records."
         >
-          
-            <AutoSaveTextInput
-              className="col-span-6 sm:col-span-3"
-              defaultValue={projectInfo.clientName}
-              onSave={(clientName) => onSave({ clientName })}
-              name="clientName"
-              title="Client Name"
-              ignoreInvalid
-            />
+          <AutoSaveTextInput
+            className="col-span-6 sm:col-span-3"
+            defaultValue={projectInfo.clientName}
+            onSave={(clientName) => onSave({ clientName })}
+            name="clientName"
+            title="Client Name"
+            ignoreInvalid
+          />
 
-            <AutoSaveTextInput
-              className="col-span-6 sm:col-span-3"
-              defaultValue={`${projectInfo.assignmentNumber || ''}`}
-              onSave={(assignmentNumber) => onSave({ assignmentNumber })}
-              name="assignmentNumber"
-              title="Assignment Number"
-              ignoreInvalid
-            />
+          <AutoSaveTextInput
+            className="col-span-6 sm:col-span-3"
+            defaultValue={`${projectInfo.assignmentNumber || ''}`}
+            onSave={(assignmentNumber) => onSave({ assignmentNumber })}
+            name="assignmentNumber"
+            title="Assignment Number"
+            ignoreInvalid
+          />
 
-            <AutoSaveTextInput
-              className="col-span-6 sm:col-span-3"
-              defaultValue={projectInfo.clientPhoneNumber}
-              onSave={(clientPhoneNumber) => onSave({ clientPhoneNumber })}
-              name="clientPhoneNumber"
-              title="Client Phone number"
-              ignoreInvalid
-              isPhonenumber
-            />
+          <AutoSaveTextInput
+            className="col-span-6 sm:col-span-3"
+            defaultValue={projectInfo.clientPhoneNumber}
+            onSave={(clientPhoneNumber) => onSave({ clientPhoneNumber })}
+            name="clientPhoneNumber"
+            title="Client Phone number"
+            ignoreInvalid
+            isPhonenumber
+          />
 
-            <AutoSaveTextInput
-              className="col-span-6 sm:col-span-3"
-              defaultValue={projectInfo.clientEmail}
-              onSave={(clientEmail) => onSave({ clientEmail })}
-              name="clientEmail"
-              title="Client Email"
-              ignoreInvalid
-            />
+          <AutoSaveTextInput
+            className="col-span-6 sm:col-span-3"
+            defaultValue={projectInfo.clientEmail}
+            onSave={(clientEmail) => onSave({ clientEmail })}
+            name="clientEmail"
+            title="Client Email"
+            ignoreInvalid
+          />
 
-            <AutoSaveTextInput
-              className="col-span-6"
-              defaultValue={projectInfo.refferal}
-              onSave={(refferal) => onSave({ refferal })}
-              name="Refferal"
-              isTextArea={true}
-              title="Refferal"
-            />
+          <AutoSaveTextInput
+            className="col-span-6"
+            defaultValue={projectInfo.refferal ?? ''}
+            onSave={(refferal) => onSave({ refferal })}
+            name="Refferal"
+            isTextArea={true}
+            title="Refferal"
+          />
 
-              
-            <AutoSaveTextInput
-              className="col-span-6"
-              defaultValue={projectInfo.claimSummary}
-              onSave={(claimSummary) => onSave({ claimSummary })}
-              name="claimSummary"
-              isTextArea={true}
-              title="Claim summary"
-            />
+          <AutoSaveTextInput
+            className="col-span-6"
+            defaultValue={projectInfo.claimSummary}
+            onSave={(claimSummary) => onSave({ claimSummary })}
+            name="claimSummary"
+            isTextArea={true}
+            title="Claim summary"
+          />
 
-            <div className="col-span-6 flex flex-col justify-between">
-              <InputLabel htmlFor="propertyAddress" className="mb-2">
-                Property Address
-              </InputLabel>
+          <div className="col-span-6 flex flex-col justify-between">
+            <InputLabel htmlFor="propertyAddress" className="mb-2">
+              Property Address
+            </InputLabel>
 
-              <div className="flex">
-                <GooglePlacesAutocomplete
-                  apiKey={GOOGLE_MAPS_API_KEY}
-                  language="en"
-                  style={{ boxShadow: 'none' }}
-                  className="block w-full rounded-md border-[1px] border-gray-300 px-2 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  options={{
-                    types: [],
-                  }}
-                  id="propertyAddress"
-                  defaultValue={projectInfo.location}
-                  onPlaceSelected={(place) => {
-                    if (place && place.formatted_address) {
-                      onSave({ location: place.formatted_address })
-                    }
-                  }}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                    e.preventDefault()
-                    if (e.target.value) {
-                      debouncedChangeHandler({ location: e.target.value })
-                    }
-                  }}
-                />
-              </div>
+            <div className="flex">
+              <GooglePlacesAutocomplete
+                apiKey={GOOGLE_MAPS_API_KEY}
+                language="en"
+                style={{ boxShadow: 'none' }}
+                className="block w-full rounded-md border-[1px] border-gray-300 px-2 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                options={{
+                  types: [],
+                }}
+                id="propertyAddress"
+                defaultValue={projectInfo.location}
+                onPlaceSelected={(place) => {
+                  if (place && place.formatted_address) {
+                    onSave({ location: place.formatted_address })
+                  }
+                }}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                  e.preventDefault()
+                  if (e.target.value) {
+                    debouncedChangeHandler({ location: e.target.value })
+                  }
+                }}
+              />
             </div>
-          
+          </div>
         </Form>
       </FormContainer>
       <FormContainer className="col-span-10 lg:col-span-4">

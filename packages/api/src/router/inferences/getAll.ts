@@ -1,4 +1,4 @@
-import getFilteredInferenceList from "@restorationx/db/queries/project/getFilteredInferenceList";
+import getFilteredInferenceList from "@servicegeek/db/queries/project/getFilteredInferenceList";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../trpc";

@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { prisma } from "@restorationx/db";
+import { prisma } from "@servicegeek/db";
 
 import { mobileProcedure } from "../../trpc";
 import requireUser from "../../utils/requireUser";
-import createProject from "@restorationx/db/queries/project/createProject";
+import createProject from "@servicegeek/db/queries/project/createProject";
 import requireOrganization from "../../utils/requireOrganization";
 import { TRPCError } from "@trpc/server";
 import requireProject from "../../utils/requireProject";

@@ -1,5 +1,5 @@
-import { prisma } from "@restorationx/db";
-import getMembers from "@restorationx/db/queries/organization/getMembers";
+import { prisma } from "@servicegeek/db";
+import getMembers from "@servicegeek/db/queries/organization/getMembers";
 import { z } from "zod";
 
 import { mobileProcedure } from "../../trpc";

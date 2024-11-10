@@ -16,8 +16,8 @@ const updateRoomNote = async (
   noteId: string,
   body: string
 ) => {
-  const identishotUser = await getUser(userId);
-  const organizationId = identishotUser?.org?.organization.id;
+  const servicegeekUser = await getUser(userId);
+  const organizationId = servicegeekUser?.org?.organization.id;
   if (!organizationId) {
     console.error("No org");
     return null;
@@ -66,7 +66,7 @@ const updateRoomNote = async (
           action: NotesAuditAction.updated,
           body,
           userId,
-          userName: `${identishotUser.firstName} ${identishotUser.lastName}`,
+          userName: `${servicegeekUser.firstName} ${servicegeekUser.lastName}`,
         },
       },
     },

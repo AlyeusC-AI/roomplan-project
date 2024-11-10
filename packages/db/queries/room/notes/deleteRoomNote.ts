@@ -15,8 +15,8 @@ const deleteRoomNote = async (
   roomId: string,
   noteId: string
 ) => {
-  const identishotUser = await getUser(userId);
-  const organizationId = identishotUser?.org?.organization.id;
+  const servicegeekUser = await getUser(userId);
+  const organizationId = servicegeekUser?.org?.organization.id;
   if (!organizationId) {
     console.error("No org");
     return null;
@@ -65,7 +65,7 @@ const deleteRoomNote = async (
           action: NotesAuditAction.deleted,
           body: note.body,
           userId,
-          userName: `${identishotUser.firstName} ${identishotUser.lastName}`,
+          userName: `${servicegeekUser.firstName} ${servicegeekUser.lastName}`,
         },
       },
     },

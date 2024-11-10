@@ -1,5 +1,5 @@
-import { prisma } from "@restorationx/db";
-import createRoomNote from "@restorationx/db/queries/room/notes/createRoomNote";
+import { prisma } from "@servicegeek/db";
+import createRoomNote from "@servicegeek/db/queries/room/notes/createRoomNote";
 import { z } from "zod";
 
 import { mobileProcedure } from "../../trpc";

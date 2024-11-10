@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Webcam from 'react-webcam'
 import PrimaryButton from '@components/DesignSystem/Buttons/PrimaryButton'
 import TertiaryButton from '@components/DesignSystem/Buttons/TertiaryButton'
@@ -15,9 +15,11 @@ const videoConstraints = {
 const Toolbar = ({
   getScreenshot,
   isMobile,
+  ref
 }: {
   getScreenshot: (screenshotDimensions?: any) => string | null
-  isMobile: boolean
+  isMobile: boolean,
+  ref: React.RefObject<Webcam>
 }) => {
   const [processingImagesCount, setProcessingImagesCount] = useState(0)
   const [isClosing, setIsClosing] = useState(false)
@@ -25,7 +27,6 @@ const Toolbar = ({
   const [imgSrc, setImgSrc] = useState('')
   const [flashOn, setFlashOn] = useState(false)
   const router = useRouter()
-  const webcamRef = useRef<Webcam>(null)
 
   const processImage = (url: string) => {
     setProcessingImagesCount((prevCount) => prevCount + 1)
@@ -59,7 +60,8 @@ const Toolbar = ({
 
   const toggleFlash = () => {
     setFlashOn((prevState) => !prevState)
-    webcamRef.current?.video?.setVideoConstraints({
+    // @ts-ignore
+    ref.current?.video?.setVideoConstraints({
       ...videoConstraints,
       torch: !flashOn,
     })
@@ -152,6 +154,8 @@ const Camera = () => {
     )
   }, [])
 
+  const webcamRef = useRef<Webcam>(null)
+
   return (
     <div className="absolute top-0 left-0 bottom-0 h-full w-full overflow-hidden bg-black">
       <Webcam
@@ -164,7 +168,7 @@ const Camera = () => {
       >
         {/* @ts-expect-error */}
         {({ getScreenshot }) => (
-          <Toolbar getScreenshot={getScreenshot} isMobile={isMobile} />
+          <Toolbar getScreenshot={getScreenshot} isMobile={isMobile} ref={webcamRef} />
         )}
       </Webcam>
     </div>

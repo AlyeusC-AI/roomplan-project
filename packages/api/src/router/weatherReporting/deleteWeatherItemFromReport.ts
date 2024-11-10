@@ -1,4 +1,4 @@
-import deleteWeatherReportItem from "@restorationx/db/queries/weather-reporting/removeWeatherItemFromReport";
+import deleteWeatherReportItem from "@servicegeek/db/queries/weather-reporting/removeWeatherItemFromReport";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../trpc";

@@ -1,4 +1,4 @@
-import getAllOrganizationEquipment from "@restorationx/db/queries/equipment/getAllOrganizationEquipment";
+import getAllOrganizationEquipment from "@servicegeek/db/queries/equipment/getAllOrganizationEquipment";
 
 import { protectedProcedure } from "../../trpc";
 import requireUser from "../../utils/requireUser";

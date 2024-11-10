@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { mobileProcedure } from "../../trpc";
 import requireUser from "../../utils/requireUser";
-import createProject from "@restorationx/db/queries/project/createProject";
+import createProject from "@servicegeek/db/queries/project/createProject";
 import requireOrganization from "../../utils/requireOrganization";
 import { TRPCError } from "@trpc/server";
 

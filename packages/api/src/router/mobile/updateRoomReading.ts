@@ -1,5 +1,5 @@
-import { prisma } from "@restorationx/db";
-import { calculateGpp } from "@restorationx/db/queries/room/reading/updateRoomReading";
+import { prisma } from "@servicegeek/db";
+import { calculateGpp } from "@servicegeek/db/queries/room/reading/updateRoomReading";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 

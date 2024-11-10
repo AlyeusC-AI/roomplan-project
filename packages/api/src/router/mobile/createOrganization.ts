@@ -3,8 +3,8 @@ import { z } from "zod";
 import { mobileProcedure } from "../../trpc";
 import requireUser from "../../utils/requireUser";
 import { supabaseServiceRole } from "../../utils/supabaseServiceRoleClient";
-import createInvitation from "@restorationx/db/queries/organization/createInvitation";
-import createOrg from "@restorationx/db/queries/user/createOrg";
+import createInvitation from "@servicegeek/db/queries/organization/createInvitation";
+import createOrg from "@servicegeek/db/queries/user/createOrg";
 
 const createOrganization = mobileProcedure
   .input(
@@ -23,7 +23,7 @@ const createOrganization = mobileProcedure
       ""
     );
     try {
-      const supportUser = `support+${org.org?.organization.publicId}@restorationx.app`;
+      const supportUser = `support+${org.org?.organization.publicId}@servicegeek.app`;
       const invitation = await createInvitation(user.id, supportUser);
       const result = await supabaseServiceRole.auth.admin.inviteUserByEmail(
         supportUser,
@@ -32,7 +32,7 @@ const createOrganization = mobileProcedure
             orgId: invitation.orgId,
             inviteId: invitation.inviteId,
             isSupportUser: true,
-            firstName: "RestorationX",
+            firstName: "ServiceGeek",
             lastName: "Support",
           },
         }

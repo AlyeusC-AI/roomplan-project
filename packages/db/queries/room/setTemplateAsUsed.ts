@@ -1,6 +1,6 @@
 import { prisma } from "../../";
 
-import templates from "@restorationx/templates";
+import templates from "@servicegeek/templates";
 import { v4 as uuidv4 } from "uuid";
 
 import getProjectForOrg from "../project/getProjectForOrg";
@@ -13,8 +13,8 @@ const setTemplateAsUsed = async (
   templateCode: string,
   excludedItems?: number[]
 ) => {
-  const identishotUser = await getUser(userId);
-  const organizationId = identishotUser?.org?.organization.id;
+  const servicegeekUser = await getUser(userId);
+  const organizationId = servicegeekUser?.org?.organization.id;
   if (!organizationId) return { failed: true, reason: "no-org" };
 
   const project = await getProjectForOrg(projectPublicId, organizationId);

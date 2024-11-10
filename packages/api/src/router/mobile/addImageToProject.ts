@@ -1,5 +1,5 @@
-import { prisma } from "@restorationx/db";
-import getMembers from "@restorationx/db/queries/organization/getMembers";
+import { prisma } from "@servicegeek/db";
+import getMembers from "@servicegeek/db/queries/organization/getMembers";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
@@ -7,11 +7,11 @@ import { mobileProcedure } from "../../trpc";
 import requireOrganization from "../../utils/requireOrganization";
 import requireProject from "../../utils/requireProject";
 import requireUser from "../../utils/requireUser";
-import createInference from "@restorationx/db/queries/inference/createInference";
-import addImage from "@restorationx/db/queries/project/addImageToProject";
+import createInference from "@servicegeek/db/queries/inference/createInference";
+import addImage from "@servicegeek/db/queries/project/addImageToProject";
 import getOrCreateRoom, {
   getRoomById,
-} from "@restorationx/db/queries/room/getOrCreateRoom";
+} from "@servicegeek/db/queries/room/getOrCreateRoom";
 export const UNKNOWN_ROOM = "Unknown Room";
 
 const addImageToProject = mobileProcedure

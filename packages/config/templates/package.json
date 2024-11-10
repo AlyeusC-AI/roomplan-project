@@ -1,5 +1,5 @@
 {
-  "name": "@restorationx/templates",
+  "name": "@servicegeek/templates",
   "version": "0.0.0",
   "private": true,
   "main": "./index.ts",
@@ -12,7 +12,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@restorationx/tsconfig": "*",
-    "@restorationx/eslint-config": "*"
+    "@servicegeek/tsconfig": "*",
+    "@servicegeek/eslint-config": "*"
   }
 }

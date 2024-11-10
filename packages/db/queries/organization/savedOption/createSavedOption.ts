@@ -1,4 +1,4 @@
-import { createOption } from "@restorationx/utils/createOption";
+import { createOption } from "@servicegeek/utils/createOption";
 
 import { prisma, SavedOptionType } from "../../../";
 import { v4 } from "uuid";

@@ -1,5 +1,5 @@
-import { prisma } from "@restorationx/db";
-import { GroupByViews } from "@restorationx/db";
+import { prisma } from "@servicegeek/db";
+import { GroupByViews } from "@servicegeek/db";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../trpc";

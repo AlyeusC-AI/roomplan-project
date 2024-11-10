@@ -1,10 +1,10 @@
-import { SubscriptionStatus } from "@restorationx/db";
-import createInference from "@restorationx/db/queries/inference/createInference";
-import { getSubcriptionStatusFromOrganizationId } from "@restorationx/db/queries/organization/getSubscriptionStatus";
-import { addImageToProjectByOrganizationId } from "@restorationx/db/queries/project/addImageToProject";
+import { SubscriptionStatus } from "@servicegeek/db";
+import createInference from "@servicegeek/db/queries/inference/createInference";
+import { getSubcriptionStatusFromOrganizationId } from "@servicegeek/db/queries/organization/getSubscriptionStatus";
+import { addImageToProjectByOrganizationId } from "@servicegeek/db/queries/project/addImageToProject";
 import getOrCreateRoom, {
   getRoomById,
-} from "@restorationx/db/queries/room/getOrCreateRoom";
+} from "@servicegeek/db/queries/room/getOrCreateRoom";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 

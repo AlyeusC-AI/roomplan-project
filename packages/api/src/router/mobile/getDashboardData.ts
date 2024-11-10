@@ -1,11 +1,11 @@
-import { prisma } from "@restorationx/db";
+import { prisma } from "@servicegeek/db";
 import { z } from "zod";
 
 import { mobileProcedure } from "../../trpc";
 import requireOrganization from "../../utils/requireOrganization";
 import requireUser from "../../utils/requireUser";
 import { supabaseServiceRole } from "../../utils/supabaseServiceRoleClient";
-import getMembers from "@restorationx/db/queries/organization/getMembers";
+import getMembers from "@servicegeek/db/queries/organization/getMembers";
 
 const PAGE_COUNT = 10;
 

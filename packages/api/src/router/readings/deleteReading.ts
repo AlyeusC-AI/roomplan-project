@@ -1,4 +1,4 @@
-import deleteRoomReading from "@restorationx/db/queries/room/reading/deleteRoomReading";
+import deleteRoomReading from "@servicegeek/db/queries/room/reading/deleteRoomReading";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../trpc";

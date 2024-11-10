@@ -1,4 +1,4 @@
-import { prisma } from "@restorationx/db";
+import { prisma } from "@servicegeek/db";
 import { v4 } from "uuid";
 import { z } from "zod";
 

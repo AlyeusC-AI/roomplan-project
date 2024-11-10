@@ -1,6 +1,6 @@
 import { prisma } from "../../";
 
-import { isNullOrUndefined } from "@restorationx/utils/isNullOrUndefined";
+import { isNullOrUndefined } from "@servicegeek/utils/isNullOrUndefined";
 
 const updateUser = async ({
   id,
