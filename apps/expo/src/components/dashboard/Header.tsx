@@ -12,7 +12,7 @@ import React from "react";
 import FilterByAssignees from "./FilterByAssignees";
 import { getConstants } from "../../lib/constants";
 import { Assets, Icon } from "react-native-ui-lib";
-import { useDebounce } from "@servicegeek/utils";
+import { useDebounce } from "../../utils/debounce";
 import { RouterOutputs } from "@servicegeek/api";
 
 const servicegeekUrl = getConstants().servicegeekUrl!;

@@ -34,7 +34,7 @@ import { api } from "../../utils/api";
 import * as Clipboard from "expo-clipboard";
 
 import { Linking, Platform, StyleSheet } from "react-native";
-import { useDebounce } from "@servicegeek/utils";
+import { useDebounce } from "../../utils/debounce";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 // @ts-expect-error
 import MapIcon from "../../../assets/icons/Map.svg";

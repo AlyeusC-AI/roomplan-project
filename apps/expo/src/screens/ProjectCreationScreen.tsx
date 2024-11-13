@@ -47,6 +47,7 @@ export default function ProjectCreationScreen({
         projectId: publicId,
       });
     } catch (e) {
+      console.error(e);
       toast.show({
         description: (
           <HStack direction="row" space="2">

@@ -7,15 +7,12 @@ const config: ExpoConfig = {
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
-  version: "2.1.0",
+  version: "1.0.0",
+  runtimeVersion: "1.0.0",
   updates: {
     fallbackToCacheTimeout: 0,
     url: "https://u.expo.dev/f62cbfa4-7182-478d-b382-e6077f40db9b",
   },
-  runtimeVersion: {
-    policy: "sdkVersion",
-  },
-  // runtimeVersion: "1.0.0",
   assetBundlePatterns: ["**/*"],
   splash: {
     image: "./assets/splash.png",
@@ -32,7 +29,7 @@ const config: ExpoConfig = {
   },
   ios: {
     bundleIdentifier: "com.servicegeek.servicegeekmobile",
-    supportsTablet: true,
+    supportsTablet: false,
   },
   web: {
     favicon: "./assets/favicon.png",
@@ -43,6 +40,7 @@ const config: ExpoConfig = {
     },
   },
   plugins: [
+    ["expo-font"],
     [
       "react-native-vision-camera",
       {
@@ -55,6 +53,17 @@ const config: ExpoConfig = {
       {
         userTrackingPermission:
           "This identifier will be used to deliver personalized ads to you.",
+      },
+    ],
+    [
+      "expo-build-properties",
+      {
+        android: {
+          compileSdkVersion: 34,
+          targetSdkVersion: 34,
+          buildToolsVersion: "30.0.2",
+          kotlinVersion: "1.7.10",
+        },
       },
     ],
   ],

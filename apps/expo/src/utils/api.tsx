@@ -31,7 +31,7 @@ const getBaseUrl = () => {
   }
   // REPLACE WITH NGROK URL FOR LOCAL TESTING
   // return `http://localhost:3002`;
-  return `https://5788-151-197-20-213.ngrok-free.app`;
+  return `https://servicegeek.app`;
 };
 
 /**

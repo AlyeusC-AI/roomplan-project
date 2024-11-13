@@ -37,7 +37,7 @@ import {
   UpdateGenericRoomReadingData,
   UpdateRoomReadingData,
 } from "./RoomReadings";
-import { useDebounce } from "@servicegeek/utils";
+import { useDebounce } from "../../utils/debounce";
 import Collapsible from "react-native-collapsible";
 
 export function RoomReadingInput({
