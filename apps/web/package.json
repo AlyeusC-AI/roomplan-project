@@ -193,9 +193,5 @@
     "prettier-plugin-tailwindcss": "0.1.13",
     "tailwindcss": "3.2.4",
     "turbo": "1.6.3"
-  },
-  "resolutions": {
-    "@types/react": "18.0.0",
-    "@types/react-dom": "18.0.0"
   }
 }
