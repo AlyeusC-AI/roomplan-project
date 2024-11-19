@@ -13,6 +13,7 @@
   "dependencies": {
     "@servicegeek/db": "../db",
     "@supabase/auth-helpers-nextjs": "0.5.7",
+    "@supabase/supabase-js": "2.14.0",
     "@trpc/client": "10.18.0",
     "@trpc/server": "10.18.0",
     "superjson": "1.11.0",
@@ -21,6 +22,8 @@
   },
   "devDependencies": {
     "@servicegeek/eslint-config": "link:../../packages/config/eslint",
+    "@servicegeek/tsconfig": "link:../../packages/config/tsconfig",
+    "@types/uuid": "8.3.4",
     "eslint": "^8.34.0",
     "typescript": "^4.9.5"
   }

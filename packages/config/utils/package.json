@@ -13,7 +13,8 @@
     "react": "18.0.0"
   },
   "devDependencies": {
+    "@servicegeek/eslint-config": "../eslint",
     "@servicegeek/tsconfig": "../tsconfig",
-    "@servicegeek/eslint-config": "../eslint"
+    "@types/react": "^18.3.12"
   }
 }

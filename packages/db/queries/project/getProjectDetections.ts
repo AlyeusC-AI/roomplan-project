@@ -81,6 +81,7 @@ export const getInferenceList = async (
     sortDirection
   );
 
+  // @ts-ignore
   return superjson.serialize(inferences).json as typeof inferences;
 };
 

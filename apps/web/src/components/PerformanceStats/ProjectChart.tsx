@@ -39,29 +39,29 @@ export const options = {
 }
 
 const ProjectChart = () => {
-  const usedEquipment = trpc.stats.getProjectStatusOverTime.useQuery()
+  const usedEquipment: any = trpc.stats.getProjectStatusOverTime.useQuery()
   console.log(
     'labels',
-    usedEquipment.data?.closed.map((c) => format(c.dateStart, 'MMM, dd'))
+    usedEquipment.data?.closed.map((c: any) => format(c.dateStart, 'MMM, dd'))
   )
   console.log(
     'data',
-    usedEquipment.data?.opened.map((c) => c.value)
+    usedEquipment.data?.opened.map((c: any) => c.value)
   )
   const data = {
-    labels: usedEquipment.data?.closed.map((c) =>
+    labels: usedEquipment.data?.closed.map((c: any) =>
       format(c.dateStart, 'MMM, dd')
     ),
     datasets: [
       {
         label: 'Weekly Closed Projects',
-        data: usedEquipment.data?.closed.map((c) => c.value),
+        data: usedEquipment.data?.closed.map((c: any) => c.value),
         borderColor: 'rgb(255, 99, 132)',
         backgroundColor: 'rgba(255, 99, 132, 0.5)',
       },
       {
         label: 'Weekly Opened Projects',
-        data: usedEquipment.data?.opened.map((c) => c.value),
+        data: usedEquipment.data?.opened.map((c: any) => c.value),
         borderColor: 'rgb(53, 162, 235)',
         backgroundColor: 'rgba(53, 162, 235, 0.5)',
       },

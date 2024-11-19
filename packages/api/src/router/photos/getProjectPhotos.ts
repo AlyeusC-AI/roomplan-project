@@ -107,7 +107,7 @@ const getProjectPhotos = protectedProcedure
           : [];
       const urlMap = arr.reduce<{
         [imageKey: string]: string;
-      }>((p, c) => {
+      }>((p: any, c: any) => {
         if (c.error) return p;
         if (!c.path) return p;
         return {

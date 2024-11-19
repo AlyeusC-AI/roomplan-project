@@ -25,7 +25,7 @@ const WeatherReporting = () => {
   }
   // method to render the table data
   const renderTableData = () => {
-    return allWeatherReports?.data?.map((weatherReport, index) => {
+    return allWeatherReports?.data?.map((weatherReport: any, index) => {
       const {
         id,
         time,
