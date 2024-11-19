@@ -22,6 +22,7 @@ export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [firstName, setFirstName] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [lastName, setLastName] = useState('')
   const [lead, setLead] = useState('Search Engine')
   const router = useRouter()
@@ -54,6 +55,7 @@ export default function Register() {
             firstName,
             lastName,
             lead,
+            phone: phoneNumber
           },
         },
       })
@@ -90,6 +92,10 @@ export default function Register() {
                       {
                         type: 'mrkdwn',
                         text: `*Email:*\n${email}`,
+                      },
+                      {
+                        type: 'mrkdwn',
+                        text: `*Phone Number:*\n${phoneNumber}`,
                       },
                       {
                         type: 'mrkdwn',
@@ -139,7 +145,7 @@ export default function Register() {
           </Link>
           <div className="mt-10">
             <h2 className="text-lg font-semibold text-gray-900">
-              Start your 14 day free trial today!
+              Free forever!
             </h2>
             <p className="mt-2  text-gray-700">No credit card necessary</p>
             <p className="mt-2 text-sm text-gray-700">
@@ -201,6 +207,18 @@ export default function Register() {
             value={email}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               setEmail(e.target.value)
+            }
+            required
+          />
+           <TextField
+            label="Phone Number"
+            id="phoneNumber"
+            name="phoneNumber"
+            type="text"
+            autoComplete="phone"
+            value={phoneNumber}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setPhoneNumber(e.target.value)
             }
             required
           />

@@ -29,7 +29,7 @@ export default function RegisterScreen({
 }: NativeStackScreenProps<AuthStackParamList>) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [lead, setLead] = useState("");
@@ -48,6 +48,7 @@ export default function RegisterScreen({
           firstName,
           lastName,
           lead,
+          phone: phoneNumber,
         },
       },
     });
@@ -73,7 +74,7 @@ export default function RegisterScreen({
                     type: "section",
                     text: {
                       type: "mrkdwn",
-                      text: `• email: ${email} \n • first name: ${firstName} \n • last name: ${lastName} \n • lead: ${lead} \n platform: mobile`,
+                      text: `• email: ${email} \n • first name: ${firstName} \n • last name: ${lastName} \n • lead: ${lead} \n • phone number: ${phoneNumber} \n platform: mobile`,
                     },
                   },
                 ],
@@ -132,6 +133,15 @@ export default function RegisterScreen({
                 placeholder="Last Name"
                 value={lastName}
                 onChangeText={(text) => setLastName(text)}
+                autoCapitalize="none"
+                size="lg"
+              />
+              <FormControl.Label>Phone Number</FormControl.Label>
+              <Input
+                type="text"
+                placeholder="Phone Number"
+                value={phoneNumber}
+                onChangeText={(text) => setPhoneNumber(text)}
                 autoCapitalize="none"
                 size="lg"
               />
