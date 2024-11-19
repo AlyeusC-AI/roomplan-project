@@ -301,6 +301,9 @@ importers:
       '@pdftron/pdfjs-express-utils':
         specifier: ^1.3.1
         version: 1.3.1
+      '@prisma/client':
+        specifier: 4.13.0
+        version: 4.13.0(prisma@4.13.0)
       '@react-google-maps/api':
         specifier: 2.15.0
         version: 2.15.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)

@@ -47,6 +47,7 @@
     "@novu/node": "^0.12.0",
     "@pdftron/pdfjs-express": "^8.7.0",
     "@pdftron/pdfjs-express-utils": "^1.3.1",
+    "@prisma/client": "4.13.0",
     "@react-google-maps/api": "2.15.0",
     "@react-pdf/renderer": "3.0.0",
     "@servicegeek/api": "link:../../packages/api",
