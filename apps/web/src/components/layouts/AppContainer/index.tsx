@@ -13,9 +13,9 @@ export default function AppContainer({
   subscriptionStatus,
 }: {
   overflow?: boolean
-  children: ReactNode
+  children: React.ReactNode
   hideParentNav?: boolean
-  renderSecondaryNavigation?: () => ReactNode
+  renderSecondaryNavigation?: () => React.ReactNode
   skeleton?: boolean
   subscriptionStatus: SubscriptionStatus
 }) {

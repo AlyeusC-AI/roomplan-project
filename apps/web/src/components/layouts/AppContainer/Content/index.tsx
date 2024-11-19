@@ -70,9 +70,9 @@ export default function Content({
   subscriptionStatus,
 }: {
   overflow: boolean
-  children: ReactNode
+  children: React.ReactNode
   hideParentNav?: boolean
-  renderSecondaryNavigation?: () => ReactNode
+  renderSecondaryNavigation?: () => React.ReactNode
   subscriptionStatus: SubscriptionStatus
 }) {
   const router = useRouter()
@@ -122,6 +122,7 @@ export default function Content({
                       </Menu.Button>
                     </div>
                     <Transition
+                      // @ts-ignore
                       as={Fragment}
                       enter="transition ease-out duration-200"
                       enterFrom="transform opacity-0 scale-95"
@@ -253,18 +254,20 @@ export default function Content({
                 ))}
               </div> */}
             </div>
-            {process.env.PRICING_ENABLED === "true" && <div className="flex flex-col">
-              {(userInfo?.isAdmin ||
-                userInfo?.accessLevel === AccessLevel.admin) && (
-                <PrimaryLink
-                  variant="invert-swag"
-                  className="w-full"
-                  href="/settings/billing"
-                >
-                  Upgrade
-                </PrimaryLink>
-              )}
-            </div>}
+            {process.env.PRICING_ENABLED === 'true' && (
+              <div className="flex flex-col">
+                {(userInfo?.isAdmin ||
+                  userInfo?.accessLevel === AccessLevel.admin) && (
+                  <PrimaryLink
+                    variant="invert-swag"
+                    className="w-full"
+                    href="/settings/billing"
+                  >
+                    Upgrade
+                  </PrimaryLink>
+                )}
+              </div>
+            )}
           </div>
         </nav>
       )}

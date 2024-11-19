@@ -79,6 +79,7 @@ export default function MentionsTextArea({
       onChange={(e) => setValue(e.target.value)}
     >
       <Mention
+      //@ts-ignore
         style={mentionStyle}
         data={mentions}
         onAdd={(id) => {

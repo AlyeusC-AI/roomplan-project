@@ -6,7 +6,7 @@ const InputLabel = ({
   className,
 }: {
   htmlFor: string
-  children: ReactNode
+  children: React.ReactNode
   className?: string
 }) => (
   <label

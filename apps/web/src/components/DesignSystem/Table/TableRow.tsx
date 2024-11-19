@@ -5,7 +5,7 @@ const TableRow = ({
   children,
   className = '',
 }: {
-  children: ReactNode
+  children: React.ReactNode
   className?: string
 }) => <tr className={clsx(className)}>{children}</tr>
 

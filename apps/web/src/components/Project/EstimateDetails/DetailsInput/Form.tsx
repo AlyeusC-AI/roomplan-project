@@ -2,7 +2,7 @@ import { ReactNode } from 'react'
 import clsx from 'clsx'
 
 type Props<T> = {
-  children: ReactNode
+  children: React.ReactNode
   styles?: string
   title: string
   description: string

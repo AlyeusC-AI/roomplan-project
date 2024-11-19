@@ -6,8 +6,8 @@ const Table = ({
   children,
 }: {
   header: string
-  subtitle: string | ReactNode
-  children: ReactNode
+  subtitle: string | React.ReactNode
+  children: React.ReactNode
 }) => {
   return (
     <>

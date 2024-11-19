@@ -23,7 +23,7 @@ interface OrgMembersSectionProps {
   hideEmptyState?: boolean
   hideDescription?: boolean
   noPadding?: boolean
-  children?: ReactNode
+  children?: React.ReactNode
   useSecondaryButton?: boolean
 }
 

@@ -71,5 +71,6 @@ export default function ProjectsNavigationContainer() {
     return navList
   }, [userInfo?.accessLevel, userInfo?.isAdmin])
 
+  // @ts-ignore
   return <SecondaryNavigation navigation={navigation} hideBackButton />
 }

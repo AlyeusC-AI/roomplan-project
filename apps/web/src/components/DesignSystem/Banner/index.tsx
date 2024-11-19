@@ -14,7 +14,7 @@ const Banner = ({
   isDismissable?: boolean
   onDismiss?: () => void
   title: string
-  children: ReactNode
+  children: React.ReactNode
   cta?: {
     text: string
     href: string

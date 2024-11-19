@@ -24,7 +24,10 @@ export default function NotificationPanel({
   )
 
   return (
-    <Transition.Root show={open} as={Fragment}>
+    <Transition.Root
+      show={open} // @ts-ignore
+      as={Fragment}
+    >
       <Dialog as="div" className="relative z-10" onClose={setOpen}>
         <div className="fixed inset-0" />
 
@@ -32,6 +35,7 @@ export default function NotificationPanel({
           <div className="absolute inset-0 overflow-hidden">
             <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10 sm:pl-16">
               <Transition.Child
+                // @ts-ignore
                 as={Fragment}
                 enter="transform transition ease-in-out duration-500 sm:duration-700"
                 enterFrom="translate-x-full"

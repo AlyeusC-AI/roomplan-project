@@ -6,7 +6,7 @@ export default function Success({
   children,
 }: {
   title?: string
-  children?: ReactNode
+  children?: React.ReactNode
 }) {
   return (
     <div className="my-4 rounded-md bg-green-50 p-4">

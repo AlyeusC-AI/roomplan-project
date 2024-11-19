@@ -142,9 +142,10 @@ export default function TheaterMode({
   }, [photos, setTheaterModeIndex])
 
   return (
-    <Transition.Root show={open} as={Fragment}>
+    <Transition.Root show={open} // @ts-ignore
+     as={Fragment}>
       <Dialog as="div" className="relative z-10" onClose={setOpen}>
-        <Transition.Child
+        <Transition.Child // @ts-ignore
           as={Fragment}
           enter="ease-out duration-300"
           enterFrom="opacity-0"
@@ -158,7 +159,7 @@ export default function TheaterMode({
 
         <div className="fixed inset-0 z-20 overflow-y-auto">
           <div className="flex h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <Transition.Child
+            <Transition.Child // @ts-ignore
               as={Fragment}
               enter="ease-out duration-300"
               enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"

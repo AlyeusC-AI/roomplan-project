@@ -1,13 +1,14 @@
 import { ReactNode, useState } from 'react'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 
+
 const Accordion = ({
   title,
   children,
   error = false,
 }: {
   title: string
-  children: ReactNode
+  children?: React.ReactNode
   error?: boolean
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(true)

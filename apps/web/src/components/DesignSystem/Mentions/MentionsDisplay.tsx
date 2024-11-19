@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import React from 'react'
 import useMentionsMetadata from './useMentionsMetadata'
 
 export default function MentionsDisplay({ message }: { message: string }) {
@@ -12,7 +12,8 @@ export default function MentionsDisplay({ message }: { message: string }) {
       <span>
         {metadata.map(({ text, url }, i) => {
           if (!url) {
-            return <Fragment key={i}>{text}</Fragment>
+            // @ts-ignore
+            return <React.Fragment key={i}>{text}</React.Fragment>
           }
 
           return (

@@ -21,7 +21,7 @@ const Pill = ({
   size = 'xs',
 }: {
   color: string
-  children: ReactNode
+  children: React.ReactNode
   className?: string
   size?: 'xs' | 'sm'
 }) => (

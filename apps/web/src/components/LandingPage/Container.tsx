@@ -6,7 +6,7 @@ export function Container({
   ...props
 }: {
   className?: string
-  children: ReactNode
+  children: React.ReactNode
 }) {
   return (
     <div

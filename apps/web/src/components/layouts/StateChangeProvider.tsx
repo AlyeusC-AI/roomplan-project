@@ -13,7 +13,7 @@ NProgress.configure({ showSpinner: false })
 export default function StateChangeProvider({
   children,
 }: {
-  children: ReactNode
+  children: React.ReactNode
 }) {
   return <>{children}</>
 }

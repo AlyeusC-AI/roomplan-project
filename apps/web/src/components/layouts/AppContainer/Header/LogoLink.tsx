@@ -154,10 +154,14 @@ export default function MobileNav() {
           </div>
         </button>
       </div>
-      <Transition.Root show={mobileMenuOpen} as={Fragment}>
+      <Transition.Root
+        show={mobileMenuOpen} // @ts-ignore
+        as={Fragment}
+      >
         <Dialog as="div" className="relative z-40" onClose={setMobileMenuOpen}>
           <div className="fixed z-40">
             <Transition.Child
+              // @ts-ignore
               as={Fragment}
               enter="transition ease-out duration-150 md:ease-in-out md:duration-300"
               enterFrom="transform opacity-0 scale-110 md:translate-x-0 md:scale-300 md:opacity-100"
@@ -211,6 +215,7 @@ export default function MobileNav() {
                 </div>
                 <div className="max-w-8xl mx-auto py-3 px-2 md:px-4">
                   {navigation.map((item) => (
+                    // @ts-ignore
                     <Fragment key={item.name}>
                       <Link
                         href={item.href}

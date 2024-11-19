@@ -2,7 +2,7 @@ import { ReactNode } from 'react'
 import { Footer } from '@components/LandingPage/Footer'
 
 interface PageContainerProps {
-  children: ReactNode
+  children: React.ReactNode
 }
 const PageContainer = ({ children }: PageContainerProps) => {
   return (

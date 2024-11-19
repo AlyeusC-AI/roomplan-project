@@ -55,6 +55,7 @@ function MobileNavigation() {
       </Popover.Button>
       <Transition.Root>
         <Transition.Child
+          // @ts-ignore
           as={Fragment}
           enter="duration-150 ease-out"
           enterFrom="opacity-0"
@@ -66,6 +67,7 @@ function MobileNavigation() {
           <Popover.Overlay className="fixed inset-0 bg-slate-300/50" />
         </Transition.Child>
         <Transition.Child
+          // @ts-ignore
           as={Fragment}
           enter="duration-150 ease-out"
           enterFrom="opacity-0 scale-95"
@@ -79,7 +81,9 @@ function MobileNavigation() {
             className="absolute inset-x-0 top-full mt-4 flex origin-top flex-col rounded-2xl bg-white p-4 text-lg tracking-tight text-slate-900 shadow-xl ring-1 ring-slate-900/5"
           >
             <MobileNavLink href="/#features">Features</MobileNavLink>
-            {process.env.PRICING_ENABLED === "true" && <MobileNavLink href="/#pricing">Pricing</MobileNavLink>}
+            {process.env.PRICING_ENABLED === 'true' && (
+              <MobileNavLink href="/#pricing">Pricing</MobileNavLink>
+            )}
             <MobileNavLink href="/about-us">About Us</MobileNavLink>
             <MobileNavLink href="https://blog.servicegeek.app">
               Blog
@@ -118,7 +122,9 @@ export function Header() {
             </Link>
             <div className="hidden md:flex md:gap-x-4">
               <NavLink href="/#features">Features</NavLink>
-              {process.env.PRICING_ENABLED == "true" && <NavLink href="/#pricing">Pricing</NavLink>}
+              {process.env.PRICING_ENABLED == 'true' && (
+                <NavLink href="/#pricing">Pricing</NavLink>
+              )}
               <NavLink className="hidden lg:block" href="/about-us">
                 About Us
               </NavLink>

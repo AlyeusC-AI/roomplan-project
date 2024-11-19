@@ -124,7 +124,6 @@ const Readings = ({ room }: { room: RoomDataWithoutInferences }) => {
                 <div
                   id="gpp"
                   className="block w-full rounded-md border-gray-300 bg-gray-300 p-2 pr-12 text-sm text-black focus:border-blue-500 focus:ring-blue-500"
-                  placeholder=""
                   aria-describedby={`total-sqft-units`}
                 >
                   {r.gpp || '--'}

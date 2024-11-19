@@ -122,7 +122,6 @@ const CreateAccessLink = () => {
                     <p className="mt-4 mr-4 font-medium">Expires at:</p>
                     <select
                       defaultValue={selectedOption}
-                      placeholder="Select Expiration Time"
                       className="rounded-md shadow-md"
                       onChange={(e) =>
                         setSelectedOption(

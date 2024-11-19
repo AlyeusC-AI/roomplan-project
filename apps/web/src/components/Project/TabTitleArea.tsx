@@ -6,9 +6,9 @@ const TabTitleArea = ({
   description,
   id,
 }: {
-  children?: ReactNode
+  children?: React.ReactNode
   title: string
-  description: string | ReactNode
+  description: string | React.ReactNode
   id?: string
 }) => (
   <div className="mt-4 grid grid-cols-5">

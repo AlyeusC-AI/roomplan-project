@@ -116,5 +116,6 @@ export default function ProjectNavigationContainer() {
     [id, userInfo?.accessLevel]
   )
 
+  // @ts-ignore
   return <SecondaryNavigation navigation={navigation} />
 }

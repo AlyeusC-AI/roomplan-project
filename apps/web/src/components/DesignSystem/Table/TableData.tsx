@@ -6,7 +6,7 @@ const TableData = ({
   important = false,
   noClass = false,
 }: {
-  children: ReactNode
+  children: React.ReactNode
   important?: boolean
   noClass?: boolean
 }) => {

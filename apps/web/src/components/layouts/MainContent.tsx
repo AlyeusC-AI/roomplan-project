@@ -9,7 +9,7 @@ const MainContent = ({
   children,
   className,
 }: {
-  children: ReactNode
+  children: React.ReactNode
   className?: string
 }) => {
   const [userInfo] = useRecoilState(userInfoState)

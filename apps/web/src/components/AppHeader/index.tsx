@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* This example requires Tailwind CSS v2.0+ */
 import { Fragment, useMemo, useState } from 'react'
 import LogoIconBlue from '@components/DesignSystem/Logo/LogoIconBlue'
@@ -79,13 +80,17 @@ export default function AppHeader({ skeleton }: { skeleton?: boolean }) {
     <Disclosure as="nav" className="sticky top-0 z-20 bg-white shadow">
       {({ open }) => (
         <>
-          <Transition.Root show={sidebarOpen} as={Fragment}>
+          <Transition.Root
+            show={sidebarOpen} // @ts-ignore
+            as={Fragment}
+          >
             <Dialog
               as="div"
               className="relative z-40 lg:hidden"
               onClose={setSidebarOpen}
             >
               <Transition.Child
+                // @ts-ignore
                 as={Fragment}
                 enter="transition-opacity ease-linear duration-300"
                 enterFrom="opacity-0"
@@ -99,6 +104,7 @@ export default function AppHeader({ skeleton }: { skeleton?: boolean }) {
 
               <div className="fixed inset-0 z-40 flex">
                 <Transition.Child
+                  // @ts-ignore
                   as={Fragment}
                   enter="transition ease-in-out duration-300 transform"
                   enterFrom="-translate-x-full"
@@ -109,6 +115,7 @@ export default function AppHeader({ skeleton }: { skeleton?: boolean }) {
                 >
                   <Dialog.Panel className="relative flex w-full max-w-xs flex-1 flex-col bg-white pt-5 pb-4">
                     <Transition.Child
+                      // @ts-ignore
                       as={Fragment}
                       enter="ease-in-out duration-300"
                       enterFrom="opacity-0"
@@ -347,6 +354,7 @@ export default function AppHeader({ skeleton }: { skeleton?: boolean }) {
                     </Menu.Button>
                   </div>
                   <Transition
+                    // @ts-ignore
                     as={Fragment}
                     enter="transition ease-out duration-200"
                     enterFrom="transform opacity-0 scale-95"

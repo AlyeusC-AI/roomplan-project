@@ -6,7 +6,7 @@ export default function Message({
   children,
 }: {
   title: string
-  children: ReactNode
+  children: React.ReactNode
 }) {
   return (
     <div className="my-4 rounded-md bg-gray-100 p-4 shadow-md">

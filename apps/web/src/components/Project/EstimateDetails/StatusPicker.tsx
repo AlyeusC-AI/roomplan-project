@@ -184,7 +184,7 @@ export default function StatusPicker() {
               </div>
 
               <Transition
-                show={open}
+                show={open}  // @ts-ignore
                 as={Fragment}
                 leave="transition ease-in duration-100"
                 leaveFrom="opacity-100"

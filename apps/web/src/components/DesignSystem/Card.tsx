@@ -7,8 +7,8 @@ const Card = ({
   bg = 'bg-white ',
 }: {
   className?: string
-  children: ReactNode
-  footer?: ReactNode
+  children: React.ReactNode
+  footer?: React.ReactNode
   bg?: string
 }) => {
   return (

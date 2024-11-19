@@ -116,7 +116,8 @@ const styles = StyleSheet.create({
   },
 })
 
-const TitleText = ({ children }: { children: ReactNode }) => (
+const TitleText = ({ children }: { children: React.ReactNode }) => (
+  // @ts-ignore
   <Text style={styles.titleText}>{children}</Text>
 )
 

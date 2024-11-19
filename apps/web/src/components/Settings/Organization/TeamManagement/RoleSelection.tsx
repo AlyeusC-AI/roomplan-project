@@ -125,6 +125,7 @@ export default function RollSelection({ member }: { member: Member }) {
 
             <Transition
               show={open}
+              // @ts-ignore
               as={Fragment}
               leave="transition ease-in duration-100"
               leaveFrom="opacity-100"

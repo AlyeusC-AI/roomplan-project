@@ -14,7 +14,7 @@ const SummaryDetail = ({ title, value }: { title: string; value: string }) => (
   </td>
 )
 
-const SummarySection = ({ children }: { children: ReactNode }) => (
+const SummarySection = ({ children }: { children: React.ReactNode }) => (
   <table className="title-page-summary-section">
     <tbody>
       <tr>{children}</tr>

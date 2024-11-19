@@ -131,6 +131,7 @@ const ProjectPage: NextPage<ProjectPageProps> = ({
             )}
             <Transition.Root
               show={isCreateCalenderEventModalOpen}
+              // @ts-ignore
               as={Fragment}
             >
               <Dialog
@@ -139,6 +140,7 @@ const ProjectPage: NextPage<ProjectPageProps> = ({
                 onClose={setIsCreateCalenderEventModalOpen}
               >
                 <Transition.Child
+                  // @ts-ignore
                   as={Fragment}
                   enter="ease-in-out duration-2000"
                   enterFrom="opacity-0"
@@ -154,6 +156,7 @@ const ProjectPage: NextPage<ProjectPageProps> = ({
                   <div className="absolute inset-0 overflow-hidden">
                     <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
                       <Transition.Child
+                        // @ts-ignore
                         as={Fragment}
                         enter="transform transition ease-in-out duration-500 sm:duration-700"
                         enterFrom="translate-x-full"

@@ -6,13 +6,13 @@ import { useRouter } from 'next/router'
 import { useRecoilState } from 'recoil'
 import projectInfoState from '@atoms/projectInfoState'
 
-const WeatherTitle = ({ children }: { children: ReactNode }) => (
+const WeatherTitle = ({ children }: { children: React.ReactNode }) => (
   <dt className="truncate text-xs font-semibold uppercase text-white">
     {children}
   </dt>
 )
 
-const WeatherData = ({ children }: { children: ReactNode }) => (
+const WeatherData = ({ children }: { children: React.ReactNode }) => (
   <dd>
     <div className="text-lg font-medium text-white">{children}</div>
   </dd>

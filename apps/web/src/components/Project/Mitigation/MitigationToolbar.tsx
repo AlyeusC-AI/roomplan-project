@@ -43,7 +43,7 @@ function UploadButton({
           <span className="sr-only">Open options</span>
           <ChevronDownIcon className="h-5 w-5 text-white" aria-hidden="true" />
         </Menu.Button>
-        <Transition
+        <Transition // @ts-ignore
           as={Fragment}
           enter="transition ease-out duration-100"
           enterFrom="transform opacity-0 scale-95"

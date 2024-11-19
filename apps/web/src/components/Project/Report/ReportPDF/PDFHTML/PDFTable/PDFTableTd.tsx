@@ -5,7 +5,7 @@ const PDFTableTd = ({
   children,
   className,
 }: {
-  children: ReactNode
+  children: React.ReactNode
   className?: string
 }) => (
   <td className={clsx('border border-gray-300 px-4', className)}>{children}</td>
