@@ -1,7 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env"],
-  "tasks": {
+  "pipeline": {
     "dev:generate": {
       "inputs": ["prisma/schema.prisma"],
       "cache": false
