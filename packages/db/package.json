@@ -5,8 +5,8 @@
   "version": "0.0.0",
   "dependencies": {
     "@prisma/client": "4.13.0",
-    "@servicegeek/templates": "*",
-    "@servicegeek/utils": "*",
+    "@servicegeek/templates": "../config/templates",
+    "@servicegeek/utils": "../config/utils",
     "date-fns": "^2.29.3",
     "node-html-parser": "^6.1.5",
     "stripe": "^11.13.0",
@@ -14,10 +14,10 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@servicegeek/eslint-config": "*",
-    "@servicegeek/templates": "*",
-    "@servicegeek/tsconfig": "*",
-    "@servicegeek/utils": "*",
+    "@servicegeek/eslint-config": "../config/eslint",
+    "@servicegeek/templates": "../config/templates",
+    "@servicegeek/tsconfig": "../config/tsconfig",
+    "@servicegeek/utils": "../config/utils",
     "dotenv-cli": "^7.1.0",
     "prisma": "4.13.0",
     "typescript": "4.8.4"
@@ -25,8 +25,8 @@
   "scripts": {
     "clean": "git clean -xdf .next .turbo node_modules",
     "with-env": "dotenv -e ../../.env --",
-    "prisma:generate": "yarn with-env prisma generate dev",
-    "prisma:migrate": "yarn with-env prisma migrate dev",
+    "prisma:generate": "pnpm with-env prisma generate dev",
+    "prisma:migrate": "pnpm with-env prisma migrate dev",
     "ci:generate": "DATABASE_URL=${MIGRATION_DATABASE} prisma generate",
     "ci:migrate-deploy": "DATABASE_URL=${MIGRATION_DATABASE} prisma migrate deploy",
     "prod:generate": "DATABASE_URL=postgresql://postgres:1bc128bf37b1da6366afbf5cc4a80a01ce628379a73e23367c2c14d7b68ffb11@db.assryutwyfriduafbeyu.supabase.co:5432/postgres prisma generate",

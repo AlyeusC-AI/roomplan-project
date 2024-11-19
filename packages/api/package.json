@@ -7,11 +7,11 @@
   "scripts": {
     "lint": "eslint .",
     "clean": "git clean -xdf .next .turbo node_modules",
-    "lint:fix": "yarn lint --fix",
+    "lint:fix": "pnpm lint --fix",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@servicegeek/db": "*",
+    "@servicegeek/db": "../db",
     "@trpc/client": "10.18.0",
     "@trpc/server": "10.18.0",
     "superjson": "1.11.0",
@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "eslint": "^8.34.0",
-    "@servicegeek/eslint-config": "*",
+    "@servicegeek/eslint-config": "link:../../packages/config/eslint",
     "typescript": "^4.9.5"
   }
 }

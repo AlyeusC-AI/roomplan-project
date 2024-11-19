@@ -49,6 +49,7 @@ export default function Register() {
       } = await supabase.auth.signUp({
         email,
         password,
+        phone: phoneNumber,
         options: {
           data: {
             isSupportUser: false,

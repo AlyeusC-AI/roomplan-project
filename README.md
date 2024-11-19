@@ -3,9 +3,9 @@
 1. `vercel login`
 2. `vercel link`
 3. `vercel env pull`
-4. `yarn dev:generate`
-5. `yarn`
-6. `yarn dev`
+4. `pnpm dev:generate`
+5. `pnpm install`
+6. `pnpm dev`
    -> Webapp is available at http://localhost:3002
    -> Mobile app will open in simulator
 

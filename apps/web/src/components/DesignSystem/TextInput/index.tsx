@@ -37,7 +37,6 @@ export default function TextInput({
         </label>
       )}
       <div className="relative rounded-md shadow-sm">
-        {/* @ts-expect-error */}
         <input
           type="text"
           name={name}

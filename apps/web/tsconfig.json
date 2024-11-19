@@ -4,9 +4,10 @@
     "esModuleInterop": true,
     "baseUrl": ".",
     "paths": {
-      "@*": ["./src/*"]
+      "@*": ["./src/*"],
+      "react": [ "./node_modules/@types/react" ]
     },
-    "module": "commonjs"
+    "module": "commonjs",
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "prettier.config.js"],
   "exclude": [""]

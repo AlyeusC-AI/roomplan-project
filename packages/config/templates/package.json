@@ -12,7 +12,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@servicegeek/tsconfig": "*",
-    "@servicegeek/eslint-config": "*"
+    "@servicegeek/eslint-config": "link:../../packages/config/eslint",
+    "@servicegeek/tsconfig": "link:../../packages/config/tsconfig"
   }
 }

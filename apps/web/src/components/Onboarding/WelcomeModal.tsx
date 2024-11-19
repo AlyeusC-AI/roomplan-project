@@ -81,7 +81,7 @@ export default function WelcomeModal() {
                       <div className="mt-8 flex flex-col items-center justify-center text-center">
                         <p className="max-w-sm text-base text-gray-800">
                           Let&apos;s get started. You and your team can now use
-                          ServiceGeek for free for 14 days.
+                          ServiceGeek for free forever.
                         </p>
                       </div>
                     </div>
