@@ -94,6 +94,7 @@
     "js-cookie": "3.0.1",
     "jspdf": "2.5.1",
     "jszip": "3.10.1",
+    "lodash": "^4.17.21",
     "lodash.debounce": "4.0.8",
     "mapbox-gl": "^2.12.0",
     "measuretool-googlemaps-v3": "1.0.2",
