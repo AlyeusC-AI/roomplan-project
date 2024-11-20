@@ -33,6 +33,9 @@ importers:
       '@expo/config':
         specifier: ~9.0.0
         version: 9.0.4
+      '@expo/metro-config':
+        specifier: ^0.18.11
+        version: 0.18.11
       '@expo/vector-icons':
         specifier: ^14.0.3
         version: 14.0.4
@@ -45,6 +48,9 @@ importers:
       '@react-native-async-storage/async-storage':
         specifier: 1.23.1
         version: 1.23.1(react-native@0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(react@18.2.0))
+      '@react-native/assets-registry':
+        specifier: ^0.76.2
+        version: 0.76.2
       '@react-navigation/bottom-tabs':
         specifier: 6.4.0
         version: 6.4.0(@react-navigation/native@6.0.13(react-native@0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(react@18.2.0))(react@18.2.0))(react-native-safe-area-context@4.10.5(react-native@0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(react@18.2.0))(react@18.2.0))(react-native-screens@3.31.1(react-native@0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(react@18.2.0))(react@18.2.0))(react-native@0.74.5(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.2.79)(react@18.2.0))(react@18.2.0)
@@ -81,12 +87,18 @@ importers:
       '@trpc/server':
         specifier: 10.18.0
         version: 10.18.0
+      babel-preset-expo:
+        specifier: ~11.0.0
+        version: 11.0.15(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))
       date-fns:
         specifier: 2.29.3
         version: 2.29.3
       expo:
         specifier: ~51.0.39
         version: 51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))
+      expo-asset:
+        specifier: ^10.0.10
+        version: 10.0.10(expo@51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))
       expo-build-properties:
         specifier: ~0.12.5
         version: 0.12.5(expo@51.0.39(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0)))
@@ -17882,8 +17894,7 @@ snapshots:
 
   '@react-native/assets-registry@0.74.87': {}
 
-  '@react-native/assets-registry@0.76.2':
-    optional: true
+  '@react-native/assets-registry@0.76.2': {}
 
   '@react-native/babel-plugin-codegen@0.74.87(@babel/preset-env@7.26.0(@babel/core@7.26.0))':
     dependencies:

@@ -1,4 +1,4 @@
-import { ExpoConfig } from "@expo/config-types";
+import { ExpoConfig } from "@expo/config";
 
 const config: ExpoConfig = {
   name: "ServiceGeek",
@@ -7,8 +7,8 @@ const config: ExpoConfig = {
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
-  version: "1.0.0",
-  runtimeVersion: "1.0.0",
+  version: "1.1.0",
+  runtimeVersion: "appVersion",
   updates: {
     fallbackToCacheTimeout: 0,
     url: "https://u.expo.dev/f62cbfa4-7182-478d-b382-e6077f40db9b",
@@ -29,7 +29,8 @@ const config: ExpoConfig = {
   },
   ios: {
     bundleIdentifier: "com.servicegeek.servicegeekmobile",
-    supportsTablet: false,
+    supportsTablet: true,
+    buildNumber: "2"
   },
   web: {
     favicon: "./assets/favicon.png",
@@ -40,6 +41,7 @@ const config: ExpoConfig = {
     },
   },
   plugins: [
+    ["expo-asset"],
     ["expo-font"],
     [
       "react-native-vision-camera",
