@@ -7,12 +7,13 @@ import {
   Spinner,
   Text,
   HStack,
+  Pressable,
 } from "native-base";
 import React from "react";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/Navigation";
 import { useToast } from "native-base";
-import { Keyboard, TouchableWithoutFeedback } from "react-native";
+import { Keyboard, Linking, TouchableWithoutFeedback } from "react-native";
 import { useRecoilState } from "recoil";
 import userSessionState from "../atoms/user";
 import { api } from "../utils/api";
@@ -106,6 +107,14 @@ export default function InsuranceScreen({
             autoCapitalize="none"
           />
           <FormControl.Label color="">Phone Number</FormControl.Label>
+          <Pressable
+            onPress={() =>
+              Linking.openURL(`tel:${adjusterPhoneNumber}`)
+            }
+          >
+            <FormControl.Label color="#000">Call</FormControl.Label>
+          </Pressable>
+
           <Input
             type="text"
             placeholder="Phone Number"

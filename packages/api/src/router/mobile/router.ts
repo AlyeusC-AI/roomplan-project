@@ -22,8 +22,10 @@ import editProjectDetails from "./editProjectDetails";
 import getProjectNotes from "../projects/getProjectNotes";
 import createProjectNote from "../projects/createProjectNote";
 import addImageToProject from "./addImageToProject";
+import updateInsuranceInfo from "./updateInsuranceInfo"
 
 export const mobileRouter = router({
+  updateInsuranceInfo,
   updateProjectInformation,
   getProjectOverviewData,
   getDashboardData,
