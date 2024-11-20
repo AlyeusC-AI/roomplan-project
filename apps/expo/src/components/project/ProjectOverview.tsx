@@ -33,9 +33,8 @@ import { RootStackParamList } from "../../types/Navigation";
 import { api } from "../../utils/api";
 import * as Clipboard from "expo-clipboard";
 
-import { Linking, Platform, StyleSheet } from "react-native";
+import { Linking, StyleSheet } from "react-native";
 import { useDebounce } from "../../utils/debounce";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 // @ts-expect-error
 import MapIcon from "../../../assets/icons/Map.svg";
 // @ts-expect-error
@@ -45,6 +44,8 @@ import CameraIcon from "../../../assets/icons/Camera.svg";
 import EnvelopeIcon from "../../../assets/icons/Envelope.svg";
 // @ts-expect-error
 import PhoneIcon from "../../../assets/icons/Phone.svg";
+// @ts-expect-error
+import SettingsLogo from "../../../assets/icons/Cog6Tooth.svg";
 // @ts-expect-error
 import ArrowLongRight from "../../../assets/icons/ArrowLongRight.svg";
 
@@ -293,6 +294,41 @@ export default function ProjectOverview({
               <CameraIcon height={24} width={24} />
               <Heading size="sm" ml={4}>
                 View Photos
+              </Heading>
+            </View>
+            <View color="gray.900">
+              <ArrowLongRight
+                height={24}
+                width={24}
+                style={{ color: "#525252" }}
+              />
+            </View>
+          </View>
+        </Pressable>
+        <Pressable
+          w="full"
+          onPress={() =>
+            navigation.navigate("Insurance", {
+              projectId: projectPublicId,
+              projectName:
+                projectOverviewDataQuery?.data?.project?.clientName || "",
+            })
+          }
+        >
+          <View
+            w="full"
+            borderWidth={1}
+            borderColor="gray.200"
+            p={4}
+            rounded="md"
+            display="flex"
+            justifyContent="space-between"
+            flexDirection="row"
+          >
+            <View display="flex" flexDirection="row" alignItems="center">
+              <SettingsLogo height={24} width={24} />
+              <Heading size="sm" ml={4}>
+                Insurance Adjuster
               </Heading>
             </View>
             <View color="gray.900">

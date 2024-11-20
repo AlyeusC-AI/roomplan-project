@@ -1,10 +1,7 @@
 --- xcodebuild: WARNING: Using the first of multiple matching destinations:
-{ platform:iOS Simulator, id:7D0C7DE1-6821-4925-8961-62F196FC1144, OS:17.2, name:iPhone SE (3rd generation) }
-{ platform:iOS Simulator, id:7D0C7DE1-6821-4925-8961-62F196FC1144, OS:17.2, name:iPhone SE (3rd generation) }
-** BUILD FAILED **
-
-
-The following build commands failed:
-	PhaseScriptExecution [CP-User]\ [RN]Check\ rncore /Users/samuelvulakh/Library/Developer/Xcode/DerivedData/ServiceGeek-anshowvoyhkspieavbuiihwqgozl/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/React-Fabric.build/Script-46EB2E0001FB60.sh (in target 'React-Fabric' from project 'Pods')
-	Building workspace ServiceGeek with scheme ServiceGeek and configuration Debug
-(2 failures)
+{ platform:iOS Simulator, id:891F9F9C-384A-4F63-82E4-CAE0F5B15BC1, OS:18.1, name:iPhone 16 Pro }
+{ platform:iOS Simulator, id:891F9F9C-384A-4F63-82E4-CAE0F5B15BC1, OS:18.1, name:iPhone 16 Pro }
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, id:891F9F9C-384A-4F63-82E4-CAE0F5B15BC1, OS:18.1, name:iPhone 16 Pro }
+{ platform:iOS Simulator, id:891F9F9C-384A-4F63-82E4-CAE0F5B15BC1, OS:18.1, name:iPhone 16 Pro }
+2024-11-19 21:50:38.338 xcodebuild[67735:8297148]  DVTDeveloperAccountManager: Failed to load credentials for samuel.vulakh@revozero.com: Error Domain=DVTDeveloperAccountCredentialsError Code=0 "Invalid credentials in keychain for samuel.vulakh@revozero.com, missing Xcode-Token" UserInfo={NSLocalizedDescription=Invalid credentials in keychain for samuel.vulakh@revozero.com, missing Xcode-Token}

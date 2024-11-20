@@ -15,8 +15,11 @@ import BookOpen from "../../../assets/icons/BookOpen.svg";
 import Document from "../../../assets/icons/Document.svg";
 // @ts-expect-error
 import Home from "../../../assets/icons/Home.svg";
+// @ts-expect-error
+import SettingsLogo from "../../../assets/icons/Cog6Tooth.svg";
 
 import ProjectOverview from "./ProjectOverview";
+import InsuranceScreen from "../../screens/EditInsuranceScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -37,6 +40,10 @@ export default function BottomTabNavigation({
             if (focused)
               return <PhotoIcon height={24} width={24} color="#1e88e5" />;
             return <PhotoIcon height={24} width={24} color="#000" />;
+          }  else if (route.name === "Insurance") {
+            if (focused)
+              return <SettingsLogo height={24} width={24} color="#1e88e5" />;
+            return <SettingsLogo height={24} width={24} color="#000" />;
           } else if (route.name === "Readings") {
             if (focused)
               return <BookOpen height={24} width={24} color="#1e88e5" />;
@@ -54,6 +61,11 @@ export default function BottomTabNavigation({
       <Tab.Screen
         name="Overview"
         component={ProjectOverview}
+        initialParams={route.params}
+      />
+      <Tab.Screen
+        name="Insurance"
+        component={InsuranceScreen}
         initialParams={route.params}
       />
       <Tab.Screen

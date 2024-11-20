@@ -6,6 +6,7 @@ export type RootStackParamList = {
   CreateProject: undefined;
   Project: { projectName: string; projectId: string };
   Photos: { projectName: string; projectId: string };
+  Insurance: { projectName: string; projectId: string };
   Readings: { projectName: string; projectId: string };
   Notes: { projectName: string; projectId: string };
   "Create Room": { projectId: string };

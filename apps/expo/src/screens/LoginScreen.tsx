@@ -57,7 +57,7 @@ export default function LoginScreen({
         >
           <View w={300} h={100}>
             <Image
-              source={require("../../assets/large_logo.png")}
+              src={"https://servicegeek.app/images/brand/servicegeek.png"}
               alt="ServiceGeek Logo"
               margin={2}
               style={{

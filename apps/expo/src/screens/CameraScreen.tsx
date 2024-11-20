@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
-import { StyleSheet } from "react-native";
 import {
   Heading,
   Button,
@@ -27,8 +26,6 @@ import { createClient } from "@supabase/supabase-js";
 import uuid from "react-native-uuid";
 import { api } from "../utils/api";
 
-const servicegeekUrl = getConstants().servicegeekUrl!;
-
 export const supabaseServiceRole = createClient(
   getConstants().supabaseUrl,
   getConstants().serviceRoleJwt
@@ -40,9 +37,9 @@ export default function CameraScreen({
 }: NativeStackScreenProps<RootStackParamList>) {
   const camera = useRef<Camera>(null);
   const [lastPhoto, setLastPhoto] = useState("");
-  const devices = useCameraDevices("wide-angle-camera");
+  const devices = useCameraDevices();
   const [disabled, setDisabled] = useState(false);
-  const device = devices.back;
+  const device = devices.find(val => val.position == "back");
   const params = route.params as {
     projectId: string;
     rooms: RouterOutputs["mobile"]["getProjectImages"]["rooms"];
@@ -111,8 +108,8 @@ export default function CameraScreen({
     setDisabled(true);
     try {
       const photo = await camera.current.takePhoto({
-        qualityPrioritization: "speed",
-        skipMetadata: true,
+        // qualityPrioritization: "speed",
+        // skipMetadata: true,
       });
       processImage(photo);
     } catch (error) {

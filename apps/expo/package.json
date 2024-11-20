@@ -23,6 +23,7 @@
     "ios": "expo run:ios"
   },
   "dependencies": {
+    "@babel/runtime": "^7.26.0",
     "@expo/config": "~9.0.0",
     "@expo/vector-icons": "^14.0.3",
     "@expo/webpack-config": "~19.0.1",
@@ -34,7 +35,7 @@
     "@react-navigation/native-stack": "6.9.1",
     "@servicegeek/api": "link:../../packages/api",
     "@servicegeek/db": "link:../../packages/db",
-    "@servicegeek/utils": "link:../../packages/config/utils",
+    "@servicegeek/utils": "link:../packages/config/utils",
     "@supabase/supabase-js": "2.14.0",
     "@tanstack/react-query": "4.28.0",
     "@trpc/client": "10.18.0",
@@ -86,7 +87,7 @@
     "@servicegeek/tailwind-config": "link:../../packages/config/tailwind",
     "@servicegeek/tsconfig": "link:../../packages/config/tsconfig",
     "@types/react": "~18.2.79",
-    "@types/react-native": "^0.73.0",
+    "metro-config": "^0.81.0",
     "react-native-codegen": "^0.69.2",
     "typescript": "~5.3.3"
   },
