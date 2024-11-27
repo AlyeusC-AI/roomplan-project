@@ -16,6 +16,7 @@ import { HomeStackParamList, RootStackParamList } from "../../types/Navigation";
 // @ts-expect-error
 import SettingsLogo from "../../../assets/icons/Cog6Tooth.svg";
 import EditProjectDetails from "../EditProjectDetails";
+import InsuranceScreen from "../EditInsuranceScreen";
 
 const Stack = createNativeStackNavigator();
 const DashboardStack = createNativeStackNavigator();
@@ -48,6 +49,8 @@ function DashboardStackScreen({
       <Stack.Screen name="Project" component={ProjectScreen} />
       <Stack.Screen name="Create Room" component={RoomCreationScreen} />
       <Stack.Screen name="Edit Project" component={EditProjectDetails} />
+      <Stack.Screen name="Edit Insurance" component={InsuranceScreen} />
+      {/* @ts-ignore */}
       <Stack.Screen name="Camera" component={CameraScreen} />
     </DashboardStack.Navigator>
   );

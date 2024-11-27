@@ -15,7 +15,7 @@ import { RootStackParamList } from "../types/Navigation";
 import {
   Camera,
   PhotoFile,
-  useCameraDevices,
+  useCameraDevice,
 } from "react-native-vision-camera";
 import { getConstants } from "../lib/constants";
 import { RouterOutputs } from "@servicegeek/api";
@@ -34,41 +34,41 @@ export const supabaseServiceRole = createClient(
 export default function CameraScreen({
   navigation,
   route,
-}: NativeStackScreenProps<RootStackParamList>) {
+}: NativeStackScreenProps<RootStackParamList, "Camera">) {
   const camera = useRef<Camera>(null);
   const [lastPhoto, setLastPhoto] = useState("");
-  const devices = useCameraDevices();
+  const device = useCameraDevice('back')
   const [disabled, setDisabled] = useState(false);
-  const device = devices.find(val => val.position == "back");
-  const params = route.params as {
-    projectId: string;
-    rooms: RouterOutputs["mobile"]["getProjectImages"]["rooms"];
-    organizationId: string;
-  };
   const [supabaseSession, setSession] = useRecoilState(userSessionState);
-  const projectPublicId = (route?.params as { projectId: string })
-    .projectId as string;
+  const { rooms, projectId } = route.params;
   const queryParams = {
     jwt: supabaseSession ? supabaseSession["access_token"] : "null",
-    projectPublicId,
+    projectPublicId: projectId,
   };
+
+  console.log(getConstants().supabaseUrl,
+  getConstants().serviceRoleJwt)
 
   const addImageToProjectMutation = api.mobile.addImageToProject.useMutation();
 
-  const { rooms } = params;
   const [selectedRoomId, setRoomId] = useState("");
   const onRoomSelect = (r: string) => {
     setRoomId(r);
   };
+  
   const processImage = async (photo: PhotoFile) => {
     try {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      const filePath = `file:${photo.path}`;
-      setLastPhoto(filePath);
+
+      console.log("Setting last photo", photo.path);
+      setLastPhoto(photo.path);
+      console.log("Uploading photo");
       const fileName = photo.path.substring(photo.path.lastIndexOf("/") + 1);
       const supabasePath = `${session?.user.id}/${uuid.v4()}_${fileName}`;
+
+      console.log("Uploading photo to", supabasePath);
 
       let contentType = "image/jpeg";
       if (fileName.indexOf(".png") >= 0) {
@@ -91,6 +91,8 @@ export default function CameraScreen({
           contentType,
           upsert: false,
         });
+
+        console.log("Uploaded photo", data, error);
       if (data) {
         addImageToProjectMutation.mutate({
           ...queryParams,
@@ -107,9 +109,10 @@ export default function CameraScreen({
     if (!camera || !camera.current) return;
     setDisabled(true);
     try {
+      console.log("TAKING PICTURE")
       const photo = await camera.current.takePhoto({
-        // qualityPrioritization: "speed",
-        // skipMetadata: true,
+        flash: "auto",
+        enableShutterSound: false,
       });
       processImage(photo);
     } catch (error) {

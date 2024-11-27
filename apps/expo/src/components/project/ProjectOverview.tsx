@@ -308,7 +308,7 @@ export default function ProjectOverview({
         <Pressable
           w="full"
           onPress={() =>
-            navigation.navigate("Insurance", {
+            navigation.navigate("Edit Insurance", {
               projectId: projectPublicId,
               projectName:
                 projectOverviewDataQuery?.data?.project?.clientName || "",
