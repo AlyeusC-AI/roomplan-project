@@ -7,7 +7,7 @@ const config: ExpoConfig = {
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
-  version: "1.1.0",
+  version: "1.2.1",
   runtimeVersion: "appVersion",
   updates: {
     fallbackToCacheTimeout: 0,
