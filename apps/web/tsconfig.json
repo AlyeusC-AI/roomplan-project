@@ -1,0 +1,37 @@
+{
+  "extends": "@servicegeek/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "target": "ESNext", 
+    "module": "ESNext", 
+    "allowImportingTsExtensions": true, 
+    "moduleResolution": "Bundler", 
+    "noEmit": true, 
+    "esModuleInterop": true, 
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@*": [
+        "./src/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    "prettier.config.js",
+    ".next/types/**/*.ts", 
+    "src/app/(logged-in)/calendar/upcoming-reminders"  
+  ],
+  "exclude": [
+    ""
+  ]
+}

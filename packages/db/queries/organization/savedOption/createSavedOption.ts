@@ -10,17 +10,17 @@ const createSavedOption = async (
   userId: string,
   type: SavedOptionType,
   label: string
-) => {
+): Promise<{ failed: boolean; reason?: string; result?: any  }> => {
   const haloUser = await getUser(userId);
   const organizationId = haloUser?.org?.organization.id;
   if (!organizationId) return { failed: true, reason: "no-org" };
 
   const isAdmin = await getIsAdmin(organizationId, haloUser.id);
-  if (!isAdmin) return false;
+  if (!isAdmin) return { failed: true };
 
   const option = createOption(label);
 
-  return prisma.organizationSavedOption.create({
+  const result = prisma.organizationSavedOption.create({
     data: {
       type,
       organizationId,
@@ -34,6 +34,8 @@ const createSavedOption = async (
       publicId: true,
     },
   });
+
+  return { failed: false, result };
 };
 
 export default createSavedOption;

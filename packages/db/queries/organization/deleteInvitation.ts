@@ -4,13 +4,13 @@ import getUser from "../user/getUser";
 
 import getIsAdmin from "./getIsAdmin";
 
-const deleteInvitation = async (userId: string, email: string) => {
+const deleteInvitation = async (userId: string, email: string): Promise<{ failed: boolean; reason?: string }> => {
   const haloUser = await getUser(userId);
   const organizationId = haloUser?.org?.organization.id;
   if (!organizationId) return { failed: true, reason: "no-org" };
 
   const isAdmin = await getIsAdmin(organizationId, haloUser.id);
-  if (!isAdmin) return { false: true, reason: "not-allowed" };
+  if (!isAdmin) return { failed: true, reason: "not-allowed" };
 
   const existingInvite = await prisma.organizationInvitation.findFirst({
     where: {
@@ -31,7 +31,7 @@ const deleteInvitation = async (userId: string, email: string) => {
     });
   }
 
-  return true;
+  return { failed: false };
 };
 
 export default deleteInvitation;

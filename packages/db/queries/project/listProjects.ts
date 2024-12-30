@@ -7,6 +7,16 @@ export interface ProjectList {
     projects: number;
   };
 }
+
+export interface Assignee {
+  userId: string;
+  user: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
+}
+
 export interface ProjectType {
   publicId: string;
   createdAt: Date;
@@ -22,19 +32,12 @@ export interface ProjectType {
     publicId: string;
     color: string;
   } | null;
-  projectAssignees: {
-    userId: string;
-    user: {
-      firstName?: string;
-      lastName?: string;
-      email?: string;
-    };
-  }[];
+  projectAssignees: Assignee[];
   images: { key: string }[];
   _count: { images: number };
 }
 
-const listProjects = async (id: number): Promise<ProjectList | null> =>
+const listProjects = async (id: number, limit: number, offset: number): Promise<ProjectList | null> =>
   prisma.organization.findFirst({
     where: { id },
     select: {
@@ -94,12 +97,15 @@ const listProjects = async (id: number): Promise<ProjectList | null> =>
         },
       },
     },
+    skip: offset,
+    take: limit,
   });
 
-export const listProjectsForUser = async (id: number, userId: string) =>
+export const listProjectsForUser = async (id: number, userId: string, limit: number, offset: number) =>
   prisma.project.findMany({
     where: {
       organizationId: id,
+      
       isDeleted: false,
     },
     orderBy: {
@@ -136,6 +142,8 @@ export const listProjectsForUser = async (id: number, userId: string) =>
         },
       },
     },
+    skip: offset,
+    take: limit,
   });
 
 export default listProjects;

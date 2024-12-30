@@ -8,13 +8,13 @@ const updateSavedOption = async (
   publicId: string,
   label: string,
   value: string
-) => {
+): Promise<{ failed: boolean; reason?: string }> => {
   const haloUser = await getUser(userId);
   const organizationId = haloUser?.org?.organization.id;
   if (!organizationId) return { failed: true, reason: "no-org" };
 
   const isAdmin = await getIsAdmin(organizationId, haloUser.id);
-  if (!isAdmin) return false;
+  if (!isAdmin) return { failed: true };
 
   await prisma.organizationSavedOption.update({
     where: {
@@ -26,7 +26,7 @@ const updateSavedOption = async (
     },
   });
 
-  return true;
+  return { failed: false };
 };
 
 export default updateSavedOption;

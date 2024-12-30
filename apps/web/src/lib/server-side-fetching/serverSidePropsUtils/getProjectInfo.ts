@@ -1,0 +1,63 @@
+
+import { Project } from '@servicegeek/db'
+
+const getProjectInfo = (project: Project) => {
+  const {
+    name,
+    clientName,
+    clientEmail,
+    clientPhoneNumber,
+    location,
+    managerName,
+    companyName,
+    insuranceCompanyName,
+    adjusterName,
+    adjusterPhoneNumber,
+    adjusterEmail,
+    insuranceClaimId,
+    lossType,
+    catCode,
+    humidity,
+    temperature,
+    forecast,
+    wind,
+    lat,
+    lng,
+    claimSummary,
+    assignmentNumber,
+    status,
+    roofSegments,
+    roofSpecs,
+    id,
+  } = project
+  return {
+    clientName: clientName || null,
+    clientEmail,
+    clientPhoneNumber,
+    location,
+    name,
+    managerName,
+    companyName,
+    insuranceCompanyName,
+    adjusterName,
+    adjusterPhoneNumber,
+    adjusterEmail,
+    insuranceClaimId,
+    lossType,
+    catCode: catCode || null,
+    humidity,
+    temperature,
+    forecast,
+    wind,
+    lat,
+    lng,
+    claimSummary,
+    assignmentNumber,
+    status,
+    roofSegments: roofSegments || null,
+    roofSpecs: roofSpecs || null,
+    id,
+  }
+}
+
+export default getProjectInfo

@@ -1,0 +1,67 @@
+'use client'
+
+import React from 'react'
+
+import { usePathname } from 'next/navigation'
+
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
+
+type TBreadCrumbProps = {
+  capitalizeLinks?: boolean
+}
+
+const NextBreadcrumb = ({ capitalizeLinks }: TBreadCrumbProps) => {
+  const paths = usePathname()
+  const pathNames = paths.split('/').filter((path) => path)
+
+  function capitalizeFirstLetter(word: string) {
+    if (!word) return ''
+    return word[0].toUpperCase() + word.slice(1)
+  }
+
+  return (
+    <>
+      <Breadcrumb>
+        <BreadcrumbList>
+          {pathNames.map((link, index) => {
+            let href = `/${pathNames.slice(0, index + 1).join('/')}`
+            let itemLink = capitalizeLinks
+              ? link[0].toUpperCase() + link.slice(1, link.length)
+              : link
+            return (
+              <React.Fragment key={index}>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href={href}>{capitalizeFirstLetter(itemLink)}</BreadcrumbLink>
+                </BreadcrumbItem>
+                {index < pathNames.length - 1 && (
+                  <BreadcrumbSeparator className="hidden md:block" />
+                )}
+              </React.Fragment>
+            )
+          })}
+
+          {/* <BreadcrumbSeparator className="hidden md:block" />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+          </BreadcrumbItem> */}
+        </BreadcrumbList>
+      </Breadcrumb>
+      {/* <div>
+        <ul className={containerClasses}>
+          <li className={listClasses}>
+            <Link href={'/'}>{homeElement}</Link>
+          </li>
+          {pathNames.length > 0 && separator}
+        </ul>
+      </div> */}
+    </>
+  )
+}
+
+export default NextBreadcrumb

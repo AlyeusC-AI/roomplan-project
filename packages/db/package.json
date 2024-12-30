@@ -14,6 +14,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@prisma/nextjs-monorepo-workaround-plugin": "^6.0.1",
     "@servicegeek/eslint-config": "../config/eslint",
     "@servicegeek/templates": "../config/templates",
     "@servicegeek/tsconfig": "../config/tsconfig",

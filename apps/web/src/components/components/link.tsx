@@ -1,0 +1,56 @@
+import clsx from 'clsx'
+
+export interface LinkProps extends React.ComponentPropsWithoutRef<'a'> {
+  ref?: React.RefObject<HTMLAnchorElement>
+  variant?: 'invert' | 'swag' | 'base' | 'invert-swag'
+}
+
+export const PrimaryLink = (props: LinkProps) => {
+  const { className, variant = 'base', ...rest } = props
+  return (
+    <a
+      className={clsx(
+        'inline-flex items-center justify-center rounded-md  shadow-sm  hover:cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2',
+        'text-sm font-medium',
+        'text-center',
+        'py-2 px-2',
+        variant === 'base' &&
+          'border border-primary-action bg-primary-action text-white hover:bg-primary-action-hover focus:ring-primary-action',
+        variant === 'invert' &&
+          'border border-primary-action bg-white text-black hover:border-white hover:bg-primary-action hover:text-white  focus:ring-primary-action',
+        variant === 'swag' &&
+          'border border-transparent bg-gradient-to-br from-swag-dark to-swag-light text-white hover:shadow-lg',
+        variant === 'invert-swag' &&
+          'border border-primary-action bg-white text-black hover:border-transparent hover:bg-gradient-to-br hover:from-swag-dark hover:to-swag-light hover:text-white hover:shadow-lg',
+        className
+      )}
+      {...rest}
+    />
+  )
+}
+
+export const SecondaryLink = (props: LinkProps) => {
+  const { className, ...rest } = props
+  return (
+    <a
+      className={clsx(
+        'inline-flex items-center justify-center  rounded-md border border-blue-600 py-2 px-2 text-sm font-medium text-primary shadow-sm hover:cursor-pointer hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto ',
+        className
+      )}
+      {...rest}
+    />
+  )
+}
+
+export const TertiaryLink = (props: LinkProps) => {
+  const { className, ...rest } = props
+  return (
+    <a
+      className={clsx(
+        'inline-flex items-center justify-center rounded-md border  border-transparent text-sm font-medium text-primary-action hover:cursor-pointer  hover:underline',
+        className
+      )}
+      {...rest}
+    />
+  )
+}

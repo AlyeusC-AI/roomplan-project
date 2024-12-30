@@ -1,6 +1,7 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearch", "jsonProtocol"]
+  // output = "./src/generated/prisma"
 }
 
 datasource db {
@@ -127,6 +128,7 @@ enum AccessLevel {
   projectManager
   accountManager
   contractor
+  removed
 }
 
 model UserToOrganization {
