@@ -1,25 +1,23 @@
+"use client";
+
 import { useMemo } from 'react'
 import SecondaryNavigation from '@components/layouts/SecondaryNavigation'
 import {
   BookOpenIcon,
   CalendarIcon,
   CloudIcon,
-  CurrencyDollarIcon,
+  DollarSignIcon,
   FolderIcon,
-  HomeModernIcon,
+  HomeIcon,
   NewspaperIcon,
-  PhotoIcon,
-} from '@heroicons/react/24/outline'
+  PictureInPicture,
+} from 'lucide-react'
 import { AccessLevel } from '@servicegeek/db'
-import { useRouter } from 'next/router'
+import { useParams } from 'next/navigation'
 import { userInfoStore } from '@atoms/user-info'
 
 export default function ProjectNavigationContainer() {
-  const router = useRouter()
-  let id = router.query.id || ''
-  if (Array.isArray(id) || !id) {
-    id = ''
-  }
+  const { id } = useParams()
   const userInfo = userInfoStore((state) => state.user)
 
   // if (
@@ -50,7 +48,7 @@ export default function ProjectNavigationContainer() {
       {
         name: 'Photos',
         href: `/projects/${id}/photos`,
-        icon: PhotoIcon,
+        icon: PictureInPicture,
       },
       {
         name: 'Mitigation',
@@ -64,7 +62,7 @@ export default function ProjectNavigationContainer() {
             {
               name: 'Expenses',
               href: `/projects/${id}/costs`,
-              icon: CurrencyDollarIcon,
+              icon: DollarSignIcon,
             },
           ]
         : []),
@@ -93,7 +91,7 @@ export default function ProjectNavigationContainer() {
       {
         name: 'Roofing',
         href: `/projects/${id}/roofing`,
-        icon: HomeModernIcon,
+        icon: HomeIcon,
       },
       {
         name: 'Weather',

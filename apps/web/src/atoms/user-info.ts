@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export const defaultUserInfoState = undefined
 
@@ -11,8 +12,15 @@ interface Actions {
   clearUser: () => void
 }
 
-export const userInfoStore = create<State & Actions>((set, get) => ({
-  user: defaultUserInfoState,
-  setUser: (user: UserInfo) => set((state) => ({ user })),
-  clearUser: () => set({ user: defaultUserInfoState }),
-}))
+export const userInfoStore = create<State & Actions>()(
+  persist(
+    (set, get) => ({
+      user: defaultUserInfoState,
+      setUser: (user: UserInfo) => set((state) => ({ user })),
+      clearUser: () => set({ user: defaultUserInfoState }),
+    }),
+    {
+      name: 'userInfo',
+    }
+  )
+)

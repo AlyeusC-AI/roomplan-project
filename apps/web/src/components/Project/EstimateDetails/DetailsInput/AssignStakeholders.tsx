@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import UserAvatar from '@components/DesignSystem/UserAvatar'
-import Spinner from '@components/Spinner'
-import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
-import { CheckIcon } from '@heroicons/react/24/outline'
+import { ChevronUpIcon, CheckIcon } from 'lucide-react'
 import { Stakeholders } from '@servicegeek/db/queries/project/getUsersForProject'
 import clsx from 'clsx'
-import { useRouter } from 'next/router'
+import { useParams, useRouter } from 'next/navigation'
 import { stakeholderStore } from '@atoms/stakeholder'
 import { teamMembersStore } from '@atoms/team-members'
 
 import FormContainer from './FormContainer'
+import { LoadingSpinner } from '@components/ui/spinner'
 
 export default function AssignStakeholders() {
   const teamMembers = teamMembersStore(state => state.getTeamMembersAsStakeHolders)
@@ -17,10 +16,11 @@ export default function AssignStakeholders() {
   const [loadingId, setLoadingId] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
+  const { id } = useParams()
   const ref = useRef<HTMLDivElement>(null)
 
   const addUser = (userId: string) => {
-    return fetch(`/api/project/${router.query.id}/stakeholder`, {
+    return fetch(`/api/project/${id}/stakeholder`, {
       method: 'POST',
       body: JSON.stringify({
         userId,
@@ -29,7 +29,7 @@ export default function AssignStakeholders() {
   }
 
   const removeUser = (userId: string) => {
-    return fetch(`/api/project/${router.query.id}/stakeholder`, {
+    return fetch(`/api/project/${id}/stakeholder`, {
       method: 'DELETE',
       body: JSON.stringify({
         userId: userId,
@@ -103,7 +103,7 @@ export default function AssignStakeholders() {
               className="relative flex w-full cursor-pointer items-center justify-between rounded-md border border-gray-300 bg-white py-2 pl-3 pr-3 text-left shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
             >
               <div>Click to Assign Team Members</div>
-              <ChevronUpDownIcon className="h-6 text-gray-500" />
+              <ChevronUpIcon className="h-6 text-gray-500" />
             </button>
             {isOpen && (
               <div className="absolute top-full left-0 z-50 w-full rounded-md border border-gray-300 bg-white shadow-md">
@@ -166,7 +166,7 @@ export default function AssignStakeholders() {
                       </div>
                       <div className="col-span-1 flex h-full items-center justify-center">
                         {loadingId === member.userId ? (
-                          <Spinner />
+                          <LoadingSpinner />
                         ) : (
                           <>{selected && <CheckIcon className="h-6" />}</>
                         )}

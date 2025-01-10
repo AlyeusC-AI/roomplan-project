@@ -15,7 +15,6 @@ import {
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
   SidebarContent,
@@ -24,7 +23,6 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import Image from "next/image"
-import { url } from "inspector"
 
 // This is sample data.
 const data = {
@@ -99,9 +97,8 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="icon" className="h-screen" {...props}>
+    <Sidebar collapsible="offcanvas" variant="sidebar" className="h-screen" {...props}>
       <SidebarHeader className="items-center flex">
-        {/* <TeamSwitcher teams={data.teams} /> */}
         <Image src="/images/brand/servicegeek-no-bg.png" alt="logo" className="my-4" width={140} height={30} />
       </SidebarHeader>
       <SidebarContent>

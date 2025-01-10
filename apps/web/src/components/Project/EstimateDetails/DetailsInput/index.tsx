@@ -1,5 +1,6 @@
-import toast from 'react-hot-toast'
-import { SecondaryButton } from '@components/components'
+'use client'
+
+import { toast } from 'sonner'
 
 import AssignStakeholders from './AssignStakeholders'
 import Form from './Form'
@@ -8,18 +9,20 @@ import ProjectInformation from './ProjectInformation'
 import PropertyOwnerInformation from './PropertyOwnerInformation'
 import Notes from './Notes'
 import { useState } from 'react'
-import { useRouter } from 'next/router'
+import { useParams, useRouter } from 'next/navigation'
 import { teamMembersStore } from '@atoms/team-members'
 
 import FormContainer from './FormContainer'
 import { trpc } from '@utils/trpc'
 import { projectStore } from '@atoms/project'
 import { MentionMetadata } from '@components/DesignSystem/Mentions/useMentionsMetadata'
+import { Button } from '@components/ui/button'
 
 export default function DetailsInput() {
   const [isConfirming, setIsConfirming] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const { id } = useParams()
   const onDelete = async () => {
     if (!isConfirming) {
       setIsConfirming(true)
@@ -27,7 +30,7 @@ export default function DetailsInput() {
     }
     setIsLoading(false)
     try {
-      const res = await fetch(`/api/project/${router.query.id}`, {
+      const res = await fetch(`/api/project/${id}`, {
         method: 'DELETE',
       })
       if (res.ok) {
@@ -44,7 +47,9 @@ export default function DetailsInput() {
 
   const trpcContext = trpc.useContext()
   const projectInfo = projectStore((state) => state.project)
-  const teamMembers = teamMembersStore(state => state.getTeamMembersAsStakeHolders)
+  const teamMembers = teamMembersStore(
+    (state) => state.getTeamMembersAsStakeHolders
+  )
 
   const createProjectNote = trpc.projects.createProjectNote.useMutation()
   const projectNotes = trpc.projects.getProjectNotes.useQuery({
@@ -63,7 +68,7 @@ export default function DetailsInput() {
   }) => {
     const res = await createProjectNote.mutateAsync(
       {
-        projectPublicId: router.query.id as string,
+        projectPublicId: id as string,
         body: note,
         mentions,
       },
@@ -107,35 +112,33 @@ export default function DetailsInput() {
     }
   }
   return (
-    <div className=" grid grid-cols-10 gap-6">
+    <div className="w-[100vh-100px]">
       <PropertyOwnerInformation />
+      <div className=" grid grid-cols-10 gap-6">
       <Notes
-        title="Project Notes"
-        subTitle="Share notes with your team about this project. You can tag team members by @ to notify them of a note."
-        notesData={notes}
-        isLoading={notesLoading}
-        handleAddProjectNote={handleAddProjectNote}
-      />
-      <AssignStakeholders />
-      <ProjectInformation />
-      <InsuranceCompanyInformation />
-      <FormContainer className="col-span-10">
-        <Form
-          title="Project Settings"
-          description="Manage settings for this project"
-          childContainerClassNames="flex"
-        >
-          <SecondaryButton
-            onClick={() => onDelete()}
-            variant="danger"
-            loading={isLoading}
+          title="Project Notes"
+          subTitle="Share notes with your team about this project. You can tag team members by @ to notify them of a note."
+          notesData={notes}
+          isLoading={notesLoading}
+          handleAddProjectNote={handleAddProjectNote}
+        />
+        <AssignStakeholders />
+        <ProjectInformation />
+        <InsuranceCompanyInformation />
+        <FormContainer className="col-span-10">
+          <Form
+            title="Project Settings"
+            description="Manage settings for this project"
+            childContainerClassNames="flex"
           >
-            {isConfirming
-              ? 'Are you sure? This cannot be undone.'
-              : 'Delete Project'}
-          </SecondaryButton>
-        </Form>
-      </FormContainer>
+            <Button onClick={() => onDelete()} variant="destructive">
+              {isConfirming
+                ? 'Are you sure? This cannot be undone.'
+                : 'Delete Project'}
+            </Button>
+          </Form>
+        </FormContainer>
+      </div>
     </div>
   )
 }

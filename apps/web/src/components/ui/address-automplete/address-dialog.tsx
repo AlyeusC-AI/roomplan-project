@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import type React from "react";
 import { type FormEvent, useEffect, useState } from "react";
 import { type ZodError, z } from "zod";
-import type { AddressType } from ".";
 import { FormMessages } from "@/components/form-messages";
 import { Loader2 } from "lucide-react";
 
@@ -23,7 +22,6 @@ interface AddressDialogProps {
 	setOpen: (open: boolean) => void;
 	address: AddressType;
 	setAddress: (address: AddressType) => void;
-	adrAddress: string;
 	dialogTitle: string;
 	isLoading: boolean;
 }
@@ -98,7 +96,6 @@ export default function AddressDialog(
 		setOpen,
 		address,
 		setAddress,
-		adrAddress,
 		isLoading,
 	} = props;
 
@@ -120,52 +117,52 @@ export default function AddressDialog(
 	/**
 	 * Update and format the address string with the given components
 	 */
-	function updateAndFormatAddress(
-		addressString: string,
-		addressComponents: {
-			"street-address": string;
-			address2: string;
-			locality: string;
-			region: string;
-			"postal-code": string;
-		},
-	) {
-		let updatedAddressString = addressString;
+	// function updateAndFormatAddress(
+	// 	addressString: string,
+	// 	addressComponents: {
+	// 		"street-address": string;
+	// 		address2: string;
+	// 		locality: string;
+	// 		region: string;
+	// 		"postal-code": string;
+	// 	},
+	// ) {
+	// 	let updatedAddressString = addressString;
 
-		// Replace each class content with its corresponding value
-		Object.entries(addressComponents).forEach(([key, value]) => {
-			if (key !== "address2") {
-				const regex = new RegExp(`(<span class="${key}">)[^<]*(</span>)`, "g");
-				updatedAddressString = updatedAddressString.replace(
-					regex,
-					`$1${value}$2`,
-				);
-			}
-		});
+	// 	// Replace each class content with its corresponding value
+	// 	Object.entries(addressComponents).forEach(([key, value]) => {
+	// 		if (key !== "address2") {
+	// 			const regex = new RegExp(`(<span class="${key}">)[^<]*(</span>)`, "g");
+	// 			updatedAddressString = updatedAddressString.replace(
+	// 				regex,
+	// 				`$1${value}$2`,
+	// 			);
+	// 		}
+	// 	});
 
-		// Remove all span tags
-		updatedAddressString = updatedAddressString.replace(/<\/?span[^>]*>/g, "");
+	// 	// Remove all span tags
+	// 	updatedAddressString = updatedAddressString.replace(/<\/?span[^>]*>/g, "");
 
-		// Add address2 just after address1 if provided
-		if (addressComponents.address2) {
-			const address1Regex = new RegExp(
-				`${addressComponents["street-address"]}`,
-			);
-			updatedAddressString = updatedAddressString.replace(
-				address1Regex,
-				`${addressComponents["street-address"]}, ${addressComponents.address2}`,
-			);
-		}
+	// 	// Add address2 just after address1 if provided
+	// 	if (addressComponents.address2) {
+	// 		const address1Regex = new RegExp(
+	// 			`${addressComponents["street-address"]}`,
+	// 		);
+	// 		updatedAddressString = updatedAddressString.replace(
+	// 			address1Regex,
+	// 			`${addressComponents["street-address"]}, ${addressComponents.address2}`,
+	// 		);
+	// 	}
 
-		// Clean up any extra spaces or commas
-		updatedAddressString = updatedAddressString
-			.replace(/,\s*,/g, ",")
-			.trim()
-			.replace(/\s\s+/g, " ")
-			.replace(/,\s*$/, "");
+	// 	// Clean up any extra spaces or commas
+	// 	updatedAddressString = updatedAddressString
+	// 		.replace(/,\s*,/g, ",")
+	// 		.trim()
+	// 		.replace(/\s\s+/g, " ")
+	// 		.replace(/,\s*$/, "");
 
-		return updatedAddressString;
-	}
+	// 	return updatedAddressString;
+	// }
 
 	/**
 	 * Handle form submission and save the address
@@ -202,13 +199,13 @@ export default function AddressDialog(
 			city !== address.city ||
 			region !== address.region
 		) {
-			const newFormattedAddress = updateAndFormatAddress(adrAddress, {
-				"street-address": address1,
-				address2,
-				locality: city,
-				region,
-				"postal-code": postalCode,
-			});
+			// const newFormattedAddress = updateAndFormatAddress(adrAddress, {
+			// 	"street-address": address1,
+			// 	address2,
+			// 	locality: city,
+			// 	region,
+			// 	"postal-code": postalCode,
+			// });
 
 			setAddress({
 				...address,
@@ -217,7 +214,6 @@ export default function AddressDialog(
 				address2,
 				address1,
 				postalCode,
-				formattedAddress: newFormattedAddress,
 			});
 		}
 		setOpen(false);

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import UserAvatar from '@components/DesignSystem/UserAvatar'
-import { ChatBubbleLeftEllipsisIcon } from '@heroicons/react/24/outline'
+import { Ellipsis } from 'lucide-react'
 import { teamMembersStore } from '@atoms/team-members'
 
 import FormContainer from './FormContainer'
@@ -128,7 +128,7 @@ export default function Notes({
                                   />
 
                                   <span className="absolute -bottom-0.5 -right-1 rounded-tl bg-white px-0.5 py-px">
-                                    <ChatBubbleLeftEllipsisIcon
+                                    <Ellipsis
                                       className="h-5 w-5 text-gray-400"
                                       aria-hidden="true"
                                     />
@@ -194,12 +194,12 @@ export default function Notes({
                       <label htmlFor="comment" className="sr-only">
                         Add your comment
                       </label>
-                      <MentionsTextArea
+                      {/* <MentionsTextArea
                         value={value}
                         setValue={setValue}
                         setMentions={onMentionChange}
                         mentions={mentionsOptions}
-                      />
+                      /> */}
                     </div>
                     <div className="flex justify-between py-3">
                       <div className="flex items-center space-x-5"></div>

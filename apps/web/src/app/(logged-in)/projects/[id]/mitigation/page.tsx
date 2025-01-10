@@ -25,8 +25,6 @@ import { RouterOutputs } from '@servicegeek/api'
 import type { GetServerSidePropsContext, NextPage } from 'next'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { RecoilRoot } from 'recoil'
-import initRecoilAtoms from '@atoms/initRecoilAtoms'
 import superjson from 'superjson'
 import { User } from '@supabase/supabase-js'
 
@@ -49,12 +47,7 @@ const tabs = (id: string) => [
 ]
 
 const EstimatePage: NextPage<EstimatePageProps> = ({
-  userInfo,
-  rooms,
-  subscriptionStatus,
   roomReadings,
-  orgInfo,
-  projectInfo,
 }) => {
   const router = useRouter()
   trpc.readings.getAll.useQuery(
@@ -62,33 +55,20 @@ const EstimatePage: NextPage<EstimatePageProps> = ({
     { initialData: roomReadings }
   )
   return (
-    <RecoilRoot
-      initializeState={initRecoilAtoms({
-        rooms,
-        userInfo,
-        orgInfo,
-        projectInfo,
-      })}
+    <AppContainer
+      hideParentNav
+      renderSecondaryNavigation={() => <ProjectNavigationContainer />}
     >
-      <AppContainer
-        hideParentNav
-        subscriptionStatus={subscriptionStatus}
-        renderSecondaryNavigation={() => <ProjectNavigationContainer />}
-      >
-        <Head>
-          <title>ServiceGeek - Estimate</title>
-          <meta name="description" content="Project Estimate and Details" />
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
-        {subscriptionStatus === SubscriptionStatus.past_due && (
-          <TrailEndedBanner />
-        )}
-        <TabNavigation tabs={tabs} />
-        <MainContent>
-          <Readings />
-        </MainContent>
-      </AppContainer>
-    </RecoilRoot>
+      <Head>
+        <title>ServiceGeek - Estimate</title>
+        <meta name="description" content="Project Estimate and Details" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <TabNavigation tabs={tabs} />
+      <MainContent>
+        <Readings />
+      </MainContent>
+    </AppContainer>
   )
 }
 

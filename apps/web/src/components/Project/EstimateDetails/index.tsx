@@ -1,3 +1,5 @@
+"use client";
+
 import { projectStore } from '@atoms/project'
 import { propertyDataStore } from '@atoms/property-data'
 
@@ -5,6 +7,9 @@ import TabTitleArea from '../TabTitleArea'
 
 import DetailsInput from './DetailsInput'
 import StatusPicker from './StatusPicker'
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { LoadingPlaceholder } from '@components/ui/spinner';
 
 const Description = ({ location }: { location: string }) => {
   const propertyDataInfo = propertyDataStore(state => state)
@@ -33,17 +38,38 @@ const Description = ({ location }: { location: string }) => {
 }
 
 export default function EstimateDetails() {
-  const projectInfo = projectStore((state) => state.project)
+  const { id } = useParams()
+  const { project, setProject } = projectStore((state) => state)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (project && project.publicId === id) {
+      setLoading(false)
+      return
+    }
+    fetch(`/api/v1/projects/${id}`)
+    .then((res) => res.json())
+    .then((data) => {
+      console.log(data)
+      setProject(data.project)
+      setLoading(false)
+    })
+  }, [])
   return (
     <>
+      {loading ? (
+        <LoadingPlaceholder />
+      ) : (
+        <>
       <TabTitleArea
-        title={projectInfo.clientName}
-        description={<Description location={projectInfo.location} />}
+        title={project.clientName}
+        description={<Description location={project.location} />}
       >
-        <div></div>
-        <StatusPicker />
+        {/* <StatusPicker /> */}
       </TabTitleArea>
       <DetailsInput />
+    </>
+      )}
     </>
   )
 }

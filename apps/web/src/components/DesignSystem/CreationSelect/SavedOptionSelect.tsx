@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react'
 import produce from 'immer'
 import {
-  savedOptionsStore
+  savedOptionsStore,
   defaultSavedOptionState,
   Option,
 } from '@atoms/saved-options'
@@ -41,26 +41,26 @@ const SavedOptionSelect = ({
       )
       if (res.ok) {
         const json = await res.json()
-        setSavedOptions((options) => ({
-          ...options,
-          [optionType]: [...defaultOptions, ...json.options],
-        }))
+        // setSavedOptions((options) => ({
+        //   ...options,
+        //   [optionType]: [...defaultOptions, ...json.options],
+        // }))
       }
     } catch (error) {
       console.error(error)
     }
-  }, [defaultOptions, optionType, setSavedOptions])
+  }, [defaultOptions, optionType, savedOptions.setSavedOptions])
 
   const deleteOption = async (option: Option) => {
-    setSavedOptions((options) => {
-      const updatedOptions = produce(options, (draft) => {
-        const index = options[optionType].findIndex(
-          (o) => o.publicId === option.publicId
-        )
-        draft[optionType].splice(index, 1)
-      })
-      return updatedOptions
-    })
+    // setSavedOptions((options) => {
+    //   const updatedOptions = produce(options, (draft) => {
+    //     const index = options[optionType].findIndex(
+    //       (o) => o.publicId === option.publicId
+    //     )
+    //     draft[optionType].splice(index, 1)
+    //   })
+    //   return updatedOptions
+    // })
     try {
       const body: SavedOptionApiDeleteBody = {
         publicId: option.publicId!,
@@ -91,10 +91,10 @@ const SavedOptionSelect = ({
       })
       if (res.ok) {
         const json = await res.json()
-        setSavedOptions((options) => ({
-          ...options,
-          [optionType]: [...options[optionType], json.option],
-        }))
+        // setSavedOptions((options) => ({
+        //   ...options,
+        //   [optionType]: [...options[optionType], json.option],
+        // }))
         return json.option as Option
       }
     } catch (error) {

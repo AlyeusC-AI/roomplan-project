@@ -1,9 +1,4 @@
-import {
-  createServerSupabaseClient,
-  Session,
-  SupabaseClient,
-  User,
-} from "@supabase/auth-helpers-nextjs";
+import { Session, SupabaseClient, User } from "@supabase/supabase-js";
 import { type inferAsyncReturnType } from "@trpc/server";
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 
@@ -30,25 +25,20 @@ export const createInnerTRPCContext = async (opts: CreateContextOptions) => {
  * This is the actual context you'll use in your router
  * @link https://trpc.io/docs/context
  **/
-export const createContext = async (opts: CreateNextContextOptions) => {
-  const { req, res } = opts;
+// export const createContext = async (opts: CreateNextContextOptions) => {
+//   const { req, res } = opts;
+//   const {
+//     data: { user },
+//     error,
+//   } = await supabase.auth.getUser();
+//   const {
+//     data: { session },
+//   } = await supabase.auth.getSession();
+//   return await createInnerTRPCContext({
+//     session,
+//     user,
+//     supabase,
+//   });
+// };
 
-  const supabase = createServerSupabaseClient({
-    req,
-    res,
-  });
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return await createInnerTRPCContext({
-    session,
-    user,
-    supabase,
-  });
-};
-
-export type Context = inferAsyncReturnType<typeof createContext>;
+export type Context = Promise<CreateContextOptions>;

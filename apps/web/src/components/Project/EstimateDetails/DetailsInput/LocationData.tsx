@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Loader } from '@googlemaps/js-api-loader'
 import clsx from 'clsx'
-import { useRouter } from 'next/router'
+import { useParams } from 'next/navigation'
 import { projectStore } from '@atoms/project'
+import mapboxgl from 'mapbox-gl'
 
 const WeatherTitle = ({ children }: { children: React.ReactNode }) => (
   <dt className="truncate text-xs font-semibold uppercase text-white">
@@ -23,17 +24,18 @@ const LocationData = ({
   showMap = true,
   showWeather = true,
 }: LocationDataProps) => {
-  const projectInfo = projectStore(state => state.project)
-  const streetView = useRef<HTMLDivElement>(null)
-  const satelliteView = useRef<HTMLDivElement>(null)
-  const router = useRouter()
+  const projectInfo = projectStore((state) => state.project)
+  const [streetMap, setStreetMap] = useState<mapboxgl.Map>()
+  const streetMapView = useRef(null)
+  const [satelliteMap, setSatelliteMap] = useState<mapboxgl.Map>()
+  const satelliteMapView = useRef(null)
+  const { id } = useParams()
 
   const updateAndFetchWeather = async () => {
     try {
-      const res = await fetch(
-        `/api/project/${router.query.id}/update-weather`,
-        { method: 'POST' }
-      )
+      const res = await fetch(`/api/project/${id}/update-weather`, {
+        method: 'POST',
+      })
       if (res.ok) {
         const { weatherData } = await res.json()
         projectStore.getState().setProject({ weatherData })
@@ -44,36 +46,76 @@ const LocationData = ({
   }
 
   useEffect(() => {
-    const loader = new Loader({
-      apiKey: process.env.GOOGLE_MAPS_API_KEY!,
-      version: 'weekly',
-      libraries: ['places', 'drawing', 'geometry'],
+    const streetNode = streetMapView.current
+    const satelliteNode = satelliteMapView.current
+
+    // const loader = new Loader({
+    //   apiKey: process.env.GOOGLE_MAPS_API_KEY!,
+    //   version: 'weekly',
+    //   libraries: ['places', 'drawing', 'geometry'],
+    // })
+    // loader.load().then(() => {
+    //   if (streetView.current) {
+    //     new google.maps.StreetViewPanorama(streetView.current, {
+    //       position: {
+    //         lat: Number(projectInfo.lat),
+    //         lng: Number(projectInfo.lng),
+    //       },
+    //       motionTrackingControl: false,
+    //       motionTracking: false,
+    //     })
+    //   }
+    //   if (satelliteView.current) {
+    //     new google.maps.Map(satelliteView.current, {
+    //       zoom: 20,
+    //       mapTypeId: 'satellite',
+    //       center: {
+    //         lat: Number(projectInfo.lat),
+    //         lng: Number(projectInfo.lng),
+    //       },
+    //       streetViewControl: false,
+    //       rotateControl: false,
+    //       mapTypeControl: false,
+    //     })
+    //   }
+    // })
+    if (
+      typeof window === 'undefined' ||
+      streetNode === null ||
+      satelliteNode === null
+    )
+      return
+    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY!
+    // otherwise, create a map instance
+    const streetMap = new mapboxgl.Map({
+      container: streetNode,
+      accessToken: process.env.NEXT_PUBLIC_MAPBOX_API_KEY,
+      style: 'mapbox://styles/mapbox/streets-v11',
+      center: [
+        Number(projectInfo.lat === '' ? 41.850033 : projectInfo.lat),
+        Number(projectInfo.lng === '' ? -87.6500523 : projectInfo.lng),
+      ],
+      zoom: 9,
     })
-    loader.load().then(() => {
-      if (streetView.current) {
-        new google.maps.StreetViewPanorama(streetView.current, {
-          position: {
-            lat: Number(projectInfo.lat),
-            lng: Number(projectInfo.lng),
-          },
-          motionTrackingControl: false,
-          motionTracking: false,
-        })
-      }
-      if (satelliteView.current) {
-        new google.maps.Map(satelliteView.current, {
-          zoom: 20,
-          mapTypeId: 'satellite',
-          center: {
-            lat: Number(projectInfo.lat),
-            lng: Number(projectInfo.lng),
-          },
-          streetViewControl: false,
-          rotateControl: false,
-          mapTypeControl: false,
-        })
-      }
+    const satelliteMap = new mapboxgl.Map({
+      container: satelliteNode,
+      accessToken: process.env.NEXT_PUBLIC_MAPBOX_API_KEY,
+      style: 'mapbox://styles/mapbox/standard-satellite',
+      center: [
+        Number(projectInfo.lat === '' ? 41.850033 : projectInfo.lat),
+        Number(projectInfo.lng === '' ? -87.6500523 : projectInfo.lng),
+      ],
+      zoom: 9,
     })
+
+    // save the map object to React.useState
+    setStreetMap(streetMap)
+    setSatelliteMap(satelliteMap)
+
+    return () => {
+      streetMap.remove()
+      satelliteMap.remove()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -83,18 +125,18 @@ const LocationData = ({
   }, [])
 
   return (
-    <div className="grid grid-cols-5 gap-5 lg:grid-cols-1">
+    <div className="grid grid-cols-5 gap-5 lg:grid-cols-1 w-full">
       {showMap === true && (
         <>
           <div
-            id="map"
-            className=" group relative col-span-5 block h-56 overflow-hidden rounded-lg shadow-md md:col-span-2 lg:col-span-1"
-            ref={streetView}
+            id="street"
+            className="w-full group relative col-span-5 block h-full overflow-hidden rounded-lg shadow-md md:col-span-2 lg:col-span-1"
+            ref={streetMapView}
           />
           <div
-            id="map"
+            id="satelitte"
             className=" group relative col-span-5 block h-56 overflow-hidden rounded-lg shadow-md md:col-span-2 lg:col-span-1"
-            ref={satelliteView}
+            ref={satelliteMapView}
           />
         </>
       )}

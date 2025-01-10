@@ -28,6 +28,7 @@ interface ProjectInfo {
   }
   id: number
   refferal?: string
+  publicId: string
 }
 
 type CostData = {

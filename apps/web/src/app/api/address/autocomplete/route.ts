@@ -1,4 +1,5 @@
 import { getGeolocation } from "@/utils/get-geolocation";
+import { uniqueId } from "lodash";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
@@ -12,38 +13,21 @@ export async function GET(req: NextRequest) {
 		`http://${req.headers?.get("host")}`,
 	);
 	// Check if your hosting provider gives you the country code
-	const country = await getGeolocation();
 	const input = searchParams.get("input");
-	const url = "https://places.googleapis.com/v1/places:autocomplete";
-
-	const primaryTypes = [
-		"street_address",
-		"subpremise",
-		"route",
-		"street_number",
-		"landmark",
-	];
+	const url = `https://api.mapbox.com/search/searchbox/v1/suggest?q=${input}&language=en&limit=10&session_token=${uniqueId()}&country=US&access_token=${process.env.NEXT_PUBLIC_MAPBOX_API_KEY}`;
 
 	try {
 		const response = await fetch(url, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				"X-Goog-Api-Key": apiKey,
-			},
-			body: JSON.stringify({
-				input: input,
-				includedPrimaryTypes: primaryTypes,
-				// Location biased towards the user's country
-				includedRegionCodes: [country || "US"],
-			}),
+			method: "GET",
 		});
+
+		const data = await response.json();
+
+		console.log("data", data);
 
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
-
-		const data = await response.json();
 
 		return NextResponse.json({ data: data.suggestions, error: null });
 	} catch (error) {

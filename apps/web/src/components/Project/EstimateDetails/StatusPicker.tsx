@@ -1,3 +1,5 @@
+"use client";
+
 import { Fragment, useState } from 'react'
 import { projectStore } from '@atoms/project'
 import {
@@ -6,20 +8,21 @@ import {
   TertiaryButton,
 } from '@components/components'
 import { SupportedColors } from '@components/DesignSystem/Pills/Pill'
-import Spinner from '@components/Spinner'
 import { Listbox, Transition } from '@headlessui/react'
-import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid'
+import { CheckIcon, ChevronDownIcon } from 'lucide-react'
 import { trpc } from '@utils/trpc'
 import { RouterOutputs } from '@servicegeek/api'
 import clsx from 'clsx'
 import { capitalize } from 'lodash'
-import { useRouter } from 'next/router'
+import { useParams, useRouter } from 'next/navigation'
 import { v4 } from 'uuid'
 import { getRndInteger } from '@servicegeek/utils'
 import { STATUS_COLORS } from '@app/(logged-in)/settings/workflow/components/color-picker'
+import { LoadingSpinner } from '@components/ui/spinner';
 
 export default function StatusPicker() {
   const router = useRouter()
+  const { id } = useParams()
   const [isCreating, setIsCreating] = useState(false)
   const [label, setLabel] = useState('')
   const [description, setDescription] = useState('')
@@ -27,7 +30,7 @@ export default function StatusPicker() {
   const projectInfo = projectStore((state) => state.project)
   const getAllProjectStatuses =
     trpc.projectStatus.getAllProjectStatuses.useQuery({
-      publicProjectId: router.query.id as string,
+      publicProjectId: id as string,
     })
   const trpcContext = trpc.useContext()
 
@@ -37,12 +40,12 @@ export default function StatusPicker() {
         await trpcContext.projectStatus.getAllProjectStatuses.cancel()
         const prevData =
           trpcContext.projectStatus.getAllProjectStatuses.getData({
-            publicProjectId: router.query.id as string,
+            publicProjectId: id as string,
           })
         const temporaryId = v4()
         trpcContext.projectStatus.getAllProjectStatuses.setData(
           {
-            publicProjectId: router.query.id as string,
+            publicProjectId: id as string,
           },
           (old) => {
             const newData = {
@@ -70,11 +73,11 @@ export default function StatusPicker() {
         await trpcContext.projectStatus.getAllProjectStatuses.cancel()
         const prevData =
           trpcContext.projectStatus.getAllProjectStatuses.getData({
-            publicProjectId: router.query.id as string,
+            publicProjectId: id as string,
           })
         trpcContext.projectStatus.getAllProjectStatuses.setData(
           {
-            publicProjectId: router.query.id as string,
+            publicProjectId: id as string,
           },
           (old) => {
             const newData = prevData?.statuses.find(
@@ -106,12 +109,12 @@ export default function StatusPicker() {
         description: option.description,
       })
       await associateProjectStatus.mutateAsync({
-        publicProjectId: router.query.id as string,
+        publicProjectId: id as string,
         publicProjectStatusId: newProjectStatus.publicId,
       })
     } else {
       await associateProjectStatus.mutateAsync({
-        publicProjectId: router.query.id as string,
+        publicProjectId: id as string,
         publicProjectStatusId: option.publicId,
       })
     }
@@ -147,7 +150,7 @@ export default function StatusPicker() {
                     {(createProjectStatus.isLoading ||
                       associateProjectStatus.isLoading) &&
                     !isCreating ? (
-                      <Spinner className="ml-2.5" bg="text-white" />
+                      <LoadingSpinner className="ml-2.5" />
                     ) : (
                       <p className="ml-2.5 text-sm font-bold">
                         {getAllProjectStatuses.data?.selectedStatus

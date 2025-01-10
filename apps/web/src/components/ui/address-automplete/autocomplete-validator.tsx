@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { AddressType } from ".";
 
 /**
  * Checks if the autocomplete address is valid. Change to your own validation logic.

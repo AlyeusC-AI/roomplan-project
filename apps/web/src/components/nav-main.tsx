@@ -20,7 +20,6 @@ import {
 import { cn } from '@lib/utils'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
-import path from 'path'
 
 interface SidebarItem {
   title: string

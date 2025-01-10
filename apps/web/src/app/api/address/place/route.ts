@@ -1,4 +1,4 @@
-import { AddressType } from "@components/ui/address-automplete";
+import { uniqueId } from "lodash";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
@@ -8,46 +8,31 @@ export async function GET(req: NextRequest) {
 		return NextResponse.json({ error: "Missing API Key", data: null });
 	}
 
-	const { searchParams } = new URL(
-		req.url,
-		`http://${req.headers?.get("host")}`,
-	);
-	const placeId = searchParams.get("placeId");
-	const url = `https://places.googleapis.com/v1/${placeId}`;
+	const placeId = req.nextUrl.searchParams.get("placeId")
+	const url = `https://api.mapbox.com/search/searchbox/v1/retrieve/${placeId}?session_token=${uniqueId()}&access_token=${process.env.NEXT_PUBLIC_MAPBOX_API_KEY}`;
 
 	try {
-		const response = await fetch(url, {
-			headers: {
-				"X-Goog-Api-Key": apiKey,
-				"X-Goog-FieldMask":
-					// Include expected fields in the response
-					"adrFormatAddress,shortFormattedAddress,formattedAddress,location,addressComponents",
-				"Content-Type": "application/json",
-			},
-		});
+		const response = await fetch(url);
+
+
+		const data: RetrieveResponse = await response.json();
+
+		console.log("data", data);
 
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
-		const data = await response.json();
-
-		const dataFinderRegx = (c: string) => {
-			const regx = new RegExp(`<span class="${c}">([^<]+)<\/span>`);
-			const match = data.adrFormatAddress.match(regx);
-			return match ? match[1] : "";
-		};
-
-		const address1 = dataFinderRegx("street-address");
+		const address1 = data.features[0].properties.address ?? "";
 		const address2 = "";
-		const city = dataFinderRegx("locality");
-		const region = dataFinderRegx("region");
-		const postalCode = dataFinderRegx("postal-code");
-		const country = dataFinderRegx("country-name");
-		const lat = data.location.latitude;
-		const lng = data.location.longitude;
+		const city = data.features[0].properties.context.place?.name ?? "";
+		const region = data.features[0].properties.context.region?.name ?? "";
+		const postalCode = data.features[0].properties.context.postcode?.name ?? "";
+		const country = data.features[0].properties.context.country?.name ?? "";
+		const lat = data.features[0].geometry.coordinates[1];
+		const lng = data.features[0].geometry.coordinates[0];
 
-		const formattedAddress = data.formattedAddress;
+		const formattedAddress = data.features[0].properties.place_formatted;
 
 		const formattedData: AddressType = {
 			address1,
@@ -61,10 +46,7 @@ export async function GET(req: NextRequest) {
 			lng,
 		};
 		return NextResponse.json({
-			data: {
-				address: formattedData,
-				adrAddress: data.adrFormatAddress,
-			},
+			data: formattedData,
 			error: null,
 		});
 	} catch (err) {

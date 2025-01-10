@@ -1,6 +1,6 @@
-import toast from 'react-hot-toast'
-import { AutoSaveTextInput } from '@components/components/input'
-import { useRouter } from 'next/router'
+import { toast } from 'sonner'
+// import { AutoSaveTextInput } from '@components/components/input'
+import { useParams, useRouter } from 'next/navigation'
 import { projectStore } from '@atoms/project'
 import { userInfoStore } from '@atoms/user-info'
 
@@ -15,13 +15,14 @@ interface ProjectData {
 
 export default function ProjectInformation() {
   const router = useRouter()
+  const { id } = useParams()
   const projectInfo = projectStore(state => state.project)
   const userInfo = userInfoStore((state) => state.user)
 
   const onSave = async (data: ProjectData) => {
     try {
       const res = await fetch(
-        `/api/project/${router.query.id}/project-information`,
+        `/api/project/${id}/project-information`,
         {
           method: 'POST',
           body: JSON.stringify(data),
@@ -50,7 +51,7 @@ export default function ProjectInformation() {
         description="Your business information and project manager information"
       >
         <>
-          <AutoSaveTextInput
+          {/* <AutoSaveTextInput
             className="col-span-6"
             defaultValue={
               projectInfo.managerName ||
@@ -71,7 +72,7 @@ export default function ProjectInformation() {
             name="companyName"
             title="Company Name"
             ignoreInvalid
-          />
+          /> */}
         </>
       </Form>
     </FormContainer>

@@ -55,8 +55,8 @@ export async function PATCH(req: NextRequest) {
   }
   const body = await req.json()
   try {
-    const { orgName, orgAddress } = body
-    await updateOrganizationName(user.id, orgName, orgAddress)
+    const { name, address } = body
+    await updateOrganizationName(user.id, name, address)
   } catch (err) {
     console.error(err)
     return NextResponse.json({ status: 'failed' }, { status: 500 })

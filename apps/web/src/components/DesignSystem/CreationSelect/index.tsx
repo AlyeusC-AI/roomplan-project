@@ -1,6 +1,6 @@
 import React, { useId, useState } from 'react'
 import { OptionProps } from 'react-select/dist/declarations/src'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { XIcon } from 'lucide-react'
 import clsx from 'clsx'
 import dynamic from 'next/dynamic'
 import { Option } from '@atoms/saved-options'
@@ -55,7 +55,7 @@ const SelectOption = ({
           {isConfirmingDelete ? (
             'Delete Permanently?'
           ) : (
-            <XMarkIcon className="h-4" />
+            <XIcon className="h-4" />
           )}
         </TertiaryButton>
       )}

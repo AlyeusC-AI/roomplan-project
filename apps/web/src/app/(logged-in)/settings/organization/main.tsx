@@ -3,9 +3,7 @@
 import { orgStore } from '@atoms/organization'
 import OrgSettingsSection from '@components/Settings/Organization/OrgSettingsSection'
 import OrgMembersSection from '@app/(logged-in)/settings/organization/members'
-import AddressAutoComplete, {
-  AddressType,
-} from '@components/ui/address-automplete'
+import AddressAutoComplete from '@components/ui/address-automplete'
 import { Button } from '@components/ui/button'
 import {
   Form,
@@ -25,29 +23,22 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
-const GooglePlacesAutocomplete = dynamic(
-  () => import('react-google-autocomplete'),
-  {
-    ssr: false,
-  }
-)
-
 const profileFormSchema = z.object({
   name: z
     .string()
     .min(2, {
-      message: 'Username must be at least 2 characters.',
+      message: 'Organization name must be at least 2 characters.',
     })
     .max(30, {
-      message: 'Username must not be longer than 30 characters.',
+      message: 'Organization name must not be longer than 30 characters.',
     }),
   address: z
     .string()
     .min(2, {
-      message: 'Username must be at least 2 characters.',
+      message: 'Organization address must be at least 2 characters.',
     })
     .max(30, {
-      message: 'Username must not be longer than 30 characters.',
+      message: 'Organization address must not be longer than 30 characters.',
     }),
 })
 
@@ -114,11 +105,10 @@ export default function Organization() {
                   <FormItem>
                     <FormLabel>Organization Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="John" {...field} />
+                      <Input placeholder="John" defaultValue={name} {...field} />
                     </FormControl>
                     <FormDescription>
-                      Enter your first name. This will be displayed on your
-                      profile.
+                      Your organization name.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -129,7 +119,7 @@ export default function Organization() {
                 name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Organization</FormLabel>
+                    <FormLabel>Organization Address</FormLabel>
                     <FormControl>
                       <AddressAutoComplete
                         address={newAddress}
@@ -140,8 +130,7 @@ export default function Organization() {
                       />
                     </FormControl>
                     <FormDescription>
-                      Enter your last name. This will be displayed on your
-                      profile.
+                      Enter your organization address.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

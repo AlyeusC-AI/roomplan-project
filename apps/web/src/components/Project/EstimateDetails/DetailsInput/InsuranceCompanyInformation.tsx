@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import { carrierOptions } from '@components/DesignSystem/CreationSelect/carrierOptions'
 import SavedOptionSelect from '@components/DesignSystem/CreationSelect/SavedOptionSelect'
-import { AutoSaveTextInput } from '@components/components'
 import clsx from 'clsx'
 import { useParams } from 'next/navigation'
 import { projectStore } from '@atoms/project'
@@ -83,14 +82,14 @@ export default function InsuranceCompanyInformation() {
             optionType="carrier"
             defaultOptions={carrierOptions}
           />
-          <AutoSaveTextInput
+          {/* <AutoSaveTextInput
             className="col-span-6"
             defaultValue={projectInfo.insuranceClaimId}
             onSave={(insuranceClaimId) => onSave({ insuranceClaimId })}
             name="insuranceClaimId"
             title="Claim Number"
             ignoreInvalid
-          />
+          /> */}
           <div
             className={`col-span-3 ${
               typeOfLoss && typeOfLoss !== '--' && typeOfLoss === 'Water'
@@ -145,7 +144,7 @@ export default function InsuranceCompanyInformation() {
             </select>
           </div>
 
-          <AutoSaveTextInput
+          {/* <AutoSaveTextInput
             className="col-span-6"
             defaultValue={projectInfo.adjusterName}
             onSave={(adjusterName) => onSave({ adjusterName })}
@@ -169,7 +168,7 @@ export default function InsuranceCompanyInformation() {
             name="adjusterEmail"
             title="Adjuster Email"
             ignoreInvalid
-          />
+          /> */}
         </>
       </Form>
     </FormContainer>

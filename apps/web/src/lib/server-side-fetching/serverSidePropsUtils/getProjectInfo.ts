@@ -29,6 +29,7 @@ const getProjectInfo = (project: Project) => {
     roofSegments,
     roofSpecs,
     id,
+    publicId
   } = project
   return {
     clientName: clientName || null,
@@ -57,7 +58,12 @@ const getProjectInfo = (project: Project) => {
     roofSegments: roofSegments || null,
     roofSpecs: roofSpecs || null,
     id,
+    publicId
   }
+}
+
+declare global {
+  type Project = ReturnType<typeof getProjectInfo>
 }
 
 export default getProjectInfo

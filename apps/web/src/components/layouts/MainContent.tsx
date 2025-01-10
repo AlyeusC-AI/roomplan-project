@@ -1,3 +1,5 @@
+"use client";
+
 import { userInfoStore } from '@atoms/user-info'
 import { DashboardViews } from '@servicegeek/db'
 import clsx from 'clsx'

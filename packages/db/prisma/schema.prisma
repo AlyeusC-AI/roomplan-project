@@ -61,6 +61,8 @@ model Organization {
   isDeleted               Boolean                   @default(false)
   updatedAt               DateTime                  @default(now()) @updatedAt
   logoId                  String?
+  lat                     Float
+  lng                     Float
   Image                   Image[]
   invitations             OrganizationInvitation[]
   projects                Project[]

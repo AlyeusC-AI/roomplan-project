@@ -59,67 +59,65 @@ export default function AccountSettings({ user }: { user: UserResponse }) {
   }
 
   return (
-    <>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John" {...field} />
-                </FormControl>
-                <FormDescription>
-                  Enter your first name. This will be displayed on your profile.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Doe" {...field} />
-                </FormControl>
-                <FormDescription>
-                  Enter your last name. This will be displayed on your profile.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {user && (
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={user.data.user?.email ?? 'example@gmail.com'}
-                      disabled
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    This is the email address that is associated with your
-                    account. You cannot change it.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <FormField
+          control={form.control}
+          name="firstName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>First Name</FormLabel>
+              <FormControl>
+                <Input placeholder="John" {...field} />
+              </FormControl>
+              <FormDescription>
+                Enter your first name. This will be displayed on your profile.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
           )}
-          <Button type="submit">Update profile</Button>
-        </form>
-      </Form>
-    </>
+        />
+        <FormField
+          control={form.control}
+          name="lastName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Last Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Doe" {...field} />
+              </FormControl>
+              <FormDescription>
+                Enter your last name. This will be displayed on your profile.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {user && (
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder={user.data.user?.email ?? 'example@gmail.com'}
+                    disabled
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  This is the email address that is associated with your
+                  account. You cannot change it.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        <Button type="submit">Update profile</Button>
+      </form>
+    </Form>
   )
 }

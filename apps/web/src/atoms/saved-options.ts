@@ -36,6 +36,7 @@ interface Actions {
     option: Option,
     type: 'carrier' | 'wallMaterial' | 'floorMaterial'
   ) => void
+  setSavedOptions: (options: State) => void
 }
 
 export const savedOptionsStore = create<State & Actions>((set) => ({
@@ -54,6 +55,7 @@ export const savedOptionsStore = create<State & Actions>((set) => ({
       state[type][index] = option
       return state
     }),
+  setSavedOptions: (options) => set(options),
 }))
 
 // const savedOptionsState = atom<SavedOptionsState>({

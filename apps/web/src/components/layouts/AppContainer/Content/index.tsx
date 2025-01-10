@@ -1,3 +1,5 @@
+"use client";
+
 import { Fragment, useState } from 'react'
 import { orgStore } from '@atoms/organization'
 import { userInfoStore } from '@atoms/user-info'

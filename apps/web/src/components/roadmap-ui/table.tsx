@@ -194,13 +194,15 @@ export function TableColumnHeader<TData, TValue>({
   );
 }
 
-export type TableCellProps = {
-  cell: Cell<unknown, unknown>;
+export type TableCellProps<T> = {
+  cell: Cell<T, unknown>;
   className?: string;
+  onClick?: () => void;
+  items: T[]
 };
 
-export const TableCell = ({ cell, className }: TableCellProps) => (
-  <TableCellRaw className={className}>
+export const TableCell = <T extends any>({ cell, className, onClick }: TableCellProps<T>) => (
+  <TableCellRaw className={className} onClick={onClick}>
     {flexRender(cell.column.columnDef.cell, cell.getContext())}
   </TableCellRaw>
 );

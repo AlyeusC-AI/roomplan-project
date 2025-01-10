@@ -1,5 +1,6 @@
 import { ProjectType } from '@servicegeek/db/queries/project/listProjects'
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 // export const defaultInferencesState = []
 
@@ -19,13 +20,20 @@ interface Actions {
   setProjects: (projects: ProjectType[]) => void
 }
 
-export const projectsStore = create<State & Actions>((set) => ({
-  projects: [],
-  addProject: (project) =>
-    set((state) => ({ projects: [...state.projects, project] })),
-  removeProject: (id) =>
-    set((state) => ({
-      projects: state.projects.filter((i) => i.publicId !== id),
-    })),
-  setProjects: (projects) => set(() => ({ projects })),
-}))
+export const projectsStore = create<State & Actions>()(
+  persist(
+    (set) => ({
+      projects: [],
+      addProject: (project) =>
+        set((state) => ({ projects: [...state.projects, project] })),
+      removeProject: (id) =>
+        set((state) => ({
+          projects: state.projects.filter((i) => i.publicId !== id),
+        })),
+      setProjects: (projects) => set(() => ({ projects })),
+    }),
+    {
+      name: 'projects',
+    }
+  )
+)
