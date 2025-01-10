@@ -181,7 +181,6 @@ export async function DELETE(
     })
 
     return NextResponse.json({ status: 'ok' })
-    return
   } catch (err) {
     console.error(err)
     return NextResponse.json({ status: 'failed' }, { status: 500 })

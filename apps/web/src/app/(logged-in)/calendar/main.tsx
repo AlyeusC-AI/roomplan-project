@@ -2,19 +2,14 @@
 
 import { Fragment, useEffect, useState } from 'react'
 import DatePicker from 'react-datepicker'
-import CalenderProjectsModal from './components/projects-modal'
-import MainContent from '@components/layouts/MainContent'
 import { Dialog, Transition } from '@headlessui/react'
-import { XCircleIcon } from 'lucide-react'
+import { CalendarIcon, Check, ChevronsUpDown, XCircleIcon } from 'lucide-react'
 import {
   Assignee,
   ProjectType,
 } from '@servicegeek/db/queries/project/listProjects'
-import { Project, SubscriptionStatus } from '@servicegeek/db'
+import { Project } from '@servicegeek/db'
 import StakeholdersCalendarLegend from './components/StakeholdersCalendarLegend'
-// import { userInfoStore } from '@atoms/user-info'
-// import { projectsStore } from '@atoms/projects'
-// import { orgStore } from '@atoms/organization'
 import {
   CalendarBody,
   CalendarDate,
@@ -31,6 +26,41 @@ import {
 import { exampleFeatures } from '../settings/equipment/table'
 import { Card } from '@components/ui/card'
 import { Button } from '@components/ui/button'
+import { projectsStore } from '@atoms/projects'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@components/ui/sheet'
+import { Input } from '@components/ui/input'
+import { z } from 'zod'
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@components/ui/form'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Popover, PopoverContent, PopoverTrigger } from '@components/ui/popover'
+import { format } from 'date-fns'
+import { cn } from '@lib/utils'
+import { toast } from 'sonner'
+import { Calendar } from '@components/ui/calendar'
+import { Checkbox } from '@components/ui/checkbox'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@components/ui/command'
 
 export interface InviteStatus {
   accepted: boolean
@@ -38,37 +68,59 @@ export interface InviteStatus {
   inviteId: string
 }
 
-interface ProjectPageProps {
-  error?: string
-  orgId?: string | null
-  projects?: ProjectType[] | null
-  subscriptionStatus: SubscriptionStatus
-  inviteStatus: InviteStatus | null
-  userInfo: UserInfo
-  allEvents:
-    | {
-        isDeleted: boolean
-        publicId: string
-        projectId: number | null
-        subject: string
-        payload: string
-        project: Project | null
-        date: Date
-        dynamicId: string
-      }[]
-    | undefined
-  totalProjects: number
-  orgInfo: OrgInfo
-}
+const calendarEventSchema = z.object({
+  subject: z
+    .string()
+    .min(2, {
+      message: 'Event subject must be at least 2 characters.',
+    })
+    .max(30, {
+      message: 'Event subject must not be longer than 30 characters.',
+    }),
+  projectId: z.string().min(1, { message: 'Project is required' }),
+  payload: z
+    .string()
+    .min(2, {
+      message: 'Event message must be at least 2 characters.',
+    })
+    .max(200, {
+      message: 'Event message must not be longer than 200 characters.',
+    }),
+  remindProjectOwners: z.boolean().optional(),
+  remindClient: z.boolean().optional(),
+  date: z.date({
+    required_error: 'Date is required',
+  }),
+  reminderDate: z.date().optional(),
+})
 
-const Calendar = ({ projects }: LoggedInUserInfo) => {
+type CreateEventValues = z.infer<typeof calendarEventSchema>
+
+// export type CalendarEvent = {
+//   id: number
+//   publicId: string
+//   createdAt: Date
+//   updatedAt: Date
+//   subject: string
+//   payload: string
+//   projectId: number | null
+//   date: Date
+//   dynamicId: string
+//   isDeleted: boolean
+//   remindClient: boolean
+//   remindProjectOwners: boolean
+// }
+
+const CalendarPage = () => {
+  const { projects } = projectsStore((state) => state)
+
   const allAssigness =
     projects
       ?.map((project) => project.projectAssignees)
       ?.flat()
       ?.filter((v, i, a) => a.findIndex((t) => t.userId === v.userId) === i)
       ?.map((assignee) => assignee) ?? []
-      
+
   const [currentAssignees, setCurrentAssignees] = useState<Assignee[]>([])
   const [showProjectsModal, setShowProjectsModal] = useState(false)
   const [isCreateCalenderEventModalOpen, setIsCreateCalenderEventModalOpen] =
@@ -101,10 +153,10 @@ const Calendar = ({ projects }: LoggedInUserInfo) => {
 
   useEffect(() => {
     fetch('/api/v1/projects')
-    .then((res) => res.json())
-    .then((data) => {
-      console.log(data)
-    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data)
+      })
   })
 
   const earliestYear =
@@ -119,16 +171,281 @@ const Calendar = ({ projects }: LoggedInUserInfo) => {
       .sort()
       .at(-1) ?? new Date().getFullYear()
 
+  const form = useForm<CreateEventValues>({
+    resolver: zodResolver(calendarEventSchema),
+    mode: 'onChange',
+  })
+
+  const [createPopover, setCreatePopover] = useState(false)
+
+  function onSubmit(data: CreateEventValues) {
+    toast('You submitted the following values:', {
+      description: (
+        <pre className="bg-slate-950 mt-2 w-[340px] rounded-md p-4">
+          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+        </pre>
+      ),
+    })
+  }
+
   return (
     // <MainContent>
     <div className="flex h-screen flex-col">
       {showProjectsModal && (
-        <CalenderProjectsModal
-          isOpen={showProjectsModal}
-          setOpen={() => setShowProjectsModal(!showProjectsModal)}
-        />
+        // <CalenderProjectsModal
+        //   isOpen={showProjectsModal}
+        //   setOpen={() => setShowProjectsModal(!showProjectsModal)}
+        // />
+        <Sheet open={showProjectsModal} onOpenChange={setShowProjectsModal}>
+          <SheetContent className='overflow-y-scroll'>
+            <SheetHeader>
+              <SheetTitle>New Calendar Event</SheetTitle>
+              <SheetDescription>Create a new calendar event.</SheetDescription>
+            </SheetHeader>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-8 pt-3"
+              >
+                <FormField
+                  control={form.control}
+                  name="projectId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project</FormLabel>
+                      <FormControl>
+                        <Popover
+                          open={createPopover}
+                          onOpenChange={setCreatePopover}
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={createPopover}
+                              className="w-full justify-between"
+                            >
+                              {field.value
+                                ? projects.find(
+                                    (framework) => framework.publicId === field.value
+                                  )?.name
+                                : 'Select project...'}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <Command>
+                              <CommandInput placeholder="Search projects..." />
+                              <CommandList>
+                                <CommandEmpty>No project found.</CommandEmpty>
+                                <CommandGroup>
+                                  {projects.map((project) => (
+                                    <CommandItem
+                                      key={project.publicId}
+                                      value={project.name}
+                                      onSelect={() => {
+                                        field.onChange(
+                                          project.publicId === field.value
+                                            ? ''
+                                            : project.publicId
+                                        )
+                                        setCreatePopover(false)
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          'mr-2 h-4 w-4',
+                                          field.value === project.publicId
+                                            ? 'opacity-100'
+                                            : 'opacity-0'
+                                        )}
+                                      />
+                                      {project.name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </FormControl>
+                      <FormDescription>
+                        Select the project you want for your event.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="subject"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Event Subject</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Event Name" {...field} />
+                      </FormControl>
+                      <FormDescription>The name of your event.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="payload"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Event Description</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Event Description" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        The description of your event.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Event Date</FormLabel>
+                      <FormControl>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={'outline'}
+                              className={cn(
+                                'w-full justify-start text-left font-normal',
+                                !field.value && 'text-muted-foreground'
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {field.value ? (
+                                format(field.value, 'PPP')
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </FormControl>
+                      <FormDescription>
+                        The date you want your event to take place.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="reminderDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Event Reminder Date</FormLabel>
+                      <FormControl>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={'outline'}
+                              className={cn(
+                                'w-full justify-start text-left font-normal',
+                                !field.value && 'text-muted-foreground'
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {field.value ? (
+                                format(field.value ?? Date.now(), 'PPP')
+                              ) : (
+                                <span>Pick a reminder date</span>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </FormControl>
+                      <FormDescription>
+                        The date you want to remind your client about the event.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormItem>
+                  <FormLabel>Reminders</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="remindProjectOwners"
+                    render={({ field }) => (
+                      <div className="mt-3 flex items-center space-x-2">
+                        <Checkbox
+                          id="terms1"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <div className="grid gap-1.5 leading-none">
+                          <label
+                            htmlFor="terms1"
+                            className="font-regular text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Remind Project Owners
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="remindClient"
+                    render={({ field }) => (
+                      <div className="mt-3 flex items-center space-x-2">
+                        <Checkbox
+                          id="terms1"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <div className="grid gap-1.5 leading-none">
+                          <label
+                            htmlFor="terms1"
+                            className="font-regular text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Remind Client
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                  />
+
+                  <FormDescription>
+                    Select who you'd like to remind about the event.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+                <Button type="submit">Create Event</Button>
+              </form>
+            </Form>
+          </SheetContent>
+        </Sheet>
       )}
-      <Transition.Root show={isCreateCalenderEventModalOpen} as={Fragment}>
+      {/* <Transition.Root show={isCreateCalenderEventModalOpen} as={Fragment}>
         <Dialog
           as="div"
           className="relative z-10"
@@ -304,7 +621,7 @@ const Calendar = ({ projects }: LoggedInUserInfo) => {
             </div>
           </div>
         </Dialog>
-      </Transition.Root>
+      </Transition.Root> */}
       <>
         <div className=" lg:h-full">
           <header className="flex items-center justify-between border-b border-gray-200 pb-4 pl-3 lg:flex-none">
@@ -359,4 +676,4 @@ const Calendar = ({ projects }: LoggedInUserInfo) => {
   )
 }
 
-export default Calendar
+export default CalendarPage
