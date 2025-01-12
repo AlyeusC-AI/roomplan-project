@@ -5,7 +5,6 @@ import {
   Platform,
   TouchableWithoutFeedback,
 } from "react-native";
-import { supabase } from "../../lib/supabase";
 import {
   Box,
   FormControl,
@@ -22,12 +21,9 @@ import {
   useToast,
   Text,
 } from "native-base";
-import { getConstants } from "../../lib/constants";
 import { api } from "../../utils/api";
-import { useRecoilState } from "recoil";
-import userSessionState from "../../atoms/user";
+import { userStore } from "../../atoms/user";
 
-const servicegeekUrl = getConstants().servicegeekUrl!;
 
 const sizes = [
   { id: "1", size: "1-10" },
@@ -48,7 +44,7 @@ export default function OrganizationSetup({
 }) {
   const [companyName, setCompanyName] = useState("");
   const [companySize, setCompanySize] = useState<validSizes>("");
-  const [supabaseSession, setSession] = useRecoilState(userSessionState);
+  const { session } = userStore(state => state);
 
   const toast = useToast();
 
@@ -64,7 +60,7 @@ export default function OrganizationSetup({
       return;
     }
     const { org } = await createOrganization.mutateAsync({
-      jwt: supabaseSession ? supabaseSession["access_token"] : "null",
+      jwt: session ? session["access_token"] : "null",
       companyName,
       companySize: sizes[companySize].size,
     });

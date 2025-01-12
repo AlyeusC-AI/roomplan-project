@@ -18,13 +18,11 @@ import {
   useCameraDevice,
 } from "react-native-vision-camera";
 import { getConstants } from "../lib/constants";
-import { RouterOutputs } from "@servicegeek/api";
 import RoomSelection from "../components/RoomSelection";
-import { useRecoilState } from "recoil";
-import userSessionState from "../atoms/user";
 import { createClient } from "@supabase/supabase-js";
 import uuid from "react-native-uuid";
 import { api } from "../utils/api";
+import { userStore } from "../atoms/user";
 
 export const supabaseServiceRole = createClient(
   getConstants().supabaseUrl,
@@ -39,7 +37,7 @@ export default function CameraScreen({
   const [lastPhoto, setLastPhoto] = useState("");
   const device = useCameraDevice('back')
   const [disabled, setDisabled] = useState(false);
-  const [supabaseSession, setSession] = useRecoilState(userSessionState);
+  const { session: supabaseSession } = userStore(state => state);
   const { rooms, projectId } = route.params;
   const queryParams = {
     jwt: supabaseSession ? supabaseSession["access_token"] : "null",

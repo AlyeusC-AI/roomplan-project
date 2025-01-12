@@ -6,27 +6,23 @@ import {
   Center,
   Heading,
   FlatList,
-  CheckIcon,
   AddIcon,
 } from "native-base";
 import React from "react";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/Navigation";
-import { getConstants } from "../lib/constants";
 import { Fab } from "native-base";
 import { api } from "../utils/api";
-import userSessionState from "../atoms/user";
-import { useRecoilState } from "recoil";
 import OrganizationSetup from "../components/dashboard/OrganizationSetup";
 import ProjectListItem from "../components/ProjectListItem";
 import DashboardHeader from "../components/dashboard/Header";
+import { userStore } from "../atoms/user";
 
-const servicegeekUrl = getConstants().servicegeekUrl!;
 
 export default function Dashboard({
   navigation,
 }: NativeStackScreenProps<RootStackParamList>) {
-  const [supabaseSession, setSession] = useRecoilState(userSessionState);
+  const { session: supabaseSession } = userStore(state => state);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
 

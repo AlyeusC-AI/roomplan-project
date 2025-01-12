@@ -20,13 +20,11 @@ import { RootStackParamList } from "../../types/Navigation";
 import { useToast } from "native-base";
 import { format, formatDistance } from "date-fns";
 
-// @ts-expect-error
 import TrashIcon from "../../../assets/icons/Trash.svg";
 import { api, RouterOutputs } from "../../utils/api";
-import { useRecoilState } from "recoil";
-import userSessionState from "../../atoms/user";
 import { useDebounce } from "../../utils/debounce";
 import produce from "immer";
+import { userStore } from "../../atoms/user";
 
 export function RoomTextArea({
   value,
@@ -172,7 +170,7 @@ export default function RoomNotes({
 }: NativeStackScreenProps<RootStackParamList>) {
   const toast = useToast();
 
-  const [supabaseSession] = useRecoilState(userSessionState);
+  const { session: supabaseSession } = userStore(state => state);
   const projectPublicId = (route?.params as { projectId: string })
     .projectId as string;
   const queryParams = {

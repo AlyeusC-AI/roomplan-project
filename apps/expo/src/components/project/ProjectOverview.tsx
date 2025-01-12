@@ -5,82 +5,36 @@ import {
   VStack,
   View,
   Pressable,
-  ChevronUpIcon,
-  ChevronDownIcon,
-  Select,
-  CheckIcon,
-  Modal,
-  Text,
-  Actionsheet,
   Divider,
   Spinner,
   useToast,
-  Button,
-  TextArea,
-  FlatList,
-  HStack,
-  Avatar,
-  Spacer,
-  Center,
-  FormControl,
-  Input,
 } from "native-base";
-import React, { FC, useEffect, useState } from "react";
-import { GridView, TextField } from "react-native-ui-lib";
-import { useRecoilState } from "recoil";
-import userSessionState from "../../atoms/user";
+import React, { useEffect, useState } from "react";
+import { userStore } from "../../atoms/user";
 import { RootStackParamList } from "../../types/Navigation";
 import { api } from "../../utils/api";
 import * as Clipboard from "expo-clipboard";
 
 import { Linking, StyleSheet } from "react-native";
 import { useDebounce } from "../../utils/debounce";
-// @ts-expect-error
 import MapIcon from "../../../assets/icons/Map.svg";
-// @ts-expect-error
 import CameraIcon from "../../../assets/icons/Camera.svg";
-
-// @ts-expect-error
 import EnvelopeIcon from "../../../assets/icons/Envelope.svg";
-// @ts-expect-error
 import PhoneIcon from "../../../assets/icons/Phone.svg";
-// @ts-expect-error
 import SettingsLogo from "../../../assets/icons/Cog6Tooth.svg";
-// @ts-expect-error
 import ArrowLongRight from "../../../assets/icons/ArrowLongRight.svg";
 
-// @ts-expect-error
 import BookOpen from "../../../assets/icons/BookOpen.svg";
-// @ts-expect-error
 import Document from "../../../assets/icons/Document.svg";
-// @ts-expect-error
 import EllipsisVertical from "../../../assets/icons/EllipsisVertical.svg";
 
 import AssigneeSelect from "./AssigneeSelect";
-import ProjectNotes from "./ProjectNotes";
-
-const styles = StyleSheet.create({
-  textfield: {
-    fontSize: 18,
-    borderBottomWidth: 1,
-    marginTop: 8,
-  },
-  container: {
-    width: "100%",
-    height: 250,
-    backgroundColor: "#000",
-  },
-  map: {
-    width: "100%",
-    height: "100%",
-  },
-});
 
 export default function ProjectOverview({
   route,
   navigation,
 }: NativeStackScreenProps<RootStackParamList>) {
-  const [supabaseSession] = useRecoilState(userSessionState);
+  const { session: supabaseSession } = userStore(state => state);
   const [name, setName] = useState("");
   const [number, setNumber] = useState("");
   const [email, setEmail] = useState("");

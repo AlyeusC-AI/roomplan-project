@@ -10,27 +10,16 @@ import {
   HStack,
   Center,
   Spinner,
-  FormControl,
-  Input,
-  Stack,
-  IconButton,
-  InputGroup,
-  InputRightAddon,
   AddIcon,
 } from "native-base";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/Navigation";
 import { useToast } from "native-base";
-import { getConstants } from "../../lib/constants";
-import { format } from "date-fns";
 import { api, RouterOutputs } from "../../utils/api";
-import { useRecoilState } from "recoil";
-import userSessionState from "../../atoms/user";
 
-// @ts-expect-error
-import TrashIcon from "../../../assets/icons/Trash.svg";
 import RoomReading from "./RoomReading";
+import { userStore } from "../../atoms/user";
 
 export const RoomReadingType = {
   dehumidifer: "dehumidifer",
@@ -142,7 +131,7 @@ export default function RoomReadings({
   navigation,
 }: NativeStackScreenProps<RootStackParamList>) {
   const toast = useToast();
-  const [supabaseSession] = useRecoilState(userSessionState);
+  const { session: supabaseSession } = userStore(state => state);
   const projectPublicId = (route?.params as { projectId: string })
     .projectId as string;
   const queryParams = {

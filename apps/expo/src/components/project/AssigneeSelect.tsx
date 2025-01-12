@@ -9,10 +9,9 @@ import {
   CheckIcon,
 } from "native-base";
 import React, { useState } from "react";
-import { useRecoilState } from "recoil";
 // @ts-expect-error
 import UsersIcon from "../../../assets/icons/Users.svg";
-import userSessionState from "../../atoms/user";
+import { userStore } from "../../atoms/user";
 import { api } from "../../utils/api";
 
 const AssigneeSelect = ({
@@ -32,7 +31,7 @@ const AssigneeSelect = ({
   const selectedMembers = projectAssignees.filter((p) =>
     teamMembers.find((t) => t.user.id === p.userId)
   );
-  const [supabaseSession] = useRecoilState(userSessionState);
+  const { session } = userStore(state => state);
 
   const trpcContext = api.useContext();
   const addProjectAssignee = api.mobile.addProjectAssignee.useMutation({
@@ -134,13 +133,13 @@ const AssigneeSelect = ({
   const onPress = (userId: string, isAlreadySelected: boolean) => {
     if (isAlreadySelected) {
       removeProjectAssignee.mutate({
-        jwt: supabaseSession ? supabaseSession["access_token"] : "null",
+        jwt: session ? session["access_token"] : "null",
         projectPublicId,
         userId,
       });
     } else {
       addProjectAssignee.mutate({
-        jwt: supabaseSession ? supabaseSession["access_token"] : "null",
+        jwt: session ? session["access_token"] : "null",
         projectPublicId,
         userId,
       });

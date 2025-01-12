@@ -22,11 +22,9 @@ import RoomImages from "./RoomImages";
 import { Fab } from "native-base";
 import { useToast } from "native-base";
 
-// @ts-expect-error
 import CameraIcon from "../../../assets/icons/Camera.svg";
 import { api, RouterOutputs } from "../../utils/api";
-import { useRecoilState } from "recoil";
-import userSessionState from "../../atoms/user";
+import { userStore } from "../../atoms/user";
 import Collapsible from "react-native-collapsible";
 import { useIsFocused } from "@react-navigation/native";
 
@@ -77,7 +75,7 @@ export default function ProjectPhotos({
   route,
   navigation,
 }: NativeStackScreenProps<RootStackParamList>) {
-  const [supabaseSession] = useRecoilState(userSessionState);
+  const { session: supabaseSession } = userStore(state => state);
   const projectPublicId = (route?.params as { projectId: string })
     .projectId as string;
 

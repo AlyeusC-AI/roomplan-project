@@ -12,15 +12,12 @@ import {
 import React from "react";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/Navigation";
-import { getConstants } from "../lib/constants";
 import { useToast } from "native-base";
 // import { MaterialIcons } from "@expo/vector-icons";
 import { Keyboard, TouchableWithoutFeedback } from "react-native";
-import { useRecoilState } from "recoil";
-import userSessionState from "../atoms/user";
 import { api } from "../utils/api";
+import { userStore } from "../atoms/user";
 
-const servicegeekUrl = getConstants().servicegeekUrl!;
 
 export default function RoomCreationScreen({
   navigation,
@@ -29,7 +26,7 @@ export default function RoomCreationScreen({
   const [roomName, setRoomName] = useState("");
   const toast = useToast();
 
-  const [supabaseSession] = useRecoilState(userSessionState);
+  const { session: supabaseSession } = userStore(state => state);
   const projectPublicId = (route?.params as { projectId: string })
     .projectId as string;
   const queryParams = {

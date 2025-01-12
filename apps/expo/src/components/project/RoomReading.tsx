@@ -1,19 +1,11 @@
 import {
-  FlatList,
   Box,
   Heading,
   Button,
-  VStack,
-  View,
-  Flex,
   Text,
-  HStack,
-  Center,
-  Spinner,
   FormControl,
   Input,
   Stack,
-  IconButton,
   InputGroup,
   InputRightAddon,
   AddIcon,
@@ -21,17 +13,10 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
 } from "native-base";
-import React, { useEffect, useMemo, useState } from "react";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../types/Navigation";
-import { useToast } from "native-base";
-import { getConstants } from "../../lib/constants";
+import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { api, RouterOutputs } from "../../utils/api";
-import { useRecoilState } from "recoil";
-import userSessionState from "../../atoms/user";
+import { RouterOutputs } from "../../utils/api";
 
-// @ts-expect-error
 import TrashIcon from "../../../assets/icons/Trash.svg";
 import {
   UpdateGenericRoomReadingData,

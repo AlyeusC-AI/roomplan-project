@@ -5,13 +5,12 @@ import { NavigationContainer } from "@react-navigation/native";
 import Authenticated from "../screens/RootScreen/Authenticated";
 import Unauthenticated from "../screens/RootScreen/Unauthenticated";
 import { supabase } from "../lib/supabase";
-import { RecoilRoot, useRecoilState } from "recoil";
-import userSessionState from "../atoms/user";
+import { userStore } from "../atoms/user";
 import { NativeBaseProvider, extendTheme } from "native-base";
 import { TRPCProvider } from "../utils/api";
 
 function RootScreen() {
-  const [supabaseSession, setSession] = useRecoilState(userSessionState);
+  const { session, setSession } = userStore((state) => state);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -31,11 +30,7 @@ function RootScreen() {
 
   return (
     <NavigationContainer>
-      {supabaseSession && supabaseSession.user ? (
-        <Authenticated />
-      ) : (
-        <Unauthenticated />
-      )}
+      {session && session.user ? <Authenticated /> : <Unauthenticated />}
     </NavigationContainer>
   );
 }
@@ -60,11 +55,9 @@ export default function AppRoot() {
   });
   return (
     <TRPCProvider>
-      <RecoilRoot>
-        <NativeBaseProvider theme={theme}>
-          <RootScreen />
-        </NativeBaseProvider>
-      </RecoilRoot>
+      <NativeBaseProvider theme={theme}>
+        <RootScreen />
+      </NativeBaseProvider>
     </TRPCProvider>
   );
 }

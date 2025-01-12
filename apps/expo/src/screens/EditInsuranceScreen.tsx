@@ -14,16 +14,15 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/Navigation";
 import { useToast } from "native-base";
 import { Keyboard, Linking, TouchableWithoutFeedback } from "react-native";
-import { useRecoilState } from "recoil";
-import userSessionState from "../atoms/user";
 import { api } from "../utils/api";
+import { userStore } from "../atoms/user";
 
 export default function InsuranceScreen({
   navigation,
   route,
 }: NativeStackScreenProps<RootStackParamList>) {
   const toast = useToast();
-  const [supabaseSession] = useRecoilState(userSessionState);
+  const { session: supabaseSession } = userStore(state => state);
   const projectPublicId = (route?.params as { projectId: string })
     .projectId as string;
   const queryParams = {

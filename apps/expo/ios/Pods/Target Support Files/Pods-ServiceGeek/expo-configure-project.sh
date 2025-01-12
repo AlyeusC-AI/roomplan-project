@@ -45,6 +45,6 @@ with_node \
   --no-warnings \
   --eval "require(require.resolve('expo-modules-autolinking', { paths: [require.resolve('expo/package.json')] }))(process.argv.slice(1))" \
   generate-modules-provider  \
-  --target "/Users/samuelvulakh/Desktop/Work/Freelancing/UpWork/servicegeek/apps/expo/ios/Pods/Target Support Files/Pods-ServiceGeek/ExpoModulesProvider.swift" \
+  --target "/Users/samuelvulakh/Desktop/Work/freelancing/upwork/servicegeek/apps/expo/ios/Pods/Target Support Files/Pods-ServiceGeek/ExpoModulesProvider.swift" \
   --platform "apple" \
   --packages "expo-asset" "expo-clipboard" "expo-constants" "expo-dev-launcher" "expo-dev-menu" "expo-eas-client" "expo-file-system" "expo-font" "expo-keep-awake" "expo-tracking-transparency" "expo-updates"

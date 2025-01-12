@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { supabase } from "../lib/supabase";
 import {
   Button,
   View,
@@ -8,21 +7,16 @@ import {
   Spinner,
   HStack,
   Text,
-  KeyboardAvoidingView,
 } from "native-base";
 import React from "react";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/Navigation";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { useToast } from "native-base";
-// import { MaterialIcons } from "@expo/vector-icons";
-import { getConstants } from "../lib/constants";
 import { Keyboard, TouchableWithoutFeedback } from "react-native";
 import { api } from "../utils/api";
-import { useRecoilState } from "recoil";
-import userSessionState from "../atoms/user";
+import { userStore } from "../atoms/user";
 
-const servicegeekUrl = getConstants().servicegeekUrl!;
 
 export default function ProjectCreationScreen({
   navigation,
@@ -31,7 +25,7 @@ export default function ProjectCreationScreen({
   const [clientName, setClientName] = useState("");
   const [address, setAddress] = useState("");
   const toast = useToast();
-  const [supabaseSession] = useRecoilState(userSessionState);
+  const { session: supabaseSession } = userStore(state => state);
 
   const createNewProject = api.mobile.createNewProject.useMutation();
 

@@ -1,1 +1,4 @@
-2024-11-27 17:22:07.850 xcodebuild[72217:12893386]  DVTDeveloperAccountManager: Failed to load credentials for samuel.vulakh@revozero.com: Error Domain=DVTDeveloperAccountCredentialsError Code=0 "Invalid credentials in keychain for samuel.vulakh@revozero.com, missing Xcode-Token" UserInfo={NSLocalizedDescription=Invalid credentials in keychain for samuel.vulakh@revozero.com, missing Xcode-Token}
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, id:D82975CA-E238-49C1-9B04-76864083C9D5, OS:18.2, name:iPhone 14 }
+{ platform:iOS Simulator, id:D82975CA-E238-49C1-9B04-76864083C9D5, OS:18.2, name:iPhone 14 }
+2025-01-10 18:47:08.048 xcodebuild[51272:3665275]  DVTDeveloperAccountManager: Failed to load credentials for samuel.vulakh@revozero.com: Error Domain=DVTDeveloperAccountCredentialsError Code=0 "Invalid credentials in keychain for samuel.vulakh@revozero.com, missing Xcode-Token" UserInfo={NSLocalizedDescription=Invalid credentials in keychain for samuel.vulakh@revozero.com, missing Xcode-Token}

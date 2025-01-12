@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { supabase } from "../lib/supabase";
 import {
   Button,
   View,
@@ -12,23 +11,18 @@ import {
 import React from "react";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/Navigation";
-import { getConstants } from "../lib/constants";
 import { useToast } from "native-base";
-// import { MaterialIcons } from "@expo/vector-icons";
-import { Keyboard, SafeAreaView, TouchableWithoutFeedback } from "react-native";
-import { useRecoilState } from "recoil";
-import userSessionState from "../atoms/user";
+import { Keyboard, TouchableWithoutFeedback } from "react-native";
 import { api } from "../utils/api";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-
-const servicegeekUrl = getConstants().servicegeekUrl!;
+import { userStore } from "../atoms/user";
 
 export default function EditProjectDetails({
   navigation,
   route,
 }: NativeStackScreenProps<RootStackParamList>) {
   const toast = useToast();
-  const [supabaseSession] = useRecoilState(userSessionState);
+  const { session: supabaseSession } = userStore(state => state);
   const projectPublicId = (route?.params as { projectId: string })
     .projectId as string;
   const queryParams = {

@@ -4,13 +4,12 @@ import React from "react";
 import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
 import { NavigationContainer } from "@react-navigation/native";
 
-import { useRecoilState } from "recoil";
-import userSessionState from "../../atoms/user";
 import Authenticated from "./Authenticated";
 import Unauthenticated from "./Unauthenticated";
+import { userStore } from "../../atoms/user";
 
 export default function RootScreen() {
-  const [session, setSession] = useRecoilState(userSessionState);
+  const { session, setSession } = userStore(state => state);
 
   console.log("session", session);
   useEffect(() => {
