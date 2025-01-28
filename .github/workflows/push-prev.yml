@@ -10,11 +10,11 @@ jobs:
   Deploy-Preview:
     runs-on: ubuntu-latest
     steps:
-      - name: Go to web dir
-        run: |
-          ls
-          cd ./apps/web
       - uses: actions/checkout@v2
+      - name: Go to web dir
+      run: |
+        ls
+        cd ./apps/web
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
       - name: Pull Vercel Environment Information
