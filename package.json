@@ -13,12 +13,9 @@
     "build:dev:ios": "turbo build:dev:ios"
   },
   "devDependencies": {
-    "@servicegeek/eslint-config": "link:./packages/config/eslint",
-    "eslint": "^9.16.0",
     "prettier": "^2.5.1",
     "turbo": "latest",
-    "@eslint/eslintrc": "^3.2.0",
-    "@eslint/js": "^9.16.0"
+    "next": "15.1.6"
   },
   "packageManager": "pnpm@9.9.0"
 }
