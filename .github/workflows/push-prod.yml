@@ -10,7 +10,7 @@ jobs:
   Deploy-Production:
     runs-on: ubuntu-latest
     steps:
-       - name: Go to web dir
+      - name: Go to web dir
         run: cd apps/web
       - uses: actions/checkout@v2
       - name: Install Vercel CLI
