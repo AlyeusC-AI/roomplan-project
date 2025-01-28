@@ -51,26 +51,26 @@ export function ImageUpload() {
     <>
       <Form {...form}>
         <form
-          className="space-y-8"
+          className='space-y-8'
           onSubmit={form.handleSubmit(submitCircleRegistration)}
         >
-          <Avatar className="w-24 h-24">
+          <Avatar className='size-24'>
             <AvatarImage src={preview} />
             <AvatarFallback>BU</AvatarFallback>
           </Avatar>
           <FormField
             control={form.control}
-            name="circle_image"
+            name='circle_image'
             render={({ field: { onChange, value, ...rest } }) => (
               <>
                 <FormItem>
                   <FormLabel>Circle Image</FormLabel>
                   <FormControl>
                     <Input
-                      type="file"
+                      type='file'
                       {...rest}
                       onChange={(event) => {
-                        const { files, displayUrl} = getImageData(event)
+                        const { files, displayUrl } = getImageData(event);
                         setPreview(displayUrl);
                         onChange(files);
                       }}
@@ -84,7 +84,7 @@ export function ImageUpload() {
               </>
             )}
           />
-          <Button type="submit">Register</Button>
+          <Button type='submit'>Register</Button>
         </form>
       </Form>
     </>

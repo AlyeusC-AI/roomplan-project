@@ -1,24 +1,24 @@
-import { prisma } from '@servicegeek/db'
+import { prisma } from "@servicegeek/db";
 
-import { ORG_ACCESS_LEVEL } from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
-import { GetServerSidePropsContext } from 'next'
-import { createClient } from '@lib/supabase/server'
+import { ORG_ACCESS_LEVEL } from "@lib/serverSidePropsUtils/getUserWithAuthStatus";
+import { GetServerSidePropsContext } from "next";
+import { createClient } from "@lib/supabase/server";
 
 const getReportData = async (
   ctx: GetServerSidePropsContext,
   projectPublicId: string
 ) => {
-  let now = performance.now()
-  const supabaseClient = await createClient()
+  const now = performance.now();
+  const supabaseClient = await createClient();
 
   const {
     data: { user: authUser },
-  } = await supabaseClient.auth.getUser()
+  } = await supabaseClient.auth.getUser();
   const {
     data: { session },
-  } = await supabaseClient.auth.getSession()
+  } = await supabaseClient.auth.getSession();
   if (!authUser) {
-    return { user: null, accessToken: null }
+    return { user: null, accessToken: null };
   }
   const user = await prisma.user.findUnique({
     where: { id: authUser.id },
@@ -83,7 +83,7 @@ const getReportData = async (
               },
               projects: {
                 orderBy: {
-                  createdAt: 'desc',
+                  createdAt: "desc",
                 },
                 where: {
                   isDeleted: false,
@@ -143,14 +143,14 @@ const getReportData = async (
         },
       },
     },
-  })
+  });
   if (!user) {
     return {
       user: null,
       orgAccessLevel: null,
       accessToken: null,
       emailConfirmed: false,
-    }
+    };
   }
 
   if (!user.org?.organization.id) {
@@ -159,7 +159,7 @@ const getReportData = async (
       orgAccessLevel: null,
       accessToken: session?.access_token,
       emailConfirmed: authUser.email_confirmed_at,
-    }
+    };
   }
 
   if (!user.org) {
@@ -168,26 +168,26 @@ const getReportData = async (
       orgAccessLevel: null,
       accessToken: session?.access_token,
       emailConfirmed: authUser.email_confirmed_at,
-    }
+    };
   }
 
-  let orgAccessLevel = ORG_ACCESS_LEVEL.MEMBER
+  let orgAccessLevel = ORG_ACCESS_LEVEL.MEMBER;
   if (user.org.isDeleted) {
-    orgAccessLevel = ORG_ACCESS_LEVEL.REMOVED
+    orgAccessLevel = ORG_ACCESS_LEVEL.REMOVED;
   } else if (user.org.isAdmin) {
-    orgAccessLevel = ORG_ACCESS_LEVEL.ADMIN
+    orgAccessLevel = ORG_ACCESS_LEVEL.ADMIN;
   }
   if (user.isSupportUser) {
-    orgAccessLevel = ORG_ACCESS_LEVEL.ADMIN
+    orgAccessLevel = ORG_ACCESS_LEVEL.ADMIN;
   }
-  let end = performance.now()
-  console.log(`getProjectsDaa took ${end - now} ms`)
+  const end = performance.now();
+  console.log(`getProjectsDaa took ${end - now} ms`);
   return {
     user: user,
     orgAccessLevel: orgAccessLevel,
     accessToken: session?.access_token,
     emailConfirmed: authUser.email_confirmed_at,
-  }
-}
+  };
+};
 
-export default getReportData
+export default getReportData;

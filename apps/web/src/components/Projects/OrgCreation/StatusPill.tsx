@@ -1,37 +1,37 @@
-import Pill from '@components/DesignSystem/Pills/Pill'
-import { ProjectStatus } from '@servicegeek/db'
+import Pill from "@components/DesignSystem/Pills/Pill";
+import { ProjectStatus } from "@servicegeek/db";
 
 export const getStatusColor = (status?: ProjectStatus | null) => {
   if (status === ProjectStatus.active) {
-    return 'green'
+    return "green";
   }
   if (status === ProjectStatus.mitigation) {
-    return 'blue'
+    return "blue";
   }
   if (status === ProjectStatus.inspection) {
-    return 'yellow'
+    return "yellow";
   }
   if (status === ProjectStatus.review) {
-    return 'orange'
+    return "orange";
   }
   if (status === ProjectStatus.incomplete) {
-    return 'red'
+    return "red";
   }
-  return 'none'
-}
+  return "none";
+};
 
 const StatusPill = ({ status }: { status?: ProjectStatus | null }) => {
-  return <Pill color={getStatusColor(status)}>{status}</Pill>
-}
+  return <Pill color={getStatusColor(status)}>{status}</Pill>;
+};
 
 export const StatusValuePill = ({
   label,
   color,
 }: {
-  label: string
-  color: string
+  label: string;
+  color: string;
 }) => {
-  return <Pill color={color}>{label}</Pill>
-}
+  return <Pill color={color}>{label}</Pill>;
+};
 
-export default StatusPill
+export default StatusPill;

@@ -1,4 +1,3 @@
-import { createOption } from "@servicegeek/utils/createOption";
 
 import { prisma, SavedOptionType } from "../../../";
 import { v4 } from "uuid";
@@ -18,7 +17,10 @@ const createSavedOption = async (
   const isAdmin = await getIsAdmin(organizationId, haloUser.id);
   if (!isAdmin) return { failed: true };
 
-  const option = createOption(label);
+  const option = {
+    label,
+    value: label.toLowerCase().replace(/\W/g, ""),
+  };
 
   const result = prisma.organizationSavedOption.create({
     data: {

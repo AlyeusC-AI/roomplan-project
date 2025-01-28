@@ -1,16 +1,16 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import { NextApiRequest, NextApiResponse } from "next";
 
-const fs = require('fs').promises
+const fs = require("fs").promises;
 
 export type DetectionObject = {
-  xmin: number
-  ymin: number
-  xmax: number
-  ymax: number
-  confidence: number
-  name: string
-  class: number
-}
+  xmin: number;
+  ymin: number;
+  xmax: number;
+  ymax: number;
+  confidence: number;
+  name: string;
+  class: number;
+};
 
 const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
   // const servicegeekToken = req.headers['x-servicegeek-detection-token']
@@ -81,15 +81,15 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
   //     })
   //     await Promise.allSettled(promises)
   //   }
-  return res.status(200).send('OK')
+  return res.status(200).send("OK");
   // } catch (error) {
   //   console.error(error)
   //   return res.status(500).send('Failed')
   // }
-}
+};
 
 export default async function Route(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') await handlePost(req, res)
-  else res.status(405).json({ Error: `Operation ${req.method} not allowed` })
-  return
+  if (req.method === "POST") await handlePost(req, res);
+  else res.status(405).json({ Error: `Operation ${req.method} not allowed` });
+  return;
 }

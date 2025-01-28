@@ -1,35 +1,35 @@
-import { createClient } from '@lib/supabase/server'
-import { prisma } from '@servicegeek/db'
+import { createClient } from "@lib/supabase/server";
+import { prisma } from "@servicegeek/db";
 
-import { DashboardViews } from '@servicegeek/db'
-import { NextRequest, NextResponse } from 'next/server'
+import { DashboardViews } from "@servicegeek/db";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(req: NextRequest) {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    console.error('Session does not exist.')
-    return NextResponse.json({ status: 'failed' }, { status: 500 })
+    console.error("Session does not exist.");
+    return NextResponse.json({ status: "failed" }, { status: 500 });
   }
 
-  const { preference } = await req.json()
+  const { preference } = await req.json();
 
   if (
     preference !== DashboardViews.listView &&
     preference !== DashboardViews.boardView
   ) {
-    console.error('Invalid prference')
+    console.error("Invalid prference");
     return NextResponse.json(
       {
-        status: 'failed',
-        message: 'Invalid preference',
+        status: "failed",
+        message: "Invalid preference",
       },
       { status: 500 }
-    )
+    );
   }
 
   try {
@@ -40,11 +40,11 @@ export async function PATCH(req: NextRequest) {
       data: {
         savedDashboardView: preference,
       },
-    })
+    });
   } catch (err) {
-    console.error('err', err)
-    return NextResponse.json({ status: 'failed' }, { status: 500 })
+    console.error("err", err);
+    return NextResponse.json({ status: "failed" }, { status: 500 });
   }
 
-  return NextResponse.json({ status: 'ok' }, { status: 200 })
+  return NextResponse.json({ status: "ok" }, { status: 200 });
 }

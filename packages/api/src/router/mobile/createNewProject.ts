@@ -11,7 +11,18 @@ const createNewProject = mobileProcedure
     z.object({
       jwt: z.string(),
       name: z.string(),
-      location: z.string(),
+      location: z.object({
+        address1: z.string(),
+        address2: z.string(),
+        formattedAddress: z.string(),
+        city: z.string(),
+        region: z.string(),
+        postalCode: z.string(),
+        country: z.string(),
+        lat: z.number(),
+        lng: z.number(),
+        state: z.string(),
+      }),
     })
   )
   .mutation(async ({ input, ctx }) => {

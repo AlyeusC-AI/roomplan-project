@@ -1,6 +1,6 @@
-import { FileObject } from '@supabase/storage-js'
+import { FileObject } from "@supabase/storage-js";
 
-import { supabaseServiceRole } from './supabaseServiceRoleClient'
+import { supabaseServiceRole } from "./admin";
 
 const getPresignedUrlMapFromFileObjectList = async (
   files: FileObject[],
@@ -8,24 +8,24 @@ const getPresignedUrlMapFromFileObjectList = async (
   from: string
 ) => {
   const keys = files.reduce((prev, cur) => {
-    return [...prev, decodeURIComponent(`${prefix}${cur.name}`)]
-  }, [] as string[])
+    return [...prev, decodeURIComponent(`${prefix}${cur.name}`)];
+  }, [] as string[]);
   const { data, error } = await supabaseServiceRole.storage
     .from(from)
-    .createSignedUrls(keys, 1800)
+    .createSignedUrls(keys, 1800);
 
   const urlMap = !data
     ? {}
     : data.reduce<PresignedUrlMap>((p, c) => {
-        if (c.error) return p
-        if (!c.path) return p
+        if (c.error) return p;
+        if (!c.path) return p;
         return {
-          [c.path.substring(c.path.lastIndexOf('/') + 1)]: c.signedUrl,
+          [c.path.substring(c.path.lastIndexOf("/") + 1)]: c.signedUrl,
           ...p,
-        }
-      }, {})
-  console.log(urlMap)
-  return urlMap
-}
+        };
+      }, {});
+  console.log(urlMap);
+  return urlMap;
+};
 
-export default getPresignedUrlMapFromFileObjectList
+export default getPresignedUrlMapFromFileObjectList;

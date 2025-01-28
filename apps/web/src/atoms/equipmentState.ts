@@ -1,4 +1,4 @@
-import { Equipment } from '@servicegeek/db'
+import { Equipment } from "@servicegeek/db";
 
 // export type EquipmentStateType = Omit<Equipment, 'id' | 'organizationId'>
 

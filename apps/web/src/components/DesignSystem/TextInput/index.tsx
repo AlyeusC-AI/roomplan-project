@@ -1,3 +1,1 @@
-import React, { HTMLProps } from 'react'
-
-
+import React, { HTMLProps } from "react";

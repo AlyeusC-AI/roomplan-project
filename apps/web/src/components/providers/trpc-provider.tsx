@@ -39,8 +39,8 @@ export default function TrpcProvider({
           },
         }),
       ],
-      transformer: superjson
-    }),
+      transformer: superjson,
+    })
   );
 
   return (

@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import { Button } from '@components/ui/button'
-import { trpc } from '@utils/trpc'
-import { useState } from 'react'
-import { toast } from 'sonner'
-import { v4 } from 'uuid'
-import { Table } from './table'
+import { Button } from "@components/ui/button";
+import { trpc } from "@utils/trpc";
+import { useState } from "react";
+import { toast } from "sonner";
+import { v4 } from "uuid";
+import { Table } from "./table";
 import {
   Form,
   FormControl,
@@ -14,90 +14,91 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { Input } from '@components/ui/input'
-import { Card } from '@components/ui/card'
+} from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Input } from "@components/ui/input";
+import { Card } from "@components/ui/card";
 
 const newEquipmentSchema = z.object({
   name: z
     .string()
     .min(2, {
-      message: 'Account name must be at least 2 characters.',
+      message: "Account name must be at least 2 characters.",
     })
     .max(30, {
-      message: 'Account name must not be longer than 30 characters.',
+      message: "Account name must not be longer than 30 characters.",
     }),
-})
+});
 
-type NewEquipmentValues = z.infer<typeof newEquipmentSchema>
+type NewEquipmentValues = z.infer<typeof newEquipmentSchema>;
 
 export async function EquipmentPage() {
-  const [newEquipmentEntry, setNewEquipmentEntry] = useState('')
-  const [isAdding, setIsAdding] = useState(false)
-  const utils = trpc.useUtils()
+  const [newEquipmentEntry, setNewEquipmentEntry] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+  const utils = trpc.useUtils();
 
   const createEquipment = trpc.equipment.create.useMutation({
     async onMutate({ name }) {
-      await utils.equipment.getAll.cancel()
-      const prevData = utils.equipment.getAll.getData()
-      const temporaryId = v4()
+      await utils.equipment.getAll.cancel();
+      const prevData = utils.equipment.getAll.getData();
+      const temporaryId = v4();
 
       utils.equipment.getAll.setData(undefined, (old) => {
         const newData = {
           name,
           publicId: `temporary-${temporaryId}`,
           quantity: 1,
-        }
+        };
         if (!old) {
-          return [newData]
+          return [newData];
         }
-        return [newData, ...old]
-      })
-      return { prevData, temporaryId }
+        return [newData, ...old];
+      });
+      return { prevData, temporaryId };
     },
     onError(err, data, ctx) {
-      if (ctx?.prevData) utils.equipment.getAll.setData(undefined, ctx.prevData)
+      if (ctx?.prevData)
+        utils.equipment.getAll.setData(undefined, ctx.prevData);
     },
     onSettled(result) {
-      utils.equipment.getAll.invalidate()
+      utils.equipment.getAll.invalidate();
     },
-  })
+  });
   // const allEquipment = trpc.equipment.getAll.useQuery(undefined, {
   //   initialData: initialOrganizationEquipment,
   // })
 
   const addEquipment = async () => {
-    setIsAdding(true)
+    setIsAdding(true);
     try {
-      await createEquipment.mutateAsync({ name: newEquipmentEntry })
-      toast.success(`Added equipment: ${newEquipmentEntry}`)
+      await createEquipment.mutateAsync({ name: newEquipmentEntry });
+      toast.success(`Added equipment: ${newEquipmentEntry}`);
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-    setNewEquipmentEntry('')
-    setIsAdding(false)
-  }
+    setNewEquipmentEntry("");
+    setIsAdding(false);
+  };
 
   const form = useForm<NewEquipmentValues>({
     resolver: zodResolver(newEquipmentSchema),
-    mode: 'onChange',
-  })
+    mode: "onChange",
+  });
 
   function onSubmit(data: NewEquipmentValues) {
-    toast('You submitted the following values:', {
+    toast("You submitted the following values:", {
       description: (
-        <pre className="bg-slate-950 mt-2 w-[340px] rounded-md p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+        <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
+          <code className='text-white'>{JSON.stringify(data, null, 2)}</code>
         </pre>
       ),
-    })
+    });
   }
 
   return (
-    <div className="space-y-6 sm:px-6 lg:col-span-9 lg:px-0">
+    <div className='space-y-6 sm:px-6 lg:col-span-9 lg:px-0'>
       {/* <div className="my-8 w-full">
         <label
           htmlFor="equipment"
@@ -128,15 +129,15 @@ export async function EquipmentPage() {
         </div>
       </div> */}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
           <FormField
             control={form.control}
-            name="name"
+            name='name'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Add Equipment</FormLabel>
                 <FormControl>
-                  <Input placeholder="Dehumidifier #001" {...field} />
+                  <Input placeholder='Dehumidifier #001' {...field} />
                 </FormControl>
                 <FormDescription>
                   Add a new equipment item to your inventory. Please provide a
@@ -146,14 +147,14 @@ export async function EquipmentPage() {
               </FormItem>
             )}
           />
-          <Button type="submit">Add equipment</Button>
+          <Button type='submit'>Add equipment</Button>
         </form>
       </Form>
       <Card className='w-full'>
         <Table />
       </Card>
     </div>
-  )
+  );
 }
 
 // const EquipmentItem = ({
@@ -227,4 +228,4 @@ export async function EquipmentPage() {
 //   )
 // }
 
-export default EquipmentPage
+export default EquipmentPage;

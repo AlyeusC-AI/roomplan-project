@@ -1,5 +1,5 @@
-import { Stakeholders } from '@servicegeek/db/queries/project/getUsersForProject'
-import { create } from 'zustand'
+import { Stakeholders } from "@servicegeek/db/queries/project/getUsersForProject";
+import { create } from "zustand";
 
 // export const defaultStakeholderState = []
 
@@ -11,12 +11,12 @@ import { create } from 'zustand'
 // export default stakeholderState
 
 interface State {
-  stakeholders: Stakeholders[]
+  stakeholders: Stakeholders[];
 }
 
 interface Actions {
-  addStakeholder: (stakeholder: Stakeholders) => void
-  removeStakeholder: (id: string) => void
+  addStakeholder: (stakeholder: Stakeholders) => void;
+  removeStakeholder: (id: string) => void;
 }
 
 export const stakeholderStore = create<State & Actions>((set) => ({
@@ -27,4 +27,4 @@ export const stakeholderStore = create<State & Actions>((set) => ({
     set((state) => ({
       stakeholders: state.stakeholders.filter((i) => i.userId !== id),
     })),
-}))
+}));

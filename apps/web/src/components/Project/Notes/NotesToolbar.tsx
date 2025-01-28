@@ -1,15 +1,17 @@
-import { useState } from 'react'
-import { PrimaryButton } from '@components/components/button'
-import Modal from '@components/DesignSystem/Modal'
+"use client";
 
-import RoomCreationModal from '../RoomCreationModal'
-import TabTitleArea from '../TabTitleArea'
+import { useState } from "react";
+import { PrimaryButton } from "@components/components/button";
+import Modal from "@components/DesignSystem/Modal";
+
+import RoomCreationModal from "../RoomCreationModal";
+import TabTitleArea from "../TabTitleArea";
 
 export default function NotesToolbar() {
-  const [isRoomCreationModalOpen, setIsRoomCreationModalOpen] = useState(false)
+  const [isRoomCreationModalOpen, setIsRoomCreationModalOpen] = useState(false);
 
   return (
-    <TabTitleArea title="Notes" description="Record notes for each room.">
+    <TabTitleArea title='Notes' description='Record notes for each room.'>
       <>
         <div></div>
         <PrimaryButton onClick={() => setIsRoomCreationModalOpen(true)}>
@@ -28,5 +30,5 @@ export default function NotesToolbar() {
         </Modal>
       </>
     </TabTitleArea>
-  )
+  );
 }

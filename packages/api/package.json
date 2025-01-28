@@ -13,7 +13,7 @@
   "dependencies": {
     "@servicegeek/db": "../db",
     "@supabase/ssr": "^0.5.2",
-    "@supabase/supabase-js": "2.47.12",
+    "@supabase/supabase-js": "2.46.2",
     "@trpc/client": "10.45.2",
     "@trpc/server": "10.45.2",
     "superjson": "1.11.0",

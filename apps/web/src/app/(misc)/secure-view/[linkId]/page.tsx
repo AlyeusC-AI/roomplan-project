@@ -1,27 +1,27 @@
-import { Header } from '@components/LandingPage/Header'
-import MainContent from '@components/layouts/MainContent'
-import SecureView from '@components/SecureView'
-import getProjectIdFromAccessLink from '@servicegeek/db/queries/photo-access-link/getPhotoAccessLink'
+import { Header } from "@components/LandingPage/Header";
+import MainContent from "@components/layouts/MainContent";
+import SecureView from "@components/SecureView";
+import getProjectIdFromAccessLink from "@servicegeek/db/queries/photo-access-link/getPhotoAccessLink";
 import {
   getInferenceList,
   RoomData,
-} from '@servicegeek/db/queries/project/getProjectDetections'
-import { prisma } from '@servicegeek/db'
+} from "@servicegeek/db/queries/project/getProjectDetections";
+import { prisma } from "@servicegeek/db";
 
 import getProjectInfo, {
   ProjectInfo,
-} from '@lib/serverSidePropsUtils/getProjectInfo'
-import getPresignedUrlMapFromInferenceList from '@lib/supabase/getPresignedUrlMapFromInferenceList'
-import type { GetServerSidePropsContext, NextPage } from 'next'
-import Head from 'next/head'
-import { RecoilRoot } from 'recoil'
-import initRecoilAtoms from '@atoms/initRecoilAtoms'
+} from "@lib/serverSidePropsUtils/getProjectInfo";
+import getPresignedUrlMapFromInferenceList from "@lib/supabase/getPresignedUrlMapFromInferenceList";
+import type { GetServerSidePropsContext, NextPage } from "next";
+import Head from "next/head";
+import { RecoilRoot } from "recoil";
+import initRecoilAtoms from "@atoms/initRecoilAtoms";
 
 interface SecureViewPageProps {
-  noAccess: boolean
-  inferences?: RoomData[]
-  urlMap: PresignedUrlMap
-  projectInfo: ProjectInfo
+  noAccess: boolean;
+  inferences?: RoomData[];
+  urlMap: PresignedUrlMap;
+  projectInfo: ProjectInfo;
 }
 
 const SecureViewPage: NextPage<SecureViewPageProps> = ({
@@ -40,72 +40,72 @@ const SecureViewPage: NextPage<SecureViewPageProps> = ({
     >
       <Head>
         <title>ServiceGeek - Estimate</title>
-        <meta name="description" content="Project Estimate and Details" />
-        <link rel="icon" href="/favicon.ico" />
+        <meta name='description' content='Project Estimate and Details' />
+        <link rel='icon' href='/favicon.ico' />
       </Head>
       <Header />
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
         <MainContent>
           <SecureView noAccess={noAccess} />
         </MainContent>
       </div>
     </RecoilRoot>
-  )
-}
+  );
+};
 
-export default SecureViewPage
+export default SecureViewPage;
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   try {
-    const linkId = ctx.query.linkId
+    const linkId = ctx.query.linkId;
 
     if (!linkId || Array.isArray(linkId)) {
-      console.log('No link Id')
+      console.log("No link Id");
       return {
         props: {
           noAccess: true,
         },
-      }
+      };
     }
-    console.log(linkId)
-    const projectId = await getProjectIdFromAccessLink(linkId)
+    console.log(linkId);
+    const projectId = await getProjectIdFromAccessLink(linkId);
 
     if (!projectId) {
-      console.log('No project Id')
+      console.log("No project Id");
       return {
         props: {
           noAccess: true,
         },
-      }
+      };
     }
 
     const project = await prisma.project.findFirst({
       where: {
         id: projectId,
       },
-    })
+    });
 
     if (!project) {
-      console.log('No project')
+      console.log("No project");
 
       return {
         props: {
           noAccess: true,
         },
-      }
+      };
     }
 
     const inferenceList = await getInferenceList(
       project?.publicId,
       project?.organizationId
-    )
+    );
 
     const urlMap = !inferenceList
       ? {}
       : // @ts-expect-error it's ok
-        await getPresignedUrlMapFromInferenceList(inferenceList)
+        await getPresignedUrlMapFromInferenceList(inferenceList);
 
-    const inferences = inferenceList?.rooms || []
+    const inferences = inferenceList?.rooms || [];
     return {
       props: {
         noAccess: false,
@@ -113,11 +113,11 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
         urlMap,
         projectInfo: getProjectInfo(project),
       },
-    }
+    };
   } catch (e) {
-    console.error(e)
+    console.error(e);
     return {
       props: {},
-    }
+    };
   }
-}
+};

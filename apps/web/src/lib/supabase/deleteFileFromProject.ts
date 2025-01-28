@@ -1,28 +1,28 @@
-import getProjectForOrg from '@servicegeek/db/queries/project/getProjectForOrg'
-import getUser from '@servicegeek/db/queries/user/getUser'
+import getProjectForOrg from "@servicegeek/db/queries/project/getProjectForOrg";
+import getUser from "@servicegeek/db/queries/user/getUser";
 
-import { supabaseServiceRole } from './supabaseServiceRoleClient'
+import { supabaseServiceRole } from "./admin";
 
 const deleteFileFromProject = async (
   userId: string,
   projectPublicId: string,
   filename: string
 ) => {
-  const servicegeekUser = await getUser(userId)
-  const organizationId = servicegeekUser?.org?.organization.id
-  if (!organizationId) return null
-  const project = await getProjectForOrg(projectPublicId, organizationId)
+  const servicegeekUser = await getUser(userId);
+  const organizationId = servicegeekUser?.org?.organization.id;
+  if (!organizationId) return null;
+  const project = await getProjectForOrg(projectPublicId, organizationId);
   if (!project) {
-    return null
+    return null;
   }
 
   const { data, error } = await supabaseServiceRole.storage
-    .from('user-files')
-    .remove([filename])
+    .from("user-files")
+    .remove([filename]);
 
-  if (error) return null
+  if (error) return null;
 
-  return data
-}
+  return data;
+};
 
-export default deleteFileFromProject
+export default deleteFileFromProject;

@@ -1,97 +1,95 @@
-import { orgStore } from '@atoms/organization'
-import { FileObject } from '@supabase/storage-js'
-import { useSearchParams } from 'next/navigation'
-import { projectStore } from '@atoms/project'
-import FileList from '@components/Project/Files/FileList'
-import { PrimaryButton } from '@components/components/button'
-import MainContent from '@components/layouts/MainContent'
-import { subscriptionStore } from '@atoms/subscription-status'
-import { SubscriptionStatus } from '@servicegeek/db'
-import UpgradeModal from '@components/UpgradeModal'
-import { useState } from 'react'
-import { userInfoStore } from '@atoms/user-info'
-import { toast } from 'sonner'
+import { orgStore } from "@atoms/organization";
+import { FileObject } from "@supabase/storage-js";
+import { useSearchParams } from "next/navigation";
+import { projectStore } from "@atoms/project";
+import FileList from "@components/Project/Files/FileList";
+import { PrimaryButton } from "@components/components/button";
+import MainContent from "@components/layouts/MainContent";
+import { subscriptionStore } from "@atoms/subscription-status";
+import { SubscriptionStatus } from "@servicegeek/db";
+import UpgradeModal from "@components/UpgradeModal";
+import { useState } from "react";
+import { userInfoStore } from "@atoms/user-info";
+import { toast } from "sonner";
 
 export interface ProjectData {
-  roofSegments?: string[]
+  roofSegments?: string[];
   roofSpecs?: {
-    roofPitch: string
-  }
+    roofPitch: string;
+  };
 }
 
 function downloadFile(file: File) {
   // Create a link and set the URL using `createObjectURL`
-  const link = document.createElement('a')
-  link.style.display = 'none'
-  link.href = URL.createObjectURL(file)
-  link.download = file.name
+  const link = document.createElement("a");
+  link.style.display = "none";
+  link.href = URL.createObjectURL(file);
+  link.download = file.name;
 
   // It needs to be added to the DOM so it can be clicked
-  document.body.appendChild(link)
-  link.click()
+  document.body.appendChild(link);
+  link.click();
 
   // To make this work on Firefox we need to wait
   // a little while before removing it.
   setTimeout(() => {
-    URL.revokeObjectURL(link.href)
-    // @ts-expect-error
-    link.parentNode.removeChild(link)
-  }, 0)
+    URL.revokeObjectURL(link.href);
+    link.parentNode?.removeChild(link);
+  }, 0);
 }
-const ResponsiveWrapper = ({ accessToken }: { accessToken: string }) => {
-  const search = useSearchParams()
+const ResponsiveWrapper = () => {
+  const search = useSearchParams();
 
-  const id = search?.get('id')
-  const orgInfo = orgStore((state) => state.organization)
-  const userInfo = userInfoStore((state) => state.user)
-  const subscriptionStatus = subscriptionStore(state => state.subscriptionStatus)
-  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false)
+  const id = search?.get("id");
+  const orgInfo = orgStore((state) => state.organization);
+  const userInfo = userInfoStore((state) => state.user);
+  const subscriptionStatus = subscriptionStore(
+    (state) => state.subscriptionStatus
+  );
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
-  const [projectInfo, files] = projectStore((state) => [
-    state.project,
-    state.projectFiles,
-  ])
+  const { project, projectFiles: files } = projectStore((state) => state);
 
   // check if a file name has the word 'roof' in it if so it is a roof report
   const roofReportFiles = files.filter((file) =>
-    file.name.toLowerCase().includes('roof')
-  )
-  const hasRoofReport = roofReportFiles.length > 0
+    file.name.toLowerCase().includes("roof")
+  );
+  const hasRoofReport = roofReportFiles.length > 0;
 
   const onDownload = async (file: FileObject, url: string) => {
     try {
-      console.log(url)
-      const res = await fetch(url)
+      console.log(url);
+      const res = await fetch(url);
       if (res.ok) {
-        const blob = await res.blob()
+        const blob = await res.blob();
         downloadFile(
           new File([blob], file.name, { type: file.metadata.mimetype })
-        )
+        );
       }
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
   const onDelete = async (file: FileObject) => {
     try {
       const res = await fetch(`/api/project/${id}/file`, {
-        method: 'DELETE',
+        method: "DELETE",
         body: JSON.stringify({
           filename: `${orgInfo?.publicId}/${id}/${file.name}`,
         }),
-      })
+      });
       if (res.ok) {
-        projectStore.getState().removeFile(file.name)
-        toast.success('File deleted')
+        projectStore.getState().removeFile(file.name);
+        toast.success("File deleted");
       } else {
-        console.error(res)
-        toast.error('Could not delete file.')
+        console.error(res);
+        toast.error("Could not delete file.");
       }
     } catch (error) {
-      console.error(error)
-      toast.error('Could not delete file.')
+      console.error(error);
+      toast.error("Could not delete file.");
     }
-  }
+  };
 
   // const sendRoofRequest = async () => {
   //   if (subscriptionStatus !== SubscriptionStatus.active) {
@@ -197,17 +195,17 @@ const ResponsiveWrapper = ({ accessToken }: { accessToken: string }) => {
   // }
   return (
     <>
-      <div className="grid grid-rows-1 pt-2">
+      <div className='grid grid-rows-1 pt-2'>
         <UpgradeModal open={upgradeModalOpen} setOpen={setUpgradeModalOpen} />
 
         {hasRoofReport ? (
-          <div className="">
-            <div className="my-2">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">
+          <div className=''>
+            <div className='my-2'>
+              <h3 className='text-lg font-medium leading-6 text-gray-900'>
                 Your roof report is ready to download
               </h3>
             </div>
-            <div className="border-t border-gray-200">
+            <div className='border-t border-gray-200'>
               <FileList
                 files={files}
                 onDownload={onDownload}
@@ -218,18 +216,18 @@ const ResponsiveWrapper = ({ accessToken }: { accessToken: string }) => {
           </div>
         ) : (
           <MainContent>
-            <div className="mb-4 flex justify-between space-x-6">
-              <div className="max-w-[220px] sm:max-w-none sm:flex-auto">
-                <div className="col-span-2 flex-col">
-                  <h3 className="text-2xl font-medium leading-6 text-gray-900">
+            <div className='mb-4 flex justify-between space-x-6'>
+              <div className='max-w-[220px] sm:max-w-none sm:flex-auto'>
+                <div className='col-span-2 flex-col'>
+                  <h3 className='text-2xl font-medium leading-6 text-gray-900'>
                     Roof report
                   </h3>
-                  <p className="mt-2 pr-8 text-base text-gray-500">
+                  <p className='mt-2 pr-8 text-base text-gray-500'>
                     Create a roof report for this project.
                   </p>
                 </div>
               </div>
-              <div className="flex min-w-[100px] flex-row items-center justify-end space-x-6">
+              <div className='flex min-w-[100px] flex-row items-center justify-end space-x-6'>
                 <PrimaryButton
                   onClick={() => {
                     // sendRoofRequest()
@@ -238,60 +236,59 @@ const ResponsiveWrapper = ({ accessToken }: { accessToken: string }) => {
                   Request Free Report
                 </PrimaryButton>
                 <form
-                  action="/api/create-one-time-checkout-session"
-                  method="POST"
+                  action='/api/create-one-time-checkout-session'
+                  method='POST'
                 >
                   <input
-                    type="hidden"
-                    name="priceId"
+                    type='hidden'
+                    name='priceId'
                     value={
                       subscriptionStatus !== SubscriptionStatus.active
-                        ? 'oneTimeRoofPurchaseFree'
-                        : 'oneTimeRoofPurchasePro'
+                        ? "oneTimeRoofPurchaseFree"
+                        : "oneTimeRoofPurchasePro"
                     }
                   />
-                  <input type="hidden" name="projectId" value={id!} />
+                  <input type='hidden' name='projectId' value={id!} />
                   <input
-                    type="hidden"
-                    name="client_address"
-                    value={projectInfo.location}
+                    type='hidden'
+                    name='client_address'
+                    value={project.location}
                   />
                   <input
-                    type="hidden"
-                    name="customer_name"
+                    type='hidden'
+                    name='customer_name'
                     value={orgInfo.name}
                   />
                   <input
-                    type="hidden"
-                    name="subscription_status"
+                    type='hidden'
+                    name='subscription_status'
                     value={subscriptionStatus}
                   />
                   <input
-                    type="hidden"
-                    name="customer_email"
+                    type='hidden'
+                    name='customer_email'
                     value={userInfo?.email}
                   />
                   <input
-                    type="hidden"
-                    name="support_email"
-                    value={`support+${orgInfo.publicId}@servicegeek.apps`}
+                    type='hidden'
+                    name='support_email'
+                    value={`support+${orgInfo?.publicId}@servicegeek.apps`}
                   />
-                  <PrimaryButton type="submit">
+                  <PrimaryButton type='submit'>
                     Purchase ESX Report
                   </PrimaryButton>
                 </form>
               </div>
             </div>
             <iframe
-              scrolling="true"
-              style={{ height: 'calc(100vh - 10rem)' }}
-              src={`https://rapi-d-halo-ai.vercel.app/#background=Bing&datasets=fbRoads,msBuildings&disable_features=boundaries&map=21/${projectInfo.lat}/${projectInfo.lng}`}
+              style={{ height: "calc(100vh - 10rem)" }}
+              src={`https://rapi-d-halo-ai.vercel.app/#background=Bing&datasets=fbRoads,msBuildings&disable_features=boundaries&map=21/${project.lat}/${project.lng}`}
             ></iframe>
           </MainContent>
         )}
       </div>
     </>
-  )
-}
+  );
+};
 
-export default ResponsiveWrapper
+export default ResponsiveWrapper;

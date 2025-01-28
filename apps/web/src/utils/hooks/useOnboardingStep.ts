@@ -1,45 +1,45 @@
-import { useRef } from 'react'
-import { trpc } from '@utils/trpc'
+import { useRef } from "react";
+import { trpc } from "@utils/trpc";
 
 export const useDynamicOnboardingStep = (step: string) => {
   const getOnboardingStatus =
-    trpc.onboardingStatus.getOnboardingStatus.useQuery()
+    trpc.onboardingStatus.getOnboardingStatus.useQuery();
 
-  if (!getOnboardingStatus.data) return
+  if (!getOnboardingStatus.data) return;
 
-  const { onboardingStatus } = getOnboardingStatus.data
+  const { onboardingStatus } = getOnboardingStatus.data;
   if (onboardingStatus) {
     const { [step]: onboardingStep } = onboardingStatus as {
-      [key: string]: boolean
-    }
-    return onboardingStep
+      [key: string]: boolean;
+    };
+    return onboardingStep;
   }
-  return null
-}
+  return null;
+};
 
 const useOnboardingStep = (step: string) => {
-  let ref = useRef<undefined | boolean>()
+  const ref = useRef<undefined | boolean>();
   const getOnboardingStatus =
-    trpc.onboardingStatus.getOnboardingStatus.useQuery()
+    trpc.onboardingStatus.getOnboardingStatus.useQuery();
 
-  if (!getOnboardingStatus.data) return
+  if (!getOnboardingStatus.data) return;
 
-  const { onboardingStatus } = getOnboardingStatus.data
+  const { onboardingStatus } = getOnboardingStatus.data;
   if (ref.current === undefined) {
     if (onboardingStatus) {
       const { [step]: onboardingStep } = onboardingStatus as {
-        [key: string]: boolean
-      }
+        [key: string]: boolean;
+      };
       if (onboardingStep) {
-        ref.current = false
+        ref.current = false;
       } else {
-        ref.current = true
+        ref.current = true;
       }
     } else {
-      ref.current = true
+      ref.current = true;
     }
   }
-  return ref.current
-}
+  return ref.current;
+};
 
-export default useOnboardingStep
+export default useOnboardingStep;

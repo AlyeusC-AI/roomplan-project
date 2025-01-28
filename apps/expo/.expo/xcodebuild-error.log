@@ -1,4 +1,11 @@
 --- xcodebuild: WARNING: Using the first of multiple matching destinations:
-{ platform:iOS Simulator, id:D82975CA-E238-49C1-9B04-76864083C9D5, OS:18.2, name:iPhone 14 }
-{ platform:iOS Simulator, id:D82975CA-E238-49C1-9B04-76864083C9D5, OS:18.2, name:iPhone 14 }
-2025-01-10 18:47:08.048 xcodebuild[51272:3665275]  DVTDeveloperAccountManager: Failed to load credentials for samuel.vulakh@revozero.com: Error Domain=DVTDeveloperAccountCredentialsError Code=0 "Invalid credentials in keychain for samuel.vulakh@revozero.com, missing Xcode-Token" UserInfo={NSLocalizedDescription=Invalid credentials in keychain for samuel.vulakh@revozero.com, missing Xcode-Token}
+{ platform:iOS Simulator, id:0A61E8C9-C4D1-418D-90BB-B838AC8A3DDD, OS:18.1, name:iPhone 16 Pro }
+{ platform:iOS Simulator, id:0A61E8C9-C4D1-418D-90BB-B838AC8A3DDD, OS:18.1, name:iPhone 16 Pro }
+2025-01-21 23:25:57.268 xcodebuild[9700:6444854]  DVTDeveloperAccountManager: Failed to load credentials for samuel.vulakh@revozero.com: Error Domain=DVTDeveloperAccountCredentialsError Code=0 "Invalid credentials in keychain for samuel.vulakh@revozero.com, missing Xcode-Token" UserInfo={NSLocalizedDescription=Invalid credentials in keychain for samuel.vulakh@revozero.com, missing Xcode-Token}
+** BUILD FAILED **
+
+
+The following build commands failed:
+	CompileC /Users/samuelvulakh/Library/Developer/Xcode/DerivedData/ServiceGeek-apcysvummigxvqenaubdlfxldgif/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/ExpoModulesCore.build/Objects-normal/arm64/ExpoBridgeModule.o /Users/samuelvulakh/Desktop/Work/freelancing/upwork/servicegeek/node_modules/.pnpm/expo-modules-core@1.12.26/node_modules/expo-modules-core/ios/Core/ExpoBridgeModule.mm normal arm64 objective-c++ com.apple.compilers.llvm.clang.1_0.compiler (in target 'ExpoModulesCore' from project 'Pods')
+	Building workspace ServiceGeek with scheme ServiceGeek and configuration Debug
+(2 failures)

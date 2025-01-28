@@ -1,34 +1,26 @@
-import { useMediaQuery } from 'react-responsive'
-import { GroupByViews, PhotoViews } from '@servicegeek/db'
-import { useRouter } from 'next/router'
+import { useMediaQuery } from "react-responsive";
+import { GroupByViews, PhotoViews } from "@servicegeek/db";
 
-import MitigationTable from './MitigationTable'
-import MitigationToolbar from './MitigationToolbar'
-import Mobile from './Mobile'
+import MitigationTable from "./MitigationTable";
+import MitigationToolbar from "./MitigationToolbar";
+import Mobile from "./Mobile";
 
 const ResponsiveWrapper = ({
-  accessToken,
   initialGroupView,
   initialPhotoView,
 }: {
-  accessToken: string
-  initialGroupView: GroupByViews
-  initialPhotoView: PhotoViews
+  initialGroupView: GroupByViews;
+  initialPhotoView: PhotoViews;
 }) => {
-  const router = useRouter()
-  let id = router.query.id || ''
-  if (Array.isArray(id) || !id) {
-    id = ''
-  }
-  const isMobile = useMediaQuery({ maxWidth: 600 })
+  const isMobile = useMediaQuery({ maxWidth: 600 });
 
   return (
     <>
       {isMobile ? (
-        <Mobile accessToken={accessToken} />
+        <Mobile />
       ) : (
         <>
-          <MitigationToolbar accessToken={accessToken} />
+          <MitigationToolbar />
           <MitigationTable
             initialGroupView={initialGroupView}
             initialPhotoView={initialPhotoView}
@@ -36,7 +28,7 @@ const ResponsiveWrapper = ({
         </>
       )}
     </>
-  )
-}
+  );
+};
 
-export default ResponsiveWrapper
+export default ResponsiveWrapper;

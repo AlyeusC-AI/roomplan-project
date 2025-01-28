@@ -1,5 +1,4 @@
-
-import { Project } from '@servicegeek/db'
+import { Project } from "@servicegeek/db";
 
 const getProjectInfo = (project: Project) => {
   const {
@@ -29,8 +28,8 @@ const getProjectInfo = (project: Project) => {
     roofSegments,
     roofSpecs,
     id,
-    publicId
-  } = project
+    publicId,
+  } = project;
   return {
     clientName: clientName || null,
     clientEmail,
@@ -58,12 +57,8 @@ const getProjectInfo = (project: Project) => {
     roofSegments: roofSegments || null,
     roofSpecs: roofSpecs || null,
     id,
-    publicId
-  }
-}
+    publicId,
+  };
+};
 
-declare global {
-  type Project = ReturnType<typeof getProjectInfo>
-}
-
-export default getProjectInfo
+export default getProjectInfo;

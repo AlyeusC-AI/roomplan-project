@@ -1,102 +1,101 @@
-import { useState } from 'react'
-import toast from 'react-hot-toast'
-import { SecondaryButton } from '@components/components/button'
-import { ArrowDownTrayIcon } from '@heroicons/react/24/outline'
-import { InferenceMetaData } from '@servicegeek/db/queries/project/getProjectDetections'
-import { saveAs } from 'file-saver'
-import { inferencesStore } from '@atoms/inferences'
-import { urlMapStore } from '@atoms/url-map'
-import { projectStore } from '@atoms/project'
+import { useState } from "react";
+import { InferenceMetaData } from "@servicegeek/db/queries/project/getProjectDetections";
+import { saveAs } from "file-saver";
+import { inferencesStore } from "@atoms/inferences";
+import { urlMapStore } from "@atoms/url-map";
+import { projectStore } from "@atoms/project";
+import { ArrowDownToLine } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@components/ui/button";
 
-var JSZip = require('jszip')
+const JSZip = require("jszip");
 
 const DownloadAllRoomImages = () => {
-  const allInferences = inferencesStore((state) => state.inferences)
-  const [isDownloading, setIsDownloading] = useState(false)
-  const projectInfo = projectStore((state) => state.project)
-  const presignedUrlMap = urlMapStore((state) => state.urlMap)
+  const allInferences = inferencesStore((state) => state.inferences);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const projectInfo = projectStore((state) => state.project);
+  const presignedUrlMap = urlMapStore((state) => state.urlMap);
 
   const downloadImage = async (imageKey: string) => {
     try {
-      const res = await fetch(presignedUrlMap[decodeURIComponent(imageKey)])
+      const res = await fetch(presignedUrlMap[decodeURIComponent(imageKey)]);
       if (res.ok) {
-        return res.blob()
+        return res.blob();
       }
-    } catch (error) {
-      return null
+    } catch {
+      return null;
     }
-  }
+  };
 
   const downloadImagesForRoom = async (
     zip: any,
     roomName: string,
     inferences: InferenceMetaData[]
   ) => {
-    setIsDownloading(true)
-    const folderName = `${roomName}_photos`
-    const promises = []
+    setIsDownloading(true);
+    const folderName = `${roomName}_photos`;
+    const promises = [];
     for (const inference of inferences) {
-      promises.push(downloadImage(inference.imageKey))
+      promises.push(downloadImage(inference.imageKey));
     }
-    const roomFolder = zip.folder(folderName)
+    const roomFolder = zip.folder(folderName);
 
-    const resolved = await Promise.all(promises)
-    let index = 1
+    const resolved = await Promise.all(promises);
+    let index = 1;
     for (const resolvedPromise of resolved) {
-      if (!resolvedPromise) continue
-      const blob = resolvedPromise as Blob
-      const mimeType = blob.type
-      let extension = '.png'
-      if (mimeType === 'jpg' || mimeType === 'jpeg') {
-        extension = '.jpeg'
+      if (!resolvedPromise) continue;
+      const blob = resolvedPromise as Blob;
+      const mimeType = blob.type;
+      let extension = ".png";
+      if (mimeType === "jpg" || mimeType === "jpeg") {
+        extension = ".jpeg";
       }
       roomFolder.file(`${roomName}_${index}${extension}`, blob, {
         base64: true,
-      })
-      index++
+      });
+      index++;
     }
-    return
-  }
+    return;
+  };
 
   const downloadAllImagesForRoom = async () => {
-    var zip = new JSZip()
+    const zip = new JSZip();
 
-    const promises = []
+    const promises = [];
 
     for (const inference of allInferences) {
       promises.push(
         downloadImagesForRoom(zip, inference.name, inference.inferences)
-      )
+      );
     }
 
-    await Promise.all(promises)
+    await Promise.all(promises);
 
     zip
-      .generateAsync({ type: 'blob' })
+      .generateAsync({ type: "blob" })
       .then(function (content: string | Blob) {
         saveAs(
           content,
-          `${projectInfo.clientName.split(' ').join('_')}_photos.zip`
-        )
-        setIsDownloading(false)
+          `${projectInfo.clientName.split(" ").join("_")}_photos.zip`
+        );
+        setIsDownloading(false);
       })
-      .catch((e: any) => {
-        console.error(e)
-        setIsDownloading(false)
+      .catch((e: unknown) => {
+        console.error(e);
+        setIsDownloading(false);
         toast.error(
-          'Failed to download images. Please contact support@servicegeek.app if this error persists'
-        )
-      })
-  }
+          "Failed to download images. Please contact support@servicegeek.app if this error persists"
+        );
+      });
+  };
   return (
-    <SecondaryButton
+    <Button
       onClick={() => downloadAllImagesForRoom()}
-      loading={isDownloading}
-      className="sm:w-full md:w-auto"
+      className='sm:w-full md:w-auto'
     >
-      <ArrowDownTrayIcon className="h-6" />
-    </SecondaryButton>
-  )
-}
+      <ArrowDownToLine className='h-6' />
+    </Button>
+  );
+};
 
-export default DownloadAllRoomImages
+export default DownloadAllRoomImages;

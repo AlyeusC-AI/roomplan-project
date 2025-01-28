@@ -1,26 +1,25 @@
-import { ReactNode, useState } from 'react'
-import { ChevronDownIcon } from '@heroicons/react/24/outline'
-
+import { ReactNode, useState } from "react";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
 
 const Accordion = ({
   title,
   children,
   error = false,
 }: {
-  title: string
-  children?: React.ReactNode
-  error?: boolean
+  title: string;
+  children?: React.ReactNode;
+  error?: boolean;
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(true)
+  const [isCollapsed, setIsCollapsed] = useState(true);
   return (
     <div
       className={`mt-8 ${
-        error ? 'bg-red-100' : 'bg-white'
+        error ? "bg-red-100" : "bg-white"
       } rounded-sm px-4 py-2 shadow-sm`}
     >
       <button
         className={`flex w-full justify-between ${
-          !isCollapsed && 'mb-4 border-b border-red-300 pb-4'
+          !isCollapsed && "mb-4 border-b border-red-300 pb-4"
         }`}
         onClick={() => setIsCollapsed((prevCollapsed) => !prevCollapsed)}
       >
@@ -29,7 +28,7 @@ const Accordion = ({
       </button>
       {!isCollapsed && <div>{children}</div>}
     </div>
-  )
-}
+  );
+};
 
-export default Accordion
+export default Accordion;

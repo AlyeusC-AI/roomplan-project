@@ -47,4 +47,4 @@ with_node \
   generate-modules-provider  \
   --target "/Users/samuelvulakh/Desktop/Work/freelancing/upwork/servicegeek/apps/expo/ios/Pods/Target Support Files/Pods-ServiceGeek/ExpoModulesProvider.swift" \
   --platform "apple" \
-  --packages "expo-asset" "expo-clipboard" "expo-constants" "expo-dev-launcher" "expo-dev-menu" "expo-eas-client" "expo-file-system" "expo-font" "expo-keep-awake" "expo-tracking-transparency" "expo-updates"
+  --packages "@servicegeek/room-plan" "expo-application" "expo-asset" "expo-clipboard" "expo-constants" "expo-dev-launcher" "expo-dev-menu" "expo-eas-client" "expo-file-system" "expo-font" "expo-image" "expo-keep-awake" "expo-router" "expo-speech-recognition" "expo-store-review" "expo-tracking-transparency" "expo-updates"

@@ -25,20 +25,19 @@ export const createInnerTRPCContext = async (opts: CreateContextOptions) => {
  * This is the actual context you'll use in your router
  * @link https://trpc.io/docs/context
  **/
-// export const createContext = async (opts: CreateNextContextOptions) => {
-//   const { req, res } = opts;
-//   const {
-//     data: { user },
-//     error,
-//   } = await supabase.auth.getUser();
-//   const {
-//     data: { session },
-//   } = await supabase.auth.getSession();
-//   return await createInnerTRPCContext({
-//     session,
-//     user,
-//     supabase,
-//   });
-// };
+export const createContext = async (supabase: SupabaseClient) => {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  return await createInnerTRPCContext({
+    session,
+    user,
+    supabase,
+  });
+};
 
-export type Context = Promise<CreateContextOptions>;
+export type Context = inferAsyncReturnType<typeof createContext>;

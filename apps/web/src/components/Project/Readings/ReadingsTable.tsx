@@ -1,19 +1,19 @@
-import EmptyState from '@components/DesignSystem/EmptyState'
-import { roomStore } from '@atoms/room'
+import EmptyState from "@components/DesignSystem/EmptyState";
+import { roomStore } from "@atoms/room";
 
-import ReadingsRoomTable from './ReadingsRoomTable'
+import ReadingsRoomTable from "./ReadingsRoomTable";
 
 export default function ReadingsTable() {
-  const rooms = roomStore((state) => state.rooms)
+  const rooms = roomStore((state) => state.rooms);
 
   return (
-    <div className=" space-y-6 divide-y-2">
+    <div className='space-y-6 divide-y-2'>
       {rooms.length === 0 ? (
         <EmptyState
-          imagePath={'/images/empty.svg'}
-          title={'No Rooms Added'}
+          imagePath={"/images/empty.svg"}
+          title={"No Rooms Added"}
           description={
-            'Get started by adding rooms. Humidity, temperature, and gpp data can be associated with each room'
+            "Get started by adding rooms. Humidity, temperature, and gpp data can be associated with each room"
           }
         />
       ) : (
@@ -24,5 +24,5 @@ export default function ReadingsTable() {
         </>
       )}
     </div>
-  )
+  );
 }

@@ -1,52 +1,49 @@
-import { useId, useMemo, useState } from 'react'
-import Select from 'react-select'
-import { roomStore } from '@atoms/room'
-import { SecondaryButton } from '@components/components/button'
-import EmptyState from '@components/DesignSystem/EmptyState'
-import Pill from '@components/DesignSystem/Pills/Pill'
-import Spinner from '@components/Spinner'
-import {
-  AdjustmentsHorizontalIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-} from '@heroicons/react/24/outline'
-import { GroupByViews, PhotoViews } from '@servicegeek/db'
-import useFilterParams from '@utils/hooks/useFilterParams'
-import { trpc } from '@utils/trpc'
-import { useRouter } from 'next/router'
-import { inferencesStore } from '@atoms/inferences'
-import { uploadInProgressImagesStore } from '@atoms/upload-in-progress-image'
+import { useId, useMemo, useState } from "react";
+import Select from "react-select";
+import { roomStore } from "@atoms/room";
+import EmptyState from "@components/DesignSystem/EmptyState";
+import Pill from "@components/DesignSystem/Pills/Pill";
+import { GroupByViews, PhotoViews } from "@servicegeek/db";
+import useFilterParams from "@utils/hooks/useFilterParams";
+import { trpc } from "@utils/trpc";
+import { useParams, useRouter } from "next/navigation";
+import { inferencesStore } from "@atoms/inferences";
+import { uploadInProgressImagesStore } from "@atoms/upload-in-progress-image";
 
-import OptimisticUploadUI from '../OptimisticUploadUI'
+import OptimisticUploadUI from "../OptimisticUploadUI";
 
-import FilterLabel from './FilterLabel'
-import GroupByPicker from './GroupByPicker'
-import PhotoList from './PhotoList'
-import ViewPicker from './ViewPicker'
+import FilterLabel from "./FilterLabel";
+import GroupByPicker from "./GroupByPicker";
+import PhotoList from "./PhotoList";
+import ViewPicker from "./ViewPicker";
+import { ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
+import { LoadingSpinner } from "@components/ui/spinner";
+import { Button } from "@components/ui/button";
 
 export default function MitigationTable({
   initialGroupView,
   initialPhotoView,
 }: {
-  initialGroupView: GroupByViews
-  initialPhotoView: PhotoViews
+  initialGroupView: GroupByViews;
+  initialPhotoView: PhotoViews;
 }) {
   const uploadInProgressImages = uploadInProgressImagesStore(
     (state) => state.images
-  )
-  const [isFilterOptionOpen, setIsFilterOptionOpen] = useState(false)
-  const router = useRouter()
-  const reactSelectId = useId()
-  const [photoView, setPhotoView] = useState(initialPhotoView)
-  const { rooms, onlySelected, sortDirection } = useFilterParams()
+  );
+  const [isFilterOptionOpen, setIsFilterOptionOpen] = useState(false);
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const reactSelectId = useId();
+  const [photoView, setPhotoView] = useState(initialPhotoView);
+  const { rooms, onlySelected, sortDirection } = useFilterParams();
 
   const groupView = trpc.groupView.getGroupView.useQuery(undefined, {
     initialData: initialGroupView,
-  })
+  });
 
   const query = trpc.inferences.getAll.useQuery(
     {
-      projectPublicId: router.query.id as string,
+      projectPublicId: id,
       rooms,
       onlySelected,
       sortDirection,
@@ -54,68 +51,63 @@ export default function MitigationTable({
     {
       initialData: [],
       onSuccess: (data: any) => {
-        inferencesStore.getState().setInferences(data?.rooms || [])
+        inferencesStore.getState().setInferences(data?.rooms || []);
       },
     }
-  )
+  );
 
   const queryContext = {
-    projectPublicId: router.query.id as string,
+    projectPublicId: id,
     rooms,
     onlySelected,
     sortDirection,
-  }
+  };
 
-  const getPhotos = trpc.photos.getProjectPhotos.useQuery(queryContext)
+  const getPhotos = trpc.photos.getProjectPhotos.useQuery(queryContext);
 
   const toggleFilterDrawer = () => {
-    setIsFilterOptionOpen((prev) => !prev)
-  }
+    setIsFilterOptionOpen((prev) => !prev);
+  };
 
   const setRoomFilter = (newRoomsFilter: string[]) => {
-    const { rooms, ...rest } = router.query
-    let newQuery: any = {
+    const { ...rest } = router.query;
+    let newQuery = {
       ...router.query,
       rooms: JSON.stringify(newRoomsFilter),
-    }
+    };
     if (newRoomsFilter.length === 0) {
-      newQuery = rest
+      newQuery = rest;
     }
-    router.push({ query: newQuery }, undefined, { shallow: true })
-  }
+    router.push({ query: newQuery }, undefined);
+  };
 
   const setSortDirection = () => {
     router.push(
       {
         query: {
-          ...router.query,
-          sortDirection: sortDirection === 'asc' ? 'desc' : 'asc',
+          sortDirection: sortDirection === "asc" ? "desc" : "asc",
         },
       },
-      undefined,
-      { shallow: true }
-    )
-  }
+      undefined
+    );
+  };
 
   const setOnlySelected = (checked: boolean) => {
-    const { onlySelected, ...rest } = router.query
     if (!checked) {
-      router.push({ query: { ...rest } }, undefined, { shallow: true })
-      return
+      router.push({ query: { ...rest } }, undefined);
+      return;
     }
     router.push(
       {
         query: {
-          ...router.query,
           onlySelected: true,
         },
       },
-      undefined,
-      { shallow: true }
-    )
-  }
+      undefined
+    );
+  };
 
-  const roomList = roomStore(state => state.rooms)
+  const roomList = roomStore((state) => state.rooms);
 
   const roomsOptions = useMemo(
     () =>
@@ -124,7 +116,7 @@ export default function MitigationTable({
         value: room.name,
       })),
     [roomList]
-  )
+  );
 
   const defaultRooms = useMemo(
     () =>
@@ -135,45 +127,45 @@ export default function MitigationTable({
           }))
         : [],
     [rooms]
-  )
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="mt-6">
-        <div className="flex justify-between">
-          <div className="flex space-x-4">
+    <div className='space-y-6'>
+      <div className='mt-6'>
+        <div className='flex justify-between'>
+          <div className='flex space-x-4'>
             <div>
               <FilterLabel>Filters</FilterLabel>
-              <SecondaryButton onClick={() => toggleFilterDrawer()}>
-                <AdjustmentsHorizontalIcon className="mr-2 h-5" />
-                Filter{' '}
+              <Button onClick={() => toggleFilterDrawer()}>
+                <SlidersHorizontal className='mr-2 h-5' />
+                Filter{" "}
                 {(rooms || onlySelected) && (
-                  <Pill className="ml-2" color="green" size="xs">
+                  <Pill className='ml-2' color='green' size='xs'>
                     {onlySelected && rooms ? 2 : 1}
                   </Pill>
                 )}
-              </SecondaryButton>
+              </Button>
             </div>
             <div>
               <FilterLabel>Sort</FilterLabel>
-              <SecondaryButton onClick={() => setSortDirection()}>
-                {sortDirection === 'desc' || !sortDirection ? (
-                  <ChevronDownIcon className="mr-2 h-5" />
+              <Button onClick={() => setSortDirection()}>
+                {sortDirection === "desc" || !sortDirection ? (
+                  <ChevronDown className='mr-2 h-5' />
                 ) : (
-                  <ChevronUpIcon className="mr-2 h-5" />
+                  <ChevronUp className='mr-2 h-5' />
                 )}
                 Sort
-              </SecondaryButton>
+              </Button>
             </div>
             <ViewPicker photoView={photoView} setPhotoView={setPhotoView} />
             <GroupByPicker />
           </div>
-          {query.isFetching && <Spinner bg="text-gray-50" />}
+          {query.isFetching && <LoadingSpinner />}
         </div>
         {isFilterOptionOpen && (
-          <div className="mt-6">
-            <div className="max-w-lg">
-              <label className="mb-2">Filter by rooms</label>
+          <div className='mt-6'>
+            <div className='max-w-lg'>
+              <label className='mb-2'>Filter by rooms</label>
               <Select
                 instanceId={reactSelectId}
                 options={roomsOptions}
@@ -185,14 +177,14 @@ export default function MitigationTable({
                 styles={{ menu: (base) => ({ ...base, zIndex: 9999 }) }}
               />
             </div>
-            <div className="mt-4 max-w-lg">
+            <div className='mt-4 max-w-lg'>
               <label>Only show photos included in report</label>
               <input
-                id="comments"
-                aria-describedby="comments-description"
-                name="comments"
-                type="checkbox"
-                className="ml-4 h-4 w-4 rounded border-gray-300 text-primary focus:ring-blue-500"
+                id='comments'
+                aria-describedby='comments-description'
+                name='comments'
+                type='checkbox'
+                className='ml-4 size-4 rounded border-gray-300 text-primary focus:ring-blue-500'
                 onChange={(e) => setOnlySelected(e.target.checked)}
                 {...(onlySelected && { checked: true })}
               />
@@ -200,7 +192,7 @@ export default function MitigationTable({
           </div>
         )}
       </div>
-      <div className="my-6">
+      <div className='my-6'>
         <OptimisticUploadUI />
         <PhotoList
           photos={getPhotos.data ? getPhotos.data.images : []}
@@ -214,14 +206,14 @@ export default function MitigationTable({
           !onlySelected &&
           !uploadInProgressImages?.length && (
             <EmptyState
-              imagePath={'/images/no-uploads.svg'}
-              title={'Get started by uploading photos'}
+              imagePath={"/images/no-uploads.svg"}
+              title={"Get started by uploading photos"}
               description={
-                'Once uploaded, we will sort your photos by room as well as identify items within each picture.'
+                "Once uploaded, we will sort your photos by room as well as identify items within each picture."
               }
             />
           )}
       </div>
     </div>
-  )
+  );
 }

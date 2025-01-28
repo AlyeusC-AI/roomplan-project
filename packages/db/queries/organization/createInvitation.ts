@@ -40,6 +40,7 @@ const createInvitation = async (userId: string, email: string) => {
       isAccepted: false,
     },
   });
+  
   if (existingInvite) return { failed: true, reason: "existing-invite" };
 
   await prisma.organization.update({

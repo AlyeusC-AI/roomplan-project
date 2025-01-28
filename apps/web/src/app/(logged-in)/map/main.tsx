@@ -1,81 +1,81 @@
-'use client'
+"use client";
 
-import { ProjectType } from '@servicegeek/db/queries/project/listProjects'
-import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
+import { ProjectType } from "@servicegeek/db/queries/project/listProjects";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 export default function ProjectMapView({ projects }: LoggedInUserInfo) {
   // const satelliteView = useRef<HTMLDivElement>(null)
-  const [map, setMap] = useState<mapboxgl.Map>()
-  const mapNode = useRef(null)
-  const [open, setOpen] = useState(true)
+  const [map, setMap] = useState<mapboxgl.Map>();
+  const mapNode = useRef(null);
+  const [open, setOpen] = useState(true);
   const [selectedProject, setSelectedProject] = useState<ProjectType | null>(
     null
-  )
-  const router = useRouter()
+  );
+  const router = useRouter();
   const [weatherInfo, setWeatherInfo] = useState<{
-    forecast: string
-    humidity: number
-    temperature: string
-    wind: string
-  } | null>(null)
-  const [weatherLoading, setWeatherLoading] = useState(false)
+    forecast: string;
+    humidity: number;
+    temperature: string;
+    wind: string;
+  } | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
   const updateAndFetchWeather = async (projectId: string) => {
     try {
       const res = await fetch(`/api/project/${projectId}/update-weather`, {
-        method: 'POST',
-      })
+        method: "POST",
+      });
       if (res.ok) {
-        const { weatherData } = await res.json()
-        setWeatherInfo(weatherData)
-        setWeatherLoading(false)
+        const { weatherData } = await res.json();
+        setWeatherInfo(weatherData);
+        setWeatherLoading(false);
       }
     } catch (e) {
-      console.error(e)
-      setWeatherLoading(false)
+      console.error(e);
+      setWeatherLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    const node = mapNode.current
+    const node = mapNode.current;
 
     // const loader = new Loader({
     //   apiKey: process.env.GOOGLE_MAPS_API_KEY!,
     //   version: 'weekly',
     //   libraries: ['places', 'drawing', 'geometry'],
     // })
-    if (typeof window === 'undefined' || node === null) return
-    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY!
-    console.log('mapboxgl.accessToken', mapboxgl.accessToken)
+    if (typeof window === "undefined" || node === null) return;
+    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY!;
+    console.log("mapboxgl.accessToken", mapboxgl.accessToken);
     // otherwise, create a map instance
     const mapboxMap = new mapboxgl.Map({
       container: node,
       accessToken: process.env.NEXT_PUBLIC_MAPBOX_API_KEY,
-      style: 'mapbox://styles/mapbox/streets-v11',
+      style: "mapbox://styles/mapbox/streets-v11",
       center: [-74.5, 40],
       zoom: 9,
-    })
+    });
 
     // save the map object to React.useState
-    setMap(mapboxMap)
+    setMap(mapboxMap);
 
     return () => {
-      mapboxMap.remove()
-    }
+      mapboxMap.remove();
+    };
     loader.load().then(() => {
       if (satelliteView.current) {
         const mapInstance = new google.maps.Map(satelliteView.current, {
           zoom: 10,
           center: {
-            lat: Number(projects ? projects[0].lat : '41.2033'),
-            lng: Number(projects ? projects[0].lng : '77.1945'),
+            lat: Number(projects ? projects[0].lat : "41.2033"),
+            lng: Number(projects ? projects[0].lng : "77.1945"),
           },
           streetViewControl: false,
           rotateControl: false,
           mapTypeControl: false,
-        })
+        });
         if (projects && projects.length > 0) {
           // set markers for each project location on map
           // set image for each marker
@@ -87,40 +87,40 @@ export default function ProjectMapView({ projects }: LoggedInUserInfo) {
               },
               map: mapInstance,
               title: project.name,
-            })
-            marker.addListener('click', () => {
+            });
+            marker.addListener("click", () => {
               // set selected project
-              setSelectedProject(project)
-              updateAndFetchWeather(project.publicId)
-              setWeatherLoading(true)
-              setOpen(true)
+              setSelectedProject(project);
+              updateAndFetchWeather(project.publicId);
+              setWeatherLoading(true);
+              setOpen(true);
               // set map center to selected project
               mapInstance.setCenter({
                 lat: Number(project.lat),
                 lng: Number(project.lng),
-              })
+              });
 
-              mapInstance.setZoom(12)
-            })
-          })
+              mapInstance.setZoom(12);
+            });
+          });
         }
       }
-    })
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
   const handleNavigation = (e: any, publicId: string) => {
-    e.preventDefault()
-    router.push(`/projects/${publicId}/photos`)
-  }
+    e.preventDefault();
+    router.push(`/projects/${publicId}/photos`);
+  };
 
   return (
     // <AppContainer>
     //   <MainContent>
     <>
       <div
-        id="map"
-        className=" group relative col-span-5 block h-full overflow-hidden rounded-lg shadow-md md:col-span-2 lg:col-span-1"
+        id='map'
+        className='group relative col-span-5 block h-full overflow-hidden rounded-lg shadow-md md:col-span-2 lg:col-span-1'
         ref={mapNode}
       />
       {/* {selectedProject && (
@@ -310,5 +310,5 @@ export default function ProjectMapView({ projects }: LoggedInUserInfo) {
     </>
     //   </MainContent>
     // </AppContainer>
-  )
+  );
 }

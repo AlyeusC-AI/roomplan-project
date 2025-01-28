@@ -1,26 +1,23 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-
-export const defaultUserInfoState = undefined
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 interface State {
-  user: UserInfo | undefined
+  user: User | null;
 }
 
 interface Actions {
-  setUser: (user: UserInfo) => void
-  clearUser: () => void
+  setUser: (user: User) => void;
 }
 
 export const userInfoStore = create<State & Actions>()(
   persist(
-    (set, get) => ({
-      user: defaultUserInfoState,
-      setUser: (user: UserInfo) => set((state) => ({ user })),
-      clearUser: () => set({ user: defaultUserInfoState }),
+    (set) => ({
+      user: null,
+      setUser: (user: User | null) => set(() => ({ user })),
     }),
     {
-      name: 'userInfo',
+      name: "userInfo",
+      storage: createJSONStorage(() => localStorage),
     }
   )
-)
+);

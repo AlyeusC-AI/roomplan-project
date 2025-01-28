@@ -1,6 +1,6 @@
 import { prisma } from "../../";
 
-import { AccessLinkExpiration } from "@servicegeek/utils/types";
+import { AccessLinkExpiration } from "../../types/access-link";
 import { addDays, addHours } from "date-fns";
 const crypto = require("crypto");
 const expirationMap = {

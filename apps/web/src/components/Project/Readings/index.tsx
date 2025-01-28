@@ -1,5 +1,5 @@
-import ReadingsTable from './ReadingsTable'
-import ReadingsToolbar from './ReadingsToolbar'
+import ReadingsTable from "./ReadingsTable";
+import ReadingsToolbar from "./ReadingsToolbar";
 
 const Readings = () => {
   return (
@@ -7,7 +7,7 @@ const Readings = () => {
       <ReadingsToolbar />
       <ReadingsTable />
     </>
-  )
-}
+  );
+};
 
-export default Readings
+export default Readings;

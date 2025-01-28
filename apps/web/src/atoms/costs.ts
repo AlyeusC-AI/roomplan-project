@@ -1,24 +1,24 @@
-import { create } from 'zustand'
+import { create } from "zustand";
 
 interface State {
-  subcontractorCosts: CostData[]
-  materialsCosts: CostData[]
-  miscellaneousCosts: CostData[]
-  laborCosts: CostData[]
+  subcontractorCosts: CostData[];
+  materialsCosts: CostData[];
+  miscellaneousCosts: CostData[];
+  laborCosts: CostData[];
 }
 
 interface Actions {
-  addCost: (cost: CostData, type: CostDataType) => void
+  addCost: (cost: CostData, type: CostDataType) => void;
   updateCost: (
     id: string,
-    cost: Omit<CostData, 'id'>,
+    cost: Omit<CostData, "id">,
     type: CostDataType
-  ) => void
-  removeCost: (id: string, type: CostDataType) => void
-  removeSubcontractorCost: (id: string) => void
-  updateSubcontractorCost: (id: string, cost: Omit<CostData, 'id'>) => void
-  removeMiscellaneousCost: (id: string) => void
-  updateMiscellaneousCost: (id: string, cost: Omit<CostData, 'id'>) => void
+  ) => void;
+  removeCost: (id: string, type: CostDataType) => void;
+  removeSubcontractorCost: (id: string) => void;
+  updateSubcontractorCost: (id: string, cost: Omit<CostData, "id">) => void;
+  removeMiscellaneousCost: (id: string) => void;
+  updateMiscellaneousCost: (id: string, cost: Omit<CostData, "id">) => void;
 }
 
 export const costsStore = create<State & Actions>((set) => ({
@@ -71,4 +71,4 @@ export const costsStore = create<State & Actions>((set) => ({
         c.id === id ? { ...c, ...cost } : c
       ),
     })),
-}))
+}));

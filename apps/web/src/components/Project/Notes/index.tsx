@@ -1,5 +1,5 @@
-import NotesToolbar from './NotesToolbar'
-import RoomNoteList from './RoomNoteList'
+import NotesToolbar from "./NotesToolbar";
+import RoomNoteList from "./RoomNoteList";
 
 const Notes = () => {
   return (
@@ -7,7 +7,7 @@ const Notes = () => {
       <NotesToolbar />
       <RoomNoteList />
     </>
-  )
-}
+  );
+};
 
-export default Notes
+export default Notes;

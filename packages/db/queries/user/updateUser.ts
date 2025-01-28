@@ -1,7 +1,5 @@
 import { prisma } from "../../";
 
-import { isNullOrUndefined } from "@servicegeek/utils/isNullOrUndefined";
-
 const updateUser = async ({
   id,
   firstName,
@@ -16,9 +14,9 @@ const updateUser = async ({
   const user = await prisma.user.update({
     where: { id },
     data: {
-      ...(!isNullOrUndefined(firstName) ? { firstName } : {}),
-      ...(!isNullOrUndefined(lastName) ? { lastName } : {}),
-      ...(!isNullOrUndefined(phone) ? { phone } : {}),
+      ...(firstName ? { firstName } : {}),
+      ...(lastName ? { lastName } : {}),
+      ...(phone ? { phone } : {}),
     },
   });
   return user;

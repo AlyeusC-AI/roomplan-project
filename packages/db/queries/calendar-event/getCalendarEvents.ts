@@ -41,4 +41,35 @@ const getCalendarEvents = async ({
   return calendarEvents;
 };
 
+export const getAllCalendarEvents = async ({
+  userId,
+}: {
+  userId: string;
+}) => {
+  const haloUser = await getUser(userId);
+  const organizationId = haloUser?.org?.organization.id;
+  if (!organizationId) {
+    console.error("No organization Id");
+    return null;
+  }
+
+  const calendarEvents = await prisma.calendarEvent.findMany({
+    where: {
+      
+      isDeleted: false,
+    },
+    select: {
+      publicId: true,
+      subject: true,
+      payload: true,
+      project: true,
+      projectId: true,
+      date: true,
+      dynamicId: true,
+      isDeleted: true,
+    },
+  });
+  return calendarEvents;
+};
+
 export default getCalendarEvents;

@@ -1,12 +1,12 @@
 "use client";
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   TableBody as TableBodyRaw,
   TableCell as TableCellRaw,
@@ -14,8 +14,8 @@ import {
   TableHeader as TableHeaderRaw,
   Table as TableRaw,
   TableRow as TableRowRaw,
-} from '@/components/ui/table';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import type {
   Cell,
   Column,
@@ -25,18 +25,18 @@ import type {
   Row,
   SortingState,
   Table,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
-} from '@tanstack/react-table';
-import { ArrowDownIcon, ArrowUpIcon, ChevronsUpDownIcon } from 'lucide-react';
-import type { HTMLAttributes, ReactNode } from 'react';
-import { createContext, useContext } from 'react';
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+} from "@tanstack/react-table";
+import { ArrowDownIcon, ArrowUpIcon, ChevronsUpDownIcon } from "lucide-react";
+import type { HTMLAttributes, ReactNode } from "react";
+import { createContext, useContext } from "react";
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 
 type TableState = {
   sorting: SortingState;
@@ -161,31 +161,31 @@ export function TableColumnHeader<TData, TValue>({
   }
 
   return (
-    <div className={cn('flex items-center space-x-2', className)}>
+    <div className={cn("flex items-center space-x-2", className)}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="ghost"
-            size="sm"
-            className="-ml-3 h-8 data-[state=open]:bg-accent"
+            variant='ghost'
+            size='sm'
+            className='-ml-3 h-8 data-[state=open]:bg-accent'
           >
             <span>{title}</span>
-            {column.getIsSorted() === 'desc' ? (
-              <ArrowDownIcon className="ml-2 h-4 w-4" />
-            ) : column.getIsSorted() === 'asc' ? (
-              <ArrowUpIcon className="ml-2 h-4 w-4" />
+            {column.getIsSorted() === "desc" ? (
+              <ArrowDownIcon className='ml-2 size-4' />
+            ) : column.getIsSorted() === "asc" ? (
+              <ArrowUpIcon className='ml-2 size-4' />
             ) : (
-              <ChevronsUpDownIcon className="ml-2 h-4 w-4" />
+              <ChevronsUpDownIcon className='ml-2 size-4' />
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
+        <DropdownMenuContent align='start'>
           <DropdownMenuItem onClick={() => column.toggleSorting(false)}>
-            <ArrowUpIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+            <ArrowUpIcon className='mr-2 size-3.5 text-muted-foreground/70' />
             Asc
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => column.toggleSorting(true)}>
-            <ArrowDownIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+            <ArrowDownIcon className='mr-2 size-3.5 text-muted-foreground/70' />
             Desc
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -198,10 +198,13 @@ export type TableCellProps<T> = {
   cell: Cell<T, unknown>;
   className?: string;
   onClick?: () => void;
-  items: T[]
 };
 
-export const TableCell = <T extends any>({ cell, className, onClick }: TableCellProps<T>) => (
+export const TableCell = <T extends any>({
+  cell,
+  className,
+  onClick,
+}: TableCellProps<T>) => (
   <TableCellRaw className={className} onClick={onClick}>
     {flexRender(cell.column.columnDef.cell, cell.getContext())}
   </TableCellRaw>
@@ -216,7 +219,7 @@ export type TableRowProps = {
 export const TableRow = ({ row, children, className }: TableRowProps) => (
   <TableRowRaw
     key={row.id}
-    data-state={row.getIsSelected() && 'selected'}
+    data-state={row.getIsSelected() && "selected"}
     className={className}
   >
     {row.getVisibleCells().map((cell) => children({ cell }))}
@@ -238,7 +241,7 @@ export const TableBody = ({ children, className }: TableBodyProps) => {
         rows.map((row) => children({ row }))
       ) : (
         <TableRowRaw>
-          <TableCellRaw colSpan={columns.length} className="h-24 text-center">
+          <TableCellRaw colSpan={columns.length} className='h-24 text-center'>
             No results.
           </TableCellRaw>
         </TableRowRaw>

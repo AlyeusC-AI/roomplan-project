@@ -7,6 +7,7 @@ const config: ExpoConfig = {
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
+  scheme: "servicegeek",
   version: "1.2.1",
   runtimeVersion: "appVersion",
   updates: {
@@ -30,7 +31,7 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: "com.servicegeek.servicegeekmobile",
     supportsTablet: true,
-    buildNumber: "2"
+    buildNumber: "2",
   },
   web: {
     favicon: "./assets/favicon.png",
@@ -43,6 +44,7 @@ const config: ExpoConfig = {
   plugins: [
     ["expo-asset"],
     ["expo-font"],
+    ["expo-router"],
     [
       "react-native-vision-camera",
       {
@@ -66,6 +68,17 @@ const config: ExpoConfig = {
           buildToolsVersion: "30.0.2",
           kotlinVersion: "1.7.10",
         },
+      },
+    ],
+    [
+      "expo-speech-recognition",
+      {
+        microphonePermission: "Allow $(PRODUCT_NAME) to use the microphone.",
+        speechRecognitionPermission:
+          "Allow $(PRODUCT_NAME) to use speech recognition.",
+        androidSpeechServicePackages: [
+          "com.google.android.googlequicksearchbox",
+        ],
       },
     ],
   ],

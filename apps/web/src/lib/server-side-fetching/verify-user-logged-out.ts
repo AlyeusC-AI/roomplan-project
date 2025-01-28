@@ -1,15 +1,15 @@
-'use server'
+"use server";
 
-import { createClient } from '@lib/supabase/server'
-import { redirect, RedirectType } from 'next/navigation'
+import { createClient } from "@lib/supabase/server";
+import { redirect, RedirectType } from "next/navigation";
 
 export async function verifyUserLoggedOut() {
-  const client = await createClient()
+  const client = await createClient();
   const {
     data: { user },
-  } = await client.auth.getUser()
+  } = await client.auth.getUser();
 
   if (user) {
-    return redirect('/projects', RedirectType.push)
+    return redirect("/projects", RedirectType.push);
   }
 }

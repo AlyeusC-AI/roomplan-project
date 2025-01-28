@@ -1,17 +1,17 @@
-import { useState } from 'react'
-import { PrimaryButton } from '@components/components/button'
-import Modal from '@components/DesignSystem/Modal'
+import { useState } from "react";
+import { PrimaryButton } from "@components/components/button";
+import Modal from "@components/DesignSystem/Modal";
 
-import RoomCreationModal from '../RoomCreationModal'
-import TabTitleArea from '../TabTitleArea'
+import RoomCreationModal from "../RoomCreationModal";
+import TabTitleArea from "../TabTitleArea";
 
 export default function MitigationToolbar() {
-  const [isRoomCreationModalOpen, setIsRoomCreationModalOpen] = useState(false)
+  const [isRoomCreationModalOpen, setIsRoomCreationModalOpen] = useState(false);
 
   return (
     <TabTitleArea
-      title="Readings"
-      description="Record humidity, gpp, and temperature readings from each room within the job site."
+      title='Readings'
+      description='Record humidity, gpp, and temperature readings from each room within the job site.'
     >
       <>
         <div></div>
@@ -31,5 +31,5 @@ export default function MitigationToolbar() {
         </Modal>
       </>
     </TabTitleArea>
-  )
+  );
 }

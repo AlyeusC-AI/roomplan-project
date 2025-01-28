@@ -1,41 +1,43 @@
-import { trpc } from '@utils/trpc'
-import { RouterOutputs } from '@servicegeek/api'
+"use client";
 
-import { useRouter } from 'next/router'
+import { trpc } from "@utils/trpc";
+import { RouterOutputs } from "@servicegeek/api";
 
-import TabTitleArea from '../TabTitleArea'
+import { useParams } from "next/navigation";
 
-import AvailableEquipment from './AvailableEquipment'
-import UsedEquipment from './UsedEquipment'
+import TabTitleArea from "../TabTitleArea";
+
+import AvailableEquipment from "./AvailableEquipment";
+import UsedEquipment from "./UsedEquipment";
 
 const ProjectEquipment = ({
   initialUsedEquipment,
   intialOrganizationEquipment,
 }: {
-  initialUsedEquipment: RouterOutputs['equipment']['getAllUsed']
-  intialOrganizationEquipment: RouterOutputs['equipment']['getAll']
+  initialUsedEquipment: RouterOutputs["equipment"]["getAllUsed"];
+  intialOrganizationEquipment: RouterOutputs["equipment"]["getAll"];
 }) => {
-  const router = useRouter()
+  const { id } = useParams<{ id: string }>();
   const usedEquipment = trpc.equipment.getAllUsed.useQuery(
     {
-      projectPublicId: router.query.id as string,
+      projectPublicId: id,
     },
     {
       initialData: initialUsedEquipment,
     }
-  )
+  );
 
   const onAdd = async () => {
-    await usedEquipment.refetch()
-  }
+    await usedEquipment.refetch();
+  };
 
   return (
     <div>
       <TabTitleArea
-        title="Equipment Transfer"
-        description="Keep track of equipment used on the job"
+        title='Equipment Transfer'
+        description='Keep track of equipment used on the job'
       ></TabTitleArea>
-      <div className="mt-12 space-y-12">
+      <div className='mt-12 space-y-12'>
         <UsedEquipment usedEquipment={usedEquipment.data} />
         <AvailableEquipment
           usedEquipment={usedEquipment.data}
@@ -44,7 +46,7 @@ const ProjectEquipment = ({
         />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProjectEquipment
+export default ProjectEquipment;

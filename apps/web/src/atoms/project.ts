@@ -1,52 +1,21 @@
-import { FileObject } from '@supabase/storage-js'
-import { ProjectStatus } from '@servicegeek/db'
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-
-export const defaultProjectInfoState = {
-  clientName: '',
-  clientEmail: '',
-  clientPhoneNumber: '',
-  location: '',
-  name: '',
-  managerName: '',
-  companyName: '',
-  insuranceCompanyName: '',
-  adjusterName: '',
-  adjusterPhoneNumber: '',
-  adjusterEmail: '',
-  insuranceClaimId: '',
-  lossType: '',
-  catCode: undefined,
-  humidity: '',
-  temperature: '',
-  forecast: '',
-  wind: '',
-  lat: '',
-  lng: '',
-  claimSummary: '',
-  assignmentNumber: '',
-  status: ProjectStatus.active,
-  roofSegments: [],
-  roofSpecs: undefined,
-  id: 0,
-  publicId: ''
-}
+import { FileObject } from "@supabase/storage-js";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface State {
-  project: ProjectInfo
-  projectFiles: FileObject[]
+  project: Project | null;
+  projectFiles: FileObject[];
 }
 
 interface Actions {
-  setProject: (project: ProjectInfo) => void
-  removeFile: (name: string) => void
+  setProject: (project: Project) => void;
+  removeFile: (name: string) => void;
 }
 
 export const projectStore = create<State & Actions>()(
   persist(
     (set) => ({
-      project: defaultProjectInfoState,
+      project: null,
       projectFiles: [],
       setProject: (project) =>
         set((state) => ({ project: { ...state.project, ...project } })),
@@ -57,7 +26,7 @@ export const projectStore = create<State & Actions>()(
         })),
     }),
     {
-      name: 'projectInfo',
+      name: "projectInfo",
     }
   )
-)
+);

@@ -1,16 +1,16 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { imageUri } = await req.json()
+    const { imageUri } = await req.json();
     const response = await fetch(
-      'https://vision.googleapis.com/v1/images:annotate?alt=json&key=' +
+      "https://vision.googleapis.com/v1/images:annotate?alt=json&key=" +
         process.env.GOOGLE_VISION_API_KEY,
       {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           requests: [
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
               },
               features: [
                 {
-                  type: 'LABEL_DETECTION',
+                  type: "LABEL_DETECTION",
                   maxResults: 10,
                 },
               ],
@@ -30,11 +30,11 @@ export async function POST(req: NextRequest) {
           ],
         }),
       }
-    )
-    const data = await response.json()
+    );
+    const data = await response.json();
 
-    return NextResponse.json(data, { status: 200 })
+    return NextResponse.json(data, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error }, { status: 500 })
+    return NextResponse.json({ error }, { status: 500 });
   }
 }

@@ -1,44 +1,44 @@
-import { Fragment } from 'react'
-import UserAvatar from '@components/DesignSystem/UserAvatar'
-import { Menu, Transition } from '@headlessui/react'
-import clsx from 'clsx'
-import Link from 'next/link'
-import { useRouter } from 'next/router'
-import { createClient } from '@lib/supabase/client'
+import { Fragment } from "react";
+import UserAvatar from "@components/DesignSystem/UserAvatar";
+import { Menu, Transition } from "@headlessui/react";
+import clsx from "clsx";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { createClient } from "@lib/supabase/client";
 
 export default function Header() {
-  const supabaseClient = createClient()
-  const router = useRouter()
-  let id = router.query.id || ''
+  const supabaseClient = createClient();
+  const router = useRouter();
+  let id = router.query.id || "";
   if (Array.isArray(id) || !id) {
-    id = ''
+    id = "";
   }
 
   return (
-    <Menu as="div" className="relative mb-2 inline-block">
-      <Menu.Button className="flex w-full items-center justify-center rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
-        <span className="sr-only">Open user menu</span>
+    <Menu as='div' className='relative mb-2 inline-block'>
+      <Menu.Button className='flex w-full items-center justify-center rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2'>
+        <span className='sr-only'>Open user menu</span>
         <UserAvatar />
       </Menu.Button>
 
       <Transition
         as={Fragment}
-        enter="transition ease-out duration-100"
-        enterFrom="transform opacity-0 scale-95"
-        enterTo="transform opacity-100 scale-100"
-        leave="transition ease-in duration-75"
-        leaveFrom="transform opacity-100 scale-100"
-        leaveTo="transform opacity-0 scale-95"
+        enter='transition ease-out duration-100'
+        enterFrom='transform opacity-0 scale-95'
+        enterTo='transform opacity-100 scale-100'
+        leave='transition ease-in duration-75'
+        leaveFrom='transform opacity-100 scale-100'
+        leaveTo='transform opacity-0 scale-95'
       >
-        <Menu.Items className="absolute left-0  bottom-full z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none">
-          <div className="py-1">
+        <Menu.Items className='absolute bottom-full left-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none'>
+          <div className='py-1'>
             <Menu.Item>
               {({ active }) => (
                 <Link
-                  href="/settings/account"
+                  href='/settings/account'
                   className={clsx(
-                    active ? 'bg-gray-100' : '',
-                    'block w-full px-4 py-2 text-sm text-gray-700'
+                    active ? "bg-gray-100" : "",
+                    "block w-full px-4 py-2 text-sm text-gray-700"
                   )}
                 >
                   Account
@@ -48,10 +48,10 @@ export default function Header() {
             <Menu.Item>
               {({ active }) => (
                 <Link
-                  href="/privacy"
+                  href='/privacy'
                   className={clsx(
-                    active ? 'bg-slate-50' : '',
-                    'block px-4 py-2 text-sm text-gray-700'
+                    active ? "bg-slate-50" : "",
+                    "block px-4 py-2 text-sm text-gray-700"
                   )}
                 >
                   Privacy
@@ -61,10 +61,10 @@ export default function Header() {
             <Menu.Item>
               {({ active }) => (
                 <Link
-                  href="/terms"
+                  href='/terms'
                   className={clsx(
-                    active ? 'bg-slate-50' : '',
-                    'block px-4 py-2 text-sm text-gray-700'
+                    active ? "bg-slate-50" : "",
+                    "block px-4 py-2 text-sm text-gray-700"
                   )}
                 >
                   Terms
@@ -75,12 +75,12 @@ export default function Header() {
               {({ active }) => (
                 <button
                   onClick={async () => {
-                    await supabaseClient.auth.signOut()
-                    router.push('/')
+                    await supabaseClient.auth.signOut();
+                    router.push("/");
                   }}
                   className={clsx(
-                    active ? 'bg-gray-100' : '',
-                    'block w-full px-4 py-2 text-left text-sm text-gray-700'
+                    active ? "bg-gray-100" : "",
+                    "block w-full px-4 py-2 text-left text-sm text-gray-700"
                   )}
                 >
                   Sign Out
@@ -91,5 +91,5 @@ export default function Header() {
         </Menu.Items>
       </Transition>
     </Menu>
-  )
+  );
 }

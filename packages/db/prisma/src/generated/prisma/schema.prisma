@@ -1,7 +1,7 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "jsonProtocol"]
-  output = "./src/generated/prisma"
+  previewFeatures = ["fullTextSearchPostgres"]
+  output          = "./src/generated/prisma"
 }
 
 datasource db {
@@ -48,6 +48,8 @@ model User {
   onboardingStatus   Json?
   ImageNote          ImageNote[]
   Annotation         Annotation[]
+  organization       Organization?       @relation(fields: [organizationId], references: [publicId])
+  organizationId     String              @db.Uuid
 }
 
 model Organization {
@@ -61,6 +63,8 @@ model Organization {
   isDeleted               Boolean                   @default(false)
   updatedAt               DateTime                  @default(now()) @updatedAt
   logoId                  String?
+  lat                     Float
+  lng                     Float
   Image                   Image[]
   invitations             OrganizationInvitation[]
   projects                Project[]
@@ -70,6 +74,7 @@ model Organization {
   OrganizationSavedOption OrganizationSavedOption[]
   equipment               Equipment[]
   ProjectStatusValue      ProjectStatusValue[]
+  User                    User[]
 }
 
 model Equipment {
@@ -128,6 +133,7 @@ enum AccessLevel {
   projectManager
   accountManager
   contractor
+  removed
 }
 
 model UserToOrganization {

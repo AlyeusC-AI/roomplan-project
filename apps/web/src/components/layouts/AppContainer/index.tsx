@@ -1,5 +1,5 @@
-import Content from './Content'
-import Header from './Header'
+import Content from "./Content";
+import Header from "./Header";
 
 export default function AppContainer({
   overflow = true,
@@ -8,15 +8,15 @@ export default function AppContainer({
   renderSecondaryNavigation,
   skeleton = false,
 }: {
-  overflow?: boolean
-  children: React.ReactNode
-  hideParentNav?: boolean
-  renderSecondaryNavigation?: () => React.ReactNode
-  skeleton?: boolean
+  overflow?: boolean;
+  children: React.ReactNode;
+  hideParentNav?: boolean;
+  renderSecondaryNavigation?: () => React.ReactNode;
+  skeleton?: boolean;
 }) {
   return (
     <>
-      <div className="flex h-vh flex-col">
+      <div className='h-vh flex flex-col'>
         <Header skeleton={skeleton} />
         <Content
           hideParentNav={hideParentNav}
@@ -27,5 +27,5 @@ export default function AppContainer({
         </Content>
       </div>
     </>
-  )
+  );
 }

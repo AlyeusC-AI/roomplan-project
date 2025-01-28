@@ -1,28 +1,28 @@
-import { prisma } from '@servicegeek/db'
+import { prisma } from "@servicegeek/db";
 
-const PAGE_COUNT = 10
+const PAGE_COUNT = 10;
 
-import { createClient } from '@lib/supabase/server'
+import { createClient } from "@lib/supabase/server";
 
 const getProjectsData = async () => {
-  let now = performance.now()
-  const supabaseClient = await createClient()
+  const now = performance.now();
+  const supabaseClient = await createClient();
   const {
     data: { user: authUser },
-  } = await supabaseClient.auth.getUser()
+  } = await supabaseClient.auth.getUser();
 
   if (!authUser) {
-    return { user: null, accessToken: null }
+    return { user: null, accessToken: null };
   }
-  
-  let skip = 0
-  const take = PAGE_COUNT
-  let page = "1"
+
+  let skip = 0;
+  const take = PAGE_COUNT;
+  const page = "1";
 
   if (page && !Array.isArray(page)) {
-    const p = parseInt(page, 10)
+    const p = parseInt(page, 10);
     if (p > 1) {
-      skip = PAGE_COUNT * (p - 1)
+      skip = PAGE_COUNT * (p - 1);
     }
   }
 
@@ -94,7 +94,7 @@ const getProjectsData = async () => {
                 take,
                 skip,
                 orderBy: {
-                  createdAt: 'desc',
+                  createdAt: "desc",
                 },
                 where: {
                   isDeleted: false,
@@ -147,7 +147,7 @@ const getProjectsData = async () => {
         },
       },
     },
-  })
+  });
 
   if (!user) {
     return {
@@ -155,7 +155,7 @@ const getProjectsData = async () => {
       orgAccessLevel: null,
       accessToken: null,
       emailConfirmed: false,
-    }
+    };
   }
 
   if (!user.org?.organization.id) {
@@ -163,7 +163,7 @@ const getProjectsData = async () => {
       user: user,
       orgAccessLevel: null,
       emailConfirmed: authUser.email_confirmed_at !== null,
-    }
+    };
   }
 
   if (!user.org) {
@@ -171,25 +171,25 @@ const getProjectsData = async () => {
       user: user,
       orgAccessLevel: null,
       emailConfirmed: authUser.email_confirmed_at !== null,
-    }
+    };
   }
 
-  let orgAccessLevel: AccessLevel = "member" 
+  let orgAccessLevel: AccessLevel = "member";
   if (user.org.isDeleted) {
-    orgAccessLevel = "removed"
+    orgAccessLevel = "removed";
   } else if (user.org.isAdmin) {
-    orgAccessLevel = "admin"
+    orgAccessLevel = "admin";
   }
   if (user.isSupportUser) {
-    orgAccessLevel = "admin"
+    orgAccessLevel = "admin";
   }
-  let end = performance.now()
-  console.log(`getProjectsData took ${end - now} ms`)
+  const end = performance.now();
+  console.log(`getProjectsData took ${end - now} ms`);
   return {
     user: user,
     orgAccessLevel: orgAccessLevel,
     emailConfirmed: authUser.email_confirmed_at !== null,
-  }
-}
+  };
+};
 
-export default getProjectsData
+export default getProjectsData;

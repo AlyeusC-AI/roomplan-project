@@ -1,74 +1,84 @@
-"use client"
+"use client";
 
-import { SidebarNav } from '@/components/ui/sidebar-nav'
-import { projectsStore } from '@atoms/projects'
-import { Separator } from '@components/ui/separator'
-import { useParams } from 'next/navigation'
+import { SidebarNav } from "@/components/ui/sidebar-nav";
+import { projectStore } from "@atoms/project";
+import { projectsStore } from "@atoms/projects";
+import { Separator } from "@components/ui/separator";
+import { useParams } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Layout({ children }: React.PropsWithChildren) {
+  const { id } = useParams();
 
-  const { id } = useParams()
-
-  const projects = projectsStore((state) => state.projects)
+  const projects = projectsStore((state) => state.projects);
+  const project = projectStore((state) => state);
 
   const sidebarNavItems = () => [
     {
-      title: 'Overview',
-      href: `projects/${id}/overview`
+      title: "Overview",
+      href: `/projects/${id}/overview`,
     },
     {
-      title: 'Files',
-      href: `projects/${id}/files`
+      title: "Files",
+      href: `/projects/${id}/files`,
     },
     {
-      title: 'Photos',
-      href: `projects/${id}/photos`
+      title: "Photos",
+      href: `/projects/${id}/photos`,
     },
     {
-      title: 'Mitigation',
-      href: `projects/${id}/mitigation`
+      title: "Mitigation",
+      href: `/projects/${id}/mitigation`,
     },
     {
-      title: 'Expenses',
-      href: `projects/${id}/expenses`
+      title: "Expenses",
+      href: `/projects/${id}/expenses`,
     },
     {
-      title: 'Calendar',
-      href: `projects/${id}/calendar`
+      title: "Calendar",
+      href: `/projects/${id}/calendar`,
     },
     {
-      title: 'Roofing',
-      href: `projects/${id}/roofing`
+      title: "Roofing",
+      href: `/projects/${id}/roofing`,
     },
     {
-      title: 'Weather',
-      href: `projects/${id}/weather`
+      title: "Weather",
+      href: `/projects/${id}/weather`,
     },
     {
-      title: 'Report',
-      href: `projects/${id}/report`
-    }
+      title: "Report",
+      href: `/projects/${id}/report`,
+    },
   ];
+
+  useEffect(() => {
+    fetch(`/api/projects/${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        project.setProject(data.data);
+      });
+  });
 
   return (
     <>
-      <div className="hidden space-y-6 pl-5 pb-16 md:block">
-        <div className="space-y-0.5 fixed bg-white z-20 w-full">
-          <h2 className="text-2xl font-bold tracking-tight mt-4">{projects.find((val) => val.publicId === id)?.name ?? ""}</h2>
-          <p className="text-muted-foreground">
-            Manage your project details.
-          </p>
+      <div className='hidden space-y-6 pb-16 pl-5 md:block'>
+        <div className='fixed z-20 w-full space-y-0.5 bg-background'>
+          <h2 className='mt-4 text-2xl font-bold tracking-tight'>
+            {project.project?.name}
+          </h2>
+          <p className='text-muted-foreground'>Manage your project details.</p>
         </div>
-        <div className='pt-10 bg-white z-20'>
-        <Separator className="my-12 fixed mt-10 " />
+        <div className='z-20 bg-background pt-10'>
+          <Separator className='fixed my-12 mt-10' />
         </div>
-        <div className="flex flex-col space-y-8 pt-10 lg:flex-row lg:gap-x-12 lg:space-y-0 w-full">
-          <aside className="-mx-4 lg:w-1/5">
-            <SidebarNav className=' fixed' items={sidebarNavItems()} />
+        <div className='flex w-full flex-col space-y-8 pt-10 lg:flex-row lg:gap-x-12 lg:space-y-0'>
+          <aside className='-mx-4 lg:w-1/5'>
+            <SidebarNav className='fixed min-w-64' items={sidebarNavItems()} />
           </aside>
-          <div className="flex-1 lg:max-w-2xl mt-10">{children}</div>
+          <div className='mt-10 flex-1'>{children}</div>
         </div>
       </div>
     </>
-  )
+  );
 }

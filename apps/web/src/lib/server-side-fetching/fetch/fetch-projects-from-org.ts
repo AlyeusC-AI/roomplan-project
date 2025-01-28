@@ -1,21 +1,18 @@
-import prisma from "@servicegeek/db"
-import superjson from "superjson"
+import prisma from "@servicegeek/db";
+import superjson from "superjson";
 
 export async function fetchUserProjectsFromOrg(orgId: number) {
-
   let projects = await prisma.project.findMany({
-    select: {
-      
-    },
+    select: {},
     where: {
-      organizationId: orgId
+      organizationId: orgId,
     },
-  })
+  });
 
-  let totalProjects = 0
-  totalProjects = user.org.organization._count.projects
+  let totalProjects = 0;
+  totalProjects = user.org.organization._count.projects;
   projects = superjson.serialize(orgWithProjects)
-    .json as unknown as ProjectType[]
+    .json as unknown as ProjectType[];
 
-  console.log('projects', projects)
+  console.log("projects", projects);
 }

@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from "next/image";
 
 const EmptyState = ({
   title,
@@ -7,14 +7,14 @@ const EmptyState = ({
   height = 861,
   width = 1056,
 }: {
-  title: string
-  description: string
-  imagePath: string
-  height?: number
-  width?: number
+  title: string;
+  description: string;
+  imagePath: string;
+  height?: number;
+  width?: number;
 }) => {
   return (
-    <div className="mt-14 flex flex-col items-center justify-center">
+    <div className='mt-14 flex flex-col items-center justify-center'>
       <div
         style={{
           width: width / 3,
@@ -25,17 +25,17 @@ const EmptyState = ({
           src={imagePath}
           width={width / 3}
           height={height / 3}
-          alt="Empty state"
+          alt='Empty state'
         />
       </div>
-      <div className="mt-8 flex h-full flex-col items-center justify-center">
-        <h3 className="text-center text-2xl font-medium sm:text-3xl">
+      <div className='mt-8 flex h-full flex-col items-center justify-center'>
+        <h3 className='text-center text-2xl font-medium sm:text-3xl'>
           {title}
         </h3>
-        <p className="mt-4 max-w-md text-center">{description}</p>
+        <p className='mt-4 max-w-md text-center'>{description}</p>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default EmptyState
+export default EmptyState;

@@ -1,10 +1,10 @@
-import { create } from 'zustand'
+import { create } from "zustand";
 
-type State = { images: ImageUploadInProgressData[] }
+type State = { images: ImageUploadInProgressData[] };
 interface Actions {
-  addImages: (images: ImageUploadInProgressData[]) => void
-  clearImages: () => void
-  removeImage: (imageName: string) => void
+  addImages: (images: ImageUploadInProgressData[]) => void;
+  clearImages: () => void;
+  removeImage: (imageName: string) => void;
 }
 
 export const uploadInProgressImagesStore = create<State & Actions>((set) => ({
@@ -16,4 +16,4 @@ export const uploadInProgressImagesStore = create<State & Actions>((set) => ({
     set((state) => ({
       images: state.images.filter((i) => i.name !== imageName),
     })),
-}))
+}));

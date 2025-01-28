@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   AudioWaveform,
   CalendarDays,
@@ -11,18 +11,18 @@ import {
   GalleryVerticalEnd,
   Map,
   Settings,
-} from "lucide-react"
+} from "lucide-react";
 
-import { NavMain } from "@/components/nav-main"
-import { NavUser } from "@/components/nav-user"
+import { NavMain } from "@/components/nav-main";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import Image from "next/image"
+} from "@/components/ui/sidebar";
+import Image from "next/image";
 
 // This is sample data.
 const data = {
@@ -47,27 +47,27 @@ const data = {
     {
       title: "Projects",
       url: "/projects",
-      icon: FolderKanban
+      icon: FolderKanban,
     },
     {
       title: "Map",
       url: "/map",
-      icon: Map
+      icon: Map,
     },
     {
       title: "Calendar",
       url: "/calendar",
-      icon: CalendarDays
+      icon: CalendarDays,
     },
     {
       title: "Performance",
       url: "/performance",
-      icon: ChartLine
+      icon: ChartLine,
     },
     {
       title: "Invoices",
       url: "/invoices",
-      icon: FileUser
+      icon: FileUser,
     },
     {
       title: "Settings",
@@ -79,8 +79,16 @@ const data = {
           url: "/settings/account",
         },
         {
+          title: "Organization",
+          url: "/settings/organization",
+        },
+        {
           title: "Billing",
           url: "/settings/billing",
+        },
+        {
+          title: "Appearance",
+          url: "/settings/appearance",
         },
         {
           title: "Workflows",
@@ -93,13 +101,24 @@ const data = {
       ],
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="offcanvas" variant="sidebar" className="h-screen" {...props}>
-      <SidebarHeader className="items-center flex">
-        <Image src="/images/brand/servicegeek-no-bg.png" alt="logo" className="my-4" width={140} height={30} />
+    <Sidebar
+      collapsible='icon'
+      variant='floating'
+      className='h-screen'
+      {...props}
+    >
+      <SidebarHeader className='flex items-center'>
+        <Image
+          src='/images/brand/servicegeek-no-bg.png'
+          alt='logo'
+          className='my-4'
+          width={140}
+          height={30}
+        />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
@@ -109,5 +128,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

@@ -1,12 +1,12 @@
-'use client'
+"use client";
 
-import { ChevronRight, type LucideIcon } from 'lucide-react'
+import { ChevronRight, type LucideIcon } from "lucide-react";
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+} from "@/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -16,25 +16,25 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from '@/components/ui/sidebar'
-import { cn } from '@lib/utils'
-import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+} from "@/components/ui/sidebar";
+import { cn } from "@lib/utils";
+import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 interface SidebarItem {
-  title: string
-  url: string
-  icon?: LucideIcon
-  isActive?: boolean
+  title: string;
+  url: string;
+  icon?: LucideIcon;
+  isActive?: boolean;
   items?: {
-    title: string
-    url: string
-  }[]
+    title: string;
+    url: string;
+  }[];
 }
 
 export function NavMain({ items }: { items: SidebarItem[] }) {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const pathname = usePathname()
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <SidebarGroup>
@@ -47,7 +47,7 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
             defaultOpen={item.isActive}
             onOpenChange={(isOpen) => setIsSettingsOpen(isOpen)}
             open={isSettingsOpen || pathname.includes(item.url)}
-            className="group/collapsible"
+            className='group/collapsible'
           >
             <SidebarMenuItem>
               {item.items ? (
@@ -60,7 +60,7 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
                     <span>{item.title}</span>
                     <ChevronRight
                       size={16}
-                      className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+                      className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90'
                     />
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
@@ -69,8 +69,8 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
                   <div
                     data-active={pathname == item.url}
                     className={cn(
-                      'peer/menu-button group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 group-data-[collapsible=icon]:!size-8 [&>svg]:size-4 flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:shrink-0',
-                      'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                      "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+                      "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
                   >
                     {item.icon && <item.icon size={16} />}
@@ -78,7 +78,7 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
                     {item.items && (
                       <ChevronRight
                         size={16}
-                        className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+                        className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90'
                       />
                     )}
                   </div>
@@ -86,7 +86,10 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
               )}
               <CollapsibleContent>
                 {item.items?.map((subItem) => (
-                  <SidebarMenuSub key={subItem.url} isActive={pathname.includes(subItem.url)}>
+                  <SidebarMenuSub
+                    key={subItem.url}
+                    isActive={pathname.includes(subItem.url)}
+                  >
                     <SidebarMenuSubItem key={subItem.title}>
                       <SidebarMenuSubButton asChild>
                         <a href={subItem.url}>
@@ -102,5 +105,5 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
         ))}
       </SidebarMenu>
     </SidebarGroup>
-  )
+  );
 }

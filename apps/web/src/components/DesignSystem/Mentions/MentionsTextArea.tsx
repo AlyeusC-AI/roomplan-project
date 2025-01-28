@@ -1,62 +1,62 @@
-import { Mention, MentionsInput } from 'react-mentions'
+import { Mention, MentionsInput } from "react-mentions";
 
 // TODO: move to tailwind styles
 const mentionStyle: React.CSSProperties = {
-  position: 'relative',
+  position: "relative",
   zIndex: 1,
-  color: 'blue',
-  textDecoration: 'underline',
-  pointerEvents: 'none',
-}
+  color: "blue",
+  textDecoration: "underline",
+  pointerEvents: "none",
+};
 
 const mentionsInputStyle = {
   control: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     fontSize: 16,
   },
-  '&multiLine': {
+  "&multiLine": {
     control: {
-      fontFamily: 'monospace',
+      fontFamily: "monospace",
       minHeight: 93,
     },
     highlighter: {
       padding: 9,
-      border: '1px solid transparent',
+      border: "1px solid transparent",
     },
     input: {
       padding: 9,
-      border: '1px solid silver',
-      borderRadius: '0.375rem',
+      border: "1px solid silver",
+      borderRadius: "0.375rem",
     },
   },
-  '&singleLine': {
-    display: 'inline-block',
+  "&singleLine": {
+    display: "inline-block",
     width: 180,
     highlighter: {
       padding: 1,
-      border: '2px inset transparent',
+      border: "2px inset transparent",
     },
     input: {
       padding: 1,
-      border: '2px inset',
-      borderRadius: '0.375rem',
+      border: "2px inset",
+      borderRadius: "0.375rem",
     },
   },
   suggestions: {
     list: {
-      backgroundColor: 'white',
-      border: '1px solid rgba(0,0,0,0.15)',
+      backgroundColor: "white",
+      border: "1px solid rgba(0,0,0,0.15)",
       fontSize: 16,
     },
     item: {
-      padding: '5px 15px',
-      borderBottom: '1px solid rgba(0,0,0,0.15)',
-      '&focused': {
-        backgroundColor: '#cee4e5',
+      padding: "5px 15px",
+      borderBottom: "1px solid rgba(0,0,0,0.15)",
+      "&focused": {
+        backgroundColor: "#cee4e5",
       },
     },
   },
-}
+};
 
 export default function MentionsTextArea({
   mentions,
@@ -65,12 +65,12 @@ export default function MentionsTextArea({
   setValue,
 }: {
   mentions: {
-    id: string
-    display: string
-  }[]
-  setMentions: (id: string) => void
-  value: string
-  setValue: (value: string) => void
+    id: string;
+    display: string;
+  }[];
+  setMentions: (id: string) => void;
+  value: string;
+  setValue: (value: string) => void;
 }) {
   return (
     <MentionsInput
@@ -82,10 +82,10 @@ export default function MentionsTextArea({
         style={mentionStyle}
         data={mentions}
         onAdd={(id) => {
-          setMentions(id as string)
+          setMentions(id as string);
         }}
-        trigger={'@'}
+        trigger={"@"}
       />
     </MentionsInput>
-  )
+  );
 }

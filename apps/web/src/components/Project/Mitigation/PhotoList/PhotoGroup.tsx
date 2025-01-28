@@ -1,13 +1,12 @@
-/* eslint-disable @next/next/no-img-element */
-import { useState } from 'react'
-import { TertiaryButton } from '@components/components/button'
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
-import { GroupByViews, PhotoViews } from '@servicegeek/db'
-import { RouterOutputs } from '@servicegeek/api'
-import clsx from 'clsx'
+import { useState } from "react";
+import { GroupByViews, PhotoViews } from "@servicegeek/db";
+import { RouterOutputs } from "@servicegeek/api";
+import clsx from "clsx";
 
-import Photo from './Photo'
-import { QueryContext } from '.'
+import Photo from "./Photo";
+import { QueryContext } from ".";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@components/ui/button";
 
 const PhotoGroup = ({
   photos,
@@ -19,39 +18,39 @@ const PhotoGroup = ({
   onSelectPhoto,
   photoView,
 }: {
-  photos: RouterOutputs['photos']['getProjectPhotos']['images']
-  selectedPhotos: RouterOutputs['photos']['getProjectPhotos']['images']
-  day: string
-  queryContext: QueryContext
-  groupBy: GroupByViews
-  onPhotoClick: (key: string) => void
+  photos: RouterOutputs["photos"]["getProjectPhotos"]["images"];
+  selectedPhotos: RouterOutputs["photos"]["getProjectPhotos"]["images"];
+  day: string;
+  queryContext: QueryContext;
+  groupBy: GroupByViews;
+  onPhotoClick: (key: string) => void;
   onSelectPhoto: (
-    photo: RouterOutputs['photos']['getProjectPhotos']['images'][0]
-  ) => void
-  photoView: PhotoViews
+    photo: RouterOutputs["photos"]["getProjectPhotos"]["images"][0]
+  ) => void;
+  photoView: PhotoViews;
 }) => {
-  const [isOpen, setOpen] = useState(true)
+  const [isOpen, setOpen] = useState(true);
 
   return (
-    <div key={day} className="mt-4">
-      <div className="flex ">
-        <TertiaryButton noPadding onClick={() => setOpen((o) => !o)}>
+    <div key={day} className='mt-4'>
+      <div className='flex'>
+        <Button onClick={() => setOpen((o) => !o)}>
           {isOpen ? (
-            <ChevronDownIcon className="h-8 w-8" />
+            <ChevronDown className='size-8' />
           ) : (
-            <ChevronUpIcon className="h-8 w-8" />
+            <ChevronUp className='size-8' />
           )}
-        </TertiaryButton>
-        <h2 className="ml-4 text-xl font-bold">{day}</h2>
+        </Button>
+        <h2 className='ml-4 text-xl font-bold'>{day}</h2>
       </div>
       {isOpen && (
         <div
           key={day}
           className={clsx(
-            'mt-4 flex',
+            "mt-4 flex",
             photoView === PhotoViews.photoGridView &&
-              'flex-wrap gap-x-4 gap-y-8',
-            photoView === PhotoViews.photoListView && 'flex-col'
+              "flex-wrap gap-x-4 gap-y-8",
+            photoView === PhotoViews.photoListView && "flex-col"
           )}
         >
           {photos.map((photo) => (
@@ -70,7 +69,7 @@ const PhotoGroup = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default PhotoGroup
+export default PhotoGroup;

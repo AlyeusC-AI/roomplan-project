@@ -1,13 +1,13 @@
 // import { Container } from '@components/LandingPage/Container'
-import { LogoTextBlue } from '@components/components'
-import Image from 'next/image'
+import { LogoTextBlue } from "@components/components";
+import Image from "next/image";
 // import { NavLink } from '@components/LandingPage/NavLink'
-import Link from 'next/link'
+import Link from "next/link";
 
 const navigation = {
   solutions: [
-    { name: 'Job Management', href: '#' },
-    { name: 'Restoration', href: '#' },
+    { name: "Job Management", href: "#" },
+    { name: "Restoration", href: "#" },
   ],
   // support: [
   //   { name: 'Pricing', href: '/pricing' },
@@ -21,70 +21,70 @@ const navigation = {
   //   },
   // ],
   company: [
-    { name: 'About', href: '/about-us' },
-    { name: 'Blog', href: 'https://blog.servicegeek.app' },
+    { name: "About", href: "/about-us" },
+    { name: "Blog", href: "https://blog.servicegeek.app" },
   ],
   legal: [
-    { name: 'Privacy', href: '/privacy' },
-    { name: 'Terms', href: '/terms' },
+    { name: "Privacy", href: "/privacy" },
+    { name: "Terms", href: "/terms" },
   ],
   social: [
     {
-      name: 'Linkedin',
-      href: 'https://www.linkedin.com/company/servicegeek/',
+      name: "Linkedin",
+      href: "https://www.linkedin.com/company/servicegeek/",
       icon: () => (
         <Image
-          src="/social/linkedin.png"
-          alt="Linkedin"
+          src='/social/linkedin.png'
+          alt='Linkedin'
           height={158 / 8}
           width={582 / 8}
         />
       ),
     },
   ],
-}
+};
 
 export function Footer() {
   return (
-    <footer className="bg-white" aria-labelledby="footer-heading">
-      <h2 id="footer-heading" className="sr-only">
+    <footer className='bg-white' aria-labelledby='footer-heading'>
+      <h2 id='footer-heading' className='sr-only'>
         Footer
       </h2>
-      <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
-        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-          <div className="space-y-8 xl:col-span-1">
-            <div className=" w-36 !justify-start">
+      <div className='mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16'>
+        <div className='xl:grid xl:grid-cols-3 xl:gap-8'>
+          <div className='space-y-8 xl:col-span-1'>
+            <div className='w-36 !justify-start'>
               <LogoTextBlue />
             </div>
 
-            <p className="text-base text-gray-500">
+            <p className='text-base text-gray-500'>
               Helping companies manage their jobs, and write estimates faster.
             </p>
-            <div className="flex space-x-6">
+            <div className='flex space-x-6'>
               {navigation.social.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-gray-400 hover:text-gray-500"
+                  className='text-gray-400 hover:text-gray-500'
                 >
-                  <span className="sr-only">{item.name}</span>
+                  <span className='sr-only'>{item.name}</span>
                   <item.icon />
                 </Link>
               ))}
             </div>
           </div>
-          <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
-            <div className="md:grid md:grid-cols-2 md:gap-8">
+          <div className='mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0'>
+            <div className='md:grid md:grid-cols-2 md:gap-8'>
               <div>
-                <h3 className="text-base font-medium text-gray-900">
+                <h3 className='text-base font-medium text-gray-900'>
                   Solutions
                 </h3>
-                <ul role="list" className="mt-4 space-y-4">
+                <ul role='list' className='mt-4 space-y-4'>
                   {navigation.solutions.map((item) => (
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-base text-gray-500 hover:text-gray-900"
+                        className='text-base text-gray-500 hover:text-gray-900'
                       >
                         {item.name}
                       </Link>
@@ -108,15 +108,15 @@ export function Footer() {
                 </ul>
               </div> */}
             </div>
-            <div className="md:grid md:grid-cols-2 md:gap-8">
+            <div className='md:grid md:grid-cols-2 md:gap-8'>
               <div>
-                <h3 className="text-base font-medium text-gray-900">Company</h3>
-                <ul role="list" className="mt-4 space-y-4">
+                <h3 className='text-base font-medium text-gray-900'>Company</h3>
+                <ul role='list' className='mt-4 space-y-4'>
                   {navigation.company.map((item) => (
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-base text-gray-500 hover:text-gray-900"
+                        className='text-base text-gray-500 hover:text-gray-900'
                       >
                         {item.name}
                       </Link>
@@ -124,14 +124,14 @@ export function Footer() {
                   ))}
                 </ul>
               </div>
-              <div className="mt-12 md:mt-0">
-                <h3 className="text-base font-medium text-gray-900">Legal</h3>
-                <ul role="list" className="mt-4 space-y-4">
+              <div className='mt-12 md:mt-0'>
+                <h3 className='text-base font-medium text-gray-900'>Legal</h3>
+                <ul role='list' className='mt-4 space-y-4'>
                   {navigation.legal.map((item) => (
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-base text-gray-500 hover:text-gray-900"
+                        className='text-base text-gray-500 hover:text-gray-900'
                       >
                         {item.name}
                       </Link>
@@ -142,15 +142,15 @@ export function Footer() {
             </div>
           </div>
         </div>
-        <div className="mt-12 border-t border-gray-200 pt-8">
-          <p className="text-base text-gray-400 xl:text-center">
+        <div className='mt-12 border-t border-gray-200 pt-8'>
+          <p className='text-base text-gray-400 xl:text-center'>
             &copy; {new Date().getFullYear()} HOSK Media, Inc. All rights
             reserved.
           </p>
         </div>
       </div>
     </footer>
-  )
+  );
 }
 
 // export function Footer() {

@@ -1,42 +1,42 @@
-import TrailEndedBanner from '@components/Banners/TrailEndedBanner'
-import AppContainer from '@components/layouts/AppContainer'
-import MainContent from '@components/layouts/MainContent'
-import ProjectNavigationContainer from '@components/Project/ProjectNavigationContainer'
-import getSubcriptionStatus from '@servicegeek/db/queries/organization/getSubscriptionStatus'
+import TrailEndedBanner from "@components/Banners/TrailEndedBanner";
+import AppContainer from "@components/layouts/AppContainer";
+import MainContent from "@components/layouts/MainContent";
+import ProjectNavigationContainer from "@components/Project/ProjectNavigationContainer";
+import getSubcriptionStatus from "@servicegeek/db/queries/organization/getSubscriptionStatus";
 import {
   getInferenceList,
   RoomData,
-} from '@servicegeek/db/queries/project/getProjectDetections'
-import getProjectForOrg from '@servicegeek/db/queries/project/getProjectForOrg'
-import getOrgInfo, { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
+} from "@servicegeek/db/queries/project/getProjectDetections";
+import getProjectForOrg from "@servicegeek/db/queries/project/getProjectForOrg";
+import getOrgInfo, { OrgInfo } from "@lib/serverSidePropsUtils/getOrgInfo";
 import getProjectInfo, {
   ProjectInfo,
-} from '@lib/serverSidePropsUtils/getProjectInfo'
-import getUserInfo, { UserInfo } from '@lib/serverSidePropsUtils/getUserInfo'
+} from "@lib/serverSidePropsUtils/getProjectInfo";
+import getUserInfo, { UserInfo } from "@lib/serverSidePropsUtils/getUserInfo";
 import getUserWithAuthStatus, {
   ORG_ACCESS_LEVEL,
-} from '@lib/serverSidePropsUtils/getUserWithAuthStatus'
-import { SubscriptionStatus } from '@servicegeek/db'
-import type { GetServerSidePropsContext, NextPage } from 'next'
-import Head from 'next/head'
-import { RecoilRoot } from 'recoil'
-import initRecoilAtoms from '@atoms/initRecoilAtoms'
-import { User } from '@supabase/supabase-js'
+} from "@lib/serverSidePropsUtils/getUserWithAuthStatus";
+import { SubscriptionStatus } from "@servicegeek/db";
+import type { GetServerSidePropsContext, NextPage } from "next";
+import Head from "next/head";
+import { RecoilRoot } from "recoil";
+import initRecoilAtoms from "@atoms/initRecoilAtoms";
+import { User } from "@supabase/supabase-js";
 
 export interface uploadInProgressImages {
-  path: string
-  name: string
+  path: string;
+  name: string;
 }
 
 interface EstimatePageProps {
-  user: User
-  userInfo: UserInfo
-  accessToken: string
-  error?: string
-  inferences?: RoomData[]
-  projectInfo: ProjectInfo
-  subscriptionStatus: SubscriptionStatus
-  orgInfo: OrgInfo
+  user: User;
+  userInfo: UserInfo;
+  accessToken: string;
+  error?: string;
+  inferences?: RoomData[];
+  projectInfo: ProjectInfo;
+  subscriptionStatus: SubscriptionStatus;
+  orgInfo: OrgInfo;
 }
 
 const PhotoPage: NextPage<EstimatePageProps> = ({
@@ -63,72 +63,71 @@ const PhotoPage: NextPage<EstimatePageProps> = ({
       >
         <Head>
           <title>ServiceGeek - Estimate</title>
-          <meta name="description" content="Project Estimate and Details" />
-          <link rel="icon" href="/favicon.ico" />
+          <meta name='description' content='Project Estimate and Details' />
+          <link rel='icon' href='/favicon.ico' />
         </Head>
         {subscriptionStatus === SubscriptionStatus.past_due && (
           <TrailEndedBanner />
         )}
         <MainContent>
           <iframe
-            scrolling="true"
-            className="h-full h-screen w-full	overflow-hidden"
-            src="https://sketch-inky.vercel.app/"
+            scrolling='true'
+            className='size-full h-screen overflow-hidden'
+            src='https://sketch-inky.vercel.app/'
           ></iframe>
         </MainContent>
       </AppContainer>
     </RecoilRoot>
-  )
-}
+  );
+};
 
-export default PhotoPage
+export default PhotoPage;
 
 export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   try {
-    const { user, orgAccessLevel, accessToken } = await getUserWithAuthStatus(
-      ctx
-    )
+    const { user, orgAccessLevel, accessToken } =
+      await getUserWithAuthStatus(ctx);
 
     if (!user) {
       return {
         redirect: {
-          destination: '/login',
+          destination: "/login",
           permanent: false,
         },
-      }
+      };
     }
 
     if (orgAccessLevel === ORG_ACCESS_LEVEL.REMOVED) {
       return {
         redirect: {
-          destination: '/access-revoked',
+          destination: "/access-revoked",
           permanent: false,
         },
-      }
+      };
     }
-    const orgId = user.org?.organization.id || null
+    const orgId = user.org?.organization.id || null;
     if (!orgId || !ctx.query.id || Array.isArray(ctx.query.id)) {
       return {
         redirect: {
-          destination: '/projects',
+          destination: "/projects",
           permanent: false,
         },
-      }
+      };
     }
-    let project = await getProjectForOrg(ctx.query.id, orgId)
+    const project = await getProjectForOrg(ctx.query.id, orgId);
     if (!project) {
       return {
         redirect: {
-          destination: '/projects',
+          destination: "/projects",
           permanent: false,
         },
-      }
+      };
     }
 
-    const inferenceList = await getInferenceList(ctx.query.id, orgId)
+    const inferenceList = await getInferenceList(ctx.query.id, orgId);
 
-    const inferences = inferenceList?.rooms || []
-    const subscriptionStatus = await getSubcriptionStatus(user.id)
+    const inferences = inferenceList?.rooms || [];
+    const subscriptionStatus = await getSubcriptionStatus(user.id);
 
     return {
       props: {
@@ -138,11 +137,11 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
         orgInfo: getOrgInfo(user),
         subscriptionStatus,
       },
-    }
+    };
   } catch (e) {
-    console.error(e)
+    console.error(e);
     return {
       props: {},
-    }
+    };
   }
-}
+};

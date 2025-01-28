@@ -25,11 +25,10 @@ interface Properties {
   poi_category?: string[];
   brand?: string[];
   external_ids?: Record<string, string>;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   distance?: number;
   eta?: number;
 }
-
 
 interface Context {
   country?: ContextDetail;
@@ -52,20 +51,19 @@ interface ContextDetail {
 }
 
 interface AddressType {
-  address1: string
-  address2: string
-  formattedAddress: string
-  city: string
-  region: string
-  postalCode: string
-  country: string
-  lat: number
-  lng: number
+  address: string;
+  formattedAddress: string;
+  city: string;
+  region: string;
+  postalCode: string;
+  country: string;
+  lat: number;
+  lng: number;
 }
 
 interface Suggestion {
-  name: string
-  mapbox_id: string
-  feature_type: string
-  place_formatted: string
+  name: string;
+  mapbox_id: string;
+  feature_type: string;
+  place_formatted: string;
 }

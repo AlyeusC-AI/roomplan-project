@@ -1,12 +1,12 @@
-import { ReactNode } from 'react'
-import clsx from 'clsx'
+import { ReactNode } from "react";
+import clsx from "clsx";
 
 const TableRow = ({
   children,
-  className = '',
+  className = "",
 }: {
-  children: React.ReactNode
-  className?: string
-}) => <tr className={clsx(className)}>{children}</tr>
+  children: React.ReactNode;
+  className?: string;
+}) => <tr className={clsx(className)}>{children}</tr>;
 
-export default TableRow
+export default TableRow;

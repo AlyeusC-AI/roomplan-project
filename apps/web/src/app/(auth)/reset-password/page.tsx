@@ -1,12 +1,12 @@
-import ResetPasswordRequest from './main'
-import { Metadata } from 'next'
+import ResetPasswordRequest from "./main";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Reset Password',
-}
+  title: "Reset Password",
+};
 
 export default function Component() {
-  return <ResetPasswordRequest />
+  return <ResetPasswordRequest />;
 }
 
 // export async function getServerSideProps(ctx: GetServerSidePropsContext) {

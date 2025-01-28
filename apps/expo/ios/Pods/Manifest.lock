@@ -3,6 +3,8 @@ PODS:
   - DoubleConversion (1.1.6)
   - EASClient (0.12.0):
     - ExpoModulesCore
+  - EXApplication (5.9.1):
+    - ExpoModulesCore
   - EXConstants (16.0.2):
     - ExpoModulesCore
   - EXJSONUtils (0.13.1)
@@ -225,6 +227,15 @@ PODS:
     - ExpoModulesCore
   - ExpoFont (12.0.10):
     - ExpoModulesCore
+  - ExpoHead (3.5.24):
+    - ExpoModulesCore
+  - ExpoImage (1.13.0):
+    - ExpoModulesCore
+    - libavif/libdav1d
+    - SDWebImage (~> 5.19.1)
+    - SDWebImageAVIFCoder (~> 0.11.0)
+    - SDWebImageSVGCoder (~> 1.7.0)
+    - SDWebImageWebPCoder (~> 0.14.6)
   - ExpoKeepAwake (13.0.2):
     - ExpoModulesCore
   - ExpoModulesCore (1.12.26):
@@ -250,6 +261,10 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - ExpoSpeechRecognition (1.1.0):
+    - ExpoModulesCore
+  - ExpoStoreReview (7.0.2):
+    - ExpoModulesCore
   - ExpoTrackingTransparency (4.0.2):
     - ExpoModulesCore
   - EXSplashScreen (0.27.7):
@@ -311,6 +326,23 @@ PODS:
   - hermes-engine (0.74.5):
     - hermes-engine/Pre-built (= 0.74.5)
   - hermes-engine/Pre-built (0.74.5)
+  - libavif/core (0.11.1)
+  - libavif/libdav1d (0.11.1):
+    - libavif/core
+    - libdav1d (>= 0.6.0)
+  - libdav1d (1.2.0)
+  - libwebp (1.3.2):
+    - libwebp/demux (= 1.3.2)
+    - libwebp/mux (= 1.3.2)
+    - libwebp/sharpyuv (= 1.3.2)
+    - libwebp/webp (= 1.3.2)
+  - libwebp/demux (1.3.2):
+    - libwebp/webp
+  - libwebp/mux (1.3.2):
+    - libwebp/demux
+  - libwebp/sharpyuv (1.3.2)
+  - libwebp/webp (1.3.2):
+    - libwebp/sharpyuv
   - RCT-Folly (2024.01.01.00):
     - boost
     - DoubleConversion
@@ -1242,27 +1274,8 @@ PODS:
     - React-debug
   - react-native-maps (1.14.0):
     - React-Core
-  - react-native-pager-view (6.3.0):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.01.01.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Codegen
+  - react-native-netinfo (11.3.1):
     - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-rendererdebug
-    - React-utils
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
   - react-native-safe-area-context (4.10.5):
     - React-Core
   - React-nativeconfig (0.74.5)
@@ -1498,6 +1511,8 @@ PODS:
     - React
   - RNCAsyncStorage (1.23.1):
     - React-Core
+  - RNCPicker (2.7.5):
+    - React-Core
   - RNGestureHandler (2.16.2):
     - DoubleConversion
     - glog
@@ -1564,6 +1579,19 @@ PODS:
     - Yoga
   - RNSVG (15.2.0):
     - React-Core
+  - RoomPlan (0.1.0):
+    - ExpoModulesCore
+  - SDWebImage (5.19.7):
+    - SDWebImage/Core (= 5.19.7)
+  - SDWebImage/Core (5.19.7)
+  - SDWebImageAVIFCoder (0.11.0):
+    - libavif/core (>= 0.11.0)
+    - SDWebImage (~> 5.10)
+  - SDWebImageSVGCoder (1.7.0):
+    - SDWebImage/Core (~> 5.6)
+  - SDWebImageWebPCoder (0.14.6):
+    - libwebp (~> 1.0)
+    - SDWebImage/Core (~> 5.17)
   - SocketRocket (0.7.0)
   - "sqlite3 (3.45.3+1)":
     - "sqlite3/common (= 3.45.3+1)"
@@ -1580,6 +1608,7 @@ DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - "EASClient (from `../../../node_modules/.pnpm/expo-eas-client@0.12.0/node_modules/expo-eas-client/ios`)"
+  - "EXApplication (from `../../../node_modules/.pnpm/expo-application@5.9.1_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-application/ios`)"
   - "EXConstants (from `../../../node_modules/.pnpm/expo-constants@16.0.2_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-constants/ios`)"
   - "EXJSONUtils (from `../../../node_modules/.pnpm/expo-json-utils@0.13.1/node_modules/expo-json-utils/ios`)"
   - "EXManifests (from `../../../node_modules/.pnpm/expo-manifests@0.14.3_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-manifests/ios`)"
@@ -1592,8 +1621,12 @@ DEPENDENCIES:
   - "ExpoClipboard (from `../../../node_modules/.pnpm/expo-clipboard@6.0.3_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-clipboard/ios`)"
   - "ExpoFileSystem (from `../../../node_modules/.pnpm/expo-file-system@17.0.1_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-file-system/ios`)"
   - "ExpoFont (from `../../../node_modules/.pnpm/expo-font@12.0.10_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-font/ios`)"
+  - "ExpoHead (from `../../../node_modules/.pnpm/expo-router@3.5.24_boux36iydmrhsmxzc6fhbn2s7i/node_modules/expo-router/ios`)"
+  - "ExpoImage (from `../../../node_modules/.pnpm/expo-image@1.13.0_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-image/ios`)"
   - "ExpoKeepAwake (from `../../../node_modules/.pnpm/expo-keep-awake@13.0.2_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-keep-awake/ios`)"
   - "ExpoModulesCore (from `../../../node_modules/.pnpm/expo-modules-core@1.12.26/node_modules/expo-modules-core`)"
+  - "ExpoSpeechRecognition (from `../../../node_modules/.pnpm/expo-speech-recognition@1.1.0_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel_nmvq7stfjb2germsd7taedvpsa/node_modules/expo-speech-recognition/ios`)"
+  - "ExpoStoreReview (from `../../../node_modules/.pnpm/expo-store-review@7.0.2_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-store-review/ios`)"
   - "ExpoTrackingTransparency (from `../../../node_modules/.pnpm/expo-tracking-transparency@4.0.2_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-tracking-transparency/ios`)"
   - "EXSplashScreen (from `../../../node_modules/.pnpm/expo-splash-screen@0.27.7_expo-modules-autolinking@1.11.3_expo@51.0.39_@babel+core@7.26.0_@ba_c2n2yjqavmgwqqwb7jsio3qrfq/node_modules/expo-splash-screen/ios`)"
   - "EXStructuredHeaders (from `../../../node_modules/.pnpm/expo-structured-headers@3.8.0/node_modules/expo-structured-headers/ios`)"
@@ -1630,7 +1663,7 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - react-native-maps (from `../node_modules/react-native-maps`)
-  - react-native-pager-view (from `../node_modules/react-native-pager-view`)
+  - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - React-nativeconfig (from `../node_modules/react-native/ReactCommon`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -1657,16 +1690,25 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - ReactNativeUiLib (from `../node_modules/react-native-ui-lib`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCPicker (from `../node_modules/@react-native-picker/picker`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
+  - RoomPlan (from `../../room-plan/ios`)
   - VisionCamera (from `../node_modules/react-native-vision-camera`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
   trunk:
+    - libavif
+    - libdav1d
+    - libwebp
     - ReachabilitySwift
+    - SDWebImage
+    - SDWebImageAVIFCoder
+    - SDWebImageSVGCoder
+    - SDWebImageWebPCoder
     - SocketRocket
     - sqlite3
 
@@ -1677,6 +1719,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   EASClient:
     :path: "../../../node_modules/.pnpm/expo-eas-client@0.12.0/node_modules/expo-eas-client/ios"
+  EXApplication:
+    :path: "../../../node_modules/.pnpm/expo-application@5.9.1_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-application/ios"
   EXConstants:
     :path: "../../../node_modules/.pnpm/expo-constants@16.0.2_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-constants/ios"
   EXJSONUtils:
@@ -1701,10 +1745,18 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/.pnpm/expo-file-system@17.0.1_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-file-system/ios"
   ExpoFont:
     :path: "../../../node_modules/.pnpm/expo-font@12.0.10_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-font/ios"
+  ExpoHead:
+    :path: "../../../node_modules/.pnpm/expo-router@3.5.24_boux36iydmrhsmxzc6fhbn2s7i/node_modules/expo-router/ios"
+  ExpoImage:
+    :path: "../../../node_modules/.pnpm/expo-image@1.13.0_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-image/ios"
   ExpoKeepAwake:
     :path: "../../../node_modules/.pnpm/expo-keep-awake@13.0.2_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-keep-awake/ios"
   ExpoModulesCore:
     :path: "../../../node_modules/.pnpm/expo-modules-core@1.12.26/node_modules/expo-modules-core"
+  ExpoSpeechRecognition:
+    :path: "../../../node_modules/.pnpm/expo-speech-recognition@1.1.0_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel_nmvq7stfjb2germsd7taedvpsa/node_modules/expo-speech-recognition/ios"
+  ExpoStoreReview:
+    :path: "../../../node_modules/.pnpm/expo-store-review@7.0.2_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-store-review/ios"
   ExpoTrackingTransparency:
     :path: "../../../node_modules/.pnpm/expo-tracking-transparency@4.0.2_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-tracking-transparency/ios"
   EXSplashScreen:
@@ -1774,8 +1826,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   react-native-maps:
     :path: "../node_modules/react-native-maps"
-  react-native-pager-view:
-    :path: "../node_modules/react-native-pager-view"
+  react-native-netinfo:
+    :path: "../node_modules/@react-native-community/netinfo"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   React-nativeconfig:
@@ -1828,6 +1880,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-ui-lib"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
+  RNCPicker:
+    :path: "../node_modules/@react-native-picker/picker"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
   RNReanimated:
@@ -1836,6 +1890,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-screens"
   RNSVG:
     :path: "../node_modules/react-native-svg"
+  RoomPlan:
+    :path: "../../room-plan/ios"
   VisionCamera:
     :path: "../node_modules/react-native-vision-camera"
   Yoga:
@@ -1845,20 +1901,25 @@ SPEC CHECKSUMS:
   boost: d3f49c53809116a5d38da093a8aa78bf551aed09
   DoubleConversion: 76ab83afb40bddeeee456813d9c04f67f78771b5
   EASClient: 1509a9a6b48b932ec61667644634daf2562983b8
+  EXApplication: c08200c34daca7af7fd76ac4b9d606077410e8ad
   EXConstants: 409690fbfd5afea964e5e9d6c4eb2c2b59222c59
   EXJSONUtils: 30c17fd9cc364d722c0946a550dfbf1be92ef6a4
   EXManifests: c1fab4c3237675e7b0299ea8df0bcb14baca4f42
   Expo: 8c995afb875c15bf8439af0b20bcb9ed8f90d0bd
   expo-dev-client: 0cec8ec81fd01c10d9afcd9f6de3768b10644aee
-  expo-dev-launcher: c510982f3437742353389750748520580af0ee43
-  expo-dev-menu: 12b319a9bc73d76a1ed47ce52055b5356edb971d
+  expo-dev-launcher: cc415197f0bb6c67c132b894451915758d8e6a18
+  expo-dev-menu: c4aeeb5eeb7fbaf141ae1f100e8fcda06d91b037
   expo-dev-menu-interface: 5764ad537419c1a5e8f66f668e29c81e8aca290c
   ExpoAsset: 323700f291684f110fb55f0d4022a3362ea9f875
   ExpoClipboard: 23d203f5d4843699fbc45be1cc4fe1fbd811a6fa
   ExpoFileSystem: 80bfe850b1f9922c16905822ecbf97acd711dc51
   ExpoFont: 00756e6c796d8f7ee8d211e29c8b619e75cbf238
+  ExpoHead: a79e263b73039b41940c220dd67b83572e7cac09
+  ExpoImage: 42162e3d264ce07a62766d6bd26bd299fe4c6faa
   ExpoKeepAwake: 3b8815d9dd1d419ee474df004021c69fdd316d08
-  ExpoModulesCore: 831ece8311a489418746925820bbffdda587d6f4
+  ExpoModulesCore: 5c3d83a15d2f2847b5d47e6e41d4170b824a0424
+  ExpoSpeechRecognition: 5e074aa0403755caec3e61e180d5eee837edc6c1
+  ExpoStoreReview: 15f9a636b62ff00bb21cbe9a9fe22f0239da4481
   ExpoTrackingTransparency: 005340638bbd48449066a6c1a54ee44ae65ed7b4
   EXSplashScreen: 3cad09949c2ca6730cbb2801b8c51cb87692425a
   EXStructuredHeaders: cb8d1f698e144f4c5547b4c4963e1552f5d2b457
@@ -1868,6 +1929,9 @@ SPEC CHECKSUMS:
   fmt: 4c2741a687cc09f0634a2e2c72a838b99f1ff120
   glog: fdfdfe5479092de0c4bdbebedd9056951f092c4f
   hermes-engine: 8c1577f3fdb849cbe7729c2e7b5abc4b845e88f8
+  libavif: 84bbb62fb232c3018d6f1bab79beea87e35de7b7
+  libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
+  libwebp: 1786c9f4ff8a279e4dac1e8f385004d5fc253009
   RCT-Folly: 02617c592a293bd6d418e0a88ff4ee1f88329b47
   RCTDeprecation: 3afceddffa65aee666dafd6f0116f1d975db1584
   RCTRequired: ec1239bc9d8bf63e10fb92bd8b26171a9258e0c1
@@ -1894,7 +1958,7 @@ SPEC CHECKSUMS:
   React-logger: 257858bd55f3a4e1bc0cf07ddc8fb9faba6f8c7c
   React-Mapbuffer: 6c1cacdbf40b531f549eba249e531a7d0bfd8e7f
   react-native-maps: cbf2f03bfeebfd7ec45966b066db13a075fd2af3
-  react-native-pager-view: c1e29e1a6105a02807392ba822ad322447a72f55
+  react-native-netinfo: bdb108d340cdb41875c9ced535977cac6d2ff321
   react-native-safe-area-context: a240ad4b683349e48b1d51fed1611138d1bdad97
   React-nativeconfig: ba9a2e54e2f0882cf7882698825052793ed4c851
   React-NativeModulesApple: 8d11ff8955181540585c944cf48e9e7236952697
@@ -1921,15 +1985,21 @@ SPEC CHECKSUMS:
   ReactCommon: f7da14a8827b72704169a48c929bcde802698361
   ReactNativeUiLib: 511a5eb03809a0b27f6aefa2b4d6f7c2d6ae4053
   RNCAsyncStorage: 826b603ae9c0f88b5ac4e956801f755109fa4d5c
+  RNCPicker: 3e2c37a8328f368ce14da050cdc8231deb5fc9f9
   RNGestureHandler: 2282cfbcf86c360d29f44ace393203afd5c6cff7
   RNReanimated: 2ab90ce4f7de319a39f486a1a6c4bad37463b30c
   RNScreens: b32a9ff15bea7fcdbe5dff6477bc503f792b1208
   RNSVG: 43b64ed39c14ce830d840903774154ca0c1f27ec
+  RoomPlan: f6d1ab1716f650510ef7ba69695e760625b56104
+  SDWebImage: 8a6b7b160b4d710e2a22b6900e25301075c34cb3
+  SDWebImageAVIFCoder: 00310d246aab3232ce77f1d8f0076f8c4b021d90
+  SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
+  SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   sqlite3: 02d1f07eaaa01f80a1c16b4b31dfcbb3345ee01a
   VisionCamera: c95a8ad535f527562be1fb05fb2fd324578e769c
   Yoga: 950bbfd7e6f04790fdb51149ed51df41f329fcc8
 
-PODFILE CHECKSUM: 7dc7352434935cbd9d9176dd7e6fb73325d35b15
+PODFILE CHECKSUM: 7af08df3e5ae25f3ff8e346c4a0defcf3620ac74
 
 COCOAPODS: 1.16.2

@@ -6,13 +6,19 @@
  */
 
 import ExpoModulesCore
+import RoomPlan
+import EXApplication
 import ExpoAsset
 import ExpoClipboard
 import EXConstants
 import EASClient
 import ExpoFileSystem
 import ExpoFont
+import ExpoImage
 import ExpoKeepAwake
+import ExpoHead
+import ExpoSpeechRecognition
+import ExpoStoreReview
 import ExpoTrackingTransparency
 import EXUpdates
 #if EXPO_CONFIGURATION_DEBUG
@@ -25,13 +31,19 @@ public class ExpoModulesProvider: ModulesProvider {
   public override func getModuleClasses() -> [AnyModule.Type] {
     #if EXPO_CONFIGURATION_DEBUG
     return [
+      RoomPlanModule.self,
+      ApplicationModule.self,
       AssetModule.self,
       ClipboardModule.self,
       ConstantsModule.self,
       EASClientModule.self,
       FileSystemModule.self,
       FontLoaderModule.self,
+      ImageModule.self,
       KeepAwakeModule.self,
+      ExpoHeadModule.self,
+      ExpoSpeechRecognitionModule.self,
+      StoreReviewModule.self,
       TrackingTransparencyModule.self,
       UpdatesModule.self,
       DevLauncherInternal.self,
@@ -44,13 +56,19 @@ public class ExpoModulesProvider: ModulesProvider {
     ]
     #else
     return [
+      RoomPlanModule.self,
+      ApplicationModule.self,
       AssetModule.self,
       ClipboardModule.self,
       ConstantsModule.self,
       EASClientModule.self,
       FileSystemModule.self,
       FontLoaderModule.self,
+      ImageModule.self,
       KeepAwakeModule.self,
+      ExpoHeadModule.self,
+      ExpoSpeechRecognitionModule.self,
+      StoreReviewModule.self,
       TrackingTransparencyModule.self,
       UpdatesModule.self
     ]
@@ -61,11 +79,13 @@ public class ExpoModulesProvider: ModulesProvider {
     #if EXPO_CONFIGURATION_DEBUG
     return [
       FileSystemBackgroundSessionHandler.self,
+      ExpoHeadAppDelegateSubscriber.self,
       ExpoDevLauncherAppDelegateSubscriber.self
     ]
     #else
     return [
-      FileSystemBackgroundSessionHandler.self
+      FileSystemBackgroundSessionHandler.self,
+      ExpoHeadAppDelegateSubscriber.self
     ]
     #endif
   }

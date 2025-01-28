@@ -1,18 +1,18 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { curveBasis } from '@visx/curve'
-import { useDrag } from '@visx/drag'
-import { LinearGradient } from '@visx/gradient'
-import { LinePath } from '@visx/shape'
+import React, { useCallback, useEffect, useState } from "react";
+import { curveBasis } from "@visx/curve";
+import { useDrag } from "@visx/drag";
+import { LinearGradient } from "@visx/gradient";
+import { LinePath } from "@visx/shape";
 
-type Line = { x: number; y: number }[]
-type Lines = Line[]
+type Line = { x: number; y: number }[];
+type Lines = Line[];
 
 export type DragIIProps = {
-  width: number
-  height: number
-  data?: Lines
-  imageUrl: string
-}
+  width: number;
+  height: number;
+  data?: Lines;
+  imageUrl: string;
+};
 
 export default function Annotation({
   data = [],
@@ -20,13 +20,13 @@ export default function Annotation({
   height,
   imageUrl,
 }: DragIIProps) {
-  const [lines, setLines] = useState<Lines>(data)
+  const [lines, setLines] = useState<Lines>(data);
   // TODO: save lines to database (on click of a save button?)
 
   useEffect(() => {
     // when image changes, reset lines
-    setLines([])
-  }, [imageUrl])
+    setLines([]);
+  }, [imageUrl]);
 
   const onDragStart = useCallback(
     (currDrag: any) => {
@@ -34,26 +34,26 @@ export default function Annotation({
       setLines((currLines) => [
         ...currLines,
         [{ x: currDrag.x, y: currDrag.y }],
-      ])
+      ]);
     },
     [setLines]
-  )
+  );
   const onDragMove = useCallback(
     (currDrag: any) => {
       // add the new point to the current line
       setLines((currLines) => {
-        const nextLines = [...currLines]
+        const nextLines = [...currLines];
         const newPoint = {
           x: currDrag.x + currDrag.dx,
           y: currDrag.y + currDrag.dy,
-        }
-        const lastIndex = nextLines.length - 1
-        nextLines[lastIndex] = [...(nextLines[lastIndex] || []), newPoint]
-        return nextLines
-      })
+        };
+        const lastIndex = nextLines.length - 1;
+        nextLines[lastIndex] = [...(nextLines[lastIndex] || []), newPoint];
+        return nextLines;
+      });
     },
     [setLines]
-  )
+  );
   const {
     x = 0,
     y = 0,
@@ -67,18 +67,18 @@ export default function Annotation({
     onDragStart,
     onDragMove,
     resetOnStart: true,
-  })
+  });
 
   return width < 10 ? null : (
-    <div className="DragII absolute w-full h-full" style={{ touchAction: 'none' }}>
+    <div className='DragII absolute size-full' style={{ touchAction: "none" }}>
       <svg width={width} height={height}>
-        <LinearGradient id="stroke" from="#ff614e" to="#ffdc64" />
+        <LinearGradient id='stroke' from='#ff614e' to='#ffdc64' />
         <image width={width} height={height} rx={14} href={imageUrl} />
         {lines.map((line, i) => (
           <LinePath
             key={`line-${i}`}
-            fill="transparent"
-            stroke="url(#stroke)"
+            fill='transparent'
+            stroke='url(#stroke)'
             strokeWidth={3}
             data={line}
             curve={curveBasis}
@@ -95,33 +95,33 @@ export default function Annotation({
               height={height}
               onMouseMove={dragMove}
               onMouseUp={dragEnd}
-              fill="transparent"
+              fill='transparent'
             />
           )}
           {/* decorate the currently drawing line */}
           {isDragging && (
             <g>
               <rect
-                fill="white"
+                fill='white'
                 width={8}
                 height={8}
                 x={x + dx - 4}
                 y={y + dy - 4}
-                pointerEvents="none"
+                pointerEvents='none'
               />
               <circle
                 cx={x}
                 cy={y}
                 r={4}
-                fill="transparent"
-                stroke="white"
-                pointerEvents="none"
+                fill='transparent'
+                stroke='white'
+                pointerEvents='none'
               />
             </g>
           )}
           {/* create the drawing area */}
           <rect
-            fill="transparent"
+            fill='transparent'
             width={width}
             height={height}
             onMouseDown={dragStart}
@@ -156,5 +156,5 @@ export default function Annotation({
         }
       `}</style>
     </div>
-  )
+  );
 }

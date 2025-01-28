@@ -1,16 +1,16 @@
-import { Footer } from '@/components/layouts/footer'
-import { Metadata } from 'next'
+import { Footer } from "@/components/layouts/footer";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Terms of Service',
-  description: 'A job management platform built for restoration',
-}
+  title: "Terms of Service",
+  description: "A job management platform built for restoration",
+};
 
 export default async function TermsPage() {
   return (
     <>
-      <div className="flex w-full items-center justify-center bg-background">
-        <div className="prose mt-10 px-6">
+      <div className='flex w-full items-center justify-center bg-background'>
+        <div className='prose mt-10 px-6'>
           <h1>Terms and Conditions</h1>
           <p>Last updated: November 06, 2022</p>
           <p>
@@ -135,11 +135,11 @@ export default async function TermsPage() {
             </li>
             <li>
               <p>
-                <strong>Website</strong> refers to ServiceGeek, accessible from{' '}
+                <strong>Website</strong> refers to ServiceGeek, accessible from{" "}
                 <a
-                  href="http://www.servicegeek.app"
-                  rel="external nofollow noopener noreferrer"
-                  target="_blank"
+                  href='http://www.servicegeek.app'
+                  rel='external nofollow noopener noreferrer'
+                  target='_blank'
                 >
                   http://www.servicegeek.app
                 </a>
@@ -679,5 +679,5 @@ export default async function TermsPage() {
       </div>
       <Footer />
     </>
-  )
+  );
 }

@@ -49,3 +49,5 @@ export const mobileRouter = router({
   createProjectNote,
   addImageToProject,
 });
+
+export type MobileRouter = typeof mobileRouter;

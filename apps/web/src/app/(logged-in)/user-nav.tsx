@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,27 +11,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { userInfoStore } from '@atoms/user-info'
-import { LoadingSpinner } from '@components/ui/spinner'
+} from "@/components/ui/dropdown-menu";
+import { userInfoStore } from "@atoms/user-info";
+import { LoadingSpinner } from "@components/ui/spinner";
 
 export function UserNav() {
-  const { user } = userInfoStore((state) => state)
+  const { user } = userInfoStore((state) => state);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Button variant='ghost' className='relative size-8 rounded-full'>
           {user ? (
-            <Avatar className="h-8 w-8 rounded-lg">
+            <Avatar className='size-8 rounded-lg'>
               <AvatarImage
                 src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profile-pictures/${user.id}/avatar.png`}
                 alt={`${user?.firstName} ${user?.lastName}`}
               />
-              <AvatarFallback className="rounded-lg">
+              <AvatarFallback className='rounded-lg'>
                 {`${user.firstName} ${user.lastName}`
-                  .split(' ')
+                  .split(" ")
                   .map((word) => word[0].toUpperCase())
-                  .join('')}
+                  .join("")}
               </AvatarFallback>
             </Avatar>
           ) : (
@@ -39,15 +39,15 @@ export function UserNav() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
+      <DropdownMenuContent className='w-56' align='end' forceMount>
+        <DropdownMenuLabel className='font-normal'>
           {user && (
-            <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{`${user.firstName} ${user.lastName}`}</p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
-            </p>
-          </div>
+            <div className='flex flex-col space-y-1'>
+              <p className='text-sm font-medium leading-none'>{`${user.firstName} ${user.lastName}`}</p>
+              <p className='text-xs leading-none text-muted-foreground'>
+                {user.email}
+              </p>
+            </div>
           )}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -73,5 +73,5 @@ export function UserNav() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

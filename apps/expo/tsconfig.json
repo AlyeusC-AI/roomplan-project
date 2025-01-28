@@ -2,8 +2,24 @@
   "extends": "@servicegeek/tsconfig/base.json",
   "compilerOptions": {
     "jsx": "react-native",
-    "types": ["nativewind/types", "webpack-env"]
+    "types": ["nativewind/types"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "resolveJsonModule": true
   },
-  "include": ["expo-plugins", "src", "*.ts", "**/*.js", "index.js", "types"],
+  "include": [
+    "*.ts",
+    "**/*.js",
+    "**/*.tsx",
+    "**/*.ts",
+    "types",
+    "nativewind-env.d.ts",
+    "layouts",
+    "lib",
+    "app",
+    "utils/state"
+  ],
   "exclude": ["node_modules"]
 }

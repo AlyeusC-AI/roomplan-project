@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React, { ReactNode } from 'react'
+import React, { ReactNode } from "react";
 import {
   Document,
   Image,
@@ -7,17 +7,17 @@ import {
   StyleSheet,
   Text,
   View,
-} from '@react-pdf/renderer'
-var parser = require('parse-address')
-import { RoomData } from '@servicegeek/db/queries/project/getProjectDetections'
-import { OrgInfo } from '@lib/serverSidePropsUtils/getOrgInfo'
-import { ProjectInfo } from '@lib/serverSidePropsUtils/getProjectInfo'
+} from "@react-pdf/renderer";
+const parser = require("parse-address");
+import { RoomData } from "@servicegeek/db/queries/project/getProjectDetections";
+import { OrgInfo } from "@lib/serverSidePropsUtils/getOrgInfo";
+import { ProjectInfo } from "@lib/serverSidePropsUtils/getProjectInfo";
 
 // Create styles
 const styles = StyleSheet.create({
   page: {
-    flexDirection: 'column',
-    backgroundColor: '#ffffff',
+    flexDirection: "column",
+    backgroundColor: "#ffffff",
     fontSize: 12,
     padding: 20,
   },
@@ -25,28 +25,28 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   titleSectionWrapper: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   titleSection: {
-    flexDirection: 'column',
-    width: '50%',
+    flexDirection: "column",
+    width: "50%",
     fontSize: 14,
     marginBottom: 60,
   },
   room: {
-    flexDirection: 'column',
+    flexDirection: "column",
     paddingBottom: 16,
     marginBottom: 16,
-    borderBottom: '2px solid lightgray',
+    borderBottom: "2px solid lightgray",
   },
   roomContainer: {
     marginBottom: 50,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   roomHeader: {
-    borderBottom: '1px solid gray',
+    borderBottom: "1px solid gray",
     paddingBottom: 4,
     marginBottom: 4,
     fontSize: 12,
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   titleLabel: {
-    fontWeight: 'extrabold',
+    fontWeight: "extrabold",
     fontSize: 12,
   },
   titleText: {
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   underlined: {
-    borderBottom: '1px solid lightgray',
+    borderBottom: "1px solid lightgray",
   },
   addressPlaceholder: {
     width: 125,
@@ -76,14 +76,14 @@ const styles = StyleSheet.create({
   companyOverview: {
     paddingBottom: 16,
     marginBottom: 16,
-    borderBottom: '2px solid black',
-    display: 'flex',
-    justifyContent: 'space-between',
-    width: '100%',
-    flexDirection: 'row',
+    borderBottom: "2px solid black",
+    display: "flex",
+    justifyContent: "space-between",
+    width: "100%",
+    flexDirection: "row",
   },
   companyOverviewData: {
-    width: '50%',
+    width: "50%",
   },
   companyName: {
     fontSize: 16,
@@ -93,33 +93,33 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   projectDetailsSection: {
-    flexDirection: 'row',
-    width: '100%',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-between",
     marginBottom: 4,
   },
   projectAddress: {
-    flexDirection: 'column',
-    justifyContent: 'flex-start',
+    flexDirection: "column",
+    justifyContent: "flex-start",
   },
   totalSection: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    width: "100%",
   },
   logo: {
-    width: '150px',
+    width: "150px",
   },
   servicegeekLogo: {
-    height: '25px',
-    width: '25px',
+    height: "25px",
+    width: "25px",
   },
-})
+});
 
 const TitleText = ({ children }: { children: React.ReactNode }) => (
   // @ts-ignore
   <Text style={styles.titleText}>{children}</Text>
-)
+);
 
 // Create Document Component
 const PDFExport = ({
@@ -127,21 +127,21 @@ const PDFExport = ({
   projectInfo,
   orgInfo,
 }: {
-  inferences: RoomData[]
-  projectInfo: ProjectInfo
-  orgInfo: OrgInfo
+  inferences: RoomData[];
+  projectInfo: ProjectInfo;
+  orgInfo: OrgInfo;
 }) => {
-  if (!inferences) return null
+  if (!inferences) return null;
 
-  const address = parser.parseLocation(projectInfo.location)
-  const orgAddress = parser.parseLocation(orgInfo.address)
+  const address = parser.parseLocation(projectInfo.location);
+  const orgAddress = parser.parseLocation(orgInfo.address);
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size='A4' style={styles.page}>
         <View>
           <Image
-            src="/images/brand/servicegeek.svg"
+            src='/images/brand/servicegeek.svg'
             style={styles.servicegeekLogo}
           />
           <Text>ServiceGeek</Text>
@@ -149,17 +149,17 @@ const PDFExport = ({
         <View style={styles.companyOverview}>
           <View style={styles.companyOverviewData}>
             <Text style={styles.companyName}>
-              {!projectInfo.companyName || projectInfo.companyName === ''
+              {!projectInfo.companyName || projectInfo.companyName === ""
                 ? orgInfo.name
-                : projectInfo.companyName}{' '}
+                : projectInfo.companyName}{" "}
             </Text>
             {orgAddress && (
               <View style={styles.companyAddress}>
                 <TitleText>
                   {orgAddress.number}
-                  {orgAddress.prefix ? ` ${orgAddress.prefix} ` : ' '}
+                  {orgAddress.prefix ? ` ${orgAddress.prefix} ` : " "}
                   {orgAddress.street}
-                  {orgAddress.type ? ` ${orgAddress.type}` : ''}
+                  {orgAddress.type ? ` ${orgAddress.type}` : ""}
                 </TitleText>
                 <TitleText>
                   {orgAddress.city}, {orgAddress.state} {orgAddress.zip}
@@ -192,9 +192,9 @@ const PDFExport = ({
                 <View style={styles.projectAddress}>
                   <TitleText>
                     {address.number}
-                    {address.prefix ? ` ${address.prefix} ` : ' '}
+                    {address.prefix ? ` ${address.prefix} ` : " "}
                     {address.street}
-                    {address.type ? ` ${address.type}` : ''}
+                    {address.type ? ` ${address.type}` : ""}
                   </TitleText>
                   <TitleText>
                     {address.city}, {address.state}
@@ -234,7 +234,7 @@ const PDFExport = ({
         </View>
         <View style={styles.section}>
           {inferences.map((room) => {
-            if (room.detections.length === 0) return null
+            if (room.detections.length === 0) return null;
             return (
               <View style={styles.roomContainer} key={room.publicId}>
                 <View style={styles.room} key={room.publicId}>
@@ -268,7 +268,7 @@ const PDFExport = ({
                       <View style={styles.rowText}>
                         {detection.dimension && (
                           <Text style={styles.rowText}>
-                            {detection.dimension}{' '}
+                            {detection.dimension}{" "}
                             {detection.unit && <>{detection.unit}</>}
                           </Text>
                         )}
@@ -293,12 +293,12 @@ const PDFExport = ({
                   </View>
                 )}
               </View>
-            )
+            );
           })}
         </View>
       </Page>
     </Document>
-  )
-}
+  );
+};
 
-export default PDFExport
+export default PDFExport;

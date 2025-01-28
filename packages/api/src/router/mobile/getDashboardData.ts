@@ -1,4 +1,4 @@
-import { prisma } from "@servicegeek/db";
+import { prisma, ProjectStatus } from "@servicegeek/db";
 import { z } from "zod";
 
 import { mobileProcedure } from "../../trpc";
@@ -24,12 +24,12 @@ const getDashboardData = mobileProcedure
     if (!user.org || !user.org?.organizationId) {
       return {
         count: 0,
-        data: [],
+        data: [] as ProjectType[],
         showOrganizationSetup: true,
       };
     }
 
-    const organization = await requireOrganization(user);
+    const organization = requireOrganization(user);
 
     const { searchTerm, page } = input;
 
@@ -239,7 +239,7 @@ const getDashboardData = mobileProcedure
     }, {});
     return {
       count,
-      data: projectData,
+      data: projectData as ProjectType[],
       showOrganizationSetup: false,
       urlMap,
       teamMembers,
@@ -247,3 +247,30 @@ const getDashboardData = mobileProcedure
   });
 
 export default getDashboardData;
+
+declare interface ProjectType {
+  publicId: string;
+  createdAt: Date;
+  name: string;
+  clientName?: string;
+  location: string;
+  status: ProjectStatus | null;
+  lat?: string;
+  lng?: string;
+  currentStatus?: {
+    label: string;
+    description?: string;
+    color?: string;
+    publicId: string;
+  };
+  projectAssignees: {
+    userId: string;
+    user: {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+    };
+  }[];
+  images: { key: string }[];
+  _count: { images: number };
+}

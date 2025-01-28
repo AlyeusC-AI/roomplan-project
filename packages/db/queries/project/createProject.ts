@@ -9,7 +9,7 @@ import { getLatLng, getWeatherData } from "./getProjectForOrg";
 
 const createProject = async (
   userId: string,
-  props: { name: string; location: string }
+  props: { name: string; location: AddressType }
 ) => {
   let now,
     end = 0;
@@ -17,9 +17,8 @@ const createProject = async (
 
   const haloUser = await getUser(userId);
   const organizationId = haloUser?.org?.organization.id;
-  const latLng = await getLatLng(props.location);
 
-  const weatherData = await getWeatherData(latLng?.lat, latLng?.lng);
+  const weatherData = await getWeatherData(props.location.lat, props.location.lng);
   if (!organizationId) return { failed: true, reason: "no-org" };
   const publicId = uuidv4();
   const project = await prisma.project.create({
@@ -28,13 +27,15 @@ const createProject = async (
       publicId,
       name: props.name,
       clientName: props.name,
-      location: props.location,
+      location: props.location.address1,
+      lat: `${props.location.lat}`,
+      lng: `${props.location.lng}`,
       projectAssignees: {
         create: {
           userId,
         },
       },
-      ...(latLng ? { lat: `${latLng.lat}`, lng: `${latLng.lng}` } : {}),
+      ...(props.location ? { lat: `${props.location.lat}`, lng: `${props.location.lng}` } : {}),
       ...(weatherData ? weatherData : {}),
     },
   });
@@ -72,3 +73,16 @@ const createProject = async (
 };
 
 export default createProject;
+
+declare interface AddressType {
+  address1: string
+  address2: string
+  formattedAddress: string
+  city: string
+  region: string
+  postalCode: string
+  country: string
+  lat: number
+  lng: number
+  state: string
+}

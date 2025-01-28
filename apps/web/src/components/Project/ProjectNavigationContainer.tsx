@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from 'react'
-import SecondaryNavigation from '@components/layouts/SecondaryNavigation'
+import { useMemo } from "react";
+import SecondaryNavigation from "@components/layouts/SecondaryNavigation";
 import {
   BookOpenIcon,
   CalendarIcon,
@@ -11,14 +11,14 @@ import {
   HomeIcon,
   NewspaperIcon,
   PictureInPicture,
-} from 'lucide-react'
-import { AccessLevel } from '@servicegeek/db'
-import { useParams } from 'next/navigation'
-import { userInfoStore } from '@atoms/user-info'
+} from "lucide-react";
+import { AccessLevel } from "@servicegeek/db";
+import { useParams } from "next/navigation";
+import { userInfoStore } from "@atoms/user-info";
 
 export default function ProjectNavigationContainer() {
-  const { id } = useParams()
-  const userInfo = userInfoStore((state) => state.user)
+  const { id } = useParams();
+  const userInfo = userInfoStore((state) => state.user);
 
   // if (
   //   user.org?.accessLevel !== AccessLevel.projectManager &&
@@ -36,22 +36,22 @@ export default function ProjectNavigationContainer() {
   const navigation = useMemo(
     () => [
       {
-        name: 'Overview',
+        name: "Overview",
         href: `/projects/${id}/overview`,
         icon: NewspaperIcon,
       },
       {
-        name: 'Files',
+        name: "Files",
         href: `/projects/${id}/files`,
         icon: FolderIcon,
       },
       {
-        name: 'Photos',
+        name: "Photos",
         href: `/projects/${id}/photos`,
         icon: PictureInPicture,
       },
       {
-        name: 'Mitigation',
+        name: "Mitigation",
         href: `/projects/${id}/mitigation`,
         icon: BookOpenIcon,
       },
@@ -60,7 +60,7 @@ export default function ProjectNavigationContainer() {
       userInfo?.accessLevel === AccessLevel.accountManager
         ? [
             {
-              name: 'Expenses',
+              name: "Expenses",
               href: `/projects/${id}/costs`,
               icon: DollarSignIcon,
             },
@@ -78,7 +78,7 @@ export default function ProjectNavigationContainer() {
       //   icon: CurrencyDollarIcon,
       // },
       {
-        name: 'Calendar',
+        name: "Calendar",
         href: `/projects/${id}/calendar`,
 
         icon: CalendarIcon,
@@ -89,17 +89,17 @@ export default function ProjectNavigationContainer() {
       //   icon: EyeIcon,
       // },
       {
-        name: 'Roofing',
+        name: "Roofing",
         href: `/projects/${id}/roofing`,
         icon: HomeIcon,
       },
       {
-        name: 'Weather',
+        name: "Weather",
         href: `/projects/${id}/weather`,
         icon: CloudIcon,
       },
       {
-        name: 'Report',
+        name: "Report",
         href: `/projects/${id}/report`,
         icon: BookOpenIcon,
       },
@@ -111,8 +111,8 @@ export default function ProjectNavigationContainer() {
       // },
     ],
     [id, userInfo?.accessLevel]
-  )
+  );
 
   // @ts-ignore
-  return <SecondaryNavigation navigation={navigation} />
+  return <SecondaryNavigation navigation={navigation} />;
 }

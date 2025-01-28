@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import React from 'react'
+import React from "react";
 
-import { usePathname } from 'next/navigation'
+import { usePathname } from "next/navigation";
 
 import {
   Breadcrumb,
@@ -10,19 +10,19 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+} from "@/components/ui/breadcrumb";
 
 type TBreadCrumbProps = {
-  capitalizeLinks?: boolean
-}
+  capitalizeLinks?: boolean;
+};
 
 const NextBreadcrumb = ({ capitalizeLinks }: TBreadCrumbProps) => {
-  const paths = usePathname()
-  const pathNames = paths.split('/').filter((path) => path)
+  const paths = usePathname();
+  const pathNames = paths.split("/").filter((path) => path);
 
   function capitalizeFirstLetter(word: string) {
-    if (!word) return ''
-    return word[0].toUpperCase() + word.slice(1)
+    if (!word) return "";
+    return word[0].toUpperCase() + word.slice(1);
   }
 
   return (
@@ -30,20 +30,22 @@ const NextBreadcrumb = ({ capitalizeLinks }: TBreadCrumbProps) => {
       <Breadcrumb>
         <BreadcrumbList>
           {pathNames.map((link, index) => {
-            let href = `/${pathNames.slice(0, index + 1).join('/')}`
-            let itemLink = capitalizeLinks
+            const href = `/${pathNames.slice(0, index + 1).join("/")}`;
+            const itemLink = capitalizeLinks
               ? link[0].toUpperCase() + link.slice(1, link.length)
-              : link
+              : link;
             return (
               <React.Fragment key={index}>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href={href}>{capitalizeFirstLetter(itemLink)}</BreadcrumbLink>
+                <BreadcrumbItem className='hidden md:block'>
+                  <BreadcrumbLink href={href}>
+                    {capitalizeFirstLetter(itemLink)}
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 {index < pathNames.length - 1 && (
-                  <BreadcrumbSeparator className="hidden md:block" />
+                  <BreadcrumbSeparator className='hidden md:block' />
                 )}
               </React.Fragment>
-            )
+            );
           })}
 
           {/* <BreadcrumbSeparator className="hidden md:block" />
@@ -61,7 +63,7 @@ const NextBreadcrumb = ({ capitalizeLinks }: TBreadCrumbProps) => {
         </ul>
       </div> */}
     </>
-  )
-}
+  );
+};
 
-export default NextBreadcrumb
+export default NextBreadcrumb;

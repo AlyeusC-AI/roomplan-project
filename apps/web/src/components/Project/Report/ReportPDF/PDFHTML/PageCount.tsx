@@ -1,10 +1,10 @@
 const PageCount = () => (
-  <div className="pdf page-container">
+  <div className='pdf page-container'>
     Page
-    <span className="pdf page"></span>
+    <span className='pdf page'></span>
     of
-    <span className="pdf pages"></span>
+    <span className='pdf pages'></span>
   </div>
-)
+);
 
-export default PageCount
+export default PageCount;

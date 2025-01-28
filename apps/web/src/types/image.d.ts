@@ -1,8 +1,8 @@
 interface ImageUploadInProgressData {
-  path: string
-  name: string
+  path: string;
+  name: string;
 }
 
 interface PresignedUrlMap {
-  [imageKey: string]: string
+  [imageKey: string]: string;
 }
