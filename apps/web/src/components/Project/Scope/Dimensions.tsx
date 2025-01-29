@@ -1,9 +1,7 @@
 import { useId, useMemo } from "react";
 import Select from "react-select/creatable";
-import { AutoSaveTextInput } from "@components/components";
 import { RoomDataWithoutInferences } from "@servicegeek/db/queries/project/getProjectDetections";
 import clsx from "clsx";
-import produce from "immer";
 import { useRouter } from "next/router";
 import { roomStore } from "@atoms/room";
 
@@ -17,7 +15,7 @@ export default function Dimensions({
   const router = useRouter();
   const reactSelectId = useId();
 
-  const saveDimension = async (data: DimensionData) => {
+  const saveDimension = async (data: any) => {
     try {
       const d = data;
       if (data.length) {
@@ -73,7 +71,7 @@ export default function Dimensions({
     <div className='mt-4'>
       <h2 className='text-lg font-medium'>Dimensions & Details</h2>
       <div className='grid grid-cols-3 gap-2'>
-        <AutoSaveTextInput
+        {/* <AutoSaveTextInput
           className='col-span-1'
           placeholder=''
           defaultValue={room.length || ""}
@@ -105,7 +103,7 @@ export default function Dimensions({
           title='Height'
           units='feet'
           ignoreInvalid
-        />
+        /> */}
         <div>
           <label
             htmlFor='total-sqft'
@@ -139,7 +137,7 @@ export default function Dimensions({
             </div>
           </div>
         </div>
-        <AutoSaveTextInput
+        {/* <AutoSaveTextInput
           className='col-span-1'
           placeholder='--'
           defaultValue={room.doors?.toString() || ""}
@@ -160,7 +158,7 @@ export default function Dimensions({
           name='roomWindows'
           title='# Windows'
           ignoreInvalid
-        />
+        /> */}
         <div>
           <label
             htmlFor='equipment-used'

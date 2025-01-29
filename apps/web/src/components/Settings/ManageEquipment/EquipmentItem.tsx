@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { TertiaryButton, AutoSaveTextInput } from "@components/components";
 import TableData from "@components/DesignSystem/Table/TableData";
 import TableRow from "@components/DesignSystem/Table/TableRow";
 import { trpc } from "@utils/trpc";
 import { RouterOutputs } from "@servicegeek/api";
 import produce from "immer";
+import { Button } from "@components/ui/button";
 
 const EquipmentItem = ({
   equipment,
@@ -13,7 +13,7 @@ const EquipmentItem = ({
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const setName = trpc.equipment.setName.useMutation();
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
 
   const deleteEquipment = trpc.equipment.delete.useMutation({
     async onMutate({ publicId }) {
@@ -38,12 +38,12 @@ const EquipmentItem = ({
     },
   });
 
-  const onSave = async (name: string, publicId: string) => {
-    setName.mutate({
-      name,
-      publicId,
-    });
-  };
+  // const onSave = async (name: string, publicId: string) => {
+  //   setName.mutate({
+  //     name,
+  //     publicId,
+  //   });
+  // };
 
   const onDelete = async () => {
     setIsDeleting(true);
@@ -60,21 +60,19 @@ const EquipmentItem = ({
   return (
     <TableRow key={equipment.publicId}>
       <TableData important>
-        <AutoSaveTextInput
+        <></>
+        {/* <AutoSaveTextInput
           defaultValue={equipment.name}
           onSave={(name) => onSave(name, equipment.publicId)}
           name={`${equipment.publicId}-equipmentName`}
           ignoreInvalid
-        />
+        /> */}
       </TableData>
       <TableData>
-        <TertiaryButton
-          onClick={onDelete}
-          disabled={isDeleting}
-          loading={isDeleting}
-        >
+        {/* @ts-expect-error ddd */}
+        <Button variant='destructive' onClick={onDelete} disabled={isDeleting}>
           Remove<span className='sr-only'>, {equipment.name}</span>
-        </TertiaryButton>
+        </Button>
       </TableData>
     </TableRow>
   );
