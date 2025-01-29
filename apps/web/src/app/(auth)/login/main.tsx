@@ -1,31 +1,27 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useState } from "react";
-import { AuthLayout } from "@/components/layouts/auth-layout";
-import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
-import { PrimaryButton, SecondaryButton } from "@/components/components/button";
-import { TertiaryLink } from "@/components/components/link";
-import { LogoTextBlue } from "@/components/components/logo";
-import Image from "next/image";
-import { ClipLoader } from "react-spinners";
-import { createClient } from "@lib/supabase/client";
-import { TextField } from "@components/components/input";
+import { useState } from "react";
 
-export default function Login() {
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@lib/supabase/client";
+import { LoadingSpinner } from "@/components/ui/spinner";
+import { toast } from "sonner";
+
+export function LoginForm() {
   const router = useSearchParams();
   const navigate = useRouter();
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState((router?.get("email") as string) || "");
+  const [email, setEmail] = useState((router?.get("email") as string) ?? "");
   const [password, setPassword] = useState("");
 
-  const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [sentMagicLink, setSentMagicLink] = useState(false);
-  const [error, setError] = useState(false);
   const supabaseClient = createClient();
 
   // Logging In The User With Supabase
-  const handleLogin = async (e: FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     // Preventing Reloading The Page
     e.preventDefault();
 
@@ -49,153 +45,129 @@ export default function Login() {
       console.error(error);
 
       // Setting The Error Text
-      setError(true);
+      toast.error("An Error Occured", {
+        description:
+          "The credentials you entered are invalid. Please check your email and password and try again.",
+      });
 
       // Toggling Loading
       setLoading(false);
     }
   };
 
-  const handleMagicLink = async (e: FormEvent) => {
-    setMagicLinkLoading(true);
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
     const { error } = await supabaseClient.auth.signInWithOtp({
       email,
     });
+
+    setLoading(false);
+
     if (!error) {
       setSentMagicLink(true);
-      setMagicLinkLoading(false);
-    } else {
-      toast;
+      return;
     }
+
+    toast.error("An Error Occured", {
+      description:
+        "The credentials you entered are invalid. Please check your email and password and try again.",
+    });
   };
+
+  if (loading) {
+    return (
+      <div className='flex h-full items-center justify-center'>
+        <LoadingSpinner className='w-full' />
+      </div>
+    );
+  }
 
   if (sentMagicLink) {
     return (
-      <AuthLayout>
-        <div className='mt-20'>
-          <h2 className='text-xl font-semibold text-gray-900'>
+      <div className='mt-20 flex flex-col items-center justify-center px-4'>
+        <div className='my-auto'>
+          <h1 className='text-center text-2xl font-bold'>
             Magic link email sent
-          </h2>
-          <p className='mt-2 text-sm text-gray-700'>
+          </h1>
+          <p className='text-balance text-center text-muted-foreground'>
             Check your inbox to find your login link to ServiceGeek.
           </p>
-          <p className='mt-2 text-sm text-gray-700'>
-            Didn&apos;t get an email?{" "}
-            <Link
-              prefetch={false}
-              href='/login'
-              className='font-medium text-primary hover:underline'
-            >
-              Sign in
-            </Link>{" "}
-            with your password instead.
-          </p>
-          <div className='mt-4'>
-            <Image
-              src='/images/email-sent.svg'
-              width={647.63626 / 3}
-              height={632.17383 / 3}
-              alt='Email Sent'
-            />
-          </div>
         </div>
-      </AuthLayout>
+        <div className='mt-4'>
+          <img
+            src='/images/email-sent.svg'
+            width={647.63626 / 3}
+            height={632.17383 / 3}
+            alt='Email Sent'
+            className='my-10'
+          />
+        </div>
+        <Button
+          onClick={() => setSentMagicLink(false)}
+          variant='default'
+          className='mb-10 w-11/12'
+        >
+          Continue With Password
+        </Button>
+      </div>
     );
   }
 
   return (
-    <AuthLayout>
-      <div className='flex flex-col'>
-        <Link href='/' aria-label='Home' className='h-10 w-auto'>
-          <LogoTextBlue />
-        </Link>
-        <div className='mt-20'>
-          <h2 className='text-lg font-semibold text-gray-900'>
-            Sign in to your account
-          </h2>
-          <p className='mt-2 text-sm text-gray-700'>
-            Don’t have an account?{" "}
-            <TertiaryLink href='/register'>Sign up</TertiaryLink> for a free
-            trial.
+    <form className='p-6 md:p-8' onSubmit={handleLogin}>
+      <div className='flex flex-col gap-6'>
+        <div className='flex flex-col items-center text-center'>
+          <h1 className='text-2xl font-bold'>Welcome back</h1>
+          <p className='text-balance text-muted-foreground'>
+            Login to your ServiceGeek account
           </p>
         </div>
-      </div>
-      {loading ? (
-        <div className='flex w-full flex-col items-center justify-center py-10'>
-          <ClipLoader color='#2563eb' />
-          <p className='mt-6 text-gray-600'>Securely logging in...</p>
+        <div className='grid gap-2'>
+          <Label htmlFor='email'>Email</Label>
+          <Input
+            id='email'
+            type='email'
+            placeholder='johndoe@company.com'
+            required
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
-      ) : (
-        <>
-          <form
-            action='#'
-            className='mt-10 grid grid-cols-1 gap-y-8'
-            onSubmit={handleLogin}
-          >
-            <TextField
-              label='Email address'
-              id='email'
-              name='email'
-              type='email'
-              autoComplete='email'
-              value={email}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setEmail(e.target.value)
-              }
-              required
-            />
-            <TextField
-              label='Password'
-              id='password'
-              name='password'
-              type='password'
-              value={password}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setPassword(e.target.value)
-              }
-              autoComplete='current-password'
-              required
-            />
-            <div className='flex flex-col'>
-              <PrimaryButton
-                type='submit'
-                loading={loading}
-                className='mb-2 w-full'
-              >
-                Sign in <span aria-hidden='true'>&rarr;</span>
-              </PrimaryButton>
-              <SecondaryButton
-                onClick={handleMagicLink}
-                loading={magicLinkLoading}
-              >
-                Email me a login link
-              </SecondaryButton>
-              <p className='mt-2 text-sm text-gray-700'>
-                Forgot your password?
-                <Link
-                  href='/reset-password'
-                  className='ml-2 font-medium text-primary hover:underline'
-                >
-                  Reset password
-                </Link>
-              </p>
-            </div>
-          </form>
-          {error && (
-            <>
-              <p className='mt-4 text-sm text-red-700'>
-                Invalid email or password{" "}
-              </p>
-              <Link
-                href='/reset-password'
-                className='mt-2 text-sm text-primary'
-              >
-                Forgot your password or email?
-              </Link>
-            </>
-          )}
-        </>
-      )}
-    </AuthLayout>
+        <div className='grid gap-2'>
+          <div className='flex items-center'>
+            <Label htmlFor='password'>Password</Label>
+            <a
+              href='/reset-password'
+              className='ml-auto text-sm underline-offset-2 hover:underline'
+            >
+              Forgot your password?
+            </a>
+          </div>
+          <Input
+            id='password'
+            type='password'
+            required
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+        <Button type='submit' className='w-full'>
+          Login
+        </Button>
+        <div className='text-center text-sm'>
+          Don&apos;t have an account?{" "}
+          <a href='/register' className='underline underline-offset-4'>
+            Sign up
+          </a>
+        </div>
+        <div className='relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border'>
+          <span className='relative z-10 bg-background px-2 text-muted-foreground'>
+            Or continue with
+          </span>
+        </div>
+        <Button onClick={handleMagicLink} variant='outline' className='w-full'>
+          Magic Link
+        </Button>
+      </div>
+    </form>
   );
 }

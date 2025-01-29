@@ -1,7 +1,6 @@
 import { useState } from "react";
-import AutoSaveTextInput from "@components/DesignSystem/TextInput/AutoSaveTextInput";
 import clsx from "clsx";
-import { useRouter } from "next/router";
+import { useParams } from "next/navigation";
 // Create our number formatter.
 const formatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -18,34 +17,34 @@ const EstimateTable = ({
   const [rv, setRv] = useState(rcvValue);
   const [av, setAv] = useState(actualValue);
 
-  const router = useRouter();
+  const { id } = useParams<{ id: string }>();
 
-  const saveValue = async (data: {
-    rcvValue?: number;
-    actualValue?: number;
-  }) => {
-    try {
-      if (data.rcvValue) {
-        setRv(data.rcvValue);
-      } else if (data.actualValue) {
-        setAv(data.actualValue);
-      } else {
-        return;
-      }
-      await fetch(`/api/project/${router.query.id}/value`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          data: data,
-        }),
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // const saveValue = async (data: {
+  //   rcvValue?: number;
+  //   actualValue?: number;
+  // }) => {
+  //   try {
+  //     if (data.rcvValue) {
+  //       setRv(data.rcvValue);
+  //     } else if (data.actualValue) {
+  //       setAv(data.actualValue);
+  //     } else {
+  //       return;
+  //     }
+  //     await fetch(`/api/project/${id}/value`, {
+  //       method: "PATCH",
+  //       body: JSON.stringify({
+  //         data: data,
+  //       }),
+  //     });
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
   return (
     <div className='grid grid-cols-3 space-x-2'>
-      <AutoSaveTextInput
+      {/* <AutoSaveTextInput
         className='border-none py-2 focus:border-none focus:outline-none'
         defaultValue={rcvValue}
         onSave={(v) => saveValue({ rcvValue: parseFloat(v) })}
@@ -66,7 +65,7 @@ const EstimateTable = ({
         name='Actual Value'
         units='$'
         type='number'
-      />
+      /> */}
       <div className='border-none py-2 focus:border-none focus:outline-none'>
         <label
           htmlFor='Difference'

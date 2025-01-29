@@ -254,7 +254,7 @@ export const CalendarBody = ({ features, children }: CalendarBodyProps) => {
         <div
           key={index}
           className={cn(
-            "aspect-square relative overflow-hidden border-r border-t",
+            "relative aspect-square overflow-hidden border-r border-t",
             index % 7 === 6 && "border-r-0"
           )}
         >

@@ -1,11 +1,11 @@
 import { useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { SecondaryButton } from "@components/components/button";
-import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { InferenceMetaData } from "@servicegeek/db/queries/project/getProjectDetections";
 import { saveAs } from "file-saver";
 import { urlMapStore } from "@atoms/url-map";
 import { projectStore } from "@atoms/project";
+import { ArrowDownSquareIcon } from "lucide-react";
 
 const JSZip = require("jszip");
 
@@ -35,7 +35,7 @@ const DownloadRoomImages = ({
 
   const downloadImagesForRoom = async () => {
     setIsDownloading(true);
-    const folderName = `${projectInfo.clientName
+    const folderName = `${projectInfo?.clientName
       .split(" ")
       .join("_")}_${roomName}_photos`;
     const promises = [];
@@ -79,7 +79,7 @@ const DownloadRoomImages = ({
       onClick={() => downloadImagesForRoom()}
       loading={isDownloading}
     >
-      <ArrowDownTrayIcon className='h-6' />
+      <ArrowDownSquareIcon className='h-6' />
     </SecondaryButton>
   );
 };

@@ -2,7 +2,6 @@ import { createClient } from "@lib/supabase/server";
 import createGenericRoomReading from "@servicegeek/db/queries/room/generic-reading/createGenericRoomReading";
 import deleteGenericRoomReading from "@servicegeek/db/queries/room/generic-reading/deleteGenericRoomReading";
 import updateGenericRoomReading from "@servicegeek/db/queries/room/generic-reading/updateGenericRoomReading";
-import { NextApiRequest, NextApiResponse } from "next";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
@@ -35,16 +34,15 @@ export async function PATCH(
     const result = await updateGenericRoomReading(
       user.id,
       id,
-      // @ts-expect-error
-      req.query.roomId,
-      req.query.readingId,
-      req.query.genericRoomReadingId,
-      req.query.value,
-      req.query.temperature || "",
-      req.query.humidity || ""
+      req.nextUrl.searchParams.get("roomId") ?? "",
+      req.nextUrl.searchParams.get("readingId") ?? "",
+      req.nextUrl.searchParams.get("genericRoomReadingId") ?? "",
+      req.nextUrl.searchParams.get("value") ?? "",
+      req.nextUrl.searchParams.get("temperature") ?? "",
+      req.nextUrl.searchParams.get("humidity") ?? ""
     );
-    // @ts-expect-error
-    if (result?.failed) {
+
+    if (!result) {
       console.log(result);
       return NextResponse.json({ status: "failed" }, { status: 500 });
     }
@@ -85,7 +83,7 @@ export async function POST(
 
   const roomId = req.nextUrl.searchParams.get("roomId");
   const readingId = req.nextUrl.searchParams.get("readingId");
-  const type = req.nextUrl.searchParams.get("type");
+  const type = req.nextUrl.searchParams.get("type") ?? "dehumidifier";
 
   try {
     const result = await createGenericRoomReading(

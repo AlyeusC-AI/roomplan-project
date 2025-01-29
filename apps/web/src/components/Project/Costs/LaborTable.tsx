@@ -6,12 +6,14 @@ import { useParams } from "next/navigation";
 import { costsStore } from "@atoms/costs";
 
 import CostTable from "./CostTable";
+import { projectStore } from "@atoms/project";
 
 export default function LaborTable() {
   const costs = costsStore((state) => state.laborCosts);
 
   const [isCreating, setIsCreating] = useState(false);
   const { id } = useParams<{ id: string }>();
+  const { project } = projectStore((state) => state);
   const createCost = async () => {
     setIsCreating(true);
     try {
@@ -23,12 +25,20 @@ export default function LaborTable() {
       });
       if (res.ok) {
         const json = await res.json();
-        costsStore
-          .getState()
-          .addCost(
-            { id: json.cost.id, name: "", estimatedCost: 0, actualCost: 0 },
-            "labor"
-          );
+        costsStore.getState().addCost(
+          {
+            id: json.cost.id,
+            name: "",
+            estimatedCost: 0,
+            actualCost: 0,
+            createdAt: new Date().toISOString(),
+            type: "labor",
+            isDeleted: false,
+            projectId: project?.id ?? 0,
+            updatedAt: new Date().toISOString(),
+          },
+          "labor"
+        );
       }
     } catch (error) {
       console.error(error);
@@ -44,7 +54,7 @@ export default function LaborTable() {
       updateCost={(id, costs) =>
         costsStore.getState().updateCost(id, costs, "labor")
       }
-      removeCost={(id: string) => costsStore.getState().removeCost(id, "labor")}
+      removeCost={(id: number) => costsStore.getState().removeCost(id, "labor")}
       name='Labor'
       buttonText='Add Labor Cost'
       isCreating={isCreating}

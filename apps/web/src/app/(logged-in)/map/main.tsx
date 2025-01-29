@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-export default function ProjectMapView({ projects }: LoggedInUserInfo) {
+export default function ProjectMapView() {
   // const satelliteView = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<mapboxgl.Map>();
   const mapNode = useRef(null);
@@ -64,49 +64,48 @@ export default function ProjectMapView({ projects }: LoggedInUserInfo) {
     return () => {
       mapboxMap.remove();
     };
-    loader.load().then(() => {
-      if (satelliteView.current) {
-        const mapInstance = new google.maps.Map(satelliteView.current, {
-          zoom: 10,
-          center: {
-            lat: Number(projects ? projects[0].lat : "41.2033"),
-            lng: Number(projects ? projects[0].lng : "77.1945"),
-          },
-          streetViewControl: false,
-          rotateControl: false,
-          mapTypeControl: false,
-        });
-        if (projects && projects.length > 0) {
-          // set markers for each project location on map
-          // set image for each marker
-          projects.forEach((project) => {
-            const marker = new google.maps.Marker({
-              position: {
-                lat: Number(project.lat),
-                lng: Number(project.lng),
-              },
-              map: mapInstance,
-              title: project.name,
-            });
-            marker.addListener("click", () => {
-              // set selected project
-              setSelectedProject(project);
-              updateAndFetchWeather(project.publicId);
-              setWeatherLoading(true);
-              setOpen(true);
-              // set map center to selected project
-              mapInstance.setCenter({
-                lat: Number(project.lat),
-                lng: Number(project.lng),
-              });
+    // loader.load().then(() => {
+    //   if (satelliteView.current) {
+    //     const mapInstance = new google.maps.Map(satelliteView.current, {
+    //       zoom: 10,
+    //       center: {
+    //         lat: Number(projects ? projects[0].lat : "41.2033"),
+    //         lng: Number(projects ? projects[0].lng : "77.1945"),
+    //       },
+    //       streetViewControl: false,
+    //       rotateControl: false,
+    //       mapTypeControl: false,
+    //     });
+    //     if (projects && projects.length > 0) {
+    //       // set markers for each project location on map
+    //       // set image for each marker
+    //       projects.forEach((project) => {
+    //         const marker = new google.maps.Marker({
+    //           position: {
+    //             lat: Number(project.lat),
+    //             lng: Number(project.lng),
+    //           },
+    //           map: mapInstance,
+    //           title: project.name,
+    //         });
+    //         marker.addListener("click", () => {
+    //           // set selected project
+    //           setSelectedProject(project);
+    //           updateAndFetchWeather(project.publicId);
+    //           setWeatherLoading(true);
+    //           setOpen(true);
+    //           // set map center to selected project
+    //           mapInstance.setCenter({
+    //             lat: Number(project.lat),
+    //             lng: Number(project.lng),
+    //           });
 
-              mapInstance.setZoom(12);
-            });
-          });
-        }
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    //           mapInstance.setZoom(12);
+    //         });
+    //       });
+    //     }
+    //   }
+    // });
   }, []);
 
   const handleNavigation = (e: any, publicId: string) => {

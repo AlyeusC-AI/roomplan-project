@@ -6,7 +6,6 @@ import TotalsTable from "./TotalsTable";
 
 export default function CostsTable({
   rcvValue,
-  actualValue,
 }: {
   rcvValue: number;
   actualValue: number;
@@ -14,7 +13,7 @@ export default function CostsTable({
   return (
     <div className='space-y-6'>
       <div className='mt-6'>
-        <TotalsTable rcvValue={rcvValue} actualValue={actualValue} />
+        <TotalsTable rcvValue={rcvValue} />
       </div>
       <div>
         <h1 className='text-2xl font-semibold text-gray-900'>

@@ -1,20 +1,15 @@
-"use client";
+import Roofing from "@components/Project/Roofing3D";
 
-import Readings from "@components/Project/Readings";
-import { trpc } from "@utils/trpc";
-import { useParams } from "next/navigation";
-
-const MitigationPage = () => {
-  const { id } = useParams<{ id: string }>();
-  trpc.readings.getAll.useQuery({ projectPublicId: id }, { initialData: [] });
-  return <Readings />;
+const RoofingPage = () => {
+  return <Roofing />;
 };
 
-export default MitigationPage;
+export default RoofingPage;
 
 // export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 //   try {
-//     const { user, orgAccessLevel } = await getUserWithAuthStatus(ctx);
+//     const { user, orgAccessLevel, accessToken } =
+//       await getUserWithAuthStatus(ctx);
 
 //     if (!user) {
 //       return {
@@ -52,19 +47,18 @@ export default MitigationPage;
 //       };
 //     }
 
-//     const roomList = await getRoomList(ctx.query.id, orgId);
-//     const rooms = roomList?.rooms || [];
+//     const inferenceList = await getInferenceList(ctx.query.id, orgId);
+
+//     const inferences = inferenceList?.rooms || [];
 //     const subscriptionStatus = await getSubcriptionStatus(user.id);
-//     const roomReadings = (await getRoomReadings(user.id, ctx.query.id)) || [];
 
 //     return {
 //       props: {
-//         rooms,
+//         inferences,
 //         userInfo: getUserInfo(user),
-//         subscriptionStatus,
-//         roomReadings: superjson.serialize(roomReadings).json,
-//         orgInfo: getOrgInfo(user),
 //         projectInfo: getProjectInfo(project),
+//         orgInfo: getOrgInfo(user),
+//         subscriptionStatus,
 //       },
 //     };
 //   } catch (e) {

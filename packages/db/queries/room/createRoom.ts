@@ -12,11 +12,11 @@ const createRoom = async (
 ) => {
   const servicegeekUser = await getUser(userId);
   const organizationId = servicegeekUser?.org?.organization.id;
-  if (!organizationId) return { failed: true, reason: "no-org" };
+  if (!organizationId) throw Error("organization-not-found");
 
   const project = await getProjectForOrg(projectPublicId, organizationId);
   if (!project) {
-    return { failed: true, reason: "no-project" };
+    throw Error("project-not-found");
   }
 
   const room = await prisma.room.findFirst({
@@ -27,7 +27,7 @@ const createRoom = async (
     },
   });
 
-  if (room) return { failed: true, reason: "existing-room" };
+  if (room) throw Error("existing-room");
 
   const publicId = uuidv4();
 
@@ -37,6 +37,9 @@ const createRoom = async (
       projectId: project.id,
       name,
     },
+    select: {
+      publicId: true,
+    }
   });
 };
 

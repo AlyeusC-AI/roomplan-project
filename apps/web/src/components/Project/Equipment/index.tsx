@@ -27,10 +27,6 @@ const ProjectEquipment = ({
     }
   );
 
-  const onAdd = async () => {
-    await usedEquipment.refetch();
-  };
-
   return (
     <div>
       <TabTitleArea
@@ -41,7 +37,6 @@ const ProjectEquipment = ({
         <UsedEquipment usedEquipment={usedEquipment.data} />
         <AvailableEquipment
           usedEquipment={usedEquipment.data}
-          onAdd={onAdd}
           intialOrganizationEquipment={intialOrganizationEquipment}
         />
       </div>

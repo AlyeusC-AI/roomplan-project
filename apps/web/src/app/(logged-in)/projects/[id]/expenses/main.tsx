@@ -1,25 +1,7 @@
 import Costs from "@components/Project/Costs";
-import { SubscriptionStatus } from "@servicegeek/db";
-import { User } from "@supabase/supabase-js";
 
-interface EstimatePageProps {
-  user: User;
-  projectInfo: ProjectInfo;
-  subscriptionStatus: SubscriptionStatus;
-  subcontractorCosts: CostDataType[];
-  miscellaneousCosts: CostDataType[];
-  materialsCosts: CostDataType[];
-  laborCosts: CostDataType[];
-  rcvValue: number;
-  actualValue: number;
-}
-
-const ExpensesPage = ({ rcvValue, actualValue }: EstimatePageProps) => {
-  return (
-    <>
-      <Costs rcvValue={rcvValue} actualValue={actualValue} />
-    </>
-  );
+const ExpensesPage = () => {
+  return <Costs rcvValue={0} actualValue={0} />;
 };
 
 export default ExpensesPage;

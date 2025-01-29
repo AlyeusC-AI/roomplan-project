@@ -1,3 +1,5 @@
+"use client";
+
 import clsx from "clsx";
 import { propertyDataStore } from "@atoms/property-data";
 

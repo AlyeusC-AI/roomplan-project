@@ -1,34 +1,14 @@
 "use client";
 
-import { Fragment, useState } from "react";
-import { ScaleLoader } from "react-spinners";
-import { PrimaryButton } from "@components/components/button";
-import { Dialog, Transition } from "@headlessui/react";
+import { useState } from "react";
 import useScheduler, { calenderEvents } from "@utils/hooks/useScheduler";
-import dynamic from "next/dynamic";
-import { useSearchParams } from "next/navigation";
-
-import CalenderEventModal from "../../../calendar/components/event-modal";
-
-const FullCalendar = dynamic(() => import("../../../calendar/components"), {
-  ssr: false,
-  loading: () => (
-    <div className='flex size-full items-center justify-center'>
-      <ScaleLoader color='#2563eb' />
-    </div>
-  ),
-});
+import { useParams } from "next/navigation";
+import CalendarComponent from "@components/calendar";
 
 export default function Calender() {
-  const router = useSearchParams();
-  const id = router?.get("id");
-  const {
-    calenderEvents,
-    createCalenderEvent,
-    updateCalenderEvent,
-    deleteCalenderEvent,
-  } = useScheduler({
-    projectId: id as string,
+  const { id } = useParams<{ id: string }>();
+  const { calenderEvents } = useScheduler({
+    projectId: id,
   });
   const [timeStamp, setTimeStamp] = useState<Date>();
   const [isCreateCalenderEventModalOpen, setIsCreateCalenderEventModalOpen] =
@@ -54,7 +34,8 @@ export default function Calender() {
 
   return (
     <>
-      <div className='mb-4 flex justify-between space-x-6'>
+      <CalendarComponent events={[]} />
+      {/* <div className='mb-4 flex justify-between space-x-6'>
         <div className='max-w-[220px] sm:max-w-none sm:flex-auto'>
           <div className='col-span-2 flex-col'>
             <h3 className='text-2xl font-medium leading-6 text-gray-900'>
@@ -139,7 +120,7 @@ export default function Calender() {
             </div>
           </Dialog>
         </Transition.Root>
-      </div>
+      </div> */}
     </>
   );
 }

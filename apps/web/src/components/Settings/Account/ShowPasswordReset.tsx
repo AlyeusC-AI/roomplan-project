@@ -1,8 +1,7 @@
 import { Dispatch, SetStateAction } from "react";
 import Modal from "@components/DesignSystem/Modal";
 import { Dialog } from "@headlessui/react";
-import { InformationCircleIcon } from "@heroicons/react/20/solid";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { AlertCircle, X } from "lucide-react";
 
 const ShowPasswordReset = ({
   open,
@@ -22,12 +21,12 @@ const ShowPasswordReset = ({
               onClick={() => setOpen(false)}
             >
               <span className='sr-only'>Close</span>
-              <XMarkIcon className='size-6' aria-hidden='true' />
+              <X className='size-6' aria-hidden='true' />
             </button>
           </div>
           <div className='sm:flex sm:items-start'>
             <div className='mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-yellow-100 sm:mx-0 sm:size-10'>
-              <InformationCircleIcon
+              <AlertCircle
                 className='size-6 text-yellow-600'
                 aria-hidden='true'
               />

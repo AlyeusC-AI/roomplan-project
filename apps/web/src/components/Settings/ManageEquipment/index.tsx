@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import toast from 'react-hot-toast'
+import toast from 'sonner'
 import { PrimaryButton } from '@components/components/button'
 import Card from '@components/DesignSystem/Card'
 import { trpc } from '@utils/trpc'

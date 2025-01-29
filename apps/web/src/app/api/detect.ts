@@ -1,7 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-const fs = require("fs").promises;
-
 export type DetectionObject = {
   xmin: number;
   ymin: number;

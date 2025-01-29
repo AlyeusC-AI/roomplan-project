@@ -1,4 +1,3 @@
-import { Database } from "@/types/database";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -8,20 +7,6 @@ import { persist } from "zustand/middleware";
 //   key: 'ProjectsState',
 //   default: defaultInferencesState,
 // })
-
-declare global {
-  type FlatProject = Database["public"]["Tables"]["Project"]["Row"];
-  type FlatImage = Database["public"]["Tables"]["Image"]["Row"];
-  type FlatAssignee = Database["public"]["Tables"]["UserToProject"]["Row"];
-  type Assignee = FlatAssignee & {
-    User: { firstName: string; lastName: string; email: string } | null;
-  };
-  type Image = FlatImage & { url: string };
-  interface Project extends FlatProject {
-    images: Image[];
-    assignees: Assignee[];
-  }
-}
 
 // export default projectsState
 interface State {

@@ -1,15 +1,17 @@
+"use client";
+
 import { ChangeEvent, useState } from "react";
-import toast from "react-hot-toast";
-import Spinner from "@components/Spinner";
-import { CloudArrowUpIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
-import { useRouter } from "next/router";
+import { useParams } from "next/navigation";
 import { event } from "nextjs-google-analytics";
 
 import TabTitleArea from "../TabTitleArea";
+import { toast } from "sonner";
+import { CloudUpload } from "lucide-react";
+import { LoadingSpinner } from "@components/ui/spinner";
 
 export default function Import() {
-  const router = useRouter();
+  const { id } = useParams<{ id: string }>();
   const [isUploading, setIsUploading] = useState(false);
 
   const onUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -27,13 +29,10 @@ export default function Import() {
     try {
       const body = new FormData();
       body.append("file", file);
-      const res = await fetch(
-        `/api/project/${router.query.id}/estimate-import`,
-        {
-          method: "POST",
-          body: body,
-        }
-      );
+      const res = await fetch(`/api/project/${id}/estimate-import`, {
+        method: "POST",
+        body: body,
+      });
       if (res.ok) {
         toast.success("Uploaded File");
       } else {
@@ -73,11 +72,11 @@ export default function Import() {
                 className='inline-flex items-center justify-center rounded-md border border-transparent bg-primary px-2 py-1 text-sm font-medium text-white shadow-sm hover:cursor-pointer hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto md:px-4 md:py-2'
               >
                 {isUploading ? (
-                  <Spinner bg='fill-white' />
+                  <LoadingSpinner />
                 ) : (
                   <>
                     {" "}
-                    <CloudArrowUpIcon
+                    <CloudUpload
                       className='-ml-1 mr-2 size-5'
                       aria-hidden='true'
                     />

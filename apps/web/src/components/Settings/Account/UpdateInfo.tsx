@@ -1,17 +1,12 @@
 import { ChangeEvent, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { PrimaryButton, Card, Spinner } from "@components/components";
-import { AutoSaveTextInput } from "@components/components/input";
 import UserAvatar from "@components/DesignSystem/UserAvatar";
-import {
-  CameraIcon,
-  CheckCircleIcon,
-  QuestionMarkCircleIcon,
-} from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 import { userInfoStore } from "@atoms/user-info";
 import { createClient } from "@lib/supabase/server";
 import { User } from "@supabase/supabase-js";
+import { Camera, Check } from "lucide-react";
 
 const UpdateInfo = ({
   emailConfirmed,
@@ -81,7 +76,7 @@ const UpdateInfo = ({
       </h2>
       <div className='mt-6 grid w-full grid-cols-4 gap-6'>
         <div className='col-span-4 md:col-span-2'>
-          <AutoSaveTextInput
+          {/* <AutoSaveTextInput
             className='col-span-4 md:col-span-2'
             defaultValue={userInfo?.firstName || ""}
             onSave={(firstName) => onSave({ firstName })}
@@ -96,7 +91,7 @@ const UpdateInfo = ({
             name='lastName'
             title='Last Name'
             ignoreInvalid
-          />
+          /> */}
         </div>
         <div className='col-span-4 flex flex-col items-center justify-center md:col-span-2'>
           <label
@@ -114,7 +109,7 @@ const UpdateInfo = ({
               {isUploading ? (
                 <Spinner bg='text-white' />
               ) : (
-                <CameraIcon strokeWidth='2' className='size-6' />
+                <Camera strokeWidth='2' className='size-6' />
               )}
             </div>
           </label>
@@ -133,7 +128,7 @@ const UpdateInfo = ({
         <span>(xxx-xxx-xxxx)</span>
       </h3>
       <div className='mt-2 flex max-w-xl items-center text-sm text-gray-500'>
-        <AutoSaveTextInput
+        {/* <AutoSaveTextInput
           className='col-span-4 md:col-span-2'
           defaultValue={userInfo?.phone || ""}
           onSave={(phone) => onSave({ phone })}
@@ -144,7 +139,7 @@ const UpdateInfo = ({
           title=''
           ignoreInvalid
           isPhonenumber
-        />
+        /> */}
       </div>
       <h3 className='text-md mt-6 font-medium leading-6 text-gray-900'>
         Email
@@ -152,9 +147,10 @@ const UpdateInfo = ({
       <div className='mt-2 flex max-w-xl items-center text-sm text-gray-500'>
         <p className='mr-2'>{user?.email}</p>{" "}
         {emailConfirmed ? (
-          <CheckCircleIcon height={18} className='text-green-600' />
+          <Check height={18} className='text-green-600' />
         ) : (
-          <QuestionMarkCircleIcon height={18} className='text-yellow-600' />
+          <></>
+          // <Q height={18} className='text-yellow-600' />
         )}
       </div>
       <h3 className='text-md mt-6 font-medium leading-6 text-gray-900'>

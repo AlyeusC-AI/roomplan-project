@@ -1,7 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env"],
-  "pipeline": {
+  "tasks": {
     "dev:generate": {
       "inputs": ["prisma/schema.prisma"],
       "cache": false
@@ -45,14 +45,5 @@
     "//#clean": {
       "cache": false
     }
-  },
-  "globalEnv": [
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "SUPABASE_SERVICE_ROLE_JWT",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    "DATABASE_URL",
-    "VERCEL_URL",
-    "NODE_ENV",
-    "PORT"
-  ]
+  }
 }

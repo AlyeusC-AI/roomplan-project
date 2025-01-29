@@ -2,13 +2,15 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { AuthLayout } from "@components/layouts/auth-layout";
-import { TextField, LogoTextBlue, PrimaryButton } from "@components/components";
-import Spinner from "@components/Spinner";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import queryString from "query-string";
 import { createClient } from "@lib/supabase/client";
 import { AuthError } from "@supabase/supabase-js";
+import { LogoTextBlue } from "@components/components";
+import { Button } from "@components/ui/button";
+import { Input } from "@components/ui/input";
+import { LoadingSpinner } from "@components/ui/spinner";
 
 export default function UpdatePassword() {
   const [loading, setLoading] = useState(false);
@@ -21,7 +23,7 @@ export default function UpdatePassword() {
   const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    supabase.auth.onAuthStateChange(async (event) => {
       console.log(event);
       if (event == "PASSWORD_RECOVERY") {
         // const newPassword = prompt("What would you like your new password to be?");
@@ -31,17 +33,16 @@ export default function UpdatePassword() {
         // if (error) alert("There was an error updating your password.")
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePasswordReset = async (e: FormEvent) => {
     e.preventDefault();
-    // @ts-expect-error
+    // @ts-expect-error i dont even know this was here before
     if (!e.target.password || !e.target.confirmPassword) {
       setError("Invalid form state. Please refresh the page.");
       return;
     }
-    // @ts-expect-error
+    // @ts-expect-error i dont even know this was here before
     if (e.target.password.value !== e.target.confirmPassword.value) {
       setError("Passwords do not match.");
       return;
@@ -52,8 +53,8 @@ export default function UpdatePassword() {
         access_token: accessToken,
         refresh_token: refreshToken,
       });
-      const { data, error } = await supabase.auth.updateUser({
-        // @ts-expect-error
+      const { error } = await supabase.auth.updateUser({
+        // @ts-expect-error i dont even know this was here before
         password: e.target.password.value,
       });
       if (error) throw error;
@@ -111,16 +112,14 @@ export default function UpdatePassword() {
         className='mt-10 grid grid-cols-1 gap-y-8'
         onSubmit={handlePasswordReset}
       >
-        <TextField
-          label='Password'
+        <Input
           id='password'
           name='Password'
           type='password'
           autoComplete='password'
           required
         />
-        <TextField
-          label='Confirm Password'
+        <Input
           id='confirmPassword'
           name='confirm-password'
           type='password'
@@ -128,15 +127,20 @@ export default function UpdatePassword() {
           required
         />
         <div>
-          <PrimaryButton type='submit' color='blue' className='w-full'>
+          <Button
+            type='submit'
+            disabled={loading}
+            color='blue'
+            className='w-full'
+          >
             {loading ? (
-              <Spinner fill='fill-white' bg='text-black' />
+              <LoadingSpinner />
             ) : (
               <span>
                 Reset Password <span aria-hidden='true'>&rarr;</span>
               </span>
             )}
-          </PrimaryButton>
+          </Button>
         </div>
       </form>
       {error && (

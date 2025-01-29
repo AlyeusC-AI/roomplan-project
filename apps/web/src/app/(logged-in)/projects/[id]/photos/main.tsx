@@ -2,26 +2,17 @@
 
 import FirstTimePhotos from "@components/onboarding/FirstTimePhotos";
 import Mitigation from "@components/Project/Mitigation";
-import { GroupByViews, PhotoViews } from "@servicegeek/db";
 import { trpc } from "@utils/trpc";
 
-interface EstimatePageProps {
-  initialPhotoView: PhotoViews;
-  initialGroupView: GroupByViews;
-}
-
-const EstimatePage = ({
-  initialPhotoView,
-  initialGroupView,
-}: EstimatePageProps) => {
+const EstimatePage = () => {
   trpc.photoView.getPhotoView.useQuery(undefined, {
-    initialData: { photoView: initialPhotoView },
+    initialData: { photoView: "photoListView" },
   });
   return (
     <>
       <Mitigation
-        initialGroupView={initialGroupView}
-        initialPhotoView={initialPhotoView}
+        initialGroupView={"roomView"}
+        initialPhotoView={"photoListView"}
       />
       <FirstTimePhotos />
     </>

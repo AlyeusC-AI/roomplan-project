@@ -1,3 +1,5 @@
+"use client";
+
 import { ScaleLoader } from "react-spinners";
 import dynamic from "next/dynamic";
 
@@ -10,6 +12,6 @@ const ResponsiveWrapper = dynamic(() => import("./ResponsiveWrapper"), {
   ),
 });
 
-export default function Roofing({ accessToken }: { accessToken: string }) {
-  return <ResponsiveWrapper accessToken={accessToken} />;
+export default function Roofing() {
+  return <ResponsiveWrapper />;
 }

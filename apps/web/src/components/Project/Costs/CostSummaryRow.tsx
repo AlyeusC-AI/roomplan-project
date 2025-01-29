@@ -1,12 +1,11 @@
 import { useMemo } from "react";
-import { CostDataType } from "@atoms/costs";
 
 const formatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
 });
 
-const CostSummaryRow = ({ costs }: { costs: CostDataType[] }) => {
+const CostSummaryRow = ({ costs }: { costs: Cost[] }) => {
   const totalEstimate = useMemo(
     () => costs.reduce((p, c) => (c.estimatedCost || 0) + p, 0),
     [costs]

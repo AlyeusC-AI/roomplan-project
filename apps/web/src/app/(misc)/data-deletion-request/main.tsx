@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { Footer } from "@components/layouts/footer";
-import { Alert, PrimaryButton } from "@components/components";
-import { EnvelopeIcon } from "@heroicons/react/24/outline";
+import { Mail } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@components/ui/button";
 
 export default function DataDeletionRequest() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setIsLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +55,10 @@ export default function DataDeletionRequest() {
     } catch (error) {
       console.error("Could not save request", error);
     }
-    setSuccess(true);
+    toast.success("Data deletion request submitted", {
+      description:
+        "Your request has been submitted. It may take up to 30 days to fully remove all data from our servers. Once we've begun processing your request, you will receive an email.",
+    });
     setIsLoading(false);
   };
 
@@ -90,7 +93,7 @@ export default function DataDeletionRequest() {
                   <div className='mt-3'>
                     <dt className='sr-only'>Email</dt>
                     <dd className='flex'>
-                      <EnvelopeIcon
+                      <Mail
                         className='size-6 shrink-0 text-gray-400'
                         aria-hidden='true'
                       />
@@ -102,7 +105,7 @@ export default function DataDeletionRequest() {
             </div>
             <div className='bg-white px-4 py-16 sm:px-6 lg:col-span-3 lg:px-8 lg:py-24 xl:pl-12'>
               <div className='mx-auto max-w-lg lg:max-w-none'>
-                {success && (
+                {/* {success && (
                   <Alert title='Data Deletion Request Submitted' type='success'>
                     <div>
                       <p>
@@ -119,7 +122,7 @@ export default function DataDeletionRequest() {
                       </p>
                     </div>
                   </Alert>
-                )}
+                )} */}
                 <form onSubmit={onSubmit} className='grid grid-cols-1 gap-y-6'>
                   <div>
                     <label htmlFor='full-name' className='sr-only'>
@@ -152,13 +155,9 @@ export default function DataDeletionRequest() {
                     />
                   </div>
                   <div>
-                    <PrimaryButton
-                      type='submit'
-                      loading={loading}
-                      disabled={success || loading}
-                    >
+                    <Button type='submit' disabled={loading}>
                       Submit
-                    </PrimaryButton>
+                    </Button>
                   </div>
                 </form>
               </div>

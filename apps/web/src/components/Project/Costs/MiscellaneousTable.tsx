@@ -6,12 +6,13 @@ import { useParams } from "next/navigation";
 import { costsStore } from "@atoms/costs";
 
 import CostTable from "./CostTable";
+import { projectStore } from "@atoms/project";
 
 export default function MiscellaneousTable() {
   const costs = costsStore((state) => state.miscellaneousCosts);
   const [isCreating, setIsCreating] = useState(false);
   const { id } = useParams<{ id: string }>();
-
+  const { project } = projectStore((state) => state);
   const createCost = async () => {
     setIsCreating(true);
     try {
@@ -23,12 +24,20 @@ export default function MiscellaneousTable() {
       });
       if (res.ok) {
         const json = await res.json();
-        costsStore
-          .getState()
-          .addCost(
-            { id: json.cost.id, name: "", estimatedCost: 0, actualCost: 0 },
-            "miscellaneous"
-          );
+        costsStore.getState().addCost(
+          {
+            id: json.cost.id,
+            name: "",
+            estimatedCost: 0,
+            actualCost: 0,
+            createdAt: new Date().toISOString(),
+            type: "miscellaneous",
+            isDeleted: false,
+            projectId: project?.id ?? 0,
+            updatedAt: new Date().toISOString(),
+          },
+          "miscellaneous"
+        );
       }
     } catch (error) {
       console.error(error);
@@ -41,7 +50,7 @@ export default function MiscellaneousTable() {
       actualName='Actual Cost'
       createCost={createCost}
       costs={costs}
-      removeCost={(id: string) =>
+      removeCost={(id: number) =>
         costsStore.getState().removeCost(id, "miscellaneous")
       }
       updateCost={(id, costs) =>

@@ -1,30 +1,27 @@
+"use client";
+
 import { useState } from "react";
-import { TertiaryButton } from "@components/components/button";
 import Typeography from "@components/DesignSystem/Typeography";
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { RoomData } from "@servicegeek/db/queries/project/getProjectDetections";
 
 import SecureImage from "./SecureImage";
+import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { Button } from "@components/ui/button";
 
 const SecureRoomImages = ({ roomData }: { roomData: RoomData }) => {
   const [isOpen, setIsOpen] = useState(false);
-
-  const toggleRow: React.MouseEventHandler<HTMLButtonElement> = (e) => {
-    setIsOpen((o) => !o);
-  };
 
   return (
     <div>
       <div>
         <div className='flex flex-row items-center'>
-          <TertiaryButton onClick={toggleRow} className='mr-2'>
+          <Button onClick={() => setIsOpen(!isOpen)} className='mr-2'>
             {isOpen ? (
-              // eslint-disable-next-line react/jsx-no-undef
               <ChevronDownIcon className='size-6 text-gray-800' />
             ) : (
               <ChevronUpIcon className='size-6 text-gray-800' />
             )}
-          </TertiaryButton>
+          </Button>
           <h3 className='py-4 text-2xl font-semibold'>{roomData.name}</h3>
         </div>
         {isOpen && (

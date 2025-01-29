@@ -1,8 +1,8 @@
 import { Dispatch, SetStateAction } from "react";
 import Modal from "@components/DesignSystem/Modal";
 import { Dialog } from "@headlessui/react";
-import { ExclamationCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/router";
+import { CircleAlert, X } from "lucide-react";
 
 const ConfirmAccountDeletion = ({
   open,
@@ -33,15 +33,12 @@ const ConfirmAccountDeletion = ({
               onClick={() => setOpen(false)}
             >
               <span className='sr-only'>Close</span>
-              <XMarkIcon className='size-6' aria-hidden='true' />
+              <X className='size-6' aria-hidden='true' />
             </button>
           </div>
           <div className='sm:flex sm:items-start'>
             <div className='mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:size-10'>
-              <ExclamationCircleIcon
-                className='size-6 text-red-600'
-                aria-hidden='true'
-              />
+              <CircleAlert className='size-6 text-red-600' aria-hidden='true' />
             </div>
             <div className='mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left'>
               <Dialog.Title

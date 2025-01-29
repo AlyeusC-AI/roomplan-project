@@ -85,18 +85,15 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
         });
       }
 
-      const json = await res.json();
-      teamMembersStore.getState().addTeamMember({
-        isAdmin: false,
-        accessLevel: "viewer",
-        user: {
-          id: json.userId,
-          email,
-          firstName: "",
-          lastName: "",
-          phone: "",
-        },
-      });
+      // teamMembersStore.getState().addTeamMember({
+      //   isAdmin: false,
+      //   accessLevel: "viewer",
+      //   User: {
+      //     email,
+      //     firstName: "",
+      //     lastName: "",
+      //   },
+      // });
 
       toast.success("Invite sent successfully", {
         description: `An invitation was sent to ${email}.`,
@@ -237,20 +234,20 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
               {filteredTeamMembers?.map((member) => {
                 return (
                   <li
-                    key={member.user.email}
+                    key={member.User?.email ?? ""}
                     className='flex flex-col items-start justify-between space-y-6 py-4 pr-4 md:flex-row md:space-y-0'
                   >
                     <div className='flex'>
                       <div className='flex items-center justify-center'>
                         <UserAvatar
-                          email={member.user?.email}
-                          userId={member.user.id}
-                          firstName={member.user.firstName || ""}
-                          lastName={member.user.lastName || ""}
+                          email={member.User?.email}
+                          userId={member.userId}
+                          firstName={member.User?.firstName || ""}
+                          lastName={member.User?.lastName || ""}
                         />
                         <div className='ml-4 flex flex-col'>
                           <span className='text-sm font-medium text-gray-900'>
-                            {member.user.email}
+                            {member.User?.email}
                           </span>
                           <span className='text-sm text-gray-500'>
                             {member.isAdmin ? "Account Administrator" : ""}
@@ -261,8 +258,8 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
                     <div className='flex items-center justify-center md:space-x-4'>
                       <RoleSelection member={member} />
                       <RemoveTeamMember
-                        id={member.user.id}
-                        email={member.user.email}
+                        id={member.userId}
+                        email={member.User?.email ?? ""}
                         removeTeamMember={
                           teamMembersStore.getState().removeTeamMember
                         }

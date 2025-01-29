@@ -28,12 +28,8 @@ export async function POST(
 
   try {
     const room = await createRoom(user.id, id, body.room);
-    // @ts-expect-error
-    if (room.failed) {
-      return NextResponse.json({ status: "failed" }, { status: 500 });
-    }
+
     return NextResponse.json(
-      // @ts-expect-error
       { status: "ok", publicId: room.publicId },
       { status: 200 }
     );
@@ -106,7 +102,7 @@ export async function DELETE(
 
   try {
     const result = await deleteRoom(user.id, id, body.roomId);
-    // @ts-expect-error
+    // @ts-expect-error ddd
     if (result?.failed) {
       console.log(result);
       return NextResponse.json({ status: "failed" }, { status: 500 });

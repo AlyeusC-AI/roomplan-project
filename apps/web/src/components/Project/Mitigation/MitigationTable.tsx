@@ -38,7 +38,7 @@ export default function MitigationTable({
   const { rooms, onlySelected, sortDirection } = useFilterParams();
 
   const groupView = trpc.groupView.getGroupView.useQuery(undefined, {
-    initialData: initialGroupView,
+    initialData: { groupView: initialGroupView },
   });
 
   const query = trpc.inferences.getAll.useQuery(
@@ -49,7 +49,7 @@ export default function MitigationTable({
       sortDirection,
     },
     {
-      initialData: [],
+      initialData: { rooms: [] },
       onSuccess: (data: any) => {
         inferencesStore.getState().setInferences(data?.rooms || []);
       },

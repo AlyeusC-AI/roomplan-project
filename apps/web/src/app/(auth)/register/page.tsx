@@ -1,7 +1,6 @@
 import { Metadata } from "next";
-import Register from "./main";
-import { verifyUserLoggedOut } from "@lib/server-side-fetching/verify-user-logged-out";
 import { RegisterForm } from "@components/auth/register-form";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Sign Up",
@@ -9,5 +8,9 @@ export const metadata: Metadata = {
 
 export default async function Component() {
   // await verifyUserLoggedOut()
-  return <RegisterForm />;
+  return (
+    <Suspense>
+      <RegisterForm />
+    </Suspense>
+  );
 }

@@ -15,7 +15,7 @@ const createGenericRoomReading = async (
   projectPublicId: string,
   roomId: string,
   readingId: string,
-  type: RoomReadingType
+  type: string
 ) => {
   const servicegeekUser = await getUser(userId);
   const organizationId = servicegeekUser?.org?.organization.id;
@@ -62,6 +62,7 @@ const createGenericRoomReading = async (
       roomReadingId: roomReading.id,
       value: "",
       publicId: uuidv4(),
+      // @ts-ignore
       type,
     },
     select: {

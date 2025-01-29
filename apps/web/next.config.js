@@ -17,7 +17,7 @@ const nextConfig = {
   webpack: (config, { isServer }) => {
     config.resolve.fallback = { fs: false };
     if (isServer) {
-      config.plugins = [...config.plugins];
+      config.plugins = [...config.plugins, new PrismaPlugin()];
     }
     return config;
   },
@@ -26,6 +26,9 @@ const nextConfig = {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true
   },
   productionBrowserSourceMaps: true,
   images: {

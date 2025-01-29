@@ -16,14 +16,14 @@ export default function CostTable({
   estimateName,
   actualName,
 }: {
-  costs: CostData[];
-  updateCost: (id: string, costs: Omit<CostData, "id">) => void;
-  removeCost: (id: string) => void;
+  costs: Cost[];
+  updateCost: (id: number, costs: Omit<Cost, "id">) => void;
+  removeCost: (id: number) => void;
   name: string;
   buttonText: string;
   createCost: () => void;
   isCreating: boolean;
-  costType: CostDataType;
+  costType: CostType;
   estimateName: string;
   actualName: string;
 }) {

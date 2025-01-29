@@ -1,23 +1,29 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import Webcam from "react-webcam";
-import { PrimaryButton } from "@components/components/button";
-import { TertiaryButton } from "@components/components/button";
-import Spinner from "@components/Spinner";
-import { CameraIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
+import { Button } from "@components/ui/button";
+import { CameraIcon } from "lucide-react";
+import { LoadingSpinner } from "@components/ui/spinner";
 
 const videoConstraints = {
   facingMode: { exact: "environment" },
   //   facingMode: 'user', // Desktop Testing
 };
 
+interface ScreenshotDimensions {
+  width: number;
+  height: number;
+}
+
 const Toolbar = ({
   getScreenshot,
   isMobile,
   ref,
 }: {
-  getScreenshot: (screenshotDimensions?: any) => string | null;
+  getScreenshot: (screenshotDimensions?: ScreenshotDimensions) => string | null;
   isMobile: boolean;
   ref: React.RefObject<Webcam>;
 }) => {
@@ -26,6 +32,7 @@ const Toolbar = ({
   const [animating, setIsAnimating] = useState(false);
   const [imgSrc, setImgSrc] = useState("");
   const [flashOn, setFlashOn] = useState(false);
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
   const processImage = (url: string) => {
@@ -36,7 +43,7 @@ const Toolbar = ({
         const file = new File([blob], "File name", { type: "image/png" });
         const body = new FormData();
         body.append("file", file);
-        return fetch(`/api/resize?id=${router.query.id}`, {
+        return fetch(`/api/resize?id=${id}`, {
           method: "POST",
           body,
         });
@@ -60,7 +67,7 @@ const Toolbar = ({
 
   const toggleFlash = () => {
     setFlashOn((prevState) => !prevState);
-    // @ts-ignore
+    // @ts-expect-error this was working apparently
     ref.current?.video?.setVideoConstraints({
       ...videoConstraints,
       torch: !flashOn,
@@ -69,18 +76,17 @@ const Toolbar = ({
 
   useEffect(() => {
     if (isClosing && processingImagesCount <= 0) {
-      router.push(`/projects/${router.query.id}/mitigation`);
+      router.push(`/projects/${id}/mitigation`);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [processingImagesCount, isClosing]);
 
   return (
     <>
       {isClosing && (
-        <div className='absolute left-0 top-0 flex size-full flex-col items-center justify-center bg-black bg-opacity-80 text-white'>
+        <div className='absolute left-0 top-0 flex size-full flex-col items-center justify-center bg-black/80 text-white'>
           <div className='flex'>
             <h2 className='mr-4 text-xl font-bold'> Uploading Images</h2>
-            <Spinner />
+            <LoadingSpinner />
           </div>
           <div className='flex'>
             <h2 className='mr-4 text-lg'>
@@ -91,7 +97,7 @@ const Toolbar = ({
       )}
       <div
         className={clsx(
-          "fixed bottom-0 z-10 grid w-full grid-cols-5 bg-black bg-opacity-80 p-4",
+          "fixed bottom-0 z-10 grid w-full grid-cols-5 bg-black/80 p-4",
           isClosing && "opacity-50"
         )}
       >
@@ -112,32 +118,32 @@ const Toolbar = ({
           </div>
         </div>
         <div className='col-span-3 flex items-center justify-center'>
-          <PrimaryButton
+          <Button
             className='size-20 rounded-full p-4 shadow-lg sm:w-20'
             onClick={() => onClick()}
             disabled={isClosing}
           >
             <CameraIcon className='h-12' />
-          </PrimaryButton>
+          </Button>
         </div>
         <div className='col-span-1 flex items-center justify-center'>
           {isMobile && (
-            <TertiaryButton
+            <Button
               className='!text-white'
               onClick={() => toggleFlash()}
               disabled={isClosing}
             >
               {flashOn ? "Flash On" : "Flash Off"}
-            </TertiaryButton>
+            </Button>
           )}
         </div>
-        <TertiaryButton
+        <Button
           className='col-span-1 !text-white'
           onClick={() => closeCamera()}
           disabled={isClosing}
         >
           Close
-        </TertiaryButton>
+        </Button>
       </div>
     </>
   );
@@ -158,7 +164,6 @@ const Camera = () => {
 
   return (
     <div className='absolute inset-y-0 left-0 size-full overflow-hidden bg-black'>
-      {/* @ts-ignore */}
       <Webcam
         audio={false}
         screenshotFormat='image/png'
@@ -167,7 +172,7 @@ const Camera = () => {
         screenshotQuality={0.8}
         ref={webcamRef}
       >
-        {/* @ts-expect-error */}
+        {/* @ts-expect-error This is the docs */}
         {({ getScreenshot }) => (
           <Toolbar
             getScreenshot={getScreenshot}

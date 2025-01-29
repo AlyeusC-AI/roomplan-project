@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   try {
     const org = await createOrg(user.id, body.orgName, body.orgSize, body.role);
     try {
-      const supportUser = `support+${org.org?.organization.publicId}@servicegeek.app`;
+      const supportUser = `support+${org.email}@servicegeek.app`;
       const invitation = await createInvitation(user.id, supportUser);
       await supabaseServiceRole.auth.admin.inviteUserByEmail(supportUser, {
         data: {

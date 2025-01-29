@@ -29,18 +29,18 @@ const SecureView = ({ noAccess }: { noAccess: boolean }) => {
         </div>
         <div className='col-span-1 bg-gray-100 p-3'>Client Name </div>
         <div className='col-span-1 bg-gray-100 p-3'>
-          {projectInfo.clientName}
+          {projectInfo?.clientName ?? ""}
         </div>
         <div className='col-span-1 p-3'>Client Address </div>
         <div className='col-span-1 p-3'>
-          <Address address={projectInfo.location} />
+          <Address address={projectInfo?.location ?? ""} />
         </div>
         <div className='col-span-1 bg-gray-100 p-3'>Adjuster Name </div>
         <div className='col-span-1 bg-gray-100 p-3'>
-          {projectInfo.adjusterName}
+          {projectInfo?.adjusterName ?? ""}
         </div>
         <div className='col-span-1 p-3'>Adjuster Email </div>
-        <div className='col-span-1 p-3'>{projectInfo.adjusterEmail}</div>
+        <div className='col-span-1 p-3'>{projectInfo?.adjusterEmail ?? ""}</div>
       </div>
       <h2 className='my-6 text-3xl'>Rooms</h2>
       {inferences?.map((roomData) => (

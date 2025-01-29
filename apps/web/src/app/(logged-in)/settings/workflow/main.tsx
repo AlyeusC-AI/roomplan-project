@@ -18,7 +18,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { Card, PrimaryButton } from "@components/components";
+import { PrimaryButton } from "@components/components";
 import { BadgeInfo } from "lucide-react";
 import WorkflowStatus from "./components/status";
 import { useState } from "react";
@@ -85,7 +85,7 @@ export default function WorkflowPage() {
         if (ctx?.prevData)
           utils.projectStatus.getAllProjectStatuses.setData({}, ctx.prevData);
       },
-      onSettled(result) {
+      onSettled() {
         utils.projectStatus.getAllProjectStatuses.invalidate();
       },
     }
@@ -117,7 +117,7 @@ export default function WorkflowPage() {
       if (ctx?.prevData)
         utils.projectStatus.getAllProjectStatuses.setData({}, ctx.prevData);
     },
-    onSettled(result) {
+    onSettled() {
       utils.projectStatus.getAllProjectStatuses.invalidate();
     },
   });
@@ -154,7 +154,7 @@ export default function WorkflowPage() {
 
   const allLabels = allStatuses.data?.statuses || [];
 
-  const form = useForm<NewEquipmentValues>({
+  const form = useForm<z.infer<typeof workflowSchema>>({
     resolver: zodResolver(workflowSchema),
     mode: "onChange",
   });

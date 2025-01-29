@@ -76,7 +76,7 @@ const DownloadAllRoomImages = () => {
       .then(function (content: string | Blob) {
         saveAs(
           content,
-          `${projectInfo.clientName.split(" ").join("_")}_photos.zip`
+          `${projectInfo?.clientName.split(" ").join("_")}_photos.zip`
         );
         setIsDownloading(false);
       })

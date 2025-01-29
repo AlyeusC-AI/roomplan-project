@@ -6,11 +6,13 @@ import { useParams } from "next/navigation";
 import { costsStore } from "@atoms/costs";
 
 import CostTable from "./CostTable";
+import { projectStore } from "@atoms/project";
 
 export default function MaterialsTable() {
   const costs = costsStore((state) => state.materialsCosts);
   const [isCreating, setIsCreating] = useState(false);
   const { id } = useParams<{ id: string }>();
+  const { project } = projectStore((state) => state);
 
   const createCost = async () => {
     setIsCreating(true);
@@ -23,12 +25,20 @@ export default function MaterialsTable() {
       });
       if (res.ok) {
         const json = await res.json();
-        costsStore
-          .getState()
-          .addCost(
-            { id: json.cost.id, name: "", estimatedCost: 0, actualCost: 0 },
-            "materials"
-          );
+        costsStore.getState().addCost(
+          {
+            id: json.cost.id,
+            name: "",
+            estimatedCost: 0,
+            actualCost: 0,
+            createdAt: new Date().toISOString(),
+            type: "materials",
+            isDeleted: false,
+            projectId: project?.id ?? 0,
+            updatedAt: new Date().toISOString(),
+          },
+          "materials"
+        );
       }
     } catch (error) {
       console.error(error);
@@ -45,7 +55,7 @@ export default function MaterialsTable() {
       updateCost={(id, costs) =>
         costsStore.getState().updateCost(id, costs, "materials")
       }
-      removeCost={(id: string) =>
+      removeCost={(id: number) =>
         costsStore.getState().removeCost(id, "materials")
       }
       name='Material'

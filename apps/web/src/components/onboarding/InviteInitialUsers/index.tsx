@@ -40,7 +40,7 @@ export default function InviteInitialUsers() {
         <div>
           <h1 className='text-3xl sm:max-w-md'>Welcome to Service Geek,</h1>
           <h1 className='text-3xl sm:max-w-md'>
-            <span className='font-bold'>{orgInfo.name}</span>!
+            <span className='font-bold'>{orgInfo?.name}</span>!
           </h1>
           <h2 className='my-4 text-xl font-medium leading-6 text-gray-900 sm:max-w-md'>
             We&apos;re happy you&apos;re here.
@@ -58,8 +58,7 @@ export default function InviteInitialUsers() {
           Add members to your organization. They will recieve an invitation
           email allowing them to access the projects within this organization.
         </p>
-        <OrgMembersSection
-          hideEmptyState
+        {/* <OrgMembersSection
           hideDescription
           useSecondaryButton={teamMembers.length > 0}
           noPadding
@@ -75,7 +74,7 @@ export default function InviteInitialUsers() {
               Invited Teammates
             </h3>
           </div>
-        </OrgMembersSection>
+        </OrgMembersSection> */}
         <div>
           {teamMembers.length === 1 && (
             <TertiaryButton noPadding className='!p-0' onClick={onContinue}>

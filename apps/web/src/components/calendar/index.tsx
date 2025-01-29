@@ -81,7 +81,11 @@ const calendarEventSchema = z.object({
 
 type CreateEventValues = z.infer<typeof calendarEventSchema>;
 
-export default function CalendarComponent() {
+export default function CalendarComponent({
+  events,
+}: {
+  events: CalendarEvent[];
+}) {
   const form = useForm<CreateEventValues>({
     resolver: zodResolver(calendarEventSchema),
     mode: "onChange",
@@ -89,6 +93,34 @@ export default function CalendarComponent() {
 
   const [createPopover, setCreatePopover] = useState(false);
   const [showProjectsModal, setShowProjectsModal] = useState(false);
+
+  function getEventStatus(eventDate: Date): { status: string; color: string } {
+    const now = new Date();
+    const timeDifference = eventDate.getTime() - now.getTime();
+    const daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+
+    let status: string;
+    let color: string;
+
+    if (daysDifference > 30) {
+      status = "Future";
+      color = "blue";
+    } else if (daysDifference > 7) {
+      status = "Upcoming";
+      color = "green";
+    } else if (daysDifference > 0) {
+      status = "Soon";
+      color = "orange";
+    } else if (daysDifference === 0) {
+      status = "Today";
+      color = "red";
+    } else {
+      status = "Past";
+      color = "gray";
+    }
+
+    return { status, color };
+  }
 
   function onSubmit(data: CreateEventValues) {
     toast("You submitted the following values:", {
@@ -314,7 +346,7 @@ export default function CalendarComponent() {
                         <div className='grid gap-1.5 leading-none'>
                           <label
                             htmlFor='terms1'
-                            className='font-regular text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+                            className='text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
                           >
                             Remind Project Owners
                           </label>
@@ -335,7 +367,7 @@ export default function CalendarComponent() {
                         <div className='grid gap-1.5 leading-none'>
                           <label
                             htmlFor='terms1'
-                            className='font-regular text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+                            className='text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
                           >
                             Remind Client
                           </label>
@@ -378,12 +410,31 @@ export default function CalendarComponent() {
             <CalendarDate>
               <CalendarDatePicker>
                 <CalendarMonthPicker />
-                <CalendarYearPicker start={earliestYear} end={latestYear} />
+                <CalendarYearPicker
+                  start={new Date().getFullYear()}
+                  end={new Date().getFullYear() + 1}
+                />
               </CalendarDatePicker>
               <CalendarDatePagination />
             </CalendarDate>
             <CalendarHeader />
-            <CalendarBody features={exampleFeatures}>
+            <CalendarBody
+              features={events.map((event) => {
+                const date = new Date(event.date);
+                const status = getEventStatus(date);
+                return {
+                  id: event.publicId,
+                  name: event.subject,
+                  startAt: date,
+                  endAt: date,
+                  status: {
+                    id: status.status,
+                    name: status.status,
+                    color: status.color,
+                  },
+                };
+              })}
+            >
               {({ feature }) => (
                 <CalendarItem key={feature.id} feature={feature} />
               )}

@@ -6,12 +6,15 @@ import { useParams } from "next/navigation";
 import { costsStore } from "@atoms/costs";
 
 import CostTable from "./CostTable";
+import { projectStore } from "@atoms/project";
 
 export default function SubcontractorTable() {
   const costs = costsStore((state) => state.subcontractorCosts);
 
   const [isCreating, setIsCreating] = useState(false);
   const { id } = useParams<{ id: string }>();
+  const { project } = projectStore((state) => state);
+
   const createCost = async () => {
     setIsCreating(true);
     try {
@@ -29,6 +32,11 @@ export default function SubcontractorTable() {
             name: "",
             estimatedCost: 0,
             actualCost: 0,
+            createdAt: new Date().toISOString(),
+            type: "subcontractor",
+            isDeleted: false,
+            projectId: project?.id ?? 0,
+            updatedAt: new Date().toISOString(),
           },
           "subcontractor"
         );

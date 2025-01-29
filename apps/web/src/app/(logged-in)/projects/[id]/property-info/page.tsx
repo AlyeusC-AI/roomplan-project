@@ -1,20 +1,15 @@
-"use client";
+import PropertyInfo from "@components/Project/PropertyInfo";
 
-import Readings from "@components/Project/Readings";
-import { trpc } from "@utils/trpc";
-import { useParams } from "next/navigation";
-
-const MitigationPage = () => {
-  const { id } = useParams<{ id: string }>();
-  trpc.readings.getAll.useQuery({ projectPublicId: id }, { initialData: [] });
-  return <Readings />;
+const PropertyInfoPage = () => {
+  return <PropertyInfo />;
 };
 
-export default MitigationPage;
+export default PropertyInfoPage;
 
 // export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 //   try {
-//     const { user, orgAccessLevel } = await getUserWithAuthStatus(ctx);
+//     const { user, orgAccessLevel, accessToken } =
+//       await getUserWithAuthStatus(ctx);
 
 //     if (!user) {
 //       return {
@@ -52,19 +47,16 @@ export default MitigationPage;
 //       };
 //     }
 
-//     const roomList = await getRoomList(ctx.query.id, orgId);
-//     const rooms = roomList?.rooms || [];
 //     const subscriptionStatus = await getSubcriptionStatus(user.id);
-//     const roomReadings = (await getRoomReadings(user.id, ctx.query.id)) || [];
+//     const propertyData = await getPropertyData(project.id);
 
 //     return {
 //       props: {
-//         rooms,
 //         userInfo: getUserInfo(user),
-//         subscriptionStatus,
-//         roomReadings: superjson.serialize(roomReadings).json,
-//         orgInfo: getOrgInfo(user),
 //         projectInfo: getProjectInfo(project),
+//         propertyDataInfo: getPropertyDataInfo(propertyData),
+//         subscriptionStatus,
+//         orgInfo: getOrgInfo(user),
 //       },
 //     };
 //   } catch (e) {

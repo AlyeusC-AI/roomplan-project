@@ -21,8 +21,7 @@ export async function PATCH(
 
   try {
     const result = await setProjectStatus(user.id, id, body.status);
-    if (result?.failed) {
-      console.log(result);
+    if (result === null) {
       return NextResponse.json({ status: "failed" }, { status: 500 });
     }
     return NextResponse.json({ status: "ok", result }, { status: 200 });
@@ -74,7 +73,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 }
 
-export async function DELETE(req: NextRequest): Promise<NextResponse | never> {
+export async function DELETE(req: NextRequest) {
   let redirectPath = null;
   try {
     const supabase = await createClient();

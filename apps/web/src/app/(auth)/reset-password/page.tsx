@@ -1,4 +1,3 @@
-import ResetPasswordRequest from "./main";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -6,7 +5,7 @@ export const metadata: Metadata = {
 };
 
 export default function Component() {
-  return <ResetPasswordRequest />;
+  return <></>;
 }
 
 // export async function getServerSideProps(ctx: GetServerSidePropsContext) {

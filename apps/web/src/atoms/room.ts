@@ -31,10 +31,15 @@ interface Actions {
   updateAllRooms: (rooms: RoomDataWithoutInferences[]) => void;
   updateAreasAffected: (
     roomPublicId: string,
-    areasAffected: AffectedAreaData,
-    type: AreaAffectedType
+    areasAffected: object,
+    type: string
   ) => void;
   updateRoom: (roomId: string, data: DimensionData) => void;
+}
+
+interface DimensionData {
+  width: number;
+  height: number;
 }
 
 export const roomStore = create<State & Actions>((set) => ({
@@ -111,14 +116,16 @@ export const roomStore = create<State & Actions>((set) => ({
   updateAllRooms: (rooms: RoomDataWithoutInferences[]) => set({ rooms }),
   updateAreasAffected: (
     roomPublicId: string,
-    areasAffected: AffectedAreaData,
-    type: AreaAffectedType
+    areasAffected: object,
+    type: string
   ) =>
     set(
       produce((draft) => {
-        const roomIndex = draft.findIndex((r) => r.publicId === roomPublicId);
+        const roomIndex = draft.findIndex(
+          (r: any) => r.publicId === roomPublicId
+        );
         const affectedAreaIndex = draft[roomIndex].areasAffected.findIndex(
-          (t) => t.type === type
+          (t: any) => t.type === type
         );
         if (affectedAreaIndex === -1) {
           draft[roomIndex].areasAffected.push({
@@ -139,7 +146,7 @@ export const roomStore = create<State & Actions>((set) => ({
   updateRoom: (roomId: string, data: DimensionData) =>
     set(
       produce((draft) => {
-        const roomIndex = draft.findIndex((r) => r.publicId === roomId);
+        const roomIndex = draft.findIndex((r: any) => r.publicId === roomId);
         draft[roomIndex] = { ...draft[roomIndex], ...data };
         return draft;
       })
