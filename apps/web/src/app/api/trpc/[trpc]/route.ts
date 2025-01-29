@@ -1,3 +1,5 @@
+"use server";
+
 import { createClient } from "@lib/supabase/server";
 import { appRouter, createContext } from "@servicegeek/api";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
