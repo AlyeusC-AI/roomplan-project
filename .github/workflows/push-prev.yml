@@ -18,7 +18,10 @@ jobs:
         run: npm install --global pnpm@9.15.2
       - name: Go to web dir
         run: |
-          cd ./apps/web
+          cd ./packages/db
+          pnpm install --frozen-lockfile
+          pnpm prod:generate
+          cd ../../apps/web
           pnpm install --frozen-lockfile
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
