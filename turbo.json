@@ -3,15 +3,15 @@
   "globalDependencies": ["**/.env"],
   "tasks": {
     "dev:generate": {
-      "inputs": ["prisma/schema.prisma"],
+      "inputs": ["./packages/db/prisma/schema.prisma"],
       "cache": false
     },
     "dev:migrate": {
-      "inputs": ["prisma/schema.prisma"],
+      "inputs": ["./packages/db/prisma/schema.prisma"],
       "cache": false
     },
     "dev:push": {
-      "inputs": ["prisma/schema.prisma"],
+      "inputs": ["./packages/db/prisma/schema.prisma"],
       "cache": false
     },
     "dev": {
@@ -30,7 +30,7 @@
       "outputs": [".next/**", ".expo/**"]
     },
     "build:web": {
-      "dependsOn": ["^ci:generate", "build"],
+      "dependsOn": ["^ci:generate", "dev:generate", "build"],
       "outputs": [".next/**"]
     },
     "lint": {
