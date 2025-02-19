@@ -2,8 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "allowImportingTsExtensions": true,
-    "moduleResolution": "Bundler",
+    "moduleResolution": "node",
     "noEmit": true,
     "esModuleInterop": true,
     "strict": true,
@@ -35,7 +34,8 @@
     "skipLibCheck": true,
     "incremental": true,
     "resolveJsonModule": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
     "**/*.ts",

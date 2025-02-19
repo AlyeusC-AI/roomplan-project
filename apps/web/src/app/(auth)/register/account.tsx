@@ -288,13 +288,13 @@ export function AccountForm() {
             </div>
           </div>
           <div className='mt-3 flex items-center space-x-2'>
-            <Checkbox id='terms1' />
+            <Checkbox id='twillio1' />
             <div className='grid gap-1.5 leading-none'>
               <label
-                htmlFor='terms1'
+                htmlFor='twillio1'
                 className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
               >
-                Opt in to recieve messages from twillio
+                Opt in to receive text messages from RestoreGeek (Optional)
               </label>
             </div>
           </div>
