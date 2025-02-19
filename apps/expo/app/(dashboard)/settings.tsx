@@ -14,8 +14,8 @@ import {
 import * as StoreReview from "expo-store-review";
 import * as Application from "expo-application";
 import * as Linking from "expo-linking";
-import { userStore } from "@/utils/state/user";
-import { supabase } from "@/utils/supabase";
+import { userStore } from "@/lib/state/user";
+import { supabase } from "@/lib/supabase";
 import { getConstants } from "@/utils/constants";
 import RBSheet from "react-native-raw-bottom-sheet";
 import { router } from "expo-router";
@@ -86,18 +86,14 @@ export default function Settings() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f8f8" }}>
       <View style={styles.header}>
         <View style={styles.headerAction}>
-          <TouchableOpacity
-            onPress={() => router.dismiss()}>
-            <ArrowLeft
-              color="#000"
-              size={24} />
+          <TouchableOpacity onPress={() => router.dismiss()}>
+            <ArrowLeft color="#000" size={24} />
           </TouchableOpacity>
         </View>
         <Text numberOfLines={1} style={styles.headerTitle}>
           Settings
         </Text>
-        <View style={[styles.headerAction, { alignItems: 'flex-end' }]}>
-        </View>
+        <View style={[styles.headerAction, { alignItems: "flex-end" }]}></View>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -218,7 +214,7 @@ export default function Settings() {
             <View style={[styles.rowWrapper, styles.rowFirst]}>
               <TouchableOpacity
                 onPress={() =>
-                  Linking.openURL("mailto:support@servicegeek.app")
+                  Linking.openURL("mailto:support@restoregeek.app")
                 }
                 style={styles.row}
               >
@@ -233,7 +229,7 @@ export default function Settings() {
             <View style={styles.rowWrapper}>
               <TouchableOpacity
                 onPress={() =>
-                  Linking.openURL("mailto:support@servicegeek.app")
+                  Linking.openURL("mailto:support@restoregeek.app")
                 }
                 style={styles.row}
               >
@@ -260,7 +256,7 @@ export default function Settings() {
 
             <View style={styles.rowWrapper}>
               <TouchableOpacity
-                onPress={() => Linking.openURL("https://servicegeek.app/terms")}
+                onPress={() => Linking.openURL("https://restoregeek.app/terms")}
                 style={styles.row}
               >
                 <Text style={styles.rowLabel}>Terms of Service</Text>
@@ -273,7 +269,7 @@ export default function Settings() {
             <View style={[styles.rowWrapper, styles.rowLast]}>
               <TouchableOpacity
                 onPress={() =>
-                  Linking.openURL("https://servicegeek.app/privacy")
+                  Linking.openURL("https://restoregeek.app/privacy")
                 }
                 style={styles.row}
               >
@@ -354,9 +350,13 @@ export default function Settings() {
         <View style={styles.body}>
           <Text style={styles.bodyText}>
             Are you sure you want to
-            <Text style={{ fontWeight: "600" }}>{modalType === "delete" ? " delete your profile" : " log out"}</Text>?
-            {"\n"}
-            {modalType === "delete" ? "This action cannot be reversed." : "You will need to log back in."}
+            <Text style={{ fontWeight: "600" }}>
+              {modalType === "delete" ? " delete your profile" : " log out"}
+            </Text>
+            ?{"\n"}
+            {modalType === "delete"
+              ? "This action cannot be reversed."
+              : "You will need to log back in."}
           </Text>
           <TouchableOpacity
             onPress={() => {
@@ -365,7 +365,15 @@ export default function Settings() {
             disabled={loading}
           >
             <View style={styles.btn}>
-              <Text style={styles.btnText}>{loading ? <ActivityIndicator color="#fff" /> : modalType === "delete" ? "Delete anyway" : "Log Out"}</Text>
+              <Text style={styles.btnText}>
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : modalType === "delete" ? (
+                  "Delete anyway"
+                ) : (
+                  "Log Out"
+                )}
+              </Text>
             </View>
           </TouchableOpacity>
           <View style={styles.bodyGap} />
@@ -587,18 +595,7 @@ const styles = StyleSheet.create({
 });
 
 // import { supabase } from "@/utils/supabase";
-// import {
-//   Box,
-//   Heading,
-//   Button,
-//   Text,
-//   Spinner,
-//   Link,
-//   View,
-//   AlertDialog,
-// } from "native-base";
 // import React, { useState } from "react";
-// import { NativeStackScreenProps } from "@react-navigation/native-stack";
 // import { getConstants } from "@/utils/constants";
 
 // export default function SettingsScreen() {

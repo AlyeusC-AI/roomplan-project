@@ -3,7 +3,7 @@ import Image from "next/image";
 import { colorHash } from "@utils/color-hash";
 
 export const defaultAvatarClassSizes =
-  "h-8 w-8 min-h-[2rem] min-w-[2rem] sm:h-12 sm:w-12 sm:min-h-[3rem] sm:min-w-[3rem]";
+  "min-h-[2rem] min-w-[2rem] sm:h-12 sm:w-12 sm:min-h-[3rem] sm:min-w-[3rem]";
 const UserAvatar = ({
   userId,
   firstName,
@@ -56,11 +56,10 @@ const UserAvatar = ({
     >
       <Image
         src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profile-pictures/${userId}/avatar.png`}
-        className={`rounded-full text-gray-700`}
+        className={`size-5 rounded-full text-gray-700`}
         onError={() => setNoImage(true)}
         fill
         alt='user'
-        sizes='46px'
       />
     </div>
   );

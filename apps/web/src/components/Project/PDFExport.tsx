@@ -1,5 +1,4 @@
-/* eslint-disable jsx-a11y/alt-text */
-import React, { ReactNode } from "react";
+import React from "react";
 import {
   Document,
   Image,
@@ -9,9 +8,9 @@ import {
   View,
 } from "@react-pdf/renderer";
 const parser = require("parse-address");
-import { RoomData } from "@servicegeek/db/queries/project/getProjectDetections";
-import { OrgInfo } from "@lib/serverSidePropsUtils/getOrgInfo";
-import { ProjectInfo } from "@lib/serverSidePropsUtils/getProjectInfo";
+import { projectStore } from "@atoms/project";
+import { orgStore } from "@atoms/organization";
+import { roomStore } from "@atoms/room";
 
 // Create styles
 const styles = StyleSheet.create({
@@ -116,25 +115,19 @@ const styles = StyleSheet.create({
   },
 });
 
-const TitleText = ({ children }: { children: React.ReactNode }) => (
-  // @ts-ignore
+const TitleText = ({ children }: React.PropsWithChildren) => (
   <Text style={styles.titleText}>{children}</Text>
 );
 
 // Create Document Component
-const PDFExport = ({
-  inferences,
-  projectInfo,
-  orgInfo,
-}: {
-  inferences: RoomData[];
-  projectInfo: ProjectInfo;
-  orgInfo: OrgInfo;
-}) => {
-  if (!inferences) return null;
+const PDFExport = () => {
+  const rooms = roomStore();
 
-  const address = parser.parseLocation(projectInfo.location);
-  const orgAddress = parser.parseLocation(orgInfo.address);
+  const { project: projectInfo } = projectStore();
+  const { organization: orgInfo } = orgStore();
+
+  const address = parser.parseLocation(projectInfo?.location);
+  const orgAddress = parser.parseLocation(orgInfo?.address);
 
   return (
     <Document>
@@ -144,13 +137,13 @@ const PDFExport = ({
             src='/images/brand/servicegeek.svg'
             style={styles.servicegeekLogo}
           />
-          <Text>ServiceGeek</Text>
+          <Text>RestoreGeek</Text>
         </View>
         <View style={styles.companyOverview}>
           <View style={styles.companyOverviewData}>
             <Text style={styles.companyName}>
-              {!projectInfo.companyName || projectInfo.companyName === ""
-                ? orgInfo.name
+              {!projectInfo?.companyName || projectInfo.companyName === ""
+                ? orgInfo?.name
                 : projectInfo.companyName}{" "}
             </Text>
             {orgAddress && (
@@ -169,12 +162,12 @@ const PDFExport = ({
           </View>
           <Image
             style={styles.logo}
-            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/org-pictures/${orgInfo.publicId}/${orgInfo.logoId}.png`}
+            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/org-pictures/${orgInfo?.publicId}/${orgInfo?.logoId}.png`}
           />
         </View>
         <View style={styles.titleSectionWrapper}>
           <View style={styles.titleSection}>
-            {projectInfo.clientName && (
+            {projectInfo?.clientName && (
               <View style={styles.projectDetailsSection}>
                 <View>
                   <TitleText>Name: </TitleText>
@@ -203,7 +196,7 @@ const PDFExport = ({
                 </View>
               </View>
             )}
-            {projectInfo.clientPhoneNumber && (
+            {projectInfo?.clientPhoneNumber && (
               <View style={styles.projectDetailsSection}>
                 <View>
                   <TitleText>Client Number: </TitleText>
@@ -214,8 +207,8 @@ const PDFExport = ({
               </View>
             )}
           </View>
-          {projectInfo.insuranceClaimId ||
-            (projectInfo.insuranceCompanyName && (
+          {projectInfo?.insuranceClaimId ||
+            (projectInfo?.insuranceCompanyName && (
               <View style={styles.titleSection}>
                 {projectInfo.insuranceClaimId && (
                   <View>
@@ -233,7 +226,7 @@ const PDFExport = ({
             ))}
         </View>
         <View style={styles.section}>
-          {inferences.map((room) => {
+          {rooms.rooms.map((room) => {
             if (room.detections.length === 0) return null;
             return (
               <View style={styles.roomContainer} key={room.publicId}>

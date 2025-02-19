@@ -1,9 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
-import { subscriptionStore } from "@atoms/subscription-status";
 import UpgradeModal from "@components/UpgradeModal";
 import { Dialog, Transition } from "@headlessui/react";
 import ExpressUtils from "@pdftron/pdfjs-express-utils";
-import { SubscriptionStatus } from "@servicegeek/db";
 import { useRouter } from "next/router";
 import { Ellipsis } from "lucide-react";
 import WebViewer from "@pdftron/pdfjs-express";
@@ -19,9 +17,6 @@ export default function Signature({
   const viewer = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [saving, setSaving] = useState(false);
-  const subscriptionStatus = subscriptionStore(
-    (state) => state.subscriptionStatus
-  );
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
   useEffect(() => {
@@ -43,10 +38,6 @@ export default function Signature({
           type: "actionButton",
           img: "data:image/png;base64,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",
           onClick: async () => {
-            if (subscriptionStatus !== SubscriptionStatus.active) {
-              setUpgradeModalOpen(true);
-              return;
-            }
             // Get the annotations and the documents data
             const xfdf = await annotManager.exportAnnotations({});
             const fileData = await docViewer.getDocument().getFileData({});

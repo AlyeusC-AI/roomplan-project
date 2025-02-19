@@ -54,8 +54,6 @@ export function NavUser() {
   };
 
   useEffect(() => {
-    // Bailing if the user exists
-    if (user) return;
     console.log("FETCHING USER FROM SIDEBAR");
     fetch("/api/v1/user")
       .then((res) => res.json())
@@ -136,12 +134,17 @@ export function NavUser() {
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => navigate.push("/settings/account")}
+                    >
                       <BadgeCheck size={16} />
                       Account
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <CreditCard size={16} />
+                      <CreditCard
+                        size={16}
+                        onClick={() => navigate.push("/settings/billing")}
+                      />
                       Billing
                     </DropdownMenuItem>
                     <DropdownMenuItem>

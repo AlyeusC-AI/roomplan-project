@@ -53,12 +53,12 @@ export default function Layout({ children }: React.PropsWithChildren) {
   ];
 
   useEffect(() => {
-    fetch(`/api/projects/${id}`)
+    fetch(`/api/v1/projects/${id}`)
       .then((res) => res.json())
       .then((data) => {
         project.setProject(data.data);
       });
-  });
+  }, []);
 
   return (
     <>

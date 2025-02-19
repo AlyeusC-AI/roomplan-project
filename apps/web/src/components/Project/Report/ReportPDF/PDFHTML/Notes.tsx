@@ -1,16 +1,6 @@
 import { format } from "date-fns";
 
-const Notes = ({
-  roomName,
-  notes,
-}: {
-  roomName: string;
-  notes: {
-    publicId: string;
-    date: Date;
-    body: string;
-  }[];
-}) => {
+const Notes = ({ roomName, notes }: { roomName: string; notes: Note[] }) => {
   if (notes.length === 0) return null;
   return (
     <div className='pdf new-page'>

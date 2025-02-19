@@ -1,60 +1,61 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Dimensions,
-  TouchableWithoutFeedback,
   SafeAreaView,
   View,
   Text,
   TouchableOpacity,
+  ScrollView,
+  RefreshControl,
 } from "react-native";
-import moment from "moment";
-import Swiper from "react-native-swiper";
-import { Plus } from "lucide-react-native";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react-native";
 import { router, useNavigation } from "expo-router";
+import DateTimePicker from "react-native-ui-datepicker";
+import { userStore } from "@/lib/state/user";
+import { Separator } from "@/components/ui/separator";
+import { projectsStore } from "@/lib/state/projects";
 
 const { width } = Dimensions.get("window");
 
 export default function Example() {
-  const swiper = useRef<Swiper>();
-  const contentSwiper = useRef<Swiper>();
-  const [week, setWeek] = useState(0);
-
-  const [value, setValue] = useState(new Date());
+  const { session: supabaseSession } = userStore((state) => state);
 
   const navigation = useNavigation();
+
+  const [form, setForm] = useState(new Date());
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
   });
-  /**
-   * Create an array of weekdays for previous, current, and next weeks.
-   */
-  const weeks = React.useMemo(() => {
-    const start = moment().add(week, "weeks").startOf("week");
 
-    return [-1, 0, 1].map((adj) => {
-      return Array.from({ length: 7 }).map((_, index) => {
-        const date = moment(start).add(adj, "week").add(index, "day");
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const { projects } = projectsStore();
 
-        return {
-          weekday: date.format("ddd"),
-          date: date.toDate(),
-        };
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = () => {
+    setLoading(true);
+    fetch(
+      `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/calendar-events`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": `${supabaseSession?.access_token}`,
+        },
+      }
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        setLoading(false);
+        console.log(data);
+        setEvents(data.data);
       });
-    });
-  }, [week]);
-
-  /**
-   * Create an array of days for yesterday, today, and tomorrow.
-   */
-  const days = React.useMemo(() => {
-    return [
-      moment(value).subtract(1, "day").toDate(),
-      value,
-      moment(value).add(1, "day").toDate(),
-    ];
-  }, [value]);
+  };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -63,7 +64,7 @@ export default function Example() {
           <Text style={styles.title}>Your Schedule</Text>
         </View>
 
-        <View style={styles.picker}>
+        {/* <View style={styles.picker}>
           <Swiper
             index={1}
             ref={swiper}
@@ -97,8 +98,8 @@ export default function Example() {
                         style={[
                           styles.item,
                           isActive && {
-                            backgroundColor: "#1d4ed8",
-                            borderColor: "#1d4ed8",
+                            backgroundColor: "#2563eb",
+                            borderColor: "#2563eb",
                           },
                         ]}
                       >
@@ -125,51 +126,64 @@ export default function Example() {
               </View>
             ))}
           </Swiper>
-        </View>
+        </View> */}
+        <DateTimePicker
+          mode="single"
+          buttonNextIcon={<ChevronRight color="#1d4ed8" />}
+          buttonPrevIcon={<ChevronLeft color="#1d4ed8" />}
+          onChange={(params) => setForm(new Date(params.date))}
+          selectedItemColor="#1d4ed8"
+          date={form}
+        />
 
-        <Swiper
-          index={1}
-          ref={contentSwiper}
-          loop={false}
-          showsPagination={false}
-          onIndexChanged={(ind) => {
-            if (ind === 1) {
-              return;
-            }
-
-            setTimeout(() => {
-              const nextValue = moment(value).add(ind - 1, "days");
-
-              // Adjust week picker if needed
-              if (moment(value).week() !== nextValue.week()) {
-                setWeek(
-                  moment(value).isBefore(nextValue) ? week + 1 : week - 1
-                );
-              }
-
-              setValue(nextValue.toDate());
-              contentSwiper.current?.scrollTo(1, false);
-            }, 10);
-          }}
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={fetchEvents} />
+          }
+          style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 24 }}
         >
-          {days.map((day, index) => {
-            return (
-              <View
-                key={index}
-                style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 24 }}
-              >
-                <Text style={styles.subtitle}>
-                  {day.toLocaleDateString("en-US", { dateStyle: "full" })}
-                </Text>
-                <View style={styles.placeholder}>
-                  <View style={styles.placeholderInset}>
-                    {/* Replace with your content */}
+          <Text style={styles.subtitle}>
+            {form.toLocaleDateString("en-US", { dateStyle: "full" })}
+          </Text>
+          <View style={styles.placeholder}>
+            <View style={styles.placeholderInset}>
+              {events.filter(
+                (event) =>
+                  new Date(event.date).toDateString() === form.toDateString()
+              ).length === 0 && <Text>No Events</Text>}
+              {events
+                .filter(
+                  (event) =>
+                    new Date(event.date).toDateString() === form.toDateString()
+                )
+                .map((event) => (
+                  <View key={event.id}>
+                    <Separator />
+                    <View className="my-5">
+                      <View className="flex flex-row justify-between items-center">
+                        <Text className="font-bold text-2xl">
+                          {event.subject}
+                        </Text>
+                        <Text>{new Date(event.date).toLocaleDateString()}</Text>
+                      </View>
+                      <View className="flex flex-row justify-between items-center mt-2">
+                        <Text className="text-gray-600 text-lg font-regular">
+                          {event.payload}
+                        </Text>
+                        <Text>
+                          {
+                            projects.find((e) => e.id == event.projectId)
+                              .clientName
+                          }
+                        </Text>
+                      </View>
+                    </View>
+                    <Separator />
                   </View>
-                </View>
-              </View>
-            );
-          })}
-        </Swiper>
+                ))}
+            </View>
+          </View>
+        </ScrollView>
 
         <View style={styles.footer}>
           <TouchableOpacity
@@ -218,6 +232,15 @@ const styles = StyleSheet.create({
     marginTop: "auto",
     paddingHorizontal: 16,
   },
+  sectionInput: {
+    backgroundColor: "#fff",
+    height: 44,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    fontSize: 17,
+    fontWeight: "500",
+    color: "#1d1d1d",
+  },
   /** Item */
   item: {
     flex: 1,
@@ -260,10 +283,6 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   placeholderInset: {
-    borderWidth: 4,
-    borderColor: "#e5e7eb",
-    borderStyle: "dashed",
-    borderRadius: 9,
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 0,
@@ -277,8 +296,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderWidth: 1,
-    backgroundColor: "#1d4ed8",
-    borderColor: "#1d4ed8",
+    backgroundColor: "#2563eb",
+    borderColor: "#2563eb",
   },
   btnText: {
     fontSize: 18,

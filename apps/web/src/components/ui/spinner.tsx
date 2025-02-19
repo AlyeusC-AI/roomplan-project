@@ -23,7 +23,7 @@ export const LoadingPlaceholder = ({ className }: { className?: string }) => {
   return (
     <div
       className={cn(
-        "flex h-full w-full items-center justify-center",
+        "flex min-h-10 min-w-10 h-full w-full items-center justify-center",
         className
       )}
     >

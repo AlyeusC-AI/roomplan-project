@@ -4,6 +4,7 @@ import { useState } from "react";
 import { FileObject } from "@supabase/storage-js";
 
 import FileListItem from "./FileListItem";
+import { Card } from "@components/ui/card";
 
 export default function FileList({
   files,
@@ -30,7 +31,7 @@ export default function FileList({
       file.name.toLowerCase().includes("roof")
     );
     return (
-      <div className='mt-8 overflow-hidden bg-white shadow sm:rounded-md'>
+      <Card className='mt-8'>
         <ul role='list' className='divide-y divide-gray-200'>
           {roofReportFiles.map((file) => (
             <FileListItem
@@ -42,12 +43,12 @@ export default function FileList({
             />
           ))}
         </ul>
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className='mt-8 overflow-hidden bg-white shadow sm:rounded-md'>
+    <Card className='mt-8'>
       <ul role='list' className='divide-y divide-gray-200'>
         {files.map((file) => (
           <FileListItem
@@ -59,6 +60,6 @@ export default function FileList({
           />
         ))}
       </ul>
-    </div>
+    </Card>
   );
 }

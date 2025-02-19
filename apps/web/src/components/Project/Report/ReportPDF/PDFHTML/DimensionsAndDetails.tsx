@@ -1,5 +1,3 @@
-import { Room } from "@servicegeek/db";
-
 import PDFTableTd from "./PDFTable/PDFTableTd";
 import PDFTableTh from "./PDFTable/PDFTableTh";
 
@@ -14,7 +12,7 @@ const DimensionsAndDetails = ({
     <h2 className='pdf room-section-subtitle major-break title-spacing'>
       {roomName}: Dimensions & Details
     </h2>
-    {room.equipmentUsed.length > 0 && (
+    {room.equipmentUsed && room.equipmentUsed.length > 0 && (
       <div className='mb-4'>
         <h4 className='mr-2'>Equipment Used:</h4>
         <ul className='ml-6 list-disc'>

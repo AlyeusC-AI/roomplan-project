@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Loader } from "@googlemaps/js-api-loader";
 import clsx from "clsx";
 import { useParams } from "next/navigation";
 import { projectStore } from "@atoms/project";
 import mapboxgl from "mapbox-gl";
+import { useTheme } from "next-themes";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 const WeatherTitle = ({ children }: { children: React.ReactNode }) => (
   <dt className='truncate text-xs font-semibold uppercase text-white'>
@@ -25,9 +26,9 @@ const LocationData = ({
   showWeather = true,
 }: LocationDataProps) => {
   const projectInfo = projectStore((state) => state.project);
-  const [streetMap, setStreetMap] = useState<mapboxgl.Map>();
+  const [, setStreetMap] = useState<mapboxgl.Map>();
   const streetMapView = useRef(null);
-  const [satelliteMap, setSatelliteMap] = useState<mapboxgl.Map>();
+  const [, setSatelliteMap] = useState<mapboxgl.Map>();
   const satelliteMapView = useRef(null);
   const { id } = useParams();
 
@@ -38,75 +39,73 @@ const LocationData = ({
       });
       if (res.ok) {
         const { weatherData } = await res.json();
-        projectStore.getState().setProject({ weatherData });
+        projectStore.getState().setProject({ ...weatherData });
       }
     } catch (e) {
       console.error(e);
     }
   };
 
+  const theme = useTheme();
+
   useEffect(() => {
     const streetNode = streetMapView.current;
     const satelliteNode = satelliteMapView.current;
-
-    // const loader = new Loader({
-    //   apiKey: process.env.GOOGLE_MAPS_API_KEY!,
-    //   version: 'weekly',
-    //   libraries: ['places', 'drawing', 'geometry'],
-    // })
-    // loader.load().then(() => {
-    //   if (streetView.current) {
-    //     new google.maps.StreetViewPanorama(streetView.current, {
-    //       position: {
-    //         lat: Number(projectInfo.lat),
-    //         lng: Number(projectInfo.lng),
-    //       },
-    //       motionTrackingControl: false,
-    //       motionTracking: false,
-    //     })
-    //   }
-    //   if (satelliteView.current) {
-    //     new google.maps.Map(satelliteView.current, {
-    //       zoom: 20,
-    //       mapTypeId: 'satellite',
-    //       center: {
-    //         lat: Number(projectInfo.lat),
-    //         lng: Number(projectInfo.lng),
-    //       },
-    //       streetViewControl: false,
-    //       rotateControl: false,
-    //       mapTypeControl: false,
-    //     })
-    //   }
-    // })
     if (
       typeof window === "undefined" ||
-      streetNode === null ||
-      satelliteNode === null
+      (streetNode === null && satelliteNode === null)
     )
       return;
     mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY!;
     // otherwise, create a map instance
+
+    const lngLat = {
+      lat: parseFloat(projectInfo?.lat ?? "0"),
+      lng: parseFloat(projectInfo?.lng ?? "0"),
+    };
+
+    const isDark =
+      theme.theme === "dark" ||
+      (theme.theme === "system" && theme.systemTheme === "dark");
+
     const streetMap = new mapboxgl.Map({
-      container: streetNode,
+      container: streetNode!,
       accessToken: process.env.NEXT_PUBLIC_MAPBOX_API_KEY,
-      style: "mapbox://styles/mapbox/streets-v11",
-      center: [
-        Number(projectInfo.lat === "" ? 41.850033 : projectInfo.lat),
-        Number(projectInfo.lng === "" ? -87.6500523 : projectInfo.lng),
-      ],
-      zoom: 9,
+      style: isDark
+        ? "mapbox://styles/mapbox/dark-v11"
+        : "mapbox://styles/mapbox/light-v11",
+      interactive: false,
+      center: lngLat,
+      zoom: 16,
     });
     const satelliteMap = new mapboxgl.Map({
-      container: satelliteNode,
+      container: satelliteNode!,
       accessToken: process.env.NEXT_PUBLIC_MAPBOX_API_KEY,
-      style: "mapbox://styles/mapbox/standard-satellite",
-      center: [
-        Number(projectInfo.lat === "" ? 41.850033 : projectInfo.lat),
-        Number(projectInfo.lng === "" ? -87.6500523 : projectInfo.lng),
-      ],
-      zoom: 9,
+      style: "mapbox://styles/mapbox/satellite-v9",
+      center: lngLat,
+      interactive: false,
+      zoom: 16,
     });
+
+    new mapboxgl.Marker({
+      color: isDark ? "#FFF" : "#000062",
+      draggable: false,
+    })
+      .setLngLat(lngLat)
+      .addTo(streetMap);
+
+    new mapboxgl.Marker({
+      color: "#000062",
+      draggable: false,
+    })
+      .setLngLat(lngLat)
+      .addTo(satelliteMap);
+
+    const nav = new mapboxgl.NavigationControl({
+      visualizePitch: true,
+    });
+    streetMap.addControl(nav, "bottom-right");
+    satelliteMap.addControl(nav, "bottom-right");
 
     // save the map object to React.useState
     setStreetMap(streetMap);
@@ -116,12 +115,10 @@ const LocationData = ({
       streetMap.remove();
       satelliteMap.remove();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     updateAndFetchWeather();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -135,7 +132,7 @@ const LocationData = ({
           />
           <div
             id='satelitte'
-            className='group relative col-span-5 block h-56 overflow-hidden rounded-lg shadow-md md:col-span-2 lg:col-span-1'
+            className='group relative col-span-5 block size-full overflow-hidden rounded-lg shadow-md md:col-span-2 lg:col-span-1'
             ref={satelliteMapView}
           />
         </>
@@ -144,11 +141,11 @@ const LocationData = ({
         <div
           className={clsx(
             "relative col-span-5 overflow-hidden rounded-lg bg-gradient-to-br text-white shadow-md md:col-span-1 lg:col-span-1",
-            projectInfo.forecast.toLowerCase() === "clouds" &&
+            projectInfo?.forecast.toLowerCase() === "clouds" &&
               "from-blue-300 via-gray-400 to-gray-500",
-            projectInfo.forecast.toLowerCase() === "rain" &&
+            projectInfo?.forecast.toLowerCase() === "rain" &&
               "from-gray-400 via-gray-500 to-gray-700",
-            projectInfo.forecast.toLowerCase() === "clear" &&
+            projectInfo?.forecast.toLowerCase() === "clear" &&
               "from-blue-400 via-blue-500 to-blue-600"
           )}
         >
@@ -157,7 +154,7 @@ const LocationData = ({
               <dl>
                 <WeatherTitle>Temperature</WeatherTitle>
                 <WeatherData>
-                  {projectInfo.temperature ? (
+                  {projectInfo?.temperature ? (
                     <>
                       {Math.floor(parseFloat(projectInfo.temperature))}
                       <span className='ml-2 text-sm'>&deg;F</span>
@@ -172,7 +169,7 @@ const LocationData = ({
               <dl>
                 <WeatherTitle>Humidity</WeatherTitle>
                 <WeatherData>
-                  {projectInfo.humidity ? (
+                  {projectInfo?.humidity ? (
                     <>
                       {projectInfo.humidity}
                       <span className='ml-2 text-sm'>%</span>
@@ -186,14 +183,14 @@ const LocationData = ({
             <div className='flex items-center'>
               <dl>
                 <WeatherTitle>Forecast</WeatherTitle>
-                <WeatherData>{projectInfo.forecast || "--"}</WeatherData>
+                <WeatherData>{projectInfo?.forecast || "--"}</WeatherData>
               </dl>
             </div>
             <div className='flex items-center'>
               <dl>
                 <WeatherTitle>Wind</WeatherTitle>
                 <WeatherData>
-                  {projectInfo.wind ? (
+                  {projectInfo?.wind ? (
                     <>
                       {projectInfo.wind}
                       <span className='ml-2 text-sm'>mph</span>

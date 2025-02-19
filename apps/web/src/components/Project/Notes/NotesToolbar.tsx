@@ -1,34 +1,34 @@
 "use client";
 
 import { useState } from "react";
-import { PrimaryButton } from "@components/components/button";
-import Modal from "@components/DesignSystem/Modal";
 
 import RoomCreationModal from "../RoomCreationModal";
-import TabTitleArea from "../TabTitleArea";
+import { Button } from "@components/ui/button";
 
 export default function NotesToolbar() {
   const [isRoomCreationModalOpen, setIsRoomCreationModalOpen] = useState(false);
 
   return (
-    <TabTitleArea title='Notes' description='Record notes for each room.'>
-      <>
-        <div></div>
-        <PrimaryButton onClick={() => setIsRoomCreationModalOpen(true)}>
-          Add Room
-        </PrimaryButton>
-        <Modal
-          open={isRoomCreationModalOpen}
-          setOpen={setIsRoomCreationModalOpen}
+    <>
+      <div className='flex items-center justify-between'>
+        <div>
+          <h3 className='text-lg font-medium'>Notes</h3>
+          <p className='text-sm text-muted-foreground'>
+            Record notes for each room.
+          </p>
+        </div>
+        <Button
+          variant='outline'
+          onClick={() => setIsRoomCreationModalOpen(true)}
         >
-          {(setOpen) => (
-            <RoomCreationModal
-              setOpen={setOpen}
-              isOpen={isRoomCreationModalOpen}
-            />
-          )}
-        </Modal>
-      </>
-    </TabTitleArea>
+          Add Room
+        </Button>
+      </div>
+
+      <RoomCreationModal
+        setOpen={setIsRoomCreationModalOpen}
+        isOpen={isRoomCreationModalOpen}
+      />
+    </>
   );
 }

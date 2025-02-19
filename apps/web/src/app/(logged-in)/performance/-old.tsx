@@ -1,5 +1,4 @@
 // import { getLoggedInUserInfo } from "@lib/server-side-fetching/get-logged-in-user-info";
-// import getProjectStats from "@servicegeek/db/queries/project/getProjectStats";
 
 // import { Metadata } from "next";
 // import PerformancePage from "./main";

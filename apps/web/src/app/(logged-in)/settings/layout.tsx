@@ -1,4 +1,4 @@
-import { SidebarNav } from "../../../components/ui/sidebar-nav";
+import { SidebarNav } from "@/components/ui/sidebar-nav";
 import { Separator } from "@components/ui/separator";
 
 const sidebarNavItems = [

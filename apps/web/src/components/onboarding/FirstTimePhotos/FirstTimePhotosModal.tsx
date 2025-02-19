@@ -3,7 +3,6 @@
 import { Fragment, useEffect, useState } from "react";
 import { PrimaryButton } from "@components/components/button";
 import { Dialog, Transition } from "@headlessui/react";
-import { trpc } from "@utils/trpc";
 import { ArrowRight } from "lucide-react";
 
 export const transitionClasses = {
@@ -18,15 +17,15 @@ export const transitionClasses = {
 export default function FirstTimePhotosModal() {
   const [open, setOpen] = useState(true);
 
-  const setOnboardingStatus =
-    trpc.onboardingStatus.setOnboardingStatus.useMutation();
+  // const setOnboardingStatus =
+  //   trpc.onboardingStatus.setOnboardingStatus.useMutation();
 
   useEffect(() => {
-    setOnboardingStatus.mutate({
-      status: {
-        seenPhotoModal: true,
-      },
-    });
+    // setOnboardingStatus.mutate({
+    //   status: {
+    //     seenPhotoModal: true,
+    //   },
+    // });
   }, []);
 
   return (

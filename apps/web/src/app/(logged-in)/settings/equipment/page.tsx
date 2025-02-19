@@ -9,11 +9,6 @@ export const metadata: Metadata = {
 };
 
 export default async function Component() {
-  // const props = await getLoggedInUserInfo(false, true, false, false)
-  // const intialOrganizationEquipment = await getAllOrganizationEquipment(
-  //   props.user?.org?.id!
-  // )
-
   return (
     <div className='space-y-6'>
       <div>

@@ -1,8 +1,6 @@
 import { ChangeEvent, useEffect, useState } from "react";
-import { trpc } from "@utils/trpc";
 import { useParams } from "next/navigation";
 import { event } from "nextjs-google-analytics";
-import { urlMapStore } from "@atoms/url-map";
 import { uploadInProgressImagesStore } from "@atoms/upload-in-progress-image";
 import { uploadSummaryStore } from "@atoms/upload-summary";
 import { v4 } from "uuid";
@@ -22,9 +20,9 @@ const useUploader = () => {
   const { id } = useParams<{ id: string }>();
   const supabase = createClient();
   const [trailEnded, setTrialEnded] = useState(false);
-  const processMediaMutation = trpc.media.processMedia.useMutation();
+  // const processMediaMutation = trpc.media.processMedia.useMutation();
 
-  const trpcContext = trpc.useUtils();
+  // const trpcContext = trpc.useUtils();
   const { rooms, onlySelected, sortDirection } = useFilterParams();
 
   const upload = async (files: File[] | FileList, roomId: string) => {
@@ -111,48 +109,48 @@ const useUploader = () => {
           upsert: false,
         });
 
-      const response = await processMediaMutation.mutateAsync({
-        fileName,
-        projectPublicId: id,
-        mediaType: "photo",
-        roomId,
-      });
+      // const response = await processMediaMutation.mutateAsync({
+      //   fileName,
+      //   projectPublicId: id,
+      //   mediaType: "photo",
+      //   roomId,
+      // });
 
       if (failedUploads)
         setFailedUploads((prevFailedUploads) => [...prevFailedUploads, file]);
 
-      urlMapStore
-        .getState()
-        .addUrlMap(decodeURIComponent(response.imageKey), response.signedUrl);
+      // urlMapStore
+      //   .getState()
+      //   .addUrlMap(decodeURIComponent(response.imageKey), response.signedUrl);
 
-      const queryContext = {
-        projectPublicId: id,
-        sortDirection,
-        rooms,
-        onlySelected,
-      };
-      const prevData =
-        trpcContext.photos.getProjectPhotos.getData(queryContext);
-      trpcContext.photos.getProjectPhotos.setData(queryContext, {
-        images: [
-          {
-            key: response.imageKey,
-            publicId: response.imagePublicId,
-            createdAt: new Date(response.createdAt),
-            includeInReport: false,
-            inference: {
-              publicId: response.publicId,
-              room: {
-                name: response.roomName,
-                publicId: response.roomId,
-              },
-            },
-          },
-          ...(prevData?.images ? prevData.images : []),
-        ],
-      });
+      // const queryContext = {
+      //   projectPublicId: id,
+      //   sortDirection,
+      //   rooms,
+      //   onlySelected,
+      // };
+      // const prevData =
+      //   trpcContext.photos.getProjectPhotos.getData(queryContext);
+      // trpcContext.photos.getProjectPhotos.setData(queryContext, {
+      //   images: [
+      //     {
+      //       key: response.imageKey,
+      //       publicId: response.imagePublicId,
+      //       createdAt: new Date(response.createdAt),
+      //       includeInReport: false,
+      //       inference: {
+      //         publicId: response.publicId,
+      //         room: {
+      //           name: response.roomName,
+      //           publicId: response.roomId,
+      //         },
+      //       },
+      //     },
+      //     ...(prevData?.images ? prevData.images : []),
+      //   ],
+      // });
 
-      uploadSummaryStore.getState().incrementUploadSummary(response.roomName);
+      // uploadSummaryStore.getState().incrementUploadSummary(response.roomName);
       setCompletedUploads((prevCompletedUploads) => prevCompletedUploads + 1);
 
       uploadInProgressImagesStore.getState().removeImage(file.name);
@@ -176,7 +174,7 @@ const useUploader = () => {
       setFailedUploads([]);
       setIsNumUploads(0);
       uploadInProgressImagesStore.getState().clearImages();
-      trpcContext.photos.getProjectPhotos.invalidate();
+      // trpcContext.photos.getProjectPhotos.invalidate();
     }
   }, [completedUploads, failedUploads, numUploads]);
 

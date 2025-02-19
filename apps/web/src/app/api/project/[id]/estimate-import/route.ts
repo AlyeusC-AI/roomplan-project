@@ -3,15 +3,14 @@
 //   StartDocumentAnalysisCommand,
 //   TextractClient,
 // } from "@aws-sdk/client-textract";
-// import getSubcriptionStatus from "@servicegeek/db/queries/organization/getSubscriptionStatus";
-// import getUser from "@servicegeek/db/queries/user/getUser";
-// import { SubscriptionStatus } from "@servicegeek/db";
 // import formidable, { File as FormidableFile } from "formidable";
 // import { v4 as uuidv4 } from "uuid";
 // import { createClient } from "@lib/supabase/server";
 // import { NextRequest, NextResponse } from "next/server";
 // import { redirect } from "next/navigation";
 // import { promises } from "fs";
+
+import { NextResponse } from "next/server";
 
 // // export const config = {
 // //   api: {
@@ -151,3 +150,6 @@
 //     return NextResponse.json({ status: "failed" }, { status: 500 });
 //   }
 // }
+export async function POST() {
+  return NextResponse.json({ status: "ok" }, { status: 200 });
+}

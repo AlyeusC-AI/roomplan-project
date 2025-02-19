@@ -66,11 +66,9 @@ export const STATUS_COLORS = [
 ];
 
 export default function ColorPicker({
-  labelName,
   newColor,
   setNewColor,
 }: {
-  labelName: string;
   newColor: string;
   setNewColor: Dispatch<SetStateAction<string>>;
 }) {
@@ -85,7 +83,7 @@ export default function ColorPicker({
         selectedColor: string;
       }) => setNewColor(sel.name)}
     >
-      <RadioGroup.Label className='block text-xs font-medium text-gray-900'>
+      <RadioGroup.Label className='block text-xs font-medium text-foreground'>
         Choose a label color
       </RadioGroup.Label>
       <div className='mt-4 flex flex-wrap items-center gap-3'>
@@ -109,7 +107,7 @@ export default function ColorPicker({
               aria-hidden='true'
               className={clsx(
                 color.bgColor,
-                "size-8 rounded-full border border-black border-opacity-10"
+                "size-8 rounded-full border border-foreground border-opacity-10"
               )}
             />
             {color.name === newColor && (

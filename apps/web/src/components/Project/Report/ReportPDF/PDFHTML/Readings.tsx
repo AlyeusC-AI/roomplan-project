@@ -1,4 +1,3 @@
-import { GenericRoomReading, RoomReading } from "@servicegeek/db";
 import { format } from "date-fns";
 
 import PDFTableTd from "./PDFTable/PDFTableTd";
@@ -9,9 +8,7 @@ const Readings = ({
   roomReadings,
 }: {
   roomName: string;
-  roomReadings: (RoomReading & {
-    genericRoomReadings: GenericRoomReading[];
-  })[];
+  roomReadings: ReadingsWithGenericReadings[];
 }) => {
   if (roomReadings.length === 0) return null;
   return (
@@ -58,7 +55,7 @@ const Readings = ({
               </tr>
             </tbody>
           </table>
-          {reading.genericRoomReadings.map((genericRoomReading, index) => (
+          {reading.GenericRoomReading.map((genericRoomReading, index) => (
             <div
               className='mt-4 border-l-2 border-gray-300 pl-4'
               key={genericRoomReading.publicId}

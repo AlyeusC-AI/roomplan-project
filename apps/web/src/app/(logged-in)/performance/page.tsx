@@ -1,17 +1,18 @@
 import { Metadata } from "next";
-import Image from "next/image";
+import { Suspense } from "react";
+// import Image from "next/image";
 
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { CalendarDateRangePicker } from "./components/date-range-picker";
-import { Overview } from "./components/overview";
-import { RecentSales } from "./components/recent-sales";
+// import { Button } from "@/components/ui/button";
+// import {
+//   Card,
+//   CardContent,
+//   CardDescription,
+//   CardHeader,
+//   CardTitle,
+// } from "@/components/ui/card";
+// import { CalendarDateRangePicker } from "./components/date-range-picker";
+// import { Overview } from "./components/overview";
+// import { RecentSales } from "./components/recent-sales";
 export const metadata: Metadata = {
   title: "Performance",
   description: "Example dashboard app built using the components.",
@@ -19,8 +20,11 @@ export const metadata: Metadata = {
 
 export default function DashboardPage() {
   return (
-    <>
-      <div className='md:hidden'>
+    <Suspense>
+      <div className='flex h-screen items-center justify-center'>
+        Coming soon!
+      </div>
+      {/* <div className='md:hidden'>
         <Image
           src='/examples/dashboard-light.png'
           width={1280}
@@ -172,7 +176,7 @@ export default function DashboardPage() {
             </Card>
           </div>
         </div>
-      </div>
-    </>
+      </div> */}
+    </Suspense>
   );
 }

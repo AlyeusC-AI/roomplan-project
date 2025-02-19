@@ -1,3 +1,5 @@
+import { Database } from "./database";
+
 declare type ProjectStatus =
   | "active"
   | "mitigation"
@@ -33,7 +35,6 @@ declare interface ProjectType {
   images: { key: string }[];
   _count: { images: number };
 }
-
 
 declare interface RoomData {
   name: string;
@@ -150,3 +151,63 @@ declare type RoomReading = {
     publicId: string;
   }[];
 };
+
+declare global {
+  type User = Database["public"]["Tables"]["User"]["Row"];
+  type Organization = Database["public"]["Tables"]["Organization"]["Row"];
+  type FlatTeamMember =
+    Database["public"]["Tables"]["UserToOrganization"]["Row"];
+
+  type TeamMember = FlatTeamMember & {
+    User: { firstName: string; lastName: string; email: string } | null;
+  };
+
+  type Cost = Database["public"]["Tables"]["Cost"]["Row"];
+  type CostType = "subcontractor" | "materials" | "miscellaneous" | "labor";
+  type CalendarEvent = Database["public"]["Tables"]["CalendarEvent"]["Row"];
+
+  type FlatProject = Database["public"]["Tables"]["Project"]["Row"];
+  type FlatImage = Database["public"]["Tables"]["Image"]["Row"];
+  type FlatAssignee = Database["public"]["Tables"]["UserToProject"]["Row"];
+  type Assignee = FlatAssignee & {
+    User: { firstName: string; lastName: string; email: string } | null;
+  };
+  type Image = FlatImage & { url: string };
+  interface Project extends FlatProject {
+    images: Image[];
+    assignees: Assignee[];
+  }
+
+  type Status = Database["public"]["Tables"]["ProjectStatusValue"]["Row"];
+  type RoomReading = Database["public"]["Tables"]["RoomReading"]["Row"];
+  type GenericRoomReading =
+    Database["public"]["Tables"]["GenericRoomReading"]["Row"];
+  type Room = Database["public"]["Tables"]["Room"]["Row"];
+
+  type Inference = Database["public"]["Tables"]["Inference"]["Row"];
+
+  type RoomWithInferences = Room & {
+    Inference: Inference[];
+  };
+
+  type Note = Database["public"]["Tables"]["Notes"]["Row"];
+
+  type NoteWithAudits = Note & {
+    NotesAuditTrail?: {
+      createdAt: Date;
+      userName: string | null;
+    }[];
+  };
+
+  type RoomWithNotes = Room & {
+    Notes: NoteWithAudits[];
+  };
+
+  interface ReadingsWithGenericReadings extends RoomReading {
+    GenericRoomReading: GenericRoomReading[];
+  }
+
+  interface RoomWithReadings extends Room {
+    RoomReading: ReadingsWithGenericReadings[];
+  }
+}

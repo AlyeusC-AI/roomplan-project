@@ -2,7 +2,7 @@ import BlurImage from "@components/DesignSystem/BlurImage";
 import useSupabaseImage from "@utils/hooks/useSupabaseImage";
 import clsx from "clsx";
 
-const SecureImage = ({ path }: { path?: string }) => {
+const SecureImage = ({ path }: { path: string | null }) => {
   const supabaseUrl = useSupabaseImage(path);
 
   return (

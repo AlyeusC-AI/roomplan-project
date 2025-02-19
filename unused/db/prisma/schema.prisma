@@ -1,0 +1,764 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
+  output = "./src/generated/prisma"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DashboardViews {
+  listView
+  boardView
+  mapView
+}
+
+enum PhotoViews {
+  photoListView
+  photoGridView
+}
+
+enum GroupByViews {
+  roomView
+  dateView
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  token              String?             @unique
+  createdAt          DateTime            @default(now())
+  email              String
+  isDeleted          Boolean             @default(false)
+  updatedAt          DateTime            @default(now()) @updatedAt
+  firstName          String
+  lastName           String
+  phone              String              @default("")
+  org                UserToOrganization?
+  inviteId           String?
+  UserToProject      UserToProject[]
+  isSupportUser      Boolean             @default(false)
+  hasSeenProductTour Boolean             @default(false)
+  productTourData    Json?
+  savedDashboardView DashboardViews      @default(listView)
+  photoView          PhotoViews          @default(photoListView)
+  groupView          GroupByViews        @default(dateView)
+  Notification       Notification[]
+  onboardingStatus   Json?
+  ImageNote          ImageNote[]
+  Annotation         Annotation[]
+  organization       Organization?       @relation(fields: [organizationId], references: [publicId])
+  organizationId     String              @db.Uuid
+}
+
+model Organization {
+  id                      Int                       @id @default(autoincrement())
+  publicId                String                    @unique @db.Uuid
+  createdAt               DateTime                  @default(now())
+  name                    String                    @db.VarChar(255)
+  address                 String                    @default("")
+  faxNumber               String                    @default("")
+  size                    String
+  isDeleted               Boolean                   @default(false)
+  updatedAt               DateTime                  @default(now()) @updatedAt
+  logoId                  String?
+  lat                     Float
+  lng                     Float
+  Image                   Image[]
+  invitations             OrganizationInvitation[]
+  projects                Project[]
+  users                   UserToOrganization[]
+  Customers               Customers[]
+  Subscriptions           Subscriptions[]
+  OrganizationSavedOption OrganizationSavedOption[]
+  equipment               Equipment[]
+  ProjectStatusValue      ProjectStatusValue[]
+  User                    User[]
+}
+
+model Equipment {
+  id               Int                @id @default(autoincrement())
+  publicId         String             @unique @db.Uuid
+  createdAt        DateTime           @default(now())
+  isDeleted        Boolean            @default(false)
+  name             String
+  quantity         Int                @default(1)
+  organization     Organization       @relation(fields: [organizationId], references: [id])
+  organizationId   Int
+  ProjectEquipment ProjectEquipment[]
+}
+
+enum NotificationType {
+  notification
+  activity
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  publicId  String           @unique @db.Uuid
+  createdAt DateTime         @default(now())
+  isDeleted Boolean          @default(false)
+  title     String
+  content   String
+  isSeen    Boolean
+  link      String?
+  linkText  String?
+  type      NotificationType
+  user      User             @relation(fields: [userId], references: [id])
+  userId    String
+}
+
+enum SavedOptionType {
+  carrier
+  wallMaterial
+  floorMaterial
+}
+
+model OrganizationSavedOption {
+  id             Int             @id @default(autoincrement())
+  publicId       String          @unique @db.Uuid
+  createdAt      DateTime        @default(now())
+  label          String
+  value          String
+  isDeleted      Boolean         @default(false)
+  type           SavedOptionType
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  organizationId Int
+}
+
+enum AccessLevel {
+  admin
+  viewer
+  projectManager
+  accountManager
+  contractor
+  removed
+}
+
+model UserToOrganization {
+  id             Int          @id @default(autoincrement())
+  createdAt      DateTime     @default(now())
+  isAdmin        Boolean      @default(false)
+  isDeleted      Boolean      @default(false)
+  organizationId Int
+  role           String?
+  accessLevel    AccessLevel? @default(viewer)
+  userId         String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  user           User         @relation(fields: [userId], references: [id])
+}
+
+model OrganizationInvitation {
+  id             Int          @id @default(autoincrement())
+  createdAt      DateTime     @default(now())
+  isDeleted      Boolean      @default(false)
+  organizationId Int
+  email          String
+  invitationId   String       @unique
+  isAccepted     Boolean      @default(false)
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+model UserToProject {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  project   Project  @relation(fields: [projectId], references: [id])
+  projectId Int
+
+  @@unique([userId, projectId])
+}
+
+enum ProjectStatus {
+  active
+  mitigation
+  inspection
+  review
+  completed
+  inactive
+  incomplete
+}
+
+model Project {
+  id                     Int                  @id @default(autoincrement())
+  createdAt              DateTime             @default(now())
+  closedAt               DateTime?
+  isDeleted              Boolean              @default(false)
+  organizationId         Int
+  assignmentNumber       String               @default("")
+  publicId               String               @unique
+  name                   String
+  location               String               @default("")
+  clientName             String               @default("")
+  clientEmail            String               @default("")
+  clientPhoneNumber      String               @default("")
+  companyName            String               @default("")
+  managerName            String               @default("")
+  adjusterEmail          String               @default("")
+  adjusterName           String               @default("")
+  adjusterPhoneNumber    String               @default("")
+  insuranceCompanyName   String               @default("")
+  insuranceClaimId       String               @default("")
+  lossType               String               @default("")
+  catCode                Int?
+  humidity               String               @default("")
+  lastTimeWeatherFetched DateTime?
+  temperature            String               @default("")
+  wind                   String               @default("")
+  lat                    String               @default("")
+  lng                    String               @default("")
+  forecast               String               @default("")
+  claimSummary           String               @default("")
+  roofSegments           Json[]               @default([])
+  roofSpecs              Json?
+  rcvValue               Float?
+  actualValue            Float?
+  organization           Organization         @relation(fields: [organizationId], references: [id])
+  images                 Image[]
+  inferences             Inference[]
+  rooms                  Room[]
+  events                 CalendarEvent[]
+  projectAssignees       UserToProject[]
+  roomReadings           RoomReading[]
+  status                 ProjectStatus?       @default(active)
+  propertyData           PropertyData?
+  AreaAffected           AreaAffected[]
+  photoAccessLinks       PhotoAccessLink[]
+  notes                  Notes[]
+  costs                  Cost[]
+  projectEquipment       ProjectEquipment[]
+  weatherReportItems     WeatherReportItem[]
+  currentStatus          ProjectStatusValue?  @relation(fields: [projectStatusValueId], references: [id])
+  projectStatusValueId   Int?
+  PendingRoofReports     PendingRoofReports[]
+  ProjectNotes           ProjectNotes[]
+}
+
+model ProjectNotes {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+  date      DateTime  @default(now())
+  isDeleted Boolean   @default(false)
+  publicId  String
+  project   Project   @relation(fields: [projectId], references: [id])
+  projectId Int
+  body      String    @default("")
+  mentions  String[]  @default([])
+  userId    String
+}
+
+model ProjectStatusValue {
+  id             Int          @id @default(autoincrement())
+  createdAt      DateTime     @default(now())
+  isDeleted      Boolean      @default(false)
+  publicId       String       @unique @db.Uuid
+  label          String
+  description    String
+  color          String
+  order          Int?         @default(-1)
+  projects       Project[]
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId Int
+
+  @@unique([organizationId, label])
+}
+
+model PendingRoofReports {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  isDeleted   Boolean  @default(false)
+  project     Project  @relation(fields: [projectId], references: [id])
+  projectId   Int
+  isCompleted Boolean  @default(false)
+}
+
+model WeatherReportItem {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  isDeleted Boolean  @default(false)
+  project   Project  @relation(fields: [projectId], references: [id])
+  projectId Int
+  date      DateTime
+  time      String
+  f_scale   String?
+  speed     String?
+  size      String?
+  location  String
+  county    String
+  state     String
+  lat       String
+  lon       String
+  comments  String
+}
+
+model ProjectEquipment {
+  id          Int       @id @default(autoincrement())
+  publicId    String    @unique @db.Uuid
+  createdAt   DateTime  @default(now())
+  isDeleted   Boolean   @default(false)
+  equipment   Equipment @relation(fields: [equipmentId], references: [id])
+  quantity    Int       @default(1)
+  project     Project   @relation(fields: [projectId], references: [id])
+  projectId   Int
+  equipmentId Int
+
+  @@unique([equipmentId, projectId])
+}
+
+enum CostType {
+  subcontractor
+  miscellaneous
+  materials
+  labor
+}
+
+model Cost {
+  id            Int      @id @default(autoincrement())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+  estimatedCost Float?
+  actualCost    Float?
+  name          String?
+  project       Project  @relation(fields: [projectId], references: [id])
+  projectId     Int
+  isDeleted     Boolean  @default(false)
+  type          CostType
+}
+
+model PropertyData {
+  id            Int      @id @default(autoincrement())
+  createdAt     DateTime @default(now())
+  project       Project? @relation(fields: [projectId], references: [id])
+  projectId     Int?     @unique
+  bathrooms     Float?
+  bedrooms      Int?
+  squareFootage Int?
+  realtyMoleId  String?
+  data          Json?
+}
+
+model DataDeletionRequest {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  fullName   String
+  email      String   @unique
+  isVerified Boolean  @default(false)
+}
+
+model PhotoAccessLink {
+  id          Int       @id @default(autoincrement())
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime?
+  project     Project   @relation(fields: [projectId], references: [id])
+  accessId    String    @unique
+  email       String?
+  phoneNumber String?
+  projectId   Int
+}
+
+model Image {
+  id              Int           @id @default(autoincrement())
+  createdAt       DateTime      @default(now())
+  isDeleted       Boolean       @default(false)
+  publicId        String        @unique
+  key             String        @unique
+  projectId       Int
+  organizationId  Int?
+  includeInReport Boolean       @default(false)
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  project         Project       @relation(fields: [projectId], references: [id])
+  inference       Inference?
+  description     String?
+  ImageNote       ImageNote[]
+  Annotation      Annotation[]
+}
+
+model Annotation {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  imageId     Int
+  Image       Image    @relation(fields: [imageId], references: [id])
+  coordinates Json
+  userId      String
+  User        User     @relation(fields: [userId], references: [id])
+  isDeleted   Boolean  @default(false)
+}
+
+model ImageNote {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  imageId   Int
+  Image     Image    @relation(fields: [imageId], references: [id])
+  body      String   @default("")
+  mentions  String[] @default([])
+  userId    String
+  User      User     @relation(fields: [userId], references: [id])
+  isDeleted Boolean  @default(false)
+}
+
+model Inference {
+  id         Int         @id @default(autoincrement())
+  createdAt  DateTime    @default(now())
+  isDeleted  Boolean     @default(false)
+  publicId   String      @unique
+  imageId    Int?        @unique
+  imageKey   String?     @unique
+  projectId  Int
+  roomId     Int?
+  image      Image?      @relation(fields: [imageId], references: [id])
+  Project    Project     @relation(fields: [projectId], references: [id])
+  room       Room?       @relation(fields: [roomId], references: [id])
+  detections Detection[]
+}
+
+model Room {
+  id            Int             @id @default(autoincrement())
+  createdAt     DateTime        @default(now())
+  isDeleted     Boolean         @default(false)
+  publicId      String          @unique
+  name          String
+  projectId     Int
+  project       Project         @relation(fields: [projectId], references: [id])
+  detections    Detection[]
+  inferences    Inference[]
+  templates     TemplatesUsed[]
+  gpp           String?
+  humidity      String?
+  dehuReading   String?
+  temperature   String?
+  length        String?
+  width         String?
+  height        String?
+  totalSqft     String?
+  windows       Int?
+  doors         Int?
+  roomReadings  RoomReading[]
+  areasAffected AreaAffected[]
+  notes         Notes[]
+  equipmentUsed String[]        @default([])
+
+  @@unique([projectId, name])
+}
+
+enum RoomReadingType {
+  dehumidifer
+}
+
+enum EqiupmentType {
+  fan
+  dehumidifier
+  airScrubber
+}
+
+model RoomReading {
+  id                   Int                  @id @default(autoincrement())
+  createdAt            DateTime             @default(now())
+  date                 DateTime             @default(now())
+  room                 Room                 @relation(fields: [roomId], references: [id])
+  humidity             String?
+  temperature          String?
+  moistureContentWall  String?
+  moistureContentFloor String?
+  equipmentUsed        String[]             @default([])
+  roomId               Int
+  isDeleted            Boolean              @default(false)
+  publicId             String
+  project              Project              @relation(fields: [projectId], references: [id])
+  projectId            Int
+  gpp                  String?              @default("")
+  genericRoomReadings  GenericRoomReading[]
+}
+
+model Notes {
+  id              Int               @id @default(autoincrement())
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime?         @updatedAt
+  date            DateTime          @default(now())
+  room            Room              @relation(fields: [roomId], references: [id])
+  roomId          Int
+  isDeleted       Boolean           @default(false)
+  publicId        String
+  project         Project           @relation(fields: [projectId], references: [id])
+  projectId       Int
+  body            String            @default("")
+  notesAuditTrail NotesAuditTrail[]
+}
+
+enum NotesAuditAction {
+  updated
+  deleted
+  created
+}
+
+model NotesAuditTrail {
+  id        Int              @id @default(autoincrement())
+  createdAt DateTime         @default(now())
+  note      Notes            @relation(fields: [notesId], references: [id])
+  notesId   Int
+  userId    String
+  userName  String?
+  action    NotesAuditAction
+  body      String
+}
+
+enum AreaAffectedType {
+  wall
+  ceiling
+  floor
+}
+
+model AreaAffected {
+  id                        Int              @id @default(autoincrement())
+  createdAt                 DateTime         @default(now())
+  date                      DateTime         @default(now())
+  room                      Room             @relation(fields: [roomId], references: [id])
+  roomId                    Int
+  material                  String?
+  totalAreaRemoved          String?
+  totalAreaMicrobialApplied String?
+  cause                     String?
+  category                  Int?
+  cabinetryRemoved          String?
+  isDeleted                 Boolean          @default(false)
+  publicId                  String
+  project                   Project          @relation(fields: [projectId], references: [id])
+  projectId                 Int
+  type                      AreaAffectedType
+
+  @@unique([type, roomId])
+}
+
+model GenericRoomReading {
+  id            Int             @id @default(autoincrement())
+  createdAt     DateTime        @default(now())
+  publicId      String
+  type          RoomReadingType
+  value         String
+  humidity      String?
+  temperature   String?
+  gpp           String?
+  roomReading   RoomReading     @relation(fields: [roomReadingId], references: [id])
+  roomReadingId Int
+  isDeleted     Boolean         @default(false)
+}
+
+enum DimensionUnit {
+  sf
+  lf
+  ea
+}
+
+model Detection {
+  id          Int            @id @default(autoincrement())
+  createdAt   DateTime       @default(now())
+  isDeleted   Boolean        @default(false)
+  publicId    String         @unique
+  inferenceId Int
+  imageKey    String?
+  xMinCord    Float?
+  yMinCord    Float?
+  confidence  Float?
+  xMaxCord    Float?
+  yMaxCord    Float?
+  projectId   Int
+  category    String
+  code        String
+  item        String
+  quality     String
+  roomId      Int?
+  dimension   Int?
+  unit        DimensionUnit?
+  inference   Inference      @relation(fields: [inferenceId], references: [id])
+  room        Room?          @relation(fields: [roomId], references: [id])
+
+  @@unique([projectId, category, code, roomId])
+}
+
+model TemplatesUsed {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  templateCode String
+  roomId       Int?
+  room         Room?    @relation(fields: [roomId], references: [id])
+}
+
+model WaitList {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  email     String   @unique
+}
+
+model RekognitionRuns {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+}
+
+model CalendarEvent {
+  id                  Int                     @id @default(autoincrement())
+  publicId            String                  @unique
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @default(now()) @updatedAt
+  subject             String
+  payload             String
+  reminders           CalendarEventReminder[]
+  project             Project?                @relation(fields: [projectId], references: [id])
+  projectId           Int?
+  date                DateTime
+  dynamicId           String                  @unique
+  isDeleted           Boolean                 @default(false)
+  remindClient        Boolean                 @default(false)
+  remindProjectOwners Boolean                 @default(false)
+}
+
+enum ReminderTarget {
+  client
+  allAssigned
+  projectCreator
+}
+
+// If events only had a single reminder we wouldn't need this.
+// This model supports the ability to have a reminder 10 minutes before an event,
+// 1 hour before an event, the day before an event, etc.
+model CalendarEventReminder {
+  id              Int            @id @default(autoincrement())
+  reminderTarget  ReminderTarget
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @default(now()) @updatedAt
+  sendText        Boolean        @default(false)
+  sendEmail       Boolean        @default(false)
+  textSentAt      DateTime?
+  emailSentAt     DateTime?
+  calendarEvent   CalendarEvent? @relation(fields: [calendarEventId], references: [id])
+  calendarEventId Int?
+  date            DateTime
+}
+
+model ItemCategory {
+  id                   Int        @id @default(autoincrement())
+  xactimateKey         String     @unique
+  xactimateDescription String
+  hasItems             Boolean    @default(false)
+  LineItem             LineItem[]
+}
+
+model LineItem {
+  id                   Int             @id @default(autoincrement())
+  xactimateCategory    ItemCategory    @relation(fields: [itemCategoryId], references: [id])
+  xactimateCode        String
+  xactimateDescription String
+  unit                 String?
+  itemCategoryId       Int
+  alternateItem        AlternateItem[]
+  relatedItem          RelatedItem[]
+
+  @@unique([itemCategoryId, xactimateCode])
+}
+
+model RelatedItem {
+  id         Int      @id @default(autoincrement())
+  relationId String
+  lineItem   LineItem @relation(fields: [lineItemId], references: [id])
+  lineItemId Int
+}
+
+model AlternateItem {
+  id          Int      @id @default(autoincrement())
+  alternateId String
+  lineItem    LineItem @relation(fields: [lineItemId], references: [id])
+  lineItemId  Int
+}
+
+model PlanEntitlements {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  extPlanId   String
+  maxImages   Int
+  maxProjects Int
+  maxSeats    Int
+  description String
+  period      String
+  price       Float
+}
+
+model Customers {
+  id             Int          @id @default(autoincrement())
+  customerId     String       @unique
+  billingAddress Json?
+  paymentMethod  Json?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId Int
+}
+
+model Products {
+  id          String   @id
+  active      Boolean
+  name        String
+  description String?
+  image       String?
+  metadata    Json?
+  prices      Prices[]
+}
+
+model Prices {
+  id              String               @id
+  productId       String
+  active          Boolean
+  unitAmount      BigInt?
+  currency        String
+  type            PricingType
+  interval        PricingPlanInterval?
+  intervalCount   Int?
+  trialPeriodDays Int?
+  metadata        Json?
+  description     String
+  product         Products             @relation(fields: [productId], references: [id])
+  Subscriptions   Subscriptions[]
+}
+
+model Subscriptions {
+  id                 String             @id
+  organizationId     Int
+  status             SubscriptionStatus
+  metadata           Json?
+  pricesId           String
+  quantity           Int
+  cancelAtPeriodEnd  Boolean
+  created            DateTime?          @default(now())
+  currentPeriodStart DateTime?          @default(now())
+  currentPeriodEnd   DateTime?          @default(now())
+  endedAt            DateTime?          @default(now())
+  cancelAt           DateTime?          @default(now())
+  canceledAt         DateTime?          @default(now())
+  trialStart         DateTime?          @default(now())
+  trialEnd           DateTime?          @default(now())
+  price              Prices             @relation(fields: [pricesId], references: [id])
+  organization       Organization       @relation(fields: [organizationId], references: [id])
+}
+
+enum PricingType {
+  one_time
+  recurring
+}
+
+enum PricingPlanInterval {
+  day
+  week
+  month
+  year
+}
+
+enum SubscriptionStatus {
+  trialing
+  active
+  canceled
+  incomplete
+  incomplete_expired
+  past_due
+  unpaid
+}

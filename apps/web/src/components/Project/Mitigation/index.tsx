@@ -1,5 +1,4 @@
 import { ScaleLoader } from "react-spinners";
-import { GroupByViews, PhotoViews } from "@servicegeek/db";
 import dynamic from "next/dynamic";
 
 const ResponsiveWrapper = dynamic(() => import("./ResponsiveWrapper"), {
@@ -11,17 +10,6 @@ const ResponsiveWrapper = dynamic(() => import("./ResponsiveWrapper"), {
   ),
 });
 
-export default function Mitigation({
-  initialGroupView,
-  initialPhotoView,
-}: {
-  initialGroupView: GroupByViews;
-  initialPhotoView: PhotoViews;
-}) {
-  return (
-    <ResponsiveWrapper
-      initialGroupView={initialGroupView}
-      initialPhotoView={initialPhotoView}
-    />
-  );
+export default function Mitigation() {
+  return <ResponsiveWrapper />;
 }

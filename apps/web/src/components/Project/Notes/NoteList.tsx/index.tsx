@@ -1,9 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { PrimaryButton, SecondaryButton } from "@components/components";
-import Modal from "@components/DesignSystem/Modal";
-import { RoomDataWithoutInferences } from "@servicegeek/db/queries/project/getProjectDetections";
 import useAmplitudeTrack from "@utils/hooks/useAmplitudeTrack";
 import { useParams } from "next/navigation";
 import { event } from "nextjs-google-analytics";
@@ -12,8 +9,18 @@ import { roomStore } from "@atoms/room";
 import Notes from "./Notes";
 import { Pencil, Trash } from "lucide-react";
 import { Button } from "@components/ui/button";
+import { Input } from "@components/ui/input";
+import { LoadingSpinner } from "@components/ui/spinner";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+} from "@components/ui/dialog";
 
-const NoteList = ({ room }: { room: RoomDataWithoutInferences }) => {
+const NoteList = ({ room }: { room: RoomWithReadings }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -29,7 +36,7 @@ const NoteList = ({ room }: { room: RoomDataWithoutInferences }) => {
     track("Update Room Name");
 
     try {
-      const res = await fetch(`/api/project/${id}/room-info`, {
+      const res = await fetch(`/api/v1/projects/${id}/room`, {
         method: "PATCH",
         body: JSON.stringify({
           name: internalRoomName,
@@ -37,10 +44,14 @@ const NoteList = ({ room }: { room: RoomDataWithoutInferences }) => {
         }),
       });
       if (res.ok) {
+        toast.success("Room name updated");
         roomStore.getState().updateRoomName(room, internalRoomName);
         setIsEditingTitle(false);
+      } else {
+        toast.error("Failed to update room name");
       }
     } catch (error) {
+      toast.error("Failed to update room name");
       console.log(error);
     }
 
@@ -77,10 +88,11 @@ const NoteList = ({ room }: { room: RoomDataWithoutInferences }) => {
     track("Add Room Note");
 
     try {
-      const res = await fetch(`/api/project/${id}/room-note`, {
+      const res = await fetch(`/api/v1/projects/${id}/notes`, {
         method: "POST",
         body: JSON.stringify({
           roomId: room.publicId,
+          body: "",
         }),
       });
       if (res.ok) {
@@ -100,84 +112,77 @@ const NoteList = ({ room }: { room: RoomDataWithoutInferences }) => {
         <div className='flex items-center'>
           {isEditingTitle ? (
             <>
-              <input
+              <Input
                 value={internalRoomName}
                 onChange={(e) => setInternalRoomName(e.target.value)}
-                className={`rounded-md border-slate-100 bg-white px-4 py-2 shadow-md ${
-                  isSaving ? "bg-slate-200" : ""
-                }`}
                 disabled={isSaving}
               />
-              <SecondaryButton
+              <Button
                 onClick={() => setIsEditingTitle(false)}
                 className='ml-4'
                 disabled={isSaving}
+                variant='outline'
               >
                 Cancel
-              </SecondaryButton>
-              <PrimaryButton
+              </Button>
+              <Button
                 onClick={() => updateRoomName()}
                 className='ml-4'
                 disabled={isSaving}
-                loading={isSaving}
               >
-                Save
-              </PrimaryButton>
+                {isSaving ? <LoadingSpinner /> : "Save"}
+              </Button>
             </>
           ) : (
             <>
-              <h1 className='text-2xl font-semibold text-gray-900'>
+              <h1 className='text-2xl font-semibold text-foreground'>
                 {room.name}
               </h1>
-              <button
+              <Button
+                className='ml-4'
                 onClick={() => setIsEditingTitle(true)}
-                className='flex items-center justify-center px-4 py-2 text-slate-500 hover:text-primary'
+                variant='outline'
               >
                 <Pencil className='h-4' />
-              </button>
+              </Button>
             </>
           )}
         </div>
         <div className='flex items-center justify-center gap-4'>
-          <Button disabled={isCreating} onClick={() => addNote()}>
-            Add Note
+          <Button
+            variant='outline'
+            disabled={isCreating}
+            onClick={() => addNote()}
+          >
+            {isCreating ? <LoadingSpinner /> : "Add Note"}
           </Button>
-          <button
-            className='text-slate-400 hover:text-red-600'
+          <Button
+            variant='destructive'
             onClick={() => setIsConfirmingDelete(true)}
           >
             <Trash className='h-6' />
-          </button>
+          </Button>
         </div>
-        <Modal open={isConfirmingDelete} setOpen={setIsConfirmingDelete}>
-          {() => (
-            <>
-              <div className='px-4 py-5 sm:p-6'>
-                <h3 className='text-lg font-medium leading-6 text-gray-900'>
-                  Delete Room
-                </h3>
-                <div className='mt-2 max-w-xl text-sm text-gray-500'>
-                  <p>
-                    Permanently delete this room and everything associated
-                    within it
-                  </p>
-                </div>
-                <div className='mt-5 flex items-center space-x-4'>
-                  <Button onClick={() => setIsConfirmingDelete(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={() => deleteRoom()}
-                    disabled={isDeleting}
-                    variant='destructive'
-                  >
-                    Yes, delete the room.
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </Modal>
+        <Dialog open={isConfirmingDelete} onOpenChange={setIsConfirmingDelete}>
+          <DialogContent>
+            <DialogHeader>Delete Room</DialogHeader>
+            <DialogDescription>
+              Permanently delete this room and everything associated within it
+            </DialogDescription>
+            <DialogFooter>
+              <Button onClick={() => setIsConfirmingDelete(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => deleteRoom()}
+                disabled={isDeleting}
+                variant='destructive'
+              >
+                Yes, delete the room.
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
       <Notes room={room} />
     </div>

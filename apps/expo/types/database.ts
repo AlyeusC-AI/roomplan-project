@@ -1,0 +1,2178 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  public: {
+    Tables: {
+      AlternateItem: {
+        Row: {
+          alternateId: string
+          id: number
+          lineItemId: number
+        }
+        Insert: {
+          alternateId: string
+          id?: number
+          lineItemId: number
+        }
+        Update: {
+          alternateId?: string
+          id?: number
+          lineItemId?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "AlternateItem_lineItemId_fkey"
+            columns: ["lineItemId"]
+            isOneToOne: false
+            referencedRelation: "LineItem"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Annotation: {
+        Row: {
+          coordinates: Json
+          createdAt: string
+          id: number
+          imageId: number
+          isDeleted: boolean
+          updatedAt: string
+          userId: string
+        }
+        Insert: {
+          coordinates: Json
+          createdAt?: string
+          id?: number
+          imageId: number
+          isDeleted?: boolean
+          updatedAt?: string
+          userId: string
+        }
+        Update: {
+          coordinates?: Json
+          createdAt?: string
+          id?: number
+          imageId?: number
+          isDeleted?: boolean
+          updatedAt?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Annotation_imageId_fkey"
+            columns: ["imageId"]
+            isOneToOne: false
+            referencedRelation: "Image"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Annotation_userId_fkey"
+            columns: ["userId"]
+            isOneToOne: false
+            referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      AreaAffected: {
+        Row: {
+          cabinetryRemoved: string | null
+          category: number | null
+          cause: string | null
+          createdAt: string
+          date: string
+          id: number
+          isDeleted: boolean
+          material: string | null
+          projectId: number
+          publicId: string
+          roomId: number
+          totalAreaMicrobialApplied: string | null
+          totalAreaRemoved: string | null
+          type: Database["public"]["Enums"]["AreaAffectedType"]
+        }
+        Insert: {
+          cabinetryRemoved?: string | null
+          category?: number | null
+          cause?: string | null
+          createdAt?: string
+          date?: string
+          id?: number
+          isDeleted?: boolean
+          material?: string | null
+          projectId: number
+          publicId: string
+          roomId: number
+          totalAreaMicrobialApplied?: string | null
+          totalAreaRemoved?: string | null
+          type: Database["public"]["Enums"]["AreaAffectedType"]
+        }
+        Update: {
+          cabinetryRemoved?: string | null
+          category?: number | null
+          cause?: string | null
+          createdAt?: string
+          date?: string
+          id?: number
+          isDeleted?: boolean
+          material?: string | null
+          projectId?: number
+          publicId?: string
+          roomId?: number
+          totalAreaMicrobialApplied?: string | null
+          totalAreaRemoved?: string | null
+          type?: Database["public"]["Enums"]["AreaAffectedType"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "AreaAffected_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "AreaAffected_roomId_fkey"
+            columns: ["roomId"]
+            isOneToOne: false
+            referencedRelation: "Room"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      CalendarEvent: {
+        Row: {
+          createdAt: string
+          date: string
+          dynamicId: string
+          id: number
+          isDeleted: boolean
+          organizationId: string | null
+          payload: string
+          projectId: number | null
+          publicId: string
+          remindClient: boolean
+          remindProjectOwners: boolean
+          subject: string
+          updatedAt: string
+        }
+        Insert: {
+          createdAt?: string
+          date: string
+          dynamicId: string
+          id?: number
+          isDeleted?: boolean
+          organizationId?: string | null
+          payload: string
+          projectId?: number | null
+          publicId: string
+          remindClient?: boolean
+          remindProjectOwners?: boolean
+          subject: string
+          updatedAt?: string
+        }
+        Update: {
+          createdAt?: string
+          date?: string
+          dynamicId?: string
+          id?: number
+          isDeleted?: boolean
+          organizationId?: string | null
+          payload?: string
+          projectId?: number | null
+          publicId?: string
+          remindClient?: boolean
+          remindProjectOwners?: boolean
+          subject?: string
+          updatedAt?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "CalendarEvent_organizationId_fkey"
+            columns: ["organizationId"]
+            isOneToOne: false
+            referencedRelation: "Organization"
+            referencedColumns: ["publicId"]
+          },
+          {
+            foreignKeyName: "CalendarEvent_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      CalendarEventReminder: {
+        Row: {
+          calendarEventId: number | null
+          createdAt: string
+          date: string
+          emailSentAt: string | null
+          id: number
+          reminderTarget: Database["public"]["Enums"]["ReminderTarget"]
+          sendEmail: boolean
+          sendText: boolean
+          textSentAt: string | null
+          updatedAt: string
+        }
+        Insert: {
+          calendarEventId?: number | null
+          createdAt?: string
+          date: string
+          emailSentAt?: string | null
+          id?: number
+          reminderTarget: Database["public"]["Enums"]["ReminderTarget"]
+          sendEmail?: boolean
+          sendText?: boolean
+          textSentAt?: string | null
+          updatedAt?: string
+        }
+        Update: {
+          calendarEventId?: number | null
+          createdAt?: string
+          date?: string
+          emailSentAt?: string | null
+          id?: number
+          reminderTarget?: Database["public"]["Enums"]["ReminderTarget"]
+          sendEmail?: boolean
+          sendText?: boolean
+          textSentAt?: string | null
+          updatedAt?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "CalendarEventReminder_calendarEventId_fkey"
+            columns: ["calendarEventId"]
+            isOneToOne: false
+            referencedRelation: "CalendarEvent"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Cost: {
+        Row: {
+          actualCost: number | null
+          createdAt: string
+          estimatedCost: number | null
+          id: number
+          isDeleted: boolean
+          name: string | null
+          projectId: number
+          type: Database["public"]["Enums"]["CostType"]
+          updatedAt: string
+        }
+        Insert: {
+          actualCost?: number | null
+          createdAt?: string
+          estimatedCost?: number | null
+          id?: number
+          isDeleted?: boolean
+          name?: string | null
+          projectId: number
+          type: Database["public"]["Enums"]["CostType"]
+          updatedAt?: string
+        }
+        Update: {
+          actualCost?: number | null
+          createdAt?: string
+          estimatedCost?: number | null
+          id?: number
+          isDeleted?: boolean
+          name?: string | null
+          projectId?: number
+          type?: Database["public"]["Enums"]["CostType"]
+          updatedAt?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Cost_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Customers: {
+        Row: {
+          billingAddress: Json | null
+          customerId: string
+          id: number
+          organizationId: number
+          paymentMethod: Json | null
+        }
+        Insert: {
+          billingAddress?: Json | null
+          customerId: string
+          id?: number
+          organizationId: number
+          paymentMethod?: Json | null
+        }
+        Update: {
+          billingAddress?: Json | null
+          customerId?: string
+          id?: number
+          organizationId?: number
+          paymentMethod?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Customers_organizationId_fkey"
+            columns: ["organizationId"]
+            isOneToOne: false
+            referencedRelation: "Organization"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      DataDeletionRequest: {
+        Row: {
+          createdAt: string
+          email: string
+          fullName: string
+          id: number
+          isVerified: boolean
+        }
+        Insert: {
+          createdAt?: string
+          email: string
+          fullName: string
+          id?: number
+          isVerified?: boolean
+        }
+        Update: {
+          createdAt?: string
+          email?: string
+          fullName?: string
+          id?: number
+          isVerified?: boolean
+        }
+        Relationships: []
+      }
+      Detection: {
+        Row: {
+          category: string
+          code: string
+          confidence: number | null
+          createdAt: string
+          dimension: number | null
+          id: number
+          imageKey: string | null
+          inferenceId: number
+          isDeleted: boolean
+          item: string
+          projectId: number
+          publicId: string
+          quality: string
+          roomId: number | null
+          unit: Database["public"]["Enums"]["DimensionUnit"] | null
+          xMaxCord: number | null
+          xMinCord: number | null
+          yMaxCord: number | null
+          yMinCord: number | null
+        }
+        Insert: {
+          category: string
+          code: string
+          confidence?: number | null
+          createdAt?: string
+          dimension?: number | null
+          id?: number
+          imageKey?: string | null
+          inferenceId: number
+          isDeleted?: boolean
+          item: string
+          projectId: number
+          publicId: string
+          quality: string
+          roomId?: number | null
+          unit?: Database["public"]["Enums"]["DimensionUnit"] | null
+          xMaxCord?: number | null
+          xMinCord?: number | null
+          yMaxCord?: number | null
+          yMinCord?: number | null
+        }
+        Update: {
+          category?: string
+          code?: string
+          confidence?: number | null
+          createdAt?: string
+          dimension?: number | null
+          id?: number
+          imageKey?: string | null
+          inferenceId?: number
+          isDeleted?: boolean
+          item?: string
+          projectId?: number
+          publicId?: string
+          quality?: string
+          roomId?: number | null
+          unit?: Database["public"]["Enums"]["DimensionUnit"] | null
+          xMaxCord?: number | null
+          xMinCord?: number | null
+          yMaxCord?: number | null
+          yMinCord?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Detection_inferenceId_fkey"
+            columns: ["inferenceId"]
+            isOneToOne: false
+            referencedRelation: "Inference"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Detection_roomId_fkey"
+            columns: ["roomId"]
+            isOneToOne: false
+            referencedRelation: "Room"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Equipment: {
+        Row: {
+          createdAt: string
+          id: number
+          isDeleted: boolean
+          name: string
+          organizationId: number
+          publicId: string
+          quantity: number
+        }
+        Insert: {
+          createdAt?: string
+          id?: number
+          isDeleted?: boolean
+          name: string
+          organizationId: number
+          publicId: string
+          quantity?: number
+        }
+        Update: {
+          createdAt?: string
+          id?: number
+          isDeleted?: boolean
+          name?: string
+          organizationId?: number
+          publicId?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Equipment_organizationId_fkey"
+            columns: ["organizationId"]
+            isOneToOne: false
+            referencedRelation: "Organization"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      GenericRoomReading: {
+        Row: {
+          createdAt: string
+          gpp: string | null
+          humidity: string | null
+          id: number
+          isDeleted: boolean
+          publicId: string
+          roomReadingId: number
+          temperature: string | null
+          type: Database["public"]["Enums"]["RoomReadingType"]
+          value: string
+        }
+        Insert: {
+          createdAt?: string
+          gpp?: string | null
+          humidity?: string | null
+          id?: number
+          isDeleted?: boolean
+          publicId: string
+          roomReadingId: number
+          temperature?: string | null
+          type: Database["public"]["Enums"]["RoomReadingType"]
+          value: string
+        }
+        Update: {
+          createdAt?: string
+          gpp?: string | null
+          humidity?: string | null
+          id?: number
+          isDeleted?: boolean
+          publicId?: string
+          roomReadingId?: number
+          temperature?: string | null
+          type?: Database["public"]["Enums"]["RoomReadingType"]
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "GenericRoomReading_roomReadingId_fkey"
+            columns: ["roomReadingId"]
+            isOneToOne: false
+            referencedRelation: "RoomReading"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Image: {
+        Row: {
+          createdAt: string
+          description: string | null
+          id: number
+          includeInReport: boolean
+          isDeleted: boolean
+          key: string
+          organizationId: number | null
+          projectId: number
+          publicId: string
+        }
+        Insert: {
+          createdAt?: string
+          description?: string | null
+          id?: number
+          includeInReport?: boolean
+          isDeleted?: boolean
+          key: string
+          organizationId?: number | null
+          projectId: number
+          publicId: string
+        }
+        Update: {
+          createdAt?: string
+          description?: string | null
+          id?: number
+          includeInReport?: boolean
+          isDeleted?: boolean
+          key?: string
+          organizationId?: number | null
+          projectId?: number
+          publicId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Image_organizationId_fkey"
+            columns: ["organizationId"]
+            isOneToOne: false
+            referencedRelation: "Organization"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Image_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ImageNote: {
+        Row: {
+          body: string
+          createdAt: string
+          id: number
+          imageId: number
+          isDeleted: boolean
+          mentions: string[] | null
+          updatedAt: string
+          userId: string
+        }
+        Insert: {
+          body?: string
+          createdAt?: string
+          id?: number
+          imageId: number
+          isDeleted?: boolean
+          mentions?: string[] | null
+          updatedAt?: string
+          userId: string
+        }
+        Update: {
+          body?: string
+          createdAt?: string
+          id?: number
+          imageId?: number
+          isDeleted?: boolean
+          mentions?: string[] | null
+          updatedAt?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ImageNote_imageId_fkey"
+            columns: ["imageId"]
+            isOneToOne: false
+            referencedRelation: "Image"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ImageNote_userId_fkey"
+            columns: ["userId"]
+            isOneToOne: false
+            referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Inference: {
+        Row: {
+          createdAt: string
+          id: number
+          imageId: number | null
+          imageKey: string | null
+          isDeleted: boolean
+          projectId: number
+          publicId: string
+          roomId: number | null
+        }
+        Insert: {
+          createdAt?: string
+          id?: number
+          imageId?: number | null
+          imageKey?: string | null
+          isDeleted?: boolean
+          projectId: number
+          publicId: string
+          roomId?: number | null
+        }
+        Update: {
+          createdAt?: string
+          id?: number
+          imageId?: number | null
+          imageKey?: string | null
+          isDeleted?: boolean
+          projectId?: number
+          publicId?: string
+          roomId?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Inference_imageId_fkey"
+            columns: ["imageId"]
+            isOneToOne: false
+            referencedRelation: "Image"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Inference_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Inference_roomId_fkey"
+            columns: ["roomId"]
+            isOneToOne: false
+            referencedRelation: "Room"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ItemCategory: {
+        Row: {
+          hasItems: boolean
+          id: number
+          xactimateDescription: string
+          xactimateKey: string
+        }
+        Insert: {
+          hasItems?: boolean
+          id?: number
+          xactimateDescription: string
+          xactimateKey: string
+        }
+        Update: {
+          hasItems?: boolean
+          id?: number
+          xactimateDescription?: string
+          xactimateKey?: string
+        }
+        Relationships: []
+      }
+      LineItem: {
+        Row: {
+          id: number
+          itemCategoryId: number
+          unit: string | null
+          xactimateCode: string
+          xactimateDescription: string
+        }
+        Insert: {
+          id?: number
+          itemCategoryId: number
+          unit?: string | null
+          xactimateCode: string
+          xactimateDescription: string
+        }
+        Update: {
+          id?: number
+          itemCategoryId?: number
+          unit?: string | null
+          xactimateCode?: string
+          xactimateDescription?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "LineItem_itemCategoryId_fkey"
+            columns: ["itemCategoryId"]
+            isOneToOne: false
+            referencedRelation: "ItemCategory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Notes: {
+        Row: {
+          body: string
+          createdAt: string
+          date: string
+          id: number
+          isDeleted: boolean
+          projectId: number
+          publicId: string
+          roomId: number
+          updatedAt: string | null
+        }
+        Insert: {
+          body?: string
+          createdAt?: string
+          date?: string
+          id?: number
+          isDeleted?: boolean
+          projectId: number
+          publicId: string
+          roomId: number
+          updatedAt?: string | null
+        }
+        Update: {
+          body?: string
+          createdAt?: string
+          date?: string
+          id?: number
+          isDeleted?: boolean
+          projectId?: number
+          publicId?: string
+          roomId?: number
+          updatedAt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Notes_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Notes_roomId_fkey"
+            columns: ["roomId"]
+            isOneToOne: false
+            referencedRelation: "Room"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      NotesAuditTrail: {
+        Row: {
+          action: Database["public"]["Enums"]["NotesAuditAction"]
+          body: string
+          createdAt: string
+          id: number
+          notesId: number
+          userId: string
+          userName: string | null
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["NotesAuditAction"]
+          body: string
+          createdAt?: string
+          id?: number
+          notesId: number
+          userId: string
+          userName?: string | null
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["NotesAuditAction"]
+          body?: string
+          createdAt?: string
+          id?: number
+          notesId?: number
+          userId?: string
+          userName?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "NotesAuditTrail_notesId_fkey"
+            columns: ["notesId"]
+            isOneToOne: false
+            referencedRelation: "Notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Notification: {
+        Row: {
+          content: string
+          createdAt: string
+          id: number
+          isDeleted: boolean
+          isSeen: boolean
+          link: string | null
+          linkText: string | null
+          publicId: string
+          title: string
+          type: Database["public"]["Enums"]["NotificationType"]
+          userId: string
+        }
+        Insert: {
+          content: string
+          createdAt?: string
+          id?: number
+          isDeleted?: boolean
+          isSeen: boolean
+          link?: string | null
+          linkText?: string | null
+          publicId: string
+          title: string
+          type: Database["public"]["Enums"]["NotificationType"]
+          userId: string
+        }
+        Update: {
+          content?: string
+          createdAt?: string
+          id?: number
+          isDeleted?: boolean
+          isSeen?: boolean
+          link?: string | null
+          linkText?: string | null
+          publicId?: string
+          title?: string
+          type?: Database["public"]["Enums"]["NotificationType"]
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Notification_userId_fkey"
+            columns: ["userId"]
+            isOneToOne: false
+            referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Organization: {
+        Row: {
+          address: string
+          createdAt: string
+          customerId: string | null
+          faxNumber: string
+          freeTrialEndsAt: string | null
+          id: number
+          isDeleted: boolean
+          lat: number | null
+          lng: number | null
+          logoId: string | null
+          maxUsersForSubscription: number | null
+          name: string
+          owner: string | null
+          publicId: string
+          size: string
+          stripeSessionId: string | null
+          subscriptionId: string | null
+          subscriptionPlan:
+            | Database["public"]["Enums"]["SubscriptionLevel"]
+            | null
+          updatedAt: string
+        }
+        Insert: {
+          address?: string
+          createdAt?: string
+          customerId?: string | null
+          faxNumber?: string
+          freeTrialEndsAt?: string | null
+          id?: number
+          isDeleted?: boolean
+          lat?: number | null
+          lng?: number | null
+          logoId?: string | null
+          maxUsersForSubscription?: number | null
+          name: string
+          owner?: string | null
+          publicId: string
+          size: string
+          stripeSessionId?: string | null
+          subscriptionId?: string | null
+          subscriptionPlan?:
+            | Database["public"]["Enums"]["SubscriptionLevel"]
+            | null
+          updatedAt?: string
+        }
+        Update: {
+          address?: string
+          createdAt?: string
+          customerId?: string | null
+          faxNumber?: string
+          freeTrialEndsAt?: string | null
+          id?: number
+          isDeleted?: boolean
+          lat?: number | null
+          lng?: number | null
+          logoId?: string | null
+          maxUsersForSubscription?: number | null
+          name?: string
+          owner?: string | null
+          publicId?: string
+          size?: string
+          stripeSessionId?: string | null
+          subscriptionId?: string | null
+          subscriptionPlan?:
+            | Database["public"]["Enums"]["SubscriptionLevel"]
+            | null
+          updatedAt?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Organization_owner_fkey"
+            columns: ["owner"]
+            isOneToOne: false
+            referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      OrganizationInvitation: {
+        Row: {
+          createdAt: string
+          email: string
+          id: number
+          invitationId: string
+          isAccepted: boolean
+          isDeleted: boolean
+          organizationId: number
+        }
+        Insert: {
+          createdAt?: string
+          email: string
+          id?: number
+          invitationId: string
+          isAccepted?: boolean
+          isDeleted?: boolean
+          organizationId: number
+        }
+        Update: {
+          createdAt?: string
+          email?: string
+          id?: number
+          invitationId?: string
+          isAccepted?: boolean
+          isDeleted?: boolean
+          organizationId?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "OrganizationInvitation_organizationId_fkey"
+            columns: ["organizationId"]
+            isOneToOne: false
+            referencedRelation: "Organization"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      OrganizationSavedOption: {
+        Row: {
+          createdAt: string
+          id: number
+          isDeleted: boolean
+          label: string
+          organizationId: number
+          publicId: string
+          type: Database["public"]["Enums"]["SavedOptionType"]
+          value: string
+        }
+        Insert: {
+          createdAt?: string
+          id?: number
+          isDeleted?: boolean
+          label: string
+          organizationId: number
+          publicId: string
+          type: Database["public"]["Enums"]["SavedOptionType"]
+          value: string
+        }
+        Update: {
+          createdAt?: string
+          id?: number
+          isDeleted?: boolean
+          label?: string
+          organizationId?: number
+          publicId?: string
+          type?: Database["public"]["Enums"]["SavedOptionType"]
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "OrganizationSavedOption_organizationId_fkey"
+            columns: ["organizationId"]
+            isOneToOne: false
+            referencedRelation: "Organization"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      PendingRoofReports: {
+        Row: {
+          createdAt: string
+          id: number
+          isCompleted: boolean
+          isDeleted: boolean
+          projectId: number
+        }
+        Insert: {
+          createdAt?: string
+          id?: number
+          isCompleted?: boolean
+          isDeleted?: boolean
+          projectId: number
+        }
+        Update: {
+          createdAt?: string
+          id?: number
+          isCompleted?: boolean
+          isDeleted?: boolean
+          projectId?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "PendingRoofReports_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      PhotoAccessLink: {
+        Row: {
+          accessId: string
+          createdAt: string
+          email: string | null
+          expiresAt: string | null
+          id: number
+          phoneNumber: string | null
+          projectId: number
+        }
+        Insert: {
+          accessId: string
+          createdAt?: string
+          email?: string | null
+          expiresAt?: string | null
+          id?: number
+          phoneNumber?: string | null
+          projectId: number
+        }
+        Update: {
+          accessId?: string
+          createdAt?: string
+          email?: string | null
+          expiresAt?: string | null
+          id?: number
+          phoneNumber?: string | null
+          projectId?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "PhotoAccessLink_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      PlanEntitlements: {
+        Row: {
+          createdAt: string
+          description: string
+          extPlanId: string
+          id: number
+          maxImages: number
+          maxProjects: number
+          maxSeats: number
+          period: string
+          price: number
+        }
+        Insert: {
+          createdAt?: string
+          description: string
+          extPlanId: string
+          id?: number
+          maxImages: number
+          maxProjects: number
+          maxSeats: number
+          period: string
+          price: number
+        }
+        Update: {
+          createdAt?: string
+          description?: string
+          extPlanId?: string
+          id?: number
+          maxImages?: number
+          maxProjects?: number
+          maxSeats?: number
+          period?: string
+          price?: number
+        }
+        Relationships: []
+      }
+      Prices: {
+        Row: {
+          active: boolean
+          currency: string
+          description: string
+          id: string
+          interval: Database["public"]["Enums"]["PricingPlanInterval"] | null
+          intervalCount: number | null
+          metadata: Json | null
+          productId: string
+          trialPeriodDays: number | null
+          type: Database["public"]["Enums"]["PricingType"]
+          unitAmount: number | null
+        }
+        Insert: {
+          active: boolean
+          currency: string
+          description: string
+          id: string
+          interval?: Database["public"]["Enums"]["PricingPlanInterval"] | null
+          intervalCount?: number | null
+          metadata?: Json | null
+          productId: string
+          trialPeriodDays?: number | null
+          type: Database["public"]["Enums"]["PricingType"]
+          unitAmount?: number | null
+        }
+        Update: {
+          active?: boolean
+          currency?: string
+          description?: string
+          id?: string
+          interval?: Database["public"]["Enums"]["PricingPlanInterval"] | null
+          intervalCount?: number | null
+          metadata?: Json | null
+          productId?: string
+          trialPeriodDays?: number | null
+          type?: Database["public"]["Enums"]["PricingType"]
+          unitAmount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Prices_productId_fkey"
+            columns: ["productId"]
+            isOneToOne: false
+            referencedRelation: "Products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Products: {
+        Row: {
+          active: boolean
+          description: string | null
+          id: string
+          image: string | null
+          metadata: Json | null
+          name: string
+        }
+        Insert: {
+          active: boolean
+          description?: string | null
+          id: string
+          image?: string | null
+          metadata?: Json | null
+          name: string
+        }
+        Update: {
+          active?: boolean
+          description?: string | null
+          id?: string
+          image?: string | null
+          metadata?: Json | null
+          name?: string
+        }
+        Relationships: []
+      }
+      Project: {
+        Row: {
+          actualValue: number | null
+          adjusterEmail: string
+          adjusterName: string
+          adjusterPhoneNumber: string
+          assignmentNumber: string
+          catCode: number | null
+          claimSummary: string
+          clientEmail: string
+          clientName: string
+          clientPhoneNumber: string
+          closedAt: string | null
+          companyName: string
+          createdAt: string
+          forecast: string
+          humidity: string
+          id: number
+          insuranceClaimId: string
+          insuranceCompanyName: string
+          isDeleted: boolean
+          lastTimeWeatherFetched: string | null
+          lat: string
+          lng: string
+          location: string
+          lossType: string
+          managerName: string
+          name: string
+          organizationId: number
+          projectStatusValueId: number | null
+          publicId: string
+          rcvValue: number | null
+          roofSegments: Json[] | null
+          roofSpecs: Json | null
+          status: string | null
+          temperature: string
+          wind: string
+        }
+        Insert: {
+          actualValue?: number | null
+          adjusterEmail?: string
+          adjusterName?: string
+          adjusterPhoneNumber?: string
+          assignmentNumber?: string
+          catCode?: number | null
+          claimSummary?: string
+          clientEmail?: string
+          clientName?: string
+          clientPhoneNumber?: string
+          closedAt?: string | null
+          companyName?: string
+          createdAt?: string
+          forecast?: string
+          humidity?: string
+          id?: number
+          insuranceClaimId?: string
+          insuranceCompanyName?: string
+          isDeleted?: boolean
+          lastTimeWeatherFetched?: string | null
+          lat?: string
+          lng?: string
+          location?: string
+          lossType?: string
+          managerName?: string
+          name: string
+          organizationId: number
+          projectStatusValueId?: number | null
+          publicId: string
+          rcvValue?: number | null
+          roofSegments?: Json[] | null
+          roofSpecs?: Json | null
+          status?: string | null
+          temperature?: string
+          wind?: string
+        }
+        Update: {
+          actualValue?: number | null
+          adjusterEmail?: string
+          adjusterName?: string
+          adjusterPhoneNumber?: string
+          assignmentNumber?: string
+          catCode?: number | null
+          claimSummary?: string
+          clientEmail?: string
+          clientName?: string
+          clientPhoneNumber?: string
+          closedAt?: string | null
+          companyName?: string
+          createdAt?: string
+          forecast?: string
+          humidity?: string
+          id?: number
+          insuranceClaimId?: string
+          insuranceCompanyName?: string
+          isDeleted?: boolean
+          lastTimeWeatherFetched?: string | null
+          lat?: string
+          lng?: string
+          location?: string
+          lossType?: string
+          managerName?: string
+          name?: string
+          organizationId?: number
+          projectStatusValueId?: number | null
+          publicId?: string
+          rcvValue?: number | null
+          roofSegments?: Json[] | null
+          roofSpecs?: Json | null
+          status?: string | null
+          temperature?: string
+          wind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Project_organizationId_fkey"
+            columns: ["organizationId"]
+            isOneToOne: false
+            referencedRelation: "Organization"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Project_projectStatusValueId_fkey"
+            columns: ["projectStatusValueId"]
+            isOneToOne: false
+            referencedRelation: "ProjectStatusValue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ProjectEquipment: {
+        Row: {
+          createdAt: string
+          equipmentId: number
+          id: number
+          isDeleted: boolean
+          projectId: number
+          publicId: string
+          quantity: number
+        }
+        Insert: {
+          createdAt?: string
+          equipmentId: number
+          id?: number
+          isDeleted?: boolean
+          projectId: number
+          publicId: string
+          quantity?: number
+        }
+        Update: {
+          createdAt?: string
+          equipmentId?: number
+          id?: number
+          isDeleted?: boolean
+          projectId?: number
+          publicId?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ProjectEquipment_equipmentId_fkey"
+            columns: ["equipmentId"]
+            isOneToOne: false
+            referencedRelation: "Equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ProjectEquipment_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ProjectNotes: {
+        Row: {
+          body: string
+          createdAt: string
+          date: string
+          id: number
+          isDeleted: boolean
+          mentions: string[] | null
+          projectId: number
+          publicId: string
+          updatedAt: string | null
+          userId: string
+        }
+        Insert: {
+          body?: string
+          createdAt?: string
+          date?: string
+          id?: number
+          isDeleted?: boolean
+          mentions?: string[] | null
+          projectId: number
+          publicId: string
+          updatedAt?: string | null
+          userId: string
+        }
+        Update: {
+          body?: string
+          createdAt?: string
+          date?: string
+          id?: number
+          isDeleted?: boolean
+          mentions?: string[] | null
+          projectId?: number
+          publicId?: string
+          updatedAt?: string | null
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ProjectNotes_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ProjectStatusValue: {
+        Row: {
+          color: string
+          createdAt: string
+          description: string
+          id: number
+          isDeleted: boolean
+          label: string
+          order: number | null
+          organizationId: number
+          publicId: string
+        }
+        Insert: {
+          color: string
+          createdAt?: string
+          description: string
+          id?: number
+          isDeleted?: boolean
+          label: string
+          order?: number | null
+          organizationId: number
+          publicId: string
+        }
+        Update: {
+          color?: string
+          createdAt?: string
+          description?: string
+          id?: number
+          isDeleted?: boolean
+          label?: string
+          order?: number | null
+          organizationId?: number
+          publicId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ProjectStatusValue_organizationId_fkey"
+            columns: ["organizationId"]
+            isOneToOne: false
+            referencedRelation: "Organization"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      PropertyData: {
+        Row: {
+          bathrooms: number | null
+          bedrooms: number | null
+          createdAt: string
+          data: Json | null
+          id: number
+          projectId: number | null
+          realtyMoleId: string | null
+          squareFootage: number | null
+        }
+        Insert: {
+          bathrooms?: number | null
+          bedrooms?: number | null
+          createdAt?: string
+          data?: Json | null
+          id?: number
+          projectId?: number | null
+          realtyMoleId?: string | null
+          squareFootage?: number | null
+        }
+        Update: {
+          bathrooms?: number | null
+          bedrooms?: number | null
+          createdAt?: string
+          data?: Json | null
+          id?: number
+          projectId?: number | null
+          realtyMoleId?: string | null
+          squareFootage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "PropertyData_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      RekognitionRuns: {
+        Row: {
+          createdAt: string
+          id: number
+        }
+        Insert: {
+          createdAt?: string
+          id?: number
+        }
+        Update: {
+          createdAt?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      RelatedItem: {
+        Row: {
+          id: number
+          lineItemId: number
+          relationId: string
+        }
+        Insert: {
+          id?: number
+          lineItemId: number
+          relationId: string
+        }
+        Update: {
+          id?: number
+          lineItemId?: number
+          relationId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "RelatedItem_lineItemId_fkey"
+            columns: ["lineItemId"]
+            isOneToOne: false
+            referencedRelation: "LineItem"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Room: {
+        Row: {
+          createdAt: string
+          dehuReading: string | null
+          doors: number | null
+          equipmentUsed: string[] | null
+          gpp: string | null
+          height: string | null
+          humidity: string | null
+          id: number
+          isDeleted: boolean
+          length: string | null
+          name: string
+          projectId: number
+          publicId: string
+          temperature: string | null
+          totalSqft: string | null
+          width: string | null
+          windows: number | null
+        }
+        Insert: {
+          createdAt?: string
+          dehuReading?: string | null
+          doors?: number | null
+          equipmentUsed?: string[] | null
+          gpp?: string | null
+          height?: string | null
+          humidity?: string | null
+          id?: number
+          isDeleted?: boolean
+          length?: string | null
+          name: string
+          projectId: number
+          publicId: string
+          temperature?: string | null
+          totalSqft?: string | null
+          width?: string | null
+          windows?: number | null
+        }
+        Update: {
+          createdAt?: string
+          dehuReading?: string | null
+          doors?: number | null
+          equipmentUsed?: string[] | null
+          gpp?: string | null
+          height?: string | null
+          humidity?: string | null
+          id?: number
+          isDeleted?: boolean
+          length?: string | null
+          name?: string
+          projectId?: number
+          publicId?: string
+          temperature?: string | null
+          totalSqft?: string | null
+          width?: string | null
+          windows?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Room_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      RoomReading: {
+        Row: {
+          createdAt: string
+          date: string
+          equipmentUsed: string[] | null
+          gpp: string | null
+          humidity: string | null
+          id: number
+          isDeleted: boolean
+          moistureContentFloor: string | null
+          moistureContentWall: string | null
+          projectId: number
+          publicId: string
+          roomId: number
+          temperature: string | null
+        }
+        Insert: {
+          createdAt?: string
+          date?: string
+          equipmentUsed?: string[] | null
+          gpp?: string | null
+          humidity?: string | null
+          id?: number
+          isDeleted?: boolean
+          moistureContentFloor?: string | null
+          moistureContentWall?: string | null
+          projectId: number
+          publicId: string
+          roomId: number
+          temperature?: string | null
+        }
+        Update: {
+          createdAt?: string
+          date?: string
+          equipmentUsed?: string[] | null
+          gpp?: string | null
+          humidity?: string | null
+          id?: number
+          isDeleted?: boolean
+          moistureContentFloor?: string | null
+          moistureContentWall?: string | null
+          projectId?: number
+          publicId?: string
+          roomId?: number
+          temperature?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "RoomReading_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "RoomReading_roomId_fkey"
+            columns: ["roomId"]
+            isOneToOne: false
+            referencedRelation: "Room"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Subscriptions: {
+        Row: {
+          cancelAt: string | null
+          cancelAtPeriodEnd: boolean
+          canceledAt: string | null
+          created: string | null
+          currentPeriodEnd: string | null
+          currentPeriodStart: string | null
+          endedAt: string | null
+          id: string
+          metadata: Json | null
+          organizationId: number
+          pricesId: string
+          quantity: number
+          status: Database["public"]["Enums"]["SubscriptionStatus"]
+          trialEnd: string | null
+          trialStart: string | null
+        }
+        Insert: {
+          cancelAt?: string | null
+          cancelAtPeriodEnd: boolean
+          canceledAt?: string | null
+          created?: string | null
+          currentPeriodEnd?: string | null
+          currentPeriodStart?: string | null
+          endedAt?: string | null
+          id: string
+          metadata?: Json | null
+          organizationId: number
+          pricesId: string
+          quantity: number
+          status: Database["public"]["Enums"]["SubscriptionStatus"]
+          trialEnd?: string | null
+          trialStart?: string | null
+        }
+        Update: {
+          cancelAt?: string | null
+          cancelAtPeriodEnd?: boolean
+          canceledAt?: string | null
+          created?: string | null
+          currentPeriodEnd?: string | null
+          currentPeriodStart?: string | null
+          endedAt?: string | null
+          id?: string
+          metadata?: Json | null
+          organizationId?: number
+          pricesId?: string
+          quantity?: number
+          status?: Database["public"]["Enums"]["SubscriptionStatus"]
+          trialEnd?: string | null
+          trialStart?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Subscriptions_organizationId_fkey"
+            columns: ["organizationId"]
+            isOneToOne: false
+            referencedRelation: "Organization"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Subscriptions_pricesId_fkey"
+            columns: ["pricesId"]
+            isOneToOne: false
+            referencedRelation: "Prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      TemplatesUsed: {
+        Row: {
+          createdAt: string
+          id: number
+          roomId: number | null
+          templateCode: string
+        }
+        Insert: {
+          createdAt?: string
+          id?: number
+          roomId?: number | null
+          templateCode: string
+        }
+        Update: {
+          createdAt?: string
+          id?: number
+          roomId?: number | null
+          templateCode?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "TemplatesUsed_roomId_fkey"
+            columns: ["roomId"]
+            isOneToOne: false
+            referencedRelation: "Room"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      User: {
+        Row: {
+          accessLevel: Database["public"]["Enums"]["AccessLevel"] | null
+          createdAt: string
+          email: string
+          firstName: string
+          groupView: Database["public"]["Enums"]["GroupByViews"]
+          hasSeenProductTour: boolean
+          id: string
+          inviteId: string | null
+          isDeleted: boolean
+          isSupportUser: boolean
+          lastName: string
+          onboardingStatus: Json | null
+          organizationId: string | null
+          phone: string
+          photoView: Database["public"]["Enums"]["PhotoViews"]
+          productTourData: Json | null
+          removed: boolean
+          savedDashboardView: Database["public"]["Enums"]["DashboardViews"]
+          token: string | null
+          updatedAt: string
+        }
+        Insert: {
+          accessLevel?: Database["public"]["Enums"]["AccessLevel"] | null
+          createdAt?: string
+          email: string
+          firstName: string
+          groupView?: Database["public"]["Enums"]["GroupByViews"]
+          hasSeenProductTour?: boolean
+          id: string
+          inviteId?: string | null
+          isDeleted?: boolean
+          isSupportUser?: boolean
+          lastName: string
+          onboardingStatus?: Json | null
+          organizationId?: string | null
+          phone?: string
+          photoView?: Database["public"]["Enums"]["PhotoViews"]
+          productTourData?: Json | null
+          removed?: boolean
+          savedDashboardView?: Database["public"]["Enums"]["DashboardViews"]
+          token?: string | null
+          updatedAt?: string
+        }
+        Update: {
+          accessLevel?: Database["public"]["Enums"]["AccessLevel"] | null
+          createdAt?: string
+          email?: string
+          firstName?: string
+          groupView?: Database["public"]["Enums"]["GroupByViews"]
+          hasSeenProductTour?: boolean
+          id?: string
+          inviteId?: string | null
+          isDeleted?: boolean
+          isSupportUser?: boolean
+          lastName?: string
+          onboardingStatus?: Json | null
+          organizationId?: string | null
+          phone?: string
+          photoView?: Database["public"]["Enums"]["PhotoViews"]
+          productTourData?: Json | null
+          removed?: boolean
+          savedDashboardView?: Database["public"]["Enums"]["DashboardViews"]
+          token?: string | null
+          updatedAt?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "User_organizationId_fkey"
+            columns: ["organizationId"]
+            isOneToOne: false
+            referencedRelation: "Organization"
+            referencedColumns: ["publicId"]
+          },
+        ]
+      }
+      UserToOrganization: {
+        Row: {
+          accessLevel: Database["public"]["Enums"]["AccessLevel"] | null
+          createdAt: string
+          id: number
+          isAdmin: boolean
+          isDeleted: boolean
+          organizationId: number
+          role: string | null
+          userId: string
+        }
+        Insert: {
+          accessLevel?: Database["public"]["Enums"]["AccessLevel"] | null
+          createdAt?: string
+          id?: number
+          isAdmin?: boolean
+          isDeleted?: boolean
+          organizationId: number
+          role?: string | null
+          userId: string
+        }
+        Update: {
+          accessLevel?: Database["public"]["Enums"]["AccessLevel"] | null
+          createdAt?: string
+          id?: number
+          isAdmin?: boolean
+          isDeleted?: boolean
+          organizationId?: number
+          role?: string | null
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "UserToOrganization_organizationId_fkey"
+            columns: ["organizationId"]
+            isOneToOne: false
+            referencedRelation: "Organization"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "UserToOrganization_userId_fkey"
+            columns: ["userId"]
+            isOneToOne: false
+            referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      UserToProject: {
+        Row: {
+          createdAt: string
+          id: number
+          projectId: number
+          userId: string
+        }
+        Insert: {
+          createdAt?: string
+          id?: number
+          projectId: number
+          userId: string
+        }
+        Update: {
+          createdAt?: string
+          id?: number
+          projectId?: number
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "UserToProject_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "UserToProject_userId_fkey"
+            columns: ["userId"]
+            isOneToOne: false
+            referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      WaitList: {
+        Row: {
+          createdAt: string
+          email: string
+          id: number
+        }
+        Insert: {
+          createdAt?: string
+          email: string
+          id?: number
+        }
+        Update: {
+          createdAt?: string
+          email?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      WeatherReportItem: {
+        Row: {
+          comments: string
+          county: string
+          createdAt: string
+          date: string
+          f_scale: string | null
+          id: number
+          isDeleted: boolean
+          lat: string
+          location: string
+          lon: string
+          projectId: number
+          size: string | null
+          speed: string | null
+          state: string
+          time: string
+        }
+        Insert: {
+          comments: string
+          county: string
+          createdAt?: string
+          date: string
+          f_scale?: string | null
+          id?: number
+          isDeleted?: boolean
+          lat: string
+          location: string
+          lon: string
+          projectId: number
+          size?: string | null
+          speed?: string | null
+          state: string
+          time: string
+        }
+        Update: {
+          comments?: string
+          county?: string
+          createdAt?: string
+          date?: string
+          f_scale?: string | null
+          id?: number
+          isDeleted?: boolean
+          lat?: string
+          location?: string
+          lon?: string
+          projectId?: number
+          size?: string | null
+          speed?: string | null
+          state?: string
+          time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "WeatherReportItem_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      AccessLevel:
+        | "admin"
+        | "viewer"
+        | "projectManager"
+        | "accountManager"
+        | "contractor"
+        | "owner"
+      AreaAffectedType: "wall" | "ceiling" | "floor"
+      CostType: "subcontractor" | "miscellaneous" | "materials" | "labor"
+      DashboardViews: "listView" | "boardView" | "mapView"
+      DimensionUnit: "sf" | "lf" | "ea"
+      EqiupmentType: "fan" | "dehumidifier" | "airScrubber"
+      GroupByViews: "roomView" | "dateView"
+      NotesAuditAction: "updated" | "deleted" | "created"
+      NotificationType: "notification" | "activity"
+      PhotoViews: "photoListView" | "photoGridView"
+      PricingPlanInterval: "day" | "week" | "month" | "year"
+      PricingType: "one_time" | "recurring"
+      ProjectStatus:
+        | "active"
+        | "mitigation"
+        | "inspection"
+        | "review"
+        | "completed"
+        | "inactive"
+        | "incomplete"
+      ReminderTarget: "client" | "allAssigned" | "projectCreator"
+      RoomReadingType: "dehumidifer"
+      SavedOptionType: "carrier" | "wallMaterial" | "floorMaterial"
+      SubscriptionLevel: "early_bird" | "startup" | "team" | "enterprise"
+      SubscriptionStatus:
+        | "trialing"
+        | "active"
+        | "canceled"
+        | "incomplete"
+        | "incomplete_expired"
+        | "past_due"
+        | "unpaid"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type PublicSchema = Database[Extract<keyof Database, "public">]
+
+export type Tables<
+  PublicTableNameOrOptions extends
+    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+        Database[PublicTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
+        PublicSchema["Views"])
+    ? (PublicSchema["Tables"] &
+        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  PublicTableNameOrOptions extends
+    | keyof PublicSchema["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  PublicTableNameOrOptions extends
+    | keyof PublicSchema["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  PublicEnumNameOrOptions extends
+    | keyof PublicSchema["Enums"]
+    | { schema: keyof Database },
+  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = PublicEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
+    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof PublicSchema["CompositeTypes"]
+    | { schema: keyof Database },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
+    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never

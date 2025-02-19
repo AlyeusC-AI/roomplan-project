@@ -1,22 +1,21 @@
-// import createInference from "@servicegeek/db/queries/inference/createInference";
-// import getSubcriptionStatus from "@servicegeek/db/queries/organization/getSubscriptionStatus";
-// import addImageToProject from "@servicegeek/db/queries/project/addImageToProject";
 // import getOrCreateRoom, {
 //   getRoomById,
-// } from "@servicegeek/db/queries/room/getOrCreateRoom";
-// import { default as getRestorationXUser } from "@servicegeek/db/queries/user/getUser";
 // import {
 //   AUTOMATIC_ROOM_DETECTION,
 //   UNKNOWN_ROOM,
 // } from "@lib/image-processing/constants";
 // import queueInference from "@lib/qstash/queueInference";
 // import { supabaseServiceRole } from "@lib/supabase/admin";
-// import { SubscriptionStatus } from "@servicegeek/db";
 // import formidable, { File } from "formidable";
 // import { v4 as uuidv4 } from "uuid";
 // import { createClient } from "@lib/supabase/server";
 // import { NextRequest, NextResponse } from "next/server";
 // import { promises } from "fs";
+
+import { supabaseServiceRole } from "@lib/supabase/admin";
+import { user } from "@lib/supabase/get-user";
+import { NextRequest, NextResponse } from "next/server";
+import { v4 } from "uuid";
 
 // export const config = {
 //   api: {
@@ -186,3 +185,181 @@
 //     return NextResponse.json({ status: "failed" }, { status: 500 });
 //   }
 // }
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await user(req);
+    const id = (await params).id;
+
+    const { data: project, error } = await supabaseServiceRole
+      .from("Project")
+      .select(
+        `
+      Room (
+        *,
+        Inference (
+        *
+        )
+      )
+      `
+      )
+      .eq("publicId", id)
+      .eq("isDeleted", false)
+      .single();
+
+    if (error) {
+      console.error(error);
+      return NextResponse.json({ status: "failed" }, { status: 500 });
+    }
+
+    if (!project) {
+      return NextResponse.json({ status: "failed" }, { status: 404 });
+    }
+
+    const imageKeys = project.Room?.reduce<string[]>((prev, cur) => {
+      const images = cur.Inference.reduce<string[]>(
+        (p, c) => (c.imageKey ? [decodeURIComponent(c.imageKey), ...p] : p),
+        []
+      );
+      return [...images, ...prev];
+    }, []) as string[];
+
+    const { data } = await supabaseServiceRole.storage
+      .from("project-images")
+      .createSignedUrls(imageKeys, 1800);
+
+    const { data: mediaData } = await supabaseServiceRole.storage
+      .from("media")
+      .createSignedUrls(imageKeys, 1800);
+    const arr =
+      data && mediaData
+        ? [...data, ...mediaData]
+        : data
+          ? data
+          : mediaData
+            ? mediaData
+            : [];
+    const urlMap = arr.reduce<{
+      [imageKey: string]: string;
+    }>((p, c) => {
+      if (c.error) return p;
+      if (!c.path) return p;
+      return {
+        [c.path]: c.signedUrl,
+        ...p,
+      };
+    }, {});
+
+    return NextResponse.json({
+      rooms: project.Room,
+      urlMap,
+    });
+  } catch {
+    return NextResponse.json({ status: "failed" }, { status: 500 });
+  }
+}
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const [, authUser] = await user(req);
+
+    const { id } = await params;
+
+    const { imageId: iId, roomId, roomName } = await req.json();
+
+    const imageId = encodeURIComponent(iId);
+
+    const projectId = await supabaseServiceRole
+      .from("Project")
+      .select("id")
+      .eq("publicId", id)
+      .single();
+
+    const image = await supabaseServiceRole
+      .from("Image")
+      .insert({
+        projectId: projectId.data!.id,
+        publicId: imageId,
+        key: imageId,
+        organizationId: authUser.user_metadata.organizationId,
+      })
+      .select("*")
+      .single();
+
+    let room: Room | null = null;
+
+    if (roomId && roomId.length > 0) {
+      const r = await supabaseServiceRole
+        .from("Room")
+        .select("*")
+        .eq("publicId", roomId)
+        .single();
+
+      room = r.data!;
+    } else {
+      const r = await supabaseServiceRole
+        .from("Room")
+        .insert({
+          projectId: projectId.data!.id,
+          name: roomName ?? "Unknown Room",
+          publicId: v4(),
+        })
+        .select("*")
+        .single();
+
+      room = r.data!;
+    }
+
+    await supabaseServiceRole.from("Inference").insert({
+      publicId: v4(),
+      imageId: image.data!.id,
+      roomId: room!.id,
+      imageKey: imageId,
+      projectId: projectId.data!.id,
+    });
+  } catch {
+    return NextResponse.json({ status: "failed" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  await user(req);
+
+  try {
+    const { keys } = await req.json();
+    if (!keys) {
+      return NextResponse.json(
+        { status: "failed", reason: "keys required" },
+        { status: 500 }
+      );
+    }
+
+    const inference = supabaseServiceRole
+      .from("Inference")
+      .update({ isDeleted: true })
+      .in("imageKey", keys);
+
+    const detection = supabaseServiceRole
+      .from("Detection")
+      .update({ isDeleted: true })
+      .in("imageKey", keys);
+
+    const image = supabaseServiceRole
+      .from("Image")
+      .update({ isDeleted: true })
+      .in("key", keys);
+
+    await Promise.all([inference, detection, image]);
+    return NextResponse.json({ status: "ok" }, { status: 200 });
+  } catch (err) {
+    console.error(err);
+
+    return NextResponse.json({ status: "failed" }, { status: 500 });
+  }
+}

@@ -1,17 +1,12 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import { projectStore } from "@atoms/project";
-import { subscriptionStore } from "@atoms/subscription-status";
-import UpgradeModal from "@components/UpgradeModal";
 import { Loader } from "@googlemaps/js-api-loader";
 import { Dialog, Transition } from "@headlessui/react";
-import { SubscriptionStatus } from "@servicegeek/db";
-import { trpc } from "@utils/trpc";
 import clsx from "clsx";
 import { useParams } from "next/navigation";
 import Papa from "papaparse";
 
-import "react-datepicker/dist/react-datepicker.css";
 import { Ellipsis, List, Map } from "lucide-react";
 
 export type HailReportItem = {
@@ -31,15 +26,12 @@ const ResponsiveWrapper = () => {
   const [loading, setLoading] = useState(true);
   const [toggleView, setToggleView] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const subscriptionStatus = subscriptionStore(
-    (state) => state.subscriptionStatus
-  );
   const params = useParams<{ id: string }>();
   const [date, setDate] = useState(new Date());
 
-  const allWeatherReports = trpc.weatherReportItems.getAll.useQuery({
-    projectPublicId: params.id,
-  });
+  // const allWeatherReports = trpc.weatherReportItems.getAll.useQuery({
+  //   projectPublicId: params.id,
+  // });
 
   const columns = [
     "Time",
@@ -54,30 +46,30 @@ const ResponsiveWrapper = () => {
   ];
   // todo: https://github.com/JHahn42/ASCServer/blob/a51ba21078ee10089ccc2f3c87e2ac4c1ab22ead/weatherparser.js
 
-  const createWeatherReportItemMutation =
-    trpc.weatherReportItems.addWeatherItemToReport.useMutation({
-      onSettled() {
-        setIsCreating(false);
-        allWeatherReports.refetch();
-      },
-    });
-  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  // const createWeatherReportItemMutation =
+  //   trpc.weatherReportItems.addWeatherItemToReport.useMutation({
+  //     onSettled() {
+  //       setIsCreating(false);
+  //       allWeatherReports.refetch();
+  //     },
+  //   });
+  // const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
-  const deleteWeatherReportItemMutation =
-    trpc.weatherReportItems.deleteWeatherReportItemFromReport.useMutation({
-      onSettled() {
-        allWeatherReports.refetch();
-      },
-    });
-  const removeFromReport = (item: any) => {
+  // const deleteWeatherReportItemMutation =
+  //   trpc.weatherReportItems.deleteWeatherReportItemFromReport.useMutation({
+  //     onSettled() {
+  //       allWeatherReports.refetch();
+  //     },
+  //   });
+  const removeFromReport = (item: HailReportItem) => {
     const found = allWeatherReports?.data?.find(
       (reportItem) => reportItem.lat === item.Lat && reportItem.lon === item.Lon
     );
     if (!found) return;
-    deleteWeatherReportItemMutation.mutateAsync({
-      projectPublicId: params.id,
-      id: found.id,
-    });
+    // deleteWeatherReportItemMutation.mutateAsync({
+    //   projectPublicId: params.id,
+    //   id: found.id,
+    // });
   };
   useEffect(() => {
     const last7Days = [];
@@ -127,8 +119,8 @@ const ResponsiveWrapper = () => {
       const map = new google.maps.Map(satelliteView?.current, {
         zoom: 10,
         center: {
-          lat: Number(projectInfo.lat),
-          lng: Number(projectInfo.lng),
+          lat: Number(projectInfo?.lat),
+          lng: Number(projectInfo?.lng),
         },
         streetViewControl: false,
         rotateControl: false,
@@ -180,25 +172,25 @@ const ResponsiveWrapper = () => {
   };
 
   const addToReport = (item: HailReportItem) => {
-    if (subscriptionStatus !== SubscriptionStatus.active) {
-      setUpgradeModalOpen(true);
-      return;
-    }
+    // if (subscriptionStatus !== SubscriptionStatus.active) {
+    //   setUpgradeModalOpen(true);
+    //   return;
+    // }
     setIsCreating(true);
-    createWeatherReportItemMutation.mutateAsync({
-      projectPublicId: params.id,
-      time: item.Time ?? "",
-      location: item.Location ?? "",
-      county: item.County ?? "",
-      state: item.State ?? "",
-      lat: item.Lat ?? "",
-      lon: item.Lon ?? "",
-      comments: item.Comments ?? "",
-      f_scale: "",
-      speed: "",
-      size: item.Size ?? "",
-      date: new Date(),
-    });
+    // createWeatherReportItemMutation.mutateAsync({
+    //   projectPublicId: params.id,
+    //   time: item.Time ?? "",
+    //   location: item.Location ?? "",
+    //   county: item.County ?? "",
+    //   state: item.State ?? "",
+    //   lat: item.Lat ?? "",
+    //   lon: item.Lon ?? "",
+    //   comments: item.Comments ?? "",
+    //   f_scale: "",
+    //   speed: "",
+    //   size: item.Size ?? "",
+    //   date: new Date(),
+    // });
   };
 
   // method to check if item is already in report
@@ -226,7 +218,7 @@ const ResponsiveWrapper = () => {
               leaveFrom='opacity-100'
               leaveTo='opacity-0'
             >
-              <div className='fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity' />
+              <div className='fixed inset-0 bg-gray-500/75 transition-opacity' />
             </Transition.Child>
 
             <div className='fixed inset-0 z-10 overflow-y-auto'>
@@ -263,7 +255,6 @@ const ResponsiveWrapper = () => {
             </div>
           </Dialog>
         </Transition.Root>
-        <UpgradeModal open={upgradeModalOpen} setOpen={setUpgradeModalOpen} />
         <div className='sm:flex sm:items-center'>
           <div className='sm:flex-auto'>
             <h1 className='text-xl font-semibold text-gray-900'>
@@ -336,10 +327,10 @@ const ResponsiveWrapper = () => {
         <div className='mt-8 flex h-full flex-col'>
           <div className='-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8'>
             <div className='inline-block min-w-full py-2 align-middle md:px-6 lg:px-8'>
-              <div className='shadow ring-1 ring-black ring-opacity-5 md:rounded-lg'>
+              <div className='shadow ring-1 ring-black/5 md:rounded-lg'>
                 <table
                   className={clsx(
-                    '"min-w-full divide-gray-300" block divide-y',
+                    "block min-w-full divide-y divide-gray-300",
                     toggleView && "hidden"
                   )}
                 >
@@ -360,14 +351,14 @@ const ResponsiveWrapper = () => {
                     {hail && hail.length > 0 ? (
                       hail?.map((item, i) => (
                         <tr key={i}>
-                          {columns.map((column, i) => {
+                          {columns.map((column) => {
                             if (column === "addToReport") {
                               return (
                                 <td
                                   key={column}
                                   className='py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6'
                                 >
-                                  {allWeatherReports.isSuccess &&
+                                  {/* {allWeatherReports.isSuccess &&
                                   isItemInReport(item) ? (
                                     <button
                                       onClick={() => removeFromReport(item)}
@@ -382,16 +373,16 @@ const ResponsiveWrapper = () => {
                                     >
                                       Add to report
                                     </button>
-                                  )}
+                                  )} */}
                                 </td>
                               );
                             } else {
                               return (
                                 <td
                                   key={column}
-                                  className='m-w-s overflow-auto py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6'
+                                  className='overflow-auto py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6'
                                 >
-                                  {/* @ts-ignore-error */}
+                                  {/* @ts-expect-error sss */}
                                   {item[column]}
                                 </td>
                               );

@@ -1,20 +1,13 @@
 "use client";
 
-import FirstTimePhotos from "@components/onboarding/FirstTimePhotos";
+// import FirstTimePhotos from "@components/onboarding/FirstTimePhotos";
 import Mitigation from "@components/Project/Mitigation";
-import { trpc } from "@utils/trpc";
 
 const EstimatePage = () => {
-  trpc.photoView.getPhotoView.useQuery(undefined, {
-    initialData: { photoView: "photoListView" },
-  });
   return (
     <>
-      <Mitigation
-        initialGroupView={"roomView"}
-        initialPhotoView={"photoListView"}
-      />
-      <FirstTimePhotos />
+      <Mitigation />
+      {/* <FirstTimePhotos /> */}
     </>
   );
 };

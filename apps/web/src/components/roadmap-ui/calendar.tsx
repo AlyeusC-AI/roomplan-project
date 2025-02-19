@@ -406,10 +406,19 @@ export const CalendarHeader = ({ className }: CalendarHeaderProps) => {
 export type CalendarItemProps = {
   feature: Feature;
   className?: string;
+  onClick?: () => void;
 };
 
-export const CalendarItem = ({ feature, className }: CalendarItemProps) => (
-  <div className={cn("flex items-center gap-2", className)} key={feature.id}>
+export const CalendarItem = ({
+  feature,
+  className,
+  onClick,
+}: CalendarItemProps) => (
+  <div
+    onClick={onClick}
+    className={cn("flex items-center gap-2 hover:cursor-pointer", className)}
+    key={feature.id}
+  >
     <div
       className='size-2 shrink-0 rounded-full'
       style={{

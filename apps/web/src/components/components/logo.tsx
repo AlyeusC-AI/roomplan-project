@@ -5,7 +5,7 @@ export const LogoIconBlue = () => (
     height={1843}
     width={1613}
     src='/images/brand/servicegeek.svg'
-    alt='ServiceGeek'
+    alt='RestoreGeek'
   />
 );
 
@@ -15,6 +15,6 @@ export const LogoTextBlue = () => (
     width={250}
     style={{ alignContent: "start" }}
     src='/images/brand/servicegeek-long.svg'
-    alt='ServiceGeek'
+    alt='RestoreGeek'
   />
 );

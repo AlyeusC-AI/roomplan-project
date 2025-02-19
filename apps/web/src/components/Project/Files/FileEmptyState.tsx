@@ -3,6 +3,7 @@ import Image from "next/image";
 import { event } from "nextjs-google-analytics";
 import { LoadingSpinner } from "@components/ui/spinner";
 import { Plus } from "lucide-react";
+import { buttonVariants } from "@components/ui/button";
 
 const FileEmptyState = ({
   onChange,
@@ -39,7 +40,7 @@ const FileEmptyState = ({
         <div>
           <label
             htmlFor='file-upload'
-            className='inline-flex items-center justify-center rounded-md border border-transparent px-2 py-1 text-sm font-medium text-white shadow-sm hover:cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 sm:w-auto md:px-4 md:py-2'
+            className={buttonVariants({ variant: "outline" })}
           >
             {isUploading ? (
               <LoadingSpinner />

@@ -7,7 +7,6 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { v4 } from "uuid";
 import { colorHash } from "@utils/color-hash";
 import {
   closestCenter,
@@ -18,11 +17,9 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { PrimaryButton } from "@components/components";
 import { BadgeInfo } from "lucide-react";
 import WorkflowStatus from "./components/status";
-import { useState } from "react";
-import { trpc } from "@utils/trpc";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,25 +34,18 @@ import {
 } from "@components/ui/form";
 import { Input } from "@components/ui/input";
 import { Button } from "@components/ui/button";
+import { LoadingPlaceholder, LoadingSpinner } from "@components/ui/spinner";
 
 const workflowSchema = z.object({
-  name: z
-    .string()
-    .min(2, {
-      message: "Workflow label must be at least 2 characters.",
-    })
-    .max(30, {
-      message: "Workflow label must not be longer than 30 characters.",
-    }),
+  name: z.string().optional(),
 });
 
 type WorkflowLabelValues = z.infer<typeof workflowSchema>;
 
 export default function WorkflowPage() {
-  const [newLabel, setNewLabel] = useState("");
   const [isAdding, setIsAdding] = useState(false);
-
-  const utils = trpc.useContext();
+  const [statuses, setStatuses] = useState<Status[]>([]);
+  const [fetching, setFetching] = useState(true);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -64,118 +54,104 @@ export default function WorkflowPage() {
     })
   );
 
-  const reorderStatuses = trpc.projectStatus.reorderProjectStatuses.useMutation(
-    {
-      async onMutate({ oldIndex, newIndex }) {
-        await utils.projectStatus.getAllProjectStatuses.cancel();
-        const prevData = utils.projectStatus.getAllProjectStatuses.getData();
+  // const reorderStatuses = trpc.projectStatus.reorderProjectStatuses.useMutation(
+  //   {
+  //     async onMutate({ oldIndex, newIndex }) {
+  //       await utils.projectStatus.getAllProjectStatuses.cancel();
+  //       const prevData = utils.projectStatus.getAllProjectStatuses.getData();
 
-        utils.projectStatus.getAllProjectStatuses.setData({}, (old) => {
-          if (!old || !old.statuses) {
-            return { statuses: [] };
-          }
-          const oldStatuses = [...old?.statuses];
-          const newArr = arrayMove(oldStatuses, oldIndex, newIndex);
+  //       utils.projectStatus.getAllProjectStatuses.setData({}, (old) => {
+  //         if (!old || !old.statuses) {
+  //           return { statuses: [] };
+  //         }
+  //         const oldStatuses = [...old?.statuses];
+  //         const newArr = arrayMove(oldStatuses, oldIndex, newIndex);
 
-          return { statuses: newArr };
-        });
-        return { prevData };
-      },
-      onError(err, data, ctx) {
-        if (ctx?.prevData)
-          utils.projectStatus.getAllProjectStatuses.setData({}, ctx.prevData);
-      },
-      onSettled() {
-        utils.projectStatus.getAllProjectStatuses.invalidate();
-      },
-    }
-  );
+  //         return { statuses: newArr };
+  //       });
+  //       return { prevData };
+  //     },
+  //     onError(err, data, ctx) {
+  //       if (ctx?.prevData)
+  //         utils.projectStatus.getAllProjectStatuses.setData({}, ctx.prevData);
+  //     },
+  //     onSettled() {
+  //       utils.projectStatus.getAllProjectStatuses.invalidate();
+  //     },
+  //   }
+  // );
 
-  const createLabel = trpc.projectStatus.createProjectStatus.useMutation({
-    async onMutate({ label, description, color }) {
-      await utils.projectStatus.getAllProjectStatuses.cancel();
-      const prevData = utils.projectStatus.getAllProjectStatuses.getData();
-      const temporaryId = v4();
-
-      utils.projectStatus.getAllProjectStatuses.setData({}, (old) => {
-        const newData = {
-          label,
-          description,
-          color,
-          publicId: `temporary-${temporaryId}`,
-          order: old?.statuses.length || -1,
-          id: Math.floor(Math.random() * (1000000 - 1000 + 1)) + 1000,
-        };
-        if (!old || !old.statuses) {
-          return { statuses: [newData] };
-        }
-        return { statuses: [newData, ...old.statuses] };
+  useEffect(() => {
+    setFetching(true);
+    fetch("/api/v1/organization/status")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        setStatuses(data.data);
+        setFetching(false);
       });
-      return { prevData, temporaryId };
-    },
-    onError(err, data, ctx) {
-      if (ctx?.prevData)
-        utils.projectStatus.getAllProjectStatuses.setData({}, ctx.prevData);
-    },
-    onSettled() {
-      utils.projectStatus.getAllProjectStatuses.invalidate();
-    },
-  });
+  }, []);
 
-  const allStatuses = trpc.projectStatus.getAllProjectStatuses.useQuery({});
-
-  const addLabel = async () => {
-    setIsAdding(true);
+  async function handleDragEnd(event: DragEndEvent) {
     try {
-      await createLabel.mutateAsync({
-        label: newLabel,
-        description: "",
-        color: colorHash(newLabel).rgb,
+      const { active, over } = event;
+
+      const copiedStatuses = statuses;
+      const oldIndex = copiedStatuses.findIndex((o) => o.id === active.id);
+      const newIndex = copiedStatuses.findIndex((o) => o.id === over?.id);
+
+      const newArr = arrayMove(copiedStatuses, oldIndex, newIndex);
+      const ordering = newArr.map((d, index) => ({
+        publicId: d.publicId,
+        index: index,
+      }));
+
+      await fetch("/api/v1/organization/status", {
+        method: "PATCH",
+        body: JSON.stringify({ order: ordering }),
       });
-      toast.success(`Added equipment: ${newLabel}`);
-    } catch (e) {
-      console.error(e);
+
+      setStatuses(newArr);
+      toast.success("Reordered statuses successfully");
+    } catch {
+      toast.error("Failed to reorder statuses");
     }
-    setNewLabel("");
-    setIsAdding(false);
-  };
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-
-    const copiedStatuses = allStatuses?.data?.statuses ?? [];
-    const oldIndex = copiedStatuses.findIndex((o) => o.id === active.id);
-    const newIndex = copiedStatuses.findIndex((o) => o.id === over?.id);
-
-    const newArr = arrayMove(copiedStatuses, oldIndex, newIndex);
-    const ordering = newArr.map((d) => ({ publicId: d.publicId }));
-    reorderStatuses.mutate({ ordering, oldIndex, newIndex });
   }
-
-  const allLabels = allStatuses.data?.statuses || [];
 
   const form = useForm<z.infer<typeof workflowSchema>>({
     resolver: zodResolver(workflowSchema),
     mode: "onChange",
   });
 
-  function onSubmit(data: WorkflowLabelValues) {
-    toast("You submitted the following values:", {
-      description: (
-        <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
-          <code className='text-white'>{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+  async function onSubmit(data: WorkflowLabelValues) {
+    try {
+      if (!data.name || data.name.length < 2) {
+        toast.error("Workflow label must be at least 2 characters.");
+        return;
+      }
+      setIsAdding(true);
+      const res = await fetch("/api/v1/organization/status", {
+        method: "POST",
+        body: JSON.stringify({
+          label: data.name,
+          color: colorHash(data.name).rgb,
+        }),
+      });
+      const json = await res.json();
+      setIsAdding(false);
+      form.setValue("name", "");
+      setStatuses([...statuses, json.data]);
+      toast.success("Added label successfully");
+    } catch {
+      toast.error("Failed to add label");
+    }
+  }
+
+  if (fetching) {
+    return <LoadingPlaceholder />;
   }
 
   return (
-    // <RecoilRoot
-    //   initializeState={initRecoilAtoms({ userInfo, teamMembers, orgInfo })}
-    // >
-    // <AppContainer
-    //   renderSecondaryNavigation={() => <ProjectsNavigationContainer />}
-    // >
     <div className=''>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
@@ -196,40 +172,13 @@ export default function WorkflowPage() {
               </FormItem>
             )}
           />
-          <Button type='submit'>Add label</Button>
+          <Button type='submit'>
+            {isAdding ? <LoadingSpinner /> : "Add label"}
+          </Button>
         </form>
       </Form>
-      <div className='my-8 w-full'>
-        <label
-          htmlFor='equipment'
-          className='block text-sm font-medium text-gray-700'
-        >
-          Add Label
-        </label>
-        <div className='mt-1 flex justify-between gap-2'>
-          <input
-            type='equipment'
-            name='equipment'
-            id='equipment'
-            className='block w-full rounded-md border border-gray-200 px-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
-            placeholder='New label'
-            onChange={(e) => setNewLabel(e.target.value)}
-            value={newLabel}
-            disabled={isAdding}
-          />
-          <div className='flex w-80 justify-end'>
-            <PrimaryButton
-              className='w-full'
-              onClick={addLabel}
-              disabled={isAdding || !newLabel}
-            >
-              Add New Label
-            </PrimaryButton>
-          </div>
-        </div>
-      </div>
-      <div className='mb-6 flex'>
-        <BadgeInfo className='mr-4 h-6 text-gray-800' /> Drag statuses to change
+      <div className='my-6 flex'>
+        <BadgeInfo className='mr-4 h-6 text-muted' /> Drag statuses to change
         their order. The order here is the order that will be displayed on your
         Projects page while using the "board" view.
       </div>
@@ -240,18 +189,16 @@ export default function WorkflowPage() {
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={allLabels}
+            items={statuses}
             strategy={verticalListSortingStrategy}
           >
-            {allLabels.map((s) => (
+            {statuses.map((s) => (
               <WorkflowStatus key={s.label} label={s} />
             ))}
           </SortableContext>
         </DndContext>
       </div>
     </div>
-    // </AppContainer>
-    /* </RecoilRoot> */
   );
 }
 

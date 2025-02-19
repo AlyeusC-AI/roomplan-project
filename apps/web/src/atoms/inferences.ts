@@ -1,27 +1,23 @@
-import { RoomData } from "@servicegeek/db/queries/project/getProjectDetections";
-import { create } from "zustand";
+// import { create } from "zustand";
 
-// export const defaultInferencesState = []
+// interface State {
+//   genericReadings: GenericRoomReading[];
+//   readings: RoomReading[];
+// }
 
-// const inferencesState = atom<RoomData[]>({
-//   key: 'InferencesState',
-//   default: defaultInferencesState,
-// })
+// interface Actions {
+//   setReadings: (
+//     readings: RoomReading[],
+//     genericReadings: GenericRoomReading[]
+//   ) => void;
+//   addReading: (inference: RoomReading) => void;
+// }
 
-// export default inferencesState
-
-interface State {
-  inferences: RoomData[];
-}
-
-interface Actions {
-  setInferences: (inferences: RoomData[]) => void;
-  addInference: (inference: RoomData) => void;
-}
-
-export const inferencesStore = create<State & Actions>((set) => ({
-  inferences: [],
-  setInferences: (inferences: RoomData[]) => set({ inferences }),
-  addInference: (inference: RoomData) =>
-    set((state) => ({ inferences: [...state.inferences, inference] })),
-}));
+// export const inferencesStore = create<State & Actions>((set) => ({
+//   readings: [],
+//   genericReadings: [],
+//   setReadings: (readings, genericReadings) =>
+//     set({ readings, genericReadings }),
+//   addReading: (reading) =>
+//     set((state) => ({ readings: [...state.readings, reading] })),
+// }));

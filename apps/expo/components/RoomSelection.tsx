@@ -1,14 +1,13 @@
-import { Box, Button, Center, Flex, HStack, Select, View } from "native-base";
+import { Center, Select, View } from "native-base";
 import React from "react";
 import { Check } from "lucide-react-native"
-import { RouterOutputs } from "@servicegeek/api";
 
 const RoomSelection = ({
   rooms,
   onChange,
   selectedRoom,
 }: {
-  rooms: RouterOutputs["mobile"]["getProjectImages"]["rooms"];
+  rooms: Room[];
   onChange: (id: string) => void;
   selectedRoom: string;
 }) => {

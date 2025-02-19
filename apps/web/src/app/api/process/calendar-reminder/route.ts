@@ -1,5 +1,4 @@
-import { prisma } from "@servicegeek/db";
-
+import { supabaseServiceRole } from "@lib/supabase/admin";
 import { Novu } from "@novu/node";
 import assert from "assert";
 import { NextRequest, NextResponse } from "next/server";
@@ -10,17 +9,13 @@ export async function POST(req: NextRequest) {
   console.log("Processing reminder ", reminderId);
   console.log("dynamic id ", dynamicId);
 
-  const calendarEventReminder = await prisma.calendarEventReminder.findFirst({
-    where: {
-      id: reminderId,
-    },
-    select: {
-      calendarEventId: true,
-      calendarEvent: true,
-    },
-  });
+  const calendarEventReminder = await supabaseServiceRole
+    .from("CalendarEventReminder")
+    .select("*, CalendarEvent(*)")
+    .eq("id", reminderId)
+    .single();
 
-  const calendarEvent = calendarEventReminder?.calendarEvent;
+  const calendarEvent = calendarEventReminder?.data?.CalendarEvent;
 
   if (!calendarEvent) {
     return NextResponse.json(
@@ -59,16 +54,12 @@ export async function POST(req: NextRequest) {
 
   // const nuvo promises
   const nuvoPromises: Promise<any>[] = [];
-  const projectInfo = await prisma.project.findFirst({
-    where: {
-      id: Number(calendarEvent?.projectId) || 0,
-    },
-    select: {
-      clientPhoneNumber: true,
-      clientName: true,
-      location: true,
-    },
-  });
+
+  const projectInfo = await supabaseServiceRole
+    .from("Project")
+    .select("clientPhoneNumber, clientName, location")
+    .eq("id", Number(calendarEvent.projectId))
+    .single();
 
   const messageData = {
     subject: Buffer.from(
@@ -76,8 +67,8 @@ export async function POST(req: NextRequest) {
       "utf-8"
     ).toString(),
     time: localizedTimeString,
-    client: projectInfo?.clientName,
-    location: projectInfo?.location,
+    client: projectInfo?.data?.clientName,
+    location: projectInfo?.data?.location,
     message: Buffer.from(
       calendarEvent.payload.replaceAll("'", ""),
       "utf-8"
@@ -87,14 +78,14 @@ export async function POST(req: NextRequest) {
   if (calendarEvent.remindClient) {
     console.log(
       "preparing to send to clientPhoneNumber ",
-      projectInfo?.clientPhoneNumber
+      projectInfo?.data?.clientPhoneNumber
     );
-    if (projectInfo?.clientPhoneNumber) {
+    if (projectInfo?.data?.clientPhoneNumber) {
       nuvoPromises.push(
         novu.trigger("calendar-reminder", {
           to: {
             subscriberId: calendarEvent.publicId,
-            phone: `+1${projectInfo?.clientPhoneNumber}`,
+            phone: `+1${projectInfo?.data.clientPhoneNumber}`,
           },
           payload: {
             ...messageData,
@@ -105,25 +96,13 @@ export async function POST(req: NextRequest) {
   }
 
   if (calendarEvent.remindProjectOwners) {
-    const stakeHolders = await prisma.userToProject.findMany({
-      where: {
-        projectId: calendarEvent?.projectId || 1,
-      },
-      select: {
-        userId: true,
-        user: {
-          select: {
-            email: true,
-            firstName: true,
-            lastName: true,
-            phone: true,
-          },
-        },
-      },
-    });
+    const stakeHolders = await supabaseServiceRole
+      .from("UserToProject")
+      .select("userId, User(*)")
+      .eq("projectId", Number(calendarEvent.projectId));
 
-    const stakeHoldersPhoneNumbers = stakeHolders.map((sholder) =>
-      `${sholder.user.phone}`.split("-").join("")
+    const stakeHoldersPhoneNumbers = (stakeHolders.data ?? []).map((sholder) =>
+      `${sholder.User?.phone}`.split("-").join("")
     );
 
     console.log("preparing to send to stakeholders ", stakeHoldersPhoneNumbers);

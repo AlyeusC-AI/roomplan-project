@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { uniqueId } from "lodash";
-import { addressPickerStore } from "@/utils/state/address-picker";
+import { addressPickerStore } from "@/lib/state/address-picker";
 
 export default function AddressInput() {
   const navigation = useNavigation();

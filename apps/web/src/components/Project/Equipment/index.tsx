@@ -1,43 +1,56 @@
 "use client";
 
-import { trpc } from "@utils/trpc";
-import { RouterOutputs } from "@servicegeek/api";
-
 import { useParams } from "next/navigation";
-
-import TabTitleArea from "../TabTitleArea";
-
 import AvailableEquipment from "./AvailableEquipment";
 import UsedEquipment from "./UsedEquipment";
+import { Separator } from "@components/ui/separator";
+import { useEffect, useState } from "react";
+import { LoadingPlaceholder } from "@components/ui/spinner";
 
-const ProjectEquipment = ({
-  initialUsedEquipment,
-  intialOrganizationEquipment,
-}: {
-  initialUsedEquipment: RouterOutputs["equipment"]["getAllUsed"];
-  intialOrganizationEquipment: RouterOutputs["equipment"]["getAll"];
-}) => {
+const ProjectEquipment = () => {
   const { id } = useParams<{ id: string }>();
-  const usedEquipment = trpc.equipment.getAllUsed.useQuery(
-    {
-      projectPublicId: id,
-    },
-    {
-      initialData: initialUsedEquipment,
-    }
-  );
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [usedEquipment, setUsedEquipment] = useState<ProjectEquipment[]>([]);
+  const [fetching, setFetching] = useState<boolean>(true);
+
+  useEffect(() => {
+    setFetching(true);
+    fetch("/api/v1/organization/equipment")
+      .then((res) => res.json())
+      .then((data) => {
+        setEquipment(data.equipment);
+        setFetching(false);
+      });
+    fetch(`/api/v1/projects/${id}/equipment`)
+      .then((res) => res.json())
+      .then((data) => {
+        setUsedEquipment(data);
+        setFetching(false);
+      });
+  }, []);
+
+  if (fetching) {
+    return <LoadingPlaceholder />;
+  }
 
   return (
-    <div>
-      <TabTitleArea
-        title='Equipment Transfer'
-        description='Keep track of equipment used on the job'
-      ></TabTitleArea>
+    <div className='space-y-6'>
+      <div>
+        <h1 className='text-2xl font-medium'>Equipment Transfer</h1>
+        <p className='text-sm text-muted-foreground'>
+          Keep track of equipment used on the job
+        </p>
+      </div>
+      <Separator />
       <div className='mt-12 space-y-12'>
-        <UsedEquipment usedEquipment={usedEquipment.data} />
+        <UsedEquipment
+          usedEquipment={usedEquipment}
+          setUsedEquipment={setUsedEquipment}
+        />
         <AvailableEquipment
-          usedEquipment={usedEquipment.data}
-          intialOrganizationEquipment={intialOrganizationEquipment}
+          usedEquipment={usedEquipment}
+          availableEquipment={equipment}
+          setUsedEquipment={setUsedEquipment}
         />
       </div>
     </div>

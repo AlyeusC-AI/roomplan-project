@@ -1,40 +1,9 @@
 "use client";
 
-import MainContent from "@components/layouts/MainContent";
 import Files from "@components/Project/Files";
-import { useParams } from "next/navigation";
-import { trpc } from "@utils/trpc";
 
 const FilesPage = () => {
-  const { id } = useParams();
-  const pendingReports = trpc.pendingReports.getPendingReports.useQuery({
-    publicProjectId: id as string,
-  });
-
-  return (
-    <MainContent>
-      {/* {router.query.alert === "roof_report_ordered" && (
-          <Alert title='Roof report ordered!' type='success'>
-            Your roof report is being generated and will available within 24
-            hours
-            <br />
-            Your roof report .esx file will be on this page once it&apos;s ready
-          </Alert>
-        )} */}
-      {/* {router.query.alert !== "roof_report_ordered" &&
-          pendingReports.data?.pendingRoofReports !== undefined &&
-          pendingReports.data?.pendingRoofReports > 0 && (
-            <Alert title='Roof status' type='default'>
-              You have {pendingReports.data?.pendingRoofReports} roof report(s)
-              currently processing
-              <br />
-              Your roof report .esx file(s) will be on this page once it&apos;s
-              ready
-            </Alert>
-          )} */}
-      <Files />
-    </MainContent>
-  );
+  return <Files />;
 };
 
 export default FilesPage;

@@ -172,7 +172,7 @@ export default function AddressDialog(
             <Loader2 className='size-6 animate-spin' />
           </div>
         ) : (
-          <form onSubmit={handleSave}>
+          <>
             <div className='space-y-4 pb-7'>
               <div className='space-y-0.5'>
                 <Label htmlFor='address1'>Address line 1</Label>
@@ -272,9 +272,9 @@ export default function AddressDialog(
               >
                 Cancel
               </Button>
-              <Button type='submit'>Save</Button>
+              <Button onClick={handleSave}>Save</Button>
             </DialogFooter>
-          </form>
+          </>
         )}
       </DialogContent>
     </Dialog>

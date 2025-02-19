@@ -1,33 +1,33 @@
 import { useState } from "react";
-import { PrimaryButton, SecondaryButton } from "@components/components";
-import Modal from "@components/DesignSystem/Modal";
-import { RoomDataWithoutInferences } from "@servicegeek/db/queries/project/getProjectDetections";
 import useAmplitudeTrack from "@utils/hooks/useAmplitudeTrack";
-import { trpc } from "@utils/trpc";
-import { useRouter } from "next/router";
 import { event } from "nextjs-google-analytics";
 
 import Readings from "./Readings";
 import { roomStore } from "@atoms/room";
 import { Pencil, Trash } from "lucide-react";
+import { useParams } from "next/navigation";
+import { Button } from "@components/ui/button";
+import { LoadingSpinner } from "@components/ui/spinner";
+import { Input } from "@components/ui/input";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+} from "@components/ui/dialog";
+import { v4 } from "uuid";
 
-const MitigationRoomTable = ({ room }: { room: RoomDataWithoutInferences }) => {
+const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const { track } = useAmplitudeTrack();
   const [internalRoomName, setInternalRoomName] = useState(room.name);
-  const trpcContext = trpc.useContext();
   const [isCreating, setIsCreating] = useState(false);
 
-  const router = useRouter();
-  const addReadingMutation = trpc.readings.addReading.useMutation({
-    async onSettled() {
-      await trpcContext.readings.getAll.invalidate();
-      setIsCreating(false);
-    },
-  });
+  const { id } = useParams<{ id: string }>();
 
   const updateRoomName = async () => {
     if (internalRoomName === "" || internalRoomName.trim() === "") return;
@@ -35,7 +35,7 @@ const MitigationRoomTable = ({ room }: { room: RoomDataWithoutInferences }) => {
     track("Update Room Name");
 
     try {
-      const res = await fetch(`/api/project/${router.query.id}/room-info`, {
+      const res = await fetch(`/api/v1/projects/${id}/room`, {
         method: "PATCH",
         body: JSON.stringify({
           name: internalRoomName,
@@ -45,8 +45,12 @@ const MitigationRoomTable = ({ room }: { room: RoomDataWithoutInferences }) => {
       if (res.ok) {
         roomStore.getState().updateRoomName(room, internalRoomName);
         setIsEditingTitle(false);
+        toast.success("Room name updated");
+      } else {
+        toast.error("Failed to update room name");
       }
     } catch (error) {
+      toast.error("Failed to update room name");
       console.log(error);
     }
 
@@ -60,16 +64,21 @@ const MitigationRoomTable = ({ room }: { room: RoomDataWithoutInferences }) => {
     setIsDeleting(true);
     track("Delete Room");
     try {
-      const res = await fetch(`/api/project/${router.query.id}/room`, {
+      const res = await fetch(`/api/v1/projects/${id}/room`, {
         method: "DELETE",
         body: JSON.stringify({
           roomId: room.publicId,
+          name: room.name,
         }),
       });
       if (res.ok) {
         roomStore.getState().removeRoom(room);
+        toast.success("Room deleted");
+      } else {
+        toast.error("Failed to delete room");
       }
     } catch (error) {
+      toast.error("Failed to delete room");
       console.log(error);
     }
     setIsDeleting(false);
@@ -79,10 +88,25 @@ const MitigationRoomTable = ({ room }: { room: RoomDataWithoutInferences }) => {
   const addReading = async () => {
     setIsCreating(true);
     track("Add Room Reading");
-    await addReadingMutation.mutateAsync({
-      projectPublicId: router.query.id as string,
-      roomPublicId: room.publicId,
-    });
+    try {
+      const res = await fetch(`/api/v1/projects/${id}/readings`, {
+        method: "POST",
+        body: JSON.stringify({
+          type: "standard",
+          data: { roomId: room.id, publicId: v4(), projectId: room.projectId },
+        }),
+      });
+      if (res.ok) {
+        const body = await res.json();
+        toast.success("Reading added successfully");
+        roomStore.getState().addReading(room.publicId, body.reading);
+      } else {
+        toast.error("Failed to add reading");
+      }
+      setIsCreating(false);
+    } catch {
+      toast.error("Failed to add reading");
+    }
   };
 
   return (
@@ -91,84 +115,70 @@ const MitigationRoomTable = ({ room }: { room: RoomDataWithoutInferences }) => {
         <div className='flex items-center'>
           {isEditingTitle ? (
             <>
-              <input
+              <Input
                 value={internalRoomName}
                 onChange={(e) => setInternalRoomName(e.target.value)}
-                className={`rounded-md border-slate-100 bg-white px-4 py-2 shadow-md ${
-                  isSaving ? "bg-slate-200" : ""
-                }`}
                 disabled={isSaving}
               />
-              <SecondaryButton
+              <Button
                 onClick={() => setIsEditingTitle(false)}
                 className='ml-4'
+                variant='outline'
                 disabled={isSaving}
               >
                 Cancel
-              </SecondaryButton>
-              <PrimaryButton
+              </Button>
+              <Button
                 onClick={() => updateRoomName()}
                 className='ml-4'
                 disabled={isSaving}
-                loading={isSaving}
               >
-                Save
-              </PrimaryButton>
+                {isSaving ? <LoadingSpinner /> : "Save"}
+              </Button>
             </>
           ) : (
             <>
-              <h1 className='text-2xl font-semibold text-gray-900'>
-                {room.name}
-              </h1>
-              <button
+              <h1 className='text-2xl font-semibold'>{room.name}</h1>
+              <Button
+                variant='outline'
                 onClick={() => setIsEditingTitle(true)}
-                className='flex items-center justify-center px-4 py-2 text-slate-500 hover:text-primary'
+                className='ml-4'
               >
                 <Pencil className='h-4' />
-              </button>
+              </Button>
             </>
           )}
         </div>
         <div className='flex items-center justify-center gap-4'>
-          <SecondaryButton loading={isCreating} onClick={() => addReading()}>
-            Add Reading
-          </SecondaryButton>
-          <button
-            className='text-slate-400 hover:text-red-600'
+          <Button disabled={isCreating} onClick={() => addReading()}>
+            {isCreating ? <LoadingSpinner /> : "Add Reading"}
+          </Button>
+          <Button
             onClick={() => setIsConfirmingDelete(true)}
+            variant='destructive'
           >
             <Trash className='h-6' />
-          </button>
+          </Button>
         </div>
-        <Modal open={isConfirmingDelete} setOpen={setIsConfirmingDelete}>
-          {() => (
-            <>
-              <div className='px-4 py-5 sm:p-6'>
-                <h3 className='text-lg font-medium leading-6 text-gray-900'>
-                  Delete Room
-                </h3>
-                <div className='mt-2 max-w-xl text-sm text-gray-500'>
-                  <p>
-                    Permanently delete this room and everything associated
-                    within it
-                  </p>
-                </div>
-                <div className='mt-5 flex items-center space-x-4'>
-                  <SecondaryButton onClick={() => setIsConfirmingDelete(false)}>
-                    Cancel
-                  </SecondaryButton>
-                  <PrimaryButton
-                    onClick={() => deleteRoom()}
-                    className='!bg-red-100 text-red-700 hover:!bg-red-200'
-                    loading={isDeleting}
-                  >
-                    Yes, delete the room.
-                  </PrimaryButton>
-                </div>
-              </div>
-            </>
-          )}
-        </Modal>
+        <Dialog open={isConfirmingDelete} onOpenChange={setIsConfirmingDelete}>
+          <DialogContent>
+            <DialogHeader>Delete Room</DialogHeader>
+            <DialogDescription>
+              Permanently delete this room and everything associated within it
+            </DialogDescription>
+            <div className='flex items-center justify-end space-x-4'>
+              <Button
+                variant='outline'
+                onClick={() => setIsConfirmingDelete(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={deleteRoom} variant='destructive'>
+                {isDeleting ? <LoadingSpinner /> : "Yes, delete the room."}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
       <Readings room={room} />
     </div>

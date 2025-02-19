@@ -1,5 +1,4 @@
 // import UserAvatar from "@components/DesignSystem/UserAvatar";
-// import { Assignee } from "@servicegeek/db/queries/project/listProjects";
 // import clsx from "clsx";
 
 // const StakeholdersCalendarLegend = ({

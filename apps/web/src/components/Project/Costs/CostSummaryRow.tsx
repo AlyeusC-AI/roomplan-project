@@ -16,7 +16,7 @@ const CostSummaryRow = ({ costs }: { costs: Cost[] }) => {
   );
 
   return (
-    <div className='grid grid-cols-4 space-x-2 bg-white'>
+    <div className='grid grid-cols-4 space-x-2'>
       <div></div>
       <div className='border-none px-4 py-2 focus:border-none focus:outline-none'>
         <span className='text-sm font-light'>total:</span>{" "}

@@ -1,119 +1,132 @@
-// "use client";
+"use client";
 
-// import { useState } from "react";
-// import {
-//   PrimaryButton,
-//   PrimaryLink,
-//   LogoTextBlue,
-//   TextField,
-//   Alert,
-// } from "@components/components";
-// import { AuthLayout } from "@components/layouts/auth-layout";
-// import Link from "next/link";
-// import { createClient } from "@lib/supabase/client";
-// import { useForm } from "react-hook-form";
-// import { AuthError } from "@supabase/supabase-js";
+import { Suspense, useState } from "react";
 
-// export default function ResetPasswordRequest() {
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState("");
-//   const [success, setSuccess] = useState(false);
-//   const supabase = createClient();
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useSearchParams } from "next/navigation";
+import { createClient } from "@lib/supabase/client";
+import { LoadingPlaceholder, LoadingSpinner } from "@/components/ui/spinner";
+import { toast } from "sonner";
 
-//   const { register, handleSubmit } = useForm<{ email: string }>();
+export function ResetPassword() {
+  const router = useSearchParams();
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState((router?.get("email") as string) ?? "");
 
-//   const handlePasswordReset = async (event: { email: string }) => {
-//     if (!event.email) {
-//       setError("Must provide email.");
-//       return;
-//     }
+  const [sentMagicLink, setSentMagicLink] = useState(false);
+  const supabaseClient = createClient();
 
-//     try {
-//       setLoading(true);
-//       const { error } = await supabase.auth.resetPasswordForEmail(event.email, {
-//         redirectTo: `${window.location.origin}/update-password`,
-//       });
-//       if (error) throw error;
-//       setSuccess(true);
-//     } catch (error) {
-//       console.error(error);
-//       if (error instanceof AuthError) {
-//         if (error.status) {
-//           if (error.status === 429) {
-//             setError(
-//               "For security purposes, you can only request this once every 60 seconds."
-//             );
-//           } else {
-//             setError(
-//               "Session Expired. Please request another password reset email."
-//             );
-//           }
-//         } else {
-//           setError(
-//             "Session Expired. Please request another password reset email."
-//           );
-//         }
-//       }
-//       setLoading(false);
-//     }
-//   };
+  // Logging In The User With Supabase
+  const sendPasswordReset = async (e: React.FormEvent) => {
+    // Preventing Reloading The Page
+    e.preventDefault();
 
-//   return (
-//     <AuthLayout>
-//       <div className='flex flex-col'>
-//         <Link href='/' aria-label='Home' className='h-10 w-auto'>
-//           <LogoTextBlue />
-//         </Link>
-//         <div className='mt-20'>
-//           <h2 className='text-lg font-semibold text-gray-900'>
-//             Forgot password
-//           </h2>
-//           <p className='mt-2 text-sm text-gray-700'>
-//             Remembered your password?
-//             <Link
-//               href='/login'
-//               className='ml-2 font-medium text-primary hover:underline'
-//             >
-//               Sign in
-//             </Link>
-//           </p>
-//         </div>
-//       </div>
-//       {success ? (
-//         <>
-//           <Alert type='success'>Password reset email sent!</Alert>
-//           <PrimaryLink className='mt-4 w-full' href='/login'>
-//             Sign In
-//           </PrimaryLink>
-//         </>
-//       ) : (
-//         <form
-//           action='#'
-//           className='mt-10 grid grid-cols-1 gap-y-8'
-//           onSubmit={handleSubmit(handlePasswordReset)}
-//         >
-//           <TextField
-//             label='Email'
-//             id='email'
-//             type='email'
-//             autoComplete='email'
-//             required
-//             {...register("email", { required: "Email is required" })}
-//           />
-//           <div>
-//             <PrimaryButton loading={loading} type='submit' className='w-full'>
-//               <span>
-//                 Send Password Reset Email <span aria-hidden='true'>&rarr;</span>
-//               </span>
-//             </PrimaryButton>
-//           </div>
-//         </form>
-//       )}
-//       {error && (
-//         <>
-//           <p className='mt-4 text-sm text-red-700'>{error}</p>
-//         </>
-//       )}
-//     </AuthLayout>
-//   );
-// }
+    try {
+      // Setting Loading
+      setLoading(true);
+
+      // Logging In The User With Supabase
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: "/login",
+      });
+
+      // If There Is An Error, Throw It
+      if (error) throw error;
+
+      toast.success("Password reset sent successfully", {
+        description:
+          "A password reset link has been sent to your email. If you did not recieve one, check your spam folder or try again.",
+      });
+    } catch (error) {
+      // Logging The Error To The Console
+      console.error(error);
+
+      // Setting The Error Text
+      toast.error("An Error Occured", {
+        description:
+          "There was an error resetting your password. Double check your email and try again.",
+      });
+    }
+
+    // Toggling Loading
+    setLoading(false);
+  };
+
+  if (loading) {
+    return (
+      <Suspense>
+        <LoadingPlaceholder />
+      </Suspense>
+    );
+  }
+
+  if (sentMagicLink) {
+    return (
+      <Suspense>
+        <div className='mt-20 flex flex-col items-center justify-center px-4'>
+          <div className='my-auto'>
+            <h1 className='text-center text-2xl font-bold'>
+              Magic link email sent
+            </h1>
+            <p className='text-balance text-center text-muted-foreground'>
+              Check your inbox to find your login link to RestoreGeek.
+            </p>
+          </div>
+          <div className='mt-4'>
+            <img
+              src='/images/email-sent.svg'
+              width={647.63626 / 3}
+              height={632.17383 / 3}
+              alt='Email Sent'
+              className='my-10'
+            />
+          </div>
+          <Button
+            onClick={() => setSentMagicLink(false)}
+            variant='default'
+            className='mb-10 w-11/12'
+          >
+            Continue With Password
+          </Button>
+        </div>
+      </Suspense>
+    );
+  }
+
+  return (
+    <Suspense>
+      <form className='p-6 md:p-8' onSubmit={sendPasswordReset}>
+        <div className='flex flex-col gap-6'>
+          <div className='flex flex-col items-center text-center'>
+            <h1 className='text-2xl font-bold'>Forgot Password</h1>
+            <p className='mt-2 text-balance text-muted-foreground'>
+              Reset the password to your RestoreGeek account
+            </p>
+          </div>
+          <div className='grid gap-2'>
+            <Label htmlFor='email'>Email</Label>
+            <Input
+              id='email'
+              type='email'
+              placeholder='johndoe@company.com'
+              required
+              onChange={(e) => setEmail(e.target.value)}
+              value={email}
+            />
+          </div>
+          <Button type='submit' className='w-full'>
+            Send Email
+          </Button>
+          <div className='text-center text-sm'>
+            Remembered your password?{" "}
+            <a href='/login' className='underline underline-offset-4'>
+              Log in
+            </a>
+          </div>
+        </div>
+      </form>
+    </Suspense>
+  );
+}

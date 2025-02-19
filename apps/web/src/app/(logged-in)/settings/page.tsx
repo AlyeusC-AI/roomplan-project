@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Account Settings",
-  description: "ServiceGeek account settings",
+  description: "RestoreGeek account settings",
   icons: ["/favicon.ico"],
 };
 

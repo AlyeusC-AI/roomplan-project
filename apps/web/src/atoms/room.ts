@@ -1,57 +1,57 @@
-import { RoomDataWithoutInferences } from "@servicegeek/db/queries/project/getProjectDetections";
-import produce from "immer";
 import { create } from "zustand";
-import { v4 as uuidv4 } from "uuid";
-
-// export const defaultRoomState = []
-// const roomState = atom<RoomDataWithoutInferences[]>({
-//   key: 'RoomState',
-//   default: defaultRoomState,
-// })
-
-// export default roomState
 
 interface State {
-  rooms: RoomDataWithoutInferences[];
+  rooms: RoomWithReadings[];
 }
+
+type VerifyKindaPartial<T, KP> = Partial<T> & {
+  [K in keyof KP]-?: K extends keyof T ? T[K] : never;
+};
 
 interface Actions {
-  setRooms: (rooms: RoomDataWithoutInferences[]) => void;
-  addRoom: (room: RoomDataWithoutInferences) => void;
-  removeRoom: (room: RoomDataWithoutInferences) => void;
-  updateRoomName: (room: RoomDataWithoutInferences, name: string) => void;
+  setRooms: (rooms: RoomWithReadings[]) => void;
+  addRoom: (room: RoomWithReadings) => void;
+  removeRoom: (room: RoomWithReadings) => void;
+  updateRoomName: (room: RoomWithReadings, name: string) => void;
   removeRoomNote: (roomPublicId: string, notePublicId: string) => void;
-  updateRoomNote: (
+  updateRoomNote: <KP>(
     roomPublicId: string,
     notePublicId: string,
-    notesAuditTrail: string,
-    updatedAt: string
+    note: VerifyKindaPartial<Note, KP>
   ) => void;
-  addRoomNote: (roomPublicId: string, note: any) => void;
-  updateAllRooms: (rooms: RoomDataWithoutInferences[]) => void;
-  updateAreasAffected: (
+  addRoomNote: (roomPublicId: string, note: Note) => void;
+  updateAllRooms: (rooms: RoomWithReadings[]) => void;
+  updateAreasAffected: <KP>(
     roomPublicId: string,
-    areasAffected: object,
-    type: string
+    areasAffected: VerifyKindaPartial<AreaAffected, KP>,
+    type: AreaAffectedType
   ) => void;
-  updateRoom: (roomId: string, data: DimensionData) => void;
-}
-
-interface DimensionData {
-  width: number;
-  height: number;
+  updateRoom: (roomId: string, data: Partial<Room>) => void;
+  addReading: (roomId: string, reading: RoomReading) => void;
+  removeReading: (roomId: string, readingId: string) => void;
+  addGenericReading: (roomId: string, reading: GenericRoomReading) => void;
+  removeGenericReading: (roomId: string, readingId: string) => void;
+  updateGenericReading: (
+    roomId: string,
+    readingId: string,
+    data: Partial<GenericRoomReading>
+  ) => void;
+  updateReading: (
+    roomId: string,
+    readingId: string,
+    data: Partial<RoomReading>
+  ) => void;
 }
 
 export const roomStore = create<State & Actions>((set) => ({
   rooms: [],
-  setRooms: (rooms: RoomDataWithoutInferences[]) => set({ rooms }),
-  addRoom: (room: RoomDataWithoutInferences) =>
-    set((state) => ({ rooms: [...state.rooms, room] })),
-  removeRoom: (room: RoomDataWithoutInferences) =>
+  setRooms: (rooms) => set({ rooms }),
+  addRoom: (room) => set((state) => ({ rooms: [...state.rooms, room] })),
+  removeRoom: (room) =>
     set((state) => ({
       rooms: state.rooms.filter((r) => r.publicId !== room.publicId),
     })),
-  updateRoomName: (room: RoomDataWithoutInferences, name: string) =>
+  updateRoomName: (room, name: string) =>
     set((state) => {
       const roomIndex = state.rooms.findIndex(
         (r) => r.publicId === room.publicId
@@ -64,44 +64,37 @@ export const roomStore = create<State & Actions>((set) => ({
       return { rooms: newState };
     }),
   removeRoomNote: (roomPublicId: string, notePublicId: string) =>
-    set(
-      produce((draft) => {
-        const roomIndex = draft.findIndex(
-          (r: RoomDataWithoutInferences) => r.publicId === roomPublicId
-        );
-        if (roomIndex < 0 || !draft[roomIndex]) return draft;
+    set((state) => {
+      const roomIndex = state.rooms.findIndex(
+        (r) => r.publicId === roomPublicId
+      );
+      if (roomIndex < 0 || !state.rooms[roomIndex]) return state;
 
-        const noteIndex = draft[roomIndex].notes?.findIndex(
-          (n: any) => n.publicId === notePublicId
-        );
-        if (noteIndex === undefined || noteIndex < 0) return draft;
-        draft[roomIndex].notes?.splice(noteIndex, 1);
-        return draft;
-      })
-    ),
-  updateRoomNote: (
-    roomPublicId: string,
-    notePublicId: string,
-    notesAuditTrail: string,
-    updatedAt: string
-  ) =>
-    set(
-      produce((draft) => {
-        const roomIndex = draft.findIndex(
-          (r: RoomDataWithoutInferences) => r.publicId === roomPublicId
-        );
-        if (roomIndex < 0 || !draft[roomIndex]) return draft;
+      const noteIndex = state.rooms[roomIndex].Notes?.findIndex(
+        (n) => n.publicId === notePublicId
+      );
+      if (noteIndex === undefined || noteIndex < 0) return state;
+      state.rooms[roomIndex].Notes?.splice(noteIndex, 1);
+      return state;
+    }),
+  updateRoomNote: (roomPublicId, notePublicId, note) =>
+    set((state) => {
+      const roomIndex = state.rooms.findIndex(
+        (r) => r.publicId === roomPublicId
+      );
+      if (roomIndex < 0 || !state.rooms[roomIndex]) return state;
 
-        const noteIndex = draft[roomIndex].notes?.findIndex(
-          (n: any) => n.publicId === notePublicId
-        );
-        if (noteIndex === undefined || noteIndex < 0) return draft;
-        draft[roomIndex].notes[noteIndex].updatedAt = updatedAt;
-        draft[roomIndex].notes[noteIndex].notesAuditTrail = notesAuditTrail;
-        return draft;
-      })
-    ),
-  addRoomNote: (roomPublicId: string, note: any) =>
+      const noteIndex = state.rooms[roomIndex].Notes?.findIndex(
+        (n) => n.publicId === notePublicId
+      );
+      if (noteIndex === undefined || noteIndex < 0) return state;
+      state.rooms[roomIndex].Notes[noteIndex] = {
+        ...state.rooms[roomIndex].Notes[noteIndex],
+        ...note,
+      };
+      return state;
+    }),
+  addRoomNote: (roomPublicId, note) =>
     set((state) => {
       const roomIndex = state.rooms.findIndex(
         (r) => r.publicId === roomPublicId
@@ -109,46 +102,100 @@ export const roomStore = create<State & Actions>((set) => ({
       const newState = [...state.rooms];
       newState[roomIndex] = {
         ...newState[roomIndex],
-        notes: [note, ...(newState[roomIndex].notes || [])],
+        Notes: [note, ...(newState[roomIndex].Notes || [])],
       };
       return { rooms: newState };
     }),
-  updateAllRooms: (rooms: RoomDataWithoutInferences[]) => set({ rooms }),
-  updateAreasAffected: (
-    roomPublicId: string,
-    areasAffected: object,
-    type: string
-  ) =>
-    set(
-      produce((draft) => {
-        const roomIndex = draft.findIndex(
-          (r: any) => r.publicId === roomPublicId
-        );
-        const affectedAreaIndex = draft[roomIndex].areasAffected.findIndex(
-          (t: any) => t.type === type
-        );
-        if (affectedAreaIndex === -1) {
-          draft[roomIndex].areasAffected.push({
-            type,
-            ...areasAffected,
-            publicId: uuidv4(),
-            isDeleted: false,
-          });
-        } else {
-          draft[roomIndex].areasAffected[affectedAreaIndex] = {
-            ...draft[roomIndex].areasAffected[affectedAreaIndex],
-            ...areasAffected,
-          };
-        }
-        return draft;
-      })
-    ),
-  updateRoom: (roomId: string, data: DimensionData) =>
-    set(
-      produce((draft) => {
-        const roomIndex = draft.findIndex((r: any) => r.publicId === roomId);
-        draft[roomIndex] = { ...draft[roomIndex], ...data };
-        return draft;
-      })
-    ),
+  updateAllRooms: (rooms) => set({ rooms }),
+  updateAreasAffected: (roomPublicId, areasAffected, type) =>
+    set((state) => {
+      const roomIndex = state.rooms.findIndex(
+        (r) => r.publicId === roomPublicId
+      );
+      const affectedAreaIndex = state.rooms[roomIndex].AreaAffected.findIndex(
+        (t) => t.type === type
+      );
+      if (affectedAreaIndex === -1) {
+        // @ts-expect-error we know this is a valid type
+        state.rooms[roomIndex].AreaAffected.push({
+          ...areasAffected,
+        });
+      } else {
+        state.rooms[roomIndex].AreaAffected[affectedAreaIndex] = {
+          ...state.rooms[roomIndex].AreaAffected[affectedAreaIndex],
+          ...areasAffected,
+        };
+      }
+      return state;
+    }),
+  updateRoom: (roomId, data) =>
+    set((state) => {
+      const roomIndex = state.rooms.findIndex((r) => r.publicId === roomId);
+      state.rooms[roomIndex] = { ...state.rooms[roomIndex], ...data };
+      return state;
+    }),
+  addReading: (roomId, reading) =>
+    set((state) => {
+      const roomIndex = state.rooms.findIndex((r) => r.publicId === roomId);
+      state.rooms[roomIndex].RoomReading.push({
+        ...reading,
+        GenericRoomReading: [],
+      });
+      return state;
+    }),
+  removeReading: (roomId, readingId) =>
+    set((state) => {
+      const roomIndex = state.rooms.findIndex((r) => r.publicId === roomId);
+      state.rooms[roomIndex].RoomReading = state.rooms[
+        roomIndex
+      ].RoomReading.filter((r) => r.publicId !== readingId);
+      return state;
+    }),
+  addGenericReading: (roomId, reading) =>
+    set((state) => {
+      const roomIndex = state.rooms.findIndex((r) => r.publicId === roomId);
+      const readingIndex = state.rooms[roomIndex].RoomReading.findIndex(
+        (r) => r.id === reading.roomReadingId
+      );
+      state.rooms[roomIndex].RoomReading[readingIndex].GenericRoomReading.push(
+        reading
+      );
+      return state;
+    }),
+  removeGenericReading: (roomId, readingId) =>
+    set((state) => {
+      const roomIndex = state.rooms.findIndex((r) => r.publicId === roomId);
+      state.rooms[roomIndex].RoomReading = state.rooms[
+        roomIndex
+      ].RoomReading.map((r) => ({
+        ...r,
+        GenericRoomReading: r.GenericRoomReading.filter(
+          (g) => g.publicId !== readingId
+        ),
+      }));
+      return state;
+    }),
+  updateGenericReading: (roomId, readingId, data) =>
+    set((state) => {
+      const roomIndex = state.rooms.findIndex((r) => r.publicId === roomId);
+      state.rooms[roomIndex].RoomReading = state.rooms[
+        roomIndex
+      ].RoomReading.map((r) => ({
+        ...r,
+        GenericRoomReading: r.GenericRoomReading.map((g) =>
+          g.publicId === readingId ? { ...g, ...data } : g
+        ),
+      }));
+      return state;
+    }),
+  updateReading: (roomId, readingId, data) =>
+    set((state) => {
+      const roomIndex = state.rooms.findIndex((r) => r.publicId === roomId);
+      state.rooms[roomIndex].RoomReading = state.rooms[
+        roomIndex
+      ].RoomReading.map((r) =>
+        r.publicId === readingId ? { ...r, ...data } : r
+      );
+      return state;
+    }),
 }));

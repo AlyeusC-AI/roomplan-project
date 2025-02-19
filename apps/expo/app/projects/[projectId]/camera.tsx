@@ -1,27 +1,34 @@
-import { useState, useRef } from "react";
-import { supabase } from "@/utils/supabase";
-import {
-  Heading,
-  Button,
-  Center,
-  View,
-  Image,
-  Flex,
-  Spinner,
-} from "native-base";
+import { useState, useRef, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { Image, View } from "react-native";
 import { Camera, PhotoFile, useCameraDevice } from "react-native-vision-camera";
 import { getConstants } from "@/utils/constants";
 import RoomSelection from "@/components/RoomSelection";
 import { createClient } from "@supabase/supabase-js";
 import uuid from "react-native-uuid";
-import { api } from "@/utils/api";
-import { userStore } from "@/utils/state/user";
-import { useLocalSearchParams } from "expo-router";
+import { userStore } from "@/lib/state/user";
+import { useGlobalSearchParams } from "expo-router";
+import { roomsStore } from "@/lib/state/rooms";
+import Reanimated, {
+  Extrapolate,
+  interpolate,
+  useAnimatedGestureHandler,
+  useSharedValue,
+} from "react-native-reanimated";
+import { Button } from "@/components/ui/button";
+import { PinchGestureHandlerGestureEvent } from "react-native-gesture-handler";
+import { PinchGestureHandler } from "react-native-gesture-handler";
+import { ActivityIndicator, Text } from "react-native";
 
 export const supabaseServiceRole = createClient(
   getConstants().supabaseUrl,
   getConstants().serviceRoleJwt
 );
+
+const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
+Reanimated.addWhitelistedNativeProps({
+  zoom: true,
+});
 
 export default function CameraScreen() {
   const camera = useRef<Camera>(null);
@@ -29,13 +36,11 @@ export default function CameraScreen() {
   const device = useCameraDevice("back");
   const [disabled, setDisabled] = useState(false);
   const { session: supabaseSession } = userStore((state) => state);
-  const { rooms, projectId } = useLocalSearchParams();
-  const queryParams = {
-    jwt: supabaseSession ? supabaseSession["access_token"] : "null",
-    projectPublicId: projectId,
-  };
-
-  const addImageToProjectMutation = api.mobile.addImageToProject.useMutation();
+  const { projectId } = useGlobalSearchParams<{
+    projectId: string;
+  }>();
+  const rooms = roomsStore();
+  const zoom = useSharedValue(1);
 
   const [selectedRoomId, setRoomId] = useState("");
   const onRoomSelect = (r: string) => {
@@ -45,14 +50,14 @@ export default function CameraScreen() {
   const processImage = async (photo: PhotoFile) => {
     try {
       const {
-        data: { session },
-      } = await supabase.auth.getSession();
+        data: { user },
+      } = await supabase.auth.getUser();
 
       console.log("Setting last photo", photo.path);
       setLastPhoto(photo.path);
       console.log("Uploading photo");
       const fileName = photo.path.substring(photo.path.lastIndexOf("/") + 1);
-      const supabasePath = `${session?.user.id}/${uuid.v4()}_${fileName}`;
+      const supabasePath = `${user!.id}/${uuid.v4()}_${fileName}`;
 
       let contentType = "image/jpeg";
       if (fileName.indexOf(".png") >= 0) {
@@ -78,16 +83,61 @@ export default function CameraScreen() {
 
       console.log("Uploaded photo", data, error);
       if (data) {
-        addImageToProjectMutation.mutate({
-          ...queryParams,
-          publicRoomId: selectedRoomId,
-          imageKey: data.path,
-        });
+        await fetch(
+          `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/image`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "auth-token": `${supabaseSession?.access_token}`,
+            },
+            body: JSON.stringify({
+              roomId: selectedRoomId,
+              imageId: data.path,
+            }),
+          }
+        );
       }
     } catch (error) {
       console.error(error);
     }
   };
+
+  const SCALE_FULL_ZOOM = 3;
+  const MAX_ZOOM_FACTOR = 10;
+  const minZoom = device?.minZoom ?? 1;
+  const maxZoom = Math.min(device?.maxZoom ?? 1, MAX_ZOOM_FACTOR);
+
+  const onPinchGesture = useAnimatedGestureHandler<
+    PinchGestureHandlerGestureEvent,
+    { startZoom?: number }
+  >({
+    onStart: (_, context) => {
+      context.startZoom = zoom.value;
+    },
+    onActive: (event, context) => {
+      // we're trying to map the scale gesture to a linear zoom here
+      const startZoom = context.startZoom ?? 0;
+      const scale = interpolate(
+        event.scale,
+        [1 - 1 / SCALE_FULL_ZOOM, 1, SCALE_FULL_ZOOM],
+        [-1, 0, 1],
+        Extrapolate.CLAMP
+      );
+      zoom.value = interpolate(
+        scale,
+        [-1, 0, 1],
+        [minZoom, startZoom, maxZoom],
+        Extrapolate.CLAMP
+      );
+      console.log("ZOOMING");
+    },
+  });
+
+  useEffect(() => {
+    // Reset zoom to it's default everytime the `device` changes.
+    zoom.value = device?.neutralZoom ?? 1;
+  }, [zoom, device]);
 
   const takePhoto = async () => {
     if (!camera || !camera.current) return;
@@ -106,81 +156,56 @@ export default function CameraScreen() {
     setDisabled(false);
   };
 
-  if (device == null)
+  if (device === null)
     return (
-      <Center w="full" h="full">
-        <Spinner size="lg" />
-        <Heading color="primary.500" fontSize="md">
-          Opening Camera
-        </Heading>
-      </Center>
+      <View className="flex justify-center items-center h-full w-full">
+        <ActivityIndicator />
+        <Text>Opening Camera</Text>
+      </View>
     );
   return (
-    <View position="relative" h="full" w={"full"} display="flex">
-      <Flex h="full" w="full" justifyContent="space-between">
-        <View py="2" backgroundColor="black">
+    <View className="relative h-full w-full flex">
+      <View className="w-full h-full justify-between">
+        <View className="py-2 bg-black">
           <RoomSelection
-            rooms={rooms}
+            rooms={rooms.rooms}
             selectedRoom={selectedRoomId}
             onChange={onRoomSelect}
           />
         </View>
-        <Camera
-          style={{
-            flex: 1,
-            height: "100%",
-          }}
-          device={device}
-          isActive={true}
-          photo={true}
-          ref={camera}
-        />
-        <Flex
-          direction="row"
-          w="full"
-          px="4"
-          justifyContent="space-between"
-          alignContent="center"
-          alignItems="center"
-          backgroundColor="black"
-          py="2"
-        >
+        <PinchGestureHandler onGestureEvent={onPinchGesture}>
+          <ReanimatedCamera
+            style={{
+              flex: 1,
+              height: "100%",
+            }}
+            device={device}
+            isActive={true}
+            photo={true}
+            ref={camera}
+            zoom={zoom}
+          />
+        </PinchGestureHandler>
+        <View className="flex flex-row justify-between items-center content-center bg-black px-4 py-2 w-full">
           {lastPhoto ? (
             <Image
-              h="16"
-              w="16"
+              className="size-16 border-white border-2 rounded-md"
               source={{
                 uri: lastPhoto,
               }}
-              size="sm"
               alt="Last Photo Taken"
-              rounded="md"
-              borderColor="white"
-              borderWidth="2"
             />
           ) : (
-            <View
-              h="16"
-              w="16"
-              borderColor="white"
-              borderWidth="2"
-              rounded="md"
-            />
+            <View className="size-16 border-white border-2 rounded-md" />
           )}
           <Button
-            h="20"
-            w="20"
-            rounded="full"
-            borderWidth="2"
-            borderColor="primary.500"
-            bg="white"
-            shadow={8}
+            className="size-20 rounded-full border-2 border-primary-500 bg-white shadow-8"
             onPress={() => takePhoto()}
             disabled={disabled}
           />
-          <View h="20" w="20" />
-        </Flex>
-      </Flex>
+          <View className="size-20 " />
+        </View>
+      </View>
     </View>
   );
 }

@@ -19,7 +19,7 @@ import useSWR from "swr";
 import AddressDialog from "./address-dialog";
 
 interface AddressAutoCompleteProps {
-  address: AddressType;
+  address: AddressType | null;
   setAddress: (address: AddressType) => void;
   searchInput: string;
   setSearchInput: (searchInput: string) => void;
@@ -60,7 +60,7 @@ export default function AddressAutoComplete(props: AddressAutoCompleteProps) {
 
   return (
     <>
-      {selectedPlaceId !== "" || address.formattedAddress ? (
+      {selectedPlaceId !== "" && address ? (
         <div className='flex items-center gap-2'>
           <Input value={address?.formattedAddress} readOnly />
 

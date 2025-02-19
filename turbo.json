@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env"],
+  "globalDependencies": ["**/.env.local"],
   "tasks": {
     "dev:generate": {
       "inputs": ["./packages/db/prisma/schema.prisma"],
@@ -27,7 +27,14 @@
     },
     "build": {
       "dependsOn": ["^build", "^dev:generate"],
-      "outputs": [".next/**", ".expo/**"]
+      "outputs": [".next/**", ".expo/**"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env.production.local",
+        ".env.local",
+        ".env.production",
+        ".env"
+      ]
     },
     "build:web": {
       "dependsOn": ["^ci:generate", "dev:generate", "build"],

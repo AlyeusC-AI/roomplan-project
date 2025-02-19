@@ -1,41 +1,33 @@
 import { useState } from "react";
-import { Fragment } from "react";
-import { subscriptionStore } from "@atoms/subscription-status";
-import { PrimaryButton, SecondaryButton } from "@components/components";
 import Modal from "@components/DesignSystem/Modal";
-import { Menu, Transition } from "@headlessui/react";
-import { SubscriptionStatus } from "@servicegeek/db";
 import useUploader from "@utils/hooks/useUploader";
-import clsx from "clsx";
 import { event } from "nextjs-google-analytics";
 
 import CreateAccessLink from "../CreateAccessLink";
 import DownloadAllRoomImages from "../DownloadAllRoomImages";
 import ImageUploadModal from "../ImageUploadModal";
 import RoomCreationModal from "../RoomCreationModal";
-import TabTitleArea from "../TabTitleArea";
-import { ChevronDown } from "lucide-react";
+import { Button } from "@components/ui/button";
+import { Dialog } from "@components/ui/dialog";
 
 function UploadButton({
   onPrimaryClick,
-  onSecondaryClick,
   disabled,
 }: {
   onPrimaryClick: () => void;
-  onSecondaryClick: () => void;
   disabled: boolean;
 }) {
   return (
     <div className='inline-flex rounded-md shadow-sm'>
-      <PrimaryButton
+      <Button
         onClick={onPrimaryClick}
+        variant='outline'
         type='button'
         disabled={disabled}
-        className='relative inline-flex items-center rounded-l-md rounded-r-none shadow-none'
       >
         Upload Images
-      </PrimaryButton>
-      <Menu as='div' className='relative -ml-px block'>
+      </Button>
+      {/* <Menu as='div' className='relative -ml-px block'>
         <Menu.Button className='group relative inline-flex h-full items-center rounded-r-md border-l border-gray-300 p-2 text-sm font-medium text-gray-500 hover:shadow-md focus:z-10 focus:outline-none focus:ring-1'>
           <span className='sr-only'>Open options</span>
           <ChevronDown className='size-5 text-white' aria-hidden='true' />
@@ -66,7 +58,7 @@ function UploadButton({
             </Menu.Item>
           </Menu.Items>
         </Transition>
-      </Menu>
+      </Menu> */}
     </div>
   );
 }
@@ -75,11 +67,8 @@ export default function MitigationToolbar() {
   const [isRoomCreationModalOpen, setIsRoomCreationModalOpen] = useState(false);
   const [isImageUploadModalOpen, setIsImageUploadModalOpen] = useState(false);
   const [directImageUpload, setIsDirectImageUpload] = useState(true);
-  const subscriptionStatus = subscriptionStore(
-    (state) => state.subscriptionStatus
-  );
 
-  const { numUploads, onChange, uploadSummary, onDrop } = useUploader();
+  const { numUploads, onChange, onDrop } = useUploader();
 
   const onClick = () => {
     event("attempt_upload_images", {
@@ -92,62 +81,59 @@ export default function MitigationToolbar() {
     setIsDirectImageUpload(true);
   };
 
-  const onSecondaryClick = () => {
-    setIsImageUploadModalOpen(true);
-    setIsDirectImageUpload(false);
-  };
-
   return (
-    <div>
-      <TabTitleArea
-        title='Upload Photos'
-        id='upload-photos-title'
-        description='Upload photos of the job site. Take photos easily right from your phone or upload directly from your computer.'
-      >
-        <>
-          <UploadButton
-            onPrimaryClick={onPrimaryClick}
-            onSecondaryClick={onSecondaryClick}
-            disabled={
-              !(
-                subscriptionStatus === SubscriptionStatus.trialing ||
-                subscriptionStatus === SubscriptionStatus.active
-              )
-            }
-          />
-          <Modal
-            open={isImageUploadModalOpen}
+    <div className='flex flex-row gap-4'>
+      <div>
+        <h3 className='text-lg font-medium'>Upload Photos</h3>
+        <p className='text-sm text-muted-foreground'>
+          Upload photos of the job site. Take photos easily right from your
+          phone or upload directly from your computer.
+        </p>
+      </div>
+      <>
+        <UploadButton
+          onPrimaryClick={onPrimaryClick}
+          disabled={false}
+          // disabled={
+          //   !(
+          //     subscriptionStatus === "trialing" ||
+          //     subscriptionStatus === "active"
+          //   )
+          // }
+        />
+        <Dialog
+          open={isImageUploadModalOpen}
+          onOpenChange={setIsImageUploadModalOpen}
+        >
+          <ImageUploadModal
+            onChange={onChange}
+            onClick={onClick}
+            isUploading={numUploads > 0}
             setOpen={setIsImageUploadModalOpen}
-          >
-            {(setOpen) => (
-              <ImageUploadModal
-                onChange={onChange}
-                onClick={onClick}
-                isUploading={numUploads > 0}
-                setOpen={setOpen}
-                directImageUpload={directImageUpload}
-                onDrop={onDrop}
-              />
-            )}
-          </Modal>
-          <SecondaryButton onClick={() => setIsRoomCreationModalOpen(true)}>
-            Add Room
-          </SecondaryButton>
-          <Modal
-            open={isRoomCreationModalOpen}
-            setOpen={setIsRoomCreationModalOpen}
-          >
-            {(setOpen) => (
-              <RoomCreationModal
-                setOpen={setOpen}
-                isOpen={isRoomCreationModalOpen}
-              />
-            )}
-          </Modal>
-          <CreateAccessLink />
-          <DownloadAllRoomImages />
-        </>
-      </TabTitleArea>
+            directImageUpload={directImageUpload}
+            onDrop={onDrop}
+          />
+        </Dialog>
+        <Button
+          variant='outline'
+          onClick={() => setIsRoomCreationModalOpen(true)}
+        >
+          Add Room
+        </Button>
+        <Modal
+          open={isRoomCreationModalOpen}
+          setOpen={setIsRoomCreationModalOpen}
+        >
+          {(setOpen) => (
+            <RoomCreationModal
+              setOpen={setOpen}
+              isOpen={isRoomCreationModalOpen}
+            />
+          )}
+        </Modal>
+        <CreateAccessLink />
+        <DownloadAllRoomImages />
+      </>
       {/* {Object.keys(uploadSummary).length > 0 && (
         <Alert title='Upload Successful' type='success'>
           <ul>

@@ -4,7 +4,7 @@ import { Separator } from "@components/ui/separator";
 
 export const metadata: Metadata = {
   title: "Workflow Settings",
-  description: "ServiceGeek workflow settings",
+  description: "RestoreGeek workflow settings",
   icons: ["/favicon.ico"],
 };
 

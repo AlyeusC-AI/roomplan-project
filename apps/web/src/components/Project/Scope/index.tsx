@@ -4,13 +4,12 @@ import EmptyState from "@components/DesignSystem/EmptyState";
 import { useParams } from "next/navigation";
 import { roomStore } from "@atoms/room";
 
-import TabTitleArea from "../TabTitleArea";
-
 import AreasAffected from "./AreasAffected";
 import Dimensions from "./Dimensions";
 import FloorMaterial from "./FloorMaterial";
 import WallMaterial from "./WallMaterial";
 import { Input } from "@components/ui/input";
+import { Separator } from "@components/ui/separator";
 
 const areaAffectedTitle = {
   wall: "Walls",
@@ -23,14 +22,14 @@ export default function Scope() {
   const { id } = useParams<{ id: string }>();
 
   const saveAffectedArea = async (
-    data: AffectedAreaData,
+    data: Partial<AreaAffected>,
     type: AreaAffectedType,
     roomId: string
   ) => {
     const oldState = rooms;
     roomStore.getState().updateAreasAffected(roomId, data, type);
     try {
-      const res = await fetch(`/api/project/${id}/room-affected-area`, {
+      const res = await fetch(`/api/v1/projects/${id}/room/affected-area`, {
         method: "POST",
         body: JSON.stringify({
           roomId,
@@ -38,6 +37,10 @@ export default function Scope() {
           type,
         }),
       });
+
+      const json = await res.json();
+
+      roomStore.getState().updateAreasAffected(roomId, json.areaAffected, type);
 
       if (!res.ok) {
         roomStore.getState().updateAllRooms(oldState);
@@ -49,10 +52,16 @@ export default function Scope() {
 
   return (
     <div>
-      <TabTitleArea
-        title='Scope Details'
-        description='Enter room dimensions, number of windows and doors, as well as document affected areas.'
-      />
+      <div className='space-y-6'>
+        <div>
+          <h1 className='text-2xl font-medium'>Scope Details</h1>
+          <p className='text-sm text-muted-foreground'>
+            Enter room dimensions, number of windows and doors, as well as
+            document affected areas.
+          </p>
+        </div>
+        <Separator />
+      </div>
       {rooms.length === 0 && (
         <EmptyState
           imagePath={"/images/empty.svg"}
@@ -64,7 +73,7 @@ export default function Scope() {
       )}
       {rooms.map((room) => (
         <div key={room.publicId} className='mb-12'>
-          <h1 className='mt-8 text-2xl font-semibold text-gray-900'>
+          <h1 className='mt-8 text-2xl font-semibold text-foreground'>
             {room.name}
           </h1>
           <Dimensions room={room} />
@@ -73,10 +82,10 @@ export default function Scope() {
               setAffectedAreas={(s, isDeleted) =>
                 saveAffectedArea({ isDeleted }, s, room.publicId)
               }
-              affectedAreas={room.areasAffected}
+              affectedAreas={room.AreaAffected}
             />
           </div>
-          {room.areasAffected.map((areaAffected) => {
+          {room.AreaAffected.map((areaAffected) => {
             if (areaAffected.isDeleted) return null;
             return (
               <div

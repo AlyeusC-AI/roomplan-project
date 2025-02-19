@@ -1,29 +1,44 @@
 import {
   Box,
   Heading,
-  Button,
-  Text,
   FormControl,
   Input,
   Stack,
   InputGroup,
   InputRightAddon,
-  AddIcon,
-  Pressable,
-  ChevronDownIcon,
-  ChevronUpIcon,
+  Button,
 } from "native-base";
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { RouterOutputs } from "../../utils/api";
-
-import {
-  UpdateGenericRoomReadingData,
-  UpdateRoomReadingData,
-} from "./RoomReadings";
 import { useDebounce } from "../../utils/debounce";
 import Collapsible from "react-native-collapsible";
-import { Trash2 } from "lucide-react-native";
+import {
+  Camera,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Plus,
+  Trash2,
+} from "lucide-react-native";
+import { Database } from "@/types/database";
+import { v4 } from "react-native-uuid/dist/v4";
+import { roomsStore } from "@/lib/state/rooms";
+import { useGlobalSearchParams } from "expo-router";
+import { userStore } from "@/lib/state/user";
+import { toast } from "sonner-native";
+import { TouchableOpacity, Text, View } from "react-native";
+import { supabaseServiceRole } from "@/unused/screens/CameraScreen";
+import * as ImagePicker from "expo-image-picker";
+import DateTimePicker from "react-native-ui-datepicker";
+
+export type UpdateRoomReadingData = {
+  temperature?: string;
+  relativeHumidity?: string;
+  gpp?: string;
+  moistureContentWall?: string;
+  moistureContentFloor?: string;
+};
 
 export function RoomReadingInput({
   value,
@@ -71,51 +86,126 @@ export function RoomReadingInput({
 }
 
 const RoomReading = ({
+  room,
   reading,
-  roomPublicId,
-  deleteReading,
-  updateRoomReading,
-  addGenericReading,
-  updateGenericRoomReading,
+  addReading,
 }: {
-  reading: NonNullable<
-    RouterOutputs["mobile"]["getRoomData"]["roomData"]
-  >["rooms"][0]["roomReadings"][0];
-  roomPublicId: string;
-  deleteReading: (roomId: string, readingId: string) => Promise<void>;
-  updateRoomReading: (
-    roomId: string,
-    readingId: string,
-    data: UpdateRoomReadingData
-  ) => Promise<void>;
-  addGenericReading: (roomId: string, readingId: string) => Promise<void>;
-  updateGenericRoomReading: (
-    roomId: string,
-    readingId: string,
-    genericReadingId: string,
-    data: UpdateGenericRoomReadingData
-  ) => Promise<void>;
+  room: Room;
+  reading: ReadingsWithGenericReadings;
+  addReading: (
+    data: Database["public"]["Tables"]["GenericRoomReading"]["Insert"],
+    type: ReadingType
+  ) => Promise<any>;
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const { session: supabaseSession } = userStore((state) => state);
+  const rooms = roomsStore();
+  const { projectId } = useGlobalSearchParams<{
+    projectId: string;
+  }>();
+  const [date, setDate] = useState(new Date(reading.date));
+
+  async function updateRoomReading(
+    readingId: string,
+    type: ReadingType,
+    data:
+      | Database["public"]["Tables"]["RoomReading"]["Update"]
+      | Database["public"]["Tables"]["GenericRoomReading"]["Update"]
+  ) {
+    try {
+      await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/readings`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": supabaseSession?.access_token || "",
+          },
+          body: JSON.stringify({
+            readingData: data,
+            readingId,
+            type,
+          }),
+        }
+      );
+
+      console.log("updated reading", data);
+
+      if (type === "standard") {
+        rooms.updateRoomReading(room.id, reading.id, data);
+      }
+    } catch {
+      toast.error("Could not update reading");
+    }
+  }
+
+  const deleteReading = async (readingId: string, type: ReadingType) => {
+    try {
+      await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/readings`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": supabaseSession?.access_token || "",
+          },
+          body: JSON.stringify({
+            type,
+            readingId,
+          }),
+        }
+      );
+      rooms.removeReading(room.id, reading.id);
+    } catch {
+      toast.error("Could not delete reading");
+    }
+  };
+
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images", "videos"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log(result);
+
+    const photo = result.assets[0];
+
+    const p = {
+      uri: photo.uri,
+      name: photo.fileName,
+    };
+    const formData = new FormData();
+    // @ts-expect-error maaaaan react-native sucks
+    formData.append("file", p);
+
+    try {
+      await supabaseServiceRole.storage
+        .from("note-images")
+        .upload(`/${reading.publicId}/${v4()}.jpeg`, formData, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <>
-      <Pressable
+      <Button
+        // className="flex flex-row justify-between items-center h-10"
+        variant="outline"
         onPress={() => setIsCollapsed((o) => !o)}
-        px={2}
-        py={4}
-        borderWidth={1}
-        borderColor="gray.200"
-        rounded="md"
-        display="flex"
-        flexDirection="row"
-        justifyContent="space-between"
-        mb={4}
       >
-        <Heading size="sm" color="blue.500" ml={2}>
-          {format(new Date(reading.date), "MM/dd/yyyy")}
-        </Heading>
-        {!isCollapsed ? <ChevronDownIcon /> : <ChevronUpIcon />}
-      </Pressable>
+        <View className="flex flex-row justify-between w-full items-center">
+          <Text>{format(new Date(reading.date), "MM/dd/yyyy")}</Text>
+          {!isCollapsed ? <ChevronDown /> : <ChevronUp />}
+        </View>
+      </Button>
       <Collapsible collapsed={isCollapsed}>
         <Box
           key={reading?.publicId}
@@ -123,17 +213,34 @@ const RoomReading = ({
           pl={6}
           borderLeftWidth={1}
           borderLeftColor="blue.500"
+          className="gap-y-3"
         >
           <Button
-            onPress={async () => deleteReading(roomPublicId, reading.publicId)}
-            rightIcon={<Trash2 color="#ef4444" height={24} width={24} />}
-            backgroundColor="white"
-            borderWidth={1}
-            rounded="md"
-            borderColor="red.500"
+            onPress={async () => deleteReading(reading.publicId, "standard")}
+            // className="bg-white border rounded-md"
+            className="flex items-center justify-center"
+            variant="destructive"
           >
-            <Text color="red.500">Delete Reading</Text>
+            <Text color="red.500">
+              Delete Reading <Trash2 color="#ef4444" height={24} width={24} />
+            </Text>
           </Button>
+          <FormControl>
+            <FormControl.Label>Date</FormControl.Label>
+            <DateTimePicker
+              mode="single"
+              buttonNextIcon={<ChevronRight color="#1d4ed8" />}
+              buttonPrevIcon={<ChevronLeft color="#1d4ed8" />}
+              onChange={(params) => {
+                setDate(new Date(params.date as string));
+                updateRoomReading(reading.publicId, "standard", {
+                  date: new Date(params.date as string).toISOString(),
+                });
+              }}
+              selectedItemColor="#1d4ed8"
+              date={date}
+            />
+          </FormControl>
           <FormControl>
             <Stack mx="2">
               <FormControl.Label>Temperature</FormControl.Label>
@@ -142,7 +249,7 @@ const RoomReading = ({
                 placeholder="Temperature"
                 rightText="°F"
                 onChange={(temperature) =>
-                  updateRoomReading(roomPublicId, reading.publicId, {
+                  updateRoomReading(reading.publicId, "standard", {
                     temperature,
                   })
                 }
@@ -156,8 +263,8 @@ const RoomReading = ({
                 placeholder="Relative Humidity"
                 rightText="RH"
                 onChange={(relativeHumidity) =>
-                  updateRoomReading(roomPublicId, reading.publicId, {
-                    relativeHumidity,
+                  updateRoomReading(reading.publicId, "standard", {
+                    humidity: relativeHumidity,
                   })
                 }
               />
@@ -170,35 +277,45 @@ const RoomReading = ({
                 placeholder=""
                 rightText="gpp"
                 onChange={(gpp) =>
-                  updateRoomReading(roomPublicId, reading.publicId, {
+                  updateRoomReading(reading.publicId, "standard", {
                     gpp,
                   })
                 }
               />
             </Stack>
             <Stack mx="2">
-              <FormControl.Label>Moisture Content (Wall)</FormControl.Label>
+              <FormControl.Label>
+                Moisture Content (Wall){" "}
+                <TouchableOpacity onPress={() => pickImage()} className="ml-2">
+                  <Camera />
+                </TouchableOpacity>
+              </FormControl.Label>
 
               <RoomReadingInput
                 value={reading.moistureContentWall || ""}
                 placeholder="Moisture Content Percentage"
                 rightText="%"
                 onChange={(moistureContentWall) =>
-                  updateRoomReading(roomPublicId, reading.publicId, {
+                  updateRoomReading(reading.publicId, "standard", {
                     moistureContentWall,
                   })
                 }
               />
             </Stack>
             <Stack mx="2">
-              <FormControl.Label>Moisture Content (Floor)</FormControl.Label>
+              <FormControl.Label>
+                Moisture Content (Floor)
+                <TouchableOpacity onPress={() => pickImage()} className="ml-2">
+                  <Camera />
+                </TouchableOpacity>
+              </FormControl.Label>
 
               <RoomReadingInput
                 value={reading.moistureContentFloor || ""}
                 placeholder="Moisture Content Percentage"
                 rightText="%"
                 onChange={(moistureContentFloor) =>
-                  updateRoomReading(roomPublicId, reading.publicId, {
+                  updateRoomReading(reading.publicId, "standard", {
                     moistureContentFloor,
                   })
                 }
@@ -209,7 +326,7 @@ const RoomReading = ({
               Dehumidifier readings
             </Heading>
 
-            {reading.genericRoomReadings.map((grr) => (
+            {reading.GenericRoomReading.map((grr) => (
               <Box w="full" key={grr.publicId}>
                 <Stack mx="2">
                   <FormControl.Label>Dehumidifier Reading</FormControl.Label>
@@ -219,14 +336,9 @@ const RoomReading = ({
                     rightText="Each"
                     placeholder="Dehumidifier Reading"
                     onChange={(value) =>
-                      updateGenericRoomReading(
-                        roomPublicId,
-                        reading.publicId,
-                        grr.publicId,
-                        {
-                          value,
-                        }
-                      )
+                      updateRoomReading(grr.publicId, "generic", {
+                        value,
+                      })
                     }
                   />
                   <FormControl.Label>Temperature</FormControl.Label>
@@ -236,14 +348,16 @@ const RoomReading = ({
                     rightText="F"
                     placeholder="Temperature"
                     onChange={(temperature) =>
-                      updateGenericRoomReading(
-                        roomPublicId,
-                        reading.publicId,
-                        grr.publicId,
-                        {
-                          temperature,
-                        }
-                      )
+                      updateRoomReading(grr.publicId, "generic", {
+                        temperature,
+                      }).then(() => {
+                        rooms.updateGenericRoomReading(
+                          room.id,
+                          reading.id,
+                          grr.publicId,
+                          { temperature }
+                        );
+                      })
                     }
                   />
                   <FormControl.Label>Relative Humidity</FormControl.Label>
@@ -253,20 +367,15 @@ const RoomReading = ({
                     rightText="RH"
                     placeholder="Relative Humidity"
                     onChange={(relativeHumidity) =>
-                      updateGenericRoomReading(
-                        roomPublicId,
-                        reading.publicId,
-                        grr.publicId,
-                        {
-                          relativeHumidity,
-                        }
-                      )
+                      updateRoomReading(grr.publicId, "generic", {
+                        humidity: relativeHumidity,
+                      })
                     }
                   />
                 </Stack>
               </Box>
             ))}
-            {reading.genericRoomReadings.length === 0 && (
+            {reading.GenericRoomReading.length === 0 && (
               <Heading size="sm" mt="4" ml="16" color="gray.400">
                 no dehumidifier readings yet
               </Heading>
@@ -274,7 +383,23 @@ const RoomReading = ({
 
             <Button
               onPress={async () =>
-                addGenericReading(roomPublicId, reading.publicId)
+                addReading(
+                  {
+                    roomReadingId: reading.id,
+                    publicId: v4(),
+                    value: "",
+                    type: "dehumidifer",
+                  },
+                  "generic"
+                )
+                  .then((res) => res.json())
+                  .then((body) => {
+                    rooms.addGenericRoomReading(
+                      room.id,
+                      reading.id,
+                      body.reading
+                    );
+                  })
               }
               display="flex"
               justifyContent="center"
@@ -282,11 +407,10 @@ const RoomReading = ({
               mt="4"
               mr="10"
               ml="10"
-              rightIcon={
-                <AddIcon style={{ color: "#fff" }} height={24} width={24} />
-              }
+              mb="6"
+              rightIcon={<Plus color="#FFF" height={24} width={24} />}
             >
-              Add Dehumidifier Reading
+              <Text>Add Dehumidifier Reading</Text>
             </Button>
           </FormControl>
         </Box>

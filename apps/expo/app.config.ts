@@ -1,14 +1,14 @@
 import { ExpoConfig } from "@expo/config";
 
 const config: ExpoConfig = {
-  name: "ServiceGeek",
+  name: "Restoregeek",
   slug: "sevicegeek-mobile",
   owner: "servicegeek",
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
   scheme: "servicegeek",
-  version: "1.2.1",
+  version: "1.3.1",
   runtimeVersion: "appVersion",
   updates: {
     fallbackToCacheTimeout: 0,
@@ -31,7 +31,13 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: "com.servicegeek.servicegeekmobile",
     supportsTablet: true,
-    buildNumber: "2",
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+      NSPhotoLibraryUsageDescription:
+        "This app requires access to the photo library.",
+      NSLocationWhenInUseUsageDescription:
+        "This app requires access to your location.",
+    },
   },
   web: {
     favicon: "./assets/favicon.png",
@@ -63,10 +69,13 @@ const config: ExpoConfig = {
       "expo-build-properties",
       {
         android: {
-          compileSdkVersion: 34,
-          targetSdkVersion: 34,
+          compileSdkVersion: 35,
+          targetSdkVersion: 35,
           buildToolsVersion: "30.0.2",
           kotlinVersion: "1.7.10",
+        },
+        ios: {
+          deploymentTarget: "16.0",
         },
       },
     ],
@@ -79,6 +88,13 @@ const config: ExpoConfig = {
         androidSpeechServicePackages: [
           "com.google.android.googlequicksearchbox",
         ],
+      },
+    ],
+    [
+      "expo-image-picker",
+      {
+        photosPermission:
+          "The app needs access to your photos.",
       },
     ],
   ],

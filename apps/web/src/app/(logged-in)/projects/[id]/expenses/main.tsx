@@ -1,7 +1,16 @@
+"use client";
+
+import { projectStore } from "@atoms/project";
 import Costs from "@components/Project/Costs";
 
 const ExpensesPage = () => {
-  return <Costs rcvValue={0} actualValue={0} />;
+  const project = projectStore();
+  return (
+    <Costs
+      rcvValue={project.project?.rcvValue ?? 0}
+      actualValue={project.project?.actualValue ?? 0}
+    />
+  );
 };
 
 export default ExpensesPage;

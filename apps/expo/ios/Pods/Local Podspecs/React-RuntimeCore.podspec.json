@@ -1,16 +1,16 @@
 {
   "name": "React-RuntimeCore",
-  "version": "0.74.5",
+  "version": "0.76.6",
   "summary": "The React Native Runtime.",
   "homepage": "https://reactnative.dev/",
   "license": "MIT",
   "authors": "Meta Platforms, Inc. and its affiliates",
   "platforms": {
-    "ios": "13.4"
+    "ios": "15.1"
   },
   "source": {
     "git": "https://github.com/facebook/react-native.git",
-    "tag": "v0.74.5"
+    "tag": "v0.76.6"
   },
   "source_files": [
     "*.{cpp,h}",
@@ -32,38 +32,17 @@
     "RCT-Folly/Fabric": [
       "2024.01.01.00"
     ],
-    "React-jsiexecutor": [
-
-    ],
-    "React-cxxreact": [
-
-    ],
-    "React-runtimeexecutor": [
-
-    ],
-    "glog": [
-
-    ],
-    "React-jsi": [
-
-    ],
-    "React-jserrorhandler": [
-
-    ],
-    "React-runtimescheduler": [
-
-    ],
-    "React-utils": [
-
-    ],
-    "React-featureflags": [
-
-    ],
-    "hermes-engine": [
-
-    ],
-    "React-jsinspector": [
-
-    ]
+    "React-jsiexecutor": [],
+    "React-cxxreact": [],
+    "React-runtimeexecutor": [],
+    "glog": [],
+    "React-jsi": [],
+    "React-jserrorhandler": [],
+    "React-performancetimeline": [],
+    "React-runtimescheduler": [],
+    "React-utils": [],
+    "React-featureflags": [],
+    "hermes-engine": [],
+    "React-jsinspector": []
   }
 }

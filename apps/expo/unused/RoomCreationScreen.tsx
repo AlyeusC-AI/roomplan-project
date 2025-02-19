@@ -13,7 +13,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useToast } from "native-base";
 import { Keyboard, TouchableWithoutFeedback } from "react-native";
 import { api } from "../utils/api";
-import { userStore } from "@/utils/state/user";
+import { userStore } from "@/lib/state/user";
 import { router, useLocalSearchParams } from "expo-router";
 
 export default function RoomCreationScreen() {

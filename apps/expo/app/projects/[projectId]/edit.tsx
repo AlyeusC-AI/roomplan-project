@@ -1,17 +1,5 @@
 // import { useState } from "react";
-// import {
-//   Button,
-//   View,
-//   FormControl,
-//   Input,
-//   Spinner,
-//   Text,
-//   HStack,
-// } from "native-base";
-// import React from "react";
-// import { useToast } from "native-base";
 // import { Keyboard, TouchableWithoutFeedback } from "react-native";
-// import { api } from "@/utils/api";
 // import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 // import { userStore } from "@/utils/state/user";
 // import { router, useLocalSearchParams } from "expo-router";
@@ -29,16 +17,16 @@
 //     api.mobile.getProjectOverviewData.useQuery(queryParams);
 
 //   const [clientName, setClientName] = useState(
-//     getProjectOverviewDataQuery.data?.project?.clientName || ""
+//     project.project?.clientName || ""
 //   );
 //   const [clientNumber, setClientNumber] = useState(
-//     getProjectOverviewDataQuery.data?.project?.clientPhoneNumber || ""
+//     project.project?.clientPhoneNumber || ""
 //   );
 //   const [clientEmail, setClientEmail] = useState(
-//     getProjectOverviewDataQuery.data?.project?.clientEmail || ""
+//     project.project?.clientEmail || ""
 //   );
 //   const [location, setLocation] = useState(
-//     getProjectOverviewDataQuery.data?.project?.location || ""
+//     project.project?.location || ""
 //   );
 
 //   const editProjectMutation = api.mobile.editProjectDetails.useMutation();
@@ -160,10 +148,12 @@
 //   );
 // }
 
-import { api } from "@/utils/api";
-import { userStore } from "@/utils/state/user";
-import { router, useLocalSearchParams, useNavigation } from "expo-router";
-import { ArrowLeft, ArrowRight } from "lucide-react-native";
+import { addressPickerStore } from "@/lib/state/address-picker";
+import { projectStore } from "@/lib/state/project";
+import { userStore } from "@/lib/state/user";
+import { router, useGlobalSearchParams, useNavigation } from "expo-router";
+import { uniqueId } from "lodash";
+import { ArrowLeft, ArrowRight, Phone } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
@@ -172,70 +162,120 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Linking,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Toast } from "toastify-react-native";
+import MapboxPlacesAutocomplete from "react-native-mapbox-places-autocomplete";
+import { toast } from "sonner-native";
 
 export default function EditProject() {
   const { session: supabaseSession } = userStore((state) => state);
-  const { projectId } = useLocalSearchParams<{
+  const { projectId } = useGlobalSearchParams<{
     projectId: string;
     projectName: string;
   }>();
-  const queryParams = {
-    jwt: supabaseSession ? supabaseSession["access_token"] : "null",
-    projectPublicId: projectId,
-  };
-
-  const getProjectOverviewDataQuery =
-    api.mobile.getProjectOverviewData.useQuery(queryParams);
+  const { address, setAddress } = addressPickerStore((state) => state);
+  const [loading, setLoading] = useState(false);
+  const project = projectStore();
 
   const [clientName, setClientName] = useState(
-    getProjectOverviewDataQuery.data?.project?.clientName || ""
+    project.project?.clientName || ""
   );
-  const [clientNumber, setClientNumber] = useState(
-    getProjectOverviewDataQuery.data?.project?.clientPhoneNumber || ""
+  const [clientPhoneNumber, setClientNumber] = useState(
+    project.project?.clientPhoneNumber || ""
   );
   const [clientEmail, setClientEmail] = useState(
-    getProjectOverviewDataQuery.data?.project?.clientEmail || ""
-  );
-  const [location, setLocation] = useState(
-    getProjectOverviewDataQuery.data?.project?.location || ""
+    project.project?.clientEmail || ""
   );
 
-  const editProjectMutation = api.mobile.editProjectDetails.useMutation();
-
-  const navigation = useNavigation()
+  const navigation = useNavigation();
 
   useEffect(() => {
-    navigation.setOptions({ headerShown: false })
-  })
-
+    navigation.setOptions({ headerShown: false });
+  });
   const updateProject = async () => {
     try {
-      await editProjectMutation.mutateAsync({
-        ...queryParams,
+      setLoading(true);
+
+      const update: Record<string, unknown> = {
         clientEmail,
         clientName,
-        clientNumber,
-        location,
-      });
-      await getProjectOverviewDataQuery.refetch();
+        clientPhoneNumber,
+      }
+
+      if (address) {
+        update.location = address.formattedAddress;
+        update.lng = address.lng;
+        update.lat = address.lat;
+      }
+
+      await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "auth-token": `${supabaseSession?.access_token}`,
+          },
+          body: JSON.stringify(update),
+        }
+      );
+      setLoading(false);
+      project.updateProject(update);
       router.dismiss();
-    } catch (e) {
-      Toast.error(
+    } catch {
+      toast.error(
         "Could not update project. If this error persits, please contact support@servicegeek.com"
       );
     }
   };
 
+  function select(id: string) {
+    const url = `https://api.mapbox.com/search/searchbox/v1/retrieve/${
+      id
+    }?session_token=${uniqueId()}&access_token=${
+      process.env.EXPO_PUBLIC_MAPBOX_TOKEN
+    }`;
+
+    fetch(url)
+      .then((res) => res.json())
+      .then((data: RetrieveResponse) => {
+        const address1 = data.features[0].properties.address ?? "";
+        const address2 = "";
+        const city = data.features[0].properties.context.place?.name ?? "";
+        const region = data.features[0].properties.context.region?.name ?? "";
+        const postalCode =
+          data.features[0].properties.context.postcode?.name ?? "";
+        const country = data.features[0].properties.context.country?.name ?? "";
+        const state = data.features[0].properties.context.region?.name ?? "";
+        const lat = data.features[0].geometry.coordinates[1];
+        const lng = data.features[0].geometry.coordinates[0];
+
+        const formattedAddress = data.features[0].properties.place_formatted;
+
+        console.log(JSON.stringify(data, null, 2));
+
+        const formattedData: AddressType = {
+          address1,
+          address2,
+          formattedAddress,
+          city,
+          region,
+          postalCode,
+          country,
+          lat,
+          lng,
+          state,
+        };
+
+        setAddress(formattedData);
+      });
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f8f8" }}>
       <View style={styles.header}>
         <View style={styles.headerAction}>
-          <TouchableOpacity
-            onPress={() => router.dismiss()}
-          >
+          <TouchableOpacity onPress={() => router.dismiss()}>
             <ArrowLeft color="#000" size={24} />
           </TouchableOpacity>
         </View>
@@ -254,10 +294,10 @@ export default function EditProject() {
           <View style={styles.sectionBody}>
             <TextInput
               clearButtonMode="while-editing"
-              onChangeText={setClientEmail}
+              onChangeText={setClientName}
               placeholder="Enter client name"
               style={styles.sectionInput}
-              value={clientEmail}
+              value={clientName}
             />
           </View>
         </View>
@@ -269,40 +309,56 @@ export default function EditProject() {
             <TextInput
               clearButtonMode="while-editing"
               onChangeText={setClientEmail}
-              placeholder="Enter last name"
+              placeholder="Enter client email"
               style={styles.sectionInput}
               value={clientEmail}
             />
           </View>
         </View>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Client Email</Text>
-
-          <View style={styles.sectionBody}>
-            <TextInput
-              clearButtonMode="while-editing"
-              onChangeText={setClientEmail}
-              placeholder="Enter last name"
-              style={styles.sectionInput}
-              value={clientEmail}
-            />
-          </View>
-        </View>
-        <View style={styles.section}>
+          <View className="flex flex-row justify-between items-center">
           <Text style={styles.sectionTitle}>Client Phone Number</Text>
+          <TouchableOpacity onPress={() => Linking.openURL(`tel:${project.project?.clientPhoneNumber}`)}>
+            <Text className="text-primary flex items-center"><Phone size={13} className="text-primary" /> Call</Text>
+          </TouchableOpacity>
+          </View>
 
           <View style={styles.sectionBody}>
             <TextInput
               clearButtonMode="while-editing"
               onChangeText={setClientNumber}
-              placeholder="Enter last name"
+              placeholder="Enter client phone number"
               style={styles.sectionInput}
-              value={clientNumber}
+              value={clientPhoneNumber}
+            />
+          </View>
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Client Address</Text>
+
+          <View style={styles.sectionBody}>
+            <MapboxPlacesAutocomplete
+              id="origin"
+              placeholder="Enter your street address"
+              accessToken={process.env.EXPO_PUBLIC_MAPBOX_TOKEN}
+              onPlaceSelect={(data: any) => {
+                select(data.properties.mapbox_id);
+                console.log(JSON.stringify(data, null, 2));
+              }}
+              // {"address": "2301", "center": [-73.950167, 40.609356], "context": [{"id": "neighborhood.378506476", "mapbox_id": "dXJuOm1ieHBsYzpGbytNN0E", "text": "Madison"}, {"id": "postcode.27848428", "mapbox_id": "dXJuOm1ieHBsYzpBYWp1N0E", "text": "11229"}, {"id": "locality.66915052", "mapbox_id": "dXJuOm1ieHBsYzpBLzBLN0E", "text": "Brooklyn", "wikidata": "Q18419"}, {"id": "place.233720044", "mapbox_id": "dXJuOm1ieHBsYzpEZTVJN0E", "text": "New York", "wikidata": "Q60"}, {"id": "district.12379884", "mapbox_id": "dXJuOm1ieHBsYzp2T2Jz", "text": "Kings County", "wikidata": "Q11980692"}, {"id": "region.107756", "mapbox_id": "dXJuOm1ieHBsYzpBYVRz", "short_code": "US-NY", "text": "New York", "wikidata": "Q1384"}, {"id": "country.8940", "mapbox_id": "dXJuOm1ieHBsYzpJdXc", "short_code": "us", "text": "United States", "wikidata": "Q30"}], "geometry": {"coordinates": [-73.950167, 40.609356], "type": "Point"}, "id": "address.7378958179886160", "place_name": "2301 Quentin Road, Brooklyn, New York 11229, United States", "place_type": ["address"], "properties": {"accuracy": "rooftop", "mapbox_id": "dXJuOm1ieGFkcjowOTg5ODU5Zi00MDZiLTQxOGQtOTdjZS1kZGMwYzYyYmM5MGQ"}, "relevance": 1, "text": "Quentin Road", "type": "Feature"}
+              onClearInput={() => {
+                setAddress(null);
+              }}
+              countryId="us"
+              inputStyle={styles.sectionInput}
+              containerStyle={{
+                marginBottom: 12,
+              }}
             />
           </View>
         </View>
 
-        <TouchableOpacity onPress={updateProject}>
+        <TouchableOpacity disabled={loading} onPress={updateProject}>
           <View style={styles.btn}>
             <View style={{ width: 34 }} />
 

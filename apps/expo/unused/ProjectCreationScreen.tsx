@@ -15,7 +15,7 @@ import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplet
 import { useToast } from "native-base";
 import { Keyboard, TouchableWithoutFeedback } from "react-native";
 import { api } from "../utils/api";
-import { userStore } from "@/utils/state/user";
+import { userStore } from "@/lib/state/user";
 
 export default function ProjectCreationScreen({
   navigation,

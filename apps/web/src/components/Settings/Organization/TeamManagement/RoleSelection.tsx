@@ -3,17 +3,20 @@ import { toast } from "sonner";
 import { Spinner } from "@components/components";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronDownIcon } from "lucide-react";
-import { AccessLevel } from "@servicegeek/db";
 import useAmplitudeTrack from "@utils/hooks/useAmplitudeTrack";
 import clsx from "clsx";
 import { teamMembersStore } from "@atoms/team-members";
+import { Database } from "@/types/database";
+
+type AccessLevel = Database["public"]["Enums"]["AccessLevel"];
 
 const RoleToDescription: Record<AccessLevel, string> = {
-  [AccessLevel.admin]: "Account Administrator",
-  [AccessLevel.accountManager]: "Account Manager",
-  [AccessLevel.projectManager]: "Project Manager",
-  [AccessLevel.contractor]: "Contractor",
-  [AccessLevel.viewer]: "Viewer",
+  admin: "Account Administrator",
+  accountManager: "Account Manager",
+  projectManager: "Project Manager",
+  contractor: "Contractor",
+  viewer: "Viewer",
+  owner: "Owner",
 };
 
 interface PublishingOption {
@@ -24,39 +27,39 @@ interface PublishingOption {
 }
 const publishingOptions: PublishingOption[] = [
   {
-    title: RoleToDescription[AccessLevel.admin],
+    title: RoleToDescription["admin"],
     description: "Full access.",
     current: true,
-    accessLevel: AccessLevel.admin,
+    accessLevel: "admin",
   },
   {
-    title: RoleToDescription[AccessLevel.accountManager],
+    title: RoleToDescription["accountManager"],
     description: "Access to everything except billing.",
     current: false,
-    accessLevel: AccessLevel.accountManager,
+    accessLevel: "accountManager",
   },
   {
-    title: RoleToDescription[AccessLevel.projectManager],
+    title: "projectManager",
     description:
       "Access to everything except billing, and organization settings",
     current: false,
-    accessLevel: AccessLevel.projectManager,
+    accessLevel: "projectManager",
   },
   {
-    title: RoleToDescription[AccessLevel.contractor],
+    title: "contractor",
     description: "Only able to access projects that they are assigned to",
     current: false,
-    accessLevel: AccessLevel.contractor,
+    accessLevel: "contractor",
   },
   {
-    title: RoleToDescription[AccessLevel.viewer],
+    title: "viewer",
     description: "Only able to view projects that they are assigned to",
     current: false,
-    accessLevel: AccessLevel.viewer,
+    accessLevel: "viewer",
   },
 ];
 
-export default function RollSelection({ member }: { member: Member }) {
+export default function RollSelection({ member }: { member: Assignee }) {
   const [loading, setIsLoading] = useState(false);
   const { track } = useAmplitudeTrack();
   const selected = publishingOptions.find(
@@ -105,7 +108,7 @@ export default function RollSelection({ member }: { member: Member }) {
           <Listbox.Label className='sr-only'>Change Role</Listbox.Label>
           <div className='relative'>
             <div className='inline-flex rounded-md shadow-sm'>
-              <div className='inline-flex items-center rounded-l-md border border-gray-400 border-transparent py-2 pl-3 pr-4 text-gray-500'>
+              <div className='inline-flex items-center rounded-l-md border border-gray-400 py-2 pl-3 pr-4 text-gray-500'>
                 <p className='ml-2.5 text-sm font-medium'>
                   {loading ? (
                     <Spinner />

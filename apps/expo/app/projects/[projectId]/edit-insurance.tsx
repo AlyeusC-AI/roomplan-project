@@ -1,143 +1,131 @@
 import { useState } from "react";
-import {
-  Button,
-  View,
-  FormControl,
-  Input,
-  Spinner,
-  Text,
-  HStack,
-  Pressable,
-} from "native-base";
 import React from "react";
-import { useToast } from "native-base";
-import { Keyboard, Linking, TouchableWithoutFeedback } from "react-native";
-import { api } from "@/utils/api";
-import { userStore } from "@/utils/state/user";
-import { router, useLocalSearchParams } from "expo-router";
+import { toast } from "sonner-native";
+import {
+  ActivityIndicator,
+  Keyboard,
+  Linking,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
+import { userStore } from "@/lib/state/user";
+import { router, useGlobalSearchParams } from "expo-router";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
+import { projectStore } from "@/lib/state/project";
+import { Phone } from "lucide-react-native";
 
 export default function InsuranceScreen() {
-  const toast = useToast();
   const { session: supabaseSession } = userStore((state) => state);
-  const { projectId, projectName } = useLocalSearchParams<{ projectId: string; projectName: string }>()
-  const queryParams = {
-    jwt: supabaseSession ? supabaseSession["access_token"] : "null",
-    projectPublicId: projectId,
-  };
+  const { projectId } = useGlobalSearchParams<{
+    projectId: string;
+  }>();
 
-  const getProjectOverviewDataQuery =
-    api.mobile.getProjectOverviewData.useQuery(queryParams);
+  const [loading, setLoading] = useState(false);
+  const project = projectStore();
 
   const [adjusterName, setAdjusterName] = useState(
-    getProjectOverviewDataQuery.data?.project?.adjusterName || ""
+    project.project?.adjusterName || ""
   );
   const [adjusterPhoneNumber, setAdjusterPhoneNumber] = useState(
-    getProjectOverviewDataQuery.data?.project?.adjusterPhoneNumber || ""
+    project.project?.adjusterPhoneNumber || ""
   );
   const [insuranceClaimId, setInsuranceClaimId] = useState(
-    getProjectOverviewDataQuery.data?.project?.insuranceClaimId || ""
+    project.project?.insuranceClaimId || ""
   );
   const [adjusterEmail, setAdjusterEmail] = useState(
-    getProjectOverviewDataQuery.data?.project?.adjusterEmail || ""
+    project.project?.adjusterEmail || ""
   );
-
-  const editProjectMutation = api.mobile.updateInsuranceInfo.useMutation();
 
   const updateProject = async () => {
     try {
-      await editProjectMutation.mutateAsync({
-        ...queryParams,
+      setLoading(true);
+      await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "auth-token": `${supabaseSession?.access_token}`,
+          },
+          body: JSON.stringify({
+            adjusterName,
+            adjusterPhoneNumber,
+            insuranceClaimId,
+            adjusterEmail,
+          }),
+        }
+      );
+      setLoading(false);
+      project.updateProject({
         adjusterName,
-        adjusterEmail,
         adjusterPhoneNumber,
         insuranceClaimId,
+        adjusterEmail,
       });
-      await getProjectOverviewDataQuery.refetch();
       router.dismiss();
-    } catch (e) {
-      toast.show({
-        description: (
-          <HStack direction="row" space="2">
-            <Text color="white">
-              Could not update project. If this error persits, please contact
-              support@servicegeek.com
-            </Text>
-          </HStack>
-        ),
-        bottom: "16",
-      });
+    } catch {
+      toast.error(
+        "Could not update project. If this error persits, please contact support@servicegeek.com"
+      );
     }
   };
 
   return (
-    <View
-      bg="#fff"
-      alignItems="flex-start"
-      padding="4"
-      justifyContent="space-between"
-      h="full"
-      w="full"
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <FormControl mt="3">
-          <FormControl.Label color="">Adjuster Name</FormControl.Label>
-          <Input
-            type="text"
-            placeholder="Adjuster Name"
-            value={adjusterName}
-            onChangeText={(text) => setAdjusterName(text)}
-            size="lg"
-          />
-          <FormControl.Label color="">Claim Number</FormControl.Label>
-          <Input
-            type="text"
-            placeholder="Claim Number"
-            value={insuranceClaimId}
-            onChangeText={(text) => setInsuranceClaimId(text)}
-            size="lg"
-            autoCapitalize="none"
-          />
-          <FormControl.Label color="">Phone Number</FormControl.Label>
-          <Pressable
-            onPress={() => Linking.openURL(`tel:${adjusterPhoneNumber}`)}
-          >
-            <FormControl.Label color="#000">Call</FormControl.Label>
-          </Pressable>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View className="w-full px-4 mt-4">
+        <Label className="mt-4">Adjuster Name</Label>
+        <Input
+          placeholder="Adjuster Name"
+          value={adjusterName}
+          onChangeText={(text) => setAdjusterName(text)}
+        />
 
-          <Input
-            type="text"
-            placeholder="Phone Number"
-            value={adjusterPhoneNumber}
-            onChangeText={(text) => setAdjusterPhoneNumber(text)}
-            size="lg"
-          />
-          <FormControl.Label color="">Email</FormControl.Label>
-          <Input
-            type="text"
-            placeholder="Email"
-            value={adjusterEmail}
-            onChangeText={(text) => setAdjusterEmail(text)}
-            size="lg"
-          />
-          <Button
-            mt={4}
-            w="full"
-            disabled={
-              editProjectMutation.isLoading ||
-              getProjectOverviewDataQuery.isLoading
-            }
-            onPress={() => updateProject()}
-          >
-            {editProjectMutation.isLoading ||
-            (getProjectOverviewDataQuery.isLoading &&
-              !getProjectOverviewDataQuery.data) ? (
-              <Spinner color="white" size="sm" />
-            ) : (
-              "Update"
-            )}
-          </Button>
-        </FormControl>
-      </TouchableWithoutFeedback>
-    </View>
+        <Label className="mt-4">Claim Number</Label>
+        <Input
+          placeholder="Claim Number"
+          value={insuranceClaimId}
+          onChangeText={(text) => setInsuranceClaimId(text)}
+        />
+
+        <Label className="mt-4">Adjuster Phone Number</Label>
+        <Input
+          placeholder="Adjuster Phone Number"
+          value={adjusterPhoneNumber}
+          onChangeText={(text) => setAdjusterPhoneNumber(text)}
+        />
+
+        <Label className="mt-4">Adjuster Email</Label>
+        <Input
+          placeholder="Adjuster Email"
+          value={adjusterEmail}
+          onChangeText={(text) => setAdjusterEmail(text)}
+        />
+        <Button
+          className="mt-4"
+          disabled={loading}
+          onPress={() => updateProject()}
+        >
+          {loading ? <ActivityIndicator color="white" /> : <Text>Update</Text>}
+        </Button>
+
+        <Button
+          className="mt-4"
+          disabled={loading}
+          onPress={() => Linking.openURL(`tel:${adjusterPhoneNumber}`)}
+          variant="outline"
+        >
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <View className="flex flex-row gap-x-2 items-center justify-center">
+              <Phone color="blue" size={15} />
+              <Text>Call Now</Text>
+            </View>
+          )}
+        </Button>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }

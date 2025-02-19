@@ -1,14 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-// export const defaultInferencesState = []
-
-// const projectsState = atom<ProjectType[]>({
-//   key: 'ProjectsState',
-//   default: defaultInferencesState,
-// })
-
-// export default projectsState
 interface State {
   projects: Project[];
   totalProjects: number;
@@ -19,6 +11,7 @@ interface Actions {
   addProjects: (projects: Project[]) => void;
   removeProject: (id: string) => void;
   setProjects: (projects: Project[], total: number) => void;
+  updateProject: (project: Partial<Project>) => void;
 }
 
 export const projectsStore = create<State & Actions>()(
@@ -36,6 +29,12 @@ export const projectsStore = create<State & Actions>()(
         })),
       setProjects: (projects, total) =>
         set(() => ({ projects, totalProjects: total })),
+      updateProject: (project) =>
+        set((state) => ({
+          projects: state.projects.map((i) =>
+            i.publicId === project.publicId ? { ...i, ...project } : i
+          ),
+        })),
     }),
     {
       name: "projects",

@@ -1,5 +1,4 @@
 {
-  "extends": "@servicegeek/tsconfig/nextjs.json",
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
@@ -9,16 +8,34 @@
     "esModuleInterop": true,
     "strict": true,
     "baseUrl": ".",
+    "jsx": "preserve",
     "paths": {
-      "@*": ["./src/*"],
-      "@/*": ["./src/*"]
+      "@*": [
+        "./src/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ]
     },
     "plugins": [
       {
         "name": "next"
       }
     ],
-    "typeRoots": ["src/types", "node_modules/@types"],
+    "typeRoots": [
+      "src/types",
+      "node_modules/@types"
+    ],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "incremental": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true
   },
   "include": [
     "**/*.ts",
@@ -29,5 +46,7 @@
     "src/app/(logged-in)/calendar/upcoming-reminders",
     "scripts/set-org.js"
   ],
-  "exclude": [""]
+  "exclude": [
+    ""
+  ]
 }

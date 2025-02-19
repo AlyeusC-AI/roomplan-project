@@ -1,1 +1,0 @@
-../../../../../../../../node_modules/.pnpm/expo-dev-menu@5.0.23_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-dev-menu/ios/DevMenuRCTDevSettings.h

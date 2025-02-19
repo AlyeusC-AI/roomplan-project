@@ -11,6 +11,8 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { validate } from "uuid";
+import { projectStore } from "@atoms/project";
 
 type TBreadCrumbProps = {
   capitalizeLinks?: boolean;
@@ -18,6 +20,7 @@ type TBreadCrumbProps = {
 
 const NextBreadcrumb = ({ capitalizeLinks }: TBreadCrumbProps) => {
   const paths = usePathname();
+  const { project } = projectStore();
   const pathNames = paths.split("/").filter((path) => path);
 
   function capitalizeFirstLetter(word: string) {
@@ -38,7 +41,9 @@ const NextBreadcrumb = ({ capitalizeLinks }: TBreadCrumbProps) => {
               <React.Fragment key={index}>
                 <BreadcrumbItem className='hidden md:block'>
                   <BreadcrumbLink href={href}>
-                    {capitalizeFirstLetter(itemLink)}
+                    {validate(itemLink)
+                      ? (project?.name ?? "")
+                      : capitalizeFirstLetter(itemLink)}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 {index < pathNames.length - 1 && (

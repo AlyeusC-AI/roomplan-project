@@ -1,12 +1,8 @@
 "use client";
 
 import Readings from "@components/Project/Readings";
-import { trpc } from "@utils/trpc";
-import { useParams } from "next/navigation";
 
 const MitigationPage = () => {
-  const { id } = useParams<{ id: string }>();
-  trpc.readings.getAll.useQuery({ projectPublicId: id }, { initialData: [] });
   return <Readings />;
 };
 

@@ -1,5 +1,3 @@
-import { RouterOutputs } from "@servicegeek/api";
-import { trpc } from "@utils/trpc";
 import { useEffect, useState } from "react";
 import ColorPicker, { STATUS_COLORS } from "./color-picker";
 import { useSortable } from "@dnd-kit/sortable";
@@ -7,11 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import { useDebounce } from "@hooks/use-debounce";
 
-const WorkflowStatus = ({
-  label,
-}: {
-  label: RouterOutputs["projectStatus"]["getAllProjectStatuses"]["statuses"][0];
-}) => {
+const WorkflowStatus = ({ label }: { label: Status }) => {
   const {
     attributes,
     listeners,
@@ -33,16 +27,16 @@ const WorkflowStatus = ({
   const debouncedLabel = useDebounce(newLabel, 1000);
   const debouncedDescription = useDebounce(newDescription, 1000);
 
-  const editProjectStatusMutation =
-    trpc.projectStatus.editProjectStatus.useMutation();
+  // const editProjectStatusMutation =
+  //   trpc.projectStatus.editProjectStatus.useMutation();
 
   useEffect(() => {
-    editProjectStatusMutation.mutate({
-      label: newLabel,
-      description: newDescription,
-      color: newColor,
-      publicId: label.publicId,
-    });
+    // editProjectStatusMutation.mutate({
+    //   label: newLabel,
+    //   description: newDescription,
+    //   color: newColor,
+    //   publicId: label.publicId,
+    // });
   }, [debouncedLabel, debouncedDescription, newColor]);
 
   const selectedColor = STATUS_COLORS.find((s) => s.name === newColor);
@@ -60,9 +54,8 @@ const WorkflowStatus = ({
         >
           <button
             className={clsx(
-              "bg-opacity-40 px-2 py-4",
-              selectedColor?.bgColor && selectedColor.bgColor,
-              `hover:bg-opacity-80`
+              selectedColor?.bgColor &&
+                `bg-${selectedColor.bgColor}/40 hover:bg-${selectedColor.bgColor}/80`
             )}
           >
             <svg viewBox='0 0 20 20' width='12'>
@@ -74,14 +67,14 @@ const WorkflowStatus = ({
           <div className='relative rounded-md rounded-b-none rounded-tl-none px-3 pb-1.5 pt-2.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-blue-600'>
             <label
               htmlFor='name'
-              className='block text-xs font-medium text-gray-900'
+              className='block text-xs font-medium text-foreground'
             >
               Label Name
             </label>
             <input
               type='text'
               value={newLabel}
-              className='block w-full border-0 bg-transparent px-0 py-2 text-lg font-bold text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6'
+              className='block w-full border-0 bg-transparent px-0 py-2 text-lg font-bold text-foreground placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6'
               placeholder='Label Name'
               onChange={(e) => setNewLabel(e.target.value)}
             />
@@ -89,24 +82,20 @@ const WorkflowStatus = ({
           <div className='relative rounded-none px-3 pb-1.5 pt-2.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-blue-600'>
             <label
               htmlFor='job-title'
-              className='block text-xs font-medium text-gray-900'
+              className='block text-xs font-medium text-foreground'
             >
               Label Description
             </label>
             <input
               type='text'
               value={newDescription}
-              className='block w-full border-0 bg-transparent px-0 py-2 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6'
+              className='block w-full border-0 bg-transparent px-0 py-2 text-foreground placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6'
               placeholder='Label Description'
               onChange={(e) => setNewDescription(e.target.value)}
             />
           </div>
           <div className='relative rounded-md rounded-t-none rounded-bl-none px-3 pb-4 pt-2.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-blue-600'>
-            <ColorPicker
-              labelName={newLabel}
-              newColor={newColor}
-              setNewColor={setNewColor}
-            />
+            <ColorPicker newColor={newColor} setNewColor={setNewColor} />
           </div>
         </div>
       </div>

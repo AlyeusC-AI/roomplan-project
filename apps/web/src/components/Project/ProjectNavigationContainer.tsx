@@ -12,7 +12,6 @@ import {
   NewspaperIcon,
   PictureInPicture,
 } from "lucide-react";
-import { AccessLevel } from "@servicegeek/db";
 import { useParams } from "next/navigation";
 import { userInfoStore } from "@atoms/user-info";
 

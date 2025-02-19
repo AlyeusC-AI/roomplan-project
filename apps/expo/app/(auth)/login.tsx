@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 
 // Supabase
-import { supabase } from "@/utils/supabase";
+import { supabase } from "@/lib/supabase";
 
-import { Link, router, useNavigation } from "expo-router";
+import { router, useNavigation } from "expo-router";
 
 // UI
-import { Toast } from "toastify-react-native";
+import { toast } from "sonner-native";
 import {
   ActivityIndicator,
   Image,
@@ -19,6 +19,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";
+// import RoomPlan from "@servicegeek/room-plan"
 
 // export default function LoginScreen() {
 //   const [email, setEmail] = useState("");
@@ -93,7 +94,7 @@ import {
 //             <Image
 //               className="w-full h-full flex m-2"
 //               source={{
-//                 uri: "https://servicegeek.app/images/brand/servicegeek.png",
+//                 uri: "https://restoregeek.app/images/brand/servicegeek.png",
 //               }}
 //               alt="ServiceGeek Logo"
 //               style={{
@@ -195,90 +196,92 @@ export default function Login() {
       password: form.password,
     });
 
-    if (error) {
-      Toast.error(error.message, "top");
-    }
     setLoading(false);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     router.replace({ pathname: "/" });
   }
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <View style={styles.container}>
-        <Image
-          source={{
-            uri: "https://servicegeek.app/images/brand/servicegeek.png",
-          }}
-          alt="ServiceGeek Logo"
-          style={{
-            width: "100%",
-            height: "10%",
-            resizeMode: "contain",
-          }}
-        />
-        <View style={styles.header}>
-          <Text style={styles.title}>Welcome back!</Text>
+        <View style={styles.container}>
+          <Image
+            source={{
+              uri: "https://restoregeek.app/images/brand/servicegeek.png",
+            }}
+            alt="ServiceGeek Logo"
+            style={{
+              width: "100%",
+              height: "10%",
+              resizeMode: "contain",
+            }}
+          />
+          <View style={styles.header}>
+            <Text style={styles.title}>Welcome back!</Text>
 
-          <Text style={styles.subtitle}>Log in to your account</Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.input}>
-            <Text style={styles.inputLabel}>Email address</Text>
-
-            <TextInput
-              autoCapitalize="none"
-              autoCorrect={false}
-              clearButtonMode="while-editing"
-              keyboardType="email-address"
-              onChangeText={(email) => setForm({ ...form, email })}
-              placeholder="john@example.com"
-              placeholderTextColor="#6b7280"
-              style={styles.inputControl}
-              value={form.email}
-            />
+            <Text style={styles.subtitle}>Log in to your account</Text>
           </View>
 
-          <View style={styles.input}>
-            <Text style={styles.inputLabel}>Password</Text>
+          <View style={styles.form}>
+            <View style={styles.input}>
+              <Text style={styles.inputLabel}>Email address</Text>
 
-            <TextInput
-              autoCorrect={false}
-              clearButtonMode="while-editing"
-              onChangeText={(password) => setForm({ ...form, password })}
-              placeholder="********"
-              placeholderTextColor="#6b7280"
-              style={styles.inputControl}
-              secureTextEntry={true}
-              value={form.password}
-            />
-          </View>
+              <TextInput
+                autoCapitalize="none"
+                autoCorrect={false}
+                clearButtonMode="while-editing"
+                keyboardType="email-address"
+                onChangeText={(email) => setForm({ ...form, email })}
+                placeholder="john@example.com"
+                placeholderTextColor="#6b7280"
+                style={styles.inputControl}
+                value={form.email}
+              />
+            </View>
 
-          <View style={styles.formAction}>
-            <TouchableOpacity disabled={loading} onPress={signInWithEmail}>
-              <View style={styles.btn}>
-                {loading ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Text style={styles.btnText}>Sign in</Text>
-                )}
-              </View>
-            </TouchableOpacity>
-          </View>
+            <View style={styles.input}>
+              <Text style={styles.inputLabel}>Password</Text>
 
-          <Link href="/register">
-            <Text style={styles.formFooter}>
-              Don't have an account?{" "}
-              <Text style={{ textDecorationLine: "underline" }}>
-                Create one.
+              <TextInput
+                autoCorrect={false}
+                clearButtonMode="while-editing"
+                onChangeText={(password) => setForm({ ...form, password })}
+                placeholder="********"
+                placeholderTextColor="#6b7280"
+                style={styles.inputControl}
+                secureTextEntry={true}
+                value={form.password}
+              />
+            </View>
+
+            <View style={styles.formAction}>
+              <TouchableOpacity disabled={loading} onPress={signInWithEmail}>
+                <View style={styles.btn}>
+                  {loading ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text style={styles.btnText}>Sign in</Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+            </View>
+            {/* 
+            <Link href="/register">
+              <Text style={styles.formFooter}>
+                Don't have an account?{" "}
+                <Text style={{ textDecorationLine: "underline" }}>
+                  Create one.
+                </Text>
               </Text>
-            </Text>
-          </Link>
+            </Link> */}
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
-      </TouchableWithoutFeedback>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }
 

@@ -1,7 +1,7 @@
 packages:
   - "apps/expo"
-  - "apps/web"
+  # - "apps/web"
+  - "apps/room-plan-module"
   - "packages/api"
   - "packages/db"
   - "packages/config/*"
-  - "apps/mobile"

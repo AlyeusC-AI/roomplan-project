@@ -292,3 +292,60 @@
 // //     props: {}, // will be passed to the page component as props
 // //   }
 // // }
+"use client";
+
+import { redirect, useSearchParams } from "next/navigation";
+import { OrganizationForm } from "./org";
+import { AccountForm } from "./account";
+import { VerifyEmailForm } from "./verify-email";
+import SubscribeForm from "./subscribe";
+import { createClient } from "@lib/supabase/client";
+import { useEffect } from "react";
+import { orgStore } from "@atoms/organization";
+
+export function RegisterForm() {
+  const searchParams = useSearchParams();
+
+  const client = createClient();
+  const { organization, setOrganization } = orgStore();
+
+  useEffect(() => {
+    client.auth.getUser().then((user) => {
+      if (!organization) {
+        setOrganization().then((org) => {
+          handleRedirect(user, org);
+        });
+        return;
+      }
+
+      handleRedirect(user, organization);
+    });
+  });
+
+  function handleRedirect(user: User, organization: Organization) {
+    if (
+      user.data.user &&
+      user.data.user.email_confirmed_at &&
+      user.data.user.user_metadata.organizationId &&
+      organization.subscriptionPlan
+    ) {
+      return redirect("/projects");
+    }
+  }
+
+  switch (searchParams.get("page") ?? "1") {
+    case "1":
+      return <AccountForm />;
+    case "2":
+      return <VerifyEmailForm />;
+    case "3":
+      return <OrganizationForm />;
+    case "4":
+      return <SubscribeForm />;
+    default:
+      return <></>;
+  }
+}
+type User = Awaited<
+  ReturnType<ReturnType<typeof createClient>["auth"]["getUser"]>
+>;

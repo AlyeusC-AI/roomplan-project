@@ -1,29 +1,27 @@
 import { orgStore } from "@atoms/organization";
 import { teamMembersStore } from "@atoms/team-members";
-import { PrimaryButton, TertiaryButton } from "@components/components/button";
-import OrgMembersSection from "@app/(logged-in)/settings/organization/members";
 import { ArrowRight } from "lucide-react";
-import { trpc } from "@utils/trpc";
 import Image from "next/image";
+import { Button } from "@components/ui/button";
 
 export default function InviteInitialUsers() {
   const orgInfo = orgStore((state) => state.organization);
   const teamMembers = teamMembersStore((state) => state.teamMembers);
-  const trpcContext = trpc.useContext();
+  // const trpcContext = trpc.useContext();
 
-  const setOnboardingStatus =
-    trpc.onboardingStatus.setOnboardingStatus.useMutation({
-      onSettled(result) {
-        trpcContext.onboardingStatus.getOnboardingStatus.invalidate();
-      },
-    });
+  // const setOnboardingStatus =
+  //   trpc.onboardingStatus.setOnboardingStatus.useMutation({
+  //     onSettled(result) {
+  //       trpcContext.onboardingStatus.getOnboardingStatus.invalidate();
+  //     },
+  //   });
 
   const onContinue = () => {
-    setOnboardingStatus.mutate({
-      status: {
-        seenInviteInitialUsers: true,
-      },
-    });
+    // setOnboardingStatus.mutate({
+    //   status: {
+    //     seenInviteInitialUsers: true,
+    //   },
+    // });
   };
 
   return (
@@ -77,9 +75,9 @@ export default function InviteInitialUsers() {
         </OrgMembersSection> */}
         <div>
           {teamMembers.length === 1 && (
-            <TertiaryButton noPadding className='!p-0' onClick={onContinue}>
+            <Button variant='outline' className='!p-0' onClick={onContinue}>
               Skip for now <ArrowRight className='ml-2 size-5' />
-            </TertiaryButton>
+            </Button>
           )}
         </div>
       </div>

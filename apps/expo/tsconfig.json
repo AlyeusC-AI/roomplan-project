@@ -1,5 +1,5 @@
 {
-  "extends": "@servicegeek/tsconfig/base.json",
+  "extends": "expo/tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react-native",
     "types": ["nativewind/types"],
@@ -19,7 +19,7 @@
     "layouts",
     "lib",
     "app",
-    "utils/state"
+    "lib/state"
   ],
   "exclude": ["node_modules"]
 }

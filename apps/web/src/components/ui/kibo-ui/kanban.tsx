@@ -55,6 +55,7 @@ export type KanbanCardProps = Pick<Feature, "id" | "name"> & {
   parent: string;
   children?: ReactNode;
   className?: string;
+  onClick?: () => void;
 };
 
 export const KanbanCard = ({
@@ -64,6 +65,7 @@ export const KanbanCard = ({
   parent,
   children,
   className,
+  onClick,
 }: KanbanCardProps) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
@@ -78,6 +80,7 @@ export const KanbanCard = ({
         isDragging && "cursor-grabbing",
         className
       )}
+      onClick={onClick}
       style={{
         transform: transform
           ? `translateX(${transform.x}px) translateY(${transform.y}px)`
@@ -136,10 +139,6 @@ export const KanbanProvider = ({
   className,
 }: KanbanProviderProps) => (
   <DndContext collisionDetection={rectIntersection} onDragEnd={onDragEnd}>
-    <div
-      className={cn("grid w-full auto-cols-fr grid-flow-col gap-4", className)}
-    >
-      {children}
-    </div>
+    <div className={cn("grid grid-flow-col gap-4", className)}>{children}</div>
   </DndContext>
 );

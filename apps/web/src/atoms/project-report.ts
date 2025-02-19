@@ -1,11 +1,3 @@
-import {
-  AreaAffected,
-  GenericRoomReading,
-  Project,
-  PropertyData,
-  Room,
-  RoomReading,
-} from "@servicegeek/db";
 import { create } from "zustand";
 
 export type ProjectReportData = Project & {

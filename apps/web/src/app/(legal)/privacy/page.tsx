@@ -54,7 +54,7 @@ export default async function PrivacyPage() {
               <p>
                 <strong>Application</strong> means the software program provided
                 by the Company downloaded by You on any electronic device, named
-                ServiceGeek
+                RestoreGeek
               </p>
             </li>
             <li>
@@ -186,13 +186,13 @@ export default async function PrivacyPage() {
             </li>
             <li>
               <p>
-                <strong>Website</strong> refers to ServiceGeek, accessible from{" "}
+                <strong>Website</strong> refers to RestoreGeek, accessible from{" "}
                 <a
-                  href='https://www.servicegeek.app'
+                  href='https://www.restoregeek.app'
                   rel='external nofollow noopener noreferrer'
                   target='_blank'
                 >
-                  https://www.servicegeek.app
+                  https://www.restoregeek.app
                 </a>
               </p>
             </li>
@@ -1537,7 +1537,7 @@ export default async function PrivacyPage() {
             are a California resident, You can contact Us:
           </p>
           <ul>
-            <li>By email: support@servicegeek.app</li>
+            <li>By email: support@restoregeek.app</li>
           </ul>
           <p>
             Only You, or a person registered with the California Secretary of
@@ -1757,7 +1757,7 @@ export default async function PrivacyPage() {
             us:
           </p>
           <ul>
-            <li>By email: support@servicegeek.app</li>
+            <li>By email: support@restoregeek.app</li>
           </ul>
         </div>
       </div>

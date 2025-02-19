@@ -37,12 +37,12 @@ const UpdateInfo = ({
         userInfoStore.getState().setUser({ ...userInfo, ...data });
       } else {
         toast.error(
-          "Updated Failed. If the error persists please contact support@servicegeek.app"
+          "Updated Failed. If the error persists please contact support@restoregeek.app"
         );
       }
     } catch (error) {
       toast.error(
-        "Updated Failed. If the error persists please contact support@servicegeek.app"
+        "Updated Failed. If the error persists please contact support@restoregeek.app"
       );
     }
   };

@@ -4,12 +4,9 @@ type State = Record<`${CostType}Costs`, Cost[]>;
 
 interface Actions {
   addCost: (cost: Cost, type: CostType) => void;
+  setCosts: (costs: Cost[]) => void;
   updateCost: (id: number, cost: Omit<Cost, "id">, type: CostType) => void;
   removeCost: (id: number, type: CostType) => void;
-  removeSubcontractorCost: (id: number) => void;
-  updateSubcontractorCost: (id: number, cost: Omit<Cost, "id">) => void;
-  removeMiscellaneousCost: (id: number) => void;
-  updateMiscellaneousCost: (id: number, cost: Omit<Cost, "id">) => void;
 }
 
 export const costsStore = create<State & Actions>((set) => ({
@@ -22,6 +19,13 @@ export const costsStore = create<State & Actions>((set) => ({
       ...state,
       [`${type}Costs`]: [...state[`${type}Costs`], cost],
     })),
+  setCosts: (costs) =>
+    set(() => ({
+      subcontractorCosts: costs.filter((c) => c.type === "subcontractor"),
+      materialsCosts: costs.filter((c) => c.type === "materials"),
+      miscellaneousCosts: costs.filter((c) => c.type === "miscellaneous"),
+      laborCosts: costs.filter((c) => c.type === "labor"),
+    })),
   removeCost: (id, type) =>
     set((state) => ({
       ...state,
@@ -31,34 +35,6 @@ export const costsStore = create<State & Actions>((set) => ({
     set((state) => ({
       ...state,
       [`${type}Costs`]: state[`${type}Costs`].map((c) =>
-        c.id === id ? { ...c, ...cost } : c
-      ),
-    })),
-  removeSubcontractorCost: (id) =>
-    set((state) => ({
-      ...state,
-      subcontractorCosts: state.subcontractorCosts.filter(
-        (cost) => cost.id !== id
-      ),
-    })),
-  updateSubcontractorCost: (id, cost) =>
-    set((state) => ({
-      ...state,
-      subcontractorCosts: state.subcontractorCosts.map((c) =>
-        c.id === id ? { ...c, ...cost } : c
-      ),
-    })),
-  removeMiscellaneousCost: (id) =>
-    set((state) => ({
-      ...state,
-      miscellaneousCosts: state.miscellaneousCosts.filter(
-        (cost) => cost.id !== id
-      ),
-    })),
-  updateMiscellaneousCost: (id, cost) =>
-    set((state) => ({
-      ...state,
-      miscellaneousCosts: state.miscellaneousCosts.map((c) =>
         c.id === id ? { ...c, ...cost } : c
       ),
     })),

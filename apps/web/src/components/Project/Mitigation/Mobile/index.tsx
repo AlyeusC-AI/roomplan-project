@@ -1,17 +1,17 @@
 import Pill from "@components/DesignSystem/Pills/Pill";
 import useUploader from "@utils/hooks/useUploader";
 import { useRouter } from "next/navigation";
-import { inferencesStore } from "@atoms/inferences";
 
 import OptimisticUploadUI from "../../OptimisticUploadUI";
 
 import MobileRoomImageList from "./MobileRoomImageList";
 import { Camera, Folder } from "lucide-react";
 import { Button } from "@components/ui/button";
+import { roomStore } from "@atoms/room";
 
 const Mobile = () => {
-  const inferences = inferencesStore((state) => state.inferences);
-  const { onChange, uploadSummary } = useUploader();
+  const rooms = roomStore();
+  const { onChange } = useUploader();
   const router = useRouter();
 
   return (
@@ -64,7 +64,7 @@ const Mobile = () => {
         </Alert>
       )} */}
       <div>
-        {inferences.map((room) => (
+        {rooms.rooms.map((room) => (
           <MobileRoomImageList key={room.publicId} room={room} />
         ))}
       </div>

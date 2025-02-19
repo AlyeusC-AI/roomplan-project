@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import Typeography from "@components/DesignSystem/Typeography";
-import { RoomData } from "@servicegeek/db/queries/project/getProjectDetections";
 
 import SecureImage from "./SecureImage";
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { Button } from "@components/ui/button";
 
-const SecureRoomImages = ({ roomData }: { roomData: RoomData }) => {
+const SecureRoomImages = ({ roomData }: { roomData: RoomWithReadings }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -26,14 +25,14 @@ const SecureRoomImages = ({ roomData }: { roomData: RoomData }) => {
         </div>
         {isOpen && (
           <div className='flex flex-wrap gap-4'>
-            {roomData.inferences.length === 0 && (
+            {roomData.Inference.length === 0 && (
               <div className='flex w-full items-center justify-center p-6'>
                 <Typeography.H6>
                   There are no images of this room.
                 </Typeography.H6>
               </div>
             )}
-            {roomData.inferences.map((inference) => (
+            {roomData.Inference.map((inference) => (
               <SecureImage path={inference.imageKey} key={inference.imageKey} />
             ))}
           </div>

@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { FileObject } from "@supabase/storage-js";
-import { trpc } from "@utils/trpc";
 import dateFormat from "dateformat";
-import { useRouter } from "next/router";
+import { useParams } from "next/navigation";
 
 import Signature from "./Signature";
 import { Paperclip, Trash } from "lucide-react";
 import { LoadingSpinner } from "@components/ui/spinner";
+import { Button } from "@components/ui/button";
 
 export default function FileListItem({
   file,
@@ -21,14 +21,14 @@ export default function FileListItem({
   onDownload: (file: FileObject, url: string) => void;
   onDelete: (file: FileObject) => void;
 }) {
-  const router = useRouter();
-  const getSignedUrl = trpc.file.getSignedUrl.useQuery(
-    {
-      name: file.name,
-      projectId: router.query.id as string,
-    },
-    { enabled: false }
-  );
+  const router = useParams<{ id: string }>();
+  // const getSignedUrl = trpc.file.getSignedUrl.useQuery(
+  //   {
+  //     name: file.name,
+  //     projectId: router.id,
+  //   },
+  //   { enabled: false }
+  // );
   const [isSigning, setIsSigning] = useState(false);
   const [preSignedUrl, setPreSignedUrl] = useState("");
   const eSign = async () => {
@@ -37,18 +37,18 @@ export default function FileListItem({
       return;
     }
     if (file.metadata.mimetype === "application/pdf") {
-      const r = await getSignedUrl.refetch();
-      setPreSignedUrl(r.data?.signedUrl ?? "");
-      setIsSigning(true);
+      // const r = await getSignedUrl.refetch();
+      // setPreSignedUrl(r.data?.signedUrl ?? "");
+      // setIsSigning(true);
       return;
     }
   };
 
   const onDel = async () => {
-    const r = await getSignedUrl.refetch();
-    if (r.data?.signedUrl) {
-      onDownload(file, r.data?.signedUrl);
-    }
+    // const r = await getSignedUrl.refetch();
+    // if (r.data?.signedUrl) {
+    //   onDownload(file, r.data?.signedUrl);
+    // }
   };
   const onSave = () => {
     setIsSigning(false);
@@ -74,33 +74,25 @@ export default function FileListItem({
               </span>
             </div>
           </div>
-          <div className='ml-4 flex items-center'>
+          <div className='ml-4 flex items-center space-x-3'>
             <>
               {file.metadata.mimetype === "application/pdf" && (
-                <button
-                  onClick={() => eSign()}
-                  className='mr-4 font-medium text-blue-600 hover:text-blue-500'
-                >
-                  eSign
-                </button>
+                <Button onClick={() => eSign()}>eSign</Button>
               )}
-              <button
+              <Button
                 onClick={() => onDel()}
                 disabled={isDeleting === file.name}
-                className='font-medium text-blue-600 hover:text-blue-500'
+                variant='outline'
               >
                 Download
-              </button>
-              <button
-                onClick={() => onDelete(file)}
-                className='ml-4 font-medium text-gray-600 hover:text-red-500'
-              >
+              </Button>
+              <Button onClick={() => onDelete(file)} variant='destructive'>
                 {isDeleting === file.name ? (
                   <LoadingSpinner />
                 ) : (
                   <Trash className='h-5' />
                 )}
-              </button>
+              </Button>
             </>
           </div>
         </div>

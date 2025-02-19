@@ -9,16 +9,13 @@ import {
   Text,
   TextInput,
 } from "react-native";
-import { Toast } from "toastify-react-native";
+import { toast } from "sonner-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { addressPickerStore } from "@/utils/state/address-picker";
+import { addressPickerStore } from "@/lib/state/address-picker";
 import MapView, { Marker } from "react-native-maps";
-import { userStore } from "@/utils/state/user";
-import { api } from "@/utils/api";
 
 export default function Address() {
   const { address } = addressPickerStore((state) => state);
-  const { session: supabaseSession } = userStore((state) => state);
 
   const { projectName } = useLocalSearchParams<{ projectName: string }>();
 
@@ -28,25 +25,28 @@ export default function Address() {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  const createNewProject = api.mobile.createNewProject.useMutation();
+  // const createNewProject = api.mobile.createNewProject.useMutation();
 
   const submit = async () => {
     try {
       if (!address) {
-        Toast.error("Please enter a valid address");
+        toast.error("Please enter a valid address");
         return;
       }
 
-      const { publicId } = await createNewProject.mutateAsync({
-        jwt: supabaseSession ? supabaseSession["access_token"] : "null",
-        name: projectName,
-        location: address,
-      });
-      router.push({ pathname: `/projects/${publicId}`, params: { projectName } });
+      // const { publicId } = await createNewProject.mutateAsync({
+      //   jwt: supabaseSession ? supabaseSession["access_token"] : "null",
+      //   name: projectName,
+      //   location: address,
+      // });
+      // router.push({
+      //   pathname: `/projects/${publicId}`,
+      //   params: { projectName },
+      // });
     } catch (e) {
       console.error(e);
-      Toast.error(
-        "Could not create project. If this error persits, please contact support@servicegeek.app"
+      toast.error(
+        "Could not create project. If this error persits, please contact support@restoregeek.app"
       );
     }
   };

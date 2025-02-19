@@ -31,7 +31,6 @@ import {
   TableProvider,
   TableRow,
 } from "@components/roadmap-ui/table";
-import { exampleFeatures } from "../equipment/table";
 import { ColumnDef } from "@tanstack/react-table";
 import { ChevronRightIcon } from "lucide-react";
 import { Card } from "@components/ui/card";
@@ -112,7 +111,7 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
     [teamMembers, userInfo]
   );
 
-  const columns: ColumnDef<(typeof exampleFeatures)[number]>[] = [
+  const columns: ColumnDef<any>[] = [
     {
       accessorKey: "name",
       header: ({ column }) => (
@@ -205,7 +204,7 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
           </form>
         </Form>
         <Card className='mt-7'>
-          <TableProvider columns={columns} data={exampleFeatures}>
+          <TableProvider columns={columns} data={[]}>
             <TableHeader>
               {({ headerGroup }) => (
                 <TableHeaderGroup
@@ -250,7 +249,7 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
                             {member.User?.email}
                           </span>
                           <span className='text-sm text-gray-500'>
-                            {member.isAdmin ? "Account Administrator" : ""}
+                            {member.role ? "Account Administrator" : ""}
                           </span>
                         </div>
                       </div>

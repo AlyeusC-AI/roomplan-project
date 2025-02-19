@@ -16,6 +16,7 @@ import {
   TableRow as TableRowRaw,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { LoadingPlaceholder } from "@components/ui/spinner";
 import type {
   Cell,
   Column,
@@ -65,6 +66,7 @@ export type TableProviderProps<TData, TValue> = {
   data: TData[];
   children: ReactNode;
   className?: string;
+  loading?: boolean;
 };
 
 export function TableProvider<TData, TValue>({
@@ -72,6 +74,7 @@ export function TableProvider<TData, TValue>({
   data,
   children,
   className,
+  loading,
 }: TableProviderProps<TData, TValue>) {
   const { sorting, setSorting } = useTable();
   const table = useReactTable({
@@ -98,7 +101,7 @@ export function TableProvider<TData, TValue>({
         table: table as never,
       }}
     >
-      <TableRaw className={className}>{children}</TableRaw>
+      {loading ? <LoadingPlaceholder /> : <TableRaw className={className}>{children}</TableRaw>}
     </TableContext.Provider>
   );
 }

@@ -1,38 +1,101 @@
-import createInvitation from "@servicegeek/db/queries/organization/createInvitation";
-import createOrg from "@servicegeek/db/queries/user/createOrg";
 import { supabaseServiceRole } from "@lib/supabase/admin";
 import { createClient } from "@lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { User } from "@supabase/supabase-js";
+import { user as getUser } from "@lib/supabase/get-user";
+import { v4 } from "uuid";
+
+const values = [
+  {
+    label: "Active",
+    description: "The job is currently being worked on.",
+    color: "blue",
+    publicId: v4(),
+    order: 0,
+  },
+  {
+    label: "Mitigation",
+    description: "The mitigation process is underway.",
+    color: "blue",
+    publicId: v4(),
+    order: 1,
+  },
+  {
+    label: "Inspection",
+    description: "The inspection process is underway.",
+    color: "yellow",
+    publicId: v4(),
+    order: 2,
+  },
+  {
+    label: "Review",
+    description: "The job is being finalized and is currently under review.",
+    color: "orange",
+    publicId: v4(),
+    order: 3,
+  },
+  {
+    label: "Completed",
+    description: "The job is complete",
+    color: "none",
+    publicId: v4(),
+    order: 4,
+  },
+  {
+    label: "Inactive",
+    description: "The job is no longer being worked on.",
+    color: "none",
+    publicId: v4(),
+    order: 5,
+  },
+  {
+    label: "Incomplete",
+    description: "The job is not finished and is not being worked on",
+    color: "red",
+    publicId: v4(),
+    order: 6,
+  },
+];
 
 export async function POST(req: NextRequest) {
-  const supabaseClient = await createClient();
-  const jwt = req.headers.get("auth-token");
+  const [, user] = await getUser(req);
 
-  let user: User | null = null;
-
-  if (jwt && typeof jwt === "string") {
-    user = (await supabaseClient.auth.getUser(jwt)).data.user;
-  } else {
-    user = (await supabaseClient.auth.getUser()).data.user;
-  }
-  if (!user) {
-    console.error("Session does not exist.");
-    return NextResponse.json({ status: "failed" }, { status: 500 });
-  }
   const body = await req.json();
   try {
-    const org = await createOrg(user.id, body.orgName, body.orgSize, body.role);
     try {
-      const supportUser = `support+${org.email}@servicegeek.app`;
-      const invitation = await createInvitation(user.id, supportUser);
-      await supabaseServiceRole.auth.admin.inviteUserByEmail(supportUser, {
-        data: {
-          orgId: invitation.orgId,
-          inviteId: invitation.inviteId,
-          isSupportUser: true,
-          firstName: "ServiceGeek",
-          lastName: "Support",
+      const { data } = await supabaseServiceRole
+        .from("Organization")
+        .insert({
+          name: body.name,
+          size: body.size,
+          publicId: v4(),
+          address: body.address,
+          lat: body.lat,
+          lng: body.lng,
+          owner: user.id,
+        })
+        .select("*")
+        .single();
+
+      await supabaseServiceRole
+        .from("User")
+        .update({ organizationId: data?.publicId, accessLevel: "owner" })
+        .eq("id", user.id);
+
+      for (const value of values) {
+        await supabaseServiceRole.from("ProjectStatusValue").insert({
+          label: value.label,
+          description: value.description,
+          color: value.color,
+          publicId: value.publicId,
+          order: value.order,
+          organizationId: data!.id,
+        });
+      }
+
+      await supabaseServiceRole.auth.admin.updateUserById(user.id, {
+        user_metadata: {
+          organizationId: data!.publicId,
+          role: "owner",
         },
       });
     } catch (error) {
@@ -55,22 +118,13 @@ export async function PATCH(req: NextRequest) {
     console.error("Session does not exist.");
     return NextResponse.json({ status: "failed" }, { status: 500 });
   }
-  const body = await req.json();
+  const body: Partial<Organization> = await req.json();
   try {
-    const { name, address } = body as { name: string; address: AddressType };
-
-    if (name.length < 3 || name.length > 50) {
-      console.error("Invalid name.");
-      return NextResponse.json(
-        {
-          failed: true,
-          reason: "invalid-name",
-          message:
-            "Invalid name. Your organization name must be between 3 and 50 characters.",
-        },
-        { status: 400 }
-      );
-    }
+    const { data: userData } = await supabaseClient
+      .from("User")
+      .select("*")
+      .eq("id", user.id)
+      .single();
 
     const { data } = await supabaseClient
       .from("UserToOrganization")
@@ -86,7 +140,10 @@ export async function PATCH(req: NextRequest) {
     const isAllowed =
       data.isAdmin ||
       data.accessLevel === "admin" ||
-      data.accessLevel === "accountManager";
+      data.accessLevel === "accountManager" ||
+      userData?.accessLevel === "owner" ||
+      userData?.accessLevel === "admin" ||
+      userData?.accessLevel === "accountManager";
 
     if (!isAllowed) {
       console.error("Not allowed");
@@ -113,26 +170,14 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    if (!name && !address) {
-      console.error("invalid data");
-      return NextResponse.json(
-        { failed: true, reason: "invalid data", message: "Invalid data." },
-        { status: 400 }
-      );
-    }
-
     const res = await supabaseClient
       .from("Organization")
-      .update({
-        ...(name ? { name } : {}),
-        ...(address
-          ? { address: address.address, lat: address.lat, lng: address.lng }
-          : {}),
-      })
+      .update(body)
       .eq("publicId", user.user_metadata.organizationId)
-      .select();
+      .select("*")
+      .single();
 
-    console.log(res);
+    return NextResponse.json(res.data, { status: 200 });
   } catch (err) {
     console.error(err);
     return NextResponse.json(

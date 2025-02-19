@@ -18,9 +18,13 @@ export default function ReadingsTable() {
         />
       ) : (
         <>
-          {rooms.map((room) => (
-            <ReadingsRoomTable key={room.publicId} room={room} />
-          ))}
+          {rooms
+            .sort((a, b) =>
+              new Date(a.createdAt) > new Date(b.createdAt) ? -1 : 1
+            )
+            .map((room) => (
+              <ReadingsRoomTable key={room.publicId} room={room} />
+            ))}
         </>
       )}
     </div>

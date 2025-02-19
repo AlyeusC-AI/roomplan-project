@@ -2,7 +2,7 @@
 
 import { projectStore } from "@atoms/project";
 import DetailsInput from "@components/Project/overview/DetailsInput";
-import { StatusPicker } from "@components/Project/overview/status";
+import { FancyBox } from "@components/ui/fancy-box";
 import { Separator } from "@components/ui/separator";
 import { LoadingPlaceholder } from "@components/ui/spinner";
 
@@ -17,7 +17,7 @@ export default function OverviewPage() {
             Update and manage your general project information and settings.
           </p>
         </div>
-        <StatusPicker />
+        <FancyBox />
       </div>
       <Separator />
       <>{!project ? <LoadingPlaceholder /> : <DetailsInput />}</>

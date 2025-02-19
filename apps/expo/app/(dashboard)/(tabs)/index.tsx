@@ -1,11 +1,10 @@
-import DashboardHeader from "@/components/dashboard/Header";
+import DashboardHeader from "@/unused/Header";
 import NoProjects from "@/components/dashboard/no-projects";
 import ProjectCell from "@/components/project/cell";
-import { userStore } from "@/utils/state/user";
-import { api } from "@/utils/api";
+import { userStore } from "@/lib/state/user";
 import { Redirect, useNavigation, useRouter } from "expo-router";
-import { Clipboard, Cog, Plus, PlusCircle } from "lucide-react-native";
-import React, { useEffect, useRef, useState } from "react";
+import { ChevronRight, Plus } from "lucide-react-native";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   SafeAreaView,
@@ -17,12 +16,13 @@ import {
   TouchableWithoutFeedback,
   RefreshControl,
 } from "react-native";
-import { projectsStore } from "@/utils/state/projects";
-import { supabase } from "@/utils/supabase";
+import { projectsStore } from "@/lib/state/projects";
+import { supabase } from "@/lib/supabase";
 
 export default function Dashboard() {
   const { session, setSession } = userStore((state) => state);
 
+  const [loading, setLoading] = useState(true);
   const { projects, setProjects } = projectsStore((state) => state);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
@@ -35,89 +35,86 @@ export default function Dashboard() {
     navigation.setOptions({ headerTitle: "Dashboard" });
   }, [navigation]);
 
-  const dashboardQuery = api.mobile.getDashboardData.useQuery({
-    page: 0,
-    jwt: session ? session.access_token : "null",
-    searchTerm,
-    userIdFilter: selectedUser
-  }, {
-    onSuccess(data) {
-      if (searchTerm === "") {
-        setProjects(data.data);
-      }
-    },
-  });
-
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+    // supabase.auth.getSession().then(({ data: { session } }) => {
+    //   setSession(session);
+    //   fetchProjects();
+    // });
+
+    supabase.auth.setSession(session);
 
     supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
+      fetchProjects();
     });
   }, []);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [searchTerm, selectedUser]);
+
+  function fetchProjects() {
+    setLoading(true);
+    console.log(session.access_token);
+    fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects?${searchTerm.length > 0 && `query=${searchTerm}`}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "auth-token": `${session.access_token}`,
+      },
+    })
+      .then((res) => {
+        return res.json()
+      })
+      .then((data) => {
+        console.log(data);
+        setProjects(data.projects);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setLoading(false);
+        console.error(err);
+        // router.replace("/login");
+      });
+  }
 
   if (!session) {
     return <Redirect href="/login" />;
   }
 
-  const noProjects =
-    !dashboardQuery.isLoading &&
-    dashboardQuery.data &&
-    dashboardQuery.data.data.length === 0;
+  const noProjects = projects && projects.length === 0;
 
-  if (dashboardQuery.data?.showOrganizationSetup) {
-    return <Redirect href="/org-setup" />;
-  }
-
-  if (noProjects) {
+  if (noProjects && searchTerm.length === 0) {
     return <NoProjects />;
   }
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+      <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <View style={styles.headerAction} />
-
-            <View style={styles.headerAction}>
-              <TouchableOpacity
-                onPress={() => router.push("/settings")}
-              >
-                <Cog color="#1e40af" size={24} />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <Text style={styles.headerTitle}>Project Dashboard</Text>
           <DashboardHeader
             refetch={setSearchTerm}
             selectedUser={selectedUser}
             setSelectedUser={setSelectedUser}
           />
+          <View
+            style={styles.headerTitle}
+            className="mt-4 flex flex-row items-center space-x-8"
+          >
+            <Text className=" font-bold text-3xl mx-2">My Projects</Text>
+            <ChevronRight color="#2563eb" />
+          </View>
         </View>
 
         <ScrollView
           contentContainerStyle={styles.content}
           refreshControl={
-            <RefreshControl
-              refreshing={dashboardQuery.isFetching}
-              onRefresh={dashboardQuery.refetch}
-            />
+            <RefreshControl refreshing={loading} onRefresh={fetchProjects} />
           }
         >
-          {(searchTerm === "" ? projects : dashboardQuery.data?.data ?? []).map(
-            (project, index) => {
-              return (
-                <ProjectCell
-                  project={project}
-                  key={index}
-                  urlMap={dashboardQuery.data?.urlMap}
-                />
-              );
-            }
-          )}
+          {projects && projects.map((project, index) => {
+            return <ProjectCell project={project} key={index} />;
+          })}
         </ScrollView>
         <TouchableOpacity
           onPress={() => router.push("/projects/new-project")}
@@ -133,7 +130,7 @@ export default function Dashboard() {
             shadowOffset: { width: 0, height: 3 },
             shadowOpacity: 0.3,
             shadowRadius: 1,
-            backgroundColor: "#1e40af",
+            backgroundColor: "#1e88e5",
             borderRadius: 100,
           }}
         >
@@ -152,33 +149,21 @@ const styles = StyleSheet.create({
   /** Header */
   header: {
     paddingHorizontal: 16,
-    marginBottom: 12,
-  },
-  headerTop: {
-    marginHorizontal: -6,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  headerAction: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
+    marginTop: 30,
   },
   headerTitle: {
-    fontSize: 32,
+    flexDirection: "row",
+    alignItems: "center",
+    fontSize: 28,
     fontWeight: "700",
     color: "#1d1d1d",
+    marginTop: 15,
   },
 });
 
 // import { useEffect, useState } from "react";
 // import { Keyboard, TouchableWithoutFeedback } from "react-native";
-// import { Box, FlatList } from "native-base";
 // import React from "react";
-// import { Fab } from "native-base";
-// import { api } from "@/utils/api";
 // import ProjectListItem from "@/components/project/project-cell";
 // import DashboardHeader from "@/components/dashboard/Header";
 // import { userStore } from "@/utils/state/user";

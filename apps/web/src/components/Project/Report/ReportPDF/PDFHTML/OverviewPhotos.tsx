@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { ProjectReportData } from "@atoms/project-report";
 import useSupabaseImage from "@utils/hooks/useSupabaseImage";
 
 import PDFSafeImage from "./PDFSaveImage";
@@ -14,10 +13,10 @@ const OverviewPhoto = ({ imageKey }: { imageKey: string }) => {
   );
 };
 
-const OverviewPhotos = ({ room }: { room: ProjectReportData["rooms"][0] }) => {
+const OverviewPhotos = ({ room }: { room: RoomWithReadings }) => {
   const selectedPhotos = useMemo(
-    () => room.inferences.filter((i) => i.image.includeInReport),
-    [room.inferences]
+    () => room.Inference.filter((i) => i.Image?.includeInReport),
+    [room.Inference]
   );
 
   return (
@@ -25,13 +24,13 @@ const OverviewPhotos = ({ room }: { room: ProjectReportData["rooms"][0] }) => {
       <h2 className='pdf room-section-subtitle major-break title-spacing'>
         Overview Photos
       </h2>
-      <div className='grid grid-cols-3 gap-3'>
+      <div className='grid grid-cols-3 gap-3 text-black'>
         {selectedPhotos.length === 0 && <p>No photos of this room</p>}
         {selectedPhotos.map((inference) => {
           return (
             <OverviewPhoto
               key={inference.imageKey}
-              imageKey={inference.imageKey}
+              imageKey={inference.imageKey!}
             />
           );
         })}

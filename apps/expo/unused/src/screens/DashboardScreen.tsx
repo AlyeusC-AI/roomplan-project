@@ -9,7 +9,7 @@ import { api } from "../utils/api";
 import OrganizationSetup from "../components/dashboard/OrganizationSetup";
 import ProjectListItem from "../components/ProjectListItem";
 import DashboardHeader from "../components/dashboard/Header";
-import { userStore } from "../../../utils/state/user";
+import { userStore } from "../../../lib/state/user";
 
 export default function Dashboard({
   navigation,

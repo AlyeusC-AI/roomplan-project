@@ -1,1 +1,1 @@
-../../../../../../../node_modules/.pnpm/expo-updates@0.25.27_expo@51.0.39_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__/node_modules/expo-updates/ios/EXUpdates/Multipart/EXUpdatesMultipartStreamReader.h
+../../../../../../../node_modules/.pnpm/expo-updates@0.26.15_expo@52.0.28_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.2_pdpcnaozrhh3kvsax4xyx5kcza/node_modules/expo-updates/ios/EXUpdates/Multipart/EXUpdatesMultipartStreamReader.h

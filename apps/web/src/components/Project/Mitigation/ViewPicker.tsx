@@ -1,55 +1,39 @@
 import { Dispatch, SetStateAction } from "react";
-import { PhotoViews } from "@servicegeek/db";
-import { trpc } from "@utils/trpc";
 
 import FilterLabel from "./FilterLabel";
 import { Button } from "@components/ui/button";
-import { ChevronDown, Grid2X2, List } from "lucide-react";
+import { Grid2X2, List } from "lucide-react";
+import { userInfoStore } from "@atoms/user-info";
 
-export default function ViewPicker({
-  photoView,
-  setPhotoView,
-}: {
-  photoView: PhotoViews;
-  setPhotoView: Dispatch<SetStateAction<PhotoViews>>;
-}) {
-  const utils = trpc.useContext();
-  const setPhotoViewMutation = trpc.photoView.setPhotoView.useMutation({
-    async onMutate({ view }) {
-      await utils.photoView.getPhotoView.cancel();
-      const prevData = utils.photoView.getPhotoView.getData();
-      utils.photoView.getPhotoView.setData(undefined, { photoView: view });
-      return { prevData, view };
-    },
-    onError(err, _, ctx) {
-      if (ctx?.prevData)
-        utils.photoView.getPhotoView.setData(undefined, ctx.prevData);
-    },
-    onSettled() {
-      utils.photoView.getPhotoView.invalidate();
-    },
-  });
-  const isGridView = photoView === PhotoViews.photoGridView;
+declare global {
+  type PhotoViews = "photoGridView" | "photoListView";
+}
+
+export default function ViewPicker() {
+  const user = userInfoStore();
 
   const onClick = () => {
     const newPhotoView =
-      photoView === PhotoViews.photoGridView
-        ? PhotoViews.photoListView
-        : PhotoViews.photoGridView;
-    setPhotoViewMutation.mutate({
-      view:
-        photoView === PhotoViews.photoGridView
-          ? PhotoViews.photoListView
-          : PhotoViews.photoGridView,
+      user.user?.photoView === "photoGridView"
+        ? "photoListView"
+        : "photoGridView";
+    fetch("/api/v1/user", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        photoView: newPhotoView,
+      }),
     });
-    setPhotoView(newPhotoView);
+    user.updateUser({ photoView: newPhotoView });
   };
 
   return (
     <div className='flex flex-col'>
       <FilterLabel>Switch View</FilterLabel>
-      <Button onClick={onClick}>
-        {!isGridView ? (
+      <Button variant='outline' onClick={onClick}>
+        {user.user?.photoView === "photoListView" ? (
           <>
             <Grid2X2 className='mr-2 size-5' />
             Grid View
@@ -60,7 +44,6 @@ export default function ViewPicker({
             List View
           </>
         )}
-        <ChevronDown className='ml-2 size-4' />
       </Button>
     </div>
   );

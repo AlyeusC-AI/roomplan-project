@@ -4,6 +4,8 @@
 /node_modules
 /.pnp
 .pnp.js
+apps/expo/ios
+apps/expo/android
 
 # testing
 /coverage
@@ -51,3 +53,4 @@ newrelic_agent.log
 **/public/worker-*.js.map
 **/public/allback-*.js
 **/.env*.local
+.env*.local

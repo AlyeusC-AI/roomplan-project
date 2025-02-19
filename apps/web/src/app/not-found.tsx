@@ -28,7 +28,7 @@ export default function NotFound() {
                 </Button>
                 <Button
                   variant='link'
-                  onClick={() => router.push("mailto:support@servicegeek.app")}
+                  onClick={() => router.push("mailto:support@restoregeek.app")}
                 >
                   Contact support
                 </Button>

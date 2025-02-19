@@ -1,20 +1,17 @@
-import { RoomData } from "@servicegeek/db/queries/project/getProjectDetections";
-import { PresignedUrlMap } from "@pages/projects/[id]/photos";
-
 import { supabaseServiceRole } from "./admin";
 
 const getPresignedUrlMapFromInferenceList = async (inferenceList: {
-  rooms: RoomData[];
+  rooms: RoomWithReadings[];
 }) => {
   const imageKeys = inferenceList?.rooms.reduce<string[]>((prev, cur) => {
-    const keys = cur.inferences.reduce<string[]>((p, c) => {
+    const keys = cur.Inference.reduce<string[]>((p, c) => {
       if (!c.imageKey) return p;
       return [decodeURIComponent(c.imageKey), ...p];
     }, []);
     return [...keys, ...prev];
   }, []) as string[];
 
-  const { data, error } = await supabaseServiceRole.storage
+  const { data } = await supabaseServiceRole.storage
     .from("project-images")
     .createSignedUrls(imageKeys, 1800);
 

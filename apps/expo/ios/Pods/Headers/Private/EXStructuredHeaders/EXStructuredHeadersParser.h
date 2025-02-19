@@ -1,1 +1,1 @@
-../../../../../../../node_modules/.pnpm/expo-structured-headers@3.8.0/node_modules/expo-structured-headers/ios/EXStructuredHeaders/EXStructuredHeadersParser.h
+../../../../../../../node_modules/.pnpm/expo-structured-headers@4.0.0/node_modules/expo-structured-headers/ios/EXStructuredHeaders/EXStructuredHeadersParser.h

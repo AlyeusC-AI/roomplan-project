@@ -2,22 +2,24 @@ import produce from "immer";
 import { create } from "zustand";
 
 interface State {
-  teamMembers: TeamMember[];
+  teamMembers: User[];
 }
 
 interface Actions {
-  addTeamMember: (member: TeamMember) => void;
+  setTeamMembers: (members: User[]) => void;
+  addTeamMember: (member: User) => void;
   removeTeamMember: (id: string) => void;
   changeAccessLevel: (id: string, accessLevel: string) => void;
 }
 
 export const teamMembersStore = create<State & Actions>((set) => ({
   teamMembers: [],
+  setTeamMembers: (members) => set({ teamMembers: members }),
   addTeamMember: (member) =>
     set((state) => ({ teamMembers: [...state.teamMembers, member] })),
   removeTeamMember: (id) =>
     set((state) => ({
-      teamMembers: state.teamMembers.filter((i) => i.userId !== id),
+      teamMembers: state.teamMembers.filter((i) => i.id !== id),
     })),
   changeAccessLevel: (id, accessLevel) =>
     set(

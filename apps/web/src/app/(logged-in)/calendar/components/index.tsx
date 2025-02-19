@@ -1,10 +1,3 @@
-// import Calendar, { CalendarOptions } from "@fullcalendar/react"; // ALERT: ordering of these imports matter https://github.com/fullcalendar/fullcalendar/issues/6371
-// import dayGridPlugin from "@fullcalendar/daygrid";
-// import interactionPlugin from "@fullcalendar/interaction";
-// import timeGridPlugin from "@fullcalendar/timegrid";
-// import "@fullcalendar/common/main.css"; // @fullcalendar/react imports @fullcalendar/common
-// import "@fullcalendar/daygrid/main.css"; // @fullcalendar/timegrid imports @fullcalendar/daygrid
-// import "@fullcalendar/timegrid/main.css"; // @fullcalendar/timegrid is a direct import
 
 // export default function FullCalendar(props: CalendarOptions) {
 //   return (

@@ -1,4 +1,4 @@
-import useOnboardingStep from "@utils/hooks/useOnboardingStep";
+// import useOnboardingStep from "@utils/hooks/useOnboardingStep";
 
 import FirstTimePhotosModal from "./FirstTimePhotosModal";
 
@@ -12,8 +12,8 @@ export const transitionClasses = {
 };
 
 export default function FirstTimePhotos() {
-  const showPhotoTour = useOnboardingStep("seenPhotoModal");
-  if (!showPhotoTour) return null;
+  // const showPhotoTour = useOnboardingStep("seenPhotoModal");
+  // if (!showPhotoTour) return null;
 
   return <FirstTimePhotosModal />;
 }

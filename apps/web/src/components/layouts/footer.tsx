@@ -13,16 +13,16 @@ const navigation = {
   //   { name: 'Pricing', href: '/pricing' },
   //   {
   //     name: 'Documentation',
-  //     href: 'https://knowledge.servicegeek.app/',
+  //     href: 'https://knowledge.restoregeek.app/',
   //   },
   //   {
   //     name: 'Guides',
-  //     href: 'https://knowledge.servicegeek.app/',
+  //     href: 'https://knowledge.restoregeek.app/',
   //   },
   // ],
   company: [
     { name: "About", href: "/about-us" },
-    { name: "Blog", href: "https://blog.servicegeek.app" },
+    { name: "Blog", href: "https://blog.restoregeek.app" },
   ],
   legal: [
     { name: "Privacy", href: "/privacy" },
@@ -165,7 +165,7 @@ export function Footer() {
 //               <NavLink href="/pricing">Pricing</NavLink>
 //               <NavLink href="/about-us">About Us</NavLink>
 //               <NavLink href="/blog">Blog</NavLink>
-//               <NavLink href="https://servicegeek.notion.site/ServiceGeek-Help-Center-e1322c5a167e4778bc85a81f37dc43c7">
+//               <NavLink href="https://servicegeek.notion.site/RestoreGeek-Help-Center-e1322c5a167e4778bc85a81f37dc43c7">
 //                 Support
 //               </NavLink>
 //             </div>
@@ -199,7 +199,7 @@ export function Footer() {
 //             </Link>
 //           </div>
 //           <p className="mt-6 text-sm text-slate-500 sm:mt-0">
-//             Copyright &copy; {new Date().getFullYear()} ServiceGeek. All rights
+//             Copyright &copy; {new Date().getFullYear()} RestoreGeek. All rights
 //             reserved.
 //           </p>
 //         </div>

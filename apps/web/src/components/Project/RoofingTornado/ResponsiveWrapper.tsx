@@ -1,18 +1,14 @@
 import { Fragment, useEffect, useRef, useState } from "react";
-import DatePicker from "react-datepicker";
 import { projectStore } from "@atoms/project";
-import UpgradeModal from "@components/UpgradeModal";
 import { Loader } from "@googlemaps/js-api-loader";
 import { Dialog, Transition } from "@headlessui/react";
-import { SubscriptionStatus } from "@servicegeek/db";
-import { trpc } from "@utils/trpc";
 import clsx from "clsx";
 import { useParams } from "next/navigation";
 import Papa from "papaparse";
 
 import "react-datepicker/dist/react-datepicker.css";
-import { subscriptionStore } from "@atoms/subscription-status";
-import { Ellipsis, List, Map } from "lucide-react";
+import { Ellipsis } from "lucide-react";
+import { Tabs } from "@components/ui/tabs";
 
 export type HailReportItem = {
   Time?: string;
@@ -28,22 +24,14 @@ const ResponsiveWrapper = () => {
   const [hail, setHail] = useState<HailReportItem[]>([]);
   const satelliteView = useRef<HTMLDivElement>(null);
   const projectInfo = projectStore((state) => state.project);
-  const [loading, setLoading] = useState(true);
-  const [toggleView, setToggleView] = useState(false);
+  const [view, setView] = useState<"list" | "map">("list");
   const [isCreating, setIsCreating] = useState(false);
-  const subscriptionStatus = subscriptionStore(
-    (state) => state.subscriptionStatus
-  );
   const params = useParams<{ id: string }>();
   const [date, setDate] = useState(new Date());
 
-  let id = params.id || "";
-  if (Array.isArray(id) || !id) {
-    id = "";
-  }
-  const allWeatherReports = trpc.weatherReportItems.getAll.useQuery({
-    projectPublicId: params.id,
-  });
+  // const allWeatherReports = trpc.weatherReportItems.getAll.useQuery({
+  //   projectPublicId: params.id,
+  // });
 
   const columns = [
     "Time",
@@ -58,22 +46,20 @@ const ResponsiveWrapper = () => {
   ];
   // todo: https://github.com/JHahn42/ASCServer/blob/a51ba21078ee10089ccc2f3c87e2ac4c1ab22ead/weatherparser.js
 
-  const createWeatherReportItemMutation =
-    trpc.weatherReportItems.addWeatherItemToReport.useMutation({
-      onSettled() {
-        setIsCreating(false);
-        allWeatherReports.refetch();
-      },
-    });
+  // const createWeatherReportItemMutation =
+  //   trpc.weatherReportItems.addWeatherItemToReport.useMutation({
+  //     onSettled() {
+  //       setIsCreating(false);
+  //       allWeatherReports.refetch();
+  //     },
+  //   });
 
-  const deleteWeatherReportItemMutation =
-    trpc.weatherReportItems.deleteWeatherReportItemFromReport.useMutation({
-      onSettled() {
-        allWeatherReports.refetch();
-      },
-    });
-
-  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  // const deleteWeatherReportItemMutation =
+  //   trpc.weatherReportItems.deleteWeatherReportItemFromReport.useMutation({
+  //     onSettled() {
+  //       allWeatherReports.refetch();
+  //     },
+  //   });
 
   useEffect(() => {
     const last7Days = [];
@@ -89,7 +75,7 @@ const ResponsiveWrapper = () => {
       last7Days.push(date);
     }
 
-    last7Days.forEach((date, i) => {
+    last7Days.forEach((date) => {
       // get hail report for last 7 days
       const url = `https://www.spc.noaa.gov/climo/reports/${date}_rpts_filtered_torn.csv`;
       Papa.parse(url, {
@@ -99,10 +85,6 @@ const ResponsiveWrapper = () => {
           if (results.data.length > 0) {
             results.data.forEach((item) => {
               if (item?.Time) {
-                // check if last item in last7Days
-                if (i === last7Days.length - 1) {
-                  setLoading(false);
-                }
                 setHail((hail) => [...hail, item]);
               }
             });
@@ -132,8 +114,8 @@ const ResponsiveWrapper = () => {
       const map = new google.maps.Map(satelliteView?.current, {
         zoom: 10,
         center: {
-          lat: Number(projectInfo.lat),
-          lng: Number(projectInfo.lng),
+          lat: Number(projectInfo?.lat),
+          lng: Number(projectInfo?.lng),
         },
         streetViewControl: false,
         rotateControl: false,
@@ -178,47 +160,38 @@ const ResponsiveWrapper = () => {
   };
   useEffect(() => {
     setMarkers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toggleView]);
-
-  const onClick = () => {
-    setToggleView(!toggleView);
-  };
+  }, [view]);
 
   const addToReport = (item: HailReportItem) => {
-    if (subscriptionStatus !== SubscriptionStatus.active) {
-      setUpgradeModalOpen(true);
-      return;
-    }
     setIsCreating(true);
-    createWeatherReportItemMutation.mutateAsync({
-      projectPublicId: params.id,
-      time: item.Time ?? "",
-      location: item.Location ?? "",
-      county: item.County ?? "",
-      state: item.State ?? "",
-      lat: item.Lat ?? "",
-      lon: item.Lon ?? "",
-      comments: item.Comments ?? "",
-      f_scale: item.F_Scale ?? "",
-      speed: "",
-      size: "",
-      date: new Date(),
-    });
+    // createWeatherReportItemMutation.mutateAsync({
+    //   projectPublicId: params.id,
+    //   time: item.Time ?? "",
+    //   location: item.Location ?? "",
+    //   county: item.County ?? "",
+    //   state: item.State ?? "",
+    //   lat: item.Lat ?? "",
+    //   lon: item.Lon ?? "",
+    //   comments: item.Comments ?? "",
+    //   f_scale: item.F_Scale ?? "",
+    //   speed: "",
+    //   size: "",
+    //   date: new Date(),
+    // });
   };
-  const removeFromReport = (item: any) => {
+  const removeFromReport = (item: HailReportItem) => {
     const found = allWeatherReports?.data?.find(
       (reportItem) => reportItem.lat === item.Lat && reportItem.lon === item.Lon
     );
     if (!found) return;
-    deleteWeatherReportItemMutation.mutateAsync({
-      projectPublicId: params.id,
-      id: found.id,
-    });
+    // deleteWeatherReportItemMutation.mutateAsync({
+    //   projectPublicId: params.id,
+    //   id: found.id,
+    // });
   };
 
   return (
-    <>
+    <Tabs>
       <div className='px-4 sm:px-6 lg:px-8'>
         <Transition.Root show={isCreating} as={Fragment}>
           <Dialog as='div' className='relative z-10' onClose={setIsCreating}>
@@ -231,7 +204,7 @@ const ResponsiveWrapper = () => {
               leaveFrom='opacity-100'
               leaveTo='opacity-0'
             >
-              <div className='fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity' />
+              <div className='fixed inset-0 bg-gray-500/75 transition-opacity' />
             </Transition.Child>
 
             <div className='fixed inset-0 z-10 overflow-y-auto'>
@@ -268,8 +241,7 @@ const ResponsiveWrapper = () => {
             </div>
           </Dialog>
         </Transition.Root>
-        <UpgradeModal open={upgradeModalOpen} setOpen={setUpgradeModalOpen} />
-        <div className='sm:flex sm:items-center'>
+        {/* <div className='sm:flex sm:items-center'>
           <div className='sm:flex-auto'>
             <h1 className='text-xl font-semibold text-gray-900'>
               Tornado report{" "}
@@ -286,8 +258,6 @@ const ResponsiveWrapper = () => {
                 placeholderText='Click to pick a date'
                 selected={date}
                 onChange={(d: Date) => {
-                  setLoading(true);
-
                   setDate(d);
                   const dd = String(d.getDate()).padStart(2, "0");
                   const mm = String(d.getMonth() + 1).padStart(2, "0"); //January is 0!
@@ -305,7 +275,6 @@ const ResponsiveWrapper = () => {
                       if (results.data.length > 0) {
                         results.data.forEach((item) => {
                           if (item?.Time) {
-                            setLoading(false);
                             setHail((hail) => [...hail, item]);
                           }
                         });
@@ -337,15 +306,15 @@ const ResponsiveWrapper = () => {
               Map View
             </button>
           </div>
-        </div>
+        </div> */}
         <div className='mt-8 flex h-full flex-col'>
           <div className='-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8'>
             <div className='inline-block min-w-full py-2 align-middle md:px-6 lg:px-8'>
-              <div className='shadow ring-1 ring-black ring-opacity-5 md:rounded-lg'>
+              <div className='shadow ring-1 ring-black/5 md:rounded-lg'>
                 <table
                   className={clsx(
-                    '"min-w-full divide-gray-300" block divide-y',
-                    toggleView && "hidden"
+                    "block min-w-full divide-y divide-gray-300",
+                    view == "map" && "hidden"
                   )}
                 >
                   <thead className='bg-gray-50'>
@@ -365,38 +334,38 @@ const ResponsiveWrapper = () => {
                     {hail && hail.length > 0 ? (
                       hail?.map((item, i) => (
                         <tr key={i}>
-                          {columns.map((column, i) => {
+                          {columns.map((column) => {
                             if (column === "addToReport") {
                               return (
                                 <td
                                   key={column}
                                   className='py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6'
                                 >
-                                  {allWeatherReports.isSuccess &&
+                                  {/* {allWeatherReports.isSuccess &&
                                   isItemInReport(item) ? (
                                     <button
-                                      onClick={(e) => removeFromReport(item)}
+                                      onClick={() => removeFromReport(item)}
                                       className='rounded bg-gray-500 px-4 py-2 font-bold text-white hover:bg-blue-700'
                                     >
                                       Remove from report
                                     </button>
                                   ) : (
                                     <button
-                                      onClick={(e) => addToReport(item)}
+                                      onClick={() => addToReport(item)}
                                       className='rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700'
                                     >
                                       Add to report
                                     </button>
-                                  )}
+                                  )} */}
                                 </td>
                               );
                             } else {
                               return (
                                 <td
                                   key={column}
-                                  className='m-w-s overflow-auto py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6'
+                                  className='overflow-auto py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6'
                                 >
-                                  {/* @ts-ignore-error */}
+                                  {/* @ts-expect-error sss */}
                                   {item[column]}
                                 </td>
                               );
@@ -418,7 +387,7 @@ const ResponsiveWrapper = () => {
                   id='map'
                   className={clsx(
                     "group relative col-span-5 block h-screen overflow-hidden rounded-lg shadow-md md:col-span-2 lg:col-span-1",
-                    !toggleView && "hidden"
+                    view == "list" && "hidden"
                   )}
                   ref={satelliteView}
                 />
@@ -427,7 +396,7 @@ const ResponsiveWrapper = () => {
           </div>
         </div>
       </div>
-    </>
+    </Tabs>
   );
 };
 

@@ -1,8 +1,12 @@
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Input } from "@components/ui/input";
 import { Button } from "@components/ui/button";
 import { Trash } from "lucide-react";
+import { LoadingSpinner } from "@components/ui/spinner";
+import { useDebounce } from "@hooks/use-debounce";
+import { useParams } from "next/navigation";
+import { toast } from "sonner";
+import { costsStore } from "@atoms/costs";
 
 const formatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -12,115 +16,135 @@ const formatter = new Intl.NumberFormat("en-US", {
 const CostsRow = ({
   costData,
   namePlaceholder,
-  updateCost,
-  removeCost,
   costType,
 }: {
-  costData?: Cost;
+  costData: Cost;
   namePlaceholder: string;
-  updateCost: (id: number, cost: Omit<Cost, "id">) => void;
-  removeCost: (id: number) => void;
   costType: CostType;
 }) => {
+  const [newName, setNewName] = useState(costData.name ?? "");
+  const [newEstimatedCost, setNewEstimatedCost] = useState(
+    costData.estimatedCost
+  );
+  const { id: projectId } = useParams<{ id: string }>();
   const [isDeleting, setIsDeleting] = useState(false);
-  const { id } = useParams<{ id: string }>();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [newActualCost, setNewActualCost] = useState(costData.actualCost);
+  const costs = costsStore();
 
-  const onDelete = async () => {
-    setIsDeleting(true);
+  const updateCost = async (id: number, cost: Partial<Cost>) => {
     try {
-      const res = await fetch(`/api/project/${id}/costs`, {
-        method: "DELETE",
+      setIsUpdating(true);
+      const res = await fetch(`/api/v1/projects/${projectId}/costs`, {
+        method: "PATCH",
         body: JSON.stringify({
-          type: costType,
-          costId: costData?.id,
+          costData: cost,
+          costId: id,
         }),
       });
+
       if (res.ok) {
-        removeCost(costData!.id);
-        // setCosts((prevCosts) =>
-        //   produce(prevCosts, (draft) => {
-        //     const index = prevCosts.findIndex((c) => c.id === costData?.id)
-        //     if (index >= 0) {
-        //       draft.splice(index, 1)
-        //     }
-        //   })
-        // )
+        const json = await res.json();
+        toast.success("Cost updated successfully");
+        costs.updateCost(id, json.cost, costType);
+      } else {
+        toast.error("Failed to update cost");
       }
     } catch (error) {
+      toast.error("Failed to update cost");
       console.error(error);
     }
+
+    setIsUpdating(false);
+  };
+
+  const deleteCost = async (id: number) => {
+    try {
+      setIsDeleting(true);
+      console.log("id", id);
+      console.log("DELETE", `/api/v1/projects/${projectId}/costs`);
+      const res = await fetch(`/api/v1/projects/${projectId}/costs`, {
+        method: "DELETE",
+        body: JSON.stringify({
+          costId: id,
+        }),
+      });
+
+      if (res.ok) {
+        toast.success("Cost removed successfully");
+        costs.removeCost(id, costType);
+      } else {
+        toast.error("Failed to removed cost");
+        console.error(res);
+      }
+    } catch (error) {
+      toast.error("Failed to removed cost");
+      console.error(error);
+    }
+
     setIsDeleting(false);
   };
 
-  // const onSave = async (data: {
-  //   name?: string;
-  //   estimatedCost?: number;
-  //   actualCost?: number;
-  // }) => {
-  //   try {
-  //     const res = await fetch(`/api/project/${id}/costs`, {
-  //       method: "PATCH",
-  //       body: JSON.stringify({
-  //         type: costType,
-  //         costId: costData?.id,
-  //         costData: data,
-  //       }),
-  //     });
-  //     if (res.ok) {
-  //       // @ts-expect-error
-  //       updateCost(costData!.id, { ...data });
-  //       // setCosts((prevCosts) =>
-  //       //   produce(prevCosts, (draft) => {
-  //       //     const index = prevCosts.findIndex((c) => c.id === costData?.id)
-  //       //     draft[index] = { ...draft[index], ...data }
-  //       //   })
-  //       // )
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
+  const debouncedName = useDebounce(newName, 1000);
+  const debouncedEstimatedCost = useDebounce(newEstimatedCost, 1000);
+  const debouncedActualCost = useDebounce(newActualCost, 1000);
+
+  useEffect(() => {
+    if (
+      debouncedName === costData.name &&
+      debouncedEstimatedCost === costData.estimatedCost &&
+      debouncedActualCost === costData.actualCost
+    ) {
+      return;
+    }
+    updateCost(costData!.id, {
+      name: debouncedName,
+      estimatedCost: debouncedEstimatedCost,
+      actualCost: debouncedActualCost,
+    });
+  }, [debouncedName, debouncedEstimatedCost, debouncedActualCost]);
+
   return (
-    <div className='grid grid-cols-4 space-x-2 bg-white'>
+    <div className='my-3 grid grid-cols-4 space-x-2'>
       <Input
+        disabled={isUpdating}
         className='border-none px-4 py-2 focus:border-none focus:outline-none'
-        defaultValue={costData?.name || ""}
-        // onSave={(name) => onSave({ name })}
+        defaultValue={newName ?? ""}
+        onChange={(e) => setNewName(e.target.value)}
         placeholder={namePlaceholder}
-        // ignoreInvalid
         name={namePlaceholder}
       />
       <Input
+        disabled={isUpdating}
         className='border-none px-4 py-2 focus:border-none focus:outline-none'
-        defaultValue={costData?.estimatedCost || ""}
-        // onSave={(estimatedCost) =>
-        //   onSave({ estimatedCost: parseInt(estimatedCost) })
-        // }
+        defaultValue={newEstimatedCost ?? ""}
+        onChange={(e) => setNewEstimatedCost(parseFloat(e.target.value))}
         placeholder='Estimated Amount'
         type='number'
         name='Estimated Amount'
       />
       <Input
+        disabled={isUpdating}
         className='border-none px-4 py-2 focus:border-none focus:outline-none'
-        defaultValue={costData?.actualCost || ""}
-        // onSave={(actualCost) => onSave({ actualCost: parseInt(actualCost) })}
+        defaultValue={newActualCost ?? ""}
+        onChange={(e) => setNewActualCost(parseFloat(e.target.value))}
         placeholder='Actual Amount'
         type='number'
         name='Actual Amount'
       />
-      <div className='flex'>
-        <div className='flex w-5/6 items-center justify-start border-none bg-gray-100 px-4 py-2'>
+      <div className='mx-3 flex'>
+        <div className='flex w-5/6 items-center justify-start border-none px-4 py-2'>
           {formatter.format(
-            (costData?.estimatedCost || 0) - (costData?.actualCost || 0)
+            (costData.estimatedCost ?? 0) - (costData.actualCost || 0)
           )}
         </div>
         <Button
+          className='mx-3'
           variant='destructive'
-          // loading={isDeleting}
           disabled={isDeleting}
-          onClick={onDelete}
+          onClick={() => deleteCost(costData.id)}
         >
-          <Trash className='h-5' />
+          {isDeleting ? <LoadingSpinner /> : <Trash size={24} />}
         </Button>
       </div>
     </div>

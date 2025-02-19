@@ -32,7 +32,7 @@ export default async function TermsPage() {
               <p>
                 <strong>Application</strong> means the software program provided
                 by the Company downloaded by You on any electronic device, named
-                ServiceGeek
+                RestoreGeek
               </p>
             </li>
             <li>
@@ -135,13 +135,13 @@ export default async function TermsPage() {
             </li>
             <li>
               <p>
-                <strong>Website</strong> refers to ServiceGeek, accessible from{" "}
+                <strong>Website</strong> refers to RestoreGeek, accessible from{" "}
                 <a
-                  href='http://www.servicegeek.app'
+                  href='http://www.restoregeek.app'
                   rel='external nofollow noopener noreferrer'
                   target='_blank'
                 >
-                  http://www.servicegeek.app
+                  http://www.restoregeek.app
                 </a>
               </p>
             </li>
@@ -422,7 +422,7 @@ export default async function TermsPage() {
             You believe that the copyrighted work has been copied in a way that
             constitutes copyright infringement that is taking place through the
             Service, You must submit Your notice in writing to the attention of
-            our copyright agent via email at support@servicegeek.app and include
+            our copyright agent via email at support@restoregeek.app and include
             in Your notice a detailed description of the alleged infringement.
           </p>
           <p>
@@ -470,7 +470,7 @@ export default async function TermsPage() {
           </ul>
           <p>
             You can contact our copyright agent via email at
-            support@servicegeek.app. Upon receipt of a notification, the Company
+            support@restoregeek.app. Upon receipt of a notification, the Company
             will take whatever action, in its sole discretion, it deems
             appropriate, including removal of the challenged content from the
             Service.
@@ -673,7 +673,7 @@ export default async function TermsPage() {
             contact us:
           </p>
           <ul>
-            <li>By email: support@servicegeek.app</li>
+            <li>By email: support@restoregeek.app</li>
           </ul>
         </div>
       </div>

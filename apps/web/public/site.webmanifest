@@ -3,11 +3,11 @@
   "description": "A job management platform built for restoration",
   "dir": "auto",
   "display": "standalone",
-  "name": "ServiceGeek Mobile",
+  "name": "RestoreGeek Mobile",
   "orientation": "natural",
   "scope": "www.api.mapbox.com",
-  "short_name": "ServiceGeek Mobile",
-  "start_url": "https://www.servicegeek.app/login",
+  "short_name": "RestoreGeek Mobile",
+  "start_url": "https://www.restoregeek.app/login",
   "theme_color": "#ffffff",
   "categories": ["business"],
   "screenshots": [
@@ -52,7 +52,7 @@
   "shortcuts": [
     {
       "name": "Login",
-      "url": "https://www.servicegeek.app/login",
+      "url": "https://www.restoregeek.app/login",
       "description": "Login"
     }
   ],
@@ -64,11 +64,11 @@
   },
   "share_target": {
     "method": "GET",
-    "action": "https://www.servicegeek.app/login",
+    "action": "https://www.restoregeek.app/login",
     "params": {
       "title": "Login",
       "text": "Sign in ",
-      "url": "https:www.servicegeek.app/login",
+      "url": "https:www.restoregeek.app/login",
       "files": []
     }
   },

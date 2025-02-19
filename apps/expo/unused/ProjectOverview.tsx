@@ -10,7 +10,7 @@ import {
   useToast,
 } from "native-base";
 import React, { useEffect, useState } from "react";
-import { userStore } from "@/utils/state/user";
+import { userStore } from "@/lib/state/user";
 import { RootStackParamList } from "../../types/Navigation";
 import { api } from "../utils/api";
 import * as Clipboard from "expo-clipboard";

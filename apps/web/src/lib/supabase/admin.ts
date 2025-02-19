@@ -1,5 +1,7 @@
+"server only";
+
 import { createClient } from "@supabase/supabase-js";
-import { Database } from "@types/database";
+import { Database } from "@/types/database";
 
 if (
   !process.env.NEXT_PUBLIC_SUPABASE_URL ||

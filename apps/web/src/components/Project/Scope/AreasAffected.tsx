@@ -1,11 +1,10 @@
-import { RoomAffectedArea } from "@servicegeek/db/queries/project/getProjectDetections";
-import { AreaAffectedType } from "@servicegeek/db";
+import { Checkbox } from "@components/ui/checkbox";
 
 export default function AreasAffected({
   affectedAreas,
   setAffectedAreas,
 }: {
-  affectedAreas: RoomAffectedArea[];
+  affectedAreas: AreaAffected[];
   setAffectedAreas: (s: AreaAffectedType, setChecked: boolean) => void;
 }) {
   return (
@@ -13,60 +12,56 @@ export default function AreasAffected({
       <h2 className='text-lg font-medium'>Areas Affected</h2>
       <div className='relative flex items-start'>
         <div className='flex h-5 items-center'>
-          <input
+          <Checkbox
             id='walls'
             aria-describedby='walls-description'
             name='walls'
-            type='checkbox'
             checked={
-              !!affectedAreas.find((a) => a.type === "wall" && !a.isDeleted)
+              affectedAreas.find((a) => a.type === "wall" && !a.isDeleted) !=
+              null
             }
-            className='size-4 rounded border-gray-300 text-primary focus:ring-blue-500'
-            onChange={(e) => setAffectedAreas("wall", !e.target.checked)}
+            onCheckedChange={(e) => setAffectedAreas("wall", !e)}
           />
         </div>
         <div className='ml-3 text-sm'>
-          <label htmlFor='walls' className='font-medium text-gray-700'>
+          <label htmlFor='walls' className='font-medium text-foreground'>
             Walls
           </label>
         </div>
       </div>
       <div className='relative flex items-start'>
         <div className='flex h-5 items-center'>
-          <input
+          <Checkbox
             id='ceilings'
             aria-describedby='ceilings-description'
             name='ceilings'
-            type='checkbox'
             checked={
               !!affectedAreas.find((a) => a.type === "ceiling" && !a.isDeleted)
             }
-            className='size-4 rounded border-gray-300 text-primary focus:ring-blue-500'
-            onChange={(e) => setAffectedAreas("ceiling", !e.target.checked)}
+            onCheckedChange={(e) => setAffectedAreas("ceiling", !e)}
           />
         </div>
         <div className='ml-3 text-sm'>
-          <label htmlFor='ceilings' className='font-medium text-gray-700'>
+          <label htmlFor='ceilings' className='font-medium text-foreground'>
             Ceilings
           </label>
         </div>
       </div>
       <div className='relative flex items-start'>
         <div className='flex h-5 items-center'>
-          <input
+          <Checkbox
             id='floors'
             aria-describedby='floors-description'
             name='floors'
-            type='checkbox'
             checked={
               !!affectedAreas.find((a) => a.type === "floor" && !a.isDeleted)
             }
             className='size-4 rounded border-gray-300 text-primary focus:ring-blue-500'
-            onChange={(e) => setAffectedAreas("floor", !e.target.checked)}
+            onCheckedChange={(e) => setAffectedAreas("floor", !e)}
           />
         </div>
         <div className='ml-3 text-sm'>
-          <label htmlFor='floors' className='font-medium text-gray-700'>
+          <label htmlFor='floors' className='font-medium text-foreground'>
             Floors
           </label>
         </div>

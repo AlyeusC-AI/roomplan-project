@@ -97,7 +97,7 @@ export default function DataDeletionRequest() {
                         className='size-6 shrink-0 text-gray-400'
                         aria-hidden='true'
                       />
-                      <span className='ml-3'>support@servicegeek.app</span>
+                      <span className='ml-3'>support@restoregeek.app</span>
                     </dd>
                   </div>
                 </dl>

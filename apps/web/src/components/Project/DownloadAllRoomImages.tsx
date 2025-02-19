@@ -1,17 +1,16 @@
 import { useState } from "react";
-import { InferenceMetaData } from "@servicegeek/db/queries/project/getProjectDetections";
 import { saveAs } from "file-saver";
-import { inferencesStore } from "@atoms/inferences";
 import { urlMapStore } from "@atoms/url-map";
 import { projectStore } from "@atoms/project";
 import { ArrowDownToLine } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@components/ui/button";
+import { roomStore } from "@atoms/room";
 
 const JSZip = require("jszip");
 
 const DownloadAllRoomImages = () => {
-  const allInferences = inferencesStore((state) => state.inferences);
+  const allRooms = roomStore();
   const [isDownloading, setIsDownloading] = useState(false);
   const projectInfo = projectStore((state) => state.project);
   const presignedUrlMap = urlMapStore((state) => state.urlMap);
@@ -30,13 +29,13 @@ const DownloadAllRoomImages = () => {
   const downloadImagesForRoom = async (
     zip: any,
     roomName: string,
-    inferences: InferenceMetaData[]
+    inferences: Inference[]
   ) => {
     setIsDownloading(true);
     const folderName = `${roomName}_photos`;
     const promises = [];
     for (const inference of inferences) {
-      promises.push(downloadImage(inference.imageKey));
+      promises.push(downloadImage(inference.imageKey!));
     }
     const roomFolder = zip.folder(folderName);
 
@@ -63,9 +62,9 @@ const DownloadAllRoomImages = () => {
 
     const promises = [];
 
-    for (const inference of allInferences) {
+    for (const inference of allRooms.rooms) {
       promises.push(
-        downloadImagesForRoom(zip, inference.name, inference.inferences)
+        downloadImagesForRoom(zip, inference.name, inference.Inference)
       );
     }
 
@@ -84,7 +83,7 @@ const DownloadAllRoomImages = () => {
         console.error(e);
         setIsDownloading(false);
         toast.error(
-          "Failed to download images. Please contact support@servicegeek.app if this error persists"
+          "Failed to download images. Please contact support@restoregeek.app if this error persists"
         );
       });
   };
@@ -92,6 +91,7 @@ const DownloadAllRoomImages = () => {
     <Button
       onClick={() => downloadAllImagesForRoom()}
       className='sm:w-full md:w-auto'
+      variant='outline'
     >
       <ArrowDownToLine className='h-6' />
     </Button>

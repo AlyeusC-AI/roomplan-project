@@ -1,212 +1,104 @@
-import { RouterOutputs } from "@servicegeek/api";
-import {
-  Actionsheet,
-  Box,
-  Heading,
-  View,
-  Text,
-  Pressable,
-  CheckIcon,
-} from "native-base";
 import React, { useState } from "react";
-import { userStore } from "@/utils/state/user";
-import { api } from "../../utils/api";
-import { Users } from "lucide-react-native";
+import { userStore } from "@/lib/state/user";
+import { Check, Users } from "lucide-react-native";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { TouchableOpacity } from "react-native";
+import { Text } from "../ui/text";
+import { View } from "react-native";
+import { Card } from "../ui/card";
+import { useGlobalSearchParams } from "expo-router";
+import { projectStore } from "@/lib/state/project";
 
 const AssigneeSelect = ({
   projectAssignees,
   teamMembers,
-  projectPublicId,
 }: {
-  projectAssignees: NonNullable<
-    RouterOutputs["mobile"]["getProjectOverviewData"]["project"]
-  >["projectAssignees"];
-  teamMembers: NonNullable<
-    RouterOutputs["mobile"]["getProjectOverviewData"]["teamMembers"]
-  >;
-  projectPublicId: string;
+  projectAssignees: Assignee[];
+  teamMembers: User[];
 }) => {
+  const { projectId } = useGlobalSearchParams<{ projectId: string }>();
+  const project = projectStore();
   const [isOpen, setIsOpen] = useState(false);
   const selectedMembers = projectAssignees.filter((p) =>
-    teamMembers.find((t) => t.user.id === p.userId)
+    teamMembers.find((t) => t.id === p.userId)
   );
   const { session } = userStore((state) => state);
 
-  const trpcContext = api.useUtils();
-  const addProjectAssignee = api.mobile.addProjectAssignee.useMutation({
-    async onMutate({ jwt, projectPublicId, userId }) {
-      await trpcContext.mobile.getProjectOverviewData.cancel();
-      const prevData = trpcContext.mobile.getProjectOverviewData.getData();
-      const alreadyContained = prevData?.project?.projectAssignees.find(
-        (a) => a.userId === userId
-      );
-      if (alreadyContained) {
-        return { prevData };
-      }
-      const newUser = teamMembers.find((m) => m.user.id === userId);
-      if (!newUser) {
-        return { prevData };
-      }
-
-      trpcContext.mobile.getProjectOverviewData.setData(
-        { jwt, projectPublicId },
-        (old) => {
-          if (!old || !old.project) return old;
-          return {
-            ...old,
-            project: {
-              ...old.project,
-              projectAssignees: [
-                ...(old.project?.projectAssignees || []),
-                {
-                  userId,
-                  user: {
-                    firstName: newUser.user.firstName,
-                    email: newUser.user.email,
-                  },
-                },
-              ],
-            },
-          };
-        }
-      );
-      return { prevData };
-    },
-    onError(err, { jwt, projectPublicId }, ctx) {
-      // If the mutation fails, use the context-value from onMutate
-      if (ctx?.prevData)
-        trpcContext.mobile.getProjectOverviewData.setData(
-          { jwt, projectPublicId },
-          ctx.prevData
-        );
-    },
-    onSettled(d, a) {
-      trpcContext.mobile.getProjectOverviewData.invalidate();
-    },
-  });
-  const removeProjectAssignee = api.mobile.removeProjectAssignee.useMutation({
-    async onMutate({ jwt, projectPublicId, userId }) {
-      await trpcContext.mobile.getProjectOverviewData.cancel();
-      const prevData = trpcContext.mobile.getProjectOverviewData.getData();
-      const alreadyContained = prevData?.project?.projectAssignees.find(
-        (a) => a.userId === userId
-      );
-      if (alreadyContained) {
-        return { prevData };
-      }
-      const newUser = teamMembers.find((m) => m.user.id === userId);
-      if (!newUser) {
-        return { prevData };
-      }
-
-      trpcContext.mobile.getProjectOverviewData.setData(
-        { jwt, projectPublicId },
-        (old) => {
-          if (!old || !old.project) return old;
-          return {
-            ...old,
-            project: {
-              ...old.project,
-              projectAssignees: (old.project?.projectAssignees || []).filter(
-                (m) => m.userId !== userId
-              ),
-            },
-          };
-        }
-      );
-      return { prevData };
-    },
-    onError(err, { jwt, projectPublicId }, ctx) {
-      // If the mutation fails, use the context-value from onMutate
-      if (ctx?.prevData)
-        trpcContext.mobile.getProjectOverviewData.setData(
-          { jwt, projectPublicId },
-          ctx.prevData
-        );
-    },
-    onSettled(d, a) {
-      trpcContext.mobile.getProjectOverviewData.invalidate();
-    },
-  });
-
   const onPress = (userId: string, isAlreadySelected: boolean) => {
     if (isAlreadySelected) {
-      removeProjectAssignee.mutate({
-        jwt: session ? session["access_token"] : "null",
-        projectPublicId,
-        userId,
-      });
+      fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/assignees`,
+        {
+          method: "DELETE",
+          headers: {
+            "auth-token": `${session?.access_token}`,
+          },
+          body: JSON.stringify({ userId }),
+        }
+      );
+      project.removeAssignee(userId);
     } else {
-      addProjectAssignee.mutate({
-        jwt: session ? session["access_token"] : "null",
-        projectPublicId,
-        userId,
+      fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/assignees`,
+        {
+          method: "POST",
+          headers: {
+            "auth-token": `${session?.access_token}`,
+          },
+          body: JSON.stringify({ userId }),
+        }
+      )
+      .then((res) => res.json())
+      .then((data) => {
+        project.addAssignee(data.assignee);
       });
     }
   };
   return (
-    <>
-      <Pressable
-        display="flex"
-        flexDirection="row"
-        onPress={() => setIsOpen(true)}
-      >
+    <Dialog open={isOpen} onOpenChange={() => setIsOpen(false)}>
+      <DialogTrigger className="flex flex-row" onPress={() => setIsOpen(true)}>
         <Users height={24} width={24} />
-        <View ml={2}>
+        <View className="ml-2">
           {selectedMembers.map((m) => (
-            <Heading key={m.userId} size="sm" color="blue.500">
-              {m.user.firstName || m.user.email}
-            </Heading>
+            <Text className="text-lg text-primary font-bold" key={m.userId}>
+              {m.User?.firstName || m.User?.email}
+            </Text>
           ))}
         </View>
-      </Pressable>
-      <Actionsheet isOpen={isOpen} onClose={() => setIsOpen(false)}>
-        <Actionsheet.Content>
-          <Box w="100%" h={60} px={4} justifyContent="center">
-            <Text
-              fontSize="16"
-              color="gray.500"
-              _dark={{
-                color: "gray.300",
-              }}
-            >
-              Team Members
-            </Text>
-          </Box>
-          {teamMembers.map((member) => (
-            <Actionsheet.Item
-              key={member.user.id}
-              onPress={() =>
-                onPress(
-                  member.user.id,
-                  !!projectAssignees.find((a) => a.userId === member.user.id)
-                )
-              }
-            >
-              <View
-                display="flex"
-                flexDirection={"row"}
-                justifyContent="space-between"
-                w="full"
-              >
-                {!member.user.firstName ? (
-                  <Text>{member.user.email}</Text>
-                ) : (
-                  <Text>
-                    {`${member.user.firstName} ${member.user.lastName}`}
-                  </Text>
-                )}
-                {projectAssignees.find((a) => a.userId === member.user.id) && (
-                  <View ml={6} color="blue.500">
-                    <CheckIcon />
-                  </View>
-                )}
-              </View>
-            </Actionsheet.Item>
-          ))}
-        </Actionsheet.Content>
-      </Actionsheet>
-    </>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <Text className="font-bold text-4xl">Team Members</Text>
+        </DialogHeader>
+        {teamMembers.map((member) => (
+          <TouchableOpacity
+            key={member.id}
+            onPress={() =>
+              onPress(
+                member.id,
+                !!projectAssignees.find((a) => a.userId === member.id)
+              )
+            }
+          >
+            <Card className="flex flex-row justify-between p-5 w-full">
+              {!member.firstName ? (
+                <Text>{member.email}</Text>
+              ) : (
+                <Text>{`${member.firstName} ${member.lastName}`}</Text>
+              )}
+              {projectAssignees.find((a) => a.userId === member.id) && (
+                <Check className="ml-6" color="#1e88e5" />
+              )}
+            </Card>
+          </TouchableOpacity>
+        ))}
+      </DialogContent>
+    </Dialog>
   );
 };
 

@@ -1,14 +1,14 @@
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import Select from "react-select";
 import { roomStore } from "@atoms/room";
 import EmptyState from "@components/DesignSystem/EmptyState";
-import Pill from "@components/DesignSystem/Pills/Pill";
-import { GroupByViews, PhotoViews } from "@servicegeek/db";
 import useFilterParams from "@utils/hooks/useFilterParams";
-import { trpc } from "@utils/trpc";
-import { useParams, useRouter } from "next/navigation";
-import { inferencesStore } from "@atoms/inferences";
-import { uploadInProgressImagesStore } from "@atoms/upload-in-progress-image";
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 
 import OptimisticUploadUI from "../OptimisticUploadUI";
 
@@ -17,94 +17,74 @@ import GroupByPicker from "./GroupByPicker";
 import PhotoList from "./PhotoList";
 import ViewPicker from "./ViewPicker";
 import { ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
-import { LoadingSpinner } from "@components/ui/spinner";
 import { Button } from "@components/ui/button";
+import { Badge } from "@components/ui/badge";
+import { urlMapStore } from "@atoms/url-map";
 
-export default function MitigationTable({
-  initialGroupView,
-  initialPhotoView,
-}: {
-  initialGroupView: GroupByViews;
-  initialPhotoView: PhotoViews;
-}) {
-  const uploadInProgressImages = uploadInProgressImagesStore(
-    (state) => state.images
-  );
+export default function MitigationTable() {
   const [isFilterOptionOpen, setIsFilterOptionOpen] = useState(false);
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const reactSelectId = useId();
-  const [photoView, setPhotoView] = useState(initialPhotoView);
   const { rooms, onlySelected, sortDirection } = useFilterParams();
+  const [loading, setLoading] = useState(false);
+  const [images, setImages] = useState<ImageQuery_Image[]>([]);
+  const urlMap = urlMapStore();
 
-  const groupView = trpc.groupView.getGroupView.useQuery(undefined, {
-    initialData: { groupView: initialGroupView },
-  });
-
-  const query = trpc.inferences.getAll.useQuery(
-    {
-      projectPublicId: id,
-      rooms,
-      onlySelected,
-      sortDirection,
-    },
-    {
-      initialData: { rooms: [] },
-      onSuccess: (data: any) => {
-        inferencesStore.getState().setInferences(data?.rooms || []);
-      },
-    }
-  );
-
-  const queryContext = {
-    projectPublicId: id,
-    rooms,
-    onlySelected,
-    sortDirection,
-  };
-
-  const getPhotos = trpc.photos.getProjectPhotos.useQuery(queryContext);
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/v1/projects/${id}/images`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        setLoading(false);
+        setImages(data.images);
+        urlMap.setUrlMap(data.urlMap);
+      });
+  }, []);
 
   const toggleFilterDrawer = () => {
     setIsFilterOptionOpen((prev) => !prev);
   };
 
+  const pathname = usePathname();
+
   const setRoomFilter = (newRoomsFilter: string[]) => {
-    const { ...rest } = router.query;
-    let newQuery = {
-      ...router.query,
-      rooms: JSON.stringify(newRoomsFilter),
-    };
+    const params = new URLSearchParams(searchParams.toString());
+
     if (newRoomsFilter.length === 0) {
-      newQuery = rest;
+      params.delete("rooms");
+    } else {
+      params.set("rooms", JSON.stringify(newRoomsFilter));
     }
-    router.push({ query: newQuery }, undefined);
+
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   const setSortDirection = () => {
-    router.push(
-      {
-        query: {
-          sortDirection: sortDirection === "asc" ? "desc" : "asc",
-        },
-      },
-      undefined
-    );
+    const params = new URLSearchParams(searchParams.toString());
+
+    const currentSortDirection = params.get("sortDirection") || "asc";
+    const newSortDirection = currentSortDirection === "asc" ? "desc" : "asc";
+
+    params.set("sortDirection", newSortDirection);
+
+    router.push(`${pathname}?${params.toString()}`);
   };
 
+  const searchParams = useSearchParams();
+
   const setOnlySelected = (checked: boolean) => {
+    const router = useRouter();
+    const params = new URLSearchParams(searchParams);
+
     if (!checked) {
-      router.push({ query: { ...rest } }, undefined);
-      return;
+      params.delete("onlySelected");
+    } else {
+      params.set("onlySelected", "true");
     }
-    router.push(
-      {
-        query: {
-          onlySelected: true,
-        },
-      },
-      undefined
-    );
+
+    router.push(`?${params.toString()}`);
   };
 
   const roomList = roomStore((state) => state.rooms);
@@ -129,6 +109,18 @@ export default function MitigationTable({
     [rooms]
   );
 
+  if (!loading && images.length === 0) {
+    return (
+      <EmptyState
+        imagePath={"/images/no-uploads.svg"}
+        title={"Get started by uploading photos"}
+        description={
+          "Once uploaded, we will sort your photos by room as well as identify items within each picture."
+        }
+      />
+    );
+  }
+
   return (
     <div className='space-y-6'>
       <div className='mt-6'>
@@ -136,19 +128,19 @@ export default function MitigationTable({
           <div className='flex space-x-4'>
             <div>
               <FilterLabel>Filters</FilterLabel>
-              <Button onClick={() => toggleFilterDrawer()}>
+              <Button variant='outline' onClick={() => toggleFilterDrawer()}>
                 <SlidersHorizontal className='mr-2 h-5' />
                 Filter{" "}
                 {(rooms || onlySelected) && (
-                  <Pill className='ml-2' color='green' size='xs'>
+                  <Badge className='ml-2' color='green'>
                     {onlySelected && rooms ? 2 : 1}
-                  </Pill>
+                  </Badge>
                 )}
               </Button>
             </div>
             <div>
               <FilterLabel>Sort</FilterLabel>
-              <Button onClick={() => setSortDirection()}>
+              <Button variant='outline' onClick={() => setSortDirection()}>
                 {sortDirection === "desc" || !sortDirection ? (
                   <ChevronDown className='mr-2 h-5' />
                 ) : (
@@ -157,10 +149,9 @@ export default function MitigationTable({
                 Sort
               </Button>
             </div>
-            <ViewPicker photoView={photoView} setPhotoView={setPhotoView} />
+            <ViewPicker />
             <GroupByPicker />
           </div>
-          {query.isFetching && <LoadingSpinner />}
         </div>
         {isFilterOptionOpen && (
           <div className='mt-6'>
@@ -194,25 +185,7 @@ export default function MitigationTable({
       </div>
       <div className='my-6'>
         <OptimisticUploadUI />
-        <PhotoList
-          photos={getPhotos.data ? getPhotos.data.images : []}
-          queryContext={queryContext}
-          groupBy={groupView.data?.groupView || GroupByViews.dateView}
-          photoView={photoView}
-        />
-        {getPhotos.data &&
-          getPhotos.data.images.length === 0 &&
-          !rooms &&
-          !onlySelected &&
-          !uploadInProgressImages?.length && (
-            <EmptyState
-              imagePath={"/images/no-uploads.svg"}
-              title={"Get started by uploading photos"}
-              description={
-                "Once uploaded, we will sort your photos by room as well as identify items within each picture."
-              }
-            />
-          )}
+        <PhotoList photos={images} setPhotos={setImages} />
       </div>
     </div>
   );

@@ -1,28 +1,48 @@
-import { Tabs } from "expo-router";
-import { Calendar, Cog, House } from "lucide-react-native";
+import { router, Tabs } from "expo-router";
+import { Calendar, CircleHelp, Cog, House } from "lucide-react-native";
+import { TouchableOpacity, View } from "react-native";
 
 export default function Layout() {
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: '#1e40af' }}>
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: "#2563eb",
+        headerTintColor: "#FFFF",
+        headerStyle: { backgroundColor: "#2563eb" },
+        headerRight: () => (
+          <View className="flex-row mr-3">
+            <TouchableOpacity onPress={() => router.push("/chat")}>
+              <CircleHelp
+                style={{ marginRight: 10 }}
+                color="#FFFF"
+                size={24}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/settings")}>
+              <Cog color="#FFFF" size={24} />
+            </TouchableOpacity>
+          </View>
+        ),
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          headerShown: false,
-          title: 'Dashboard',
+          title: "Dashboard",
           tabBarIcon: ({ color }) => <House size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="calendar"
         options={{
-          title: 'Calendar',
+          title: "Calendar",
           tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
+          title: "Settings",
           tabBarIcon: ({ color }) => <Cog size={24} color={color} />,
         }}
       />

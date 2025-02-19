@@ -1,9 +1,9 @@
-// import getSubcriptionStatus from "@servicegeek/db/queries/organization/getSubscriptionStatus";
 // import uploadFileToProject from "@lib/supabase/uploadFileToProject";
-// import { SubscriptionStatus } from "@servicegeek/db";
 // import formidable, { File as FormidableFile } from "formidable";
 // import { createClient } from "@lib/supabase/server";
 // import { NextRequest, NextResponse } from "next/server";
+
+import { NextResponse } from "next/server";
 
 // export const config = {
 //   api: {
@@ -68,3 +68,7 @@
 //     return NextResponse.json({ status: "failed" }, { status: 500 });
 //   }
 // }
+
+export async function POST() {
+  return NextResponse.json({ status: "ok" }, { status: 200 });
+}

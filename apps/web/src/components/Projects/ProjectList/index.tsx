@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import CreateFirstProject from "@components/onboarding/CreateFirstProject";
-import { DashboardViews } from "@servicegeek/db";
-import dynamic from "next/dynamic";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@components/ui/tabs";
 
-import CreateNewProject from "../../../../unused/CreateNewProject";
+import CreateNewProject from "./new";
 
-import { ProjectMapView } from "./ProjectMapView";
+import { useDebouncedCallback } from "use-debounce";
 import { userInfoStore } from "@atoms/user-info";
 import { projectsStore } from "@atoms/projects";
 import { Button } from "@components/ui/button";
@@ -27,144 +24,182 @@ import {
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  DragEndEvent,
+  KanbanBoard,
+  KanbanCard,
+  KanbanCards,
+  KanbanHeader,
+  KanbanProvider,
+} from "@/components/ui/kibo-ui/kanban";
 import { ChevronRightIcon } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
 import { Badge } from "@components/ui/badge";
 import { LoadingPlaceholder } from "@components/ui/spinner";
 import { Input } from "@components/ui/input";
+import { statusStore } from "@atoms/status";
+import { cn } from "@lib/utils";
+import { toast } from "sonner";
+import { Database } from "@/types/database";
 
-const ProjectBoardView = dynamic(() => import("./ProjectBoardView"), {
-  ssr: false,
-});
+type DashboardView = Database["public"]["Enums"]["DashboardViews"];
 
-export const useSearchTerm = () => {
-  const router = useSearchParams();
-
-  return router?.get("search");
-};
-
-export default function ProjectList({
-  redirectTo = "overview",
-}: {
-  redirectTo?: string;
-}) {
-  const { projects, setProjects } = projectsStore((state) => state);
+export default function ProjectList() {
+  const { projects, totalProjects, setProjects } = projectsStore(
+    (state) => state
+  );
   const { user, setUser } = userInfoStore((state) => state);
-  const searchTerm = useSearchTerm();
   const [isCreatingNewProject, setIsCreatingNewProject] = useState(false);
   const [loading, setLoading] = useState(true);
   const search = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     fetchProjects();
-  }, []);
+  }, [search.get("query"), search.get("page")]);
 
   function fetchProjects() {
-    fetch(`/api/v1/projects?offset=${search.get("offset") || 0}`)
+    setLoading(true);
+    fetch(`/api/v1/projects?${search.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         setProjects(data.projects, data.total);
         setLoading(false);
         console.log(data);
+      })
+      .catch((err) => {
+        if (err instanceof Error) {
+          console.error(err);
+          toast.error("Failed to fetch projects", {
+            description: err.message,
+          });
+        }
+        setLoading(false);
       });
   }
 
-  const setView = (preference: DashboardViews) => {
-    if (!user) {
-      return;
+  const handleSearch = useDebouncedCallback((term) => {
+    console.log(`Searching... ${term}`);
+    const params = new URLSearchParams(search);
+    if (term) {
+      params.set("query", term);
+    } else {
+      params.delete("query");
     }
+    router.replace(`${pathname}?${params.toString()}`);
+  }, 300);
 
-    fetch("/api/user/save-dashboard-preference", {
+  useEffect(() => {
+    if (
+      !projects ||
+      (projects.length === 0 && !search.get("query") && !loading)
+    ) {
+      setIsCreatingNewProject(true);
+    }
+  }, [projects]);
+
+  function changeDashboardView(view: DashboardView) {
+    fetch("/api/v1/user", {
       method: "PATCH",
       body: JSON.stringify({
-        preference,
+        savedDashboardView: view,
       }),
     });
 
-    setUser({ ...user, savedDashboardView: preference });
-  };
-
-  if (projects.length === 0 && !searchTerm && !loading) {
-    return (
-      <div className='flex size-full items-center justify-center'>
-        <CreateFirstProject />
-      </div>
-    );
+    setUser({ ...user!, savedDashboardView: view });
   }
+
+  const page = parseInt(search.get("page") || "1");
 
   return (
     <>
-      <div>
-        <div className='mt-3 flex justify-between space-x-6'>
-          <div className='space-y-0.5'>
+      <div
+        className={cn(
+          "fixed z-10 bg-background lg:pr-10",
+
+          "lg:w-[calc(100vw-var(--sidebar-width))]"
+        )}
+      >
+        <div className='mt-3 flex w-full justify-between space-x-6'>
+          <div className='z-10 w-11/12 space-y-0.5'>
             <h2 className='mt-4 text-2xl font-bold tracking-tight'>Projects</h2>
-            <p className='text-muted-foreground'>
+            <p className='hidden text-muted-foreground lg:block'>
               Select a project to manage files and estimates.
             </p>
           </div>
-          <div className='flex min-w-[100px] flex-col space-y-4'>
+          <div className='ml-auto flex min-w-[100px] flex-col space-y-4'>
             <Button onClick={() => setIsCreatingNewProject((i) => !i)}>
               New Project
             </Button>
           </div>
         </div>
         <div className='mt-5 flex justify-between'>
-          {/* <ProjectSearch /> */}
-          <Input placeholder='Search projects...' className='max-w-96' />
+          <Input
+            placeholder='Search projects...'
+            onChange={(e) => handleSearch(e.target.value)}
+            className='w-full lg:max-w-96'
+            defaultValue={search.get("query") ?? ""}
+          />
           <Tabs
-            defaultValue={user?.savedDashboardView || DashboardViews.listView}
-            onValueChange={(e) => setView(e as DashboardViews)}
+            defaultValue={user?.savedDashboardView || "listView"}
+            onValueChange={(e) => changeDashboardView(e as DashboardView)}
           >
-            <TabsList>
-              <TabsTrigger value={DashboardViews.listView}>
-                List View
-              </TabsTrigger>
-              <TabsTrigger value={DashboardViews.boardView}>
-                Board View
-              </TabsTrigger>
+            <TabsList
+              className='hidden lg:block'
+              defaultValue={user?.savedDashboardView ?? "listView"}
+            >
+              <TabsTrigger value={"listView"}>List View</TabsTrigger>
+              <TabsTrigger value={"boardView"}>Board View</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
       </div>
 
-      {loading ? (
-        <LoadingPlaceholder />
-      ) : (
-        <div className='flex flex-col justify-start'>
-          <View />
-          <Pagination className='mt-5'>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious href='#' />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink href='#'>1</PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink href='#' isActive>
-                  2
-                </PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink href='#'>3</PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationNext href='#' />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
+      <div className='mt-40'>
+        {loading ? (
+          <LoadingPlaceholder />
+        ) : (
+          <div className='flex flex-col justify-start'>
+            <View />
+            {user?.savedDashboardView === "listView" && (
+              <Pagination className='mt-5'>
+                <PaginationContent>
+                  <PaginationItem>
+                    {page !== 1 && (
+                      <PaginationPrevious href={`/projects?page=${page - 1}`} />
+                    )}
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationLink isActive>{page}</PaginationLink>
+                  </PaginationItem>
+                  {totalProjects > 10 * page && (
+                    <PaginationItem>
+                      <PaginationLink
+                        href={`/projects?page=${page + 1}`}
+                        isActive
+                      >
+                        {page + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )}
+                  {totalProjects > 10 * page && (
+                    <PaginationItem>
+                      <PaginationNext href={`/projects?page=${page + 1}`} />
+                    </PaginationItem>
+                  )}
+                </PaginationContent>
+              </Pagination>
+            )}
+          </div>
+        )}
+      </div>
       <CreateNewProject
         open={isCreatingNewProject}
         setOpen={setIsCreatingNewProject}
@@ -174,7 +209,7 @@ export default function ProjectList({
 
   function View() {
     switch (user?.savedDashboardView) {
-      case DashboardViews.listView:
+      case "listView":
         return (
           <Card>
             <Table />
@@ -185,16 +220,10 @@ export default function ProjectList({
           //   isFetching={false}
           // />
         );
-      case DashboardViews.boardView:
-        return <ProjectBoardView redirectTo={redirectTo} />;
-      case DashboardViews.mapView:
-        return <ProjectMapView />;
-      default:
-        return (
-          <Card>
-            <Table />
-          </Card>
-        );
+      case "boardView":
+        return <KanBan />;
+      case "mapView":
+        return <></>;
     }
   }
 }
@@ -241,7 +270,7 @@ export const Table = () => {
           </div>
           <div>
             <span className='font-medium'>{row.original.name}</span>
-            <div className='flex items-center gap-1 text-xs text-muted-foreground'>
+            <div className='hidden items-center gap-1 text-xs text-muted-foreground lg:flex'>
               <span>{row.original.location}</span>
               <ChevronRightIcon size={12} />
               <span>{row.original.clientName}</span>
@@ -266,7 +295,9 @@ export const Table = () => {
       header: ({ column }) => (
         <TableColumnHeader column={column} title='Assignee' />
       ),
-      cell: ({ row }) => row.original.assignees[0].User?.firstName ?? "No User",
+      cell: ({ row }) =>
+        row.original.assignees.find((_, i) => i === 0)?.User?.firstName ??
+        "No User",
     },
     {
       accessorKey: "status",
@@ -306,5 +337,100 @@ export const Table = () => {
         )}
       </TableBody>
     </TableProvider>
+  );
+};
+
+function getPFPUrl(id: string) {
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profile-pictures/${id}/avatar.png`;
+}
+
+export const KanBan = () => {
+  const { projects, updateProject } = projectsStore((state) => state);
+  const status = statusStore((state) => state);
+  const [statuses, setStatuses] = useState<Status[]>([]);
+
+  useEffect(() => {
+    status.getStatuses().then((data) => {
+      console.log(data);
+      setStatuses(data);
+    });
+  }, []);
+  const router = useRouter();
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over) {
+      console.log("no over");
+      return;
+    }
+
+    const project = projects.find((p) => p.publicId === active.id);
+
+    console.log("project", project?.status);
+    console.log("over", over.id);
+
+    if (project?.status === over.id.toString().toLowerCase()) {
+      router.push(`/projects/${project.publicId}/overview`);
+      return;
+    } else {
+      updateProject({ ...project!, status: over.id.toString().toLowerCase() });
+    }
+
+    console.log(event);
+  };
+
+  return (
+    <KanbanProvider onDragEnd={handleDragEnd} className='p-4'>
+      {statuses.map((status) => (
+        <KanbanBoard key={status.id} id={status.label} className='min-w-64'>
+          <KanbanHeader name={status.label} color={status.color} />
+          <KanbanCards>
+            {projects
+              .filter(
+                (feature) => feature.status === status.label.toLowerCase()
+              )
+              .map((feature, index) => (
+                <KanbanCard
+                  key={feature.id}
+                  id={feature.publicId}
+                  name={feature.name}
+                  parent={status.label}
+                  index={index}
+                  className='min-w-60'
+                  onClick={() =>
+                    router.push(`/projects/${feature.publicId}/overview`)
+                  }
+                >
+                  <div className='flex items-start justify-between gap-2'>
+                    <div className='flex flex-col gap-1'>
+                      <p className='m-0 flex-1 text-sm font-medium'>
+                        {feature.name}
+                      </p>
+                      <p className='m-0 max-w-60 text-xs text-muted-foreground'>
+                        {feature.location}
+                      </p>
+                    </div>
+                    {feature.assignees.length > 0 && (
+                      <Avatar className='size-4 shrink-0'>
+                        <AvatarImage
+                          src={getPFPUrl(feature.assignees[0].userId)}
+                        />
+                        <AvatarFallback>
+                          {`${feature.assignees[0].User?.firstName.slice(0, 2)}`}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                  </div>
+                  {/* <p className='m-0 text-xs text-muted-foreground'>
+                    {shortDateFormatter.format(feature.startAt)} -{" "}
+                    {dateFormatter.format(feature.endAt)}
+                  </p> */}
+                </KanbanCard>
+              ))}
+          </KanbanCards>
+        </KanbanBoard>
+      ))}
+    </KanbanProvider>
   );
 };

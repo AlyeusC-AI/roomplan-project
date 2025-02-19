@@ -1,17 +1,18 @@
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { FileObject } from "@supabase/storage-js";
 import { useParams } from "next/navigation";
 import { event } from "nextjs-google-analytics";
 import { orgStore } from "@atoms/organization";
 import { projectStore } from "@atoms/project";
 
-import TabTitleArea from "../TabTitleArea";
-
 import FileEmptyState from "./FileEmptyState";
 import FileList from "./FileList";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@components/ui/spinner";
-import { Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
+import { createClient } from "@lib/supabase/client";
+import { buttonVariants } from "@components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
 
 function downloadFile(file: File) {
   // Create a link and set the URL using `createObjectURL`
@@ -34,17 +35,36 @@ function downloadFile(file: File) {
 
 const FileUploader = () => {
   const [isUploading, setIsUploading] = useState(false);
-  const files = projectStore((state) => state.projectFiles);
+  const files = projectStore();
   const orgInfo = orgStore((state) => state.organization);
+  const supabase = createClient();
 
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
+
+  useEffect(() => {
+    fetch(`/api/v1/projects/${id}/files`)
+      .then((res) => res.json())
+      .then((data) => {
+        files.setFiles(data);
+        console.log(data.files);
+      });
+    fetch(`/api/v1/projects/${id}/reports`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        // files.setReports(data);
+      });
+  }, []);
 
   const onUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     event("attempt_upload_file", {
       category: "Header",
     });
-    if (!files || files.length < 0) return;
+    if (!files || files.length < 0) {
+      toast.error("No file selected.");
+      return;
+    }
     uploadToSupabase(files[0]);
   };
 
@@ -54,26 +74,42 @@ const FileUploader = () => {
     try {
       const body = new FormData();
       body.append("file", file);
-      const res = await fetch(`/api/project/${id}/file-upload`, {
-        method: "POST",
-        body: body,
-      });
-      if (res.ok) {
-        // @ts-expect-error dont even know whats going on here
-        setFiles((oldFiles) => [
-          ...oldFiles,
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const { data } = await supabase.storage
+        .from("user-files")
+        .upload(
+          `${user?.user_metadata.organizationid}/${files.project?.publicId}/${file.name}`,
+          await file.bytes(),
           {
-            name: file.name,
-            created_at: new Date().toDateString(),
-            metadata: {
-              mimetype: file.type,
-            },
-          },
-        ]);
-        toast.success("Uploaded File");
-      } else {
-        toast.error("Failed to upload file.");
-      }
+            upsert: true,
+            contentType: file.type,
+          }
+        );
+      files.addFile({
+        name: file.name,
+        created_at: new Date().toDateString(),
+        metadata: {
+          mimetype: file.type,
+        },
+        bucket_id: "",
+        updated_at: new Date().toDateString(),
+        owner: user!.id,
+        id: data!.id,
+        buckets: {
+          id: "",
+          name: "",
+          created_at: "",
+          updated_at: "",
+          owner: "",
+          public: true,
+        },
+        last_accessed_at: new Date().toDateString(),
+      });
+      toast.success("Uploaded File");
     } catch (error) {
       console.error(error);
       toast.error("Failed to upload file.");
@@ -99,7 +135,7 @@ const FileUploader = () => {
 
   const onDelete = async (file: FileObject) => {
     try {
-      const res = await fetch(`/api/project/${id}/file`, {
+      const res = await fetch(`/api/v1/projects/${id}/files`, {
         method: "DELETE",
         body: JSON.stringify({
           filename: `${orgInfo?.publicId}/${id}/${file.name}`,
@@ -119,47 +155,57 @@ const FileUploader = () => {
   };
 
   return (
-    <div>
-      <TabTitleArea
-        title='Project Files'
-        description='Securely store files related to a project'
-      >
-        <>
-          {files.length > 0 && (
-            <div className='flex justify-end'>
-              <label
-                htmlFor='file-upload'
-                className='inline-flex items-center justify-center rounded-md border border-transparent px-2 py-1 text-sm font-medium text-white shadow-sm hover:cursor-pointer hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto md:px-4 md:py-2'
-              >
-                {isUploading ? (
-                  <LoadingSpinner />
-                ) : (
-                  <>
-                    {" "}
-                    <Plus className='-ml-1 mr-2 size-5' aria-hidden='true' />
-                    Upload File
-                  </>
-                )}
-              </label>
-              <input
-                onChange={onUpload}
-                type='file'
-                id='file-upload'
-                name='file-upload'
-                className='hidden'
-                disabled={isUploading}
-              />
-            </div>
-          )}
-        </>
-      </TabTitleArea>
+    <div className='space-y-4'>
+      <div className='flex items-center justify-between'>
+        <div>
+          <h3 className='text-lg font-medium'>Project Files</h3>
+          <p className='text-sm text-muted-foreground'>
+            Securely store files related to a project
+          </p>
+        </div>
+        <div className='flex justify-end'>
+          <label
+            htmlFor='file-upload'
+            className={buttonVariants({ variant: "outline" })}
+          >
+            {isUploading ? (
+              <LoadingSpinner />
+            ) : (
+              <>
+                {" "}
+                <Plus className='-ml-1 mr-2 size-5' aria-hidden='true' />
+                Upload File
+              </>
+            )}
+          </label>
+          <input
+            onChange={onUpload}
+            type='file'
+            id='file-upload'
+            name='file-upload'
+            className='hidden'
+            disabled={isUploading}
+          />
+        </div>
+      </div>
+      {files.pendingReports && files.pendingReports.length > 0 && (
+        <Alert>
+          <Check className='size-4' />
+          <AlertTitle>Roof report ordered!</AlertTitle>
+          <AlertDescription>
+            Your roof report is being generated and will available within 24
+            hours. Your roof report .esx file will be on this page once
+            it&apos;s ready
+          </AlertDescription>
+        </Alert>
+      )}
       <div>
-        {files.length === 0 ? (
+        {files.projectFiles.length === 0 ? (
           <FileEmptyState onChange={onUpload} isUploading={isUploading} />
         ) : (
           <div>
             <FileList
-              files={files}
+              files={files.projectFiles}
               onDownload={onDownload}
               onDelete={onDelete}
             />

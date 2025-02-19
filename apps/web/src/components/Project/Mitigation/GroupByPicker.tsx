@@ -1,44 +1,33 @@
-import { GroupByViews } from "@servicegeek/db";
-import { trpc } from "@utils/trpc";
-
 import FilterLabel from "./FilterLabel";
 import { Button } from "@components/ui/button";
-import { Calendar, ChevronDown, Home } from "lucide-react";
+import { Calendar, Home } from "lucide-react";
+import { userInfoStore } from "@atoms/user-info";
 
 export default function GroupByPicker() {
-  const utils = trpc.useUtils();
-  const groupView = trpc.groupView.getGroupView.useQuery();
-  const setPhotoView = trpc.groupView.setGroupView.useMutation({
-    async onMutate({ view }) {
-      await utils.groupView.getGroupView.cancel();
-      const prevData = utils.groupView.getGroupView.getData();
-      utils.groupView.getGroupView.setData(undefined, { groupView: view });
-      return { prevData, view };
-    },
-    onError(err, _, ctx) {
-      if (ctx?.prevData)
-        utils.groupView.getGroupView.setData(undefined, ctx.prevData);
-    },
-    onSettled() {
-      utils.groupView.getGroupView.invalidate();
-    },
-  });
-  const isRoomView = groupView.data?.groupView === GroupByViews.roomView;
+  const user = userInfoStore();
 
   const onClick = () => {
-    setPhotoView.mutate({
-      view:
-        groupView.data?.groupView === GroupByViews.roomView
-          ? GroupByViews.dateView
-          : GroupByViews.roomView,
+    const newView =
+      user.user?.groupView == "dateView" ? "roomView" : "dateView";
+    user.updateUser({
+      groupView: newView,
+    });
+    fetch("/api/v1/user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        groupView: newView,
+      }),
     });
   };
 
   return (
     <div className='flex flex-col'>
       <FilterLabel>Group By</FilterLabel>
-      <Button onClick={onClick}>
-        {!isRoomView ? (
+      <Button variant='outline' onClick={onClick}>
+        {user.user?.groupView == "dateView" ? (
           <>
             <Calendar className='mr-2 size-5' />
             Date
@@ -49,7 +38,6 @@ export default function GroupByPicker() {
             Room
           </>
         )}
-        <ChevronDown className='ml-2 size-4' />
       </Button>
     </div>
   );

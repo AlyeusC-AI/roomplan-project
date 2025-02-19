@@ -1,30 +1,23 @@
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
-import TextareaAutosize from "react-textarea-autosize";
-import { TertiaryButton } from "@components/components/button";
-import { Notes, NotesAuditTrail } from "@servicegeek/db";
+import { useState } from "react";
 import clsx from "clsx";
 import { format, formatDistance } from "date-fns";
-import debounce from "lodash.debounce";
-import { useRouter } from "next/router";
 import { roomStore } from "@atoms/room";
-import { Trash } from "lucide-react";
+import { Pencil, Trash } from "lucide-react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@components/ui/spinner";
+import { Button } from "@components/ui/button";
+import { useParams } from "next/navigation";
+import { Textarea } from "@components/ui/textarea";
 
-const Note = ({
-  roomPublicId,
-  note,
-}: {
-  roomPublicId: string;
-  note: Notes & { notesAuditTrail: NotesAuditTrail[] };
-}) => {
-  const [loading, setLoading] = useState(false);
+const Note = ({ roomPublicId, note }: { roomPublicId: string; note: Note }) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [body, setBody] = useState(note.body);
 
-  const router = useRouter();
-  const onSave = async (body: string) => {
+  const onSave = async () => {
     try {
-      const res = await fetch(`/api/project/${router.query.id}/room-note`, {
+      setIsEditing(true);
+      const res = await fetch(`/api/v1/projects/${id}/notes`, {
         method: "PATCH",
         body: JSON.stringify({
           roomId: roomPublicId,
@@ -42,6 +35,8 @@ const Note = ({
             json.result.notesAuditTrail,
             json.result.updatedAt
           );
+
+        toast.success("Note saved");
         // setRooms((oldRooms) => {
         //   return produce(oldRooms, (draft) => {
         //     const roomIndex = draft.findIndex(
@@ -60,17 +55,23 @@ const Note = ({
         //   })
         // })
       } else {
+        toast.error("Failed to save room note");
         console.error("Failed to save room note");
       }
     } catch (error) {
+      toast.error("Failed to save note.");
       console.log(error);
     }
+
+    setIsEditing(false);
   };
+
+  const { id } = useParams<{ id: string }>();
 
   const onDeleteNote = async () => {
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/project/${router.query.id}/room-note`, {
+      const res = await fetch(`/api/v1/projects/${id}/notes`, {
         method: "DELETE",
         body: JSON.stringify({
           roomId: roomPublicId,
@@ -89,41 +90,33 @@ const Note = ({
     setIsDeleting(false);
   };
 
-  const saveHandler = async (
-    e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLTextAreaElement>
-  ) => {
-    if (!e || !e.target || !e.target.value || !e.target.validity.valid) {
-      return;
-    }
-    setLoading(true);
-    await onSave(e.target.value);
-    setLoading(false);
-  };
-
-  const debouncedChangeHandler = useMemo(() => debounce(saveHandler, 500), []);
-
-  useEffect(() => {
-    return () => {
-      debouncedChangeHandler.cancel();
-    };
-  }, []);
-
   return (
     <div className='mt-6 border-l-2 border-gray-500 pl-4'>
       <div className='grid grid-cols-2 gap-6'>
         <div className='col-span-1 flex items-center justify-between'>
           <h4>{format(new Date(note.date), "PPp")}</h4>
-          <TertiaryButton
-            variant='danger'
-            onClick={() => onDeleteNote()}
-            loading={isDeleting}
-          >
-            <Trash className='h-6' />
-          </TertiaryButton>
+          <div className='flex items-center space-x-2'>
+            <Button variant='outline' onClick={onSave} disabled={isEditing}>
+              {isEditing ? (
+                <LoadingSpinner />
+              ) : (
+                <>
+                  Update <Pencil className='h-6' />
+                </>
+              )}
+            </Button>
+            <Button
+              variant='destructive'
+              onClick={() => onDeleteNote()}
+              disabled={isDeleting}
+            >
+              {isDeleting ? <LoadingSpinner /> : <Trash className='h-6' />}
+            </Button>
+          </div>
         </div>
         <div className='col-start-1'>
           <div className={clsx("relative mt-1 rounded-md shadow-sm")}>
-            <TextareaAutosize
+            <Textarea
               name={note.publicId}
               id={note.publicId}
               className={clsx(
@@ -131,19 +124,8 @@ const Note = ({
               )}
               placeholder='Take notes for this room'
               defaultValue={note.body}
-              onChange={debouncedChangeHandler}
-              maxRows={10}
-              minRows={3}
+              onChange={(e) => setBody(e.target.value)}
             />
-            <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3'>
-              <span
-                className={clsx(
-                  "flex flex-row-reverse text-gray-500 sm:text-sm"
-                )}
-              >
-                {loading && <LoadingSpinner />}
-              </span>
-            </div>
           </div>
           <div className='mt-2 text-xs'>
             {note.updatedAt && (
@@ -153,11 +135,11 @@ const Note = ({
                   {formatDistance(new Date(note.updatedAt), Date.now(), {
                     addSuffix: true,
                   })}
-                  {note.notesAuditTrail?.length > 0 &&
-                    note.notesAuditTrail[0].userName && (
+                  {note.NotesAuditTrail?.length > 0 &&
+                    note.NotesAuditTrail[0].userName && (
                       <>
                         {" "}
-                        by <strong>{note.notesAuditTrail[0].userName}</strong>
+                        by <strong>{note.NotesAuditTrail[0].userName}</strong>
                       </>
                     )}
                 </p>

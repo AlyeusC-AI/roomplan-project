@@ -1,25 +1,64 @@
 import { supabaseServiceRole } from "@lib/supabase/admin";
-import { createClient } from "@lib/supabase/server";
+import { user } from "@lib/supabase/get-user";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = await createClient();
-  const jwt = req.headers.get("auth-token");
-
-  await supabase.auth.getUser(jwt ?? undefined);
+  await user(req);
 
   const id = (await params).id;
-  console.log("id", id);
+
+  try {
+    const projectRaw: { data: FlatProject | null } = await supabaseServiceRole
+      .from("Project")
+      .select("*")
+      .eq("publicId", id)
+      .single();
+
+    const project: Project = {
+      ...projectRaw.data!,
+      images: [],
+      assignees: [],
+    };
+
+    const assignees = await supabaseServiceRole
+      .from("UserToProject")
+      .select("*, User (firstName, lastName, email)")
+      .eq("projectId", project.id);
+
+    project.assignees = assignees.data ?? [];
+
+    return NextResponse.json({
+      status: "ok",
+      data: project,
+    });
+  } catch (err) {
+    console.error("err", err);
+    return NextResponse.json({ status: "failed" }, { status: 500 });
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  await user(req);
+
+  const id = (await params).id;
+
+  const body = await req.json();
 
   try {
     const project = await supabaseServiceRole
       .from("Project")
+      .update(body)
+      .eq("publicId", id)
       .select("*")
-      .eq("publicId", "f8877dc3-cf9d-42ee-8a89-37d0623243b9")
       .single();
+
+    console.log(project.data);
 
     if (project.error) {
       console.log("project.error", project.error);

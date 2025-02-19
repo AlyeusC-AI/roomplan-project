@@ -66,7 +66,7 @@ export default function WelcomeModal() {
                             src='/images/onboarding/welcome.png'
                             height={992}
                             width={1308}
-                            alt='Welcome to ServiceGeek'
+                            alt='Welcome to RestoreGeek'
                           />
                         </div>
                       </div>
@@ -79,7 +79,7 @@ export default function WelcomeModal() {
                       <div className='mt-8 flex flex-col items-center justify-center text-center'>
                         <p className='max-w-sm text-base text-gray-800'>
                           Let&apos;s get started. You and your team can now use
-                          ServiceGeek for free forever.
+                          RestoreGeek for free forever.
                         </p>
                       </div>
                     </div>
@@ -136,7 +136,7 @@ export default function WelcomeModal() {
                       </Dialog.Title>
                       <div className='mt-8 flex items-center justify-center text-center'>
                         <p className='max-w-sm text-base text-gray-800'>
-                          Download the ServiceGeek mobile application to quickly
+                          Download the RestoreGeek mobile application to quickly
                           snap photos, take notes, and record readings while in
                           the field.
                         </p>

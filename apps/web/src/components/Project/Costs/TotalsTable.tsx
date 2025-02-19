@@ -1,11 +1,13 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
-import Pill from "@components/DesignSystem/Pills/Pill";
 import clsx from "clsx";
 import debounce from "lodash.debounce";
-import { useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { costsStore } from "@atoms/costs";
+import { Card } from "@components/ui/card";
+import { Badge } from "@components/ui/badge";
+import { toast } from "sonner";
 // Create our number formatter.
 const formatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -31,19 +33,20 @@ const TotalsTable = ({ rcvValue }: { rcvValue: number }) => {
     [costs]
   );
 
-  const router = useSearchParams();
+  const { id } = useParams();
 
   const saveValue = async (rcvValue: string) => {
     const stripped = rcvValue.replaceAll(",", "").replaceAll("$", "");
     const v = stripped ? parseFloat(stripped) : 0;
     try {
-      await fetch(`/api/project/${router?.get("id")}/value`, {
+      await fetch(`/api/v1/projects/${id}`, {
         method: "PATCH",
-        body: JSON.stringify({
-          data: { rcvValue: v },
-        }),
+        body: JSON.stringify({ rcvValue: v }),
       });
+
+      toast.success("Updated project successfully");
     } catch (error) {
+      toast.error("Failed to update project");
       console.error(error);
     }
   };
@@ -66,15 +69,18 @@ const TotalsTable = ({ rcvValue }: { rcvValue: number }) => {
 
   return (
     <dl className='mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3'>
-      <div className='overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6'>
+      {/* <div className='overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6'>
+        
+      </div> */}
+      <Card className='p-3'>
         <dt className='truncate text-sm font-medium text-gray-500'>
           Total Estimate Amount
         </dt>
-        <dd className='mt-1 text-3xl font-semibold tracking-tight text-gray-900'>
+        <dd className='mt-1 text-3xl font-semibold tracking-tight text-foreground'>
           {/* TODO: Input field */}
           {/* {formatter.format(totalEstimate)} */}
           <input
-            className='w-full border-b border-gray-100 placeholder:text-sm'
+            className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm'
             value={rv || ""}
             onBlur={(e) => {
               const stripped = e.target.value
@@ -98,24 +104,30 @@ const TotalsTable = ({ rcvValue }: { rcvValue: number }) => {
             }}
           />
         </dd>
-      </div>
-      <div className='overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6'>
+      </Card>
+      {/* <div className='overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6'>
+        
+      </div> */}
+      <Card className='p-3'>
         <dt className='truncate text-sm font-medium text-gray-500'>
           Total Contracted Cost
         </dt>
-        <dd className='mt-1 text-3xl font-semibold tracking-tight text-gray-900'>
+        <dd className='mt-3 text-3xl font-semibold tracking-tight text-foreground'>
           {formatter.format(totalActual)}
         </dd>
-      </div>
-      <div className='overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6'>
+      </Card>
+      {/* <div className='overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6'>
+        
+      </div> */}
+      <Card className='p-3'>
         <dt className='truncate text-sm font-medium text-gray-500'>
           Total Difference
         </dt>
         {strippedRv && !isNaN(parseFloat(strippedRv)) ? (
-          <>
+          <div className='mt-3 flex justify-between'>
             <dd
               className={clsx(
-                "mt-1 text-3xl font-semibold tracking-tight",
+                "text-3xl font-semibold tracking-tight",
                 parseFloat(strippedRv) - totalActual === 0 && "text-gray-900",
                 parseFloat(strippedRv) - totalActual < 0 && "text-red-700",
                 parseFloat(strippedRv) - totalActual > 0 && "text-green-700"
@@ -125,32 +137,31 @@ const TotalsTable = ({ rcvValue }: { rcvValue: number }) => {
             </dd>
             {parseFloat(strippedRv) > 0 &&
               parseFloat(strippedRv) - totalActual > 0 && (
-                <Pill color='green' size='sm'>
+                <Badge color='green'>
                   {(
                     ((parseFloat(strippedRv) - totalActual) /
                       parseFloat(strippedRv)) *
                     100
                   ).toFixed(2)}
                   %
-                </Pill>
+                </Badge>
               )}
             {parseFloat(strippedRv) > 0 &&
               parseFloat(strippedRv) - totalActual < 0 && (
-                <Pill color='red' size='sm'>
+                <Badge variant='default'>
                   {(
                     ((parseFloat(strippedRv) - totalActual) /
                       parseFloat(strippedRv)) *
                     100
                   ).toFixed(2)}
                   %
-                </Pill>
+                </Badge>
               )}
-          </>
+          </div>
         ) : (
-          <div className='mt-1 text-3xl font-semibold tracking-tight'>--</div>
+          <div className='text-3xl font-semibold tracking-tight'>--</div>
         )}
-        {/* TODO: Show percentage  */}
-      </div>
+      </Card>
     </dl>
   );
 };

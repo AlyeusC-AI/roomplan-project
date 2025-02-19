@@ -3,17 +3,18 @@ import "@/styles/tailwind.css";
 import { Metadata, Viewport } from "next";
 import clsx from "clsx";
 import Providers from "@components/providers";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: {
-    default: "ServiceGeek",
-    template: "ServiceGeek - %s",
+    default: "RestoreGeek",
+    template: "RestoreGeek - %s",
   },
   keywords: [
     "servicegeek",
     "restorationx",
     "restoration",
-    "servicegeek.app",
+    "restoregeek.app",
     "service geek",
   ],
   description: "Hono x Lucia",
@@ -35,7 +36,9 @@ export default function RootLayout({ children }: React.PropsWithChildren) {
   return (
     <html lang='en' dir='ltr' suppressHydrationWarning>
       <body className={clsx("h-screen bg-background")}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <Suspense>{children}</Suspense>
+        </Providers>
       </body>
     </html>
   );

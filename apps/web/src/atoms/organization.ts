@@ -6,14 +6,25 @@ interface State {
 }
 
 interface Actions {
-  setOrganization: (organization: Organization) => void;
+  setOrganization(): Promise<Organization>;
+  setOrganizationLocal(organization: Organization): void;
 }
 
 export const orgStore = create<State & Actions>()(
   persist(
     (set) => ({
       organization: null,
-      setOrganization: (organization) => set(() => ({ organization })),
+      setOrganization: async () => {
+        const res = await fetch("/api/v1/organization");
+        const json = await res.json();
+
+        set(() => ({ organization: json }));
+
+        return json
+      },
+      setOrganizationLocal: (organization) => {
+        set(() => ({ organization }));
+      },
     }),
     {
       name: "orgInfo",

@@ -1,6 +1,8 @@
 import React from "react";
 import { orgStore } from "@atoms/organization";
 import { projectStore } from "@atoms/project";
+import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
+import { CircleAlert } from "lucide-react";
 
 const requiredAttributes = {
   name: "Client name",
@@ -20,21 +22,24 @@ export default function MissingDataWarning() {
   const orgInfo = orgStore((state) => state.organization);
 
   const isMissingProjectInfo = Object.keys(requiredAttributes).find(
-    (key) => !projectInfo[key as keyof typeof requiredAttributes]
+    (key) => !projectInfo![key as keyof typeof requiredAttributes]
   );
   const isMissingOrgInfo = Object.keys(requiredOrgAttributes).find(
-    (key) => !orgInfo[key as keyof typeof requiredOrgAttributes]
+    (key) => !orgInfo![key as keyof typeof requiredOrgAttributes]
   );
   return (
     <>
-      {/* {(isMissingProjectInfo || isMissingOrgInfo) && (
-        <Alert
-          type='warning'
-          title='Certain information about the project is missing. This can lead to an incomplete report.'
-        >
-          <ul role='list' className='list-disc space-y-1 pl-5'>
+      {(isMissingProjectInfo || isMissingOrgInfo) && (
+        <Alert variant='destructive' className='my-4'>
+          <CircleAlert className='size-4' />
+          <AlertTitle>Missing Information</AlertTitle>
+          <AlertDescription>
+            Certain information about the project is missing. This can lead to
+            an incomplete report.
+          </AlertDescription>
+          <ul role='list' className='mt-3 list-disc space-y-1 pl-5'>
             {Object.keys(requiredAttributes).map((key) => {
-              if (projectInfo[key as keyof typeof requiredAttributes]) return;
+              if (projectInfo![key as keyof typeof requiredAttributes]) return;
               return (
                 <li key={key}>
                   {requiredAttributes[key as keyof typeof requiredAttributes]}
@@ -42,7 +47,7 @@ export default function MissingDataWarning() {
               );
             })}
             {Object.keys(requiredOrgAttributes).map((key) => {
-              if (orgInfo[key as keyof typeof requiredOrgAttributes]) return;
+              if (orgInfo![key as keyof typeof requiredOrgAttributes]) return;
               return (
                 <li key={key}>
                   {
@@ -55,7 +60,7 @@ export default function MissingDataWarning() {
             })}
           </ul>
         </Alert>
-      )} */}
+      )}
     </>
   );
 }

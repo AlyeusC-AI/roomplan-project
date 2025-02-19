@@ -13,9 +13,12 @@
     "build:dev:ios": "turbo build:dev:ios"
   },
   "devDependencies": {
+    "next": "15.1.6",
     "prettier": "^2.5.1",
-    "turbo": "latest",
-    "next": "15.1.6"
+    "turbo": "latest"
   },
-  "packageManager": "pnpm@9.9.0"
+  "packageManager": "pnpm@9.9.0",
+  "dependencies": {
+    "vercel": "^41.0.3"
+  }
 }

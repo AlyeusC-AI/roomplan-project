@@ -1,28 +1,40 @@
 import { useState } from "react";
-import Modal from "@components/DesignSystem/Modal";
-import { AccessLinkExpiration } from "@servicegeek/db";
-import { useRouter } from "next/router";
 import { Clipboard, Share } from "lucide-react";
-import { Button } from "@components/ui/button";
+import { Button, buttonVariants } from "@components/ui/button";
 import { useParams } from "next/navigation";
+import { LoadingPlaceholder, LoadingSpinner } from "@components/ui/spinner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+} from "@components/ui/dialog";
+import { toast } from "sonner";
 
-const expirationOptions = {
-  [AccessLinkExpiration.ONE_HOUR]: "1 Hour",
-  [AccessLinkExpiration.ONE_DAY]: "1 Day",
-  [AccessLinkExpiration.SEVEN_DAYS]: "7 Days",
-  [AccessLinkExpiration.FOURTEEN_DAYS]: "14 Days",
-  [AccessLinkExpiration.THIRTY_DAYS]: "30 Days",
-  [AccessLinkExpiration.NEVER]: "never",
+declare global {
+  type AccessLinkExpiration =
+    | "1-hour"
+    | "1-day"
+    | "7-days"
+    | "14-days"
+    | "30-days"
+    | "never";
+}
+
+const expirationOptions: Record<AccessLinkExpiration, string> = {
+  "1-hour": "1 Hour",
+  "1-day": "1 Day",
+  "7-days": "7 Days",
+  "14-days": "14 Days",
+  "30-days": "30 Days",
+  never: "never",
 };
 
 const CreateAccessLink = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [didCopy, setDidCopy] = useState(false);
 
-  const [selectedOption, setSelectedOption] = useState(
-    AccessLinkExpiration.SEVEN_DAYS
-  );
+  const [selectedOption, setSelectedOption] = useState<AccessLinkExpiration>("7-days");
   const [accessLinkId, setAccessLinkId] = useState("");
   const { id } = useParams<{ id: string }>();
 
@@ -32,7 +44,6 @@ const CreateAccessLink = () => {
 
   const onClose = () => {
     setAccessLinkId("");
-    setDidCopy(false);
     setIsCreating(false);
   };
 
@@ -56,86 +67,93 @@ const CreateAccessLink = () => {
   };
 
   const getLinkUrl = () =>
-    `https://www.servicegeek.app/secure-view/${accessLinkId}`;
+    `https://www.restoregeek.app/secure-view/${accessLinkId}`;
 
   const onCopyClick = () => {
     navigator.clipboard.writeText(getLinkUrl());
-    setDidCopy(true);
+    toast.success("Link copied to clipboard");
   };
   return (
     <>
-      <Button className='sm:w-full md:w-auto' onClick={() => onClick()}>
-        <Share className='h-6' />
+      <Button
+        variant='outline'
+        className='sm:w-full md:w-auto'
+        onClick={() => onClick()}
+      >
+        {isCreating ? <LoadingSpinner /> : <Share className='h-6' />}
       </Button>
-      <Modal open={isCreating} setOpen={onClose}>
-        {() => (
+      <Dialog open={accessLinkId.length > 0} onOpenChange={onClose}>
+        <DialogContent>
           <div>
             {accessLinkId ? (
               <div>
-                <h3 className='text-lg font-medium leading-6 text-gray-900'>
-                  Link Created
-                </h3>
-                <p className='my-2'>
+                <DialogHeader>Link Created</DialogHeader>
+                <DialogDescription>
                   Click the link below to copy it to your clipboard
-                </p>
+                </DialogDescription>
                 <div
                   onClick={() => onCopyClick()}
-                  className='flex cursor-pointer items-center justify-between rounded-sm border border-gray-300 text-sm shadow-sm hover:bg-gray-300 hover:shadow-md'
+                  className={buttonVariants({
+                    variant: "outline",
+                    className: "mt-3 w-full",
+                  })}
                 >
                   <div className='w-5/6 truncate p-3'>{getLinkUrl()}</div>
-                  <div className='flex items-center justify-center border-l border-gray-300 p-3'>
+                  <div className='justify-centerhover:border-none flex w-10 items-center p-3'>
                     <Clipboard className='h-6' />
                   </div>
                 </div>
-                {/* {didCopy && (
-                  <Alert title='Copied to clipboard!' type='success' />
-                )} */}
               </div>
             ) : (
               <div>
-                <h3 className='text-lg font-medium leading-6 text-gray-900'>
-                  Create Access Link
-                </h3>
-                <p className='my-2'>
-                  To create a secure link to share with anyone, select an
-                  expiration date for your link and copy the generated link.
-                  Once a link expires the contents will no longer be accessible.
-                </p>
-                <p className='my-2'>
-                  {" "}
-                  Viewers with a link will be able to view:
-                </p>
-                <ol className='list-disc pl-8'>
-                  <li>Client Name & Address</li>
-                  <li>Adjuster Name & Email</li>
-                  <li>All photos</li>
-                </ol>
-                <div className='flex items-end justify-between'>
-                  <div>
-                    <p className='mr-4 mt-4 font-medium'>Expires at:</p>
-                    <select
-                      defaultValue={selectedOption}
-                      className='rounded-md shadow-md'
-                      onChange={(e) =>
-                        setSelectedOption(
-                          e.target.value as AccessLinkExpiration
-                        )
-                      }
-                    >
-                      {Object.keys(expirationOptions).map((v) => (
-                        <option key={v} value={v}>
-                          {expirationOptions[v as AccessLinkExpiration]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <Button onClick={onCreateLink}>Create Link</Button>
-                </div>
+                {isLoading ? (
+                  <LoadingPlaceholder />
+                ) : (
+                  <>
+                    <DialogHeader>Create Access Link</DialogHeader>
+                    <DialogDescription>
+                      To create a secure link to share with anyone, select an
+                      expiration date for your link and copy the generated link.
+                      Once a link expires the contents will no longer be
+                      accessible.
+                    </DialogDescription>
+                    <p className='my-2'>
+                      {" "}
+                      Viewers with a link will be able to view:
+                    </p>
+                    <ol className='list-disc pl-8'>
+                      <li>Client Name & Address</li>
+                      <li>Adjuster Name & Email</li>
+                      <li>All photos</li>
+                    </ol>
+                    <div className='flex items-end justify-between'>
+                      <div>
+                        <p className='mr-4 mt-4 font-medium'>Expires at:</p>
+                        <select
+                          defaultValue={selectedOption}
+                          className='rounded-md p-3 shadow-md'
+                          onChange={(e) =>
+                            setSelectedOption(
+                              e.target.value as AccessLinkExpiration
+                            )
+                          }
+                        >
+                          {Object.keys(expirationOptions).map((v) => (
+                            <option key={v} value={v}>
+                              {expirationOptions[v as AccessLinkExpiration]}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <Button onClick={onCreateLink}>Create Link</Button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
-        )}
-      </Modal>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

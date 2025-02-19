@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { supabase } from "@/utils/supabase";
+import { supabase } from "@/lib/supabase";
 import {
   Heading,
   Button,
@@ -18,7 +18,7 @@ import RoomSelection from "../../components/RoomSelection";
 import { createClient } from "@supabase/supabase-js";
 import uuid from "react-native-uuid";
 import { api } from "../../utils/api";
-import { userStore } from "@/utils/state/user";
+import { userStore } from "@/lib/state/user";
 
 export const supabaseServiceRole = createClient(
   getConstants().supabaseUrl,

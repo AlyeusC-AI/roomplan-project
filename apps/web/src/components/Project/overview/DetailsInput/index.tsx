@@ -3,7 +3,6 @@
 import { toast } from "sonner";
 
 import AssignStakeholders from "./AssignStakeholders";
-import Form from "./Form";
 import InsuranceCompanyInformation from "./InsuranceCompanyInformation";
 import ProjectInformation from "./ProjectInformation";
 import PropertyOwnerInformation from "./PropertyOwnerInformation";
@@ -12,8 +11,6 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { teamMembersStore } from "@atoms/team-members";
 
-import FormContainer from "./FormContainer";
-import { trpc } from "@utils/trpc";
 import { projectStore } from "@atoms/project";
 import { MentionMetadata } from "@components/DesignSystem/Mentions/useMentionsMetadata";
 import { Button } from "@components/ui/button";
@@ -47,16 +44,15 @@ export default function DetailsInput() {
     setIsConfirming(false);
   };
 
-  const trpcContext = trpc.useUtils();
   const projectInfo = projectStore((state) => state.project);
   const teamMembers = teamMembersStore((state) => state.teamMembers);
 
-  const createProjectNote = trpc.projects.createProjectNote.useMutation();
-  const projectNotes = trpc.projects.getProjectNotes.useQuery({
-    projectId: projectInfo!.id,
-  });
-  const notes = projectNotes.data || [];
-  const notesLoading = projectNotes.isLoading;
+  // const createProjectNote = trpc.projects.createProjectNote.useMutation();
+  // const projectNotes = trpc.projects.getProjectNotes.useQuery({
+  //   projectId: projectInfo!.id,
+  // });
+  // const notes = projectNotes.data || [];
+  // const notesLoading = projectNotes.isLoading;
   const handleAddProjectNote = async ({
     note,
     mentions,
@@ -66,24 +62,24 @@ export default function DetailsInput() {
     mentions: string[];
     metadata: MentionMetadata[];
   }) => {
-    const res = await createProjectNote.mutateAsync(
-      {
-        projectPublicId: id as string,
-        body: note,
-        mentions,
-      },
-      {
-        onSettled: async () => {
-          await notifyMentions({
-            phoneNumbers: teamMembers()
-              .filter((tm) => mentions.includes(tm.userId))
-              .map((t) => t.user.phone),
-            metadata,
-          });
-          trpcContext.projects.getProjectNotes.invalidate();
-        },
-      }
-    );
+    // const res = await createProjectNote.mutateAsync(
+    //   {
+    //     projectPublicId: id as string,
+    //     body: note,
+    //     mentions,
+    //   },
+    //   {
+    //     onSettled: async () => {
+    //       await notifyMentions({
+    //         phoneNumbers: teamMembers
+    //           .filter((tm) => mentions.includes(tm.userId))
+    //           .map((t) => t.User.phone),
+    //         metadata,
+    //       });
+    //       trpcContext.projects.getProjectNotes.invalidate();
+    //     },
+    //   }
+    // );
   };
   const notifyMentions = async ({
     phoneNumbers,
@@ -117,13 +113,13 @@ export default function DetailsInput() {
       <Notes
         title='Project Notes'
         subTitle='Share notes with your team about this project. You can tag team members by @ to notify them of a note.'
-        notesData={notes}
-        isLoading={notesLoading}
+        notesData={[]}
+        isLoading={false}
         handleAddProjectNote={handleAddProjectNote}
       />
       <AssignStakeholders />
 
-      <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+      <div className='grid grid-cols-1 gap-6 xl:grid-cols-3'>
         <ProjectInformation />
         <InsuranceCompanyInformation />
       </div>

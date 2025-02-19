@@ -1,5 +1,5 @@
 curl -XPOST \
-        "https://qstash.upstash.io/v1/publish/https://www.servicegeek.app/api/cron/rekognition-check" \
+        "https://qstash.upstash.io/v1/publish/https://www.restoregeek.app/api/cron/rekognition-check" \
         -H "Authorization: Bearer ***" \
         -H "Content-Type: application/json" \
         -H "Upstash-Cron: */30 * * * *"
@@ -7,7 +7,7 @@ curl -XPOST \
 
 
         curl -XPOST \
-        "https://qstash.upstash.io/v1/publish/https://www.servicegeek.app/api/process/poll-rekognition" \
+        "https://qstash.upstash.io/v1/publish/https://www.restoregeek.app/api/process/poll-rekognition" \
         -H "Authorization: Bearer " \
         -H "Content-Type: application/json" \
         -H "Upstash-Cron: */30 * * * *"

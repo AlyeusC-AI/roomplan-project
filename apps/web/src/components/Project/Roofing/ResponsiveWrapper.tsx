@@ -4,9 +4,6 @@ import { useSearchParams } from "next/navigation";
 import { projectStore } from "@atoms/project";
 import FileList from "@components/Project/Files/FileList";
 import { PrimaryButton } from "@components/components/button";
-import MainContent from "@components/layouts/MainContent";
-import { subscriptionStore } from "@atoms/subscription-status";
-import { SubscriptionStatus } from "@servicegeek/db";
 import UpgradeModal from "@components/UpgradeModal";
 import { useState } from "react";
 import { userInfoStore } from "@atoms/user-info";
@@ -43,9 +40,6 @@ const ResponsiveWrapper = () => {
   const id = search?.get("id");
   const orgInfo = orgStore((state) => state.organization);
   const userInfo = userInfoStore((state) => state.user);
-  const subscriptionStatus = subscriptionStore(
-    (state) => state.subscriptionStatus
-  );
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
   const { project, projectFiles: files } = projectStore((state) => state);
@@ -109,7 +103,7 @@ const ResponsiveWrapper = () => {
   //           subscription_status: subscriptionStatus,
   //           customer_email: userInfo?.email,
   //           report_type: 'free', // this block is for free reports
-  //           support_email: `support+${orgInfo.publicId}@servicegeek.app`,
+  //           support_email: `support+${orgInfo.publicId}@restoregeek.app`,
   //         }),
   //       })
   //       if (ticketRes.ok) {
@@ -121,7 +115,7 @@ const ResponsiveWrapper = () => {
   //       }
 
   //       const supportemail = encodeURIComponent(
-  //         `support+${orgInfo.publicId}@servicegeek.app`
+  //         `support+${orgInfo.publicId}@restoregeek.app`
   //       )
   //       const res = await fetch(
   //         'https://hooks.slack.com/services/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',
@@ -134,7 +128,7 @@ const ResponsiveWrapper = () => {
   //                 type: 'section',
   //                 text: {
   //                   type: 'mrkdwn',
-  //                   text: `(free) New roof request for ${projectInfo.location}\n\n<https://www.servicegeek.app/projects/${id}/roofing|View Roof>`,
+  //                   text: `(free) New roof request for ${projectInfo.location}\n\n<https://www.restoregeek.app/projects/${id}/roofing|View Roof>`,
   //                 },
   //               },
   //               {
@@ -151,7 +145,7 @@ const ResponsiveWrapper = () => {
   //                     emoji: true,
   //                   },
   //                   value: 'login',
-  //                   url: `https://www.servicegeek.app/login?email=${supportemail}&redirect_type=roof`,
+  //                   url: `https://www.restoregeek.app/login?email=${supportemail}&redirect_type=roof`,
   //                   action_id: 'login',
   //                 },
   //               },
@@ -189,7 +183,7 @@ const ResponsiveWrapper = () => {
   //     )
   //   } catch (e) {
   //     toast.error(
-  //       'Roof report request failed. If the error persists please contact support@servicegeek.app'
+  //       'Roof report request failed. If the error persists please contact support@restoregeek.app'
   //     )
   //   }
   // }
@@ -215,7 +209,7 @@ const ResponsiveWrapper = () => {
             </div>
           </div>
         ) : (
-          <MainContent>
+          <>
             <div className='mb-4 flex justify-between space-x-6'>
               <div className='max-w-[220px] sm:max-w-none sm:flex-auto'>
                 <div className='col-span-2 flex-col'>
@@ -243,7 +237,7 @@ const ResponsiveWrapper = () => {
                     type='hidden'
                     name='priceId'
                     value={
-                      subscriptionStatus !== SubscriptionStatus.active
+                      orgInfo?.subscriptionPlan
                         ? "oneTimeRoofPurchaseFree"
                         : "oneTimeRoofPurchasePro"
                     }
@@ -252,17 +246,17 @@ const ResponsiveWrapper = () => {
                   <input
                     type='hidden'
                     name='client_address'
-                    value={project.location}
+                    value={project?.location ?? ""}
                   />
                   <input
                     type='hidden'
                     name='customer_name'
-                    value={orgInfo.name}
+                    value={orgInfo?.name ?? ""}
                   />
                   <input
                     type='hidden'
                     name='subscription_status'
-                    value={subscriptionStatus}
+                    value={"active"}
                   />
                   <input
                     type='hidden'
@@ -284,7 +278,7 @@ const ResponsiveWrapper = () => {
               style={{ height: "calc(100vh - 10rem)" }}
               src={`https://rapi-d-halo-ai.vercel.app/#background=Bing&datasets=fbRoads,msBuildings&disable_features=boundaries&map=21/${project.lat}/${project.lng}`}
             ></iframe>
-          </MainContent>
+          </>
         )}
       </div>
     </>

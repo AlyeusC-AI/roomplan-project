@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 import {
   ArrowLeft,
@@ -7,24 +7,68 @@ import {
   Images,
   StickyNote,
 } from "lucide-react-native";
-import { router, Tabs } from "expo-router";
-import { Text } from "react-native";
+import { router, Tabs, useGlobalSearchParams } from "expo-router";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { projectStore } from "@/lib/state/project";
+import { userStore } from "@/lib/state/user";
 
 export default function Layout() {
+  const { projectId } = useGlobalSearchParams();
+  const [loading, setLoading] = React.useState(true);
+  const project = projectStore();
+  const { session } = userStore((state) => state);
+
+  useEffect(() => {
+    fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "auth-token": session!.access_token,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setLoading(false);
+        console.log(data);
+        project.setProject(data.data);
+        console.log("Project fetched");
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <View className="flex items-center justify-center h-full w-full">
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: "#1e88e5",
+        headerTintColor: "white",
+        headerStyle: {
+          backgroundColor: "#1e88e5",
+        },
         headerLeft: () => (
-          <ArrowLeft onPress={() => router.dismiss()} color="black" />
+          <ArrowLeft
+            className="ml-3"
+            onPress={() => router.dismiss()}
+            color="white"
+          />
         ),
         headerRight: () => (
-          <Text
-            onPress={() => router.push({ pathname: "../edit" })}
-            style={{ fontWeight: "600", marginHorizontal: 10 }}
+          <TouchableOpacity
+            onPress={() => router.push({ pathname: "./edit" })}
           >
-            Edit
-          </Text>
+            <Text
+              className="text-white mr-3"
+              style={{ fontWeight: "600", paddingHorizontal: 10 }}
+            >
+              Edit
+            </Text>
+          </TouchableOpacity>
         ),
       }}
     >
@@ -36,12 +80,10 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
-        name="photos"
+        name="pictures"
         options={{
           title: "Photos",
-          tabBarIcon: ({ color }) => (
-            <Images size={24} color={color} />
-          ),
+          tabBarIcon: ({ color }) => <Images size={24} color={color} />,
         }}
       />
       <Tabs.Screen

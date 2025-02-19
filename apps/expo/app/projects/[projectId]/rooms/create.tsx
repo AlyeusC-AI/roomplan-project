@@ -1,91 +1,97 @@
 import { useState } from "react";
+import { userStore } from "@/lib/state/user";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { toast } from "sonner-native";
+import { Label } from "@/components/ui/label";
 import {
-  Button,
+  ActivityIndicator,
+  Keyboard,
+  TouchableOpacity,
   View,
-  FormControl,
-  Input,
-  Spinner,
-  Text,
-  HStack,
-} from "native-base";
-import { useToast } from "native-base";
-import { Keyboard, TouchableWithoutFeedback } from "react-native";
-import { api } from "@/utils/api";
-import { userStore } from "@/utils/state/user";
-import { router, useLocalSearchParams } from "expo-router";
+} from "react-native";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
+import { Input } from "@/components/ui/input";
+import { ChevronLeft } from "lucide-react-native";
+import { roomsStore } from "@/lib/state/rooms";
+import { roomInferenceStore } from "@/lib/state/readings-image";
 
 export default function RoomCreationScreen() {
   const [roomName, setRoomName] = useState("");
-  const toast = useToast();
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const { session: supabaseSession } = userStore((state) => state);
-  const { projectId, projectName } = useLocalSearchParams<{
+  const { projectId } = useLocalSearchParams<{
     projectId: string;
-    projectName: string;
   }>();
-  const queryParams = {
-    jwt: supabaseSession ? supabaseSession["access_token"] : "null",
-    projectPublicId: projectId,
-  };
-
-  const createRoomMutation = api.mobile.createNewRoom.useMutation();
 
   const createRoom = async () => {
     try {
-      await createRoomMutation.mutateAsync({
-        ...queryParams,
-        name: roomName,
-      });
+      Keyboard.dismiss();
+      if (roomName.length < 3) {
+        toast.error("Your room name must be at least 3 characters long.");
+        return;
+      }
+
+      setLoading(true);
+
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": supabaseSession?.access_token || "",
+          },
+          body: JSON.stringify({
+            name: roomName,
+          }),
+        }
+      );
+
+      const json = await res.json();
+
+      roomsStore.getState().addRoom({ ...json.room, RoomReading: [] });
+      roomInferenceStore.getState().addRoom({ ...json.room, Inference: [] });
+
       router.dismiss();
-    } catch (e) {
-      toast.show({
-        description: (
-          <HStack direction="row" space="2">
-            {/* <MaterialIcons name="error" size={24} color="red" /> */}
-            <Text color="white">
-              Could not create room. If this error persits, please contact
-              support@servicegeek.com
-            </Text>
-          </HStack>
-        ),
-        bottom: "16",
-      });
+    } catch {
+      toast.error(
+        "Could not create room. If this error persits, please contact support@servicegeek.com"
+      );
     }
+
+    setLoading(false);
   };
 
   return (
-    <View
-      bg="#fff"
-      alignItems="flex-start"
-      padding="4"
-      justifyContent="space-between"
-      h="full"
-      w="full"
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <FormControl mt="3">
-          <FormControl.Label color="">Add Room</FormControl.Label>
-          <Input
-            type="text"
-            placeholder="Room Name"
-            value={roomName}
-            onChangeText={(text) => setRoomName(text)}
-            size="lg"
-          />
-          <Button
-            mt={4}
-            w="full"
-            disabled={createRoomMutation.isLoading}
-            onPress={() => createRoom()}
-          >
-            {createRoomMutation.isLoading ? (
-              <Spinner color="white" size="sm" />
-            ) : (
-              "Create"
-            )}
-          </Button>
-        </FormControl>
-      </TouchableWithoutFeedback>
+    <View className="p-4 flex items-center">
+      <View className="flex flex-row items-center w-full">
+        <TouchableOpacity onPress={() => router.back()}>
+          <ChevronLeft color="black" />
+        </TouchableOpacity>
+        <Text className="text-2xl ml-28 font-bold">Create Room</Text>
+      </View>
+      <View className="w-full mt-8">
+        <Label nativeID="Room Name">Room Name</Label>
+        <Input
+          placeholder="Room Name"
+          value={roomName}
+          onChangeText={(text) => setRoomName(text)}
+        />
+        <Button
+          disabled={loading}
+          onPress={() => createRoom()}
+          className="mt-4"
+        >
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text>Create Room</Text>
+          )}
+        </Button>
+      </View>
     </View>
   );
 }

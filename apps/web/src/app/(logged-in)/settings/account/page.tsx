@@ -4,7 +4,7 @@ import { Separator } from "@components/ui/separator";
 
 export const metadata: Metadata = {
   title: "Account Settings",
-  description: "ServiceGeek account settings",
+  description: "RestoreGeek account settings",
   icons: ["/favicon.ico"],
 };
 

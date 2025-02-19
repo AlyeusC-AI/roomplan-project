@@ -13,6 +13,7 @@ const ResponsiveWrapper = () => {
       style: "mapbox://styles/mapbox/light-v11",
       center: [Number(projectInfo.lng), Number(projectInfo.lat)],
       zoom: 18,
+      accessToken: process.env.NEXT_PUBLIC_MAPBOX_API_KEY!,
       pitch: 45,
       bearing: -17.6,
       antialias: true,

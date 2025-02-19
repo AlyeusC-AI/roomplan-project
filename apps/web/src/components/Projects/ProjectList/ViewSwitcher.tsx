@@ -1,7 +1,6 @@
 // import React from 'react'
 // import { List, Table,  } from 'lucide-react'
 // import clsx from 'clsx'
-// import { DashboardViews } from '@servicegeek/db'
 
 // export default function ViewSwitcher({
 //   view,

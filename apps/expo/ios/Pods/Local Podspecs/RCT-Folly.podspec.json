@@ -14,15 +14,9 @@
   "module_name": "folly",
   "header_mappings_dir": ".",
   "dependencies": {
-    "boost": [
-
-    ],
-    "DoubleConversion": [
-
-    ],
-    "glog": [
-
-    ],
+    "boost": [],
+    "DoubleConversion": [],
+    "glog": [],
     "fmt": [
       "9.1.0"
     ]
@@ -97,8 +91,11 @@
     "HEADER_SEARCH_PATHS": "\"$(PODS_ROOT)/boost\""
   },
   "default_subspecs": "Default",
+  "resource_bundles": {
+    "RCT-Folly_privacy": "RCT-Folly/PrivacyInfo.xcprivacy"
+  },
   "platforms": {
-    "ios": "13.4"
+    "ios": "15.1"
   },
   "subspecs": [
     {

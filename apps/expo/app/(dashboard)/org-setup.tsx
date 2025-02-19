@@ -4,21 +4,6 @@ import {
   Platform,
   TouchableWithoutFeedback,
 } from "react-native";
-import {
-  Box,
-  FormControl,
-  Stack,
-  Input,
-  Button,
-  Heading,
-  KeyboardAvoidingView,
-  Center,
-  Spinner,
-  CheckIcon,
-  Select,
-  HStack,
-  useToast,
-} from "native-base";
 import { api } from "../../utils/api";
 
 // export default function OrganizationSetup({
@@ -142,8 +127,8 @@ import {
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import RNPickerSelect from "react-native-picker-select";
 import { ArrowRight } from "lucide-react-native";
-import { userStore } from "@/utils/state/user";
-import { Toast } from "toastify-react-native";
+import { userStore } from "@/lib/state/user";
+import { toast } from "sonner-native";
 import { router, useNavigation } from "expo-router";
 
 const sizes = ["1-10", "10-20", "20-50", "50-75", "75+"];
@@ -182,8 +167,8 @@ export default function OrganizationSetup() {
     if (org.id) {
       router.replace("/");
     } else {
-      Toast.error(
-        "Could not create organization. If this error persits, please contact support@servicegeek.app"
+      toast.error(
+        "Could not create organization. If this error persits, please contact support@restoregeek.app"
       );
     }
   }

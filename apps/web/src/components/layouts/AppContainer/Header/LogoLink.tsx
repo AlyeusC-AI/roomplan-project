@@ -182,7 +182,7 @@
 //                   <img
 //                     className='block h-8 w-auto'
 //                     src='/images/brand/servicegeek.svg'
-//                     alt='ServiceGeek'
+//                     alt='RestoreGeek'
 //                   />
 //                   <button
 //                     type='button'

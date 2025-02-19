@@ -1,5 +1,4 @@
 import { orgStore } from "@atoms/organization";
-import { projectReportStore } from "@atoms/project-report";
 
 import AffectedAreas from "./AffectedAreas";
 import DimensionsAndDetails from "./DimensionsAndDetails";
@@ -10,30 +9,33 @@ import PageCount from "./PageCount";
 import Readings from "./Readings";
 import TitlePage from "./TitlePage";
 import WeatherReporting from "./WeatherReporting";
+import { roomStore } from "@atoms/room";
+import Script from "next/script";
+
+import "@/styles/shared-pdf-styles.css";
+import "@/styles/unshared-pdf-styles.css";
 
 const PDFHTML = () => {
-  const orgInfo = orgStore((state) => state.organization);
-  const projectReportData = projectReportStore(
-    (state) => state.projectReportData
-  );
+  const rooms = roomStore((state) => state.rooms);
 
   return (
     <div className='flex'>
+      <Script
+        src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'
+        integrity='sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=='
+        crossOrigin='anonymous'
+        referrerPolicy='no-referrer'
+      />
       <div className='pdf-root w-[800px]'>
         <div id='pdf-root'>
           <div className='pdf pdf-reset'>
             <PageCount />
 
-            {orgInfo?.logoId && (
-              <LogoContainer
-                logoId={orgInfo.logoId}
-                publicId={orgInfo.publicId}
-              />
-            )}
+            {/* <LogoContainer publicId={orgInfo!.publicId} /> */}
             <TitlePage />
             <WeatherReporting />
 
-            {projectReportData?.rooms.map((room) => (
+            {rooms.map((room) => (
               <div key={room.publicId} className='pdf'>
                 <div className='pdf new-page'>
                   <h2 className='pdf room-section-title'>{room.name}</h2>
@@ -42,13 +44,13 @@ const PDFHTML = () => {
                 <DimensionsAndDetails roomName={room.name} room={room} />
                 <AffectedAreas
                   roomName={room.name}
-                  areasAffected={room.areasAffected}
+                  areasAffected={room.AreaAffected}
                 />
                 <Readings
                   roomName={room.name}
-                  roomReadings={room.roomReadings}
+                  roomReadings={room.RoomReading}
                 />
-                <Notes roomName={room.name} notes={room.notes} />
+                <Notes roomName={room.name} notes={room.Notes} />
               </div>
             ))}
           </div>

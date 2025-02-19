@@ -1,61 +1,49 @@
-import {
-  Dispatch,
-  Fragment,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import BlurImage from "@components/DesignSystem/BlurImage";
-import { Dialog, Transition } from "@headlessui/react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import useSupabaseImage from "@utils/hooks/useSupabaseImage";
-import { RouterOutputs } from "@servicegeek/api";
-import clsx from "clsx";
 import probe from "probe-image-size";
 import Image from "next/image";
 
 import { projectStore } from "@atoms/project";
-import { trpc } from "@utils/trpc";
-import { useRouter } from "next/router";
 import Notes from "@components/Project/overview/DetailsInput/Notes";
 import { MentionMetadata } from "@components/DesignSystem/Mentions/useMentionsMetadata";
-import { X } from "lucide-react";
+import { teamMembersStore } from "@atoms/team-members";
 
-const TheaterModeSlideImage = ({
-  photo,
-  index,
-  theaterModeIndex,
-  onClick,
-}: {
-  photo: RouterOutputs["photos"]["getProjectPhotos"]["images"][0];
-  theaterModeIndex: number;
-  index: number;
-  onClick: (i: number) => void;
-}) => {
-  const supabaseUrl = useSupabaseImage(photo.key);
-  const ref = useRef<HTMLDivElement | null>(null);
+// const TheaterModeSlideImage = ({
+//   photo,
+//   index,
+//   theaterModeIndex,
+//   onClick,
+// }: {
+//   photo: RouterOutputs["photos"]["getProjectPhotos"]["images"][0];
+//   theaterModeIndex: number;
+//   index: number;
+//   onClick: (i: number) => void;
+// }) => {
+//   const supabaseUrl = useSupabaseImage(photo.key);
+//   const ref = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (!ref.current) return;
-    if (index === theaterModeIndex) {
-      ref.current.scrollIntoView();
-    }
-  }, [index, ref, theaterModeIndex]);
+//   useEffect(() => {
+//     if (!ref.current) return;
+//     if (index === theaterModeIndex) {
+//       ref.current.scrollIntoView();
+//     }
+//   }, [index, ref, theaterModeIndex]);
 
-  return (
-    <div
-      key={`${photo.key}-slide`}
-      onClick={() => onClick(index)}
-      ref={ref}
-      className={clsx(
-        index === theaterModeIndex ? "border-green-500" : "border-white",
-        "group relative block size-[125px] cursor-pointer overflow-hidden rounded-lg border-4 bg-gray-100"
-      )}
-    >
-      {supabaseUrl && <BlurImage sizes='125px' src={supabaseUrl} alt='' />}
-    </div>
-  );
-};
+//   return (
+//     <div
+//       key={`${photo.key}-slide`}
+//       onClick={() => onClick(index)}
+//       ref={ref}
+//       className={clsx(
+//         index === theaterModeIndex ? "border-green-500" : "border-white",
+//         "group relative block size-[125px] cursor-pointer overflow-hidden rounded-lg border-4 bg-gray-100"
+//       )}
+//     >
+//       {supabaseUrl && <BlurImage sizes='125px' src={supabaseUrl} alt='' />}
+//     </div>
+//   );
+// };
 
 export default function TheaterMode({
   open,
@@ -66,39 +54,42 @@ export default function TheaterMode({
 }: {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
-  photos: RouterOutputs["photos"]["getProjectPhotos"]["images"];
+  photos: ImageQuery_Image[];
   theaterModeIndex: number;
   setTheaterModeIndex: Dispatch<SetStateAction<number>>;
 }) {
-  const router = useRouter();
   const projectInfo = projectStore((state) => state.project);
   const supabaseUrl = useSupabaseImage(photos[theaterModeIndex].key);
   const [size, setSize] = useState<probe.ProbeResult | null>(null);
-  const photoNotes = photos[theaterModeIndex].ImageNote;
-  const createPhotoNote = trpc.photos.createImageNote.useMutation();
+  const [photoNotes, setPhotoNotes] = useState<ImageQuery_ImageNote[]>(
+    photos[theaterModeIndex].ImageNote
+  );
+  // const createPhotoNote = trpc.photos.createImageNote.useMutation();
 
   const handleAddProjectNote = async ({
     note,
-    mentions,
-    metadata,
   }: {
     note: string;
     mentions: string[];
     metadata: MentionMetadata[];
   }) => {
-    const res = await createPhotoNote.mutateAsync(
+    const res = await fetch(
+      `/api/v1/projects/${projectInfo?.publicId}/images`,
       {
-        projectPublicId: router.query.id as string,
-        body: note,
-        imageId: photos[theaterModeIndex].id,
-        mentions,
-      },
-      {
-        onSettled: async () => {
-          console.log("done");
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          imageId: photos[theaterModeIndex].id,
+          body: note,
+        }),
       }
     );
+
+    const { data } = await res.json();
+    console.log(data)
+    setPhotoNotes([...photoNotes, data]);
   };
 
   useEffect(() => {
@@ -110,10 +101,6 @@ export default function TheaterMode({
     };
     updateSize();
   }, [supabaseUrl]);
-
-  const onClick = (i: number) => {
-    setTheaterModeIndex(i);
-  };
 
   useEffect(() => {
     const keyHandler = ({ keyCode }: { keyCode: number }) => {
@@ -133,92 +120,65 @@ export default function TheaterMode({
   }, [photos, setTheaterModeIndex]);
 
   return (
-    <Transition.Root show={open} as={Fragment}>
-      <Dialog as='div' className='relative z-10' onClose={setOpen}>
-        <Transition.Child
-          as={Fragment}
-          enter='ease-out duration-300'
-          enterFrom='opacity-0'
-          enterTo='opacity-100'
-          leave='ease-in duration-200'
-          leaveFrom='opacity-100'
-          leaveTo='opacity-0'
-        >
-          <div className='fixed inset-0 bg-gray-500/75 transition-opacity' />
-        </Transition.Child>
+    <Dialog open={open} onOpenChange={setOpen}>
+      {/* <Transition.Child
+        as={Fragment}
+        enter='ease-out duration-300'
+        enterFrom='opacity-0'
+        enterTo='opacity-100'
+        leave='ease-in duration-200'
+        leaveFrom='opacity-100'
+        leaveTo='opacity-0'
+      >
+        <div className='fixed inset-0 bg-gray-500/75 transition-opacity' />
+      </Transition.Child> */}
 
-        <div className='fixed inset-0 z-20 overflow-y-auto'>
-          <div className='flex h-full items-end justify-center p-4 text-center sm:items-center sm:p-0'>
-            <Transition.Child
-              as={Fragment}
-              enter='ease-out duration-300'
-              enterFrom='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
-              enterTo='opacity-100 translate-y-0 sm:scale-100'
-              leave='ease-in duration-200'
-              leaveFrom='opacity-100 translate-y-0 sm:scale-100'
-              leaveTo='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
-            >
-              <Dialog.Panel className='relative flex size-5/6 items-center justify-center overflow-hidden text-left transition-all'>
-                <div className='size-full overflow-hidden rounded-lg bg-neutral-900 shadow-xl'>
-                  <div className='flex size-full overflow-hidden rounded-lg bg-neutral-900 shadow-xl'>
-                    <div className='relative flex size-full items-center justify-center overflow-hidden align-middle'>
-                      {size && supabaseUrl && (
-                        <Image
-                          src={supabaseUrl}
-                          width={size.width}
-                          height={size.height}
-                          alt=''
-                        />
-                      )}
-                    </div>
-                    <div className='w-2/4'>
-                      <form className='h-full overflow-y-scroll bg-white shadow-xl'>
-                        <div className=''>
-                          {/* Header */}
-                          <div className='bg-gray-50 px-4 py-6 sm:px-6'>
-                            <div className='flex items-start justify-between space-x-3'>
-                              <div className='space-y-1'>
-                                <Dialog.Title className='text-base font-semibold leading-6 text-gray-900'>
-                                  {projectInfo?.name}
-                                </Dialog.Title>
-                                <p className='text-sm text-gray-500'>
-                                  {projectInfo?.location}
-                                </p>
-                              </div>
-                              <div className='flex h-7 items-center'>
-                                <button
-                                  type='button'
-                                  className='text-gray-400 hover:text-gray-500'
-                                  onClick={() => setOpen(false)}
-                                >
-                                  <span className='sr-only'>Close panel</span>
-                                  <X className='size-6' aria-hidden='true' />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Divider container */}
-                          <div className='space-y-6 py-6 sm:space-y-0 sm:divide-y sm:divide-gray-200 sm:py-0'></div>
-                        </div>
-
-                        {/* Action buttons */}
-                        <div className='shrink-0 border-t border-gray-200 px-4 py-5 sm:px-6'>
-                          <Notes
-                            notesData={photoNotes}
-                            isLoading={false}
-                            handleAddProjectNote={handleAddProjectNote}
-                          />
-                        </div>
-                      </form>
+      <DialogContent className='h-5/6 max-w-4xl'>
+        <div className='size-full overflow-hidden rounded-lg bg-background shadow-xl'>
+          <div className='flex size-full overflow-hidden rounded-lg bg-background shadow-xl'>
+            <div className='relative flex size-full items-center justify-center overflow-hidden align-middle'>
+              {size && supabaseUrl && (
+                <Image
+                  src={supabaseUrl}
+                  width={size.width}
+                  height={size.height}
+                  alt=''
+                  className=''
+                />
+              )}
+            </div>
+            <div className='w-2/4'>
+              <div className=''>
+                {/* Header */}
+                <div className='px-4 py-6 sm:px-6'>
+                  <div className='flex items-start justify-between space-x-3'>
+                    <div className='space-y-1'>
+                      <DialogTitle className='text-base font-semibold leading-6 text-foreground'>
+                        {projectInfo?.name}
+                      </DialogTitle>
+                      <p className='text-sm text-gray-500'>
+                        {projectInfo?.location}
+                      </p>
                     </div>
                   </div>
                 </div>
-              </Dialog.Panel>
-            </Transition.Child>
+
+                {/* Divider container */}
+                <div className='space-y-6 py-6 sm:space-y-0 sm:divide-y sm:divide-gray-200 sm:py-0'></div>
+              </div>
+
+              {/* Action buttons */}
+              <div className='shrink-0 border-t px-4 py-5 sm:px-6'>
+                <Notes
+                  notesData={photoNotes}
+                  isLoading={false}
+                  handleAddProjectNote={handleAddProjectNote}
+                />
+              </div>
+            </div>
           </div>
         </div>
-      </Dialog>
-    </Transition.Root>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,5 +1,5 @@
+import { Separator } from "@components/ui/separator";
 import CostsTable from "./CostsTable";
-import CostsToolbar from "./CostsToolbar";
 
 export default function Costs({
   rcvValue,
@@ -9,8 +9,14 @@ export default function Costs({
   actualValue: number;
 }) {
   return (
-    <div>
-      <CostsToolbar />
+    <div className='space-y-6'>
+      <div>
+        <h2 className='text-lg font-medium'>Expenses</h2>
+        <p className='text-sm text-muted-foreground'>
+          Track estimates and actual costs of a project
+        </p>
+      </div>
+      <Separator />
       <CostsTable rcvValue={rcvValue} actualValue={actualValue} />
     </div>
   );

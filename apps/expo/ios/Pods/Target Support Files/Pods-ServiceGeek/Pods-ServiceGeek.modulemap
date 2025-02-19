@@ -1,6 +1,0 @@
-module Pods_ServiceGeek {
-  umbrella header "Pods-ServiceGeek-umbrella.h"
-
-  export *
-  module * { export * }
-}

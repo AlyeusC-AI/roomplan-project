@@ -1,78 +1,46 @@
-import { createClient } from "@lib/supabase/server";
-import createRoomReading from "@servicegeek/db/queries/room/reading/createRoomReading";
-import deleteRoomReading from "@servicegeek/db/queries/room/reading/deleteRoomReading";
-import getRoomReadings from "@servicegeek/db/queries/room/reading/getRoomReadings";
-import updateRoomReading from "@servicegeek/db/queries/room/reading/updateRoomReading";
+import { supabaseServiceRole } from "@lib/supabase/admin";
+import { user } from "@lib/supabase/get-user";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const jwt = req.headers.get("auth-token");
-  if (!jwt || Array.isArray(jwt)) {
-    return NextResponse.json({ status: "Missing token" }, { status: 500 });
-  }
+// const calculateGpp = async (temperature: string, relativeHumidity: string) => {
+//   const temperatureMeasurement = "Fahrenheit";
+//   const pressure = 1;
+//   const pressureMeasurement = "atmosphere";
+//   const precision = 2;
 
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser(jwt);
-  if (!user) {
-    console.error("Session does not exist.");
-    return NextResponse.json({ status: "failed" }, { status: 500 });
-  }
-  const userId = req.nextUrl.searchParams.get("userId");
-  const projectId = (await params).id;
-
-  try {
-    const readings = await getRoomReadings(userId!, projectId);
-    // @ts-expect-error
-    if (readings.failed) {
-      return NextResponse.json({ status: "failed" }, { status: 500 });
-    }
-
-    return NextResponse.json({ status: "ok", roomReadings: readings });
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json({ status: "failed" }, { status: 500 });
-  }
-}
+//   const response = await fetch("https://www.aqua-calc.com/calculate/humidity", {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/x-www-form-urlencoded",
+//     },
+//     body: `temperature=${temperature}&temperature-measurement=${temperatureMeasurement}&relative-humidity=${relativeHumidity}&pressure=${pressure}&pressure-measurement=${pressureMeasurement}&precision=${precision}&calculate=Calculate`,
+//   });
+//   const text = await response.text();
+//   const root = parse(text);
+//   console.log(root.querySelectorAll(".black_on_white"));
+//   return root.querySelectorAll(".black_on_white.math>p>strong")[1].innerText;
+// };
 
 export async function PATCH(req: NextRequest) {
-  const jwt = req.headers.get("auth-token");
-  if (!jwt || Array.isArray(jwt)) {
-    return NextResponse.json({ status: "Missing token" }, { status: 500 });
-  }
+  await user(req);
 
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser(jwt);
-  if (!user) {
-    console.error("Session does not exist.");
-    return NextResponse.json({ status: "failed" }, { status: 500 });
-  }
-
-  const body = await req.json();
-  console.log("body", body);
+  const { readingData, readingId, type } = await req.json();
   try {
-    if (!body.readingData) {
-      return NextResponse.json({ status: "failed" }, { status: 400 });
-    }
-    const result = await updateRoomReading(
-      body.userId,
-      body.projectId,
-      body.roomId,
-      body.readingId,
-      JSON.parse(body.readingData)
-    );
-    // @ts-expect-error
-    if (result?.failed) {
-      console.log(result);
-      return NextResponse.json({ status: "failed" }, { status: 500 });
+    // if (readingData.humidity && readingData.temperature) {
+    //   const gpp = await calculateGpp(
+    //     readingData.temperature,
+    //     readingData.humidity
+    //   );
+    //   readingData.gpp = parseFloat(gpp).toFixed(2);
+    // }
+
+    const result = await supabaseServiceRole
+      .from(type === "generic" ? "GenericRoomReading" : "RoomReading")
+      .update(readingData)
+      .eq("publicId", readingId);
+
+    if (result.error) {
+      console.error(result.error);
     }
 
     return NextResponse.json({ status: "ok" }, { status: 200 });
@@ -82,92 +50,50 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const jwt = req.headers.get("auth-token");
-  if (!jwt || Array.isArray(jwt)) {
-    return NextResponse.json({ status: "Missing token" }, { status: 500 });
-  }
+export async function POST(req: NextRequest) {
+  await user(req);
 
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser(jwt);
-  if (!user) {
-    console.error("Session does not exist.");
-    return NextResponse.json({ status: "failed" }, { status: 500 });
-  }
-
-  const id = (await params).id;
-  if (Array.isArray(id) || !id) {
-    return NextResponse.json({ status: "failed" }, { status: 400 });
-  }
-  const userId = req.nextUrl.searchParams.get("userId");
-  const projectId = req?.nextUrl?.searchParams.get("projectId");
-  const roomId = req?.nextUrl?.searchParams.get("roomId");
+  const { type, data } = await req.json();
 
   try {
-    const result = await createRoomReading(
-      userId!,
-      projectId!,
-      roomId!,
-      undefined
-    );
-    // @ts-expect-error
-    if (result?.failed) {
-      return NextResponse.json({ status: "failed" }, { status: 500 });
-    }
+    const result = await supabaseServiceRole
+      .from(type === "generic" ? "GenericRoomReading" : "RoomReading")
+      .insert(data)
+      .select("*")
+      .single();
 
-    return NextResponse.json({ status: "ok", result }, { status: 200 });
+    return NextResponse.json(
+      { status: "ok", reading: result.data },
+      { status: 200 }
+    );
   } catch (err) {
     console.error(err);
     return NextResponse.json({ status: "failed" }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const jwt = req.headers.get("auth-token");
-  if (!jwt || Array.isArray(jwt)) {
-    return NextResponse.json({ status: "Missing token" }, { status: 500 });
-  }
-
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser(jwt);
-  if (!user) {
-    console.error("Session does not exist.");
-    return NextResponse.json({ status: "failed" }, { status: 500 });
-  }
-
-  const body = await req.json();
-  const id = (await params).id;
-  if (Array.isArray(id) || !id) {
-    return NextResponse.json({ status: "failed" }, { status: 400 });
-  }
-  const userId = req.nextUrl.searchParams.get("userId");
-  const projectId = req?.nextUrl?.searchParams.get("projectId");
-  const roomId = body?.roomId;
-  const readingId = body?.readingId;
+export async function DELETE(req: NextRequest) {
+  await user(req);
 
   try {
-    const result = await deleteRoomReading(
-      userId!,
-      projectId!,
-      roomId,
-      readingId
-    );
-    // @ts-expect-error
-    if (result?.failed) {
-      console.log(result);
-      return NextResponse.json({ status: "failed" }, { status: 500 });
+    const { type, readingId } = await req.json();
+
+    const res = await supabaseServiceRole
+      .from(type === "generic" ? "GenericRoomReading" : "RoomReading")
+      .update({
+        isDeleted: true,
+      })
+      .eq("publicId", readingId)
+      .select("id")
+      .single();
+
+    if (type != "generic") {
+      await supabaseServiceRole
+        .from("GenericRoomReading")
+        .update({
+          isDeleted: true,
+        })
+        .eq("roomReadingId", res.data!.id);
     }
 
     return NextResponse.json({ status: "ok" }, { status: 200 });

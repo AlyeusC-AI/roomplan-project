@@ -1,4 +1,3 @@
-import { Stakeholders } from "@servicegeek/db/queries/project/getUsersForProject";
 import { create } from "zustand";
 
 // export const defaultStakeholderState = []

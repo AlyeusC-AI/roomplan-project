@@ -151,6 +151,7 @@ export type Database = {
           createdAt: string;
           date: string;
           dynamicId: string;
+          end: string | null;
           id: number;
           isDeleted: boolean;
           organizationId: string | null;
@@ -159,6 +160,7 @@ export type Database = {
           publicId: string;
           remindClient: boolean;
           remindProjectOwners: boolean;
+          start: string | null;
           subject: string;
           updatedAt: string;
         };
@@ -166,6 +168,7 @@ export type Database = {
           createdAt?: string;
           date: string;
           dynamicId: string;
+          end?: string | null;
           id?: number;
           isDeleted?: boolean;
           organizationId?: string | null;
@@ -174,6 +177,7 @@ export type Database = {
           publicId: string;
           remindClient?: boolean;
           remindProjectOwners?: boolean;
+          start?: string | null;
           subject: string;
           updatedAt?: string;
         };
@@ -181,6 +185,7 @@ export type Database = {
           createdAt?: string;
           date?: string;
           dynamicId?: string;
+          end?: string | null;
           id?: number;
           isDeleted?: boolean;
           organizationId?: string | null;
@@ -189,6 +194,7 @@ export type Database = {
           publicId?: string;
           remindClient?: boolean;
           remindProjectOwners?: boolean;
+          start?: string | null;
           subject?: string;
           updatedAt?: string;
         };
@@ -729,6 +735,35 @@ export type Database = {
           },
         ];
       };
+      NoteImage: {
+        Row: {
+          created_at: string;
+          id: string;
+          imageKey: string | null;
+          noteId: number;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          imageKey?: string | null;
+          noteId: number;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          imageKey?: string | null;
+          noteId?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "NoteImage_noteId_fkey";
+            columns: ["noteId"];
+            isOneToOne: false;
+            referencedRelation: "Notes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       Notes: {
         Row: {
           body: string;
@@ -872,46 +907,81 @@ export type Database = {
         Row: {
           address: string;
           createdAt: string;
+          customerId: string | null;
           faxNumber: string;
+          freeTrialEndsAt: string | null;
           id: number;
           isDeleted: boolean;
           lat: number | null;
           lng: number | null;
           logoId: string | null;
+          maxUsersForSubscription: number | null;
           name: string;
+          owner: string | null;
           publicId: string;
           size: string;
+          stripeSessionId: string | null;
+          subscriptionId: string | null;
+          subscriptionPlan:
+            | Database["public"]["Enums"]["SubscriptionLevel"]
+            | null;
           updatedAt: string;
         };
         Insert: {
           address?: string;
           createdAt?: string;
+          customerId?: string | null;
           faxNumber?: string;
+          freeTrialEndsAt?: string | null;
           id?: number;
           isDeleted?: boolean;
           lat?: number | null;
           lng?: number | null;
           logoId?: string | null;
+          maxUsersForSubscription?: number | null;
           name: string;
+          owner?: string | null;
           publicId: string;
           size: string;
+          stripeSessionId?: string | null;
+          subscriptionId?: string | null;
+          subscriptionPlan?:
+            | Database["public"]["Enums"]["SubscriptionLevel"]
+            | null;
           updatedAt?: string;
         };
         Update: {
           address?: string;
           createdAt?: string;
+          customerId?: string | null;
           faxNumber?: string;
+          freeTrialEndsAt?: string | null;
           id?: number;
           isDeleted?: boolean;
           lat?: number | null;
           lng?: number | null;
           logoId?: string | null;
+          maxUsersForSubscription?: number | null;
           name?: string;
+          owner?: string | null;
           publicId?: string;
           size?: string;
+          stripeSessionId?: string | null;
+          subscriptionId?: string | null;
+          subscriptionPlan?:
+            | Database["public"]["Enums"]["SubscriptionLevel"]
+            | null;
           updatedAt?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "Organization_owner_fkey";
+            columns: ["owner"];
+            isOneToOne: false;
+            referencedRelation: "User";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       OrganizationInvitation: {
         Row: {
@@ -1209,7 +1279,7 @@ export type Database = {
           rcvValue: number | null;
           roofSegments: Json[] | null;
           roofSpecs: Json | null;
-          status: Database["public"]["Enums"]["ProjectStatus"] | null;
+          status: string | null;
           temperature: string;
           wind: string;
         };
@@ -1246,7 +1316,7 @@ export type Database = {
           rcvValue?: number | null;
           roofSegments?: Json[] | null;
           roofSpecs?: Json | null;
-          status?: Database["public"]["Enums"]["ProjectStatus"] | null;
+          status?: string | null;
           temperature?: string;
           wind?: string;
         };
@@ -1283,7 +1353,7 @@ export type Database = {
           rcvValue?: number | null;
           roofSegments?: Json[] | null;
           roofSpecs?: Json | null;
-          status?: Database["public"]["Enums"]["ProjectStatus"] | null;
+          status?: string | null;
           temperature?: string;
           wind?: string;
         };
@@ -1753,6 +1823,7 @@ export type Database = {
       };
       User: {
         Row: {
+          accessLevel: Database["public"]["Enums"]["AccessLevel"] | null;
           createdAt: string;
           email: string;
           firstName: string;
@@ -1768,11 +1839,13 @@ export type Database = {
           phone: string;
           photoView: Database["public"]["Enums"]["PhotoViews"];
           productTourData: Json | null;
+          removed: boolean;
           savedDashboardView: Database["public"]["Enums"]["DashboardViews"];
           token: string | null;
           updatedAt: string;
         };
         Insert: {
+          accessLevel?: Database["public"]["Enums"]["AccessLevel"] | null;
           createdAt?: string;
           email: string;
           firstName: string;
@@ -1788,11 +1861,13 @@ export type Database = {
           phone?: string;
           photoView?: Database["public"]["Enums"]["PhotoViews"];
           productTourData?: Json | null;
+          removed?: boolean;
           savedDashboardView?: Database["public"]["Enums"]["DashboardViews"];
           token?: string | null;
           updatedAt?: string;
         };
         Update: {
+          accessLevel?: Database["public"]["Enums"]["AccessLevel"] | null;
           createdAt?: string;
           email?: string;
           firstName?: string;
@@ -1808,6 +1883,7 @@ export type Database = {
           phone?: string;
           photoView?: Database["public"]["Enums"]["PhotoViews"];
           productTourData?: Json | null;
+          removed?: boolean;
           savedDashboardView?: Database["public"]["Enums"]["DashboardViews"];
           token?: string | null;
           updatedAt?: string;
@@ -1999,7 +2075,8 @@ export type Database = {
         | "viewer"
         | "projectManager"
         | "accountManager"
-        | "contractor";
+        | "contractor"
+        | "owner";
       AreaAffectedType: "wall" | "ceiling" | "floor";
       CostType: "subcontractor" | "miscellaneous" | "materials" | "labor";
       DashboardViews: "listView" | "boardView" | "mapView";
@@ -2022,6 +2099,7 @@ export type Database = {
       ReminderTarget: "client" | "allAssigned" | "projectCreator";
       RoomReadingType: "dehumidifer";
       SavedOptionType: "carrier" | "wallMaterial" | "floorMaterial";
+      SubscriptionLevel: "early_bird" | "startup" | "team" | "enterprise";
       SubscriptionStatus:
         | "trialing"
         | "active"

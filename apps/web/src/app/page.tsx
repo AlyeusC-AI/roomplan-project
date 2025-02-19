@@ -7,8 +7,20 @@ export default async function Component() {
 
   const user = await client.auth.getUser();
 
-  if (user.data.user) {
+  if (
+    user.data.user &&
+    user.data.user.email_confirmed_at &&
+    user.data.user.user_metadata.organizationId
+  ) {
     return redirect("/projects");
+  } else if (
+    user.data.user &&
+    user.data.user.email_confirmed_at &&
+    !user.data.user.user_metadata.organizationId
+  ) {
+    return redirect("/register?page=3");
+  } else if (user.data.user && !user.data.user.email_confirmed_at) {
+    return redirect("/register?page=2");
   }
 
   return redirect("/login");

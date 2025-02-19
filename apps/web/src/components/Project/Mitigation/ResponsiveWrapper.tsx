@@ -1,18 +1,24 @@
 import { useMediaQuery } from "react-responsive";
-import { GroupByViews, PhotoViews } from "@servicegeek/db";
 
 import MitigationTable from "./MitigationTable";
 import MitigationToolbar from "./MitigationToolbar";
 import Mobile from "./Mobile";
+import { useEffect } from "react";
+import { roomStore } from "@atoms/room";
+import { useParams } from "next/navigation";
 
-const ResponsiveWrapper = ({
-  initialGroupView,
-  initialPhotoView,
-}: {
-  initialGroupView: GroupByViews;
-  initialPhotoView: PhotoViews;
-}) => {
+const ResponsiveWrapper = () => {
   const isMobile = useMediaQuery({ maxWidth: 600 });
+  const rooms = roomStore();
+  const { id } = useParams<{ id: string }>();
+
+  useEffect(() => {
+    fetch(`/api/v1/projects/${id}/room`)
+      .then((res) => res.json())
+      .then((data) => {
+        rooms.setRooms(data.rooms);
+      });
+  }, []);
 
   return (
     <>
@@ -21,10 +27,7 @@ const ResponsiveWrapper = ({
       ) : (
         <>
           <MitigationToolbar />
-          <MitigationTable
-            initialGroupView={initialGroupView}
-            initialPhotoView={initialPhotoView}
-          />
+          <MitigationTable />
         </>
       )}
     </>

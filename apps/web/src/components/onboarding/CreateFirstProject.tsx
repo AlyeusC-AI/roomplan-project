@@ -1,17 +1,10 @@
 import { PrimaryButton } from "@components/components/button";
 import useAmplitudeTrack from "@utils/hooks/useAmplitudeTrack";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { event } from "nextjs-google-analytics";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { FormEvent, useState } from "react";
 
-const GooglePlacesAutocomplete = dynamic(
-  () => import("react-google-autocomplete"),
-  {
-    ssr: false,
-  }
-);
 // Should be an html form. Not a form because the google auto complete dropdown breaks when nested in a form and clicking "enter"
 const CreateFirstProject = () => {
   const router = useRouter();
@@ -115,8 +108,7 @@ const CreateFirstProject = () => {
               Project Location
             </label>
             <div className='mt-1'>
-              {/* @ts-ignore */}
-              <GooglePlacesAutocomplete
+              {/* <GooglePlacesAutocomplete
                 // @ts-expect-error
                 type='text'
                 required
@@ -137,7 +129,7 @@ const CreateFirstProject = () => {
                   if (e.target.value) setProjectLocation(e.target.value);
                 }}
                 defaultValue={projectLocation}
-              />
+              /> */}
             </div>
           </div>
           <div className='mt-4 flex w-full items-center justify-end'>

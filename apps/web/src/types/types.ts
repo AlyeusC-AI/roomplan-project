@@ -25,4 +25,51 @@ declare global {
     images: Image[];
     assignees: Assignee[];
   }
+  type PendingRoofReport =
+    Database["public"]["Tables"]["PendingRoofReports"]["Row"];
+
+  type Status = Database["public"]["Tables"]["ProjectStatusValue"]["Row"];
+  type RoomReading = Database["public"]["Tables"]["RoomReading"]["Row"];
+  type GenericRoomReading =
+    Database["public"]["Tables"]["GenericRoomReading"]["Row"];
+  type Room = Database["public"]["Tables"]["Room"]["Row"];
+
+  interface ReadingsWithGenericReadings extends RoomReading {
+    GenericRoomReading: GenericRoomReading[];
+  }
+
+  type Equipment = Database["public"]["Tables"]["Equipment"]["Row"];
+
+  type ProjectEquipmentFlat =
+    Database["public"]["Tables"]["ProjectEquipment"]["Row"];
+
+  type ProjectEquipment = ProjectEquipmentFlat & {
+    Equipment: Equipment | null;
+  };
+
+  type AreaAffected = Database["public"]["Tables"]["AreaAffected"]["Row"];
+  type AreaAffectedType = Database["public"]["Enums"]["AreaAffectedType"];
+  type PropertyData = Database["public"]["Tables"]["PropertyData"]["Row"];
+
+  type FlatNote = Database["public"]["Tables"]["Notes"]["Row"];
+  type NotesAuditTrail = Database["public"]["Tables"]["NotesAuditTrail"]["Row"];
+
+  type Note = FlatNote & {
+    NotesAuditTrail: NotesAuditTrail[];
+  };
+
+  type ImageNote = Database["public"]["Tables"]["ImageNote"]["Row"];
+
+  type Inference = Database["public"]["Tables"]["Inference"]["Row"];
+
+  type InferenceWithImages = Inference & {
+    Image: Database["public"]["Tables"]["Image"]["Row"] | null;
+  };
+
+  interface RoomWithReadings extends Room {
+    RoomReading: ReadingsWithGenericReadings[];
+    Inference: InferenceWithImages[];
+    Notes: Note[];
+    AreaAffected: AreaAffected[];
+  }
 }

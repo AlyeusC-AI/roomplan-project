@@ -1,8 +1,8 @@
-// import getSubcriptionStatus from "@servicegeek/db/queries/organization/getSubscriptionStatus";
 // import deleteFileFromProject from "@lib/supabase/deleteFileFromProject";
-// import { SubscriptionStatus } from "@servicegeek/db";
 // import { createClient } from "@lib/supabase/server";
 // import { NextRequest, NextResponse } from "next/server";
+
+import { NextResponse } from "next/server";
 
 // export async function DELETE(
 //   req: NextRequest,
@@ -45,3 +45,6 @@
 //     return NextResponse.json({ status: "failed" }, { status: 500 });
 //   }
 // }
+export async function DELETE() {
+  return NextResponse.json({ status: "ok" }, { status: 200 });
+}

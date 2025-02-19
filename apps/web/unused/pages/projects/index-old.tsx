@@ -7,7 +7,7 @@ import SetupAccountFromInvite from "@components/Onboarding/SetupAccountFromInvit
 import OrgCreation from "@components/Projects/OrgCreation";
 import ProjectList from "@components/Projects/ProjectList";
 import { Member } from "@components/Settings/Organization/types";
-import getProjectsData from "@lib/server-side-fetching/pages/getProjectsData";
+import getProjectsData from "unused/server-side-fetching/pages/getProjectsData";
 import { getQueueTime } from "@lib/qstash/queueInference";
 import getOrgInfo, { OrgInfo } from "@lib/serverSidePropsUtils/getOrgInfo";
 import getUserInfo, { UserInfo } from "@lib/serverSidePropsUtils/getUserInfo";

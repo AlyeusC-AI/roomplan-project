@@ -1,19 +1,9 @@
-import React, { useState } from "react";
-import {
-  TouchableOpacity,
-  Image,
-  View,
-  StyleSheet,
-  ScrollView,
-  Text,
-} from "react-native";
-import { RouterOutputs } from "@servicegeek/api";
-import safelyGetImageUrl from "../../utils/safelyGetImageKey";
+import React from "react";
+import { TouchableOpacity, Image, View, StyleSheet, Text } from "react-native";
 import { router } from "expo-router";
+import { Separator } from "@/components/ui/separator";
 
-const getStatusColor = (
-  status: RouterOutputs["mobile"]["getDashboardData"]["data"][0]["status"]
-): string => {
+const getStatusColor = (status: string | null): string => {
   switch (status) {
     case "active":
       return "green";
@@ -29,51 +19,35 @@ const getStatusColor = (
       return "purple";
     case "review":
       return "orange";
-    case null:
+    default:
       return "gray";
   }
 };
 
-const formatDate = (date: Date): string => {
-  const options: Intl.DateTimeFormatOptions = {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  };
-  return new Date(date).toLocaleDateString(undefined, options);
-};
-
-export default function ProjectCell({
-  project,
-  urlMap,
-}: {
-  project: ProjectType;
-  urlMap: RouterOutputs["mobile"]["getDashboardData"]["urlMap"];
-}) {
-  const [imageUrl, setImageUrl] = useState(
-    `https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/profile-pictures/${project.projectAssignees[0].userId}/avatar.png`
-  );
-
+export default function ProjectCell({ project }: { project: Project }) {
   const formatProjectName = (name: string): string => {
     return name.split(" ").join("+");
   };
 
   return (
     <TouchableOpacity
-      onPress={() => router.push({
-        pathname: `/projects/${project.publicId}`,
-        params: {
-          projectName: project.name,
-        }
-      })}
+      className="mt-3"
+      onPress={() =>
+        router.push({
+          pathname: `/projects/${project.publicId}`,
+          params: {
+            projectName: project.name,
+          },
+        })
+      }
     >
       <View style={styles.card}>
         {project.images &&
         project.images.length > 0 &&
-        safelyGetImageUrl(urlMap, project.images[0].key) ? (
+        project.images.find((_, index) => index === 0)?.url ? (
           <Image
             source={{
-              uri: safelyGetImageUrl(urlMap, project.images[0].key),
+              uri: project.images.find((_, index) => index === 0)?.url,
             }}
             alt="Image"
             resizeMode="cover"
@@ -92,14 +66,17 @@ export default function ProjectCell({
 
         <View style={styles.cardBody}>
           <Text
-            style={[styles.cardTag, { color: getStatusColor(project.status) }]}
+            style={[
+              styles.cardTag,
+              { color: getStatusColor(project.status ?? "active") },
+            ]}
           >
             {project.status}
           </Text>
 
           <Text style={styles.cardTitle}>{`${project.name}`}</Text>
           <Text style={styles.cardSubTitle}>{project.location}</Text>
-          <View style={styles.cardRow}>
+          {/* <View style={styles.cardRow}>
             <View style={styles.cardRowItem}>
               <Image
                 alt=""
@@ -124,9 +101,11 @@ export default function ProjectCell({
                 {formatDate(project.createdAt)}
               </Text>
             </View>
-          </View>
+          </View> */}
         </View>
       </View>
+
+      <Separator />
     </TouchableOpacity>
   );
 }
@@ -163,12 +142,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "stretch",
     borderRadius: 12,
-    marginBottom: 16,
-    backgroundColor: "#fff",
+    marginBottom: 8,
   },
   cardImg: {
-    width: 96,
-    height: 96,
+    width: 100,
+    height: 100,
     borderRadius: 12,
   },
   cardBody: {
@@ -192,7 +170,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 19,
     color: "#000",
-    marginBottom: 8,
+    marginBottom: 2,
   },
   cardSubTitle: {
     fontWeight: "400",
@@ -233,88 +211,88 @@ const styles = StyleSheet.create({
   },
 });
 
-    // <View m={1}>
-    //   <Box
-    //     alignItems="center"
-    //     w="full"
-    //     rounded={4}
-    //     {...(Platform.OS === "ios" && { shadow: 4 })}
-    //   >
-    //     <Pressable
-    //       onPress={() => onPress(project.publicId, project.clientName)}
-    //       borderLeftWidth={4}
-    //       borderLeftColor={getBorderColor(project.status)}
-    //       overflow="hidden"
-    //       rounded={4}
-    //       shadow="4"
-    //       {...(Platform.OS === "android" && { shadow: 4 })}
-    //       w="full"
-    //       bg="white"
-    //       p="5"
-    //     >
-    //       <Box>
-    //         <HStack alignItems="flex-start">
-    //           <Text
-    //             color="coolGray.800"
-    //             fontWeight="medium"
-    //             fontSize="xl"
-    //             flexWrap="wrap"
-    //             overflow="hidden"
-    //             maxWidth="1/2"
-    //           >
-    //             {project.clientName}
-    //           </Text>
-    //           <Spacer />
-    //           <HStack justifyContent="center" alignItems="center">
-    //             <View
-    //               rounded="full"
-    //               w={3}
-    //               h={3}
-    //               opacity={50}
-    //               bg={getBorderColor(project.status)}
-    //               mr={2}
-    //             />
-    //             <Text
-    //               fontSize={12}
-    //               textTransform="uppercase"
-    //               color={getBorderColor(project.status)}
-    //             >
-    //               {project.status}
-    //             </Text>
-    //           </HStack>
-    //         </HStack>
-    //         <HStack alignItems="center">
-    //           <Text fontSize={14} color="coolGray.600">
-    //             Created:{" "}
-    //             {formatDistance(new Date(project.createdAt), Date.now(), {
-    //               addSuffix: true,
-    //             })}
-    //           </Text>
-    //         </HStack>
-    //         <HStack justifyContent="space-between" mt="4">
-    //           <HStack color="coolGray.700" maxW="1/2">
-    //             <Map width={24} height={24} stroke="#1e88e5" />
-    //             <View marginLeft={2}>
-    //               <Address address={project.location} />
-    //             </View>
-    //           </HStack>
-    //           {project.images &&
-    //             project.images.length > 0 &&
-    //             safelyGetImageUrl(urlMap, project.images[0].key) && (
-    //               <View shadow="3">
-    //                 <Image
-    //                   source={{
-    //                     uri: safelyGetImageUrl(urlMap, project.images[0].key),
-    //                   }}
-    //                   width="24"
-    //                   height="24"
-    //                   alt="Image"
-    //                   rounded="md"
-    //                 />
-    //               </View>
-    //             )}
-    //         </HStack>
-    //       </Box>
-    //     </Pressable>
-    //   </Box>
-    // </View>
+// <View m={1}>
+//   <Box
+//     alignItems="center"
+//     w="full"
+//     rounded={4}
+//     {...(Platform.OS === "ios" && { shadow: 4 })}
+//   >
+//     <Pressable
+//       onPress={() => onPress(project.publicId, project.clientName)}
+//       borderLeftWidth={4}
+//       borderLeftColor={getBorderColor(project.status)}
+//       overflow="hidden"
+//       rounded={4}
+//       shadow="4"
+//       {...(Platform.OS === "android" && { shadow: 4 })}
+//       w="full"
+//       bg="white"
+//       p="5"
+//     >
+//       <Box>
+//         <HStack alignItems="flex-start">
+//           <Text
+//             color="coolGray.800"
+//             fontWeight="medium"
+//             fontSize="xl"
+//             flexWrap="wrap"
+//             overflow="hidden"
+//             maxWidth="1/2"
+//           >
+//             {project.clientName}
+//           </Text>
+//           <Spacer />
+//           <HStack justifyContent="center" alignItems="center">
+//             <View
+//               rounded="full"
+//               w={3}
+//               h={3}
+//               opacity={50}
+//               bg={getBorderColor(project.status)}
+//               mr={2}
+//             />
+//             <Text
+//               fontSize={12}
+//               textTransform="uppercase"
+//               color={getBorderColor(project.status)}
+//             >
+//               {project.status}
+//             </Text>
+//           </HStack>
+//         </HStack>
+//         <HStack alignItems="center">
+//           <Text fontSize={14} color="coolGray.600">
+//             Created:{" "}
+//             {formatDistance(new Date(project.createdAt), Date.now(), {
+//               addSuffix: true,
+//             })}
+//           </Text>
+//         </HStack>
+//         <HStack justifyContent="space-between" mt="4">
+//           <HStack color="coolGray.700" maxW="1/2">
+//             <Map width={24} height={24} stroke="#1e88e5" />
+//             <View marginLeft={2}>
+//               <Address address={project.location} />
+//             </View>
+//           </HStack>
+//           {project.images &&
+//             project.images.length > 0 &&
+//             safelyGetImageUrl(urlMap, project.images[0].key) && (
+//               <View shadow="3">
+//                 <Image
+//                   source={{
+//                     uri: safelyGetImageUrl(urlMap, project.images[0].key),
+//                   }}
+//                   width="24"
+//                   height="24"
+//                   alt="Image"
+//                   rounded="md"
+//                 />
+//               </View>
+//             )}
+//         </HStack>
+//       </Box>
+//     </Pressable>
+//   </Box>
+// </View>

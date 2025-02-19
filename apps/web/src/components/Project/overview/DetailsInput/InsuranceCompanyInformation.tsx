@@ -1,176 +1,284 @@
-import { useState } from "react";
 import { toast } from "sonner";
-import { carrierOptions } from "@components/DesignSystem/CreationSelect/carrierOptions";
-import SavedOptionSelect from "@components/DesignSystem/CreationSelect/SavedOptionSelect";
-import clsx from "clsx";
 import { useParams } from "next/navigation";
 import { projectStore } from "@atoms/project";
-import { savedOptionsStore } from "@atoms/saved-options";
 
-import Form from "./Form";
-import FormContainer from "./FormContainer";
-import InputLabel from "./InputLabel";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@components/ui/form";
+import { Input } from "@components/ui/input";
+import { Button } from "@components/ui/button";
+import { Card } from "@components/ui/card";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@lib/utils";
+import { useState } from "react";
+import { LoadingSpinner } from "@components/ui/spinner";
 
-interface InsuranceData {
-  insuranceCompanyName?: string;
-  adjusterName?: string;
-  adjusterPhoneNumber?: string;
-  adjusterEmail?: string;
-  insuranceClaimId?: string;
-  lossType?: string;
-  catCode?: number;
-}
+const lossTypes = ["Fire", "Water", "Wind", "Mold", "Catastrophe"];
+
+const formSchema = z.object({
+  insuranceCompanyName: z.string().optional(),
+  adjusterName: z.string().optional(),
+  adjusterPhoneNumber: z.string().optional(),
+  adjusterEmail: z.string().optional(),
+  insuranceClaimId: z.string().optional(),
+  lossType: z.string().optional(),
+  catCode: z.string().optional(),
+});
 
 export default function InsuranceCompanyInformation() {
-  const projectInfo = projectStore((state) => state.project);
-  const savedOptions = savedOptionsStore((state) => state);
+  const { project: projectInfo, setProject } = projectStore((state) => state);
+  const [loading, setLoading] = useState(false);
 
-  const router = useParams();
-  const [typeOfLoss, setTypeOfLoss] = useState(projectInfo.lossType);
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      insuranceCompanyName: projectInfo?.insuranceCompanyName,
+      adjusterName: projectInfo?.adjusterName,
+      adjusterPhoneNumber: projectInfo?.adjusterPhoneNumber,
+      adjusterEmail: projectInfo?.adjusterEmail,
+      insuranceClaimId: projectInfo?.insuranceClaimId,
+      lossType: projectInfo?.lossType,
+      catCode: `${projectInfo?.catCode ?? ""}`,
+    },
+  });
 
-  const onSave = async (data: InsuranceData) => {
-    // @ts-expect-error
-    projectStore.getState().setProject(data);
+  const { id } = useParams<{ id: string }>();
+
+  const onSave = async (data: z.infer<typeof formSchema>) => {
     try {
-      const res = await fetch(
-        `/api/project/${router?.id}/insurance-information`,
-        {
-          method: "POST",
-          body: JSON.stringify(data),
-        }
-      );
+      setLoading(true);
+      const res = await fetch(`/api/v1/projects/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      });
       if (res.ok) {
-        // @ts-expect-error
-        projectStore.getState().setProject(data);
+        setProject({
+          ...projectInfo!,
+          ...data,
+          catCode: data.catCode ? parseInt(data.catCode) : null,
+        });
+
+        toast.success("Project updated successfully!");
       } else {
         toast.error(
-          "Updated Failed. If the error persists please contact support@servicegeek.app"
+          "Updated Failed. If the error persists please contact support@restoregeek.app"
         );
       }
     } catch (error) {
       console.error(error);
       toast.error(
-        "Updated Failed. If the error persists please contact support@servicegeek.app"
+        "Updated Failed. If the error persists please contact support@restoregeek.app"
       );
     }
+
+    setLoading(false);
   };
 
   return (
-    <FormContainer className='col-span-10 md:col-span-5'>
-      <Form
-        title='Carrier details'
-        description='The insurance company and adjuster information.'
-      >
-        <>
-          <SavedOptionSelect
-            className='col-span-6'
+    <Card className='w-full lg:col-span-2'>
+      <div className='p-4'>
+        <h3 className='text-lg font-medium'>Insurance Information</h3>
+        <p className='text-sm text-muted-foreground'>
+          The insurance company and adjuster information.
+        </p>
+      </div>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSave)}
+          className='grid grid-cols-1 space-x-2 space-y-5 p-3 lg:grid-cols-2'
+        >
+          <FormField
+            control={form.control}
             name='insuranceCompanyName'
-            title='Carrier'
-            onSave={(value) =>
-              onSave({
-                insuranceCompanyName: value,
-              })
-            }
-            defaultValue={
-              projectInfo.insuranceCompanyName
-                ? savedOptions.carrier.find(
-                    (carrier) =>
-                      carrier.value === projectInfo.insuranceCompanyName
-                  )
-                : undefined
-            }
-            optionType='carrier'
-            defaultOptions={carrierOptions}
+            render={({ field }) => (
+              <FormItem className='mt-5'>
+                <FormLabel>Insurance Company Name</FormLabel>
+                <FormControl>
+                  <Input placeholder='Insurance Company Name' {...field} />
+                </FormControl>
+                <FormDescription>
+                  The name of the insurance company for the project.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {/* <AutoSaveTextInput
-            className="col-span-6"
-            defaultValue={projectInfo.insuranceClaimId}
-            onSave={(insuranceClaimId) => onSave({ insuranceClaimId })}
-            name="insuranceClaimId"
-            title="Claim Number"
-            ignoreInvalid
-          /> */}
-          <div
-            className={`col-span-3 ${
-              typeOfLoss && typeOfLoss !== "--" && typeOfLoss === "Water"
-            }`}
-          >
-            <InputLabel htmlFor='typeOfLoss'>Type of Loss</InputLabel>
-            <select
-              id='typeOfLoss'
-              className='mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500'
-              onChange={(e) => {
-                if (e.target.value && e.target.value !== "--") {
-                  setTypeOfLoss(e.target.value);
-                  if (e.target.value !== "Water") {
-                    // @ts-expect-error
-                    onSave({ lossType: e.target.value, catCode: null });
-                  } else {
-                    onSave({ lossType: e.target.value });
-                  }
-                }
-              }}
-              defaultValue={typeOfLoss}
-            >
-              <option className='text-sm'>--</option>
-              <option value='Fire'>Fire</option>
-              <option value='Water'>Water</option>
-              <option value='Wind'>Wind</option>
-              <option value='Mold'>Mold</option>
-              <option value='Mold'>Catastrophe</option>
-            </select>
+          <FormField
+            control={form.control}
+            name='adjusterName'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Insurance Adjuster Name</FormLabel>
+                <FormControl>
+                  <Input placeholder='Insurance Adjuster Name' {...field} />
+                </FormControl>
+                <FormDescription>
+                  The name of the insurance adjuster for the project.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='adjusterEmail'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Insurance Adjuster Email</FormLabel>
+                <FormControl>
+                  <Input placeholder='Insurance Adjuster Email' {...field} />
+                </FormControl>
+                <FormDescription>
+                  The email of the insurance adjuster for the project.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='adjusterPhoneNumber'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Insurance Adjuster Phone Number</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder='Insurance Adjuster Phone Number'
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  The phone number of the insurance adjuster for the project.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='insuranceClaimId'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Insurance Claim ID</FormLabel>
+                <FormControl>
+                  <Input placeholder='Insurance Claim ID' {...field} />
+                </FormControl>
+                <FormDescription>
+                  The claim ID of the insurance for the project.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='lossType'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Type of Loss</FormLabel>
+                <FormControl>
+                  <Popover>
+                    <PopoverTrigger asChild className='w-full'>
+                      <Button
+                        variant='outline'
+                        role='combobox'
+                        className='justify-between'
+                      >
+                        {field.value
+                          ? lossTypes.find(
+                              (framework) => framework === field.value
+                            )
+                          : "Select loss type..."}
+                        <ChevronsUpDown className='ml-2 size-4 shrink-0 opacity-50' />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className='w-[200px] p-0'>
+                      <Command>
+                        <CommandInput placeholder='Search loss types...' />
+                        <CommandList>
+                          <CommandEmpty>No loss types found.</CommandEmpty>
+                          <CommandGroup>
+                            {lossTypes.map((framework) => (
+                              <CommandItem
+                                key={framework}
+                                value={framework}
+                                onSelect={(currentValue) => {
+                                  field.onChange(
+                                    currentValue === field.value
+                                      ? ""
+                                      : currentValue
+                                  );
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    field.value === framework
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                {framework}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </FormControl>
+                <FormDescription>
+                  The type of loss for the project.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='catCode'
+            render={({ field }) => (
+              <FormItem className='lg:col-span-2'>
+                <FormLabel>Category Code</FormLabel>
+                <FormControl>
+                  <Input placeholder='Category Code' type='number' {...field} />
+                </FormControl>
+                <FormDescription>
+                  The category code of the loss for the project.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className='col-span-2 flex justify-end'>
+            <Button type='submit' className='ml-auto'>
+              {loading ? <LoadingSpinner /> : "Save"}
+            </Button>
           </div>
-
-          <div className='col-span-3'>
-            <InputLabel htmlFor='catCode'>Category of Loss</InputLabel>
-            <select
-              id='catCode'
-              className={clsx(
-                "mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500",
-                typeOfLoss !== "Water" && "bg-slate-300"
-              )}
-              onChange={(e) => {
-                if (e.target.value && e.target.value !== "--") {
-                  onSave({ catCode: parseInt(e.target.value, 10) });
-                }
-              }}
-              value={projectInfo.catCode || ""}
-              disabled={typeOfLoss !== "Water"}
-            >
-              <option>--</option>
-              <option value='1'>1</option>
-              <option value='2'>2</option>
-              <option value='3'>3</option>
-            </select>
-          </div>
-
-          {/* <AutoSaveTextInput
-            className="col-span-6"
-            defaultValue={projectInfo.adjusterName}
-            onSave={(adjusterName) => onSave({ adjusterName })}
-            name="adjusterName"
-            title="Adjuster Name"
-            ignoreInvalid
-          />
-          <AutoSaveTextInput
-            className="col-span-6 sm:col-span-3"
-            defaultValue={projectInfo.adjusterPhoneNumber}
-            onSave={(adjusterPhoneNumber) => onSave({ adjusterPhoneNumber })}
-            name="adjusterPhoneNumber"
-            title="Adjuster Phone Number"
-            ignoreInvalid
-            isPhonenumber
-          />
-          <AutoSaveTextInput
-            className="col-span-6 sm:col-span-3"
-            defaultValue={projectInfo.adjusterEmail}
-            onSave={(adjusterEmail) => onSave({ adjusterEmail })}
-            name="adjusterEmail"
-            title="Adjuster Email"
-            ignoreInvalid
-          /> */}
-        </>
+        </form>
       </Form>
-    </FormContainer>
+    </Card>
   );
 }

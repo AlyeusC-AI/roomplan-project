@@ -1,22 +1,20 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { SecondaryButton } from "@components/components/button";
-import { InferenceMetaData } from "@servicegeek/db/queries/project/getProjectDetections";
 import { saveAs } from "file-saver";
 import { urlMapStore } from "@atoms/url-map";
 import { projectStore } from "@atoms/project";
 import { ArrowDownSquareIcon } from "lucide-react";
+import { Button } from "@components/ui/button";
+import { LoadingSpinner } from "@components/ui/spinner";
 
 const JSZip = require("jszip");
 
 const DownloadRoomImages = ({
   roomName,
-  roomId,
   inferences,
 }: {
   roomName: string;
-  roomId: string;
-  inferences: InferenceMetaData[];
+  inferences: Inference[];
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const projectInfo = projectStore((state) => state.project);
@@ -28,7 +26,7 @@ const DownloadRoomImages = ({
       if (res.ok) {
         return res.blob();
       }
-    } catch (error) {
+    } catch {
       return null;
     }
   };
@@ -40,7 +38,7 @@ const DownloadRoomImages = ({
       .join("_")}_${roomName}_photos`;
     const promises = [];
     for (const inference of inferences) {
-      promises.push(downloadImage(inference.imageKey));
+      promises.push(downloadImage(inference.imageKey!));
     }
     const zip = new JSZip();
     const roomFolder = zip.folder(folderName);
@@ -66,21 +64,26 @@ const DownloadRoomImages = ({
         saveAs(content, `${folderName}.zip`);
         setIsDownloading(false);
       })
-      .catch((e: any) => {
+      .catch(() => {
         console.error(e);
         setIsDownloading(false);
         toast.error(
-          "Failed to download images. Please contact support@servicegeek.app if this error persists"
+          "Failed to download images. Please contact support@restoregeek.app if this error persists"
         );
       });
   };
   return (
-    <SecondaryButton
+    <Button
+      variant='outline'
       onClick={() => downloadImagesForRoom()}
-      loading={isDownloading}
+      disabled={isDownloading}
     >
-      <ArrowDownSquareIcon className='h-6' />
-    </SecondaryButton>
+      {isDownloading ? (
+        <LoadingSpinner />
+      ) : (
+        <ArrowDownSquareIcon className='h-6' />
+      )}
+    </Button>
   );
 };
 
