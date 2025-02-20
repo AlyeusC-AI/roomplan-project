@@ -42,7 +42,13 @@ export default function SubscribeForm() {
       })
         .then((response) => response.json())
         .then((data) => {
-          window.location.href = data.url;
+          if (data.url) {
+            window.location.href = data.url;
+          } else {
+            toast.error(
+              "An error occurred while processing your payment. Please try again later."
+            );
+          }
           console.log(data);
           setLoading(false);
         });

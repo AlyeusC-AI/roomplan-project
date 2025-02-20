@@ -13,54 +13,68 @@ import { Search } from "./performance/components/search";
 import { UserNav } from "./user-nav";
 import { cn } from "@lib/utils";
 import { createClient } from "@lib/supabase/client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { orgStore } from "@atoms/organization";
+import { Loader2 } from "lucide-react";
 
 export default function Layout({ children }: React.PropsWithChildren) {
   const { setOrganization, setOrganizationLocal } = orgStore((state) => state);
   const client = createClient();
   const search = useSearchParams();
   const router = useRouter();
-
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
-    client.auth.getUser().then(({ data: { user }, error }) => {
-      if (error || !user) {
-        router.replace("/login");
-        return;
-      } else if (user.email_confirmed_at === null) {
-        router.replace("/register?page=2");
-      } else if (!user.user_metadata.organizationId) {
-        router.replace("/register?page=3");
-      } else {
-        setOrganization().then((org) => {
-          if (
-            !org.subscriptionPlan &&
-            !search.has("from_checkout") &&
-            org.subscriptionPlan !== "early_bird"
-          ) {
-            router.replace("/register?page=4");
-          } else if (search.has("from_checkout")) {
-            const plan = search.get("plan");
-            fetch("/api/check-session", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                sessionId: search.get("session_id"),
-                plan: plan?.toLowerCase(),
-              }),
-            })
-              .then((res) => res.json())
-              .then((data) => {
-                setOrganizationLocal(data.org);
-              });
-          }
-        });
-      }
-    });
+    client.auth
+      .getUser()
+      .then(({ data: { user }, error }) => {
+        if (error || !user) {
+          router.replace("/login");
+          return;
+        } else if (user.email_confirmed_at === null) {
+          router.replace("/register?page=2");
+        } else if (!user.user_metadata.organizationId) {
+          router.replace("/register?page=3");
+        } else {
+          setOrganization().then((org) => {
+            if (
+              !org.subscriptionPlan &&
+              !search.has("from_checkout") &&
+              org.subscriptionPlan !== "early_bird"
+            ) {
+              router.replace("/register?page=4");
+            } else if (search.has("from_checkout")) {
+              const plan = search.get("plan");
+              fetch("/api/check-session", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  sessionId: search.get("session_id"),
+                  plan: plan?.toLowerCase(),
+                }),
+              })
+                .then((res) => res.json())
+                .then((data) => {
+                  setOrganizationLocal(data.org);
+                });
+            }
+          });
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
+
+  if (loading) {
+    return (
+      <div className='flex h-screen w-screen items-center justify-center'>
+        <Loader2 className='h-10 w-10 animate-spin' />
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider defaultOpen={true}>

@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
           },
         },
       },
-      success_url: `${process.env.VERCEL_URL}/projects?session_id={CHECKOUT_SESSION_ID}&from_checkout=true&userId=${user?.id}&organizationId=${user?.user_metadata.organizationId}&plan=${plan}`,
-      cancel_url: `${process.env.VERCEL_URL}/${type === "register" ? "register?page=4" : "/settings/billing"}`,
+      success_url: `${process.env.DOMAIN || "http://localhost:3000"}/projects?session_id={CHECKOUT_SESSION_ID}&from_checkout=true&userId=${user?.id}&organizationId=${user?.user_metadata.organizationId}&plan=${plan}`,
+      cancel_url: `${process.env.DOMAIN || "http://localhost:3000"}/${type === "register" ? "register?page=4" : "/settings/billing"}`,
     });
 
     return NextResponse.json(session);
