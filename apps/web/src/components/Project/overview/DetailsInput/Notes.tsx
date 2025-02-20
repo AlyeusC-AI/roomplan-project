@@ -168,17 +168,10 @@ export default function Notes({
                   </div>
                 ))}
             {notesData?.length === 0 && !isLoading && (
-              <div className='text-center text-gray-500'>No notes yet</div>
+              <div className='mb-4 text-center text-gray-500'>No notes yet</div>
             )}
-            <Textarea
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              placeholder='Create a new note'
-            />
-          </div>
 
-          <div className='ml-auto flex items-center space-x-4'>
-            <div className='shrink-0'>
+            <div className='flex gap-2'>
               {user && (
                 <Avatar className='size-8 rounded-lg'>
                   <AvatarImage
@@ -193,7 +186,15 @@ export default function Notes({
                   </AvatarFallback>
                 </Avatar>
               )}
+              <Textarea
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder='Create a new note'
+              />
             </div>
+          </div>
+
+          <div className='ml-auto flex items-center space-x-4'>
             <div className='min-w-0 flex-1'>
               <form action='#'>
                 <div className='focus-within:border-indigo-600'>
@@ -204,7 +205,7 @@ export default function Notes({
                         mentions={mentionsOptions}
                       /> */}
                 </div>
-                <div className='flex justify-between py-3'>
+                <div className='flex justify-between'>
                   <div className='flex items-center space-x-5'></div>
                   <div className='shrink-0'>
                     <Button
@@ -218,7 +219,7 @@ export default function Notes({
                         });
                         setValue("");
                       }}
-                      variant='ghost'
+                      // variant='secondary'
                     >
                       Post
                     </Button>

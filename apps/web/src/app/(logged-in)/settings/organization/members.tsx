@@ -58,7 +58,7 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
   const addMember = async ({ email }: FormSchemaTypes) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/organization/v1/invite", {
+      const res = await fetch("/api/v1/organization/invite", {
         method: "POST",
         body: JSON.stringify({
           email,

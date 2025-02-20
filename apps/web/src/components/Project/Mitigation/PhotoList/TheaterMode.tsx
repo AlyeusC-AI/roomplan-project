@@ -68,6 +68,8 @@ export default function TheaterMode({
 
   const handleAddProjectNote = async ({
     note,
+    mentions,
+    metadata,
   }: {
     note: string;
     mentions: string[];
@@ -88,7 +90,7 @@ export default function TheaterMode({
     );
 
     const { data } = await res.json();
-    console.log(data)
+    console.log(data);
     setPhotoNotes([...photoNotes, data]);
   };
 
@@ -133,9 +135,9 @@ export default function TheaterMode({
         <div className='fixed inset-0 bg-gray-500/75 transition-opacity' />
       </Transition.Child> */}
 
-      <DialogContent className='h-5/6 max-w-4xl'>
-        <div className='size-full overflow-hidden rounded-lg bg-background shadow-xl'>
-          <div className='flex size-full overflow-hidden rounded-lg bg-background shadow-xl'>
+      <DialogContent className='h-5/6 max-w-[90vw]'>
+        <div className='size-full overflow-scroll rounded-lg bg-background'>
+          <div className='flex size-full overflow-scroll rounded-lg bg-background'>
             <div className='relative flex size-full items-center justify-center overflow-hidden align-middle'>
               {size && supabaseUrl && (
                 <Image
