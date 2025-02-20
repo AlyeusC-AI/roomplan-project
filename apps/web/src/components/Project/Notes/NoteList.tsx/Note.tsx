@@ -25,15 +25,18 @@ const Note = ({ roomPublicId, note }: { roomPublicId: string; note: Note }) => {
           noteId: note.publicId,
         }),
       });
+      console.log("🚀 ~ onSave ~ res:", res);
+
       if (res.ok) {
         const json = await res.json();
+        console.log("🚀 ~ onSave ~ json:", json);
         roomStore
           .getState()
           .updateRoomNote(
             roomPublicId,
             note.publicId,
-            json.result.notesAuditTrail,
-            json.result.updatedAt
+            json.note.notesAuditTrail,
+            json.note.updatedAt
           );
 
         toast.success("Note saved");

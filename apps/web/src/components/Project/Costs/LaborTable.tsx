@@ -2,7 +2,7 @@
 
 import CostTable from "./CostTable";
 
-export default function LaborTable() {
+export default function LaborTable({ fetchCosts }: { fetchCosts: () => void }) {
   return (
     <CostTable
       estimateName='Estimated Amount'
@@ -10,6 +10,7 @@ export default function LaborTable() {
       name='Labor'
       buttonText='Add Labor Cost'
       costType='labor'
+      fetchCosts={fetchCosts}
     />
   );
 }

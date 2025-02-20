@@ -65,7 +65,7 @@ const NoteList = ({ room }: { room: RoomWithReadings }) => {
     setIsDeleting(true);
     track("Delete Room");
     try {
-      const res = await fetch(`/api/project/${id}/room`, {
+      const res = await fetch(`/api/v1/projects/${id}/room/${room.publicId}`, {
         method: "DELETE",
         body: JSON.stringify({
           roomId: room.publicId,
@@ -98,7 +98,7 @@ const NoteList = ({ room }: { room: RoomWithReadings }) => {
       if (res.ok) {
         const json = await res.json();
         console.log("Note created", json);
-        roomStore.getState().addRoomNote(room.publicId, json.result);
+        roomStore.getState().addRoomNote(room.publicId, json.note);
       }
     } catch (error) {
       console.error(error);

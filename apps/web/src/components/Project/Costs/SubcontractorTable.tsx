@@ -2,7 +2,11 @@
 
 import CostTable from "./CostTable";
 
-export default function SubcontractorTable() {
+export default function SubcontractorTable({
+  fetchCosts,
+}: {
+  fetchCosts: () => void;
+}) {
   return (
     <CostTable
       estimateName='Estimate Amount'
@@ -10,6 +14,7 @@ export default function SubcontractorTable() {
       name='Subcontractor Name'
       buttonText='Add Subcontractor Cost'
       costType='subcontractor'
+      fetchCosts={fetchCosts}
     />
   );
 }

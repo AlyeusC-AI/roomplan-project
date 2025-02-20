@@ -17,7 +17,7 @@ const Notes = ({ room }: { room: RoomWithReadings }) => {
 
   return (
     <div>
-      {room.Notes.map((note) => (
+      {room.Notes.filter((note) => note).map((note) => (
         <Note key={note.publicId} roomPublicId={room.publicId} note={note} />
       ))}
       {room.Notes.length === 0 && (

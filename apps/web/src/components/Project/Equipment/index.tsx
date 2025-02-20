@@ -12,15 +12,18 @@ const ProjectEquipment = () => {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [usedEquipment, setUsedEquipment] = useState<ProjectEquipment[]>([]);
   const [fetching, setFetching] = useState<boolean>(true);
-
-  useEffect(() => {
-    setFetching(true);
-    fetch("/api/v1/organization/equipment")
+  const getAvailableEquipment = async () => {
+    await fetch("/api/v1/organization/available-equipment")
       .then((res) => res.json())
       .then((data) => {
-        setEquipment(data.equipment);
+        console.log("🚀 ~ .then ~ data:", data);
+        setEquipment(data.equipment || []);
         setFetching(false);
       });
+  };
+  useEffect(() => {
+    setFetching(true);
+    getAvailableEquipment();
     fetch(`/api/v1/projects/${id}/equipment`)
       .then((res) => res.json())
       .then((data) => {
@@ -28,6 +31,9 @@ const ProjectEquipment = () => {
         setFetching(false);
       });
   }, []);
+  // useEffect(() => {
+  //   getAvailableEquipment();
+  // }, [usedEquipment]);
 
   if (fetching) {
     return <LoadingPlaceholder />;
@@ -46,11 +52,13 @@ const ProjectEquipment = () => {
         <UsedEquipment
           usedEquipment={usedEquipment}
           setUsedEquipment={setUsedEquipment}
+          setAvailableEquipment={setEquipment}
         />
         <AvailableEquipment
           usedEquipment={usedEquipment}
           availableEquipment={equipment}
           setUsedEquipment={setUsedEquipment}
+          setAvailableEquipment={setEquipment}
         />
       </div>
     </div>

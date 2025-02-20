@@ -17,10 +17,12 @@ const CostsRow = ({
   costData,
   namePlaceholder,
   costType,
+  fetchCosts,
 }: {
   costData: Cost;
   namePlaceholder: string;
   costType: CostType;
+  fetchCosts: () => void;
 }) => {
   const [newName, setNewName] = useState(costData.name ?? "");
   const [newEstimatedCost, setNewEstimatedCost] = useState(
@@ -47,6 +49,7 @@ const CostsRow = ({
         const json = await res.json();
         toast.success("Cost updated successfully");
         costs.updateCost(id, json.cost, costType);
+        fetchCosts();
       } else {
         toast.error("Failed to update cost");
       }
@@ -73,6 +76,7 @@ const CostsRow = ({
       if (res.ok) {
         toast.success("Cost removed successfully");
         costs.removeCost(id, costType);
+        fetchCosts();
       } else {
         toast.error("Failed to removed cost");
         console.error(res);

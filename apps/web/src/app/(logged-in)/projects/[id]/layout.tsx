@@ -73,8 +73,11 @@ export default function Layout({ children }: React.PropsWithChildren) {
           <Separator className='fixed my-12 mt-10' />
         </div>
         <div className='flex w-full flex-col space-y-8 pt-10 lg:flex-row lg:gap-x-12 lg:space-y-0'>
-          <aside className='-mx-4 lg:w-1/5'>
-            <SidebarNav className='fixed min-w-64' items={sidebarNavItems()} />
+          <aside className='relative -mx-4 lg:w-1/5'>
+            <SidebarNav
+              className='sticky top-[185px] w-full'
+              items={sidebarNavItems()}
+            />
           </aside>
           <div className='mt-10 flex-1'>{children}</div>
         </div>

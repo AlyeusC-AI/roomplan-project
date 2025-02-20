@@ -14,12 +14,14 @@ export default function CostTable({
   costType,
   estimateName,
   actualName,
+  fetchCosts,
 }: {
   name: string;
   buttonText: string;
   costType: CostType;
   estimateName: string;
   actualName: string;
+  fetchCosts: () => void;
 }) {
   const costs = costsStore();
   const [isCreating, setIsCreating] = useState(false);
@@ -37,6 +39,7 @@ export default function CostTable({
         const json = await res.json();
         toast.success("Cost added successfully");
         costs.addCost(json.cost, costType);
+        fetchCosts();
       } else {
         toast.error("Failed to add cost");
       }
@@ -63,6 +66,7 @@ export default function CostTable({
               costData={cost}
               namePlaceholder={name}
               costType={costType}
+              fetchCosts={fetchCosts}
             />
           ))}
         </div>

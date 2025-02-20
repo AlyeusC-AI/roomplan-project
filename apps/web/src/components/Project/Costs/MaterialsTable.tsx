@@ -2,7 +2,11 @@
 
 import CostTable from "./CostTable";
 
-export default function MaterialsTable() {
+export default function MaterialsTable({
+  fetchCosts,
+}: {
+  fetchCosts: () => void;
+}) {
   return (
     <CostTable
       estimateName='Estimate Summary'
@@ -10,6 +14,7 @@ export default function MaterialsTable() {
       name='Material'
       buttonText='Add Material Cost'
       costType='materials'
+      fetchCosts={fetchCosts}
     />
   );
 }

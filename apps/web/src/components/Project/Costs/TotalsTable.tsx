@@ -14,7 +14,13 @@ const formatter = new Intl.NumberFormat("en-US", {
   currency: "USD",
 });
 
-const TotalsTable = ({ rcvValue }: { rcvValue: number }) => {
+const TotalsTable = ({
+  rcvValue,
+  fetchCosts,
+}: {
+  rcvValue: number;
+  fetchCosts: () => void;
+}) => {
   const [rv, setRv] = useState<string | undefined>(
     rcvValue ? formatter.format(rcvValue) : ""
   );
@@ -43,7 +49,7 @@ const TotalsTable = ({ rcvValue }: { rcvValue: number }) => {
         method: "PATCH",
         body: JSON.stringify({ rcvValue: v }),
       });
-
+      fetchCosts();
       toast.success("Updated project successfully");
     } catch (error) {
       toast.error("Failed to update project");

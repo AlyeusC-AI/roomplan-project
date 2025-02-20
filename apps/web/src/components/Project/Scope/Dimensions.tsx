@@ -142,7 +142,7 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
           <Input
             className='col-span-1'
             placeholder='--'
-            value={Number(tempRoom.height) * Number(tempRoom.width)}
+            value={Number(tempRoom.length) * Number(tempRoom.width)}
             readOnly
             name='totalSqft'
             type='number'

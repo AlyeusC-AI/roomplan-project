@@ -6,6 +6,11 @@ const useAmplitudeTrack = () => {
   const userInfo = userInfoStore((state) => state.user);
   const currentUserId = getUserId();
 
+  // Initialize Amplitude with the API key
+  if (!currentUserId) {
+    init(String(process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY));
+  }
+
   if (userInfo?.email && userInfo.email !== currentUserId) {
     setUserId(userInfo.email);
   }

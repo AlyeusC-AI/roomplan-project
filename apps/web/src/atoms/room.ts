@@ -68,14 +68,25 @@ export const roomStore = create<State & Actions>((set) => ({
       const roomIndex = state.rooms.findIndex(
         (r) => r.publicId === roomPublicId
       );
+      console.log("🚀 ~ set ~ roomIndex:", roomIndex)
       if (roomIndex < 0 || !state.rooms[roomIndex]) return state;
 
       const noteIndex = state.rooms[roomIndex].Notes?.findIndex(
         (n) => n.publicId === notePublicId
       );
+
       if (noteIndex === undefined || noteIndex < 0) return state;
-      state.rooms[roomIndex].Notes?.splice(noteIndex, 1);
-      return state;
+      return {
+        ...state,
+        rooms: state.rooms.map((r, i) =>
+          i === roomIndex
+            ? {
+                ...r,
+                Notes: r.Notes?.filter((n) => n.publicId !== notePublicId),
+              }
+            : r
+        ),
+      };
     }),
   updateRoomNote: (roomPublicId, notePublicId, note) =>
     set((state) => {

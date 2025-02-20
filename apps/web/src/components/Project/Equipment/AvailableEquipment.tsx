@@ -161,10 +161,12 @@ const AvaliableEquipment = ({
   usedEquipment,
   availableEquipment,
   setUsedEquipment,
+  setAvailableEquipment,
 }: {
   usedEquipment: ProjectEquipment[];
   availableEquipment: Equipment[];
   setUsedEquipment: React.Dispatch<React.SetStateAction<ProjectEquipment[]>>;
+  setAvailableEquipment: React.Dispatch<React.SetStateAction<Equipment[]>>;
 }) => {
   const [isDeleting, setIsDeleting] = useState<Equipment | null>(null);
 
@@ -247,6 +249,7 @@ const AvaliableEquipment = ({
       toast.success("Equipment added successfully");
       console.log(json);
       setUsedEquipment([...usedEquipment, { ...json, Equipment: e }]);
+      setAvailableEquipment(availableEquipment.filter((i) => i.id !== e.id));
     } catch {
       toast.error("An error occurred");
     }

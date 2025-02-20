@@ -80,9 +80,11 @@ import { useParams } from "next/navigation";
 const UsedEquipment = ({
   usedEquipment,
   setUsedEquipment,
+  setAvailableEquipment,
 }: {
   usedEquipment: ProjectEquipment[];
   setUsedEquipment: React.Dispatch<React.SetStateAction<ProjectEquipment[]>>;
+  setAvailableEquipment: React.Dispatch<React.SetStateAction<Equipment[]>>;
 }) => {
   const [isDeleting, setIsDeleting] = useState<ProjectEquipment | null>(null);
 
@@ -147,6 +149,7 @@ const UsedEquipment = ({
       });
 
       setUsedEquipment(usedEquipment.filter((i) => i.publicId !== e.publicId));
+      setAvailableEquipment((prev) => [...prev, e.Equipment]);
       toast.success("Equipment deleted successfully");
     } catch {
       toast.error("An error occurred");

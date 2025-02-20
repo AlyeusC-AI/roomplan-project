@@ -18,15 +18,15 @@ export default function CostsTable({
   const [fetching, setFetching] = useState(true);
   const { id } = useParams<{ id: string }>();
   const costs = costsStore();
+  const fetchCosts = async () => {
+    const res = await fetch(`/api/v1/projects/${id}/costs`);
+    const json = await res.json();
+    costs.setCosts(json.costs);
+    setFetching(false);
+  };
   useEffect(() => {
     setFetching(true);
-    fetch(`/api/v1/projects/${id}/costs`)
-      .then((res) => res.json())
-      .then((json) => {
-        costs.setCosts(json.costs);
-        console.log(json);
-        setFetching(false);
-      });
+    fetchCosts();
   }, []);
 
   if (fetching) {
@@ -36,7 +36,7 @@ export default function CostsTable({
   return (
     <div className='space-y-6'>
       <div className='mt-6'>
-        <TotalsTable rcvValue={rcvValue} />
+        <TotalsTable rcvValue={rcvValue} fetchCosts={fetchCosts} />
       </div>
       <div className='space-y-6'>
         <div>
@@ -47,7 +47,7 @@ export default function CostsTable({
           </p>
         </div>
         <Separator />
-        <SubcontractorTable />
+        <SubcontractorTable fetchCosts={fetchCosts} />
       </div>
       <div className='space-y-6'>
         <div>
@@ -57,7 +57,7 @@ export default function CostsTable({
           </p>
         </div>
         <Separator />
-        <MaterialsTable />
+        <MaterialsTable fetchCosts={fetchCosts} />
       </div>
       <div className='space-y-6'>
         <div>
@@ -67,7 +67,7 @@ export default function CostsTable({
           </p>
         </div>
         <Separator />
-        <LaborTable />
+        <LaborTable fetchCosts={fetchCosts} />
       </div>
       <div className='space-y-6'>
         <div>
@@ -77,7 +77,7 @@ export default function CostsTable({
           </p>
         </div>
         <Separator />
-        <MiscellaneousTable />
+        <MiscellaneousTable fetchCosts={fetchCosts} />
       </div>
     </div>
   );
