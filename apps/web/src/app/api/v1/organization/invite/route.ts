@@ -22,16 +22,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ status: "failed" }, { status: 500 });
   }
 
-  const servicegeekUser = await getUser(user.id);
+  
 
-  const org = servicegeekUser?.org?.organization;
-  if (!org?.id) {
+  const orgId = user?.user_metadata.organizationId
+  console.log("🚀 ~ POST ~ orgId:", orgId)
+  if (!orgId) {
     console.error("err", "no org");
     return NextResponse.json({ status: "failed" }, { status: 500 });
   }
-  const currentTeamMembers = org.users;
 
-  const body = JSON.parse(await req.json());
+    // Get organization details
+    const { data: currentTeamMembers } = await supabaseClient
+      .from("User")
+      .select("*")
+      .eq("organizationId", orgId)
+      .single();
+      console.log("🚀 ~ POST ~ org:", currentTeamMembers)
+
+
+  
+
+  const body = await req.json()
 
   if (!validator.isEmail(body.email)) {
     console.error("Invalid email.");
