@@ -26,7 +26,7 @@ export default function SubscribeForm() {
       });
   }, []);
 
-  function purchase(plan: SubscriptionPlan) {
+  function purchase(plan: SubscriptionPlan, noTrial: boolean) {
     try {
       setLoading(true);
       fetch("/api/create-checkout-session", {
@@ -38,6 +38,7 @@ export default function SubscribeForm() {
           priceId: plan.price_id,
           type: "register",
           plan: plan.product.name.toLowerCase(),
+          noTrial,
         }),
       })
         .then((response) => response.json())
@@ -142,8 +143,18 @@ export default function SubscribeForm() {
                         ))}
                       </ul>
                     </CardContent>
-                    <CardFooter>
-                      <Button onClick={() => purchase(plan)} className='w-full'>
+                    <CardFooter className='flex flex-col gap-2'>
+                      <Button
+                        onClick={() => purchase(plan, true)}
+                        className='w-full'
+                      >
+                        Continue
+                      </Button>
+                      <Button
+                        onClick={() => purchase(plan, false)}
+                        className='w-full'
+                        variant={"ghost"}
+                      >
                         Start free trial
                       </Button>
                     </CardFooter>
@@ -171,11 +182,17 @@ export default function SubscribeForm() {
                         ))}
                       </ul>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className='flex flex-col gap-2'>
                       <Button
-                        onClick={() => purchase(plan)}
+                        onClick={() => purchase(plan, true)}
                         className='w-full'
-                        variant={"outline"}
+                      >
+                        Continue
+                      </Button>
+                      <Button
+                        onClick={() => purchase(plan, false)}
+                        className='w-full'
+                        variant={"ghost"}
                       >
                         Start free trial
                       </Button>

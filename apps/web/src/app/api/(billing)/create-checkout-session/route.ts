@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export async function POST(request: NextRequest) {
-  const { priceId, type, plan } = await request.json();
+  const { priceId, type, plan, noTrial } = await request.json();
   const supabase = await createClient();
 
   const {
@@ -30,16 +30,18 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         },
       ],
-      subscription_data: {
-        trial_period_days: 14,
-        trial_settings: {
-          end_behavior: {
+      subscription_data: noTrial
+        ? undefined
+        : {
+            trial_period_days: 14,
+            trial_settings: {
+              end_behavior: {
             missing_payment_method: "pause",
           },
         },
-      },
-      success_url: `${process.env.DOMAIN || "http://localhost:3000"}/projects?session_id={CHECKOUT_SESSION_ID}&from_checkout=true&userId=${user?.id}&organizationId=${user?.user_metadata.organizationId}&plan=${plan}`,
-      cancel_url: `${process.env.DOMAIN || "http://localhost:3000"}/${type === "register" ? "register?page=4" : "/settings/billing"}`,
+        },
+      success_url: `${process.env.DOMAIN || "http://localhost:3002"}/projects?session_id={CHECKOUT_SESSION_ID}&from_checkout=true&userId=${user?.id}&organizationId=${user?.user_metadata.organizationId}&plan=${plan}`,
+      cancel_url: `${process.env.DOMAIN || "http://localhost:3002"}/${type === "register" ? "register?page=4" : "/settings/billing"}`,
     });
 
     return NextResponse.json(session);
