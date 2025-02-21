@@ -1,3 +1,4 @@
+import { createClient } from "@lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -7,11 +8,34 @@ export async function POST(request: NextRequest) {
       apiVersion: "2025-01-27.acacia",
     });
 
-    // Get the customer ID from your database based on the authenticated user
-    const customerId = "cus_example123"; // Replace with actual customer ID retrieval logic
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not authenticated" },
+        { status: 401 }
+      );
+    }
+
+    // Get organization details for the user
+    const { data: org } = await supabase
+      .from("Organization")
+      .select("customerId")
+      .eq("publicId", user.user_metadata.organizationId)
+      .single();
+
+    if (!org?.customerId) {
+      return NextResponse.json(
+        { error: "No customer ID found" },
+        { status: 400 }
+      );
+    }
 
     const session = await stripe.billingPortal.sessions.create({
-      customer: customerId,
+      customer: org.customerId,
       return_url: `${request.headers.get("origin")}/settings/billing`,
     });
 

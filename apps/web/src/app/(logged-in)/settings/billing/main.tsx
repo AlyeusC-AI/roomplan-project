@@ -1,164 +1,287 @@
 "use client";
 
-// export default async function BillingPage() {
-//   return (
-//     // <AppContainer
-//     //   renderSecondaryNavigation={() => <ProjectsNavigationContainer />}
-//     // >
-//     <></>
-//     // <div className="space-y-6 sm:px-6 lg:col-span-9 lg:px-0">
-//     //   {planInfo && (
-//     //     <Card bg="" className="shadow-none">
-//     //       <h2 className="text-lg font-medium leading-6 text-gray-900">
-//     //         Billing Information
-//     //         {status === 'canceled' && (
-//     //           <span className=" ml-2 rounded-full bg-red-200 px-2 py-1 text-sm">
-//     //             Cancelled
-//     //           </span>
-//     //         )}
-//     //         {status === 'active' && (
-//     //           <span className=" ml-2 rounded-full bg-green-200 px-2 py-1 text-sm">
-//     //             active
-//     //           </span>
-//     //         )}
-//     //       </h2>
-//     //       {status === 'active' && (
-//     //         <>
-//     //           {productInfo && (
-//     //             <h3 className="text-md mt-6 font-medium leading-6 text-gray-900">
-//     //               Plan: {productInfo.name}
-//     //             </h3>
-//     //           )}
-//     //           <div className="mt-6 flex items-baseline">
-//     //             <p className="text-4xl">
-//     //               $ {parseInt(planInfo.unitAmount) * 0.01}
-//     //             </p>
-//     //             <p className="ml-4 text-base">
-//     //               {' '}
-//     //               / user / {planInfo.interval}
-//     //             </p>
-//     //           </div>
-//     //         </>
-//     //       )}
-//     //       {status === 'canceled' && (
-//     //         <>
-//     //           <PrimaryLink
-//     //             color="blue"
-//     //             href="/pricing"
-//     //             className="mt-4 rounded-md"
-//     //           >
-//     //             Reactivate Now
-//     //           </PrimaryLink>
-//     //         </>
-//     //       )}
-//     //     </Card>
-//     //   )}
-//     //   {status !== 'never' ? (
-//     //     <Card bg="" className="shadow-none">
-//     //       <h2 className="text-lg font-medium leading-6 text-gray-900">
-//     //         Payment Portal
-//     //       </h2>
-//     //       <h3 className="text-md mt-6 font-medium leading-6 text-gray-900">
-//     //         We partnered with Stripe to simplify billing.
-//     //       </h3>
-//     //       <button
-//     //         type="button"
-//     //         className="mt-6 flex items-center justify-center rounded-md border border-transparent bg-primary py-2 px-4 text-center text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-//     //         onClick={redirectToCustomerPortal}
-//     //       >
-//     //         {isLoading ? (
-//     //           <Spinner fill="fill-white" />
-//     //         ) : (
-//     //           <span>View Billing Portal</span>
-//     //         )}
-//     //       </button>
-//     //     </Card>
-//     //   ) : (
-//     //     <Card>
-//     //       <h2 className="text-2xl font-medium leading-6 text-gray-900">
-//     //         Upgrade Your Account
-//     //       </h2>
-//     //       <PricingOptions inProduct />
-//     //     </Card>
-//     //   )}
-//     //   <Card bg="" className="shadow-none">
-//     //     <h2 className="text-lg font-medium leading-6 text-gray-900">
-//     //       Support
-//     //     </h2>
-//     //     <h3 className="text-md mt-6 font-medium leading-6 text-gray-900">
-//     //       Need help with something?
-//     //     </h3>
-
-//     //     <p className="text-md mt-6 leading-6 text-gray-900">
-//     //       Contact{' '}
-//     //       <a href="mailto:support@restoregeek.app" className="underline">
-//     //         support@restoregeek.app
-//     //       </a>
-//     //     </p>
-//     //   </Card>
-//     // </div>
-//     // </AppContainer>
-//   );
-// }
-
 import { useState, useEffect } from "react";
-import { loadStripe } from "@stripe/stripe-js";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { LoadingPlaceholder } from "@components/ui/spinner";
+import {
+  CheckIcon,
+  Loader2,
+  CreditCard,
+  Calendar,
+  Users,
+  Receipt,
+  ExternalLink,
+} from "lucide-react";
+import { toast } from "sonner";
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-);
+interface Invoice {
+  id: string;
+  amount: number;
+  status: string;
+  date: string;
+  pdfUrl: string | null;
+}
 
-export default function Subscriptions() {
-  const [plans, setPlans] = useState<
-    {
-      id: string;
-      name: string;
-      description: string;
-      price: number;
-      interval: string;
-      price_id: string;
-    }[]
-  >([]);
+interface SubscriptionInfo {
+  status: "active" | "canceled" | "past_due" | "never" | "trialing";
+  customerId: string;
+  subscriptionId: string;
+  plan: {
+    name: string;
+    price: number;
+    interval: string;
+    features: string[];
+  } | null;
+  customer: {
+    email: string;
+    name: string | null;
+    phone: string | null;
+  } | null;
+  currentPeriodEnd: string | null;
+  freeTrialEndsAt: string | null;
+  maxUsersForSubscription: number;
+  cancelAtPeriodEnd: boolean;
+  recentInvoices: Invoice[];
+}
+
+export default function BillingPage() {
+  const [loading, setLoading] = useState(true);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [subscriptionInfo, setSubscriptionInfo] =
+    useState<SubscriptionInfo | null>(null);
 
   useEffect(() => {
-    // Fetch subscription plans from your API
-    fetch("/api/subscription-plans")
-      .then((res) => res.json())
-      .then((data) => setPlans(data));
+    fetchSubscriptionInfo();
   }, []);
 
-  const handleSubscribe = async (priceId: string) => {
-    const stripe = await stripePromise;
-    const { sessionId } = await fetch("/api/create-checkout-session", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ priceId }),
-    }).then((res) => res.json());
-
-    const result = await stripe?.redirectToCheckout({ sessionId });
-
-    if (result.error) {
-      console.error(result.error);
+  const fetchSubscriptionInfo = async () => {
+    try {
+      const response = await fetch("/api/subscription-info");
+      if (!response.ok) throw new Error("Failed to fetch subscription info");
+      const data = await response.json();
+      setSubscriptionInfo(data);
+    } catch (error) {
+      toast.error("Failed to load subscription information");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const redirectToPortal = async () => {
+    try {
+      setPortalLoading(true);
+      const response = await fetch("/api/create-portal-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerId: subscriptionInfo?.customerId }),
+      });
+      const data = await response.json();
+      if (data.url) window.location.href = data.url;
+    } catch (error) {
+      toast.error("Failed to redirect to billing portal");
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
+  if (loading) return <LoadingPlaceholder />;
+
   return (
-    <div>
-      <h1>Choose a Subscription Plan</h1>
-      {plans.map((plan) => (
-        <div key={plan.id}>
-          <h2>{plan.name}</h2>
-          <p>{plan.description}</p>
-          <p>
-            Price: ${plan.price / 100} / {plan.interval}
-          </p>
-          <button onClick={() => handleSubscribe(plan.price_id)}>
-            Subscribe
-          </button>
+    <div className='mx-auto max-w-5xl space-y-8 p-8'>
+      {/* Header Section */}
+
+      {/* Main Subscription Card */}
+      <Card className='overflow-hidden'>
+        <div className='bg-primary/5 p-6'>
+          <div className='flex items-center justify-between'>
+            <div className='space-y-1'>
+              <h2 className='text-2xl font-semibold'>
+                {subscriptionInfo?.plan?.name || "No Active Plan"}
+              </h2>
+              <p className='text-sm text-muted-foreground'>
+                {subscriptionInfo?.plan
+                  ? `${subscriptionInfo.maxUsersForSubscription} users included`
+                  : "Choose a plan to get started"}
+              </p>
+            </div>
+            {subscriptionInfo?.status && (
+              <div className='flex items-center gap-3'>
+                {subscriptionInfo.cancelAtPeriodEnd && (
+                  <Badge
+                    variant='outline'
+                    className='border-yellow-500/20 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
+                  >
+                    Cancels soon
+                  </Badge>
+                )}
+                <Badge
+                  variant={
+                    subscriptionInfo.status === "active"
+                      ? "default"
+                      : subscriptionInfo.status === "trialing"
+                        ? "secondary"
+                        : "destructive"
+                  }
+                  className='px-4 py-1'
+                >
+                  {subscriptionInfo.status.charAt(0).toUpperCase() +
+                    subscriptionInfo.status.slice(1)}
+                </Badge>
+              </div>
+            )}
+          </div>
         </div>
-      ))}
+
+        <CardContent className='grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-3'>
+          {/* Price Info */}
+          {subscriptionInfo?.plan && (
+            <>
+              <div className='space-y-2'>
+                <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                  <CreditCard className='h-4 w-4' />
+                  Billing Amount
+                </div>
+                <div className='flex items-baseline gap-1'>
+                  <span className='text-3xl font-bold'>
+                    ${subscriptionInfo.plan.price}
+                  </span>
+                  <span className='text-muted-foreground'>
+                    /{subscriptionInfo.plan.interval}
+                  </span>
+                </div>
+              </div>
+
+              {/* Next Payment */}
+              <div className='space-y-2'>
+                <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                  <Calendar className='h-4 w-4' />
+                  Next Payment
+                </div>
+                <p className='text-xl font-medium'>
+                  {subscriptionInfo.currentPeriodEnd
+                    ? new Date(
+                        subscriptionInfo.currentPeriodEnd
+                      ).toLocaleDateString()
+                    : "N/A"}
+                </p>
+              </div>
+
+              {/* User Limit */}
+              <div className='space-y-2'>
+                <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                  <Users className='h-4 w-4' />
+                  User Limit
+                </div>
+                <p className='text-xl font-medium'>
+                  {subscriptionInfo.maxUsersForSubscription} users
+                </p>
+              </div>
+            </>
+          )}
+        </CardContent>
+
+        {subscriptionInfo?.plan?.features?.length &&
+          subscriptionInfo?.plan?.features?.length > 0 && (
+            <>
+              <Separator />
+              <CardContent className='p-6'>
+                <h3 className='mb-4 text-sm font-medium'>Included Features</h3>
+                <ul className='grid gap-3 md:grid-cols-2'>
+                  {subscriptionInfo.plan.features.map((feature, i) => (
+                    <li key={i} className='flex items-center gap-2'>
+                      <CheckIcon className='h-4 w-4 text-primary' />
+                      <span className='text-sm'>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </>
+          )}
+
+        <Separator />
+        <CardFooter className='p-6'>
+          <div className='flex w-full flex-col gap-4 sm:flex-row'>
+            <Button
+              onClick={redirectToPortal}
+              disabled={portalLoading}
+              className='flex-1'
+              size='lg'
+            >
+              {portalLoading ? (
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+              ) : (
+                <CreditCard className='mr-2 h-4 w-4' />
+              )}
+              Manage Subscription
+            </Button>
+            {!subscriptionInfo?.plan && (
+              <Button asChild variant='outline' size='lg' className='flex-1'>
+                <a href='/pricing'>View Plans</a>
+              </Button>
+            )}
+          </div>
+        </CardFooter>
+      </Card>
+
+      {/* Recent Invoices */}
+      {subscriptionInfo?.recentInvoices &&
+        subscriptionInfo.recentInvoices.length > 0 && (
+          <Card>
+            <CardHeader>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <CardTitle>Recent Invoices</CardTitle>
+                  <CardDescription>
+                    View and download your recent invoices
+                  </CardDescription>
+                </div>
+                <Receipt className='h-8 w-8 text-muted-foreground' />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className='space-y-4'>
+                {subscriptionInfo.recentInvoices.map((invoice) => (
+                  <div
+                    key={invoice.id}
+                    className='flex items-center justify-between rounded-lg border bg-card p-4 transition-colors hover:bg-muted/50'
+                  >
+                    <div>
+                      <p className='font-medium'>
+                        ${invoice.amount.toFixed(2)}
+                      </p>
+                      <p className='text-sm text-muted-foreground'>
+                        {new Date(invoice.date).toLocaleDateString()}
+                      </p>
+                    </div>
+                    {invoice.pdfUrl && (
+                      <Button variant='ghost' size='sm' asChild>
+                        <a
+                          href={invoice.pdfUrl}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='flex items-center gap-2'
+                        >
+                          <ExternalLink className='h-4 w-4' />
+                          Download
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
     </div>
   );
 }
