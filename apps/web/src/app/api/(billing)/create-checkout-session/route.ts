@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
       payment_method_types: ["card"],
       payment_method_collection: "if_required",
       submit_type: "subscribe",
+      customer_email: user?.email,
       metadata: {
         userId: user!.id,
         organizationId: user?.user_metadata.organizationId,
@@ -36,10 +37,10 @@ export async function POST(request: NextRequest) {
             trial_period_days: 14,
             trial_settings: {
               end_behavior: {
-            missing_payment_method: "pause",
+                missing_payment_method: "pause",
+              },
+            },
           },
-        },
-        },
       success_url: `${process.env.DOMAIN || "http://localhost:3002"}/projects?session_id={CHECKOUT_SESSION_ID}&from_checkout=true&userId=${user?.id}&organizationId=${user?.user_metadata.organizationId}&plan=${plan}`,
       cancel_url: `${process.env.DOMAIN || "http://localhost:3002"}/${type === "register" ? "register?page=4" : "/settings/billing"}`,
     });

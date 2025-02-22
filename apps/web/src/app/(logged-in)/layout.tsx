@@ -28,15 +28,24 @@ export default function Layout({ children }: React.PropsWithChildren) {
     client.auth
       .getUser()
       .then(({ data: { user }, error }) => {
+        console.log("🚀 ~ .then ~ user:", user);
+
         if (error || !user) {
           router.replace("/login");
           return;
+        } else if (
+          user.user_metadata.inviteId &&
+          !user.user_metadata.acceptedInvite
+          // true
+        ) {
+          router.replace("/acceptInvite?token=" + user.user_metadata.inviteId);
         } else if (user.email_confirmed_at === null) {
           router.replace("/register?page=2");
         } else if (!user.user_metadata.organizationId) {
           router.replace("/register?page=3");
         } else {
           setOrganization().then((org) => {
+            console.log("🚀 ~ setOrganization ~ org:", org);
             if (
               !org.subscriptionPlan &&
               !search.has("from_checkout") &&

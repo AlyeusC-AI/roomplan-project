@@ -146,7 +146,7 @@ export default function AccountSettings() {
           <AvatarFallback className='rounded-lg text-2xl'>
             {`${user?.firstName ?? "No"} ${user?.lastName ?? "User"}`
               .split(" ")
-              .map((word) => word[0].toUpperCase())
+              .map((word) => word[0]?.toUpperCase())
               .join("")}
           </AvatarFallback>
         </Avatar>

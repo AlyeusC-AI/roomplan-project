@@ -15,6 +15,15 @@ export default async function Component() {
     return redirect("/projects");
   } else if (
     user.data.user &&
+    user.data.user.user_metadata.inviteId &&
+    !user.data.user.user_metadata.acceptedInvite
+    // true
+  ) {
+    return redirect(
+      "/acceptInvite?token=" + user.data.user.user_metadata.inviteId
+    );
+  } else if (
+    user.data.user &&
     user.data.user.email_confirmed_at &&
     !user.data.user.user_metadata.organizationId
   ) {

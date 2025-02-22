@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
           stripeSessionId: session.id,
           customerId: typeof customer === "string" ? customer : customer.id,
           maxUsersForSubscription:
-            plan === "startup" ? 3 : plan === "team" ? 5 : 10,
+            plan === "startup" ? 2 : plan === "team" ? 5 : 10,
           freeTrialEndsAt: new Date(
             Date.now() + 14 * 24 * 60 * 60 * 1000
           ).toISOString(),

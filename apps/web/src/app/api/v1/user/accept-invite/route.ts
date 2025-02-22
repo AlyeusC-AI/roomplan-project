@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function PATCH(req: NextRequest) {
   await user(req);
 
-  const { firstName, lastName, inviteId, phone } = await req.json();
+  const { firstName, lastName, inviteId, phone, password } = await req.json();
 
   if (!firstName && !lastName && !phone) {
     return NextResponse.json(

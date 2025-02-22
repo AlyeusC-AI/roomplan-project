@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import UserAvatar from "@components/DesignSystem/UserAvatar";
 import Image from "next/image";
 import { teamMembersStore } from "@atoms/team-members";
@@ -54,8 +54,19 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
   });
   const [loading, setLoading] = useState(false);
   const userInfo = userInfoStore((state) => state.user);
-  const teamMembers = teamMembersStore((state) => state.teamMembers);
+  const [teamMembers, setTeamMembers] = useState<User[]>([]);
+  useEffect(() => {
+    fetch("/api/v1/organization/members")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("team members", data);
+        teamMembersStore.getState().setTeamMembers(data.members);
+        setTeamMembers(data.members);
+        console.log(data);
+      });
+  }, []);
   const addMember = async ({ email }: FormSchemaTypes) => {
+    console.log("🚀 ~ addMember ~ email:", email);
     setLoading(true);
     try {
       const res = await fetch("/api/v1/organization/invite", {
@@ -64,10 +75,11 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
           email,
         }),
       });
+      console.log("🚀 ~ addMember ~ res:", res);
       if (!res.ok) {
         const message = "Something went wrong. Please try again.";
         const json = await res.json();
-        console.error(json);
+        console.log("🚀 ~ addMember ~ json:", json);
         if (json.message) {
           if (json.message === "existing-invite") {
             return toast.error("Error sending invite", {
@@ -78,6 +90,9 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
               description: `${email} is already a member of this organization.`,
             });
           }
+          return toast.error("Error sending invite", {
+            description: json.message,
+          });
         }
         return toast.error("Error sending invite", {
           description: message,
@@ -98,12 +113,16 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
         description: `An invitation was sent to ${email}.`,
       });
     } catch (error) {
+      console.log("🚀 ~ addMember ~ error:", error);
       console.error(error);
       toast.error("Error sending invite", {
-        description: "Something went wrong. Please try again.",
+        description: error
+          ? (error as Error).message
+          : "Something went wrong. Please try again.",
       });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const filteredTeamMembers = useMemo(
@@ -200,7 +219,9 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
                 </FormItem>
               )}
             />
-            <Button type='submit'>Submit</Button>
+            <Button type='submit' disabled={loading}>
+              Submit
+            </Button>
           </form>
         </Form>
         <Card className='mt-7'>
@@ -233,37 +254,54 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
               {filteredTeamMembers?.map((member) => {
                 return (
                   <li
-                    key={member.User?.email ?? ""}
+                    key={member.email}
                     className='flex flex-col items-start justify-between space-y-6 py-4 pr-4 md:flex-row md:space-y-0'
                   >
                     <div className='flex'>
                       <div className='flex items-center justify-center'>
                         <UserAvatar
-                          email={member.User?.email}
-                          userId={member.userId}
-                          firstName={member.User?.firstName || ""}
-                          lastName={member.User?.lastName || ""}
+                          email={member.email}
+                          userId={member.id}
+                          firstName={member.firstName || ""}
+                          lastName={member.lastName || ""}
                         />
                         <div className='ml-4 flex flex-col'>
                           <span className='text-sm font-medium text-gray-900'>
-                            {member.User?.email}
+                            {member.email}
                           </span>
                           <span className='text-sm text-gray-500'>
-                            {member.role ? "Account Administrator" : ""}
+                            {member.accessLevel === "admin" &&
+                              "Account Administrator"}
+                            {member.accessLevel === "viewer" && "Viewer"}
+                            {member.accessLevel === "projectManager" &&
+                              "Project Manager"}
+                            {member.accessLevel === "accountManager" &&
+                              "Account Manager"}
+                            {member.accessLevel === "contractor" &&
+                              "Contractor"}
+                            {member.accessLevel === "owner" && "Owner"}
                           </span>
                         </div>
                       </div>
                     </div>
                     <div className='flex items-center justify-center md:space-x-4'>
-                      <RoleSelection member={member} />
+                      <RoleSelection
+                        member={{
+                          User: member,
+                          createdAt: member.createdAt,
+                          // id: member.id,
+                          // projectId: member.projectId,
+                          userId: member.id,
+                        }}
+                      />
                       <RemoveTeamMember
-                        id={member.userId}
-                        email={member.User?.email ?? ""}
+                        id={member.id}
+                        email={member.email}
                         removeTeamMember={
                           teamMembersStore.getState().removeTeamMember
                         }
                         setEmailStatus={() => {}}
-                        isAdmin={member.isAdmin}
+                        isAdmin={member.accessLevel === "admin"}
                       />
                     </div>
                   </li>

@@ -32,8 +32,8 @@ const UserAvatar = ({
           }}
           className={`flex ${className} items-center justify-center rounded-full ${textSize} border border-white font-bold text-white`}
         >
-          {firstName[0].toUpperCase()}
-          {lastName[0].toUpperCase()}
+          {firstName[0]?.toUpperCase()}
+          {lastName[0]?.toUpperCase()}
         </div>
       );
     }

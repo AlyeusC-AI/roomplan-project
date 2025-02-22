@@ -30,7 +30,7 @@ export function UserNav() {
               <AvatarFallback className='rounded-lg'>
                 {`${user.firstName} ${user.lastName}`
                   .split(" ")
-                  .map((word) => word[0].toUpperCase())
+                  .map((word) => word[0]?.toUpperCase())
                   .join("")}
               </AvatarFallback>
             </Avatar>

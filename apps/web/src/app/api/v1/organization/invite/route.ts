@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import validator from "validator";
 import { createClient } from "@lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import createInvitation from "./createInvitation";
 
 // import { NextResponse } from "next/server";
 
@@ -21,28 +22,24 @@ export async function POST(req: NextRequest) {
     console.error("Session does not exist.");
     return NextResponse.json({ status: "failed" }, { status: 500 });
   }
+  console.log("🚀 ~ POST ~ user:", user);
 
-  
-
-  const orgId = user?.user_metadata.organizationId
-  console.log("🚀 ~ POST ~ orgId:", orgId)
+  const orgId = user?.user_metadata.organizationId;
+  console.log("🚀 ~ POST ~ orgId:", orgId);
   if (!orgId) {
     console.error("err", "no org");
     return NextResponse.json({ status: "failed" }, { status: 500 });
   }
 
-    // Get organization details
-    const { data: currentTeamMembers } = await supabaseClient
-      .from("User")
-      .select("*")
-      .eq("organizationId", orgId)
-      .single();
-      console.log("🚀 ~ POST ~ org:", currentTeamMembers)
+  // Get organization details
+  const { data: currentTeamMembers } = await supabaseClient
+    .from("User")
+    .select("*")
+    .eq("organizationId", orgId)
+    .single();
+  console.log("🚀 ~ POST ~ org:", currentTeamMembers);
 
-
-  
-
-  const body = await req.json()
+  const body = await req.json();
 
   if (!validator.isEmail(body.email)) {
     console.error("Invalid email.");
@@ -55,6 +52,7 @@ export async function POST(req: NextRequest) {
   }
   try {
     const invitation = await createInvitation(user.id, body.email);
+    console.log("🚀 ~ POST ~ invitation:", invitation);
     if (invitation.failed) {
       if (invitation.reason === "existing-invite")
         return NextResponse.json(
@@ -68,16 +66,22 @@ export async function POST(req: NextRequest) {
         );
       else return NextResponse.json({ status: "failed" }, { status: 500 });
     } else {
+      console.log("🚀 ~ POST ~ invitation:", invitation);
+      console.log("🚀 ~ POST ~ orgId:", orgId);
+
       const { data: u, error } =
         await supabaseServiceRole.auth.admin.inviteUserByEmail(body.email, {
           data: {
-            orgId: invitation.orgId,
+            organizationId: orgId,
             inviteId: invitation.inviteId,
             isSupportUser: false,
             firstName: "",
             lastName: "",
+            accessLevel: "viewer",
           },
+          redirectTo: `${process.env.DOMAIN || "http://localhost:3002"}/acceptInvite?token=${invitation.inviteId}`,
         });
+      console.log("🚀 ~ POST ~ error:", error);
       if (process.env.NODE_ENV === "production") {
         await fetch(
           "https://hooks.slack.com/services/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",
@@ -105,29 +109,34 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const { data: subscription } = await supabaseClient
-        .from("Subscriptions")
-        .select("*")
-        .eq("organizationId", org.id)
-        .eq("status", SubscriptionStatus.active)
-        .single();
+      // const { data: subscription } = await supabaseClient
+      //   .from("Subscriptions")
+      //   .select("*")
+      //   .eq("organizationId", orgId)
+      //   .eq("status", "active")
+      //   .single();
 
-      if (subscription) {
-        const subItems = await stripe.subscriptionItems.list({
-          subscription: subscription.id,
-        });
-        await stripe.subscriptions.update(subscription.id, {
-          items: [
-            {
-              id: subItems.data[0].id,
-              price: getStripePriceFromClientID("basic"),
-              quantity: currentTeamMembers.length + 1,
-            },
-          ],
-        });
-      }
+      // if (subscription) {
+      //   const subItems = await stripe.subscriptionItems.list({
+      //     subscription: subscription.id,
+      //   });
+      //   await stripe.subscriptions.update(subscription.id, {
+      //     items: [
+      //       {
+      //         id: subItems.data[0].id,
+      //         price: getStripePriceFromClientID("basic"),
+      //         quantity: currentTeamMembers.length + 1,
+      //       },
+      //     ],
+      //   });
+      // }
+
       if (error) {
         console.log(error);
+        return NextResponse.json(
+          { status: "failed", message: error.message },
+          { status: 400 }
+        );
       } else {
         return NextResponse.json(
           { status: "ok", userId: u?.user.id },
@@ -161,10 +170,10 @@ export async function DELETE(req: NextRequest) {
     );
   }
   try {
-    const invitation = await deleteInvitation(user.id, body.email);
-    if (invitation.failed) {
-      return NextResponse.json({ status: "failed" }, { status: 500 });
-    }
+    // const invitation = await deleteInvitation(user.id, body.email);
+    // if (invitation.failed) {
+    //   return NextResponse.json({ status: "failed" }, { status: 500 });
+    // }
   } catch (err) {
     console.error(err);
     return NextResponse.json({ status: "failed" }, { status: 500 });

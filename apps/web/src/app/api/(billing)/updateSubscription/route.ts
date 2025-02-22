@@ -5,22 +5,41 @@ import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-01-27.acacia",
 });
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+// This is your Stripe webhook secret for testing
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+// Disable body parsing (Stripe requires raw body)
+// export const config = {
+//     api: {
+//       bodyParser: false
+//     }
+//   };
 
 export async function POST(request: NextRequest) {
-  const body = await request.text();
-  const sig = request.headers.get("stripe-signature")!;
-  let event;
+  const payload = await request.text();
+  console.log("🚀 ~ POST ~ payload:", payload);
+  const sig = request.headers.get("stripe-signature");
+
+  if (!sig) {
+    return NextResponse.json(
+      { error: "No stripe signature found" },
+      { status: 400 }
+    );
+  }
+
+  let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(body, sig, endpointSecret!);
+    // Verify the webhook signature
+    event = stripe.webhooks.constructEvent(payload, sig, endpointSecret);
   } catch (err: any) {
-    console.error("Error verifying webhook signature:", err);
     return NextResponse.json(
       { error: `Webhook Error: ${err.message}` },
       { status: 400 }
     );
   }
+  console.log("🚀 ~ POST ~ event:", event);
+  console.log("🚀 ~ POST ~ event.type:", event.type);
 
   // Handle the event
   switch (event.type) {
@@ -69,12 +88,12 @@ export async function POST(request: NextRequest) {
       // Get organization ID from metadata
       const organizationId = subscription.metadata.organizationId;
 
-      // if (!organizationId) {
-      //   return NextResponse.json(
-      //     { error: "No organization ID in metadata" },
-      //     { status: 400 }
-      //   );
-      // }
+      if (!organizationId) {
+        return NextResponse.json(
+          { error: "No organization ID in metadata" },
+          { status: 400 }
+        );
+      }
 
       // Update organization subscription details
       const { data: org, error } = await supabaseServiceRole
@@ -82,16 +101,13 @@ export async function POST(request: NextRequest) {
         .update({
           subscriptionId: subscription.id,
           subscriptionPlan: plan,
-          customerId: (subscription.customer as string) || undefined,
+          customerId: subscription.customer as string,
           maxUsersForSubscription: totalMaxUsers,
           freeTrialEndsAt: subscription.trial_end
             ? new Date(subscription.trial_end * 1000).toISOString()
             : null,
         })
-        .eq(
-          organizationId ? "publicId" : "subscriptionId",
-          organizationId || subscription.id
-        )
+        .eq("publicId", organizationId)
         .select("*")
         .single();
 
@@ -129,61 +145,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ updated: true });
 
-    case "checkout.session.completed":
-      const session = event.data.object as Stripe.Checkout.Session;
-
-      const customer = session.customer as Stripe.Customer;
-      const newSubscription = session.subscription as Stripe.Subscription;
-      console.log(newSubscription);
-      console.log(customer);
-      if (
-        session.payment_status === "paid" ||
-        session.payment_status === "no_payment_required"
-      ) {
-        await stripe.subscriptions.update(newSubscription.id, {
-          metadata: session.metadata,
-        });
-
-        const plan = newSubscription.items.data[0].price.lookup_key as
-          | "early_bird"
-          | "startup"
-          | "team"
-          | "enterprise";
-        console.log(session.metadata!.organizationId);
-        const org = await supabaseServiceRole
-          .from("Organization")
-          .update({
-            subscriptionId:
-              typeof newSubscription === "string"
-                ? newSubscription
-                : newSubscription.id,
-            subscriptionPlan: plan,
-            stripeSessionId: session.id,
-            customerId: typeof customer === "string" ? customer : customer.id,
-            maxUsersForSubscription:
-              plan === "startup" ? 2 : plan === "team" ? 5 : 10,
-            freeTrialEndsAt: new Date(
-              Date.now() + 14 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-          })
-          .eq("publicId", session.metadata!.organizationId)
-          .select("*")
-          .single();
-
-        console.log(org);
-
-        return NextResponse.json({ session, org: org.data });
-      }
-
-      return NextResponse.json({ updated: true });
-
     default:
       return NextResponse.json({ received: true });
   }
 }
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
