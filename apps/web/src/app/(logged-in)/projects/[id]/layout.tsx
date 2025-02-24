@@ -62,25 +62,18 @@ export default function Layout({ children }: React.PropsWithChildren) {
 
   return (
     <>
-      <div className='hidden space-y-6 pb-16 pl-5 md:block'>
-        <div className='fixed z-20 w-full space-y-0.5 bg-background'>
+      <div className='space-y-6 pb-16 pl-5'>
+        <div className='sticky top-0 z-20 w-full space-y-0.5 bg-background'>
           <h2 className='mt-4 text-2xl font-bold tracking-tight'>
             {project.project?.name}
           </h2>
           <p className='text-muted-foreground'>Manage your project details.</p>
+          <div className='mt-6'>
+            <SidebarNav items={sidebarNavItems()} />
+          </div>
+          <Separator className='mt-2' />
         </div>
-        <div className='z-20 bg-background pt-10'>
-          <Separator className='fixed my-12 mt-10' />
-        </div>
-        <div className='flex w-full flex-col space-y-8 pt-10 lg:flex-row lg:gap-x-12 lg:space-y-0'>
-          <aside className='relative -mx-4 lg:w-1/5'>
-            <SidebarNav
-              className='sticky top-[185px] w-full'
-              items={sidebarNavItems()}
-            />
-          </aside>
-          <div className='mt-10 flex-1'>{children}</div>
-        </div>
+        <div className='mt-[160px]'>{children}</div>
       </div>
     </>
   );

@@ -1,43 +1,76 @@
-import { uniqueId } from "lodash";
 import { type NextRequest, NextResponse } from "next/server";
+import { AddressType, GooglePlaceDetails } from "@/types/address";
 
 export async function GET(req: NextRequest) {
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json({ error: "Missing API Key", data: null });
+  }
+
   const placeId = req.nextUrl.searchParams.get("placeId");
-  const url = `https://api.mapbox.com/search/searchbox/v1/retrieve/${placeId}?session_token=${uniqueId()}&access_token=${process.env.NEXT_PUBLIC_MAPBOX_API_KEY}`;
+  if (!placeId) {
+    return NextResponse.json({
+      error: "Missing placeId parameter",
+      data: null,
+    });
+  }
+
+  const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=formatted_address,geometry,address_components&key=${apiKey}`;
 
   try {
     const response = await fetch(url);
-
-    const data: RetrieveResponse = await response.json();
-
-    console.log("data", data);
+    const data = (await response.json()) as GooglePlaceDetails;
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const address = data.features[0].properties.address ?? "";
-    const city = data.features[0].properties.context.place?.name ?? "";
-    const region = data.features[0].properties.context.region?.name ?? "";
-    const postalCode = data.features[0].properties.context.postcode?.name ?? "";
-    const country = data.features[0].properties.context.country?.name ?? "";
-    const lat = data.features[0].geometry.coordinates[1];
-    const lng = data.features[0].geometry.coordinates[0];
+    if (!data.result) {
+      throw new Error("Place details not found");
+    }
 
-    console.log("address", address);
+    // Extract address components
+    const addressComponents = data.result.address_components;
+    let streetNumber = "",
+      route = "",
+      city = "",
+      region = "",
+      postalCode = "",
+      country = "";
 
-    const formattedAddress = data.features[0].properties.full_address ?? "";
+    addressComponents.forEach((component) => {
+      const types = component.types;
+      if (types.includes("street_number")) {
+        streetNumber = component.long_name;
+      } else if (types.includes("route")) {
+        route = component.long_name;
+      } else if (types.includes("locality")) {
+        city = component.long_name;
+      } else if (types.includes("administrative_area_level_1")) {
+        region = component.long_name;
+      } else if (types.includes("postal_code")) {
+        postalCode = component.long_name;
+      } else if (types.includes("country")) {
+        country = component.long_name;
+      }
+    });
+
+    const address =
+      streetNumber && route
+        ? `${streetNumber} ${route}`
+        : data.result.formatted_address.split(",")[0];
 
     const formattedData: AddressType = {
       address,
-      formattedAddress,
+      formattedAddress: data.result.formatted_address,
       city,
       region,
       postalCode,
       country,
-      lat,
-      lng,
+      lat: data.result.geometry.location.lat,
+      lng: data.result.geometry.location.lng,
     };
+
     return NextResponse.json({
       data: formattedData,
       error: null,
