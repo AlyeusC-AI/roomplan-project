@@ -195,7 +195,9 @@ export default function Scope() {
                           if (!area) return null;
                           return (
                             <TabsTrigger key={area.publicId} value={areaType}>
-                              {areaAffectedTitle[areaType]}
+                              <span className='text-sm'>
+                                {areaAffectedTitle[areaType]}
+                              </span>
                             </TabsTrigger>
                           );
                         })}
@@ -211,16 +213,16 @@ export default function Scope() {
                             value={areaType}
                           >
                             <div className='rounded-lg border border-border/10 bg-gradient-to-br from-background/80 via-background/50 to-background/80 p-4'>
-                              <div className='mb-4 flex items-center gap-2'>
-                                <div className='h-5 w-1 rounded-full bg-gradient-to-b from-primary/60 to-primary/30' />
-                                <h2 className='text-base font-medium text-foreground/90'>
+                              <div className='mb-3 flex items-center gap-2'>
+                                <div className='h-4 w-1 rounded-full bg-gradient-to-b from-primary/60 to-primary/30' />
+                                <h2 className='text-sm font-medium text-foreground/90'>
                                   {areaAffectedTitle[areaType]}
                                 </h2>
                                 <div className='flex-1 border-t border-border/20'></div>
                               </div>
 
-                              <div className='grid gap-4'>
-                                <div className='rounded-md border border-border/10 bg-muted/5 p-3'>
+                              <div className='grid gap-3'>
+                                <div className='rounded-md border border-border/10 bg-muted/5 p-2.5'>
                                   <div className='w-full'>
                                     {areaType === "wall" ? (
                                       <WallMaterial
@@ -252,70 +254,16 @@ export default function Scope() {
                                   </div>
                                 </div>
 
-                                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-                                  <div className='rounded-md border border-border/10 bg-muted/5 p-3'>
-                                    <h3 className='mb-2 text-sm font-medium text-muted-foreground'>
+                                <div className='grid grid-cols-1 gap-3 md:grid-cols-2'>
+                                  <div className='rounded-md border border-border/10 bg-muted/5 p-2.5'>
+                                    <h3 className='mb-1.5 text-xs font-medium text-muted-foreground'>
                                       Total Area Removed
                                     </h3>
-                                    <Input
-                                      className='w-full'
-                                      defaultValue={
-                                        areaAffected.totalAreaRemoved || ""
-                                      }
-                                      placeholder='Enter value'
-                                      type='number'
-                                      onChange={(e) => {
-                                        setHasChanges(true);
-                                        saveAffectedArea(
-                                          {
-                                            totalAreaRemoved: e.target.value,
-                                            id: areaAffected.id,
-                                          },
-                                          areaType,
-                                          room.publicId
-                                        );
-                                      }}
-                                      name='totalAreaRemoved'
-                                    />
-                                  </div>
-
-                                  <div className='rounded-md border border-border/10 bg-muted/5 p-3'>
-                                    <h3 className='mb-2 text-sm font-medium text-muted-foreground'>
-                                      Total Area Anti-Microbial Applied
-                                    </h3>
-                                    <Input
-                                      className='w-full'
-                                      defaultValue={
-                                        areaAffected.totalAreaMicrobialApplied ||
-                                        ""
-                                      }
-                                      placeholder='Enter value'
-                                      type='number'
-                                      onChange={(e) => {
-                                        setHasChanges(true);
-                                        saveAffectedArea(
-                                          {
-                                            totalAreaMicrobialApplied:
-                                              e.target.value,
-                                            id: areaAffected.id,
-                                          },
-                                          areaType,
-                                          room.publicId
-                                        );
-                                      }}
-                                      name='totalAreaApplied'
-                                    />
-                                  </div>
-
-                                  {areaType === "wall" && (
-                                    <div className='rounded-md border border-border/10 bg-muted/5 p-3'>
-                                      <h3 className='mb-2 text-sm font-medium text-muted-foreground'>
-                                        Cabinetry Removed
-                                      </h3>
+                                    <div className='relative flex items-center'>
                                       <Input
-                                        className='w-full'
+                                        className='w-full pr-12 text-sm'
                                         defaultValue={
-                                          areaAffected.cabinetryRemoved || ""
+                                          areaAffected.totalAreaRemoved || ""
                                         }
                                         placeholder='Enter value'
                                         type='number'
@@ -323,15 +271,85 @@ export default function Scope() {
                                           setHasChanges(true);
                                           saveAffectedArea(
                                             {
-                                              cabinetryRemoved: e.target.value,
+                                              totalAreaRemoved: e.target.value,
                                               id: areaAffected.id,
                                             },
                                             areaType,
                                             room.publicId
                                           );
                                         }}
-                                        name='cabinetryremoved'
+                                        name='totalAreaRemoved'
                                       />
+                                      <span className='absolute right-3 text-xs text-muted-foreground'>
+                                        sqft
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className='rounded-md border border-border/10 bg-muted/5 p-2.5'>
+                                    <h3 className='mb-1.5 text-xs font-medium text-muted-foreground'>
+                                      Total Area Anti-Microbial Applied
+                                    </h3>
+                                    <div className='relative flex items-center'>
+                                      <Input
+                                        className='w-full pr-12 text-sm'
+                                        defaultValue={
+                                          areaAffected.totalAreaMicrobialApplied ||
+                                          ""
+                                        }
+                                        placeholder='Enter value'
+                                        type='number'
+                                        onChange={(e) => {
+                                          setHasChanges(true);
+                                          saveAffectedArea(
+                                            {
+                                              totalAreaMicrobialApplied:
+                                                e.target.value,
+                                              id: areaAffected.id,
+                                            },
+                                            areaType,
+                                            room.publicId
+                                          );
+                                        }}
+                                        name='totalAreaApplied'
+                                      />
+                                      <span className='absolute right-3 text-xs text-muted-foreground'>
+                                        sqft
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {areaType === "wall" && (
+                                    <div className='rounded-md border border-border/10 bg-muted/5 p-2.5'>
+                                      <h3 className='mb-1.5 text-xs font-medium text-muted-foreground'>
+                                        Cabinetry Removed
+                                      </h3>
+                                      <div className='relative flex items-center'>
+                                        <Input
+                                          className='w-full pr-12 text-sm'
+                                          defaultValue={
+                                            areaAffected.cabinetryRemoved || ""
+                                          }
+                                          placeholder='Enter value'
+                                          type='number'
+                                          onChange={(e) => {
+                                            setHasChanges(true);
+                                            saveAffectedArea(
+                                              {
+                                                cabinetryRemoved:
+                                                  e.target.value,
+                                                id: areaAffected.id,
+                                              },
+                                              areaType,
+                                              room.publicId
+                                            );
+                                          }}
+                                          name='cabinetryremoved'
+                                        />
+                                        <span className='absolute right-3 text-xs text-muted-foreground'>
+                                          sqft
+                                        </span>
+                                      </div>
                                     </div>
                                   )}
                                 </div>

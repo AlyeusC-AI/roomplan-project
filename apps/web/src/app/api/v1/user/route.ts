@@ -43,11 +43,10 @@ export async function PATCH(req: NextRequest) {
   }
 
   const data = await req.json();
+  console.log("🚀 ~ PATCH ~ data:", data);
 
   try {
-    supabase.auth.updateUser({
-      data,
-    });
+    await supabase.from("User").update(data).eq("id", user.id);
 
     // await updateUser({ id: user.id, firstName, lastName, phone });
   } catch (err) {

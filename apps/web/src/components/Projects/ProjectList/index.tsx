@@ -167,7 +167,13 @@ export default function ProjectList() {
           <LoadingPlaceholder />
         ) : (
           <div className='flex flex-col justify-start'>
-            <View />
+            {user?.savedDashboardView === "boardView" ? (
+              <KanBan />
+            ) : (
+              <Card>
+                <Table />
+              </Card>
+            )}
             {user?.savedDashboardView === "listView" && (
               <Pagination className='mt-5'>
                 <PaginationContent>
