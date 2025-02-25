@@ -7,7 +7,13 @@ declare global {
     Database["public"]["Tables"]["UserToOrganization"]["Row"];
 
   type TeamMember = FlatTeamMember & {
-    User: { firstName: string; lastName: string; email: string } | null;
+    User: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      accessLevel: "owner" | "admin" | "viewer";
+      id: string;
+    } | null;
   };
 
   type Cost = Database["public"]["Tables"]["Cost"]["Row"];
@@ -18,7 +24,13 @@ declare global {
   type FlatImage = Database["public"]["Tables"]["Image"]["Row"];
   type FlatAssignee = Database["public"]["Tables"]["UserToProject"]["Row"];
   type Assignee = FlatAssignee & {
-    User: { firstName: string; lastName: string; email: string } | null;
+    user: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      accessLevel: "owner" | "admin" | "viewer";
+      id: string;
+    } | null;
   };
   type Image = FlatImage & { url: string };
   interface Project extends FlatProject {

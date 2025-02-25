@@ -32,12 +32,12 @@ export async function POST(req: NextRequest) {
   }
 
   // Get organization details
-  const { data: currentTeamMembers } = await supabaseClient
-    .from("User")
-    .select("*")
-    .eq("organizationId", orgId)
-    .single();
-  console.log("🚀 ~ POST ~ org:", currentTeamMembers);
+  // const { data: currentTeamMembers } = await supabaseClient
+  //   .from("User")
+  //   .select("*")
+  //   .eq("organizationId", orgId)
+  //   .single();
+  // console.log("🚀 ~ POST ~ org:", currentTeamMembers);
 
   const body = await req.json();
 

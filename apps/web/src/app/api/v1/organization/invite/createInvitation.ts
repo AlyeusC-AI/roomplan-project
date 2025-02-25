@@ -26,6 +26,9 @@ const createInvitation = async (userId: string, email: string) => {
     haloUser?.accessLevel === "owner" || haloUser?.accessLevel === "admin";
   if (!isAdmin) return { failed: true, reason: "not-allowed" };
 
+  if (organization.subscriptionPlan == "early_bird") {
+    return { failed: true, reason: "please upgrade to a paid plan" };
+  }
   const { data: existingMember } = await supabaseClient
     .from("UserToOrganization")
     .select("*")

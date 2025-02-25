@@ -54,14 +54,15 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
   });
   const [loading, setLoading] = useState(false);
   const userInfo = userInfoStore((state) => state.user);
-  const [teamMembers, setTeamMembers] = useState<User[]>([]);
+  // const [teamMembers, setTeamMembers] = useState<User[]>([]);
+  const teamMembers = teamMembersStore((state) => state.teamMembers);
   useEffect(() => {
     fetch("/api/v1/organization/members")
       .then((res) => res.json())
       .then((data) => {
         console.log("team members", data);
         teamMembersStore.getState().setTeamMembers(data.members);
-        setTeamMembers(data.members);
+        // setTeamMembers(data.members);
         console.log(data);
       });
   }, []);
@@ -126,7 +127,7 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
   };
 
   const filteredTeamMembers = useMemo(
-    () => teamMembers.filter(({ userId }) => userId !== userInfo?.id),
+    () => teamMembers.filter(({ id }) => id !== userInfo?.id),
     [teamMembers, userInfo]
   );
 

@@ -22,14 +22,17 @@ export const teamMembersStore = create<State & Actions>((set) => ({
       teamMembers: state.teamMembers.filter((i) => i.id !== id),
     })),
   changeAccessLevel: (id, accessLevel) =>
-    set(
-      produce((draft) => {
-        const memberIndex = draft.findIndex((m: TeamMember) => m.userId === id);
+    set(({ teamMembers }) => {
+      const memberIndex = teamMembers.map((m) => {
+        if (m.id === id) {
+          return {
+            ...m,
+            accessLevel,
+          };
+        }
+        return m;
+      });
 
-        draft[memberIndex] = {
-          ...draft[memberIndex],
-          accessLevel: accessLevel,
-        };
-      })
-    ),
+      return { teamMembers: memberIndex };
+    }),
 }));

@@ -62,12 +62,14 @@ export default function Layout({ children }: React.PropsWithChildren) {
 
   return (
     <>
-      <div className='space-y-6 pb-16 pl-5'>
+      <div className='space-y-6 py-4 pb-16 pl-5'>
         <div className='sticky top-0 z-20 w-full space-y-0.5 bg-background'>
           <h2 className='mt-4 text-2xl font-bold tracking-tight'>
             {project.project?.name}
           </h2>
-          <p className='text-muted-foreground'>Manage your project details.</p>
+          <p className='pb-4 text-muted-foreground'>
+            Manage your project details.
+          </p>
           <div className='mt-6'>
             <SidebarNav items={sidebarNavItems()} />
           </div>

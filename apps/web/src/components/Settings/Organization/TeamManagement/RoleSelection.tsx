@@ -63,22 +63,23 @@ export default function RollSelection({ member }: { member: Assignee }) {
   const [loading, setIsLoading] = useState(false);
   const { track } = useAmplitudeTrack();
   const selected = publishingOptions.find(
-    (o) => o.accessLevel === member.accessLevel
+    (o) => o.accessLevel === member.User?.accessLevel
   );
   const onSelect = async (option: PublishingOption) => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/organization/member/${member.user.id}`, {
+      const res = await fetch(`/api/v1/organization/member`, {
         method: "PATCH",
         body: JSON.stringify({
           accessLevel: option.accessLevel,
+          userId: member.userId,
         }),
       });
       if (res.ok) {
         track("Update Organization Team Member Role");
         teamMembersStore
           .getState()
-          .changeAccessLevel(member.user.id, option.accessLevel);
+          .changeAccessLevel(member.userId, option.accessLevel);
         // setTeamMembers((prevTeamMembers) => {
         //   const nextState = produce(prevTeamMembers, (draft) => {
         //     const memberIndex = prevTeamMembers.findIndex(

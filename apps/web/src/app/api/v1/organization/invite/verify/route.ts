@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     // Get the invitation details
     const { data: invitation, error: inviteError } = await supabaseServiceRole
       .from("OrganizationInvitation")
-      .select("*, Organization(name)")
+      .select("*, Organization(name, publicId)")
       .eq("invitationId", token)
       .single();
 
@@ -135,6 +135,7 @@ export async function GET(req: NextRequest) {
       email: invitation.email,
       organizationId: invitation.organizationId,
       organizationName: invitation.Organization?.name,
+      publicId: invitation.Organization?.publicId,
       inviteId: invitation.id,
     });
   } catch (error) {

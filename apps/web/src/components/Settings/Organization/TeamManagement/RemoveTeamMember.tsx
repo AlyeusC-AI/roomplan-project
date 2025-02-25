@@ -26,7 +26,7 @@ const RemoveTeamMember = ({
   const removeMember = async (id: string, memberEmail: string) => {
     setLoadingDelete(true);
     try {
-      const res = await fetch(`/api/organization/member/${id}`, {
+      const res = await fetch(`/api/v1/organization/member/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {
