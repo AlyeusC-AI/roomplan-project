@@ -274,12 +274,20 @@ export async function POST(
     const { imageId: iId, roomId, roomName } = await req.json();
 
     const imageId = encodeURIComponent(iId);
+    console.log("🚀 ~ imageId:", imageId);
 
     const projectId = await supabaseServiceRole
       .from("Project")
       .select("id")
       .eq("publicId", id)
       .single();
+    console.log("🚀 ~ projectId:", projectId);
+    const org = await supabaseServiceRole
+      .from("Organization")
+      .select("id")
+      .eq("publicId", authUser.user_metadata.organizationId)
+      .single();
+    console.log("🚀 ~ org:", org);
 
     const image = await supabaseServiceRole
       .from("Image")
@@ -287,10 +295,11 @@ export async function POST(
         projectId: projectId.data!.id,
         publicId: imageId,
         key: imageId,
-        organizationId: authUser.user_metadata.organizationId,
+        organizationId: org.data!.id,
       })
       .select("*")
       .single();
+    console.log("🚀 ~ image:", image);
 
     let room: Room | null = null;
 
@@ -302,6 +311,7 @@ export async function POST(
         .single();
 
       room = r.data!;
+      console.log("🚀 ~ room:", room);
     } else {
       const r = await supabaseServiceRole
         .from("Room")
@@ -312,7 +322,7 @@ export async function POST(
         })
         .select("*")
         .single();
-
+      console.log("🚀 ~ r:", r);
       room = r.data!;
     }
 
@@ -323,7 +333,10 @@ export async function POST(
       imageKey: imageId,
       projectId: projectId.data!.id,
     });
-  } catch {
+
+    return NextResponse.json({ status: "ok" }, { status: 200 });
+  } catch (err) {
+    console.error(err);
     return NextResponse.json({ status: "failed" }, { status: 500 });
   }
 }

@@ -46,6 +46,8 @@ export async function GET(
       )
       .eq("projectId", project.data!.id)
       .eq("isDeleted", false);
+    console.log("🚀 ~ images:", images?.length);
+
     // .eq("includeInReport", input.onlySelected)
     // .order("createdAt", { ascending: input.sortDirection !== "desc" })
     // .in("inference.room.name", input.rooms || []);
@@ -56,6 +58,7 @@ export async function GET(
     }
 
     const imageKeys = images.map((i) => decodeURIComponent(i.key));
+    console.log("🚀 ~ imageKeys:", imageKeys);
     const { data } = await supabaseServiceRole.storage
       .from("project-images")
       .createSignedUrls(imageKeys, 1800);
@@ -132,5 +135,55 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ data });
   } catch {
     return NextResponse.json({ error: "An error occurred" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await user(req);
+    const { id } = await params;
+    const { photoIds } = await req.json();
+
+    if (!photoIds || !Array.isArray(photoIds) || photoIds.length === 0) {
+      return NextResponse.json(
+        { error: "Invalid photo IDs provided" },
+        { status: 400 }
+      );
+    }
+
+    // Get the project first to ensure it exists
+    const { data: project, error: projectError } = await supabaseServiceRole
+      .from("Project")
+      .select("id")
+      .eq("publicId", id)
+      .single();
+
+    if (projectError || !project) {
+      console.error("Error fetching project:", projectError);
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    // Soft delete the images
+    const { error } = await supabaseServiceRole
+      .from("Image")
+      .update({ isDeleted: true })
+      .eq("projectId", project.id)
+      .in("publicId", photoIds);
+
+    if (error) {
+      console.error("Error deleting images:", error);
+      throw error;
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error in DELETE /api/v1/projects/[id]/images:", error);
+    return NextResponse.json(
+      { error: "Failed to delete images" },
+      { status: 500 }
+    );
   }
 }

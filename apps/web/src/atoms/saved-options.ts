@@ -17,7 +17,7 @@ export interface Option {
   readonly publicId?: string;
 }
 
-type State = {
+export type State = {
   carrier: Option[];
   wallMaterial: Option[];
   floorMaterial: Option[];

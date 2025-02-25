@@ -10,7 +10,7 @@ import useFilterParams from "./useFilterParams";
 import { createClient } from "@lib/supabase/client";
 const { pRateLimit } = require("p-ratelimit");
 
-const useUploader = () => {
+const useUploader = ({ imageFolder }: { imageFolder?: string } = {}) => {
   const uploadSummary = uploadSummaryStore((state) => state.summary);
   const { track } = useAmplitudeTrack();
 
@@ -53,7 +53,7 @@ const useUploader = () => {
       concurrency: 30, // no more than 10 running at once
     });
     for (let i = 0; i < files.length; i++) {
-      limit(() => uploadToSupabase(files[i], roomId));
+      await limit(async () => await uploadToSupabase(files[i], roomId));
     }
   };
 
@@ -83,7 +83,7 @@ const useUploader = () => {
     }
 
     uploadInProgressImagesStore.getState().addImages(imagesInFlight);
-    upload(files, roomId);
+    await upload(files, roomId);
   };
 
   const uploadToSupabase = async (file: File, roomId: string) => {
@@ -102,13 +102,23 @@ const useUploader = () => {
       const user = await supabase.auth.getUser();
 
       const fileName = `${v4()}_${file.name}`;
-      await supabase.storage
+      const { data: uploadData } = await supabase.storage
         .from("media")
-        .upload(`${user.data.user?.id}/${fileName}`, file, {
+        .upload(`/${imageFolder ?? user.data.user?.id}/${fileName}`, file, {
           contentType: file.type,
           upsert: false,
         });
+      console.log("🚀 ~ uploadToSupabase ~ uploadData:", uploadData);
 
+      const response = await fetch(`/api/v1/projects/${id}/image`, {
+        method: "POST",
+        body: JSON.stringify({
+          imageId: uploadData?.path,
+          roomId,
+          roomName: roomId,
+        }),
+      });
+      console.log("🚀 ~ uploadToSupabase ~ response:", response);
       // const response = await processMediaMutation.mutateAsync({
       //   fileName,
       //   projectPublicId: id,

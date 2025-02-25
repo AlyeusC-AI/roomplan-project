@@ -9,6 +9,7 @@ export default function FloorMaterial({
   defaultValue: string;
   onChange: (s: string) => void;
 }) {
+  console.log("🚀 ~ defaultValue:", defaultValue);
   const savedOptions = savedOptionsStore((state) => state);
 
   return (
@@ -23,8 +24,10 @@ export default function FloorMaterial({
         }}
         defaultValue={
           defaultValue
-            ? savedOptions.floorMaterial.find(
-                (material) => material.value === defaultValue
+            ? floorOptions.find(
+                (material) =>
+                  material.value === defaultValue ||
+                  material.label === defaultValue
               )
             : undefined
         }

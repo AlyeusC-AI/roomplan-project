@@ -28,16 +28,23 @@ export async function POST(
     let areaAffected: AreaAffected | null;
 
     if (!body.affectedAreaData.id) {
+      const { data: room } = await supabaseServiceRole
+        .from("Room")
+        .select("id")
+        .eq("publicId", body.roomId)
+        .single();
+
       const result = await supabaseServiceRole
         .from("AreaAffected")
         .insert({
           publicId: v4(),
           projectId: projectId.data!.id,
-          roomId: body.roomId,
+          roomId: room!.id,
           type: body.type,
         })
         .select("*")
         .single();
+      console.log("🚀 ~ result:", result);
 
       areaAffected = result.data;
     } else {

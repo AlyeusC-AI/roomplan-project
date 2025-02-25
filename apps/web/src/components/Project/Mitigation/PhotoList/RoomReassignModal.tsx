@@ -1,7 +1,17 @@
 import { Dispatch, SetStateAction, useState } from "react";
-import { PrimaryButton } from "@components/components";
 import Modal from "@components/DesignSystem/Modal";
 import { roomStore } from "@atoms/room";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@components/ui/select";
+import { Button } from "@components/ui/button";
+import { Building2 } from "lucide-react";
 
 const RoomReassignModal = ({
   open,
@@ -15,47 +25,69 @@ const RoomReassignModal = ({
   loading: boolean;
 }) => {
   const roomList = roomStore((state) => state.rooms);
-
-  const [internalValue, setInternalValue] = useState("");
   const [value, setValue] = useState("");
+
   return (
     <Modal open={open} setOpen={setOpen}>
       {() => (
-        <div>
-          <h3 className='text-xl font-medium'>Assign images to a new room</h3>
-          <div className='mt-4 flex w-full flex-col items-center gap-4'>
-            <select
-              id='selectRoom'
-              name='selectRoom'
-              className='block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm'
-              defaultValue='select-a-room'
-              onChange={(e) => {
-                setValue(e.target.value);
-                setInternalValue(e.target.value);
-              }}
-            >
-              <option value='select-a-room' disabled>
-                Select a room
-              </option>
-
-              {roomList.map((room) => (
-                <option key={room.name} value={room.publicId}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
+        <div className='space-y-6 p-2'>
+          <div className='space-y-2'>
+            <div className='flex items-center gap-2'>
+              <Building2 className='h-5 w-5 text-primary' />
+              <h2 className='text-xl font-semibold tracking-tight'>
+                Assign to Room
+              </h2>
+            </div>
+            <p className='text-sm text-muted-foreground'>
+              Select a room to assign the selected images to.
+            </p>
           </div>
-          <div className='mt-4 flex justify-end'>
-            <PrimaryButton
-              onClick={() => {
-                onReassign(value);
-                setInternalValue("");
-              }}
-              disabled={!internalValue}
-              loading={loading}
-            >
-              Reassign Room
-            </PrimaryButton>
+
+          <div className='space-y-4'>
+            <Select value={value} onValueChange={setValue}>
+              <SelectTrigger className='w-full'>
+                <SelectValue placeholder='Select a room' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Available Rooms</SelectLabel>
+                  {roomList.map((room) => (
+                    <SelectItem key={room.publicId} value={room.publicId}>
+                      {room.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <div className='flex justify-end gap-3'>
+              <Button
+                variant='outline'
+                onClick={() => {
+                  setOpen(false);
+                  setValue("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  onReassign(value);
+                  setValue("");
+                }}
+                disabled={!value}
+                className='min-w-[100px]'
+              >
+                {loading ? (
+                  <div className='flex items-center gap-2'>
+                    <div className='h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent' />
+                    Assigning
+                  </div>
+                ) : (
+                  "Assign"
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       )}

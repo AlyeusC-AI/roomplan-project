@@ -3,6 +3,9 @@ import EmptyState from "@components/DesignSystem/EmptyState";
 import useFilterParams from "@utils/hooks/useFilterParams";
 import { format } from "date-fns";
 import produce from "immer";
+import { motion, AnimatePresence } from "framer-motion";
+import { useParams } from "next/navigation";
+import { toast } from "sonner";
 
 import PhotoGroup from "./PhotoGroup";
 import RoomReassignModal from "./RoomReassignModal";
@@ -15,9 +18,11 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogTitle,
 } from "@components/ui/dialog";
 import { userInfoStore } from "@atoms/user-info";
 import { teamMembersStore } from "@atoms/team-members";
+import { Trash2, FolderInput, X, Loader2 } from "lucide-react";
 
 const PhotoList = ({
   photos,
@@ -26,79 +31,32 @@ const PhotoList = ({
   photos?: ImageQuery_Image[];
   setPhotos: React.Dispatch<React.SetStateAction<ImageQuery_Image[]>>;
 }) => {
+  const { id } = useParams<{ id: string }>();
   const [theaterModeIndex, setTheaterModeIndex] = useState(0);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
   const [isRoomReassignOpen, setIsRoomReassignOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isAssigningRoom, setIsAssigningRoom] = useState(false);
   const { rooms, onlySelected } = useFilterParams();
   const roomList = roomStore((state) => state.rooms);
   const user = userInfoStore();
 
   const [selectedPhotos, setSelectedPhotos] = useState<ImageQuery_Image[]>([]);
 
-  // const trpcContext = trpc.useContext();
-
-  // const deletePhotoMutation = trpc.photos.deleteProjectPhotos.useMutation({
-  //   async onMutate({ photoIds }) {
-  //     await trpcContext.photos.getProjectPhotos.cancel();
-  //     const prevData =
-  //       trpcContext.photos.getProjectPhotos.getData(queryContext);
-  //     trpcContext.photos.getProjectPhotos.setData(queryContext, (old) => {
-  //       const updated = old?.images?.filter(
-  //         (p) => !photoIds.some((id) => id === p.publicId)
-  //       );
-  //       return { images: updated || [] };
-  //     });
-  //     return { prevData };
-  //   },
-  //   onSettled() {
-  //     trpcContext.photos.getProjectPhotos.invalidate();
-  //   },
-  // });
-
-  // const setRoomForProjectPhotosMutation =
-  //   trpc.photos.setRoomForProjectPhotos.useMutation({
-  //     async onMutate({ photoKeys, roomId }) {
-  //       await trpcContext.photos.getProjectPhotos.cancel();
-  //       const prevData =
-  //         trpcContext.photos.getProjectPhotos.getData(queryContext);
-  //       const newRoom = roomList.find((room) => room.publicId === roomId);
-  //       trpcContext.photos.getProjectPhotos.setData(queryContext, (old) => {
-  //         const updated = produce(old, (draft) => {
-  //           if (!old || !draft) return;
-  //           try {
-  //             for (let i = 0; i < old.images?.length; i++) {
-  //               if (photoKeys.find((key) => key === old.images[i].key)) {
-  //                 if (old.images[i] && old.images[i].inference && newRoom) {
-  //                   draft.images[i] = {
-  //                     ...old.images[i],
-  //                     ...(old.images[i].inference !== null && {
-  //                       inference: {
-  //                         publicId: old.images[i].inference!.publicId,
-  //                         room: {
-  //                           name: newRoom.name,
-  //                           publicId: newRoom?.publicId,
-  //                         },
-  //                       },
-  //                     }),
-  //                   };
-  //                 }
-  //               }
-  //             }
-  //           } catch (e) {
-  //             // something went horribly wrong
-  //             console.error(e);
-  //             location.reload();
-  //             return;
-  //           }
-  //         });
-  //         return updated;
-  //       });
-  //       return { prevData };
-  //     },
-  //     onSettled() {
-  //       trpcContext.photos.getProjectPhotos.invalidate();
-  //     },
-  //   });
+  const fetchImages = async () => {
+    try {
+      const response = await fetch(`/api/v1/projects/${id}/images`);
+      const data = await response.json();
+      if (response.ok) {
+        setPhotos(data.images);
+      } else {
+        throw new Error(data.message || "Failed to fetch images");
+      }
+    } catch (error) {
+      console.error("Error fetching images:", error);
+      toast.error("Failed to refresh images");
+    }
+  };
 
   const onPhotoClick = (key: string) => {
     const photoIndex = photos?.findIndex((p) => p.key === key);
@@ -120,12 +78,16 @@ const PhotoList = ({
   }, []);
 
   if (!photos) {
-    return <LoadingPlaceholder />;
+    return (
+      <div className='flex min-h-[400px] items-center justify-center'>
+        <LoadingPlaceholder />
+      </div>
+    );
   }
 
   if (photos.length === 0 && (rooms || onlySelected)) {
     return (
-      <div className='flex size-full items-center justify-center'>
+      <div className='flex size-full min-h-[400px] items-center justify-center rounded-lg bg-gray-50'>
         <EmptyState
           title='No photos match your filter criteria'
           imagePath='/images/void.svg'
@@ -182,56 +144,132 @@ const PhotoList = ({
   };
 
   const onDelete = async () => {
-    // FILTER HERE IN CASE OF DRIFT
-    const photoIds = selectedPhotos
-      .map((p) => p.publicId)
-      .filter((p) => photos.some((o) => o.publicId === p));
-    // await deletePhotoMutation.mutateAsync({
-    //   projectPublicId: queryContext.projectPublicId,
-    //   photoIds,
-    // });
-    setSelectedPhotos([]);
+    try {
+      setIsDeleting(true);
+      const photoIds = selectedPhotos
+        .map((p) => p.publicId)
+        .filter((p) => photos.some((o) => o.publicId === p));
+
+      const response = await fetch(`/api/v1/projects/${id}/images`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ photoIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete images");
+      }
+
+      toast.success("Images deleted successfully");
+      await fetchImages();
+    } catch (error) {
+      console.error("Error deleting images:", error);
+      toast.error("Failed to delete images");
+    } finally {
+      setIsDeleting(false);
+      setSelectedPhotos([]);
+    }
   };
 
   const onUpdateRoom = async (roomId: string) => {
-    // FILTER HERE IN CASE OF DRIFT
-    const photoKeys = selectedPhotos
-      .map((p) => p.key)
-      .filter((p) => photos.some((o) => o.key === p));
-    // await setRoomForProjectPhotosMutation.mutateAsync({
-    //   projectPublicId: queryContext.projectPublicId,
-    //   photoKeys,
-    //   roomId,
-    // });
-    setSelectedPhotos([]);
-    setIsRoomReassignOpen(false);
+    try {
+      setIsAssigningRoom(true);
+      const photoKeys = selectedPhotos
+        .map((p) => p.key)
+        .filter((p) => photos.some((o) => o.key === p));
+
+      const response = await fetch(`/api/v1/projects/${id}/images/room`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ photoKeys, roomId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to assign room");
+      }
+
+      toast.success("Room assigned successfully");
+      await fetchImages();
+    } catch (error) {
+      console.error("Error assigning room:", error);
+      toast.error("Failed to assign room");
+    } finally {
+      setIsAssigningRoom(false);
+      setSelectedPhotos([]);
+      setIsRoomReassignOpen(false);
+    }
   };
 
   return (
-    <div className='mt-4 flex flex-col gap-4'>
-      <Dialog
-        open={selectedPhotos.length > 0}
-        onOpenChange={() => setSelectedPhotos([])}
-      >
-        <DialogContent>
-          <DialogHeader>Manage Image(s)</DialogHeader>
-          <DialogDescription>Manage your images here.</DialogDescription>
-          <div className='flex justify-end gap-4'>
-            <Button onClick={() => setIsRoomReassignOpen(true)}>
-              Assign Room
-            </Button>
-            <Button variant='destructive' onClick={onDelete} disabled={false}>
-              Delete Image(s)
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+    <div className='mt-4 flex flex-col gap-6'>
+      <AnimatePresence>
+        {selectedPhotos.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className='fixed right-4 top-4 z-50 rounded-lg border border-gray-200 bg-white p-4 shadow-lg'
+          >
+            <div className='flex items-center gap-4'>
+              <span className='text-sm font-medium text-gray-700'>
+                {selectedPhotos.length} photo
+                {selectedPhotos.length > 1 ? "s" : ""} selected
+              </span>
+              <div className='flex gap-2'>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  onClick={() => setIsRoomReassignOpen(true)}
+                  disabled={isAssigningRoom}
+                  className='flex items-center gap-2'
+                >
+                  {isAssigningRoom ? (
+                    <Loader2 className='h-4 w-4 animate-spin' />
+                  ) : (
+                    <FolderInput className='h-4 w-4' />
+                  )}
+                  Assign Room
+                </Button>
+                <Button
+                  size='sm'
+                  variant='destructive'
+                  onClick={onDelete}
+                  disabled={isDeleting}
+                  className='flex items-center gap-2'
+                >
+                  {isDeleting ? (
+                    <Loader2 className='h-4 w-4 animate-spin' />
+                  ) : (
+                    <Trash2 className='h-4 w-4' />
+                  )}
+                  Delete
+                </Button>
+                <Button
+                  size='sm'
+                  variant='ghost'
+                  onClick={() => setSelectedPhotos([])}
+                  disabled={isDeleting || isAssigningRoom}
+                  className='flex items-center'
+                >
+                  <X className='h-4 w-4' />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <RoomReassignModal
         open={isRoomReassignOpen}
         setOpen={setIsRoomReassignOpen}
         onReassign={onUpdateRoom}
-        loading={false}
+        loading={isAssigningRoom}
       />
+
       {isTheaterMode && (
         <TheaterMode
           open={isTheaterMode}
@@ -241,17 +279,30 @@ const PhotoList = ({
           setTheaterModeIndex={setTheaterModeIndex}
         />
       )}
-      {Object.keys(grouped).map((day) => (
-        <PhotoGroup
-          key={day}
-          day={day}
-          photos={grouped[day]}
-          onPhotoClick={onPhotoClick}
-          onSelectPhoto={onSelectPhoto}
-          selectedPhotos={selectedPhotos}
-          setPhotos={setPhotos}
-        />
-      ))}
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className='grid gap-8'
+      >
+        {Object.keys(grouped).map((day) => (
+          <motion.div
+            key={day}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <PhotoGroup
+              day={day}
+              photos={grouped[day]}
+              onPhotoClick={onPhotoClick}
+              onSelectPhoto={onSelectPhoto}
+              selectedPhotos={selectedPhotos}
+              setPhotos={setPhotos}
+            />
+          </motion.div>
+        ))}
+      </motion.div>
     </div>
   );
 };

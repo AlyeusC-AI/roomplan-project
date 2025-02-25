@@ -68,7 +68,7 @@ export const roomStore = create<State & Actions>((set) => ({
       const roomIndex = state.rooms.findIndex(
         (r) => r.publicId === roomPublicId
       );
-      console.log("🚀 ~ set ~ roomIndex:", roomIndex)
+      console.log("🚀 ~ set ~ roomIndex:", roomIndex);
       if (roomIndex < 0 || !state.rooms[roomIndex]) return state;
 
       const noteIndex = state.rooms[roomIndex].Notes?.findIndex(
@@ -118,26 +118,45 @@ export const roomStore = create<State & Actions>((set) => ({
       return { rooms: newState };
     }),
   updateAllRooms: (rooms) => set({ rooms }),
-  updateAreasAffected: (roomPublicId, areasAffected, type) =>
+  updateAreasAffected: <KP>(
+    roomPublicId: string,
+    areasAffected: VerifyKindaPartial<AreaAffected, KP>,
+    type: AreaAffectedType
+  ) =>
     set((state) => {
       const roomIndex = state.rooms.findIndex(
         (r) => r.publicId === roomPublicId
       );
-      const affectedAreaIndex = state.rooms[roomIndex].AreaAffected.findIndex(
-        (t) => t.type === type
-      );
+
+      // Return unchanged state if room not found
+      if (roomIndex === -1) return state;
+
+      const room = state.rooms[roomIndex];
+      const areaAffected = room.AreaAffected || [];
+      const affectedAreaIndex = areaAffected.findIndex((t) => t.type === type);
+
+      // Create new rooms array with updated area affected
+      const updatedRooms = [...state.rooms];
+      const updatedRoom = { ...room };
+
+      const newAreaAffected: AreaAffected = {
+        ...areasAffected,
+        type,
+      } as AreaAffected;
+
       if (affectedAreaIndex === -1) {
-        // @ts-expect-error we know this is a valid type
-        state.rooms[roomIndex].AreaAffected.push({
-          ...areasAffected,
-        });
+        // Add new area affected
+        updatedRoom.AreaAffected = [...areaAffected, newAreaAffected];
       } else {
-        state.rooms[roomIndex].AreaAffected[affectedAreaIndex] = {
-          ...state.rooms[roomIndex].AreaAffected[affectedAreaIndex],
-          ...areasAffected,
-        };
+        // Update existing area affected
+        updatedRoom.AreaAffected = areaAffected.map((area, index) =>
+          index === affectedAreaIndex ? { ...area, ...newAreaAffected } : area
+        );
       }
-      return state;
+
+      updatedRooms[roomIndex] = updatedRoom;
+
+      return { rooms: updatedRooms };
     }),
   updateRoom: (roomId, data) =>
     set((state) => {

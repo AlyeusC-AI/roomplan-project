@@ -1,14 +1,24 @@
-import { useCallback, useEffect } from "react";
-import produce from "immer";
+import { useCallback, useEffect, useState } from "react";
+import type { State } from "@atoms/saved-options";
 import {
   savedOptionsStore,
   defaultSavedOptionState,
   Option,
 } from "@atoms/saved-options";
-import {
-  SavedOptionApiDeleteBody,
-  SavedOptionApiPostBody,
-} from "@app/api/organization/savedOption/route.ts";
+import { z } from "zod";
+
+// API Types
+const SavedOptionApiDeleteBodySchema = z.object({
+  publicId: z.string().uuid(),
+});
+
+const SavedOptionApiPostBodySchema = z.object({
+  label: z.string(),
+  type: z.string(),
+});
+
+type SavedOptionApiDeleteBody = z.infer<typeof SavedOptionApiDeleteBodySchema>;
+type SavedOptionApiPostBody = z.infer<typeof SavedOptionApiPostBodySchema>;
 
 import CreationSelect from ".";
 
@@ -29,76 +39,129 @@ const SavedOptionSelect = ({
   title: string;
   className: string;
 }) => {
-  const savedOptions = savedOptionsStore((state) => state);
+  const { setSavedOptions } = savedOptionsStore();
+  const savedOptions = savedOptionsStore((state) => state[optionType]);
+  const allOptions = savedOptionsStore();
+  const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const fetchOptions = useCallback(async () => {
+    if (isInitialized) return;
+
+    setError(null);
     try {
       const res = await fetch(
-        `/api/organization/savedOption?type=${optionType}`,
+        `/api/v1/organization/savedOption?type=${optionType}`,
         {
           method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
-      if (res.ok) {
-        const json = await res.json();
-        // setSavedOptions((options) => ({
-        //   ...options,
-        //   [optionType]: [...defaultOptions, ...json.options],
-        // }))
+      if (!res.ok) {
+        throw new Error(`Failed to fetch options: ${res.statusText}`);
+      }
+      const json = await res.json();
+      if (json.status === "ok" && Array.isArray(json.options)) {
+        setSavedOptions({
+          ...allOptions,
+          [optionType]: [...defaultOptions, ...json.options],
+        });
+        setIsInitialized(true);
+      } else {
+        throw new Error("Invalid response format");
       }
     } catch (error) {
       console.error(error);
+      setError(
+        error instanceof Error ? error.message : "Failed to fetch options"
+      );
     }
-  }, [defaultOptions, optionType, savedOptions.setSavedOptions]);
+  }, [defaultOptions, optionType, setSavedOptions, isInitialized, allOptions]);
 
   const deleteOption = async (option: Option) => {
-    // setSavedOptions((options) => {
-    //   const updatedOptions = produce(options, (draft) => {
-    //     const index = options[optionType].findIndex(
-    //       (o) => o.publicId === option.publicId
-    //     )
-    //     draft[optionType].splice(index, 1)
-    //   })
-    //   return updatedOptions
-    // })
+    if (!option.publicId) {
+      console.error("Cannot delete option without publicId");
+      return;
+    }
+
+    setError(null);
     try {
       const body: SavedOptionApiDeleteBody = {
-        publicId: option.publicId!,
+        publicId: option.publicId,
       };
-      const res = await fetch("/api/organization/savedOption", {
+      const res = await fetch("/api/v1/organization/savedOption", {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(body),
       });
-      // HACK
-      // If deletion fails, re-sync. Should just store previous value
+
       if (!res.ok) {
-        fetchOptions();
+        throw new Error(`Failed to delete option: ${res.statusText}`);
+      }
+
+      // Optimistically update the UI
+      setSavedOptions({
+        ...allOptions,
+        [optionType]:
+          savedOptions?.filter((o: Option) => o.publicId !== option.publicId) ||
+          [],
+      });
+
+      const json = await res.json();
+      if (json.status !== "ok") {
+        throw new Error("Failed to delete option");
       }
     } catch (error) {
       console.error(error);
+      setError(
+        error instanceof Error ? error.message : "Failed to delete option"
+      );
+      // Revert on error by refetching
+      setIsInitialized(false);
+      fetchOptions();
     }
   };
 
-  const createOption = async (label: string) => {
+  const createOption = async (label: string): Promise<Option | undefined> => {
+    setError(null);
     try {
       const body: SavedOptionApiPostBody = {
         label,
         type: optionType,
       };
-      const res = await fetch("/api/organization/savedOption", {
+      const res = await fetch("/api/v1/organization/savedOption", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(body),
       });
-      if (res.ok) {
-        const json = await res.json();
-        // setSavedOptions((options) => ({
-        //   ...options,
-        //   [optionType]: [...options[optionType], json.option],
-        // }))
-        return json.option as Option;
+
+      if (!res.ok) {
+        throw new Error(`Failed to create option: ${res.statusText}`);
+      }
+
+      const json = await res.json();
+      if (json.status === "ok" && json.option) {
+        const newOption = json.option as Option;
+        setSavedOptions({
+          ...allOptions,
+          [optionType]: [...(savedOptions || []), newOption],
+        });
+        return newOption;
+      } else {
+        throw new Error("Invalid response format");
       }
     } catch (error) {
       console.error(error);
+      setError(
+        error instanceof Error ? error.message : "Failed to create option"
+      );
+      return undefined;
     }
   };
 
@@ -107,16 +170,23 @@ const SavedOptionSelect = ({
   }, [fetchOptions]);
 
   return (
-    <CreationSelect
-      deleteOption={deleteOption}
-      className={className}
-      name={name}
-      title={title}
-      onSave={(option) => onSave(option ? option.value : undefined)}
-      defaultValue={defaultValue}
-      options={savedOptions[optionType]}
-      createOption={createOption}
-    />
+    <>
+      {error && (
+        <div className='mb-2 text-sm text-red-500' role='alert'>
+          {error}
+        </div>
+      )}
+      <CreationSelect
+        deleteOption={deleteOption}
+        className={className}
+        name={name}
+        title={title}
+        onSave={(option) => onSave(option ? option.value : undefined)}
+        defaultValue={defaultValue}
+        options={savedOptions || []}
+        createOption={createOption}
+      />
+    </>
   );
 };
 

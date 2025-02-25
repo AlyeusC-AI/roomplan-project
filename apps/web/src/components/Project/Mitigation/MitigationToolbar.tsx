@@ -66,7 +66,7 @@ function UploadButton({
 export default function MitigationToolbar() {
   const [isRoomCreationModalOpen, setIsRoomCreationModalOpen] = useState(false);
   const [isImageUploadModalOpen, setIsImageUploadModalOpen] = useState(false);
-  const [directImageUpload, setIsDirectImageUpload] = useState(true);
+  const [directImageUpload, setIsDirectImageUpload] = useState(false);
 
   const { numUploads, onChange, onDrop } = useUploader();
 
@@ -78,7 +78,7 @@ export default function MitigationToolbar() {
 
   const onPrimaryClick = () => {
     setIsImageUploadModalOpen(true);
-    setIsDirectImageUpload(true);
+    setIsDirectImageUpload(false);
   };
 
   return (

@@ -22,8 +22,10 @@ export default function WallMaterial({
         }}
         defaultValue={
           defaultValue
-            ? savedOptions.wallMaterial.find(
-                (material) => material.value === defaultValue
+            ? wallOptions.find(
+                (material) =>
+                  material.value === defaultValue ||
+                  material.label === defaultValue
               )
             : undefined
         }
