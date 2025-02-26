@@ -46,11 +46,28 @@ export async function POST(req: NextRequest) {
       payload,
       remindClient,
       remindProjectOwners,
-      reminderDate,
+      reminderTime,
       projectId,
       end,
     } = await req.json();
     const [, authUser] = await user(req);
+
+    // Calculate reminder date based on reminderTime
+    let reminderDate: Date | null = null;
+    if (reminderTime) {
+      reminderDate = new Date(start);
+      switch (reminderTime) {
+        case "24h":
+          reminderDate.setHours(reminderDate.getHours() - 24);
+          break;
+        case "2h":
+          reminderDate.setHours(reminderDate.getHours() - 2);
+          break;
+        case "40m":
+          reminderDate.setMinutes(reminderDate.getMinutes() - 40);
+          break;
+      }
+    }
 
     const results = await supabaseServiceRole
       .from("CalendarEvent")
@@ -67,22 +84,23 @@ export async function POST(req: NextRequest) {
         remindProjectOwners,
         projectId,
         organizationId: authUser.user_metadata.organizationId,
+        reminderTime: reminderTime || null,
       })
       .select("*")
       .single();
 
-    if (remindClient) {
+    if (remindClient && reminderDate) {
       await supabaseServiceRole.from("CalendarEventReminder").insert({
         calendarEventId: results.data!.id,
-        date: reminderDate,
+        date: reminderDate.toISOString(),
         reminderTarget: "client",
       });
     }
 
-    if (remindProjectOwners) {
+    if (remindProjectOwners && reminderDate) {
       await supabaseServiceRole.from("CalendarEventReminder").insert({
         calendarEventId: results.data!.id,
-        date: reminderDate,
+        date: reminderDate.toISOString(),
         reminderTarget: "projectCreator",
       });
     }
@@ -103,32 +121,67 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { id, ...data } = await req.json();
+    const {
+      id,
+      start,
+      reminderTime,
+      remindClient,
+      remindProjectOwners,
+      ...data
+    } = await req.json();
     const [, authUser] = await user(req);
+
+    // Calculate reminder date based on reminderTime
+    let reminderDate: Date | null = null;
+    if (reminderTime && start) {
+      reminderDate = new Date(start);
+      switch (reminderTime) {
+        case "24h":
+          reminderDate.setHours(reminderDate.getHours() - 24);
+          break;
+        case "2h":
+          reminderDate.setHours(reminderDate.getHours() - 2);
+          break;
+        case "40m":
+          reminderDate.setMinutes(reminderDate.getMinutes() - 40);
+          break;
+      }
+    }
 
     const results = await supabaseServiceRole
       .from("CalendarEvent")
-      .update(data)
+      .update({
+        ...data,
+        start,
+        reminderTime: reminderTime || null,
+      })
       .eq("id", id)
       .eq("organizationId", authUser.user_metadata.organizationId)
       .select("*")
       .single();
 
-    // if (remindClient) {
-    //   await supabaseServiceRole.from("CalendarEventReminder").insert({
-    //     calendarEventId: results.data!.id,
-    //     date: reminderDate,
-    //     reminderTarget: "client",
-    //   });
-    // }
+    // Delete existing reminders
+    await supabaseServiceRole
+      .from("CalendarEventReminder")
+      .delete()
+      .eq("calendarEventId", id);
 
-    // if (remindProjectOwners) {
-    //   await supabaseServiceRole.from("CalendarEventReminder").insert({
-    //     calendarEventId: results.data!.id,
-    //     date: reminderDate,
-    //     reminderTarget: "projectCreator",
-    //   });
-    // }
+    // Add new reminders if needed
+    if (remindClient && reminderDate) {
+      await supabaseServiceRole.from("CalendarEventReminder").insert({
+        calendarEventId: id,
+        date: reminderDate.toISOString(),
+        reminderTarget: "client",
+      });
+    }
+
+    if (remindProjectOwners && reminderDate) {
+      await supabaseServiceRole.from("CalendarEventReminder").insert({
+        calendarEventId: id,
+        date: reminderDate.toISOString(),
+        reminderTarget: "projectCreator",
+      });
+    }
 
     if (results.error) {
       console.error("error", results.error);

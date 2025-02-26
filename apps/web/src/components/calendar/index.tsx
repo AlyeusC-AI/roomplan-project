@@ -64,6 +64,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@components/ui/alert-dialog";
+import { RadioGroup, RadioGroupItem } from "@components/ui/radio-group";
+
+type CalendarEvent = {
+  id: number;
+  publicId: string;
+  subject: string;
+  payload: string;
+  date: string;
+  start: string | null;
+  end: string | null;
+  dynamicId: string;
+  projectId: number | null;
+  organizationId: string | null;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  remindClient: boolean;
+  remindProjectOwners: boolean;
+  reminderTime?: "24h" | "2h" | "40m";
+};
 
 const calendarEventSchema = z.object({
   subject: z
@@ -74,7 +94,7 @@ const calendarEventSchema = z.object({
     .max(30, {
       message: "Event subject must not be longer than 30 characters.",
     }),
-  projectId: z.number(),
+  projectId: z.number().optional(),
   payload: z
     .string()
     .min(2, {
@@ -91,7 +111,7 @@ const calendarEventSchema = z.object({
   end: z.date({
     required_error: "Date is required",
   }),
-  reminderDate: z.date().optional(),
+  reminderTime: z.enum(["24h", "2h", "40m"]).optional(),
 });
 
 type CreateEventValues = z.infer<typeof calendarEventSchema>;
@@ -263,11 +283,12 @@ export default function CalendarComponent({
                 name='projectId'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Project</FormLabel>
+                    <FormLabel>Project (optional)</FormLabel>
                     <FormControl>
                       <Popover
                         open={createPopover}
                         onOpenChange={setCreatePopover}
+                        modal
                       >
                         <PopoverTrigger disabled={project != null} asChild>
                           <Button
@@ -366,7 +387,13 @@ export default function CalendarComponent({
                     <FormControl>
                       <DateTimePicker
                         date={field.value}
-                        setDate={field.onChange}
+                        setDate={(date) => {
+                          field.onChange(date);
+                          // Set end date to 1 hour after start date
+                          const endDate = new Date(date);
+                          endDate.setHours(endDate.getHours() + 1);
+                          form.setValue("end", endDate);
+                        }}
                       />
                       {/* <Popover>
                         <PopoverTrigger asChild>
@@ -411,7 +438,9 @@ export default function CalendarComponent({
                     <FormControl>
                       <DateTimePicker
                         date={field.value}
-                        setDate={field.onChange}
+                        setDate={(date) => {
+                          field.onChange(date);
+                        }}
                       />
                       {/* <Popover>
                         <PopoverTrigger asChild>
@@ -449,40 +478,44 @@ export default function CalendarComponent({
               />
               <FormField
                 control={form.control}
-                name='reminderDate'
+                name='reminderTime'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Event Reminder Date</FormLabel>
+                    <FormLabel>Reminder Time</FormLabel>
                     <FormControl>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className='mr-2 size-4' />
-                            {field.value ? (
-                              format(field.value ?? Date.now(), "PPP")
-                            ) : (
-                              <span>Pick a reminder date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className='w-full p-0'>
-                          <Calendar
-                            mode='single'
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className='flex flex-col space-y-1'
+                      >
+                        <FormItem className='flex items-center space-x-3 space-y-0'>
+                          <FormControl>
+                            <RadioGroupItem value='24h' />
+                          </FormControl>
+                          <FormLabel className='font-normal'>
+                            24 hours before
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className='flex items-center space-x-3 space-y-0'>
+                          <FormControl>
+                            <RadioGroupItem value='2h' />
+                          </FormControl>
+                          <FormLabel className='font-normal'>
+                            2 hours before
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className='flex items-center space-x-3 space-y-0'>
+                          <FormControl>
+                            <RadioGroupItem value='40m' />
+                          </FormControl>
+                          <FormLabel className='font-normal'>
+                            40 minutes before
+                          </FormLabel>
+                        </FormItem>
+                      </RadioGroup>
                     </FormControl>
                     <FormDescription>
-                      The date you want to remind your client about the event.
+                      Select when you want to be reminded about the event.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -642,7 +675,7 @@ export default function CalendarComponent({
                     }
 
                     setEditingEvent(event);
-                    form.setValue("projectId", event.projectId!);
+                    form.setValue("projectId", event.projectId ?? undefined);
                     form.setValue("subject", event.subject);
                     form.setValue("payload", event.payload);
                     form.setValue("start", new Date(event.start ?? event.date));
@@ -652,6 +685,10 @@ export default function CalendarComponent({
                       event.remindProjectOwners
                     );
                     form.setValue("remindClient", event.remindClient);
+                    form.setValue(
+                      "reminderTime",
+                      event.reminderTime ?? undefined
+                    );
                     setShowProjectsModal(true);
                   }}
                   key={feature.id}
