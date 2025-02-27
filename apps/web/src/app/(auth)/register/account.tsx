@@ -294,7 +294,8 @@ export function AccountForm() {
                 htmlFor='twillio1'
                 className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
               >
-                Opt in to receive text messages from RestoreGeek (Optional)
+                Opt in to receive one time passcodes and appointment reminders
+                via text from RestoreGeek (optional)
               </label>
             </div>
           </div>
