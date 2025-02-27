@@ -9,7 +9,7 @@ import { AppState } from "react-native";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { PortalHost } from "@rn-primitives/portal";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-
+import { Text } from "react-native";
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
     supabase.auth.startAutoRefresh();
@@ -93,6 +93,10 @@ export default function AppRoot() {
               }}
             />
           </Stack>
+          {/* 
+     
+  
+         */}
         </NativeBaseProvider>
       </ThemeProvider>
       <Toaster visibleToasts={1} position="top-center" closeButton />

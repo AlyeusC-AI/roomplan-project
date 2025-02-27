@@ -1,1 +1,1 @@
-../../../../../../../../node_modules/.pnpm/expo@52.0.28_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__@expo+metro-runt_dftzkmgflbdezgqsnihqnzpu3y/node_modules/expo/ios/Expo.h
+../../../../../../node_modules/expo/ios/Expo.h

@@ -42,15 +42,19 @@ const config: ExpoConfig = {
   web: {
     favicon: "./assets/favicon.png",
   },
+
   extra: {
     eas: {
       projectId: "f62cbfa4-7182-478d-b382-e6077f40db9b",
+    },
+    "expo-router": {
+      appRoot: "app",
     },
   },
   plugins: [
     ["expo-asset"],
     ["expo-font"],
-    ["expo-router"],
+    "expo-router",
     [
       "react-native-vision-camera",
       {
@@ -93,8 +97,7 @@ const config: ExpoConfig = {
     [
       "expo-image-picker",
       {
-        photosPermission:
-          "The app needs access to your photos.",
+        photosPermission: "The app needs access to your photos.",
       },
     ],
   ],

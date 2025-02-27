@@ -55,16 +55,20 @@ export default function Dashboard() {
 
   function fetchProjects() {
     setLoading(true);
-    console.log(session.access_token);
-    fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects?${searchTerm.length > 0 && `query=${searchTerm}`}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "auth-token": `${session.access_token}`,
-      },
-    })
+    fetch(
+      `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects?${
+        searchTerm.length > 0 && `query=${searchTerm}`
+      }`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": `${session?.access_token}`,
+        },
+      }
+    )
       .then((res) => {
-        return res.json()
+        return res.json();
       })
       .then((data) => {
         console.log(data);
@@ -112,9 +116,10 @@ export default function Dashboard() {
             <RefreshControl refreshing={loading} onRefresh={fetchProjects} />
           }
         >
-          {projects && projects.map((project, index) => {
-            return <ProjectCell project={project} key={index} />;
-          })}
+          {projects &&
+            projects.map((project, index) => {
+              return <ProjectCell project={project} key={index} />;
+            })}
         </ScrollView>
         <TouchableOpacity
           onPress={() => router.push("/projects/new-project")}

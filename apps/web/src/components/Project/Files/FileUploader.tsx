@@ -41,13 +41,18 @@ const FileUploader = () => {
 
   const { id } = useParams<{ id: string }>();
 
+  const fetchFiles = async () => {
+    try {
+      const res = await fetch(`/api/v1/projects/${id}/files`);
+      const data = await res.json();
+      files.setFiles(data);
+    } catch (error) {
+      console.error("Failed to fetch files:", error);
+    }
+  };
+
   useEffect(() => {
-    fetch(`/api/v1/projects/${id}/files`)
-      .then((res) => res.json())
-      .then((data) => {
-        files.setFiles(data);
-        console.log(data.files);
-      });
+    fetchFiles();
     fetch(`/api/v1/projects/${id}/reports`)
       .then((res) => res.json())
       .then((data) => {
@@ -58,6 +63,7 @@ const FileUploader = () => {
 
   const onUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
+    console.log("🚀 ~ onUpload ~ files:", files);
     event("attempt_upload_file", {
       category: "Header",
     });
@@ -69,6 +75,7 @@ const FileUploader = () => {
   };
 
   const uploadToSupabase = async (file: File) => {
+    console.log("🚀 ~ uploadToSupabase ~ file:", file);
     setIsUploading(true);
 
     try {
@@ -78,17 +85,22 @@ const FileUploader = () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
+      console.log("🚀 ~ uploadToSupabase ~ user:", user?.user_metadata);
 
-      const { data } = await supabase.storage
+      const { data, error } = await supabase.storage
         .from("user-files")
         .upload(
-          `${user?.user_metadata.organizationid}/${files.project?.publicId}/${file.name}`,
-          await file.bytes(),
+          `${user?.user_metadata.organizationId}/${files.project?.publicId}/${file.name}`,
+          body,
           {
             upsert: true,
             contentType: file.type,
           }
         );
+      console.log("🚀 ~ uploadToSupabase ~ error:", error);
+
+      console.log("🚀 ~ uploadToSupabase ~ data:", data);
+
       files.addFile({
         name: file.name,
         created_at: new Date().toDateString(),
@@ -113,23 +125,34 @@ const FileUploader = () => {
     } catch (error) {
       console.error(error);
       toast.error("Failed to upload file.");
+    } finally {
+      setIsUploading(false);
     }
-
-    setIsUploading(false);
   };
 
   const onDownload = async (file: FileObject, url: string) => {
     try {
-      console.log(url);
-      const res = await fetch(url);
+      const { data } = await supabase.storage
+        .from("user-files")
+        .createSignedUrl(`${orgInfo?.publicId}/${id}/${file.name}`, 60);
+
+      if (!data?.signedUrl) {
+        toast.error("Could not download file");
+        return;
+      }
+
+      const res = await fetch(data.signedUrl);
       if (res.ok) {
         const blob = await res.blob();
         downloadFile(
           new File([blob], file.name, { type: file.metadata.mimetype })
         );
+      } else {
+        toast.error("Could not download file");
       }
     } catch (e) {
       console.error(e);
+      toast.error("Could not download file");
     }
   };
 
@@ -144,6 +167,7 @@ const FileUploader = () => {
       if (res.ok) {
         projectStore.getState().removeFile(file.name);
         toast.success("File deleted");
+        await fetchFiles(); // Refetch files after successful deletion
       } else {
         console.error(res);
         toast.error("Could not delete file.");

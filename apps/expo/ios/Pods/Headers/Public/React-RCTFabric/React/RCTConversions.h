@@ -1,1 +1,1 @@
-../../../../../../../../node_modules/.pnpm/react-native@0.76.6_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__@react-na_a62dx43ndc33ebrragoaebkzz4/node_modules/react-native/React/Fabric/RCTConversions.h
+../../../../../../node_modules/react-native/React/Fabric/RCTConversions.h

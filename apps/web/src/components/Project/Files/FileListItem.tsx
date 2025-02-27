@@ -45,10 +45,7 @@ export default function FileListItem({
   };
 
   const onDel = async () => {
-    // const r = await getSignedUrl.refetch();
-    // if (r.data?.signedUrl) {
-    //   onDownload(file, r.data?.signedUrl);
-    // }
+    onDownload(file, "");
   };
   const onSave = () => {
     setIsSigning(false);

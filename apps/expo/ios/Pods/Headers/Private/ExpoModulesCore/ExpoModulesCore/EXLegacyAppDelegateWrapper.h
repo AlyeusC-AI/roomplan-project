@@ -1,1 +1,1 @@
-../../../../../../../../node_modules/.pnpm/expo-modules-core@2.2.0/node_modules/expo-modules-core/ios/AppDelegates/EXLegacyAppDelegateWrapper.h
+../../../../../../node_modules/expo-modules-core/ios/AppDelegates/EXLegacyAppDelegateWrapper.h

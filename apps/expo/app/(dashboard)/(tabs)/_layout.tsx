@@ -12,11 +12,7 @@ export default function Layout() {
         headerRight: () => (
           <View className="flex-row mr-3">
             <TouchableOpacity onPress={() => router.push("/chat")}>
-              <CircleHelp
-                style={{ marginRight: 10 }}
-                color="#FFFF"
-                size={24}
-              />
+              <CircleHelp style={{ marginRight: 10 }} color="#FFFF" size={24} />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push("/settings")}>
               <Cog color="#FFFF" size={24} />
