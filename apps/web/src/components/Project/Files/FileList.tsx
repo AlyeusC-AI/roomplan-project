@@ -13,7 +13,7 @@ export default function FileList({
   roofReport = false,
 }: {
   files: FileObject[];
-  onDownload: (file: FileObject, url: string) => void;
+  onDownload: (file: FileObject, url: string) => Promise<string | void>;
   onDelete: (file: FileObject) => Promise<void>;
   roofReport?: boolean;
 }) {
@@ -26,13 +26,14 @@ export default function FileList({
     await onDelete(file);
     setIsDeleting("");
   };
+
   if (hasRoofReport && roofReport) {
     const roofReportFiles = files.filter((file) =>
       file.name.toLowerCase().includes("roof")
     );
     return (
-      <Card className='mt-8'>
-        <ul role='list' className='divide-y divide-gray-200'>
+      <Card className='mt-8 p-4'>
+        <div className='grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'>
           {roofReportFiles.map((file) => (
             <FileListItem
               key={`file-${file.id}`}
@@ -42,14 +43,14 @@ export default function FileList({
               onDelete={onDel}
             />
           ))}
-        </ul>
+        </div>
       </Card>
     );
   }
 
   return (
-    <Card className='mt-8'>
-      <ul role='list' className='divide-y divide-gray-200'>
+    <Card className='mt-8 p-4'>
+      <div className='grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'>
         {files.map((file) => (
           <FileListItem
             key={`file-${file.id}`}
@@ -59,7 +60,7 @@ export default function FileList({
             onDelete={onDel}
           />
         ))}
-      </ul>
+      </div>
     </Card>
   );
 }

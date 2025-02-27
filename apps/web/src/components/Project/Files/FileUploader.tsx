@@ -137,22 +137,36 @@ const FileUploader = () => {
         .createSignedUrl(`${orgInfo?.publicId}/${id}/${file.name}`, 60);
 
       if (!data?.signedUrl) {
-        toast.error("Could not download file");
+        toast.error("Could not access file");
         return;
       }
 
-      const res = await fetch(data.signedUrl);
-      if (res.ok) {
-        const blob = await res.blob();
-        downloadFile(
-          new File([blob], file.name, { type: file.metadata.mimetype })
-        );
-      } else {
-        toast.error("Could not download file");
+      // If URL is empty, it means we want to download
+      if (!url) {
+        const res = await fetch(data.signedUrl);
+        if (res.ok) {
+          const blob = await res.blob();
+          downloadFile(
+            new File([blob], file.name, { type: file.metadata.mimetype })
+          );
+        } else {
+          toast.error("Could not download file");
+        }
+        return;
+      }
+
+      // For preview (thumbnails), return the URL without opening
+      if (url === "preview" && file.metadata.mimetype?.startsWith("image/")) {
+        return data.signedUrl;
+      }
+
+      // For viewing files
+      if (url === "view") {
+        window.open(data.signedUrl, "_blank");
       }
     } catch (e) {
       console.error(e);
-      toast.error("Could not download file");
+      toast.error("Could not access file");
     }
   };
 
@@ -223,17 +237,15 @@ const FileUploader = () => {
           </AlertDescription>
         </Alert>
       )}
-      <div>
+      <div className='mx-auto max-w-6xl'>
         {files.projectFiles.length === 0 ? (
           <FileEmptyState onChange={onUpload} isUploading={isUploading} />
         ) : (
-          <div>
-            <FileList
-              files={files.projectFiles}
-              onDownload={onDownload}
-              onDelete={onDelete}
-            />
-          </div>
+          <FileList
+            files={files.projectFiles}
+            onDownload={onDownload}
+            onDelete={onDelete}
+          />
         )}
       </div>
     </div>

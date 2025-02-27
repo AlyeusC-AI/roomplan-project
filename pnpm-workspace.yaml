@@ -1,5 +1,5 @@
 packages:
-  - "apps/expo"
+  # - "apps/expo"
   # - "apps/web"
   - "apps/room-plan-module"
   - "packages/api"

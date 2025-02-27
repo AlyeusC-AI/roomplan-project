@@ -1,1 +1,1 @@
-../../../../../node_modules/expo-constants/ios/EXConstantsService.h
+../../../../../../../node_modules/.pnpm/expo-constants@17.0.7_expo@52.0.37_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7._uy67vfipv4qdf2zyg3uje5sp7m/node_modules/expo-constants/ios/EXConstantsService.h
