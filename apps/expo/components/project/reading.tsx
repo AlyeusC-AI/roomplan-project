@@ -7,6 +7,7 @@ import {
   InputGroup,
   InputRightAddon,
   Button,
+  Modal,
 } from "native-base";
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
@@ -30,7 +31,7 @@ import { toast } from "sonner-native";
 import { TouchableOpacity, Text, View } from "react-native";
 import { supabaseServiceRole } from "@/unused/screens/CameraScreen";
 import * as ImagePicker from "expo-image-picker";
-import DateTimePicker from "react-native-ui-datepicker";
+import DateTimePicker, { getDefaultStyles } from "react-native-ui-datepicker";
 
 export type UpdateRoomReadingData = {
   temperature?: string;
@@ -98,12 +99,14 @@ const RoomReading = ({
   ) => Promise<any>;
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const { session: supabaseSession } = userStore((state) => state);
   const rooms = roomsStore();
   const { projectId } = useGlobalSearchParams<{
     projectId: string;
   }>();
   const [date, setDate] = useState(new Date(reading.date));
+  const defaultStyles = getDefaultStyles();
 
   async function updateRoomReading(
     readingId: string,
@@ -164,7 +167,7 @@ const RoomReading = ({
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images", "videos"],
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
@@ -172,37 +175,37 @@ const RoomReading = ({
 
     console.log(result);
 
-    const photo = result.assets[0];
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const photo = result.assets[0];
 
-    const p = {
-      uri: photo.uri,
-      name: photo.fileName,
-    };
-    const formData = new FormData();
-    // @ts-expect-error maaaaan react-native sucks
-    formData.append("file", p);
+      const p = {
+        uri: photo.uri,
+        name: photo.fileName,
+      };
+      const formData = new FormData();
+      // @ts-expect-error maaaaan react-native sucks
+      formData.append("file", p);
 
-    try {
-      await supabaseServiceRole.storage
-        .from("note-images")
-        .upload(`/${reading.publicId}/${v4()}.jpeg`, formData, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-    } catch (error) {
-      console.error(error);
+      try {
+        await supabaseServiceRole.storage
+          .from("note-images")
+          .upload(`/${reading.publicId}/${v4()}.jpeg`, formData, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+      } catch (error) {
+        console.error(error);
+      }
     }
   };
 
   return (
     <>
-      <Button
-        // className="flex flex-row justify-between items-center h-10"
-        variant="outline"
-        onPress={() => setIsCollapsed((o) => !o)}
-      >
+      <Button variant="outline" onPress={() => setIsCollapsed((o) => !o)}>
         <View className="flex flex-row justify-between w-full items-center">
-          <Text>{format(new Date(reading.date), "MM/dd/yyyy")}</Text>
+          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+            <Text className="text-blue-500">{format(date, "MM/dd/yyyy")}</Text>
+          </TouchableOpacity>
           {!isCollapsed ? <ChevronDown /> : <ChevronUp />}
         </View>
       </Button>
@@ -217,29 +220,48 @@ const RoomReading = ({
         >
           <Button
             onPress={async () => deleteReading(reading.publicId, "standard")}
-            // className="bg-white border rounded-md"
             className="flex items-center justify-center"
             variant="destructive"
           >
-            <Text color="red.500">
+            <Text style={{ color: "#ef4444" }}>
               Delete Reading <Trash2 color="#ef4444" height={24} width={24} />
             </Text>
           </Button>
           <FormControl>
-            <FormControl.Label>Date</FormControl.Label>
-            <DateTimePicker
-              mode="single"
-              buttonNextIcon={<ChevronRight color="#1d4ed8" />}
-              buttonPrevIcon={<ChevronLeft color="#1d4ed8" />}
-              onChange={(params) => {
-                setDate(new Date(params.date as string));
-                updateRoomReading(reading.publicId, "standard", {
-                  date: new Date(params.date as string).toISOString(),
-                });
-              }}
-              selectedItemColor="#1d4ed8"
-              date={date}
-            />
+            <Modal
+              isOpen={showDatePicker}
+              onClose={() => setShowDatePicker(false)}
+            >
+              <Modal.Content>
+                <Modal.CloseButton />
+                <Modal.Header>Select Date</Modal.Header>
+                <Modal.Body>
+                  <DateTimePicker
+                    mode="single"
+                    components={{
+                      IconNext: <ChevronRight color="#1d4ed8" />,
+                      IconPrev: <ChevronLeft color="#1d4ed8" />,
+                    }}
+                    onChange={(params) => {
+                      setDate(new Date(params.date as string));
+                      updateRoomReading(reading.publicId, "standard", {
+                        date: new Date(params.date as string).toISOString(),
+                      });
+                      setShowDatePicker(false);
+                    }}
+                    styles={{
+                      ...defaultStyles,
+                      selected: {
+                        ...defaultStyles.selected,
+                        color: "#1d4ed8",
+                        backgroundColor: "#1d4ed8",
+                      },
+                    }}
+                    date={date}
+                  />
+                </Modal.Body>
+              </Modal.Content>
+            </Modal>
           </FormControl>
           <FormControl>
             <Stack mx="2">

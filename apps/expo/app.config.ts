@@ -40,7 +40,7 @@ const config: ExpoConfig = {
     },
   },
   web: {
-    favicon: "./assets/favicon.png",
+    favicon: "./assets/icon.png",
   },
 
   extra: {

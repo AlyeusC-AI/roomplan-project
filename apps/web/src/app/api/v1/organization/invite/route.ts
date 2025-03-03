@@ -64,7 +64,11 @@ export async function POST(req: NextRequest) {
           { status: "failed", message: "existing-member" },
           { status: 400 }
         );
-      else return NextResponse.json({ status: "failed" }, { status: 500 });
+      else
+        return NextResponse.json(
+          { status: "failed", message: invitation.reason },
+          { status: 500 }
+        );
     } else {
       console.log("🚀 ~ POST ~ invitation:", invitation);
       console.log("🚀 ~ POST ~ orgId:", orgId);
@@ -81,6 +85,21 @@ export async function POST(req: NextRequest) {
           },
           redirectTo: `${process.env.DOMAIN || "http://localhost:3002"}/acceptInvite?token=${invitation.inviteId}`,
         });
+      // const { error } = await supabaseClient.auth.signInWithOtp({
+      //   email: body.email,
+      //   options: {
+      //     data: {
+      //       organizationId: orgId,
+      //       inviteId: invitation.inviteId,
+      //       isSupportUser: false,
+      //       firstName: "",
+      //       lastName: "",
+      //       accessLevel: "viewer",
+      //     },
+
+      //     emailRedirectTo: `${process.env.DOMAIN || "http://localhost:3002"}/acceptInvite?token=${invitation.inviteId}`,
+      //   },
+      // });
       console.log("🚀 ~ POST ~ error:", error);
       if (process.env.NODE_ENV === "production") {
         await fetch(

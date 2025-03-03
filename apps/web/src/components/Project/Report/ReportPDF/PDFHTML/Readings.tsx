@@ -23,9 +23,11 @@ const Readings = ({
           </div>
           <table className='pdf room-section-dimensions-details-table section-spacing'>
             <thead>
-              <PDFTableTh>Description</PDFTableTh>
-              <PDFTableTh>Value</PDFTableTh>
-              <PDFTableTh>Unit</PDFTableTh>
+              <tr>
+                <PDFTableTh>Description</PDFTableTh>
+                <PDFTableTh>Value</PDFTableTh>
+                <PDFTableTh>Unit</PDFTableTh>
+              </tr>
             </thead>
             <tbody>
               <tr>
@@ -67,9 +69,11 @@ const Readings = ({
               </h3>
               <table className='pdf room-section-dimensions-details-table section-spacing'>
                 <thead>
-                  <PDFTableTh>Description</PDFTableTh>
-                  <PDFTableTh>Value</PDFTableTh>
-                  <PDFTableTh>Unit</PDFTableTh>
+                  <tr>
+                    <PDFTableTh>Description</PDFTableTh>
+                    <PDFTableTh>Value</PDFTableTh>
+                    <PDFTableTh>Unit</PDFTableTh>
+                  </tr>
                 </thead>
                 <tbody>
                   <tr>

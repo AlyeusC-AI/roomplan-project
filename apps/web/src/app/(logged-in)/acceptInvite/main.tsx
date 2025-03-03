@@ -20,14 +20,39 @@ export function AcceptInviteForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
-
+  useEffect(() => {
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("🚀 ~ supabase.auth.onAuthStateChange ~ event:", event);
+      if (
+        // event == "PASSWORD_RECOVERY" &&
+        session
+      ) {
+        console.log("SETTING SESSION");
+        await supabase.auth.setSession({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token,
+        });
+      }
+    });
+  }, []);
   useEffect(() => {
     // Verify the invite token and get organization details
     async function verifyInvite() {
       try {
-        const token = (await supabase.auth.getUser()).data.user?.user_metadata
-          .inviteId;
+        const token =
+          (await supabase.auth.getUser()).data.user?.user_metadata.inviteId ||
+          searchParams.get("token");
         console.log("🚀 ~ verifyInvite ~ token:", token);
+        // try {
+        //   await supabase.auth.verifyOtp({
+        //     token_hash: token!,
+        //     type: "invite",
+        //   });
+        // } catch (error) {
+        //   toast.error("Invalid invitation link");
+        //   // router.push("/login");
+        //   // return;
+        // }
 
         if (!token) {
           toast.error("Invalid invitation link");

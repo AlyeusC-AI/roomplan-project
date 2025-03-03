@@ -1,1 +1,1 @@
-../../../../../../../../../node_modules/.pnpm/react-native@0.76.7_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7.26.0__@react-na_g24qdsanp7rvwgpcz2plzw7fs4/node_modules/react-native/ReactCommon/react/debug/react_native_assert.h
+../../../../../../../../../node_modules/react-native/ReactCommon/react/debug/react_native_assert.h

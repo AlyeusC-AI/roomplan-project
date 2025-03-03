@@ -21,9 +21,11 @@ const AffectedAreas = ({
           </h4>
           <table className='pdf room-section-dimensions-details-table'>
             <thead>
-              <PDFTableTh>Description</PDFTableTh>
-              <PDFTableTh>Value</PDFTableTh>
-              <PDFTableTh>Unit</PDFTableTh>
+              <tr>
+                <PDFTableTh>Description</PDFTableTh>
+                <PDFTableTh>Value</PDFTableTh>
+                <PDFTableTh>Unit</PDFTableTh>
+              </tr>
             </thead>
             <tbody>
               <tr>

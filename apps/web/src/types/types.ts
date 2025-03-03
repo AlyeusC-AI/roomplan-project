@@ -68,6 +68,9 @@ declare global {
 
   type Note = FlatNote & {
     NotesAuditTrail: NotesAuditTrail[];
+    NoteImage: {
+      imageKey: string;
+    }[];
   };
 
   type ImageNote = Database["public"]["Tables"]["ImageNote"]["Row"];

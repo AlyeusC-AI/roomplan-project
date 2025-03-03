@@ -197,6 +197,9 @@ declare global {
       createdAt: Date;
       userName: string | null;
     }[];
+    NoteImage?: {
+      imageKey: string;
+    }[];
   };
 
   type RoomWithNotes = Room & {

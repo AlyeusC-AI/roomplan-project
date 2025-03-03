@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let customerId = null;
     // Get organization details for the user
     const { data: org } = await supabase
       .from("Organization")
@@ -28,6 +29,19 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!org?.customerId) {
+      const stripeCustomer = await stripe.customers.create({
+        email: user.email,
+      });
+      customerId = stripeCustomer.id;
+      await supabase
+        .from("Organization")
+        .update({ customerId: customerId })
+        .eq("publicId", user.user_metadata.organizationId);
+    } else {
+      customerId = org.customerId;
+    }
+
+    if (!customerId) {
       return NextResponse.json(
         { error: "No customer ID found" },
         { status: 400 }
@@ -35,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     const session = await stripe.billingPortal.sessions.create({
-      customer: org.customerId,
+      customer: customerId,
       return_url: `${request.headers.get("origin")}/settings/billing`,
     });
 

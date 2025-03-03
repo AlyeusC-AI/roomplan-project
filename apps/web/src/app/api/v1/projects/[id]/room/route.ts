@@ -88,7 +88,6 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -107,7 +106,7 @@ export async function GET(
       await supabaseServiceRole
         .from("Room")
         .select(
-          "*, Inference (*, Image (*)), Notes (*, NotesAuditTrail (*)), AreaAffected (*), RoomReading (*, GenericRoomReading (*))"
+          "*, Inference (*, Image (*)), Notes (*, NotesAuditTrail (*), NoteImage (*)), AreaAffected (*), RoomReading (*, RoomReadingImage (*), GenericRoomReading (* , GenericRoomReadingImage (*)))"
         )
         .eq("isDeleted", false)
         .eq("RoomReading.isDeleted", false)

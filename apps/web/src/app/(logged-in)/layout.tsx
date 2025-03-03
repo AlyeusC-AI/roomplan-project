@@ -14,7 +14,7 @@ import { UserNav } from "./user-nav";
 import { cn } from "@lib/utils";
 import { createClient } from "@lib/supabase/client";
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { orgStore } from "@atoms/organization";
 import { Loader2 } from "lucide-react";
 
@@ -24,12 +24,28 @@ export default function Layout({ children }: React.PropsWithChildren) {
   const search = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
   useEffect(() => {
+    // async function verifyInvite() {
+    //   console.log("🚀 ~ verifyInvite ~ search.get):", search.get("inviteCode"));
+
+    //   if (search.get("inviteCode")) {
+    //     await client.auth.verifyOtp({
+    //       token_hash: search.get("inviteCode")!,
+    //       type: "invite",
+    //     });
+    //   }
+    // }
+    // verifyInvite().finally(() => {
     client.auth
       .getUser()
-      .then(({ data: { user }, error }) => {
+      .then(async ({ data: { user }, error }) => {
         console.log("🚀 ~ .then ~ user:", user);
 
+        if (pathname.includes("acceptInvite")) {
+          console.log("🚀 ~ .then ~ pathname:", pathname);
+          return;
+        }
         if (error || !user) {
           router.replace("/login");
           return;
@@ -75,6 +91,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
       .finally(() => {
         setLoading(false);
       });
+    // });
   }, []);
 
   if (loading) {

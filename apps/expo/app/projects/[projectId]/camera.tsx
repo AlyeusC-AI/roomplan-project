@@ -14,18 +14,23 @@ import Reanimated, {
   interpolate,
   useAnimatedGestureHandler,
   useSharedValue,
+  useAnimatedStyle,
+  useAnimatedProps,
+  withTiming,
+  runOnJS,
 } from "react-native-reanimated";
 import { Button } from "@/components/ui/button";
 import { PinchGestureHandlerGestureEvent } from "react-native-gesture-handler";
 import { PinchGestureHandler } from "react-native-gesture-handler";
-import { ActivityIndicator, Text } from "react-native";
+import { ActivityIndicator, Text, Pressable } from "react-native";
+import { Minus, Plus } from "lucide-react-native";
 
 export const supabaseServiceRole = createClient(
   getConstants().supabaseUrl,
   getConstants().serviceRoleJwt
 );
 
-const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera);
+const AnimatedCamera = Reanimated.createAnimatedComponent(Camera);
 Reanimated.addWhitelistedNativeProps({
   zoom: true,
 });
@@ -41,6 +46,7 @@ export default function CameraScreen() {
   }>();
   const rooms = roomsStore();
   const zoom = useSharedValue(1);
+  const [zoomLevel, setZoomLevel] = useState(1);
 
   const [selectedRoomId, setRoomId] = useState("");
   const onRoomSelect = (r: string) => {
@@ -116,7 +122,6 @@ export default function CameraScreen() {
       context.startZoom = zoom.value;
     },
     onActive: (event, context) => {
-      // we're trying to map the scale gesture to a linear zoom here
       const startZoom = context.startZoom ?? 0;
       const scale = interpolate(
         event.scale,
@@ -130,14 +135,39 @@ export default function CameraScreen() {
         [minZoom, startZoom, maxZoom],
         Extrapolate.CLAMP
       );
-      console.log("ZOOMING");
+    },
+    onEnd: () => {
+      runOnJS(setZoomLevel)(zoom.value);
     },
   });
 
   useEffect(() => {
-    // Reset zoom to it's default everytime the `device` changes.
-    zoom.value = device?.neutralZoom ?? 1;
-  }, [zoom, device]);
+    const neutralZoom = device?.neutralZoom ?? 1;
+    zoom.value = withTiming(neutralZoom, { duration: 200 });
+    setZoomLevel(neutralZoom);
+
+    return () => {
+      zoom.value = neutralZoom;
+    };
+  }, [device]);
+
+  const animatedProps = useAnimatedProps(() => ({
+    zoom: zoom.value,
+  }));
+
+  const handleZoomIn = () => {
+    const newZoom = Math.min(zoomLevel + 0.5, maxZoom);
+    console.log("🚀 ~ handleZoomIn ~ newZoom:", newZoom);
+    zoom.value = withTiming(newZoom, { duration: 200 });
+    setZoomLevel(newZoom);
+  };
+
+  const handleZoomOut = () => {
+    const newZoom = Math.max(zoomLevel - 0.5, minZoom);
+    console.log("🚀 ~ handleZoomOut ~ newZoom:", newZoom);
+    zoom.value = withTiming(newZoom, { duration: 200 });
+    setZoomLevel(newZoom);
+  };
 
   const takePhoto = async () => {
     if (!camera || !camera.current) return;
@@ -156,13 +186,15 @@ export default function CameraScreen() {
     setDisabled(false);
   };
 
-  if (device === null)
+  if (!device) {
     return (
       <View className="flex justify-center items-center h-full w-full">
         <ActivityIndicator />
         <Text>Opening Camera</Text>
       </View>
     );
+  }
+
   return (
     <View className="relative h-full w-full flex">
       <View className="w-full h-full justify-between">
@@ -174,17 +206,32 @@ export default function CameraScreen() {
           />
         </View>
         <PinchGestureHandler onGestureEvent={onPinchGesture}>
-          <ReanimatedCamera
-            style={{
-              flex: 1,
-              height: "100%",
-            }}
-            device={device}
-            isActive={true}
-            photo={true}
-            ref={camera}
-            zoom={zoom}
-          />
+          <View className="flex-1">
+            <AnimatedCamera
+              style={{
+                flex: 1,
+                height: "100%",
+              }}
+              device={device}
+              isActive={true}
+              photo={true}
+              ref={camera}
+              animatedProps={animatedProps}
+            />
+            <View className="absolute right-4 top-1/2 -mt-20 bg-black/40 rounded-full">
+              <Pressable onPress={handleZoomIn} className="p-2">
+                <Plus size={24} color="white" />
+              </Pressable>
+              <View className="py-2 px-3 bg-black/60">
+                <Text className="text-white font-medium text-center">
+                  {zoomLevel.toFixed(1)}x
+                </Text>
+              </View>
+              <Pressable onPress={handleZoomOut} className="p-2">
+                <Minus size={24} color="white" />
+              </Pressable>
+            </View>
+          </View>
         </PinchGestureHandler>
         <View className="flex flex-row justify-between items-center content-center bg-black px-4 py-2 w-full">
           {lastPhoto ? (
@@ -203,7 +250,7 @@ export default function CameraScreen() {
             onPress={() => takePhoto()}
             disabled={disabled}
           />
-          <View className="size-20 " />
+          <View className="size-16" />
         </View>
       </View>
     </View>

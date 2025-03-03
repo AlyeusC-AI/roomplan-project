@@ -224,11 +224,11 @@ export default function BillingPage() {
               )}
               Manage Subscription
             </Button>
-            {!subscriptionInfo?.plan && (
+            {/* {!subscriptionInfo?.plan && (
               <Button asChild variant='outline' size='lg' className='flex-1'>
                 <a href='/pricing'>View Plans</a>
               </Button>
-            )}
+            )} */}
           </div>
         </CardFooter>
       </Card>

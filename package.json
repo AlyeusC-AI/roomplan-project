@@ -1,24 +1,25 @@
 {
+  "name": "newMononrepo",
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev --concurrency 11",
+    "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "clean": "git clean -xdf node_modules",
-    "clean:workspaces": "turbo clean",
-    "dev:generate": "turbo dev:generate",
-    "dev:migrate": "turbo dev:push dev:generate",
-    "dev:push": "turbo dev:push dev:generate",
-    "build:dev:ios": "turbo build:dev:ios"
+    "check-types": "turbo run check-types"
   },
   "devDependencies": {
-    "next": "15.1.6",
-    "prettier": "^2.5.1",
-    "turbo": "latest"
+    "@types/node": "^22.13.5",
+    "prettier": "^3.5.0",
+    "turbo": "^2.4.4",
+    "typescript": "5.7.3"
   },
-  "packageManager": "pnpm@9.9.0",
-  "dependencies": {
-    "vercel": "^41.0.3"
-  }
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "yarn@1.22.22",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

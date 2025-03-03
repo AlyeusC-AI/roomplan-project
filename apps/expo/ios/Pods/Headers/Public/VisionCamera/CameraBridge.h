@@ -1,1 +1,1 @@
-../../../../../node_modules/react-native-vision-camera/ios/React/CameraBridge.h
+../../../../../../../node_modules/react-native-vision-camera/ios/React/CameraBridge.h

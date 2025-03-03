@@ -33,32 +33,78 @@ export default function ProjectPhotos() {
   const { session: supabaseSession } = userStore((state) => state);
   const [loading, setLoading] = React.useState(true);
   const rooms = roomInferenceStore();
+  console.log("🚀 ~ ProjectPhotos ~ rooms:", JSON.stringify(rooms, null, 2));
   const urlMap = urlMapStore();
 
   useEffect(() => {
-    setUrlMap();
+    refreshData();
   }, []);
-
-  function setUrlMap() {
+  const refreshData = async () => {
     setLoading(true);
-    fetch(
-      `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/image`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "auth-token": supabaseSession?.access_token || "",
-        },
-      }
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setLoading(false);
-        console.log(data);
-        rooms.setRooms(data.rooms);
-        urlMap.setUrlMap(data.urlMap);
-      });
-  }
+    try {
+      // Fetch rooms
+      const roomsRes = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": supabaseSession?.access_token || "",
+          },
+        }
+      );
+      console.log("🚀 ~ refreshData ~ roomsRes:", roomsRes);
+
+      const roomsData = await roomsRes.json();
+      console.log(
+        "🚀 ~ refreshData ~ roomsData:",
+        JSON.stringify(roomsData, null, 2)
+      );
+      rooms.setRooms(roomsData.rooms);
+
+      // Fetch images
+      const imagesRes = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/images`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": supabaseSession?.access_token || "",
+          },
+        }
+      );
+      const imagesData = await imagesRes.json();
+      urlMap.setUrlMap(imagesData.urlMap);
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  // function setUrlMap() {
+  //   setLoading(true);
+  //   fetch(
+  //     `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/images`,
+  //     {
+  //       method: "GET",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         "auth-token": supabaseSession?.access_token || "",
+  //       },
+  //     }
+  //   )
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       console.log("🚀 ~ .then ~ data:", JSON.stringify(data.images, null, 2));
+  //       setLoading(false);
+  //       rooms.setRooms(data.images);
+  //       urlMap.setUrlMap(data.urlMap);
+  //     })
+  //     .catch((err) => {
+  //       console.error("🚀 ~ .catch ~ err:", err);
+  //       setLoading(false);
+  //     });
+  // }
 
   const router = useRouter();
 
@@ -84,7 +130,7 @@ export default function ProjectPhotos() {
     }
   };
 
-  if (!loading && rooms.rooms.length === 0) {
+  if (!loading && rooms?.rooms?.length === 0) {
     return (
       <Empty
         title="No Images"
@@ -104,7 +150,7 @@ export default function ProjectPhotos() {
     <View className="w-full h-full px-3 mt-4">
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={setUrlMap} />
+          <RefreshControl refreshing={loading} onRefresh={refreshData} />
         }
       >
         <View className="flex-row justify-end">
@@ -120,20 +166,22 @@ export default function ProjectPhotos() {
           collapsible
           className="w-full max-w-sm native:max-w-md"
         >
-          {rooms.rooms.filter(e => !e.isDeleted).map((room) => (
-            <AccordionItem key={room.name} value={room.name}>
-              <AccordionTrigger>
-                <Text className="font-bold text-2xl my-3">{room.name}</Text>
-              </AccordionTrigger>
-              <AccordionContent>
-                <RoomImages
-                  key={room.name}
-                  inferences={room.Inference}
-                  urlMap={urlMap.urlMap}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          ))}
+          {rooms.rooms
+            .filter((e) => !e.isDeleted)
+            .map((room) => (
+              <AccordionItem key={room.name} value={room.name}>
+                <AccordionTrigger>
+                  <Text className="font-bold text-2xl my-3">{room.name}</Text>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <RoomImages
+                    key={room.name}
+                    inferences={room.Inference}
+                    urlMap={urlMap.urlMap}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            ))}
         </Accordion>
       </ScrollView>
 
