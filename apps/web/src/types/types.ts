@@ -43,11 +43,19 @@ declare global {
   type Status = Database["public"]["Tables"]["ProjectStatusValue"]["Row"];
   type RoomReading = Database["public"]["Tables"]["RoomReading"]["Row"];
   type GenericRoomReading =
-    Database["public"]["Tables"]["GenericRoomReading"]["Row"];
+    Database["public"]["Tables"]["GenericRoomReading"]["Row"] & {
+      GenericRoomReadingImage: {
+        id: number;
+        imageKey: string;
+        type: "floor" | "wall";
+      }[];
+    };
   type Room = Database["public"]["Tables"]["Room"]["Row"];
-
+  type RoomReadingImage =
+    Database["public"]["Tables"]["RoomReadingImage"]["Row"];
   interface ReadingsWithGenericReadings extends RoomReading {
     GenericRoomReading: GenericRoomReading[];
+    RoomReadingImage: RoomReadingImage[];
   }
 
   type Equipment = Database["public"]["Tables"]["Equipment"]["Row"];

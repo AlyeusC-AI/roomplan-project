@@ -207,7 +207,17 @@ declare global {
   };
 
   interface ReadingsWithGenericReadings extends RoomReading {
-    GenericRoomReading: GenericRoomReading[];
+    GenericRoomReading: (GenericRoomReading & {
+      GenericRoomReadingImage?: {
+        id: number;
+        imageKey: string;
+      }[];
+    })[];
+    RoomReadingImage?: {
+      id: number;
+      imageKey: string;
+      type: "floor" | "wall";
+    }[];
   }
 
   interface RoomWithReadings extends Room {

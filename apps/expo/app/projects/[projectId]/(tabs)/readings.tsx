@@ -37,6 +37,7 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
     type: ReadingType
   ) => {
     try {
+      setIsAdding(true);
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/readings`,
         {
@@ -51,6 +52,7 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
           }),
         }
       );
+      console.log("🚀 ~ RoomReadingItem ~ res:", res)
 
       if (!res.ok) {
         throw new Error("Could not add reading");
@@ -67,8 +69,9 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
       return body;
     } catch {
       toast.error("Could not add reading");
+    } finally {
+      setIsAdding(false);
     }
-    setIsAdding(false);
   };
 
   return (
@@ -83,7 +86,6 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
         <Heading>{room.name}</Heading>
         <Button
           onPress={() => {
-            setIsAdding(true);
             addReading(
               {
                 projectId: room.projectId,
@@ -103,14 +105,14 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
         </Button>
       </HStack>
       <VStack w="100%" mb="3">
-        {room.RoomReading.length === 0 && (
+        {room.RoomReading?.length === 0 && (
           <Center w="full">
             <Heading size="sm" mb="2" color="gray.400">
               There are no readings yet
             </Heading>
           </Center>
         )}
-        {room.RoomReading.map((reading) => (
+        {room.RoomReading?.map((reading) => (
           <RoomReading
             room={room}
             key={reading.publicId}
