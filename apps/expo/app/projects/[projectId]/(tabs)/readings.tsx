@@ -82,6 +82,7 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
         alignItems="flex-start"
         direction="row"
         mb={4}
+        // px={4}
       >
         <Heading>{room.name}</Heading>
         <Button
@@ -196,7 +197,7 @@ export default function RoomReadings() {
       alignItems="flex-start"
       h="full"
       pt={4}
-      px={2}
+      px={4}
       mt={4}
       backgroundColor="white"
     >

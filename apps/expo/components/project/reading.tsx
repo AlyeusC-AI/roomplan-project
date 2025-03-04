@@ -457,7 +457,7 @@ const RoomReading = ({
   const floorImages = reading.RoomReadingImage?.filter(img => img.type === "floor");  
   return (
     <>
-      <Button variant="outline" onPress={() => setIsCollapsed((o) => !o)}>
+      <Button variant="outline" onPress={() => setIsCollapsed((o) => !o)} className="mb-4">
         <View className="flex flex-row justify-between w-full items-center px-3 py-1.5">
           <TouchableOpacity onPress={() => setShowDatePicker(true)}>
             <Text className="text-blue-600 font-medium">{format(date, "MM/dd/yyyy")}</Text>
@@ -492,7 +492,7 @@ const RoomReading = ({
                 ]
               );
             }}
-            className="flex-row items-center justify-center bg-red-100 rounded-lg py-1.5 px-3 border border-red-300"
+            className="flex-row items-center justify-center bg-white rounded-lg py-1.5 px-3 border border-red-300"
             variant="destructive"
             disabled={isDeleting}
           >
@@ -602,7 +602,7 @@ const RoomReading = ({
                   }
                 />
                 {wallImages && wallImages.length > 0 && (
-                  <View className="flex-row flex-wrap gap-1.5 mt-1">
+                  <View className="flex-row flex-wrap gap-1.5 mt-1 mb-1">
                     {wallImages.map((img, index) => (
                       <Pressable 
                         key={img.imageKey}
@@ -638,7 +638,7 @@ const RoomReading = ({
                   }
                 />
                 {floorImages && floorImages.length > 0 && (
-                  <View className="flex-row flex-wrap gap-1.5 mt-1">
+                  <View className="flex-row flex-wrap gap-1.5 mt-1 mb-1">
                     {floorImages.map((img, index) => (
                       <Pressable 
                         key={img.imageKey}
@@ -688,7 +688,7 @@ const RoomReading = ({
                       }
                     />
                     {grr.GenericRoomReadingImage && grr.GenericRoomReadingImage.length > 0 && (
-                      <View className="flex-row flex-wrap gap-1.5 mt-1">
+                      <View className="flex-row flex-wrap gap-1.5 mt-1 mb-1">
                         {grr.GenericRoomReadingImage.map((img, index) => (
                           <Pressable 
                             key={img.imageKey}
