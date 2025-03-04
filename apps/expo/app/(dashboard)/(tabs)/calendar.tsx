@@ -147,7 +147,10 @@ export default function CalendarScreen() {
         },
       }
     )
-      .then((res) => res.json())
+      .then((res) => {
+        console.log("🚀 ~ fetchEvents ~ res:", res)
+        return res.json()
+      })
       .then((data) => {
         setLoading(false);
         setEvents(data.data);

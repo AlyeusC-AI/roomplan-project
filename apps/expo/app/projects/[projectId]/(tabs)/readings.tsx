@@ -7,7 +7,6 @@ import {
   Center,
 } from "native-base";
 import React, { useEffect, useState } from "react";
-
 import RoomReading from "@/components/project/reading";
 import { userStore } from "@/lib/state/user";
 import { useGlobalSearchParams, useRouter } from "expo-router";
@@ -168,7 +167,7 @@ export default function RoomReadings() {
     getReadings();
   }, []);
 
-  if (!loading && rooms.rooms.length === 0) {
+  if (!loading && rooms.rooms?.length === 0) {
     return (
       <Empty
         title="There are no rooms yet"

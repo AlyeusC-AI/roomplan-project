@@ -132,6 +132,13 @@ declare type SearchResult = {
   createdAt: string;
 };
 
+declare type ExtendedWallItem = {
+  id: string;
+  name: string;
+  value: string | null;
+  type: "wall" | "floor";
+};
+
 declare type RoomReading = {
   publicId: string;
   humidity: string | null;
@@ -139,6 +146,9 @@ declare type RoomReading = {
   gpp: string | null;
   moistureContentWall: string | null;
   moistureContentFloor: string | null;
+  wallName: string | null;
+  floorName: string | null;
+  extendedWalls: ExtendedWallItem[] | null;
   date: Date;
   room: {
     publicId: string;
@@ -218,6 +228,7 @@ declare global {
       imageKey: string;
       type: "floor" | "wall";
     }[];
+    extendedWalls?: ExtendedWallItem[] | null;
   }
 
   interface RoomWithReadings extends Room {
