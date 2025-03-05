@@ -180,6 +180,25 @@ export default function CalendarScreen() {
     });
   };
 
+  const handleViewEventDetails = (event: CalendarEvent) => {
+    router.push({
+      pathname: "calendar/event-details",
+      params: {
+        id: event.id.toString(),
+        publicId: event.publicId,
+        subject: event.subject,
+        payload: event.payload,
+        date: event.date,
+        start: event.start || event.date,
+        end: event.end || event.date,
+        projectId: event.projectId?.toString() || "",
+        remindClient: event.remindClient ? "true" : "false",
+        remindProjectOwners: event.remindProjectOwners ? "true" : "false",
+        reminderTime: event.reminderTime || "",
+      }
+    });
+  };
+
   const handleDeleteEvent = (event: CalendarEvent) => {
     Alert.alert(
       "Delete Event",
@@ -364,7 +383,7 @@ export default function CalendarScreen() {
                       <Trash2 size={18} color="#ef4444" />
                     </TouchableOpacity>
                     
-                    <TouchableOpacity onPress={() => handleEditEvent(event)} activeOpacity={0.7}>
+                    <TouchableOpacity onPress={() => handleViewEventDetails(event)} activeOpacity={0.7}>
                       <View style={styles.eventHeader}>
                         <Text style={styles.eventTitle}>{event.subject}</Text>
                         <View style={[styles.eventTimeContainer, { marginRight: 24 }]}>
@@ -477,15 +496,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 3,
-  },
-  monthHeader: {
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  monthTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1e293b',
   },
   calendarWrapper: {
     minHeight: 340,
@@ -642,20 +652,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#fff",
-  },
-  placeholder: {
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 0,
-    height: 400,
-    marginTop: 0,
-    padding: 0,
-    backgroundColor: "transparent",
-  },
-  placeholderInset: {
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 0,
   },
 });
 
