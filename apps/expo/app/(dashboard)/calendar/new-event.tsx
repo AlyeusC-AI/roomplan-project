@@ -691,39 +691,3 @@ const styles = StyleSheet.create({
     minHeight: 360,
   },
 });
-
-const customStyles = StyleSheet.create({
-  dayContainer: {
-    width: 46,
-    height: 46,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 23,
-    marginVertical: 4,
-    marginHorizontal: 3,
-  },
-  selectedDay: {
-    backgroundColor: '#2563eb', // darker blue
-    transform: [{ scale: 1.1 }],
-    shadowColor: "#2563eb",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  startDay: {
-    backgroundColor: '#3b82f6', // blue
-  },
-  endDay: {
-    backgroundColor: '#60a5fa', // lighter blue
-  },
-  dayText: {
-    fontSize: 16,
-    color: '#1e293b',
-    fontWeight: '600',
-  },
-  dayTextLight: {
-    color: '#fff',
-    fontWeight: '700',
-  },
-});

@@ -87,7 +87,8 @@ export default function CalendarScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+  console.log("🚀 ~ CalendarScreen ~ events:", JSON.stringify(events, null, 2))
+  // const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { projects } = projectsStore();
   const defaultStyles = getDefaultStyles();
