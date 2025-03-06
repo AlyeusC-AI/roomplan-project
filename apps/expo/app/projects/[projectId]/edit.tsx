@@ -160,13 +160,14 @@ import {
   SafeAreaView,
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   Linking,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import MapboxPlacesAutocomplete from "react-native-mapbox-places-autocomplete";
+import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { toast } from "sonner-native";
+import { FormInput, FormButton } from "@/components/ui/form";
+import { Box, VStack, HStack, FormControl, Pressable } from "native-base";
 
 export default function EditProject() {
   const { session: supabaseSession } = userStore((state) => state);
@@ -187,9 +188,13 @@ export default function EditProject() {
   const [clientEmail, setClientEmail] = useState(
     project.project?.clientEmail || ""
   );
+  const [currentAddress, setCurrentAddress] = useState(
+    project.project?.location || ""
+  );
+    console.log("🚀 ~ EditProject ~ project.project:",JSON.stringify({...project.project,currentAddress}, null, 2))
 
   const navigation = useNavigation();
-
+  const [firstTime, setFirstTime] = useState(true);
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
   });
@@ -229,47 +234,11 @@ export default function EditProject() {
     }
   };
 
-  function select(id: string) {
-    const url = `https://api.mapbox.com/search/searchbox/v1/retrieve/${
-      id
-    }?session_token=${uniqueId()}&access_token=${
-      process.env.EXPO_PUBLIC_MAPBOX_TOKEN
-    }`;
-
-    fetch(url)
-      .then((res) => res.json())
-      .then((data: RetrieveResponse) => {
-        const address1 = data.features[0].properties.address ?? "";
-        const address2 = "";
-        const city = data.features[0].properties.context.place?.name ?? "";
-        const region = data.features[0].properties.context.region?.name ?? "";
-        const postalCode =
-          data.features[0].properties.context.postcode?.name ?? "";
-        const country = data.features[0].properties.context.country?.name ?? "";
-        const state = data.features[0].properties.context.region?.name ?? "";
-        const lat = data.features[0].geometry.coordinates[1];
-        const lng = data.features[0].geometry.coordinates[0];
-
-        const formattedAddress = data.features[0].properties.place_formatted;
-
-        console.log(JSON.stringify(data, null, 2));
-
-        const formattedData: AddressType = {
-          address1,
-          address2,
-          formattedAddress,
-          city,
-          region,
-          postalCode,
-          country,
-          lat,
-          lng,
-          state,
-        };
-
-        setAddress(formattedData);
-      });
-  }
+  const handleCallPress = () => {
+    if (project.project?.clientPhoneNumber) {
+      Linking.openURL(`tel:${project.project.clientPhoneNumber}`);
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f8f8" }}>
@@ -288,85 +257,119 @@ export default function EditProject() {
       </View>
 
       <KeyboardAwareScrollView style={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Client Name</Text>
+        <VStack >
+          <FormInput
+            label="Client Name"
+            placeholder="Enter client name"
+            value={clientName}
+            onChangeText={setClientName}
+          />
 
-          <View style={styles.sectionBody}>
-            <TextInput
-              clearButtonMode="while-editing"
-              onChangeText={setClientName}
-              placeholder="Enter client name"
-              style={styles.sectionInput}
-              value={clientName}
-            />
-          </View>
-        </View>
+          <FormInput
+            label="Client Email"
+            placeholder="Enter client email"
+            value={clientEmail}
+            onChangeText={setClientEmail}
+          />
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Client Email</Text>
+          <FormInput
+            label="Client Phone Number"
+            placeholder="Enter client phone number"
+            value={clientPhoneNumber}
+            onChangeText={setClientNumber}
+            rightElement={
+              <Pressable onPress={handleCallPress}>
+                <HStack space={1} alignItems="center">
+                  <Phone size={13} color="#2563eb" />
+                  <Text style={styles.callText}>Call</Text>
+                </HStack>
+              </Pressable>
+            }
+          />
 
-          <View style={styles.sectionBody}>
-            <TextInput
-              clearButtonMode="while-editing"
-              onChangeText={setClientEmail}
-              placeholder="Enter client email"
-              style={styles.sectionInput}
-              value={clientEmail}
-            />
-          </View>
-        </View>
-        <View style={styles.section}>
-          <View className="flex flex-row justify-between items-center">
-          <Text style={styles.sectionTitle}>Client Phone Number</Text>
-          <TouchableOpacity onPress={() => Linking.openURL(`tel:${project.project?.clientPhoneNumber}`)}>
-            <Text className="text-primary flex items-center"><Phone size={13} className="text-primary" /> Call</Text>
-          </TouchableOpacity>
-          </View>
+          <Box>
+            <FormControl.Label>Client Address</FormControl.Label>
+            <Box mb={4}>
+              <GooglePlacesAutocomplete
+                placeholder="Enter your street address"
+                onPress={(data, details = null) => {
+                  if (details) {
+                    const { geometry, formatted_address } = details;
+                    setAddress({
+                      formattedAddress: formatted_address,
+                      lat: geometry.location.lat,
+                      lng: geometry.location.lng,
+                      address1: formatted_address,
+                      address2: "",
+                      city: "",
+                      state: "",
+                      country: "",
+                      postalCode: "",
+                      region: "",
+                    });
+                    setCurrentAddress(formatted_address);
+                  }
+                }}
+                query={{
+                  key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+                  language: "en",
+                }}
+                fetchDetails={true}
+                textInputProps={{
+                  // defaultValue: currentAddress,
+                  value: currentAddress,
+                  onChangeText: (text) =>{
+                    console.log("🚀 ~ EditProject ~ text:", text)
+                    if(!text && firstTime){
+                      return setFirstTime(false)
+                    }
+                    setCurrentAddress(text??currentAddress)},
+                }}
+                styles={{
+                  textInputContainer: {
+                    backgroundColor: "transparent",
+                  },
+                  textInput: {
+                    height: 44,
+                    fontSize: 16,
+                    fontWeight: "500",
+                    color: "#1d1d1d",
+                    borderWidth: 1,
+                    borderColor: "rgb(212, 212, 212)",
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    backgroundColor: "transparent",
+                  },
+                  container: {
+                    flex: 0,
+                  },
+                  listView: {
+                    borderWidth: 1,
+                    borderColor: "rgb(212, 212, 212)",
+                    borderRadius: 8,
+                    backgroundColor: "white",
+                    marginTop: 4,
+                  },
+                  row: {
+                    padding: 13,
+                  },
+                  description: {
+                    fontSize: 14,
+                    color: "#1d1d1d",
+                  }
+                }}
+                enablePoweredByContainer={false}
+              />
+            </Box>
+          </Box>
 
-          <View style={styles.sectionBody}>
-            <TextInput
-              clearButtonMode="while-editing"
-              onChangeText={setClientNumber}
-              placeholder="Enter client phone number"
-              style={styles.sectionInput}
-              value={clientPhoneNumber}
-            />
-          </View>
-        </View>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Client Address</Text>
-
-          <View style={styles.sectionBody}>
-            <MapboxPlacesAutocomplete
-              id="origin"
-              placeholder="Enter your street address"
-              accessToken={process.env.EXPO_PUBLIC_MAPBOX_TOKEN}
-              onPlaceSelect={(data: any) => {
-                select(data.properties.mapbox_id);
-                console.log(JSON.stringify(data, null, 2));
-              }}
-              // {"address": "2301", "center": [-73.950167, 40.609356], "context": [{"id": "neighborhood.378506476", "mapbox_id": "dXJuOm1ieHBsYzpGbytNN0E", "text": "Madison"}, {"id": "postcode.27848428", "mapbox_id": "dXJuOm1ieHBsYzpBYWp1N0E", "text": "11229"}, {"id": "locality.66915052", "mapbox_id": "dXJuOm1ieHBsYzpBLzBLN0E", "text": "Brooklyn", "wikidata": "Q18419"}, {"id": "place.233720044", "mapbox_id": "dXJuOm1ieHBsYzpEZTVJN0E", "text": "New York", "wikidata": "Q60"}, {"id": "district.12379884", "mapbox_id": "dXJuOm1ieHBsYzp2T2Jz", "text": "Kings County", "wikidata": "Q11980692"}, {"id": "region.107756", "mapbox_id": "dXJuOm1ieHBsYzpBYVRz", "short_code": "US-NY", "text": "New York", "wikidata": "Q1384"}, {"id": "country.8940", "mapbox_id": "dXJuOm1ieHBsYzpJdXc", "short_code": "us", "text": "United States", "wikidata": "Q30"}], "geometry": {"coordinates": [-73.950167, 40.609356], "type": "Point"}, "id": "address.7378958179886160", "place_name": "2301 Quentin Road, Brooklyn, New York 11229, United States", "place_type": ["address"], "properties": {"accuracy": "rooftop", "mapbox_id": "dXJuOm1ieGFkcjowOTg5ODU5Zi00MDZiLTQxOGQtOTdjZS1kZGMwYzYyYmM5MGQ"}, "relevance": 1, "text": "Quentin Road", "type": "Feature"}
-              onClearInput={() => {
-                setAddress(null);
-              }}
-              countryId="us"
-              inputStyle={styles.sectionInput}
-              containerStyle={{
-                marginBottom: 12,
-              }}
-            />
-          </View>
-        </View>
-
-        <TouchableOpacity disabled={loading} onPress={updateProject}>
-          <View style={styles.btn}>
-            <View style={{ width: 34 }} />
-
-            <Text style={styles.btnText}>Update</Text>
-
-            <ArrowRight color="#fff" size={22} style={{ marginLeft: 12 }} />
-          </View>
-        </TouchableOpacity>
+          <FormButton onPress={updateProject} mt={2}>
+            <HStack space={2} alignItems="center">
+              <Text style={styles.btnText}>Update</Text>
+              <ArrowRight color="#fff" size={22} />
+            </HStack>
+          </FormButton>
+        </VStack>
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );
@@ -431,27 +434,32 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "500",
     color: "#1d1d1d",
+    borderWidth: 1,
+    borderColor: "rgb(212, 212, 212)",
   },
   /** Button */
-  btn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderWidth: 1,
-    backgroundColor: "#1e40af",
-    borderColor: "#1e40af",
-    marginVertical: 24,
-    marginHorizontal: 36,
-  },
   btnText: {
     fontSize: 18,
-    lineHeight: 26,
+    lineHeight: 20,
     fontWeight: "600",
     color: "#fff",
-    marginRight: "auto",
-    marginLeft: "auto",
+  },
+  callText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#2563eb",
+  },
+  addressInputContainer: {
+    backgroundColor: "transparent",
+  },
+  addressInput: {
+    height: 44,
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#1d1d1d",
+    borderWidth: 1,
+    borderColor: "rgb(212, 212, 212)",
+    borderRadius: 8,
+    paddingHorizontal: 12,
   },
 });

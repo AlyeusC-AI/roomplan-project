@@ -25,9 +25,7 @@ import { teamMemberStore } from "@/lib/state/team-members";
 import { userStore } from "@/lib/state/user";
 import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner-native";
-import { Button } from "@/components/ui/button";
 
 type ViewMode = "list" | "grid";
 

@@ -5,11 +5,11 @@ import {
   View,
   Text,
   TouchableOpacity,
-  TextInput,
   ScrollView,
   ActivityIndicator,
   Alert,
   Pressable,
+  TextInput,
 } from "react-native";
 import dayjs from "dayjs";
 import DateTimePicker, { DateType, getDefaultStyles } from "react-native-ui-datepicker";
@@ -21,11 +21,13 @@ import {
   ChevronRight,
   Trash2,
   Calendar as CalendarIcon,
+  X,
 } from "lucide-react-native";
 import { useNavigation, useRouter, useLocalSearchParams } from "expo-router";
 import { userStore } from "@/lib/state/user";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner-native";
+import { FormInput, FormButton } from "@/components/ui/form";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +38,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { projectsStore } from "@/lib/state/projects";
+import { Box, VStack, HStack, FormControl, Radio, Stack } from "native-base";
+import { Modal } from "@/components/ui/modal";
 
 interface EventFormData {
   subject: string;    
@@ -47,8 +51,6 @@ interface EventFormData {
   end: DateType;
   reminderTime?: "24h" | "2h" | "40m";
 }
-
-
 
 const Header: React.FC<{ isEditMode: boolean }> = ({ isEditMode }) => {
   const router = useRouter();
@@ -103,6 +105,98 @@ const ProjectSelector: React.FC<{
   </DropdownMenu>
 );
 
+const DateInput: React.FC<{
+  label: string;
+  value: DateType;
+  onChange: (date: DateType) => void;
+}> = ({ label, value, onChange }) => {
+  const [showPicker, setShowPicker] = useState(false);
+  const [tempDate, setTempDate] = useState<DateType>(value);
+  const defaultStyles = getDefaultStyles();
+
+  useEffect(() => {
+    setTempDate(value);
+  }, [value]);
+
+  const handleConfirm = () => {
+    onChange(tempDate);
+    setShowPicker(false);
+  };
+
+  return (
+    <Box>
+      <FormControl.Label>{label}</FormControl.Label>
+      <TouchableOpacity 
+        onPress={() => setShowPicker(true)}
+        style={styles.dateInput}
+      >
+        <Text style={styles.dateInputText}>
+          {dayjs(value).format('MMM D, YYYY h:mm A')}
+        </Text>
+        <CalendarIcon color="#64748b" size={20} />
+      </TouchableOpacity>
+
+      <Modal isOpen={showPicker} onClose={() => setShowPicker(false)}>
+        <Box style={styles.calendarContainer}>
+          <HStack justifyContent="space-between" alignItems="center" mb={4}>
+            <Text style={styles.modalTitle}>{label}</Text>
+            <Pressable onPress={() => setShowPicker(false)}>
+              <X color="#64748b" size={20} />
+            </Pressable>
+          </HStack>
+          <Box style={styles.datePickerContainer}>
+            <DateTimePicker
+              mode="single"
+              timePicker
+              components={{
+                IconNext: <ChevronRight color="#1d4ed8" size={28} />,
+                IconPrev: <ChevronLeft color="#1d4ed8" size={28} />,
+              }}
+              onChange={(params: { date: DateType }) => {
+                setTempDate(params.date);
+              }}
+              styles={{
+                ...defaultStyles,
+                selected: {
+                  ...defaultStyles.selected,
+                  color: "#1d4ed8",
+                  backgroundColor: "#1d4ed8",
+                },
+                selected_month: {
+                  ...defaultStyles.selected_month,
+                  color: "#1d4ed8",
+                  backgroundColor: "#1d4ed8",
+                },
+                selected_year: {
+                  ...defaultStyles.selected_year,
+                  color: "#1d4ed8",
+                  backgroundColor: "#1d4ed8",
+                },
+              }}
+              date={tempDate}
+            />
+          </Box>
+          <HStack space={2} mt={4}>
+            <Button 
+              variant="outline" 
+              onPress={() => setShowPicker(false)}
+              style={styles.modalButton}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </Button>
+            <Button 
+              onPress={handleConfirm}
+              style={[styles.modalButton, styles.confirmButton]}
+            >
+              <Text style={styles.confirmButtonText}>Confirm</Text>
+            </Button>
+          </HStack>
+        </Box>
+      </Modal>
+    </Box>
+  );
+};
+
 export default function NewEvent() {
   const params = useLocalSearchParams();
   const isEditMode = params.editMode === "true";
@@ -127,7 +221,6 @@ export default function NewEvent() {
   const { projects } = projectsStore();
   const navigation = useNavigation();
   const initialDataLoaded = React.useRef(false);
-  const defaultStyles = getDefaultStyles();
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -273,216 +366,106 @@ export default function NewEvent() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f8f8" }}>
-      <Header  isEditMode={isEditMode} />
+    <SafeAreaView style={{ flex: 1,  }}>
+      <Header isEditMode={isEditMode} />
 
       <ScrollView style={styles.content}>
-        <View style={{ ...styles.section, paddingHorizontal: 10 }}>
-          <Text style={styles.sectionTitle}>Event start date</Text>
-          <View style={[styles.sectionBody, styles.calendarContainer]}>
-            <DateTimePicker
-              mode="single"
-              timePicker
-              className="w-full border-none bg-transparent px-0 pt-0 shadow-none"
-              components={{
-                IconNext: <ChevronRight color="#1d4ed8" size={28} />,
-                IconPrev: <ChevronLeft color="#1d4ed8" size={28} />,
-            
-              }}
-              onChange={(params: { date: DateType }) => {
-                console.log("🚀 ~ NewEvent ~ params:", params)
-                // setFormData({
-                //   ...formData,
-                //   start: params.date ,
-                //   // end: dayjs(params.date).add(1, 'hour').format('YYYY-MM-DDTHH:mm:ss.SSSZ')
-                // });
-                updateFormData("start", params.date);
-                // Set end date to 1 hour after start date if end date is before start date
-                const endDate = dayjs(formData.end);
-                const startDate = dayjs(params.date);
-                if (endDate.isBefore(startDate)) {
-                  updateFormData("end", startDate.add(1, 'hour').toDate());
-                }
-              }}
-              styles={{
-                ...defaultStyles,
-                selected: {
-                  ...defaultStyles.selected,
-                  color: "#1d4ed8",
-                  backgroundColor: "#1d4ed8",
-                },
-                selected_month: {
-                  ...defaultStyles.selected_month,
-                  color: "#1d4ed8",
-                  backgroundColor: "#1d4ed8",
-                },
-                selected_year: {
-                  ...defaultStyles.selected_year,
-                  color: "#1d4ed8",
-                  backgroundColor: "#1d4ed8",
-                },
-              }}
-              date={formData.start}
-            />
-          </View>
-        </View>
-
-        <View style={{ ...styles.section, paddingHorizontal: 10 }}>
-          <Text style={styles.sectionTitle}>Event end date</Text>
-          <View style={[styles.sectionBody, styles.calendarContainer]}>
-            <DateTimePicker
-              mode="single"
-              timePicker
-              className="w-full border-none bg-transparent px-0 pt-0 shadow-none"
-              components={{
-                IconNext: <ChevronRight color="#1d4ed8" size={28} />,
-                IconPrev: <ChevronLeft color="#1d4ed8" size={28} />,
-             
-              }}
-              onChange={(params: { date: DateType }) => updateFormData("end", params.date)}
-              styles={{
-                ...defaultStyles,
-                selected: {
-                  ...defaultStyles.selected,
-                  color: "#1d4ed8",
-                  backgroundColor: "#1d4ed8",
-                },
-                selected_month: {
-                  ...defaultStyles.selected_month,
-                  color: "#1d4ed8",
-                  backgroundColor: "#1d4ed8",
-                },
-                selected_year: {
-                  ...defaultStyles.selected_year,
-                  color: "#1d4ed8",
-                  backgroundColor: "#1d4ed8",
-                },
-                
-              }}
-              date={formData.end}
-            />
-          </View>
-        </View>
-
-        <View style={{ ...styles.section, paddingHorizontal: 10 }}>
-          <Text style={styles.sectionTitle}>Project</Text>
-          <ProjectSelector
-            projectId={formData.projectId}
-            projects={projects}
-            onSelect={(id) => updateFormData("projectId", id)}
+        <VStack space={4}>
+          <DateInput
+            label="Event start date"
+            value={formData.start}
+            onChange={(date) => {
+              updateFormData("start", date);
+              const endDate = dayjs(formData.end);
+              const startDate = dayjs(date);
+              if (endDate.isBefore(startDate)) {
+                updateFormData("end", startDate.add(1, 'hour').toDate());
+              }
+            }}
           />
-        </View>
 
-        <View style={{ ...styles.section, paddingHorizontal: 10 }}>
-          <Text style={styles.sectionTitle}>Event Subject</Text>
-          <View style={styles.sectionTextBody}>
-            <TextInput
-              clearButtonMode="while-editing"
-              onChangeText={(text) => updateFormData("subject", text)}
-              placeholder="Enter event subject"
-              style={styles.sectionInput}
-              value={formData.subject}
-            />
-          </View>
-        </View>
-
-        <View style={{ ...styles.section, paddingHorizontal: 10 }}>
-          <Text style={styles.sectionTitle}>Event Description</Text>
-          <View style={styles.sectionTextBody}>
-            <TextInput
-              clearButtonMode="while-editing"
-              onChangeText={(text) => updateFormData("payload", text)}
-              placeholder="Enter event description"
-              style={styles.sectionInput}
-              value={formData.payload}
-              multiline={true}
-              numberOfLines={3}
-            />
-          </View>
-        </View>
-
-        <View style={{ ...styles.section, paddingHorizontal: 10 }}>
-          <Text style={styles.sectionTitle}>Reminder Time</Text>
-          <View style={styles.radioGroup}>
-            <TouchableOpacity 
-              style={[
-                styles.radioOption, 
-                formData.reminderTime === "24h" && styles.radioOptionSelected
-              ]}
-              onPress={() => updateFormData("reminderTime", "24h")}
-            >
-              <View style={[
-                styles.radioCircle, 
-                formData.reminderTime === "24h" && styles.radioCircleSelected
-              ]}>
-                {formData.reminderTime === "24h" && <View style={styles.radioInner} />}
-              </View>
-              <Text style={styles.radioText}>24 hours before</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[
-                styles.radioOption, 
-                formData.reminderTime === "2h" && styles.radioOptionSelected
-              ]}
-              onPress={() => updateFormData("reminderTime", "2h")}
-            >
-              <View style={[
-                styles.radioCircle, 
-                formData.reminderTime === "2h" && styles.radioCircleSelected
-              ]}>
-                {formData.reminderTime === "2h" && <View style={styles.radioInner} />}
-              </View>
-              <Text style={styles.radioText}>2 hours before</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[
-                styles.radioOption, 
-                formData.reminderTime === "40m" && styles.radioOptionSelected
-              ]}
-              onPress={() => updateFormData("reminderTime", "40m")}
-            >
-              <View style={[
-                styles.radioCircle, 
-                formData.reminderTime === "40m" && styles.radioCircleSelected
-              ]}>
-                {formData.reminderTime === "40m" && <View style={styles.radioInner} />}
-              </View>
-              <Text style={styles.radioText}>40 minutes before</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.checkboxContainer}>
-          <Checkbox
-            checked={formData.remindClient}
-            onCheckedChange={(checked) => updateFormData("remindClient", checked)}
+          <DateInput
+            label="Event end date"
+            value={formData.end}
+            onChange={(date) => updateFormData("end", date)}
           />
-          <Text style={styles.checkboxLabel}>Remind Client</Text>
-        </View>
 
-        <View style={styles.checkboxContainer}>
-          <Checkbox
-            checked={formData.remindProjectOwners}
-            onCheckedChange={(checked) => updateFormData("remindProjectOwners", checked)}
+          <Box>
+            <FormControl.Label>Project</FormControl.Label>
+            <ProjectSelector
+              projectId={formData.projectId}
+              projects={projects}
+              onSelect={(id) => updateFormData("projectId", id)}
+            />
+          </Box>
+
+          <FormInput
+            label="Event Subject"
+            placeholder="Enter event subject"
+            value={formData.subject}
+            onChangeText={(text) => updateFormData("subject", text)}
           />
-          <Text style={styles.checkboxLabel}>Remind Project Owners</Text>
-        </View>
 
-        <View style={styles.buttonContainer}>
-          {isEditMode && (
-            <TouchableOpacity onPress={handleDelete} style={styles.deleteBtn}>
-              <Trash2 color="#fff" size={20} style={{ marginRight: 8 }} />
-              <Text style={styles.deleteBtnText}>Delete</Text>
-            </TouchableOpacity>
-          )}
+          <FormInput
+            label="Event Description"
+            placeholder="Enter event description"
+            value={formData.payload}
+            onChangeText={(text) => updateFormData("payload", text)}
+            multiline={true}
+            numberOfLines={3}
+          />
 
-          <TouchableOpacity onPress={onSubmit} style={styles.saveBtn}>
-            <Text style={styles.saveBtnText}>{isEditMode ? "Update" : "Save"}</Text>
-            <ArrowRight color="#fff" size={20} style={{ marginLeft: 8 }} />
-          </TouchableOpacity>
-        </View>
+          <Box>
+            <FormControl.Label>Reminder Time</FormControl.Label>
+            <Box bg="white" rounded="lg" p={3} shadow={1}>
+              <Radio.Group
+                name="reminderTime"
+                value={formData.reminderTime}
+                onChange={(value) => updateFormData("reminderTime", value)}
+              >
+                <Stack space={2}>
+                  <Radio value="24h">24 hours before</Radio>
+                  <Radio value="2h">2 hours before</Radio>
+                  <Radio value="40m">40 minutes before</Radio>
+                </Stack>
+              </Radio.Group>
+            </Box>
+          </Box>
+
+          <HStack space={2} alignItems="center">
+            <Checkbox
+              checked={formData.remindClient}
+              onCheckedChange={(checked) => updateFormData("remindClient", checked)}
+            />
+            <Text style={styles.checkboxLabel}>Remind Client</Text>
+          </HStack>
+
+          <HStack space={2} alignItems="center">
+            <Checkbox
+              checked={formData.remindProjectOwners}
+              onCheckedChange={(checked) => updateFormData("remindProjectOwners", checked)}
+            />
+            <Text style={styles.checkboxLabel}>Remind Project Owners</Text>
+          </HStack>
+
+          <HStack space={2} mt={6}>
+            {isEditMode && (
+              <FormButton variant="danger" onPress={handleDelete} flex={1}>
+                <HStack space={2} alignItems="center">
+                  <Trash2 color="#fff" size={20} />
+                  <Text style={styles.deleteBtnText}>Delete</Text>
+                </HStack>
+              </FormButton>
+            )}
+
+            <FormButton onPress={onSubmit} flex={1}>
+              <HStack space={2} alignItems="center">
+                <Text style={styles.saveBtnText}>{isEditMode ? "Update" : "Save"}</Text>
+                <ArrowRight color="#fff" size={20} />
+              </HStack>
+            </FormButton>
+          </HStack>
+        </VStack>
       </ScrollView>
     </SafeAreaView>
   );
@@ -514,180 +497,71 @@ const styles = StyleSheet.create({
     flexBasis: 0,
     textAlign: "center",
   },
-  section: {
-    paddingTop: 12,
-  },
-  sectionTitle: {
-    margin: 8,
-    marginLeft: 12,
-    fontSize: 13,
-    letterSpacing: 0.33,
-    fontWeight: "500",
-    color: "#a69f9f",
-    textTransform: "uppercase",
-  },
-  sectionTextBody: {
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-  },
-  sectionBody: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 8,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-  },
-  sectionInput: {
-    backgroundColor: "#fff",
-    minHeight: 44,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
-    fontSize: 17,
-    fontWeight: "500",
-    color: "#1d1d1d",
-  },
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    marginTop: 12,
-  },
   checkboxLabel: {
-    marginLeft: 12,
     fontSize: 16,
     fontWeight: "500",
     color: "#1d1d1d",
-  },
-  radioGroup: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-  },
-  radioOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-  },
-  radioOptionSelected: {
-    backgroundColor: "#f0f9ff",
-    borderRadius: 8,
-    paddingHorizontal: 8,
-  },
-  radioCircle: {
-    height: 20,
-    width: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: "#d1d5db",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
-  },
-  radioCircleSelected: {
-    borderColor: "#2563eb",
-  },
-  radioInner: {
-    height: 10,
-    width: 10,
-    borderRadius: 5,
-    backgroundColor: "#2563eb",
-  },
-  radioText: {
-    fontSize: 16,
-    color: "#1d1d1d",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginVertical: 24,
-    paddingHorizontal: 16,
-  },
-  saveBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    backgroundColor: "#2563eb",
-    shadowColor: "#2563eb",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-    flex: 1,
-    marginLeft: 10,
   },
   saveBtnText: {
     fontSize: 16,
     fontWeight: "600",
     color: "#fff",
   },
-  deleteBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    backgroundColor: "#ef4444",
-    shadowColor: "#ef4444",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
   deleteBtnText: {
     fontSize: 16,
     fontWeight: "600",
     color: "#fff",
   },
-  btn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderWidth: 1,
-    backgroundColor: "#1d4ed8",
-    borderColor: "#1d4ed8",
-    marginVertical: 24,
-    marginHorizontal: 36,
-  },
-  btnText: {
-    fontSize: 18,
-    lineHeight: 26,
-    fontWeight: "600",
-    color: "#fff",
-    marginRight: "auto",
-    marginLeft: "auto",
-  },
   calendarContainer: {
     padding: 16,
-    paddingBottom: 24,
-    minHeight: 360,
+    backgroundColor: 'white',
+    borderRadius: 12,
   },
-});
+  datePickerContainer: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    height: 350,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1d1d1d",
+  },
+  dateInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  dateInputText: {
+    fontSize: 16,
+    color: '#1d1d1d',
+  },
+  modalButton: {
+    flex: 1,
+    height: 45,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#1d4ed8',
+  },
+  confirmButton: {
+    backgroundColor: '#1d4ed8',
+    borderWidth: 0,
+  },
+  confirmButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  cancelButtonText: {
+    color: '#1d4ed8',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+} as const);
