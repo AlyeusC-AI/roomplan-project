@@ -10621,7 +10621,7 @@ expo-modules-core@2.2.2:
   dependencies:
     invariant "^2.2.4"
 
-expo-router@^4.0.17, expo-router@~4.0.17:
+expo-router@~4.0.17:
   version "4.0.17"
   resolved "https://registry.yarnpkg.com/expo-router/-/expo-router-4.0.17.tgz#8cecc68f189fd93d69b239986f63e040ee15f63a"
   integrity sha512-8ybo6bVwdG1S9hafh9BTOjX1hpCgomdUvs6hKHMM01koo8mQ7zocH/+zxQeaMVDxGhboz2dO5GiDchWJ0OheRA==
