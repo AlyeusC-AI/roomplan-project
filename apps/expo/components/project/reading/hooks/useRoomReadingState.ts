@@ -33,12 +33,13 @@ export function useRoomReadingState(
   // Wall and floor name state
   const [showWallNameEdit, setShowWallNameEdit] = useState(false);
   const [showFloorNameEdit, setShowFloorNameEdit] = useState(false);
-  const [wallName, setWallName] = useState(typedReading.wallName || "");
-  const [floorName, setFloorName] = useState(typedReading.floorName || "");
-  const [originalWallName, setOriginalWallName] = useState(typedReading.wallName || "");
-  const [originalFloorName, setOriginalFloorName] = useState(typedReading.floorName || "");
+  const [wallName, setWallName] = useState(room.wallName || "");
+  const [floorName, setFloorName] = useState(room.floorName || "");
+  const [originalWallName, setOriginalWallName] = useState(room.wallName || "");
+  const [originalFloorName, setOriginalFloorName] = useState(room.floorName || "");
   const [isUpdatingWallName, setIsUpdatingWallName] = useState(false);
   const [isUpdatingFloorName, setIsUpdatingFloorName] = useState(false);
+  const [extendedWallsStructure, setExtendedWallsStructure] = useState<ExtendedWallItem[]>(room.extendedWalls || []);
 
   // Extended walls state
   const [extendedWalls, setExtendedWalls] = useState<ExtendedWallItem[]>(typedReading.extendedWalls || []);
@@ -101,6 +102,17 @@ export function useRoomReadingState(
     }
   }
 
+  async function updateRoom(data: Database["public"]["Tables"]["Room"]["Update"]) {
+    try {
+      const res = await supabaseServiceRole.from("Room").update(data).eq("publicId", room.publicId);
+      if (res.error) {
+        throw new Error(res.error.message);
+      }
+    } catch {
+      toast.error("Could not update room");
+    }
+  }
+  
   const deleteReading = async (readingId: string, type: ReadingType) => {
     try {
       setIsDeleting(true);
@@ -196,7 +208,7 @@ export function useRoomReadingState(
     setIsAdding,
     date,
     setDate,
-    
+    updateRoom,
     // Wall and floor name state
     showWallNameEdit,
     setShowWallNameEdit,
@@ -218,6 +230,8 @@ export function useRoomReadingState(
     // Extended walls state
     extendedWalls,
     setExtendedWalls,
+    extendedWallsStructure,
+    setExtendedWallsStructure,
     showExtendedWallEdit,
     setShowExtendedWallEdit,
     currentEditingWall,

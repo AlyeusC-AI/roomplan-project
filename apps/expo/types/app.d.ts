@@ -139,6 +139,19 @@ declare type ExtendedWallItem = {
   type: "wall" | "floor";
 };
 
+// Define a structure-only version of ExtendedWallItem for Room level
+declare type ExtendedWallStructure = {
+  id: string;
+  name: string;
+  type: "wall" | "floor";
+};
+
+// Define a values-only version of ExtendedWallItem for Reading level
+declare type ExtendedWallValue = {
+  id: string; // Reference to the structure id
+  value: string | null;
+};
+
 declare type RoomReading = {
   publicId: string;
   humidity: string | null;
@@ -146,9 +159,7 @@ declare type RoomReading = {
   gpp: string | null;
   moistureContentWall: string | null;
   moistureContentFloor: string | null;
-  wallName: string | null;
-  floorName: string | null;
-  extendedWalls: ExtendedWallItem[] | null;
+  extendedWalls: ExtendedWallValue[] | null;
   date: Date;
   room: {
     publicId: string;
@@ -228,10 +239,15 @@ declare global {
       imageKey: string;
       type: "floor" | "wall";
     }[];
-    extendedWalls?: ExtendedWallItem[] | null;
   }
 
   interface RoomWithReadings extends Room {
     RoomReading: ReadingsWithGenericReadings[];
+  }
+
+  interface Room extends Database["public"]["Tables"]["Room"]["Row"] {
+    wallName?: string | null;
+    floorName?: string | null;
+    extendedWalls?: ExtendedWallStructure[] | null;
   }
 }

@@ -86,9 +86,13 @@ const RoomReading: React.FC<RoomReadingProps> = ({ room, reading, addReading }) 
     isUpdatingFloorName,
     setIsUpdatingFloorName,
 
+      // Extended walls state
+      extendedWalls,
+      setExtendedWalls,  
     // Extended walls state
-    extendedWalls,
-    setExtendedWalls,
+    extendedWallsStructure,
+    setExtendedWallsStructure,  
+
     showExtendedWallEdit,
     setShowExtendedWallEdit,
     currentEditingWall,
@@ -108,6 +112,7 @@ const RoomReading: React.FC<RoomReadingProps> = ({ room, reading, addReading }) 
     supabaseSession,
     rooms,
     projectId,
+    updateRoom,
   } = useRoomReadingState(room, reading, addReading);
 
   const {
@@ -145,8 +150,8 @@ const RoomReading: React.FC<RoomReadingProps> = ({ room, reading, addReading }) 
     const newWall: ExtendedWallItem = {
       id: v4().toString(),
       name: type === "wall" 
-        ? `Wall ${extendedWalls.filter(w => w.type === "wall").length + 1}` 
-        : `Floor ${extendedWalls.filter(w => w.type === "floor").length + 1}`,
+        ? `Wall ${extendedWallsStructure.filter(w => w.type === "wall").length + 1}` 
+        : `Floor ${extendedWallsStructure.filter(w => w.type === "floor").length + 1}`,
       value: null,
       type,
     };
@@ -166,15 +171,15 @@ const RoomReading: React.FC<RoomReadingProps> = ({ room, reading, addReading }) 
       setIsUpdatingExtendedWall(true);
       
       // Check if we're adding a new wall or updating existing
-      const updatedWalls = currentEditingWall.id && extendedWalls.some(w => w.id === currentEditingWall.id)
-        ? extendedWalls.map(w => w.id === currentEditingWall.id ? currentEditingWall : w)
-        : [...extendedWalls, currentEditingWall];
+      const updatedWalls = currentEditingWall.id && extendedWallsStructure.some(w => w.id === currentEditingWall.id)
+        ? extendedWallsStructure.map(w => w.id === currentEditingWall.id ? currentEditingWall : w)
+        : [...extendedWallsStructure, currentEditingWall];
       
       // Update the state
-      setExtendedWalls(updatedWalls);
+      setExtendedWallsStructure(updatedWalls);
       
       // Save to database
-      await updateRoomReading(reading.publicId, "standard", {
+      await updateRoom({
         extendedWalls: updatedWalls,
       });
       
@@ -189,10 +194,10 @@ const RoomReading: React.FC<RoomReadingProps> = ({ room, reading, addReading }) 
 
   const handleDeleteExtendedWall = async (id: string) => {
     try {
-      const updatedWalls = extendedWalls.filter(w => w.id !== id);
-      setExtendedWalls(updatedWalls);
+      const updatedWalls = extendedWallsStructure.filter(w => w.id !== id);
+      setExtendedWallsStructure(updatedWalls);
       
-      await updateRoomReading(reading.publicId, "standard", {
+      await updateRoom({
         extendedWalls: updatedWalls,
       });
       
@@ -211,7 +216,7 @@ const RoomReading: React.FC<RoomReadingProps> = ({ room, reading, addReading }) 
   const handleUpdateWallName = async () => {
     try {
       setIsUpdatingWallName(true);
-      await updateRoomReading(reading.publicId, "standard", {
+      await updateRoom({
         wallName,
       });
       setShowWallNameEdit(false);
@@ -226,7 +231,7 @@ const RoomReading: React.FC<RoomReadingProps> = ({ room, reading, addReading }) 
   const handleUpdateFloorName = async () => {
     try {
       setIsUpdatingFloorName(true);
-      await updateRoomReading(reading.publicId, "standard", {
+      await updateRoom({
         floorName,
       });
       setShowFloorNameEdit(false);
@@ -464,10 +469,13 @@ const RoomReading: React.FC<RoomReadingProps> = ({ room, reading, addReading }) 
                 )}
                 
                 {/* Extended Walls Section */}
-                {extendedWalls?.filter(w => w.type === "wall").map((wall) => (
+                {extendedWallsStructure?.filter(w => w.type === "wall").map((wall) => (
                   <ExtendedWallSection
                     key={wall.id}
-                    wall={wall}
+                    wall={{
+                      ...wall,
+                      value: reading.extendedWalls?.find(w => w.id === wall.id)?.value || null,
+                    }}
                     onEdit={handleEditExtendedWall}
                     onDelete={handleDeleteExtendedWall}
                     onPickImage={(id) => pickImage('room', undefined, id)}
@@ -529,10 +537,13 @@ const RoomReading: React.FC<RoomReadingProps> = ({ room, reading, addReading }) 
                 )}
                 
                 {/* Extended Floors Section */}
-                {extendedWalls?.filter(w => w.type === "floor").map((floor) => (
+                {extendedWallsStructure?.filter(w => w.type === "floor").map((floor) => (
                   <ExtendedWallSection
                     key={floor.id}
-                    wall={floor}
+                    wall={{
+                      ...floor,
+                      value: reading.extendedWalls?.find(w => w.id === floor.id)?.value || null,
+                    }}
                     onEdit={handleEditExtendedWall}
                     onDelete={handleDeleteExtendedWall}
                     onPickImage={(id) => pickImage('room', undefined, id)}

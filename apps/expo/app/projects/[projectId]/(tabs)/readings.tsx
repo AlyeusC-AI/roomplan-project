@@ -200,7 +200,7 @@ export default function RoomReadings() {
       mt={4}
       backgroundColor="white"
     >
-      <FlatList
+      {/* <FlatList
         refreshing={loading}
         onRefresh={getReadings}
         data={rooms.rooms}
@@ -210,7 +210,7 @@ export default function RoomReadings() {
         )}
         w="full"
         h="full"
-      />
+      /> */}
     </Box>
   );
 }

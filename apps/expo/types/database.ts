@@ -1,3 +1,5 @@
+import { ExtendedWallItem, ExtendedWallStructure } from "./app"
+
 export type Json =
   | string
   | number
@@ -1613,7 +1615,10 @@ export type Database = {
           temperature?: string | null
           totalSqft?: string | null
           width?: string | null
-          windows?: number | null
+          windows?: number | null,
+          wallName?: string | null,
+          floorName?: string | null,
+          extendedWalls?: ExtendedWallStructure[] | null
         }
         Relationships: [
           {
