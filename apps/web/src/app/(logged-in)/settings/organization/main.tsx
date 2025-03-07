@@ -168,7 +168,7 @@ export default function Organization() {
           <AvatarFallback className='rounded-lg text-2xl'>
             {(organization?.name ?? "")
               .split(" ")
-              .map((word) => (word === "" ? "" : word[0].toUpperCase()))
+              .map((word) => (word === "" ? "" : word[0]?.toUpperCase()))
               .join("")}
           </AvatarFallback>
         </Avatar>

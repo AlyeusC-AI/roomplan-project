@@ -74,7 +74,7 @@ export const uploadImageToStorage = async (
     onSuccess?: () => void;
     compression?: 'high' | 'medium' | 'low';
   } = {}
-): Promise<string | undefined> => {
+): Promise<any | undefined> => {
   const {
     bucket = STORAGE_BUCKETS.PROJECT,
     pathPrefix = '',
@@ -145,7 +145,7 @@ export const uploadImageToStorage = async (
     }
     
     toast.success("Image uploaded successfully");
-    return res.data.path;
+    return res.data;
   } catch (error) {
     console.error("Upload error:", error);
     toast.error("Failed to upload image");
@@ -249,7 +249,7 @@ export const pickMultipleImages = async (
     pathPrefix?: string;
     tableName?: string;
     idField?: string;
-    onSuccess?: () => void;
+    onSuccess?: (files:any[]) => void;
     onRefresh?: () => Promise<void>;
     compression?: 'high' | 'medium' | 'low';
     maxImages?: number;
@@ -287,7 +287,7 @@ export const pickMultipleImages = async (
         })
       );
       
-      await Promise.all(uploadPromises);
+      const uploadedImages = await Promise.all(uploadPromises);
       
       // Always call refresh to update the UI
       if (options.onRefresh) {
@@ -295,7 +295,7 @@ export const pickMultipleImages = async (
       }
       
       // Also call onSuccess if provided (for compatibility)
-      if (options.onSuccess) options.onSuccess();
+      if (options.onSuccess) options.onSuccess(uploadedImages);
       
       // Show appropriate success message
       if (imageCount === 1) {

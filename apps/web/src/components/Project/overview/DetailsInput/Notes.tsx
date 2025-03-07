@@ -118,7 +118,7 @@ export default function Notes({
                                     )[0]?.lastName
                                   }`
                                     .split(" ")
-                                    .map((word) => word[0].toUpperCase())
+                                    .map((word) => word[0]?.toUpperCase())
                                     .join("")}
                                 </AvatarFallback>
                               </Avatar>
@@ -181,7 +181,7 @@ export default function Notes({
                   <AvatarFallback className='rounded-lg'>
                     {`${user.firstName} ${user.lastName}`
                       .split(" ")
-                      .map((word) => word[0].toUpperCase())
+                      .map((word) => word[0]?.toUpperCase())
                       .join("")}
                   </AvatarFallback>
                 </Avatar>

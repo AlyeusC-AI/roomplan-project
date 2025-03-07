@@ -112,6 +112,9 @@ export async function GET(
         .eq("RoomReading.isDeleted", false)
         .eq("RoomReading.GenericRoomReading.isDeleted", false)
         .eq("Notes.isDeleted", false)
+        .eq("Inference.Image.isDeleted", false)
+        .eq("Inference.isDeleted", false)
+        .eq("AreaAffected.isDeleted", false)
         .eq("projectId", project.data![0].id);
 
     if (rooms.error || !rooms.data) {

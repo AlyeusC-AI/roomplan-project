@@ -134,7 +134,7 @@ export default function BillingPage() {
                   }
                   className='px-4 py-1'
                 >
-                  {subscriptionInfo.status.charAt(0).toUpperCase() +
+                  {subscriptionInfo.status.charAt(0)?.toUpperCase() +
                     subscriptionInfo.status.slice(1)}
                 </Badge>
               </div>

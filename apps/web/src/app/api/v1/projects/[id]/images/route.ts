@@ -167,11 +167,12 @@ export async function DELETE(
     }
 
     // Soft delete the images
-    const { error } = await supabaseServiceRole
+    const { error,data } = await supabaseServiceRole
       .from("Image")
       .update({ isDeleted: true })
       .eq("projectId", project.id)
       .in("publicId", photoIds);
+      console.log("🚀 ~ data:", data)
 
     if (error) {
       console.error("Error deleting images:", error);

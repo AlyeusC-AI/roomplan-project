@@ -8,9 +8,10 @@ import {
   StyleSheet,
   Dimensions,
   Image,
+  Modal,
 } from "react-native";
 import { Camera } from "react-native-vision-camera";
-import { Camera as CameraIcon, ImagePlus, Plus, Image as ImageIcon } from "lucide-react-native";
+import { Camera as CameraIcon, ImagePlus, Plus, Image as ImageIcon, Building2, ArrowDownToLine } from "lucide-react-native";
 import { userStore } from "@/lib/state/user";
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import { toast } from "sonner-native";
@@ -33,9 +34,17 @@ import {
   getStorageUrl
 } from "@/lib/utils/imageModule";
 import safelyGetImageUrl from "@/utils/safelyGetImageKey";
+import * as FileSystem from 'expo-file-system';
+import { v4 as uuidv4 } from 'uuid';
+import { supabase } from "@/lib/supabase";
+
+interface PhotoResult {
+  uri: string;
+}
 
 // Get screen dimensions for responsive sizing
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 
 export default function ProjectPhotos() {
   const { projectId } = useGlobalSearchParams<{
@@ -45,10 +54,18 @@ export default function ProjectPhotos() {
   const { session: supabaseSession } = userStore((state) => state);
   const [loading, setLoading] = useState(true);
   const [expandedValue, setExpandedValue] = useState<string | undefined>(undefined);
+  const [showRoomSelection, setShowRoomSelection] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const rooms = roomInferenceStore();
   const urlMap = urlMapStore();
   const router = useRouter();
-
+  useEffect(() => {
+    if(selectedRoom) {
+      handlePickImages();
+    }
+  }, [selectedRoom]);
   useEffect(() => {
     refreshData();
   }, []);
@@ -97,16 +114,70 @@ export default function ProjectPhotos() {
     }
   };
 
+  const uploadToSupabase = async (imagePath: string, roomId: number) => {
+    console.log("🚀 ~ uploadToSupabase ~ imagePath:", imagePath,roomId)
+    try {
+      // const fileInfo = await FileSystem.getInfoAsync(fileUri);
+      // if (!fileInfo.exists) {
+      //   throw new Error('File does not exist');
+      // }
+
+      // const fileName = `${uuidv4()}_${fileInfo.uri.split('/').pop()}`;
+      // const fileContent = await FileSystem.readAsStringAsync(fileUri, {
+      //   encoding: FileSystem.EncodingType.Base64,
+      // });
+
+      // const { data: uploadData, error: uploadError } = await supabase.storage
+      //   .from(STORAGE_BUCKETS.PROJECT)
+      //   .upload(`projects/${projectId}/rooms/${fileName}`, Buffer.from(fileContent, 'base64'), {
+      //     contentType: 'image/jpeg',
+      //     upsert: false,
+      //   });
+
+      // if (uploadError) throw uploadError;
+
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/image`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": supabaseSession?.access_token || "",
+          },
+          body: JSON.stringify({
+            // imageId: uploadData?.path,
+            imageId: imagePath,
+            roomId:rooms.rooms.find(r => r.id === roomId)?.publicId,
+            roomName: rooms.rooms.find(r => r.id === roomId)?.name || '',
+          }),
+        }
+      );
+
+      const data = await response.json();
+              console.log("🚀 ~ uploadToSupabase ~ response:", data)
+
+      if (data.status !== 'ok') {
+        throw new Error('Failed to process image');
+      }
+
+      setUploadProgress(prev => prev + 1);
+      return true;
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload image");
+      return false;
+    }
+  };
+
   const handleTakePhoto = async () => {
     try {
-      const firstRoom = rooms.rooms.find(r => !r.isDeleted);
-      if (!firstRoom) {
-        toast.error("Please create a room first");
+      if (!selectedRoom) {
+        setShowRoomSelection(true);
         return;
       }
       
       await takePhoto(
-        firstRoom.id, 
+        selectedRoom, 
         {
           bucket: STORAGE_BUCKETS.PROJECT,
           pathPrefix: `projects/${projectId}/rooms`,
@@ -122,25 +193,38 @@ export default function ProjectPhotos() {
 
   const handlePickImages = async () => {
     try {
-      const firstRoom = rooms.rooms.find(r => !r.isDeleted);
-      if (!firstRoom) {
-        toast.error("Please create a room first");
+      if (!selectedRoom) {
+        setShowRoomSelection(true);
         return;
       }
+
+      setIsUploading(true);
+      setUploadProgress(0);
       
       await pickMultipleImages(
-        firstRoom.id,
+        selectedRoom,
         {
           bucket: STORAGE_BUCKETS.PROJECT,
           pathPrefix: `projects/${projectId}/rooms`,
-          onRefresh: refreshData,
+          // onRefresh: refreshData,
           compression: 'medium',
-          maxImages: 20
+          maxImages: 20,
+          onSuccess: async (files) => {
+            for (const file of files) {
+              await uploadToSupabase(file.path, selectedRoom);
+            }
+            await refreshData()
+          }
         }
       );
+      // uploadToSupabase(fileUri, selectedRoom);
     } catch (error) {
       console.error("Error picking images:", error);
       toast.error("Failed to pick images");
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+      setSelectedRoom(null);
     }
   };
 
@@ -189,7 +273,43 @@ export default function ProjectPhotos() {
       />
     );
   }
+  const onDelete = async (imagePublicId: string) => {
+    console.log("🚀 ~ onDelete ~ imagePublicId:", imagePublicId)
+    try {
+    
+      const response = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/images`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": supabaseSession?.access_token || "",
+        },
+        body: JSON.stringify({ photoIds: [imagePublicId] }),
+      });
+      console.log("🚀 ~ onDelete ~ response:", response)  
+      const data = await response.json();
+      console.log("🚀 ~ onDelete ~ data:", data)  
 
+      if (!data.success) {
+        throw new Error("Failed to delete images");
+      }
+
+      toast.success("Images deleted successfully");
+      await refreshData();
+    } catch (error) {
+      console.error("Error deleting images:", error);
+      toast.error("Failed to delete images");
+    } finally {
+      // setIsDeleting(false);
+      // setSelectedPhotos([]);
+    }
+  };
+  const finalRooms = rooms?.rooms?.map(room => {
+    return {
+      ...room,
+      Inference: room.Inference.filter(i => !i.isDeleted && !i.Image?.isDeleted && i.Image)
+    }
+  })
+  // console.log("🚀 ~ ProjectPhotos ~ finalRooms:", JSON.stringify(finalRooms,null,2))
   return (
     <View style={styles.container}>
       <ScrollView
@@ -197,6 +317,7 @@ export default function ProjectPhotos() {
           <RefreshControl refreshing={loading} onRefresh={refreshData} />
         }
         contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Project Photos</Text>
@@ -220,7 +341,7 @@ export default function ProjectPhotos() {
         </View>
 
         <View style={styles.roomsContainer}>
-          {rooms.rooms
+          {finalRooms
             .filter((room) => !room.isDeleted)
             .map((room) => {
               const previewImageUrl = getRoomPreviewImage(room.Inference);
@@ -261,6 +382,7 @@ export default function ProjectPhotos() {
                         urlMap={urlMap.urlMap}
                         onRefresh={refreshData}
                         roomName={room.name}
+                        onDelete={onDelete}
                       />
                     </View>
                   )}
@@ -273,13 +395,84 @@ export default function ProjectPhotos() {
       {rooms.rooms.length > 0 && (
         <View style={styles.fabContainer}>
           <TouchableOpacity
-            onPress={handleTakePhoto}
-            style={styles.fab}
+            onPress={() => router.push("../camera")}
+            // onPress={handleTakePhoto}
+            style={[styles.fab, isUploading && styles.fabDisabled]}
+            disabled={isUploading}
           >
-            <CameraIcon size={30} color="#fff" />
+            {isUploading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <CameraIcon size={30} color="#fff" />
+            )}
           </TouchableOpacity>
         </View>
       )}
+
+      {isUploading && (
+        <View style={styles.uploadProgress}>
+          <Text style={styles.uploadProgressText}>
+            Uploading {uploadProgress} images...
+          </Text>
+        </View>
+      )}
+
+      <Modal
+        visible={showRoomSelection}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowRoomSelection(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Building2 size={24} color="#1e40af" />
+              <Text style={styles.modalTitle}>Select Room</Text>
+            </View>
+            <Text style={styles.modalDescription}>
+              Choose a room to upload images to
+            </Text>
+            
+            <View style={styles.roomList}>
+              {rooms.rooms
+                .filter((room) => !room.isDeleted)
+                .map((room) => (
+                  <TouchableOpacity
+                    key={room.id}
+                    style={[
+                      styles.roomOption,
+                      selectedRoom === room.id && styles.selectedRoom
+                    ]}
+                    onPress={() => {
+                      setSelectedRoom(room.id);
+                      setShowRoomSelection(false);
+                      
+                    }}
+                  >
+                    <Text style={[
+                      styles.roomOptionText,
+                      selectedRoom === room.id && styles.selectedRoomText
+                    ]}>
+                      {room.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+            </View>
+
+            <View style={styles.modalFooter}>
+              <Button
+                variant="outline"
+                onPress={() => {
+                  setShowRoomSelection(false);
+                  setSelectedRoom(null);
+                }}
+              >
+                <Text>Cancel</Text>
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -360,7 +553,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   galleryContainer: {
-    paddingHorizontal: 12,
     paddingBottom: 16,
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
@@ -382,5 +574,79 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginLeft: 8,
+  },
+  modalDescription: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 16,
+  },
+  roomList: {
+    marginBottom: 20,
+  },
+  roomOption: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: '#f1f5f9',
+  },
+  selectedRoom: {
+    backgroundColor: '#1e40af',
+  },
+  roomOptionText: {
+    fontSize: 16,
+    color: '#1e293b',
+  },
+  selectedRoomText: {
+    color: '#fff',
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  fabDisabled: {
+    opacity: 0.5,
+  },
+  uploadProgress: {
+    position: 'absolute',
+    bottom: 90,
+    right: 20,
+    backgroundColor: '#1e40af',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  uploadProgressText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });

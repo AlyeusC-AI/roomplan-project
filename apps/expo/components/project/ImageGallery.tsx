@@ -44,6 +44,7 @@ interface ImageGalleryProps {
   selectable?: boolean;
   onSelectionChange?: (selectedKeys: string[]) => void;
   initialSelectedKeys?: string[];
+  onDelete?: (imageKey: string) => Promise<void>;
 }
 
 export default function ImageGallery({
@@ -54,6 +55,7 @@ export default function ImageGallery({
   selectable = false,
   onSelectionChange,
   initialSelectedKeys = [],
+  onDelete,
 }: ImageGalleryProps) {
   // State for modal visibility and active image
   const [modalVisible, setModalVisible] = useState(false);
@@ -73,32 +75,10 @@ export default function ImageGallery({
   // Filter out inferences without imageKey or with undefined urlMap entries
   const validInferences = inferences
     .filter((inference): inference is Inference & { imageKey: string } => 
-      !!inference.imageKey && typeof inference.imageKey === 'string'
+      !!inference.imageKey && typeof inference.imageKey === 'string' && !inference.isDeleted && !inference.Image?.isDeleted
     );
   
-  // Debug: Log the first few valid inferences and their URLs
-  useEffect(() => {
-    if (validInferences.length > 0) {
-      const sampleInferences = validInferences.slice(0, Math.min(3, validInferences.length));
-      console.log('Sample inferences:', 
-        sampleInferences.map(inf => ({
-          id: inf.id,
-          imageKey: inf.imageKey,
-          hasUrlInMap: !!urlMap[inf.imageKey],
-          url: urlMap[inf.imageKey] || 'NOT_FOUND'
-        }))
-      );
-    } else {
-      console.log('No valid inferences found. Total inferences:', inferences.length);
-      if (inferences.length > 0) {
-        console.log('First inference:', {
-          hasImageKey: !!inferences[0].imageKey,
-          imageKey: inferences[0].imageKey
-        });
-      }
-    }
-  }, [inferences, urlMap, validInferences]);
-  
+
   // Organize inferences into rows for grid display
   const rows = Array.from({ length: Math.ceil(validInferences.length / itemsPerRow) }).map(
     (_, rowIndex) => {
@@ -172,7 +152,17 @@ export default function ImageGallery({
   };
   
   // Handle image deletion
-  const handleDeleteImage = async (imageKey: string) => {
+  const handleDeleteImage = async (imageKey: string,publicId:string) => {
+            console.log("🚀 ~ handleDeleteImage ~ validInferences:",JSON.stringify(validInferences,null,2))
+
+    if (onDelete) {
+      
+       await onDelete(
+        publicId
+       );
+       handleCloseModal();
+       return
+    }
     if (onRefresh) {
       await deleteImage(imageKey, { onRefresh });
       
@@ -243,7 +233,9 @@ export default function ImageGallery({
           imageKey={item.imageKey}
           showInfo={true}
           showDeleteButton={true}
-          onDelete={() => handleDeleteImage(item.imageKey)}
+          onDelete={() => {
+            console.log("🚀 ~ renderModalItem ~ item:",JSON.stringify(item,null,2))
+            handleDeleteImage(item.imageKey,item.Image?.publicId || '')}}
           onRefresh={onRefresh}
         />
       </View>
@@ -343,12 +335,15 @@ export default function ImageGallery({
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.thumbnailScroll}
+                scrollEventThrottle={16}
+                bounces={false}
+                decelerationRate="fast"
+                snapToInterval={70}
+                snapToAlignment="start"
               >
                 {validInferences.map((inference, index) => {
-                  // Try to get the URL from the map first, then fall back to direct construction
                   let imageUrl = safelyGetImageUrl(urlMap, inference.imageKey, '');
                   
-                  // If URL is still empty, try to construct it directly
                   if (!imageUrl) {
                     imageUrl = getStorageUrl(inference.imageKey);
                   }
@@ -356,9 +351,20 @@ export default function ImageGallery({
                   return (
                     <TouchableOpacity
                       key={inference.imageKey}
+                      activeOpacity={0.7}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                       onPress={() => {
-                        setActiveImageIndex(index);
-                        modalScrollRef.current?.scrollToIndex({ index, animated: true });
+                        const newIndex = index;
+                        setActiveImageIndex(newIndex);
+                        modalScrollRef.current?.scrollToIndex({ 
+                          index: newIndex, 
+                          animated: true,
+                          viewPosition: 0.5
+                        });
+                        thumbnailScrollRef.current?.scrollTo({
+                          x: newIndex * 70,
+                          animated: true
+                        });
                       }}
                       style={[
                         styles.thumbnail,
@@ -370,6 +376,7 @@ export default function ImageGallery({
                         style={styles.thumbnailImage}
                         size="small"
                         imageKey={inference.imageKey}
+                        disabled={true}
                       />
                     </TouchableOpacity>
                   );
