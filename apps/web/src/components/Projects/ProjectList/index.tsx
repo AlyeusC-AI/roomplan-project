@@ -255,7 +255,7 @@ export const Table = () => {
               <AvatarFallback className='rounded-lg'>
                 {`${row.original.clientName}`
                   .split(" ")
-                  .map((word) => word[0].toUpperCase())
+                  .map((word) => word[0]?.toUpperCase())
                   .join("")}
               </AvatarFallback>
             </Avatar>

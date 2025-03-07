@@ -146,8 +146,10 @@ const DateInput: React.FC<{
           </HStack>
           <Box style={styles.datePickerContainer}>
             <DateTimePicker
+              use12Hours={true}
               mode="single"
               timePicker
+              
               components={{
                 IconNext: <ChevronRight color="#1d4ed8" size={28} />,
                 IconPrev: <ChevronLeft color="#1d4ed8" size={28} />,
@@ -216,6 +218,9 @@ export default function NewEvent() {
 
   const [isDeleting, setIsDeleting] = useState(false);
   const { session: supabaseSession } = userStore((state) => state);
+  const session= userStore((state) => state);
+  console.log("🚀 ~ NewEvent ~ session:", JSON.stringify(session, null, 2))
+
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const { projects } = projectsStore();

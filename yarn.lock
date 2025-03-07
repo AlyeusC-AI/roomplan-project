@@ -4215,7 +4215,7 @@
     aria-hidden "^1.2.4"
     react-remove-scroll "^2.6.3"
 
-"@radix-ui/react-popover@^1.1.1", "@radix-ui/react-popover@^1.1.4":
+"@radix-ui/react-popover@^1.1.4":
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/@radix-ui/react-popover/-/react-popover-1.1.6.tgz#699634dbc7899429f657bb590d71fb3ca0904087"
   integrity sha512-NQouW0x4/GnkFJ/pRqsIS3rM/k97VzKnVb2jB7Gq7VEGPy5g7uNV1ykySFt7eWSp3i2uSGFwaJcvIRJBAHmmFg==
@@ -6032,16 +6032,6 @@
   integrity sha512-wNxXu45wzE12M0LYPR6g2DYVZsD4zf9EiXecP46pJfC8XEhUPhcgzAE8oa1xfEUU+P8O29ZIWoK/CPtAodFBfw==
   dependencies:
     "@radix-ui/react-label" "^2.1.0"
-    "@rn-primitives/slot" "1.1.0"
-    "@rn-primitives/types" "1.1.0"
-
-"@rn-primitives/popover@1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@rn-primitives/popover/-/popover-1.1.0.tgz#3743e73c7fa02e68ea3505073379689c2a043b53"
-  integrity sha512-2LU6sGdITvmRtKJwfGDHZ5pFz0eOySlw2lJERqrfAmMiiYWhq4WItkBh386u/IzlAyAoPVQVDmIrYgQVH1rkfA==
-  dependencies:
-    "@radix-ui/react-popover" "^1.1.1"
-    "@rn-primitives/hooks" "1.1.0"
     "@rn-primitives/slot" "1.1.0"
     "@rn-primitives/types" "1.1.0"
 
@@ -10631,7 +10621,7 @@ expo-modules-core@2.2.2:
   dependencies:
     invariant "^2.2.4"
 
-expo-router@^4.0.17, expo-router@~4.0.17:
+expo-router@~4.0.17:
   version "4.0.17"
   resolved "https://registry.yarnpkg.com/expo-router/-/expo-router-4.0.17.tgz#8cecc68f189fd93d69b239986f63e040ee15f63a"
   integrity sha512-8ybo6bVwdG1S9hafh9BTOjX1hpCgomdUvs6hKHMM01koo8mQ7zocH/+zxQeaMVDxGhboz2dO5GiDchWJ0OheRA==
@@ -16433,10 +16423,10 @@ react-native-text-size@4.0.0-rc.1:
   resolved "https://registry.yarnpkg.com/react-native-text-size/-/react-native-text-size-4.0.0-rc.1.tgz#1e048d345dd6a5a8e1269e0585c1a5948c478da5"
   integrity sha512-CysqjU2jK6Yc+a+kEI222pUyTY2ywcU2HqbFqf1KHymW6OPTdvBBHqbEJKL0QiLhQaFYDbqicM+h990s9TP00g==
 
-react-native-ui-datepicker@^3.0.4:
-  version "3.0.4"
-  resolved "https://registry.yarnpkg.com/react-native-ui-datepicker/-/react-native-ui-datepicker-3.0.4.tgz#a99eb6e3f9d6733f91889b83c9b6dedeefa7fb21"
-  integrity sha512-AEcWP6+0wUROwKE4xKw40qd1zjx0PoPbNDOmt6jtpSN9Sqnr3uknFehDEr13yE0fhCth6t5Za11QU8UFFB2q5Q==
+react-native-ui-datepicker@^3.0.5:
+  version "3.0.5"
+  resolved "https://registry.yarnpkg.com/react-native-ui-datepicker/-/react-native-ui-datepicker-3.0.5.tgz#6993e5f8e371ad81bc5f121a40187e6677c44270"
+  integrity sha512-8nLz74M8xvML64B7KGIrHxUEYrsYL1ChvJ4PUWZKbk41uogpJbX8BTWLjXiRwXkDlW+NaKVnmNVmtbpeLvzs0w==
   dependencies:
     clsx "^2.1.1"
     dayjs "^1.11.13"

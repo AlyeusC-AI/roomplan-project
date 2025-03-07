@@ -17,6 +17,7 @@ import { ArrowLeft, Check, Clock, AlertTriangle, MapPin, PlayCircle, CheckCircle
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { userStore } from "@/lib/state/user";
 import { projectsStore } from "@/lib/state/projects";
+import { supabase } from "@/lib/supabase";
 
 export type NotificationType = "arrival" | "start_work" | "complete_work";
 
@@ -48,6 +49,21 @@ export default function NotificationScreen({
   const [status, setStatus] = useState<"heading" | "late">("heading");
   const MAX_CHARS = 300;
   const fadeAnim = useState(new Animated.Value(0))[0];
+const [org, setOrg] = useState<any | null>(null);
+
+useEffect(() => {
+  const fetchOrg = async () => {
+   const {data, error} = await supabase.from("Organization").select("*").eq("publicId", supabaseSession?.user.user_metadata.organizationId).single();
+   console.log("🚀 ~ fetchOrg ~ data:", data)
+
+   if (error) {
+    console.error("Error fetching organization:", error);
+   } else {
+    setOrg(data);
+   }
+  };
+  fetchOrg();
+}, []);
 
   // Extract project details from params
   const projectId = params.projectId ? Number(params.projectId) : null;
@@ -60,10 +76,10 @@ export default function NotificationScreen({
     navigation.setOptions({ headerShown: false });
     
     // Initialize default message
-    if (project) {
+    if (org) {
       const defaultMessage = defaultMessageTemplate(
-        project.name, 
-        project.clientPhoneNumber || "(your phone number)",
+        org?.name, 
+        org?.phoneNumber || "(your phone number)",
         type === "arrival" ? arrivalTime : undefined
       );
       setMessage(defaultMessage);
@@ -76,7 +92,7 @@ export default function NotificationScreen({
       duration: 500,
       useNativeDriver: true,
     }).start();
-  }, [project]);
+  }, [org]);
 
   // Update message when arrival time changes (only for arrival notifications)
   useEffect(() => {

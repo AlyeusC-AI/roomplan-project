@@ -693,6 +693,7 @@ const styles = StyleSheet.create({
   notificationButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingBottom: 12
   },
   notificationButton: {
     flex: 1,
