@@ -139,6 +139,7 @@ export default function AddressAutoComplete(props: AddressAutoCompleteProps) {
           setIsOpenDialog={setIsOpen}
           showInlineError={showInlineError}
           placeholder={placeholder}
+          address={address}
         />
       )}
     </>
@@ -153,6 +154,7 @@ interface CommonProps {
   searchInput: string;
   setSearchInput: (searchInput: string) => void;
   placeholder?: string;
+  address: AddressType | null;
 }
 
 function AddressAutoCompleteInput(props: CommonProps) {
@@ -164,7 +166,9 @@ function AddressAutoCompleteInput(props: CommonProps) {
     searchInput,
     setSearchInput,
     placeholder,
+    address,
   } = props;
+    console.log("🚀 ~ AddressAutoCompleteInput ~ searchInput:", searchInput)
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -188,7 +192,7 @@ function AddressAutoCompleteInput(props: CommonProps) {
         <SearchIcon className='absolute left-3 top-1/2 z-20 size-4 -translate-y-1/2 text-muted-foreground' />
         <div className='relative flex w-full rounded-md border border-input bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2'>
           <CommandInput
-            value={searchInput}
+            value={searchInput.toString()}
             onValueChange={setSearchInput}
             onBlur={close}
             onFocus={open}

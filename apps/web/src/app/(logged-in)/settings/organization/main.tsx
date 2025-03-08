@@ -24,6 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
 import { Label } from "@components/ui/label";
 import { LoadingSpinner } from "@components/ui/spinner";
 import { Separator } from "@components/ui/separator";
+import Address from "@components/DesignSystem/Address";
 
 const profileFormSchema = z.object({
   name: z
@@ -34,6 +35,9 @@ const profileFormSchema = z.object({
     .max(30, {
       message: "Organization name must not be longer than 30 characters.",
     }),
+  phoneNumber: z.string().min(10, {
+    message: "Phone number must be at least 10 characters.",
+  }),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -107,6 +111,7 @@ export default function Organization() {
         body: JSON.stringify({
           name: data.name,
           address: newAddress.address === "" ? null : newAddress,
+          phoneNumber: data.phoneNumber,
         }),
       });
 
@@ -142,6 +147,7 @@ export default function Organization() {
     mode: "onChange",
     defaultValues: {
       name: organization?.name ?? "",
+      phoneNumber: organization?.phoneNumber ?? "",
     },
   });
 
@@ -151,6 +157,10 @@ export default function Organization() {
       .then((data) => {
         setOrganization(data);
         form.setValue("name", data.name ?? "");
+        form.setValue("phoneNumber", data.phoneNumber ?? "");
+        const address =  data.address ? JSON.parse(data.address) : null;
+        setAddress(address);
+        // setSearchInput(address?.formattedAddress ?? "");
       });
   }, []);
 
@@ -188,7 +198,7 @@ export default function Organization() {
             setAddress={setAddress}
             searchInput={searchInput}
             setSearchInput={setSearchInput}
-            placeholder={organization?.address ?? ""}
+            placeholder={newAddress?.formattedAddress ?? ""}
             dialogTitle='Enter Address'
           />
           <p className={"text-sm text-muted-foreground"}>
@@ -211,6 +221,20 @@ export default function Organization() {
                     />
                   </FormControl>
                   <FormDescription>Your organization name.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='phoneNumber'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormDescription>Your organization phone number.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
