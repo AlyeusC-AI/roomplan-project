@@ -20,7 +20,7 @@ export const orgStore = create<State & Actions>()(
 
         set(() => ({ organization: json }));
 
-        return json
+        return json;
       },
       setOrganizationLocal: (organization) => {
         set(() => ({ organization }));
