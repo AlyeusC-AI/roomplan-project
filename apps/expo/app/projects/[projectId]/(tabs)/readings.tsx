@@ -1,11 +1,4 @@
-import {
-  FlatList,
-  Box,
-  Heading,
-  VStack,
-  HStack,
-  Center,
-} from "native-base";
+import { FlatList, Box, Heading, VStack, HStack, Center } from "native-base";
 import React, { useEffect, useState } from "react";
 import RoomReading from "@/components/project/reading";
 import { userStore } from "@/lib/state/user";
@@ -51,7 +44,7 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
           }),
         }
       );
-      console.log("🚀 ~ RoomReadingItem ~ res:", res)
+      console.log("🚀 ~ RoomReadingItem ~ res:", res);
 
       if (!res.ok) {
         throw new Error("Could not add reading");
@@ -175,9 +168,7 @@ export default function RoomReadings() {
         buttonText="Create a room"
         onPress={onCreateRoom}
         icon={<Building size={64} />}
-        secondaryIcon={
-          <Plus color="#FFF" height={24} width={24} />
-        }
+        secondaryIcon={<Plus color="#FFF" height={24} width={24} />}
       />
     );
   }
@@ -200,7 +191,7 @@ export default function RoomReadings() {
       mt={4}
       backgroundColor="white"
     >
-      {/* <FlatList
+      <FlatList
         refreshing={loading}
         onRefresh={getReadings}
         data={rooms.rooms}
@@ -210,7 +201,7 @@ export default function RoomReadings() {
         )}
         w="full"
         h="full"
-      /> */}
+      />
     </Box>
   );
 }

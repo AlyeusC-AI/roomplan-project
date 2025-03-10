@@ -7,6 +7,7 @@ interface RoomReadingInputProps {
   placeholder: string;
   rightText: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }
 
 export function RoomReadingInput({
@@ -14,6 +15,7 @@ export function RoomReadingInput({
   placeholder,
   onChange,
   rightText,
+  disabled = false,
 }: RoomReadingInputProps) {
   const [text, setText] = useState(value);
   const debouncedText = useDebounce(text);
@@ -46,10 +48,12 @@ export function RoomReadingInput({
         value={text}
         placeholder={placeholder}
         onChangeText={(text) => {
+          if (disabled) return;
           setText(text);
         }}
+        isDisabled={disabled}
       />
       <InputRightAddon children={rightText} w="20%" />
     </InputGroup>
   );
-} 
+}

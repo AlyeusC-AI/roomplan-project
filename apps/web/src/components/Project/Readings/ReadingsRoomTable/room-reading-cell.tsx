@@ -10,7 +10,7 @@ import {
 import { cn } from "@lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { roomStore } from "@atoms/room";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
@@ -28,6 +28,20 @@ export default function RoomReadingCell({
   const [tempReading, setTempReading] = useState(r);
   const rooms = roomStore();
   const { id } = useParams<{ id: string }>();
+
+  const calculateGPP = (temperature: number, humidity: number) => {
+    if (!temperature || !humidity) return null;
+    return (
+      (humidity / 100) * 7000 * (1 / 7000 + (2 / 7000) * (temperature - 32))
+    );
+  };
+
+  useEffect(() => {
+    setTempReading((prev) => ({
+      ...prev,
+      gpp: calculateGPP(Number(prev.temperature), Number(prev.humidity)),
+    }));
+  }, []);
 
   const onSave = async () => {
     try {
@@ -103,9 +117,17 @@ export default function RoomReadingCell({
             className='col-span-1'
             defaultValue={tempReading.temperature || ""}
             placeholder='Temperature'
-            onChange={(e) =>
-              setTempReading({ ...tempReading, temperature: e.target.value })
-            }
+            onChange={(e) => {
+              const newTemp = e.target.value;
+              setTempReading({
+                ...tempReading,
+                temperature: newTemp,
+                gpp: calculateGPP(
+                  Number(newTemp),
+                  Number(tempReading.humidity)
+                ),
+              });
+            }}
             name='temperature'
             title='Temperature'
           />
@@ -116,9 +138,17 @@ export default function RoomReadingCell({
             className='col-span-1'
             defaultValue={tempReading.humidity || ""}
             placeholder='Humidity'
-            onChange={(e) =>
-              setTempReading({ ...tempReading, humidity: e.target.value })
-            }
+            onChange={(e) => {
+              const newHumidity = e.target.value;
+              setTempReading({
+                ...tempReading,
+                humidity: newHumidity,
+                gpp: calculateGPP(
+                  Number(tempReading.temperature),
+                  Number(newHumidity)
+                ),
+              });
+            }}
             name='relative-humidity'
             title='Relative Humidity'
           />
@@ -152,12 +182,9 @@ export default function RoomReadingCell({
           <Label>Grains Per Pound (gpp)</Label>
           <Input
             className='col-span-1'
-            value={tempReading.gpp ?? "--"}
-            defaultValue={tempReading.gpp || ""}
+            value={tempReading.gpp ? Number(tempReading.gpp).toFixed(2) : "--"}
+            disabled
             placeholder='Grains Per Pound'
-            onChange={(e) =>
-              setTempReading({ ...tempReading, gpp: e.target.value })
-            }
           />
         </div>
         <div className='flex flex-col items-start space-y-2'>
