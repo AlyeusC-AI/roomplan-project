@@ -1,4 +1,3 @@
 --- xcodebuild: WARNING: Using the first of multiple matching destinations:
-{ platform:iOS Simulator, id:B8BA4E36-9930-4175-9990-3E7FF44034EF, OS:17.0.1, name:iPhone 15 Pro Max }
-{ platform:iOS Simulator, id:B8BA4E36-9930-4175-9990-3E7FF44034EF, OS:17.0.1, name:iPhone 15 Pro Max }
-2025-02-18 18:05:45.297 xcodebuild[48251:5013918]  DVTDeveloperAccountManager: Failed to load credentials for samuel.vulakh@revozero.com: Error Domain=DVTDeveloperAccountCredentialsError Code=0 "Invalid credentials in keychain for samuel.vulakh@revozero.com, missing Xcode-Token" UserInfo={NSLocalizedDescription=Invalid credentials in keychain for samuel.vulakh@revozero.com, missing Xcode-Token}
+{ platform:iOS Simulator, id:71CFFCAD-B91E-46EF-BA8A-6913D44217AE, OS:18.3.1, name:iPhone 16 Pro }
+{ platform:iOS Simulator, id:71CFFCAD-B91E-46EF-BA8A-6913D44217AE, OS:18.3.1, name:iPhone 16 Pro }

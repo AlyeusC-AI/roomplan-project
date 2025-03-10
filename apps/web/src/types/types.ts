@@ -7,7 +7,13 @@ declare global {
     Database["public"]["Tables"]["UserToOrganization"]["Row"];
 
   type TeamMember = FlatTeamMember & {
-    User: { firstName: string; lastName: string; email: string } | null;
+    User: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      accessLevel: "owner" | "admin" | "viewer";
+      id: string;
+    } | null;
   };
 
   type Cost = Database["public"]["Tables"]["Cost"]["Row"];
@@ -18,7 +24,13 @@ declare global {
   type FlatImage = Database["public"]["Tables"]["Image"]["Row"];
   type FlatAssignee = Database["public"]["Tables"]["UserToProject"]["Row"];
   type Assignee = FlatAssignee & {
-    User: { firstName: string; lastName: string; email: string } | null;
+    user: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      accessLevel: "owner" | "admin" | "viewer";
+      id: string;
+    } | null;
   };
   type Image = FlatImage & { url: string };
   interface Project extends FlatProject {
@@ -31,11 +43,19 @@ declare global {
   type Status = Database["public"]["Tables"]["ProjectStatusValue"]["Row"];
   type RoomReading = Database["public"]["Tables"]["RoomReading"]["Row"];
   type GenericRoomReading =
-    Database["public"]["Tables"]["GenericRoomReading"]["Row"];
+    Database["public"]["Tables"]["GenericRoomReading"]["Row"] & {
+      GenericRoomReadingImage: {
+        id: number;
+        imageKey: string;
+        type: "floor" | "wall";
+      }[];
+    };
   type Room = Database["public"]["Tables"]["Room"]["Row"];
-
+  type RoomReadingImage =
+    Database["public"]["Tables"]["RoomReadingImage"]["Row"];
   interface ReadingsWithGenericReadings extends RoomReading {
     GenericRoomReading: GenericRoomReading[];
+    RoomReadingImage: RoomReadingImage[];
   }
 
   type Equipment = Database["public"]["Tables"]["Equipment"]["Row"];
@@ -56,6 +76,9 @@ declare global {
 
   type Note = FlatNote & {
     NotesAuditTrail: NotesAuditTrail[];
+    NoteImage: {
+      imageKey: string;
+    }[];
   };
 
   type ImageNote = Database["public"]["Tables"]["ImageNote"]["Row"];

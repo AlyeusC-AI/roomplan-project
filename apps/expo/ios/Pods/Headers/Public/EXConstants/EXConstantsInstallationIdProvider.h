@@ -1,1 +1,1 @@
-../../../../../../../node_modules/.pnpm/expo-constants@17.0.5_expo@52.0.28_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@7._zdbdrrpdgc72yw4yw3l24kwdp4/node_modules/expo-constants/ios/EXConstantsInstallationIdProvider.h
+../../../../../../../node_modules/expo-constants/ios/EXConstantsInstallationIdProvider.h

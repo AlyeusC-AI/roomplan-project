@@ -167,7 +167,13 @@ export default function ProjectList() {
           <LoadingPlaceholder />
         ) : (
           <div className='flex flex-col justify-start'>
-            <View />
+            {user?.savedDashboardView === "boardView" ? (
+              <KanBan />
+            ) : (
+              <Card>
+                <Table />
+              </Card>
+            )}
             {user?.savedDashboardView === "listView" && (
               <Pagination className='mt-5'>
                 <PaginationContent>
@@ -249,7 +255,7 @@ export const Table = () => {
               <AvatarFallback className='rounded-lg'>
                 {`${row.original.clientName}`
                   .split(" ")
-                  .map((word) => word[0].toUpperCase())
+                  .map((word) => word[0]?.toUpperCase())
                   .join("")}
               </AvatarFallback>
             </Avatar>

@@ -1,0 +1,53 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    
+    "moduleResolution": "node",
+    "noEmit": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "baseUrl": ".",
+    "jsx": "react-native",
+    "paths": {
+      "@*": [
+        "./src/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "typeRoots": [
+      "src/types",
+      "node_modules/@types"
+    ],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "incremental": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    "prettier.config.js",
+    ".next/types/**/*.ts",
+    "src/app/(logged-in)/calendar/upcoming-reminders",
+    "scripts/set-org.js"
+  ],
+  "exclude": [
+    ""
+  ]
+}

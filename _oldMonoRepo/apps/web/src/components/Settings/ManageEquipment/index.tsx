@@ -1,0 +1,18 @@
+// import { useState } from 'react'
+// import toast from 'sonner'
+// import { PrimaryButton } from '@components/components/button'
+// import Card from '@components/DesignSystem/Card'
+// import { v4 } from 'uuid'
+
+// import EquipmentList from './EquipmentList'
+
+// export default function ManageEquipment({
+//   intialOrganizationEquipment,
+// }: {
+//   intialOrganizationEquipment: RouterOutputs['equipment']['getAll']
+// }) {
+
+//   return (
+
+//   )
+// }

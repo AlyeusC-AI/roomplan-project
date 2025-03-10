@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 
-const PDFSafeImage = ({ url }: { url: string }) => {
+const PDFSafeImage = ({
+  url,
+  alt,
+  className,
+}: {
+  url: string;
+  alt: string;
+  className: string;
+}) => {
   const [dataUri, setDataUri] = useState("");
 
   useEffect(() => {
@@ -17,7 +25,11 @@ const PDFSafeImage = ({ url }: { url: string }) => {
   }, [url]);
   if (!dataUri) return null;
   /* eslint-disable-next-line */
-  return <img src={dataUri} />
+  return (
+    <a href={url} target='_blank' rel='noopener noreferrer' className='block'>
+      <img src={dataUri} alt={alt} className={`${className} cursor-pointer`} />
+    </a>
+  );
 };
 
 export default PDFSafeImage;

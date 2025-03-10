@@ -7,7 +7,6 @@ import {
   Center,
 } from "native-base";
 import React, { useEffect, useState } from "react";
-
 import RoomReading from "@/components/project/reading";
 import { userStore } from "@/lib/state/user";
 import { useGlobalSearchParams, useRouter } from "expo-router";
@@ -37,6 +36,7 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
     type: ReadingType
   ) => {
     try {
+      setIsAdding(true);
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/readings`,
         {
@@ -51,6 +51,7 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
           }),
         }
       );
+      console.log("🚀 ~ RoomReadingItem ~ res:", res)
 
       if (!res.ok) {
         throw new Error("Could not add reading");
@@ -67,8 +68,9 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
       return body;
     } catch {
       toast.error("Could not add reading");
+    } finally {
+      setIsAdding(false);
     }
-    setIsAdding(false);
   };
 
   return (
@@ -79,11 +81,11 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
         alignItems="flex-start"
         direction="row"
         mb={4}
+        // px={4}
       >
         <Heading>{room.name}</Heading>
         <Button
           onPress={() => {
-            setIsAdding(true);
             addReading(
               {
                 projectId: room.projectId,
@@ -103,14 +105,14 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
         </Button>
       </HStack>
       <VStack w="100%" mb="3">
-        {room.RoomReading.length === 0 && (
+        {room.RoomReading?.length === 0 && (
           <Center w="full">
             <Heading size="sm" mb="2" color="gray.400">
               There are no readings yet
             </Heading>
           </Center>
         )}
-        {room.RoomReading.map((reading) => (
+        {room.RoomReading?.map((reading) => (
           <RoomReading
             room={room}
             key={reading.publicId}
@@ -165,7 +167,7 @@ export default function RoomReadings() {
     getReadings();
   }, []);
 
-  if (!loading && rooms.rooms.length === 0) {
+  if (!loading && rooms.rooms?.length === 0) {
     return (
       <Empty
         title="There are no rooms yet"
@@ -194,11 +196,11 @@ export default function RoomReadings() {
       alignItems="flex-start"
       h="full"
       pt={4}
-      px={2}
+      px={4}
       mt={4}
       backgroundColor="white"
     >
-      <FlatList
+      {/* <FlatList
         refreshing={loading}
         onRefresh={getReadings}
         data={rooms.rooms}
@@ -208,7 +210,7 @@ export default function RoomReadings() {
         )}
         w="full"
         h="full"
-      />
+      /> */}
     </Box>
   );
 }

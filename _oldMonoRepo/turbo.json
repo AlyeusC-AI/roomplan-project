@@ -1,0 +1,56 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env.local"],
+  "tasks": {
+    "dev:generate": {
+      "inputs": ["./packages/db/prisma/schema.prisma"],
+      "cache": false
+    },
+    "dev:migrate": {
+      "inputs": ["./packages/db/prisma/schema.prisma"],
+      "cache": false
+    },
+    "dev:push": {
+      "inputs": ["./packages/db/prisma/schema.prisma"],
+      "cache": false
+    },
+    "dev": {
+      "persistent": true,
+      "cache": false
+    },
+    "dev:build": {
+      "dependsOn": ["^dev:generate"],
+      "outputs": [".next/**"]
+    },
+    "ci:generate": {
+      "outputs": []
+    },
+    "build": {
+      "dependsOn": ["^build", "^dev:generate"],
+      "outputs": [".next/**", ".expo/**"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env.production.local",
+        ".env.local",
+        ".env.production",
+        ".env"
+      ]
+    },
+    "build:web": {
+      "dependsOn": ["^ci:generate", "dev:generate", "build"],
+      "outputs": [".next/**"]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "build:dev:ios": {
+      "outputs": []
+    },
+    "clean": {
+      "cache": false
+    },
+    "//#clean": {
+      "cache": false
+    }
+  }
+}

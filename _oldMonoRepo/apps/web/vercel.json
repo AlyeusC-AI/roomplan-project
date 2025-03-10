@@ -1,0 +1,11 @@
+{
+  "github": {
+    "enabled": false
+  },
+  "crons": [
+    {
+      "path": "/crons/calendar",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

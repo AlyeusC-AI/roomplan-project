@@ -1,71 +1,84 @@
-# Setup
+# Turborepo starter
 
-1. `vercel login`
-2. `vercel link`
-3. `vercel env pull`
-4. `pnpm dev:generate`
-5. `pnpm install`
-6. `pnpm dev`
-   -> Webapp is available at http://localhost:3002
-   -> Mobile app will open in simulator
+This Turborepo starter is maintained by the Turborepo core team.
 
-# Directory Stucture
+## Using this example
 
-## Apps
+Run the following command:
 
-Each folder in here maps to an "app".
+```sh
+npx create-turbo@latest
+```
 
-- Expo: This is our mobile app
-- Web: This is the main app
+## What's inside?
 
-## Packages
+This Turborepo includes the following packages/apps:
 
-Each folder in here maps to a _reusable_ "package"
+### Apps and Packages
 
-- Api: This holds all of our app trpc routers. You can think of each one of these as different "endpoints" we can call from our application.
-- Config: Shared config settings
-- DB: Prisma database config
+- `docs`: a [Next.js](https://nextjs.org/) app
+- `web`: another [Next.js](https://nextjs.org/) app
+- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
+- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
+- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
 
-# Database
+Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
 
-We use `prisma` to manage our schema and push database updates.
+### Utilities
 
-## Development DB Updates
+This Turborepo has some additional tools already setup for you:
 
-1. After making a change in the prisma schema, you'll need to update the generated typescript client: `yarn dev:generate`
-2. Next, to update the database, run `yarn dev:push`.
+- [TypeScript](https://www.typescriptlang.org/) for static type checking
+- [ESLint](https://eslint.org/) for code linting
+- [Prettier](https://prettier.io) for code formatting
 
-## Production DB Updates
+### Build
 
-1. Navigate into the db folder `cd packages/db`
-2. Run `yarn prod:push`. This will update the prod db. CAREFUL.
+To build all apps and packages, run the following command:
 
-# Technology Stack
+```
+cd my-turborepo
+pnpm build
+```
 
-1. Next.js: The framework this is all built upon
-2. Typescript: The language everything is written in
-3. TRPC: What we use for most of our data fetching
-4. Tailwind: What we use for styling
-5. Stripe: What we use for payment processing
-6. Supabase: What we use for our database
+### Develop
 
-# Payments
+To develop all apps and packages, run the following command:
 
-1. We use stripe for processing payments.
-2. Locally, you'll need to listen to stripe webhooks test payment pipelines.
-3. Install the cli brew install stripe/stripe-cli/stripe
-4. Run the webhook listener `yarn stripe:listen`
-5. Copy the env var it outputs in .env and override `STRIPE_WEBHOOK_SECRET`
+```
+cd my-turborepo
+pnpm dev
+```
 
-## Adding new plans
+### Remote Caching
 
-1. When a plan is added in stripe, we need to respond to webhooks emitted to update our database. Make update in Stripe -> API ingests data and updates database
-2. To ensure this happens correctly locally, make sure you are running your local stripe listener when making updates in TEST mode. If you are not, that's ok. you can always startup the stripe listener, make a change to whatever you added, and everything will be updated retroactively.
+> [!TIP]
+> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
 
-# Advice
+Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
 
-This code base is very large. With a lot of moving pieces. Understanding the whole system isn't impossible but isn't worth the time. Instead, focus on understanding individual components. By "component" I literally mean a single react component. For example, a button, then a form, etc. Start at the component level and work your way up until you can understand how an entire page renders. Once you understand how a single page works (how it's data is fetched, how data is mutated) you'll understand how most pages work.
+By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
 
-The next step from understanding a page is understanding related pages. For example you may understand the account settings page, but what about organization settings, and other settings pages.
+```
+cd my-turborepo
+npx turbo login
+```
 
-At this point you'll have a solid understanding of how to interact with Next.js, trpc, and prisma. From there it's good to start working on how to change things - how to add new trpc endpoints, how to use prisma to update the database, etc.
+This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+
+Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+
+```
+npx turbo link
+```
+
+## Useful Links
+
+Learn more about the power of Turborepo:
+
+- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
+- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
+- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
+- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
+- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
+- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)

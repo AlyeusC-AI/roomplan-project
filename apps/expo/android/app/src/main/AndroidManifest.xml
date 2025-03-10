@@ -37,6 +37,7 @@
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="servicegeek"/>
         <data android:scheme="com.servicegeek.servicegeekmobile"/>
+        <data android:scheme="exp+sevicegeek-mobile"/>
       </intent-filter>
     </activity>
   </application>

@@ -23,12 +23,17 @@ export async function PATCH(req: NextRequest) {
 
     console.log(noteRes);
 
+    const { data: userData } = await supabaseServiceRole
+      .from("User")
+      .select("*")
+      .eq("id", authUser.id)
+      .single();
     const result = await supabaseServiceRole.from("NotesAuditTrail").insert({
       notesId: noteRes.data!.id,
       action: "updated",
       body: body.body,
       userId: authUser.id,
-      userName: `${authUser.user_metadata.first_name} ${authUser.user_metadata.last_name}`,
+      userName: `${userData?.firstName} ${userData?.lastName}`,
     });
 
     console.log(result);
@@ -75,13 +80,18 @@ export async function POST(
       })
       .select("*")
       .single();
+    const { data: userData } = await supabaseServiceRole
+      .from("User")
+      .select("*")
+      .eq("id", authUser.id)
+      .single();
 
     await supabaseServiceRole.from("NotesAuditTrail").insert({
       notesId: result.data!.id,
       action: "created",
       body: body,
       userId: authUser.id,
-      userName: `${authUser.user_metadata.first_name} ${authUser.user_metadata.last_name}`,
+      userName: `${userData?.firstName} ${userData?.lastName}`,
     });
 
     return NextResponse.json(
@@ -107,13 +117,18 @@ export async function DELETE(req: NextRequest) {
       .eq("publicId", body.noteId)
       .select("body")
       .single();
+    const { data: userData } = await supabaseServiceRole
+      .from("User")
+      .select("*")
+      .eq("id", authUser.id)
+      .single();
 
     await supabaseServiceRole.from("NotesAuditTrail").insert({
       notesId: body.noteId,
       action: "deleted",
       body: note.data!.body,
       userId: authUser.id,
-      userName: `${authUser.user_metadata.first_name} ${authUser.user_metadata.last_name}`,
+      userName: `${userData?.firstName} ${userData?.lastName}`,
     });
     return NextResponse.json({ status: "ok" }, { status: 200 });
   } catch (err) {
@@ -139,7 +154,7 @@ export async function GET(
 
     const notes = await supabaseServiceRole
       .from("Room")
-      .select("*, Notes(*, NotesAuditTrail(*))")
+      .select("*, Notes(*, NotesAuditTrail(*), NoteImage(*))")
       .eq("projectId", project.data!.id)
       .eq("isDeleted", false)
       .eq("Notes.isDeleted", false)

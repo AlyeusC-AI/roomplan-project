@@ -1,1 +1,1 @@
-../../../../../node_modules/react-native-ui-lib/lib/ios/reactnativeuilib/safearea/SafeAreaManager.h
+../../../../../../../node_modules/react-native-ui-lib/lib/ios/reactnativeuilib/safearea/SafeAreaManager.h

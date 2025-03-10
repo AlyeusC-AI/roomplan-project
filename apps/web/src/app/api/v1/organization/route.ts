@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
         .from("Organization")
         .insert({
           name: body.name,
+          phoneNumber: body.phoneNumber,
           size: body.size,
           publicId: v4(),
           address: body.address,
@@ -169,6 +170,7 @@ export async function PATCH(req: NextRequest) {
         { status: 404 }
       );
     }
+    console.log("🚀 ~ PATCH ~ body:", body,user)
 
     const res = await supabaseClient
       .from("Organization")
@@ -176,14 +178,22 @@ export async function PATCH(req: NextRequest) {
       .eq("publicId", user.user_metadata.organizationId)
       .select("*")
       .single();
-
-    return NextResponse.json(res.data, { status: 200 });
+      console.log("🚀 ~ PATCH ~ res:", res)
+if(res.error){  
+  return NextResponse.json(
+    {
+      status: "failed",
+      message: res.error?.message || "An unkown error ocurred. Please try again later",
+    },
+    { status: 400 }
+  );
+}
   } catch (err) {
     console.error(err);
     return NextResponse.json(
       {
         status: "failed",
-        message: "An unkown error ocurred. Please try again later",
+        message: err?.message || "An unkown error ocurred. Please try again later",
       },
       { status: 500 }
     );

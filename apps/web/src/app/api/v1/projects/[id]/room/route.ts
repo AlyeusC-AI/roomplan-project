@@ -88,53 +88,6 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-export async function DELETE(req: NextRequest) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    console.error("Session does not exist.");
-    return NextResponse.json({ status: "failed" }, { status: 500 });
-  }
-  const { roomId } = await req.json();
-
-  try {
-    const room = await supabaseServiceRole
-      .from("Room")
-      .select("name, id")
-      .eq("publicId", roomId);
-
-    const { name, id: roomRawId } = room.data![0];
-
-    await supabaseServiceRole
-      .from("Detection")
-      .update({ isDeleted: true })
-      .eq("roomId", roomRawId);
-
-    await supabaseServiceRole
-      .from("Inference")
-      .update({ isDeleted: true })
-      .eq("roomId", roomRawId);
-
-    await supabaseServiceRole
-      .from("Room")
-      .update({ isDeleted: true, name: `${roomId}-${name}` })
-      .eq("publicId", roomId);
-
-    await supabaseServiceRole
-      .from("Image")
-      .update({ isDeleted: true })
-      .eq("roomId", roomRawId);
-
-    return NextResponse.json({ status: "ok" });
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json({ status: "failed" }, { status: 500 });
-  }
-}
-
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -153,11 +106,15 @@ export async function GET(
       await supabaseServiceRole
         .from("Room")
         .select(
-          "*, Inference (*, Image (*)), Notes (*, NotesAuditTrail (*)), AreaAffected (*), RoomReading (*, GenericRoomReading (*))"
+          "*, Inference (*, Image (*)), Notes (*, NotesAuditTrail (*), NoteImage (*)), AreaAffected (*), RoomReading (*, RoomReadingImage (*), GenericRoomReading (* , GenericRoomReadingImage (*)))"
         )
         .eq("isDeleted", false)
         .eq("RoomReading.isDeleted", false)
         .eq("RoomReading.GenericRoomReading.isDeleted", false)
+        .eq("Notes.isDeleted", false)
+        .eq("Inference.Image.isDeleted", false)
+        .eq("Inference.isDeleted", false)
+        .eq("AreaAffected.isDeleted", false)
         .eq("projectId", project.data![0].id);
 
     if (rooms.error || !rooms.data) {
