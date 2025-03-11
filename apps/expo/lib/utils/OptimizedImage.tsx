@@ -146,8 +146,12 @@ export function OptimizedImage({
   // If URI is invalid, show error state immediately
   useEffect(() => {
     if (!isValidUri) {
+      setLoading(true);
+      // setError(true);
+      handleRetry();
+    } else {
+      setError(false);
       setLoading(false);
-      setError(true);
     }
   }, [isValidUri]);
 
@@ -201,6 +205,7 @@ export function OptimizedImage({
   const handleError = () => {
     setLoading(false);
     setError(true);
+    handleRetry();
   };
 
   // Handle retry button press
@@ -250,7 +255,8 @@ export function OptimizedImage({
         </Animated.View>
       )}
 
-      {loading && !error && (
+      {loading && (
+        //  && !error
         <View style={[styles.loadingContainer, style]}>
           <ActivityIndicator size="large" color="#1e40af" />
         </View>

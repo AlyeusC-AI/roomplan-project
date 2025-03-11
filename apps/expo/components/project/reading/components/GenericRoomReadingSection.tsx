@@ -4,6 +4,7 @@ import { Box, FormControl, Heading, Stack } from "native-base";
 import { Camera } from "lucide-react-native";
 import { RoomReadingInput } from "./RoomReadingInput";
 import { ReadingType } from "@/types/app";
+import { OptimizedImage } from "@/lib/utils/imageModule";
 
 interface GenericRoomReadingProps {
   index: number;
@@ -116,8 +117,8 @@ export const GenericRoomReadingSection: React.FC<GenericRoomReadingProps> = ({
                     key={img.imageKey}
                     onPress={() => onImagePress(imgIndex, reading.id)}
                   >
-                    <Image
-                      source={{ uri: genericImages[img.imageKey] }}
+                    <OptimizedImage
+                      uri={genericImages[img.imageKey]}
                       style={{ width: 80, height: 80, borderRadius: 6 }}
                     />
                   </Pressable>

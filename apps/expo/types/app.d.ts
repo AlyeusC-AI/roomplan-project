@@ -9,6 +9,8 @@ declare type ProjectStatus =
   | "inactive"
   | "incomplete";
 
+declare type ReadingType = "generic" | "standard";
+
 declare interface ProjectType {
   publicId: string;
   createdAt: Date;

@@ -22,7 +22,7 @@ import {
   Image,
 } from "react-native";
 import DateTimePicker, { getDefaultStyles } from "react-native-ui-datepicker";
-import { ExtendedWallItem } from "@/types/app";
+import { ExtendedWallItem, ReadingType } from "@/types/app";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner-native";
 import { useGlobalSearchParams } from "expo-router";
@@ -40,12 +40,13 @@ import { GenericRoomReadingSection } from "./components/GenericRoomReadingSectio
 // Import hooks
 import { useRoomReadingState } from "./hooks/useRoomReadingState";
 import { useImageHandling } from "./hooks/useImageHandling";
+import { OptimizedImage } from "@/lib/utils/OptimizedImage";
 
 // Define the type for the room reading component props
 interface RoomReadingProps {
   room: any; // Room object
   reading: any; // Reading object with GenericRoomReading
-  addReading: (data: any, type: string) => Promise<any>;
+  addReading: (data: any, type: ReadingType) => Promise<any>;
 }
 
 const RoomReading: React.FC<RoomReadingProps> = ({
@@ -524,8 +525,8 @@ const RoomReading: React.FC<RoomReadingProps> = ({
                           key={img.imageKey}
                           onPress={() => openImageViewer(index, "wall")}
                         >
-                          <Image
-                            source={{ uri: roomImages[img.imageKey] }}
+                          <OptimizedImage
+                            uri={roomImages[img.imageKey]}
                             style={{ width: 80, height: 80, borderRadius: 6 }}
                           />
                         </Pressable>
@@ -606,8 +607,8 @@ const RoomReading: React.FC<RoomReadingProps> = ({
                           key={img.imageKey}
                           onPress={() => openImageViewer(index, "floor")}
                         >
-                          <Image
-                            source={{ uri: roomImages[img.imageKey] }}
+                          <OptimizedImage
+                            uri={roomImages[img.imageKey]}
                             style={{ width: 80, height: 80, borderRadius: 6 }}
                           />
                         </Pressable>

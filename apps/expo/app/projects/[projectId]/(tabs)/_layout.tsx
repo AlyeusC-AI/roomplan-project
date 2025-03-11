@@ -8,7 +8,15 @@ import {
   StickyNote,
 } from "lucide-react-native";
 import { router, Tabs, useGlobalSearchParams } from "expo-router";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Text,
+  TouchableOpacity,
+  View,
+  SafeAreaView,
+  Platform,
+  StatusBar,
+} from "react-native";
 import { projectStore } from "@/lib/state/project";
 import { userStore } from "@/lib/state/user";
 
@@ -45,108 +53,92 @@ export default function Layout() {
 
   return (
     <Tabs
-      screenOptions={{
+      screenOptions={({ route }) => ({
         tabBarActiveTintColor: "#1e88e5",
         headerTintColor: "white",
         headerStyle: {
           backgroundColor: "#1e88e5",
         },
-        headerLeft: () => (
-          <ArrowLeft
-            className="ml-3"
-            onPress={() => router.dismiss()}
-            color="white"
-          />
-        ),
-        headerRight: () => (
-          <TouchableOpacity
-            onPress={() => router.push({ pathname: "./edit" })}
-          >
-            <Text
-              className="text-white mr-3"
-              style={{ fontWeight: "600", paddingHorizontal: 10 }}
+        header: ({ navigation, route, options }) => (
+          <SafeAreaView style={{ backgroundColor: "#1e88e5" }}>
+            <StatusBar barStyle="light-content" backgroundColor="#1e88e5" />
+            <View
+              style={{
+                paddingTop:
+                  Platform.OS === "android" ? StatusBar.currentHeight : 0,
+                backgroundColor: "#1e88e5",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 3,
+                elevation: 5,
+              }}
             >
-              Edit
-            </Text>
-          </TouchableOpacity>
+              <View className="px-4 py-3 flex-row items-center justify-between">
+                <View className="flex-row items-center">
+                  <TouchableOpacity
+                    onPress={() => router.dismiss()}
+                    className="mr-4 p-2 bg-white/10 rounded-full"
+                  >
+                    <ArrowLeft color="white" size={20} />
+                  </TouchableOpacity>
+                  <Text className="text-white text-lg font-semibold">
+                    {project.project?.clientName || "Project"}
+                  </Text>
+                </View>
+                {route.name === "index" && (
+                  <TouchableOpacity
+                    onPress={() => router.push({ pathname: "./edit" })}
+                    className="bg-white/10 px-4 py-2 rounded-full"
+                  >
+                    <Text className="text-white font-medium">Edit</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          </SafeAreaView>
         ),
-      }}
+        tabBarIcon: ({ color }) => {
+          if (route.name === "index") {
+            return <House size={24} color={color} />;
+          }
+          if (route.name === "pictures") {
+            return <Images size={24} color={color} />;
+          }
+          if (route.name === "readings") {
+            return <BookOpen size={24} color={color} />;
+          }
+          if (route.name === "notes") {
+            return <StickyNote size={24} color={color} />;
+          }
+          return null;
+        },
+      })}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Overview",
-          tabBarIcon: ({ color }) => <House size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="pictures"
         options={{
           title: "Photos",
-          tabBarIcon: ({ color }) => <Images size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="readings"
         options={{
           title: "Readings",
-          tabBarIcon: ({ color }) => <BookOpen size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="notes"
         options={{
           title: "Notes",
-          tabBarIcon: ({ color }) => <StickyNote size={24} color={color} />,
         }}
       />
     </Tabs>
-    // <Tab.Navigator
-    //   screenOptions={({ route }) => ({
-    //     headerShown: false,
-    //     tabBarIcon: ({ focused, color, size }) => {
-    //       if (route.name === "Overview") {
-    //         if (focused) return <House height={24} width={24} color="#1e88e5" />;
-    //         return <House height={24} width={24} color="#000" />;
-    //       }
-    //       if (route.name === "Photos") {
-    //         if (focused)
-    //           return <PictureInPicture height={24} width={24} color="#1e88e5" />;
-    //         return <PictureInPicture height={24} width={24} color="#000" />;
-    //       } else if (route.name === "Readings") {
-    //         if (focused)
-    //           return <BookOpen height={24} width={24} color="#1e88e5" />;
-    //         return <BookOpen height={24} width={24} color="#000" />;
-    //       } else if (route.name === "Notes") {
-    //         if (focused)
-    //           return <StickyNote height={24} width={24} color="#1e88e5" />;
-    //         return <StickyNote height={24} width={24} color="#000" />;
-    //       }
-    //     },
-    //     tabBarActiveTintColor: "#1e88e5",
-    //     tabBarInactiveTintColor: "gray",
-    //   })}
-    // >
-    //   <Tab.Screen
-    //     name="Overview"
-    //     component={ProjectOverview}
-    //     initialParams={route.params}
-    //   />
-    //   <Tab.Screen
-    //     name="Photos"
-    //     component={ProjectPhotos}
-    //     initialParams={route.params}
-    //   />
-    //   <Tab.Screen
-    //     name="Readings"
-    //     component={RoomReadings}
-    //     initialParams={route.params}
-    //   />
-    //   <Tab.Screen
-    //     name="Notes"
-    //     component={RoomNotes}
-    //     initialParams={route.params}
-    //   />
-    // </Tab.Navigator>
   );
 }

@@ -1,5 +1,5 @@
 import { ScrollView, TouchableOpacity, View } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import * as Clipboard from "expo-clipboard";
 import { Linking } from "react-native";
 
@@ -23,11 +23,10 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { projectStore } from "@/lib/state/project";
 import { teamMemberStore } from "@/lib/state/team-members";
 import { userStore } from "@/lib/state/user";
+import { uiPreferencesStore } from "@/lib/state/ui-preferences";
 import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner-native";
-
-type ViewMode = "list" | "grid";
 
 export default function ProjectOverview() {
   const { projectId } = useLocalSearchParams<{
@@ -37,7 +36,7 @@ export default function ProjectOverview() {
   const members = teamMemberStore();
   const user = userStore();
   const project = projectStore();
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const { projectViewMode, setProjectViewMode } = uiPreferencesStore();
 
   const openInMaps = () => {
     Linking.openURL(
@@ -120,26 +119,30 @@ export default function ProjectOverview() {
           </Text>
           <View className="flex-row overflow-hidden rounded-full border border-border">
             <TouchableOpacity
-              className={`px-4 py-2 flex-row items-center ${viewMode === "list" ? "bg-primary" : "bg-transparent"}`}
-              onPress={() => setViewMode("list")}
+              className={`px-4 py-2 flex-row items-center ${projectViewMode === "list" ? "bg-primary" : "bg-transparent"}`}
+              onPress={() => setProjectViewMode("list")}
             >
-              <List 
-                size={16} 
-                color={viewMode === "list" ? "#FFFFFF" : "#000000"} 
+              <List
+                size={16}
+                color={projectViewMode === "list" ? "#FFFFFF" : "#000000"}
               />
-              <Text className={`text-sm ml-2 font-medium ${viewMode === "list" ? "text-primary-foreground" : "text-foreground"}`}>
+              <Text
+                className={`text-sm ml-2 font-medium ${projectViewMode === "list" ? "text-primary-foreground" : "text-foreground"}`}
+              >
                 List
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              className={`px-4 py-2 flex-row items-center ${viewMode === "grid" ? "bg-primary" : "bg-transparent"}`}
-              onPress={() => setViewMode("grid")}
+              className={`px-4 py-2 flex-row items-center ${projectViewMode === "grid" ? "bg-primary" : "bg-transparent"}`}
+              onPress={() => setProjectViewMode("grid")}
             >
-              <Grid2X2 
-                size={16} 
-                color={viewMode === "grid" ? "#FFFFFF" : "#000000"} 
+              <Grid2X2
+                size={16}
+                color={projectViewMode === "grid" ? "#FFFFFF" : "#000000"}
               />
-              <Text className={`text-sm ml-2 font-medium ${viewMode === "grid" ? "text-primary-foreground" : "text-foreground"}`}>
+              <Text
+                className={`text-sm ml-2 font-medium ${projectViewMode === "grid" ? "text-primary-foreground" : "text-foreground"}`}
+              >
                 Grid
               </Text>
             </TouchableOpacity>
@@ -195,7 +198,9 @@ export default function ProjectOverview() {
                   onPress={() =>
                     Linking.openURL(`tel:${project.project?.clientPhoneNumber}`)
                   }
-                  onLongPress={() => copyText(project.project?.clientPhoneNumber)}
+                  onLongPress={() =>
+                    copyText(project.project?.clientPhoneNumber)
+                  }
                   className="flex flex-row items-center"
                 >
                   <View className="bg-primary/10 p-2 rounded-lg">
@@ -224,7 +229,7 @@ export default function ProjectOverview() {
           />
 
           <View className="py-4">
-            {viewMode === "list" ? (
+            {projectViewMode === "list" ? (
               <View className="space-y-3 gap-2">
                 {navigationItems.map((item, index) => (
                   <NavigationCell
@@ -300,10 +305,16 @@ function NavigationCell({
             <Icon height={24} width={24} className="text-primary" />
           </View>
           <View className="flex-1 ml-4">
-            <Text className="text-base font-semibold text-foreground">{title}</Text>
+            <Text className="text-base font-semibold text-foreground">
+              {title}
+            </Text>
             <Text className="text-sm text-muted-foreground">{description}</Text>
           </View>
-          <ArrowRight height={20} width={20} className="text-muted-foreground" />
+          <ArrowRight
+            height={20}
+            width={20}
+            className="text-muted-foreground"
+          />
         </View>
       </Card>
     </TouchableOpacity>

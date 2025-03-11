@@ -44,6 +44,7 @@ import safelyGetImageUrl from "@/utils/safelyGetImageKey";
 import * as FileSystem from "expo-file-system";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/lib/supabase";
+import AddRoomButton from "@/components/project/AddRoomButton";
 
 interface PhotoResult {
   uri: string;
@@ -365,18 +366,21 @@ export default function ProjectPhotos() {
       >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Project Photos</Text>
-          <View style={styles.buttonContainer}>
-            <Button
+          <View style={styles.buttonContainer} className="gap-2">
+            {/* <Button
               className="mr-2"
               variant="outline"
               onPress={() => router.push("../rooms/create")}
             >
               <Plus size={18} color="#1e40af" />
               <Text className="ml-1 text-primary">Add Room</Text>
-            </Button>
+            </Button> */}
+            <AddRoomButton variant="outline" />
             <Button variant="outline" onPress={handlePickImages}>
-              <ImagePlus size={18} color="#1e40af" />
-              <Text className="ml-1 text-primary">Select Images</Text>
+              <View className="flex-row items-center">
+                <ImagePlus size={18} color="#1e40af" />
+                <Text className="ml-1 text-primary">Select Images</Text>
+              </View>
             </Button>
           </View>
         </View>
@@ -542,6 +546,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#e5e7eb",
   },
   headerTitle: {
+    paddingTop: 8,
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 16,
