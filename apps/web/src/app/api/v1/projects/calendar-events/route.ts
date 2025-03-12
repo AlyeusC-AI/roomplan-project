@@ -89,19 +89,25 @@ export async function POST(req: NextRequest) {
       .select("*")
       .single();
 
-    if (remindClient && reminderDate) {
+    if (remindClient && reminderDate && results.data?.Project) {
       await supabaseServiceRole.from("CalendarEventReminder").insert({
         calendarEventId: results.data!.id,
         date: reminderDate.toISOString(),
         reminderTarget: "client",
+
+        sendEmail: true,
+        sendText: true,
       });
     }
 
-    if (remindProjectOwners && reminderDate) {
+    if (remindProjectOwners && reminderDate && results.data?.Organization) {
       await supabaseServiceRole.from("CalendarEventReminder").insert({
         calendarEventId: results.data!.id,
         date: reminderDate.toISOString(),
         reminderTarget: "projectCreator",
+
+        sendEmail: true,
+        sendText: true,
       });
     }
 
@@ -172,6 +178,9 @@ export async function PATCH(req: NextRequest) {
         calendarEventId: id,
         date: reminderDate.toISOString(),
         reminderTarget: "client",
+
+        sendEmail: true,
+        sendText: true,
       });
     }
 
@@ -180,6 +189,9 @@ export async function PATCH(req: NextRequest) {
         calendarEventId: id,
         date: reminderDate.toISOString(),
         reminderTarget: "projectCreator",
+
+        sendEmail: true,
+        sendText: true,
       });
     }
 
@@ -206,7 +218,14 @@ export async function DELETE(req: NextRequest) {
       .from("CalendarEvent")
       .update({ isDeleted: true })
       .eq("publicId", publicId)
-      .eq("organizationId", authUser.user_metadata.organizationId);
+      .eq("organizationId", authUser.user_metadata.organizationId)
+      .select("id")
+      .single();
+
+    await supabaseServiceRole
+      .from("CalendarEventReminder")
+      .delete()
+      .eq("calendarEventId", results.data?.id);
 
     if (results.error) {
       console.error("error", results.error);

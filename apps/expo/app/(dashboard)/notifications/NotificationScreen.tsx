@@ -13,7 +13,15 @@ import {
   ScrollView,
   Animated,
 } from "react-native";
-import { ArrowLeft, Check, Clock, AlertTriangle, MapPin, PlayCircle, CheckCircle } from "lucide-react-native";
+import {
+  ArrowLeft,
+  Check,
+  Clock,
+  AlertTriangle,
+  MapPin,
+  PlayCircle,
+  CheckCircle,
+} from "lucide-react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { userStore } from "@/lib/state/user";
 import { projectsStore } from "@/lib/state/projects";
@@ -25,7 +33,11 @@ interface NotificationScreenProps {
   type: NotificationType;
   title: string;
   icon: React.ReactNode;
-  defaultMessageTemplate: (projectName: string, phoneNumber: string, arrivalTime?: number) => string;
+  defaultMessageTemplate: (
+    projectName: string,
+    phoneNumber: string,
+    arrivalTime?: number
+  ) => string;
   additionalFields?: React.ReactNode;
   additionalData?: Record<string, any>;
 }
@@ -49,36 +61,43 @@ export default function NotificationScreen({
   const [status, setStatus] = useState<"heading" | "late">("heading");
   const MAX_CHARS = 300;
   const fadeAnim = useState(new Animated.Value(0))[0];
-const [org, setOrg] = useState<any | null>(null);
+  const [org, setOrg] = useState<any | null>(null);
 
-useEffect(() => {
-  const fetchOrg = async () => {
-   const {data, error} = await supabase.from("Organization").select("*").eq("publicId", supabaseSession?.user.user_metadata.organizationId).single();
-   console.log("🚀 ~ fetchOrg ~ data:", data)
+  useEffect(() => {
+    const fetchOrg = async () => {
+      const { data, error } = await supabase
+        .from("Organization")
+        .select("*")
+        .eq("publicId", supabaseSession?.user.user_metadata.organizationId)
+        .single();
 
-   if (error) {
-    console.error("Error fetching organization:", error);
-   } else {
-    setOrg(data);
-   }
-  };
-  fetchOrg();
-}, []);
+      if (error) {
+        console.error("Error fetching organization:", error);
+      } else {
+        setOrg(data);
+      }
+    };
+    fetchOrg();
+  }, []);
 
   // Extract project details from params
-  const projectId = params.projectId ? Number(params.projectId) : null;
+  // const projectId = params.projectId ? Number(params.projectId) : null;
   const eventId = params.eventId as string;
   const { projects } = projectsStore();
-  const project = projectId ? projects.find(p => p.id === projectId) : null;
-  console.log("🚀 ~ project:",JSON.stringify(project, null, 2))
+  const project = params.projectId
+    ? projects.find(
+        (p) => p.id == params.projectId || p.publicId == params.projectId
+      )
+    : null;
+  const projectId = project?.id;
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
-    
+
     // Initialize default message
     if (org) {
       const defaultMessage = defaultMessageTemplate(
-        org?.name, 
+        org?.name,
         org?.phoneNumber || "(your phone number)",
         type === "arrival" ? arrivalTime : undefined
       );
@@ -97,7 +116,10 @@ useEffect(() => {
   // Update message when arrival time changes (only for arrival notifications)
   useEffect(() => {
     if (type === "arrival" && project && message.includes("minutes")) {
-      const updatedMessage = message.replace(/\d+ minutes/, `${arrivalTime} minutes`);
+      const updatedMessage = message.replace(
+        /\d+ minutes/,
+        `${arrivalTime} minutes`
+      );
       setMessage(updatedMessage);
       setCharCount(updatedMessage.length);
     }
@@ -107,19 +129,19 @@ useEffect(() => {
   useEffect(() => {
     if (type === "arrival" && project && message) {
       let updatedMessage = message;
-      
+
       if (status === "late" && !message.includes("running late")) {
         updatedMessage = message.replace(
-          "heading your way", 
+          "heading your way",
           "running late but will be there"
         );
       } else if (status === "heading" && message.includes("running late")) {
         updatedMessage = message.replace(
-          "running late but will be there", 
+          "running late but will be there",
           "heading your way"
         );
       }
-      
+
       setMessage(updatedMessage);
       setCharCount(updatedMessage.length);
     }
@@ -148,12 +170,12 @@ useEffect(() => {
 
     try {
       setLoading(true);
-      
+
       // Send SMS via Twilio
       const twilioAccountSid = process.env.EXPO_PUBLIC_TWILIO_ACCOUNT_SID;
       const twilioAuthToken = process.env.EXPO_PUBLIC_TWILIO_AUTH_TOKEN;
       const twilioPhoneNumber = process.env.EXPO_PUBLIC_TWILIO_PHONE_NUMBER;
-      
+
       if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) {
         Alert.alert("Error", "Twilio configuration is missing");
         setLoading(false);
@@ -161,8 +183,14 @@ useEffect(() => {
       }
 
       // Format the phone number (ensure it has country code)
-      const formattedPhoneNumber = formatPhoneNumber(project?.clientPhoneNumber || "");
-      
+      const formattedPhoneNumber = formatPhoneNumber(
+        project?.clientPhoneNumber || ""
+      );
+      console.log(
+        "🚀 ~ handleSendNotification ~ formattedPhoneNumber:",
+        formattedPhoneNumber
+      );
+
       // Create the Twilio message
       const response = await fetch(
         `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`,
@@ -170,7 +198,7 @@ useEffect(() => {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
-            "Authorization": `Basic ${btoa(`${twilioAccountSid}:${twilioAuthToken}`)}`,
+            Authorization: `Basic ${btoa(`${twilioAccountSid}:${twilioAuthToken}`)}`,
           },
           body: new URLSearchParams({
             To: formattedPhoneNumber,
@@ -181,7 +209,7 @@ useEffect(() => {
       );
 
       const data = await response.json();
-      
+
       if (response.ok) {
         // Save notification record to your database if needed
         const notificationData = {
@@ -193,14 +221,12 @@ useEffect(() => {
           ...(type === "arrival" && { arrivalTime, status }),
           ...additionalData,
         };
-        
+
         await saveNotificationRecord(notificationData);
-        
-        Alert.alert(
-          "Success", 
-          `${title} notification sent successfully`,
-          [{ text: "OK", onPress: () => router.back() }]
-        );
+
+        Alert.alert("Success", `${title} notification sent successfully`, [
+          { text: "OK", onPress: () => router.back() },
+        ]);
       } else {
         Alert.alert("Error", data.message || "Failed to send notification");
       }
@@ -214,10 +240,10 @@ useEffect(() => {
 
   // Helper function to format phone number
   const formatPhoneNumber = (phoneNumber: string): string => {
-    console.log("🚀 ~ formatPhoneNumber ~ phoneNumber:", phoneNumber)
+    console.log("🚀 ~ formatPhoneNumber ~ phoneNumber:", phoneNumber);
     // Remove any non-digit characters
     const digitsOnly = phoneNumber.replace(/\D/g, "");
-    
+
     // Ensure it has the US country code if needed
     if (digitsOnly.length === 10) {
       return `+1${digitsOnly}`;
@@ -226,7 +252,7 @@ useEffect(() => {
     } else if (digitsOnly.startsWith("+")) {
       return digitsOnly;
     }
-    
+
     // Default to adding +1 if no country code is detected
     return `+1${digitsOnly}`;
   };
@@ -245,7 +271,7 @@ useEffect(() => {
           body: JSON.stringify(notificationData),
         }
       );
-      
+
       if (!response.ok) {
         console.error("Failed to save notification record");
       }
@@ -261,21 +287,25 @@ useEffect(() => {
         style={{ flex: 1 }}
       >
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
             <ArrowLeft color="#000" size={24} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{title} Notification</Text>
           <View style={{ width: 32 }} />
         </View>
 
-        <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.contentContainer}
+        >
           <Animated.View style={{ opacity: fadeAnim }}>
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Notification Details</Text>
               <View style={styles.infoCard}>
-                <View style={styles.infoIconContainer}>
-                  {icon}
-                </View>
+                <View style={styles.infoIconContainer}>{icon}</View>
                 <View style={styles.infoTextContainer}>
                   <Text style={styles.infoTitle}>{title}</Text>
                   <Text style={styles.infoDescription}>
@@ -290,66 +320,97 @@ useEffect(() => {
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Status</Text>
                 <View style={styles.statusOptions}>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={[
-                      styles.statusOption, 
-                      status === "heading" && styles.statusOptionSelected
+                      styles.statusOption,
+                      status === "heading" && styles.statusOptionSelected,
                     ]}
                     onPress={() => setStatus("heading")}
                   >
-                    <View style={[
-                      styles.statusIconContainer,
-                      status === "heading" && styles.statusIconContainerSelected
-                    ]}>
-                      <Clock size={18} color={status === "heading" ? "#fff" : "#64748b"} />
+                    <View
+                      style={[
+                        styles.statusIconContainer,
+                        status === "heading" &&
+                          styles.statusIconContainerSelected,
+                      ]}
+                    >
+                      <Clock
+                        size={18}
+                        color={status === "heading" ? "#fff" : "#64748b"}
+                      />
                     </View>
                     <View style={styles.statusTextContainer}>
-                      <Text style={[
-                        styles.statusText,
-                        status === "heading" && styles.statusTextSelected
-                      ]}>Heading Your Way</Text>
-                      <Text style={styles.statusDescription}>On time and en route</Text>
+                      <Text
+                        style={[
+                          styles.statusText,
+                          status === "heading" && styles.statusTextSelected,
+                        ]}
+                      >
+                        Heading Your Way
+                      </Text>
+                      <Text style={styles.statusDescription}>
+                        On time and en route
+                      </Text>
                     </View>
                   </TouchableOpacity>
-                  
-                  <TouchableOpacity 
+
+                  <TouchableOpacity
                     style={[
-                      styles.statusOption, 
-                      status === "late" && styles.statusOptionSelected
+                      styles.statusOption,
+                      status === "late" && styles.statusOptionSelected,
                     ]}
                     onPress={() => setStatus("late")}
                   >
-                    <View style={[
-                      styles.statusIconContainer,
-                      status === "late" && styles.statusIconContainerSelected
-                    ]}>
-                      <AlertTriangle size={18} color={status === "late" ? "#fff" : "#64748b"} />
+                    <View
+                      style={[
+                        styles.statusIconContainer,
+                        status === "late" && styles.statusIconContainerSelected,
+                      ]}
+                    >
+                      <AlertTriangle
+                        size={18}
+                        color={status === "late" ? "#fff" : "#64748b"}
+                      />
                     </View>
                     <View style={styles.statusTextContainer}>
-                      <Text style={[
-                        styles.statusText,
-                        status === "late" && styles.statusTextSelected
-                      ]}>Running Late</Text>
-                      <Text style={styles.statusDescription}>Delayed but on the way</Text>
+                      <Text
+                        style={[
+                          styles.statusText,
+                          status === "late" && styles.statusTextSelected,
+                        ]}
+                      >
+                        Running Late
+                      </Text>
+                      <Text style={styles.statusDescription}>
+                        Delayed but on the way
+                      </Text>
                     </View>
                   </TouchableOpacity>
                 </View>
 
                 <View style={styles.arrivalTimeContainer}>
-                  <Text style={styles.arrivalTimeLabel}>Estimated arrival in:</Text>
+                  <Text style={styles.arrivalTimeLabel}>
+                    Estimated arrival in:
+                  </Text>
                   <View style={styles.arrivalTimeControls}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.arrivalTimeButton}
-                      onPress={() => setArrivalTime(Math.max(5, arrivalTime - 5))}
+                      onPress={() =>
+                        setArrivalTime(Math.max(5, arrivalTime - 5))
+                      }
                     >
                       <Text style={styles.arrivalTimeButtonText}>-</Text>
                     </TouchableOpacity>
                     <View style={styles.arrivalTimeValue}>
-                      <Text style={styles.arrivalTimeValueText}>{arrivalTime} min</Text>
+                      <Text style={styles.arrivalTimeValueText}>
+                        {arrivalTime} min
+                      </Text>
                     </View>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.arrivalTimeButton}
-                      onPress={() => setArrivalTime(Math.min(120, arrivalTime + 5))}
+                      onPress={() =>
+                        setArrivalTime(Math.min(120, arrivalTime + 5))
+                      }
                     >
                       <Text style={styles.arrivalTimeButtonText}>+</Text>
                     </TouchableOpacity>
@@ -371,14 +432,16 @@ useEffect(() => {
                 maxLength={MAX_CHARS}
                 placeholder="Enter your message here"
               />
-              <Text style={styles.charCount}>{charCount}/{MAX_CHARS}</Text>
+              <Text style={styles.charCount}>
+                {charCount}/{MAX_CHARS}
+              </Text>
             </View>
           </Animated.View>
         </ScrollView>
 
         <View style={styles.bottomContainer}>
-          <TouchableOpacity 
-            onPress={handleSendNotification} 
+          <TouchableOpacity
+            onPress={handleSendNotification}
             style={styles.sendButton}
             disabled={loading}
           >
@@ -404,15 +467,25 @@ useEffect(() => {
 }
 
 // Helper functions to create default message templates
-export const createArrivalMessageTemplate = (projectName: string, phoneNumber: string, arrivalTime: number = 30) => {
+export const createArrivalMessageTemplate = (
+  projectName: string,
+  phoneNumber: string,
+  arrivalTime: number = 30
+) => {
   return `Hello, this is ${projectName}. We are heading your way and will be there in about ${arrivalTime} minutes. Feel free to reach us at ${phoneNumber}`;
 };
 
-export const createStartWorkMessageTemplate = (projectName: string, phoneNumber: string) => {
+export const createStartWorkMessageTemplate = (
+  projectName: string,
+  phoneNumber: string
+) => {
   return `Hello, this is ${projectName}. We have arrived and are starting work now. If you have any questions, please contact us at ${phoneNumber}`;
 };
 
-export const createCompleteWorkMessageTemplate = (projectName: string, phoneNumber: string) => {
+export const createCompleteWorkMessageTemplate = (
+  projectName: string,
+  phoneNumber: string
+) => {
   return `Hello, this is ${projectName}. We have completed the work at your location. If you have any questions or need anything else, please contact us at ${phoneNumber}. Thank you for your business!`;
 };
 
@@ -621,4 +694,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     zIndex: 1000,
   },
-}); 
+});
