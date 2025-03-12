@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   TouchableOpacity,
@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   Image,
   Text,
+  Alert,
 } from "react-native";
 import {
   GiftedChat,
@@ -16,7 +17,6 @@ import {
 } from "react-native-gifted-chat";
 import { ChevronLeft, Send as SendIcon } from "lucide-react-native";
 import { router } from "expo-router";
-import OpenAI from "react-native-openai";
 
 interface Message {
   _id: number;
@@ -28,86 +28,117 @@ interface Message {
   };
 }
 
+// Define OpenAI API types
+type Role = "system" | "user" | "assistant";
+
+interface ChatMessage {
+  role: Role;
+  content: string;
+}
+
 export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [messageStrings, setMessageStrings] = useState<string[]>([]);
+  const [messageHistory, setMessageHistory] = useState<ChatMessage[]>([
+    {
+      role: "system",
+      content:
+        "You are here to help answer Fire, water, and mold restoration questions based off the IICRC standard or other reportable sources. Answer all questions direct and with as few words as possible. Only ask questions if needed to give a better answer.",
+    },
+  ]);
   const [tempMessage, setTempMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const openAI = new OpenAI({
-    apiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY!,
-    organization: process.env.EXPO_PUBLIC_OPENAI_ORGANIZATION!,
-  });
+  const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY!;
+  const API_URL = "https://api.openai.com/v1/chat/completions";
 
   const onSend = async (msgs: Message[]) => {
+    const userMessage = msgs[0];
+
+    // Add user message to chat
     setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, msgs)
+      GiftedChat.append(previousMessages, [userMessage])
     );
 
-    setMessageStrings([...messageStrings, msgs[0].text]);
-
-    setLoading(true);
-
-    console.log(messageStrings);
-
-    const out = await openAI.chat.create({
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are here to help answer Fire, water, and mold restoration questions based off the IICRC standard or other reportable sources. Answer all questions direct and with as few words as possible. Only ask questions if needed to give a better answer.",
-        },
-        ...messageStrings.map<{ role: "user"; content: string }>((msg) => ({
-          role: "user",
-          content: msg,
-        })),
-        {
-          role: "user",
-          content: msgs[0].text,
-        },
-      ],
-      model: "gpt-4o",
-    });
-
-    const message = {
-      _id: Math.floor(Math.random() * 1000000),
-      text: out.choices[0].message.content,
-      createdAt: new Date(),
-      user: { _id: 2, name: "Restore Geek" },
+    // Add user message to history
+    const newUserMessage: ChatMessage = {
+      role: "user",
+      content: userMessage.text,
     };
 
-    setTempMessage(null);
+    const updatedHistory = [...messageHistory, newUserMessage];
+    setMessageHistory(updatedHistory);
 
-    setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, [message])
-    );
+    // Start loading state
+    setLoading(true);
+    setTempMessage("");
 
-    setMessageStrings([...messageStrings, message.text]);
+    try {
+      // Make API request to OpenAI
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini", // or any other model you want to use
+          messages: updatedHistory,
+          stream: false, // Set to false for non-streaming approach
+        }),
+      });
 
-    setLoading(false);
-  }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          `OpenAI API error: ${errorData.error?.message || "Unknown error"}`
+        );
+      }
 
-  openAI.chat.addListener("onChatMessageReceived", (payload) => {
-    console.log(tempMessage);
-    const newMessage = payload.choices[0]?.delta.content;
+      // For non-streaming approach
+      const data = await response.json();
+      const responseText = data.choices[0]?.message?.content || "";
 
-    setTempMessage((tempMessage ?? "") + (newMessage ?? ""));
+      // Create the final message
+      const assistantMessage: ChatMessage = {
+        role: "assistant",
+        content: responseText,
+      };
 
-    if (payload.choices[0]?.finishReason === "stop") {
-      const message = {
+      // Add to message history
+      setMessageHistory([...updatedHistory, assistantMessage]);
+
+      // Add to chat
+      const message: Message = {
         _id: Math.floor(Math.random() * 1000000),
-        text: tempMessage!,
+        text: responseText,
         createdAt: new Date(),
         user: { _id: 2, name: "Restore Geek" },
       };
 
-      setTempMessage(null);
-
       setMessages((previousMessages) =>
         GiftedChat.append(previousMessages, [message])
       );
+
+      // Reset states
+      setTempMessage(null);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error with OpenAI API:", error);
+      setLoading(false);
+
+      // Add error message
+      const errorMessage = {
+        _id: Math.floor(Math.random() * 1000000),
+        text: "Sorry, I couldn't process your request. Please try again.",
+        createdAt: new Date(),
+        user: { _id: 2, name: "Restore Geek" },
+      };
+
+      setMessages((previousMessages) =>
+        GiftedChat.append(previousMessages, [errorMessage])
+      );
     }
-  });
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
@@ -136,6 +167,7 @@ export default function Chat() {
       </View>
       <GiftedChat
         listViewProps={{
+          // @ts-ignore - Known issue with type definitions
           style: {
             backgroundColor: "#fff",
           },

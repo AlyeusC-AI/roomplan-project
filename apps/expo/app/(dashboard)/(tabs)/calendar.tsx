@@ -12,9 +12,19 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Clock, Trash2 } from "lucide-react-native";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Calendar as CalendarIcon,
+  Clock,
+  Trash2,
+} from "lucide-react-native";
 import { router, useNavigation } from "expo-router";
-import DateTimePicker, { CalendarDay, getDefaultStyles } from "react-native-ui-datepicker";
+import DateTimePicker, {
+  CalendarDay,
+  useDefaultStyles,
+} from "react-native-ui-datepicker";
 import { userStore } from "@/lib/state/user";
 import { Separator } from "@/components/ui/separator";
 import { projectsStore } from "@/lib/state/projects";
@@ -43,36 +53,43 @@ interface CalendarEvent {
   reminderTime?: "24h" | "2h" | "40m";
 }
 
-const CustomDay = ({ 
-  day, 
+const CustomDay = ({
+  day,
   events,
   isSelected,
-  onPress 
-}: { 
-  day: CalendarDay; 
+  onPress,
+}: {
+  day: CalendarDay;
   events: CalendarEvent[];
   isSelected?: boolean;
   onPress?: () => void;
 }) => {
   const dayDate = day.date;
-  const hasEvents = events.some(
-    event => {
-      const eventDate = event.start ? new Date(event.start) : new Date(event.date);
-      return dayjs(eventDate).format("YYYY-MM-DD") === dayjs(dayDate).format("YYYY-MM-DD");
-    }
-  );
+  const hasEvents = events.some((event) => {
+    const eventDate = event.start
+      ? new Date(event.start)
+      : new Date(event.date);
+    return (
+      dayjs(eventDate).format("YYYY-MM-DD") ===
+      dayjs(dayDate).format("YYYY-MM-DD")
+    );
+  });
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-      <View style={[
-        customStyles.dayContainer,
-        hasEvents && customStyles.hasEventsDay,
-        isSelected && customStyles.selectedDay
-      ]}>
-        <Text style={[
-          customStyles.dayText,
-          (hasEvents || isSelected) && customStyles.dayTextLight
-        ]}>
+      <View
+        style={[
+          customStyles.dayContainer,
+          hasEvents && customStyles.hasEventsDay,
+          isSelected && customStyles.selectedDay,
+        ]}
+      >
+        <Text
+          style={[
+            customStyles.dayText,
+            (hasEvents || isSelected) && customStyles.dayTextLight,
+          ]}
+        >
           {dayjs(dayDate).format("D")}
         </Text>
         {hasEvents && <View style={customStyles.eventIndicator} />}
@@ -87,11 +104,11 @@ export default function CalendarScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  console.log("🚀 ~ CalendarScreen ~ events:", JSON.stringify(events, null, 2))
+  console.log("🚀 ~ CalendarScreen ~ events:", JSON.stringify(events, null, 2));
   // const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { projects } = projectsStore();
-  const defaultStyles = getDefaultStyles();
+  const defaultStyles = useDefaultStyles();
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -99,9 +116,9 @@ export default function CalendarScreen() {
 
   useEffect(() => {
     fetchEvents();
-    
+
     // Add focus listener to refetch events when returning to the screen
-    const unsubscribe = navigation.addListener('focus', () => {
+    const unsubscribe = navigation.addListener("focus", () => {
       fetchEvents();
     });
 
@@ -149,14 +166,14 @@ export default function CalendarScreen() {
       }
     )
       .then((res) => {
-        console.log("🚀 ~ fetchEvents ~ res:", res)
-        return res.json()
+        console.log("🚀 ~ fetchEvents ~ res:", res);
+        return res.json();
       })
       .then((data) => {
         setLoading(false);
         setEvents(data.data);
       })
-      .catch(error => {
+      .catch((error) => {
         setLoading(false);
         console.error("Error fetching events:", error);
       });
@@ -176,7 +193,7 @@ export default function CalendarScreen() {
         remindClient: event.remindClient ? "true" : "false",
         remindProjectOwners: event.remindProjectOwners ? "true" : "false",
         reminderTime: event.reminderTime || "",
-      }
+      },
     });
   };
 
@@ -195,7 +212,7 @@ export default function CalendarScreen() {
         remindClient: event.remindClient ? "true" : "false",
         remindProjectOwners: event.remindProjectOwners ? "true" : "false",
         reminderTime: event.reminderTime || "",
-      }
+      },
     });
   };
 
@@ -206,13 +223,13 @@ export default function CalendarScreen() {
       [
         {
           text: "Cancel",
-          style: "cancel"
+          style: "cancel",
         },
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => deleteEvent(event)
-        }
+          onPress: () => deleteEvent(event),
+        },
       ]
     );
   };
@@ -249,8 +266,10 @@ export default function CalendarScreen() {
   };
 
   const renderDay = (day: CalendarDay): ReactNode => {
-    const isSelected = dayjs(selectedDate).format("YYYY-MM-DD") === dayjs(day.date).format("YYYY-MM-DD");
-    
+    const isSelected =
+      dayjs(selectedDate).format("YYYY-MM-DD") ===
+      dayjs(day.date).format("YYYY-MM-DD");
+
     return (
       <CustomDay
         day={day}
@@ -268,16 +287,20 @@ export default function CalendarScreen() {
   const IconNext = <ChevronRight color="#1d4ed8" size={28} />;
   const IconPrev = <ChevronLeft color="#1d4ed8" size={28} />;
 
-  const todayEvents = events.filter(event => {
-    const eventDate = event.start ? new Date(event.start) : new Date(event.date);
+  const todayEvents = events.filter((event) => {
+    const eventDate = event.start
+      ? new Date(event.start)
+      : new Date(event.date);
     return eventDate.toDateString() === selectedDate.toDateString();
   });
 
   if (isDeleting) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={{ marginTop: 10, color: '#64748b' }}>Deleting event...</Text>
+        <Text style={{ marginTop: 10, color: "#64748b" }}>
+          Deleting event...
+        </Text>
       </View>
     );
   }
@@ -288,7 +311,7 @@ export default function CalendarScreen() {
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Your Schedule</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.todayButton}
             onPress={() => setSelectedDate(new Date())}
           >
@@ -296,132 +319,179 @@ export default function CalendarScreen() {
             <Text style={styles.todayButtonText}>Today</Text>
           </TouchableOpacity>
         </View>
-
-        <View style={styles.calendarContainer}>
-          {/* <View style={styles.monthHeader}>
-            <Text style={styles.monthTitle}>
-              {selectedDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-            </Text>
-          </View> */}
-          <View style={styles.calendarWrapper}>
-            <DateTimePicker
-              mode="single"
-              className="w-full border-none bg-transparent px-0 pt-0 shadow-none"
-              components={{
-                IconNext,
-                IconPrev,
-                Day: renderDay,
-              }}
-              onChange={(params) => {
-                console.log("🚀 ~ CalendarScreen ~ params:", params)
-                if (params.date) {
-                  const dateStr = dayjs(params.date).format('YYYY-MM-DD');
-                  setSelectedDate(new Date(dateStr));
-                }
-              }}
-              styles={{
-                ...defaultStyles,
-                day: {
-                  ...defaultStyles.day,
-                  backgroundColor: 'transparent',
-                },
-                selected: {
-                  backgroundColor: 'transparent',
-                },
-              }}
-              date={selectedDate}
-            />
-          </View>
-        </View>
-
         <ScrollView
           refreshControl={
             <RefreshControl refreshing={loading} onRefresh={fetchEvents} />
           }
           style={styles.scrollView}
-          contentContainerStyle={styles.scrollViewContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.dateHeader}>
-            <Text style={styles.subtitle}>
-              {selectedDate.toLocaleDateString("en-US", { dateStyle: "full" })}
+          <View style={styles.calendarContainer}>
+            {/* <View style={styles.monthHeader}>
+            <Text style={styles.monthTitle}>
+              {selectedDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
             </Text>
-            <Text style={styles.eventCount}>
-              {todayEvents.length} {todayEvents.length === 1 ? "Event" : "Events"}
-            </Text>
+          </View> */}
+            <View style={styles.calendarWrapper}>
+              <DateTimePicker
+                mode="single"
+                className="w-full border-none bg-transparent px-0 pt-0 shadow-none"
+                components={{
+                  IconNext,
+                  IconPrev,
+                  Day: renderDay,
+                }}
+                onChange={(params) => {
+                  console.log("🚀 ~ CalendarScreen ~ params:", params);
+                  if (params.date) {
+                    const dateStr = dayjs(params.date).format("YYYY-MM-DD");
+                    setSelectedDate(new Date(dateStr));
+                  }
+                }}
+                styles={{
+                  ...defaultStyles,
+                  day: {
+                    ...defaultStyles.day,
+                    backgroundColor: "transparent",
+                  },
+                  selected: {
+                    backgroundColor: "transparent",
+                  },
+                }}
+                date={selectedDate}
+              />
+            </View>
           </View>
-          
-          <View style={styles.eventsContainer}>
-            {todayEvents.length === 0 ? (
-              <Animated.View 
-                style={styles.noEventsContainer}
-                entering={FadeIn.delay(200).duration(400)}
-              >
-                <Text style={styles.noEventsText}>No events scheduled for today</Text>
-                <TouchableOpacity 
-                  style={styles.addEventButton}
-                  onPress={() => router.push({ pathname: "calendar/new-event" })}
+          <View style={styles.scrollViewContent}>
+            <View style={styles.dateHeader}>
+              <Text style={styles.subtitle}>
+                {selectedDate.toLocaleDateString("en-US", {
+                  dateStyle: "full",
+                })}
+              </Text>
+              <Text style={styles.eventCount}>
+                {todayEvents.length}{" "}
+                {todayEvents.length === 1 ? "Event" : "Events"}
+              </Text>
+            </View>
+
+            <View style={styles.eventsContainer}>
+              {todayEvents.length === 0 ? (
+                <Animated.View
+                  style={styles.noEventsContainer}
+                  entering={FadeIn.delay(200).duration(400)}
                 >
-                  <Text style={styles.addEventButtonText}>Add Event</Text>
-                </TouchableOpacity>
-              </Animated.View>
-            ) : (
-              todayEvents.map((event, index) => {
-                const eventDate = event.start ? new Date(event.start) : new Date(event.date);
-                const status = getEventStatus(eventDate);
-                
-                return (
-                  <Animated.View 
-                    key={event.publicId} 
-                    style={styles.eventCard}
-                    entering={FadeInDown.delay(index * 100).springify()}
+                  <Text style={styles.noEventsText}>
+                    No events scheduled for today
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.addEventButton}
+                    onPress={() =>
+                      router.push({ pathname: "calendar/new-event" })
+                    }
                   >
-                    <TouchableOpacity 
-                      style={{ position: 'absolute', top: 16, right: 12, zIndex: 10 }}
-                      onPress={() => handleDeleteEvent(event)}
+                    <Text style={styles.addEventButtonText}>Add Event</Text>
+                  </TouchableOpacity>
+                </Animated.View>
+              ) : (
+                todayEvents.map((event, index) => {
+                  const eventDate = event.start
+                    ? new Date(event.start)
+                    : new Date(event.date);
+                  const status = getEventStatus(eventDate);
+
+                  return (
+                    <Animated.View
+                      key={event.publicId}
+                      style={styles.eventCard}
+                      entering={FadeInDown.delay(index * 100).springify()}
                     >
-                      <Trash2 size={18} color="#ef4444" />
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity onPress={() => handleViewEventDetails(event)} activeOpacity={0.7}>
-                      <View style={styles.eventHeader}>
-                        <Text style={styles.eventTitle}>{event.subject}</Text>
-                        <View style={[styles.eventTimeContainer, { marginRight: 24 }]}>
-                          <Clock size={14} color="#64748b" style={{ marginRight: 4 }} />
-                          <Text style={styles.eventTime}>
-                            {eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </Text>
-                        </View>
-                      </View>
-                      
-                      <Text style={styles.eventDescription}>{event.payload}</Text>
-                      
-                      <View style={styles.eventFooter}>
-                        {event.projectId && (
-                          <View style={[
-                            styles.projectBadge, 
-                            { backgroundColor: getProjectColor(event.projectId) }
-                          ]}>
-                            <Text style={styles.projectName}>
-                              {projects.find((p) => p.id === event.projectId)?.name || "Project"}
+                      <TouchableOpacity
+                        style={{
+                          position: "absolute",
+                          top: 16,
+                          right: 12,
+                          zIndex: 10,
+                        }}
+                        onPress={() => handleDeleteEvent(event)}
+                      >
+                        <Trash2 size={18} color="#ef4444" />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => handleViewEventDetails(event)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.eventHeader}>
+                          <Text style={styles.eventTitle}>{event.subject}</Text>
+                          <View
+                            style={[
+                              styles.eventTimeContainer,
+                              { marginRight: 24 },
+                            ]}
+                          >
+                            <Clock
+                              size={14}
+                              color="#64748b"
+                              style={{ marginRight: 4 }}
+                            />
+                            <Text style={styles.eventTime}>
+                              {eventDate.toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
                             </Text>
                           </View>
-                        )}
-                        
-                        <View style={[
-                          styles.statusBadge,
-                          { backgroundColor: status.color + '20', marginLeft: event.projectId ? 8 : 0 }
-                        ]}>
-                          <Text style={[styles.statusText, { color: status.color }]}>
-                            {status.status}
-                          </Text>
                         </View>
-                      </View>
-                    </TouchableOpacity>
-                  </Animated.View>
-                );
-              })
-            )}
+
+                        <Text style={styles.eventDescription}>
+                          {event.payload}
+                        </Text>
+
+                        <View style={styles.eventFooter}>
+                          {event.projectId && (
+                            <View
+                              style={[
+                                styles.projectBadge,
+                                {
+                                  backgroundColor: getProjectColor(
+                                    event.projectId
+                                  ),
+                                },
+                              ]}
+                            >
+                              <Text style={styles.projectName}>
+                                {projects.find((p) => p.id === event.projectId)
+                                  ?.name || "Project"}
+                              </Text>
+                            </View>
+                          )}
+
+                          <View
+                            style={[
+                              styles.statusBadge,
+                              {
+                                backgroundColor: status.color + "20",
+                                marginLeft: event.projectId ? 8 : 0,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.statusText,
+                                { color: status.color },
+                              ]}
+                            >
+                              {status.status}
+                            </Text>
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    </Animated.View>
+                  );
+                })
+              )}
+            </View>
           </View>
         </ScrollView>
 
@@ -450,7 +520,7 @@ const getProjectColor = (projectId: number): string => {
     "#ec4899", // pink
     "#06b6d4", // cyan
   ];
-  
+
   return colors[projectId % colors.length];
 };
 
@@ -499,7 +569,7 @@ const styles = StyleSheet.create({
   },
   calendarWrapper: {
     minHeight: 340,
-    width: '100%',
+    width: "100%",
   },
   scrollView: {
     flex: 1,
@@ -507,7 +577,7 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingVertical: 24,
   },
   dateHeader: {
     flexDirection: "row",
@@ -629,7 +699,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: "#e2e8f0",
     backgroundColor: "#ffffff",
@@ -659,18 +729,18 @@ const customStyles = StyleSheet.create({
   dayContainer: {
     width: 46,
     height: 46,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: 8,
     marginVertical: 4,
     marginHorizontal: 3,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   hasEventsDay: {
-    backgroundColor: '#93c5fd', // light blue
+    backgroundColor: "#93c5fd", // light blue
   },
   selectedDay: {
-    backgroundColor: '#2563eb', // darker blue
+    backgroundColor: "#2563eb", // darker blue
     transform: [{ scale: 1.05 }],
     shadowColor: "#2563eb",
     shadowOffset: { width: 0, height: 2 },
@@ -680,19 +750,19 @@ const customStyles = StyleSheet.create({
   },
   dayText: {
     fontSize: 16,
-    color: '#1e293b',
-    fontWeight: '600',
+    color: "#1e293b",
+    fontWeight: "600",
   },
   dayTextLight: {
-    color: '#fff',
-    fontWeight: '700',
+    color: "#fff",
+    fontWeight: "700",
   },
   eventIndicator: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 6,
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
 });

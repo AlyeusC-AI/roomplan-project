@@ -12,7 +12,10 @@ import {
   TextInput,
 } from "react-native";
 import dayjs from "dayjs";
-import DateTimePicker, { DateType, getDefaultStyles } from "react-native-ui-datepicker";
+import DateTimePicker, {
+  DateType,
+  useDefaultStyles,
+} from "react-native-ui-datepicker";
 import {
   ArrowLeft,
   ArrowRight,
@@ -42,7 +45,7 @@ import { Box, VStack, HStack, FormControl, Radio, Stack } from "native-base";
 import { Modal } from "@/components/ui/modal";
 
 interface EventFormData {
-  subject: string;    
+  subject: string;
   payload: string;
   remindProjectOwners: boolean;
   remindClient: boolean;
@@ -55,17 +58,17 @@ interface EventFormData {
 const Header: React.FC<{ isEditMode: boolean }> = ({ isEditMode }) => {
   const router = useRouter();
   return (
-  <View style={styles.header}>
-    <View style={styles.headerAction}>
-      <Pressable onPress={() => router.back()}>
-        <ArrowLeft color="#000" size={24} />
-      </Pressable>
+    <View style={styles.header}>
+      <View style={styles.headerAction}>
+        <Pressable onPress={() => router.back()}>
+          <ArrowLeft color="#000" size={24} />
+        </Pressable>
+      </View>
+      <Text numberOfLines={1} style={styles.headerTitle}>
+        {isEditMode ? "Edit Event" : "New Event"}
+      </Text>
+      <View style={[styles.headerAction, { alignItems: "flex-end" }]} />
     </View>
-    <Text numberOfLines={1} style={styles.headerTitle}>
-      {isEditMode ? "Edit Event" : "New Event"}
-    </Text>
-    <View style={[styles.headerAction, { alignItems: "flex-end" }]} />
-  </View>
   );
 };
 
@@ -79,7 +82,8 @@ const ProjectSelector: React.FC<{
       <Button variant="outline">
         <Text>
           {projectId
-            ? projects.find((e) => e.id === projectId)?.name ?? "Select A Project"
+            ? projects.find((e) => e.id === projectId)?.name ??
+              "Select A Project"
             : "Select A Project"}
         </Text>
       </Button>
@@ -112,7 +116,7 @@ const DateInput: React.FC<{
 }> = ({ label, value, onChange }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [tempDate, setTempDate] = useState<DateType>(value);
-  const defaultStyles = getDefaultStyles();
+  const defaultStyles = useDefaultStyles();
 
   useEffect(() => {
     setTempDate(value);
@@ -126,12 +130,12 @@ const DateInput: React.FC<{
   return (
     <Box>
       <FormControl.Label>{label}</FormControl.Label>
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={() => setShowPicker(true)}
         style={styles.dateInput}
       >
         <Text style={styles.dateInputText}>
-          {dayjs(value).format('MMM D, YYYY h:mm A')}
+          {dayjs(value).format("MMM D, YYYY h:mm A")}
         </Text>
         <CalendarIcon color="#64748b" size={20} />
       </TouchableOpacity>
@@ -149,7 +153,6 @@ const DateInput: React.FC<{
               use12Hours={true}
               mode="single"
               timePicker
-              
               components={{
                 IconNext: <ChevronRight color="#1d4ed8" size={28} />,
                 IconPrev: <ChevronLeft color="#1d4ed8" size={28} />,
@@ -179,14 +182,14 @@ const DateInput: React.FC<{
             />
           </Box>
           <HStack space={2} mt={4}>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onPress={() => setShowPicker(false)}
               style={styles.modalButton}
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </Button>
-            <Button 
+            <Button
               onPress={handleConfirm}
               style={[styles.modalButton, styles.confirmButton]}
             >
@@ -206,7 +209,7 @@ export default function NewEvent() {
 
   const [formData, setFormData] = useState<EventFormData>({
     start: dayjs(),
-    end: dayjs().add(1, 'hour'),
+    end: dayjs().add(1, "hour"),
     subject: "",
     payload: "",
     remindProjectOwners: false,
@@ -214,12 +217,12 @@ export default function NewEvent() {
     projectId: null,
     reminderTime: "24h",
   });
-  console.log("🚀 ~ NewEvent ~ formData:", formData)
+  console.log("🚀 ~ NewEvent ~ formData:", formData);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const { session: supabaseSession } = userStore((state) => state);
-  const session= userStore((state) => state);
-  console.log("🚀 ~ NewEvent ~ session:", JSON.stringify(session, null, 2))
+  const session = userStore((state) => state);
+  console.log("🚀 ~ NewEvent ~ session:", JSON.stringify(session, null, 2));
 
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -242,8 +245,9 @@ export default function NewEvent() {
         remindClient: params.remindClient === "true",
         projectId: params.projectId ? Number(params.projectId) : null,
         start: params.start ? dayjs(params.start as string) : dayjs(),
-        end: params.end ? dayjs(params.end as string) : dayjs().add(1, 'hour'),
-        reminderTime: (params.reminderTime as "24h" | "2h" | "40m") || undefined,
+        end: params.end ? dayjs(params.end as string) : dayjs().add(1, "hour"),
+        reminderTime:
+          (params.reminderTime as "24h" | "2h" | "40m") || undefined,
       });
     }
   }, [isEditMode, params]);
@@ -259,13 +263,13 @@ export default function NewEvent() {
       [
         {
           text: "Cancel",
-          style: "cancel"
+          style: "cancel",
         },
         {
           text: "Delete",
           style: "destructive",
-          onPress: deleteEvent
-        }
+          onPress: deleteEvent,
+        },
       ]
     );
   };
@@ -309,8 +313,8 @@ export default function NewEvent() {
 
   const onSubmit = async () => {
     const { subject, payload, start, end, projectId } = formData;
-    
-    if (!subject || !payload || !start ) {
+
+    if (!subject || !payload || !start) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -346,13 +350,17 @@ export default function NewEvent() {
           }),
         }
       );
-      
+
       const data = await response.json();
-      console.log("🚀 ~ onSubmit ~ data:", data)
-      toast.success(isEditMode ? "Event updated successfully" : "Event created successfully");
+      console.log("🚀 ~ onSubmit ~ data:", data);
+      toast.success(
+        isEditMode ? "Event updated successfully" : "Event created successfully"
+      );
       router.back();
     } catch (error) {
-      toast.error(isEditMode ? "Failed to update event" : "Failed to create event");
+      toast.error(
+        isEditMode ? "Failed to update event" : "Failed to create event"
+      );
       console.error(error);
     } finally {
       setLoading(false);
@@ -363,15 +371,19 @@ export default function NewEvent() {
     return (
       <View className="w-full h-full flex justify-center items-center">
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={{ marginTop: 10, color: '#64748b' }}>
-          {isDeleting ? "Deleting event..." : (isEditMode ? "Updating event..." : "Creating event...")}
+        <Text style={{ marginTop: 10, color: "#64748b" }}>
+          {isDeleting
+            ? "Deleting event..."
+            : isEditMode
+            ? "Updating event..."
+            : "Creating event..."}
         </Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1,  }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <Header isEditMode={isEditMode} />
 
       <ScrollView style={styles.content}>
@@ -384,7 +396,7 @@ export default function NewEvent() {
               const endDate = dayjs(formData.end);
               const startDate = dayjs(date);
               if (endDate.isBefore(startDate)) {
-                updateFormData("end", startDate.add(1, 'hour').toDate());
+                updateFormData("end", startDate.add(1, "hour").toDate());
               }
             }}
           />
@@ -440,7 +452,9 @@ export default function NewEvent() {
           <HStack space={2} alignItems="center">
             <Checkbox
               checked={formData.remindClient}
-              onCheckedChange={(checked) => updateFormData("remindClient", checked)}
+              onCheckedChange={(checked) =>
+                updateFormData("remindClient", checked)
+              }
             />
             <Text style={styles.checkboxLabel}>Remind Client</Text>
           </HStack>
@@ -448,7 +462,9 @@ export default function NewEvent() {
           <HStack space={2} alignItems="center">
             <Checkbox
               checked={formData.remindProjectOwners}
-              onCheckedChange={(checked) => updateFormData("remindProjectOwners", checked)}
+              onCheckedChange={(checked) =>
+                updateFormData("remindProjectOwners", checked)
+              }
             />
             <Text style={styles.checkboxLabel}>Remind Project Owners</Text>
           </HStack>
@@ -465,7 +481,9 @@ export default function NewEvent() {
 
             <FormButton onPress={onSubmit} flex={1}>
               <HStack space={2} alignItems="center">
-                <Text style={styles.saveBtnText}>{isEditMode ? "Update" : "Save"}</Text>
+                <Text style={styles.saveBtnText}>
+                  {isEditMode ? "Update" : "Save"}
+                </Text>
                 <ArrowRight color="#fff" size={20} />
               </HStack>
             </FormButton>
@@ -519,11 +537,11 @@ const styles = StyleSheet.create({
   },
   calendarContainer: {
     padding: 16,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 12,
   },
   datePickerContainer: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 8,
     height: 350,
   },
@@ -533,40 +551,40 @@ const styles = StyleSheet.create({
     color: "#1d1d1d",
   },
   dateInput: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'white',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "white",
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: "#e2e8f0",
   },
   dateInputText: {
     fontSize: 16,
-    color: '#1d1d1d',
+    color: "#1d1d1d",
   },
   modalButton: {
     flex: 1,
     height: 45,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#1d4ed8',
+    borderColor: "#1d4ed8",
   },
   confirmButton: {
-    backgroundColor: '#1d4ed8',
+    backgroundColor: "#1d4ed8",
     borderWidth: 0,
   },
   confirmButtonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   cancelButtonText: {
-    color: '#1d4ed8',
+    color: "#1d4ed8",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 } as const);

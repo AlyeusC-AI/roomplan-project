@@ -69,7 +69,14 @@ const createInvitation = async (userId: string, email: string) => {
     .single();
   console.log("🚀 ~ createInvitation ~ existingInvite:", existingInvite);
 
-  if (existingInvite) return { failed: true, reason: "existing-invite" };
+  // if (existingInvite) return { failed: true, reason: "existing-invite" };
+  if (existingInvite)
+    return {
+      failed: false,
+      reason: null,
+      inviteId: existingInvite.invitationId,
+      orgId: organizationId,
+    };
 
   const { data, error } = await supabaseClient
     .from("OrganizationInvitation")

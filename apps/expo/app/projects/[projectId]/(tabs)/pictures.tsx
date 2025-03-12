@@ -65,6 +65,7 @@ export default function ProjectPhotos() {
   );
   const [showRoomSelection, setShowRoomSelection] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
+  const [shouldOpenCamera, setShouldOpenCamera] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const rooms = roomInferenceStore();
@@ -72,7 +73,11 @@ export default function ProjectPhotos() {
   const router = useRouter();
   useEffect(() => {
     if (selectedRoom) {
-      handlePickImages();
+      if (shouldOpenCamera) {
+        handleTakePhoto();
+      } else {
+        handlePickImages();
+      }
     }
   }, [selectedRoom]);
   useEffect(() => {
@@ -181,6 +186,7 @@ export default function ProjectPhotos() {
 
   const handleTakePhoto = async () => {
     try {
+      setShouldOpenCamera(true);
       if (!selectedRoom) {
         setShowRoomSelection(true);
         return;
@@ -189,9 +195,17 @@ export default function ProjectPhotos() {
       await takePhoto(selectedRoom, {
         bucket: STORAGE_BUCKETS.PROJECT,
         pathPrefix: `projects/${projectId}/rooms`,
-        onRefresh: refreshData,
+        // onRefresh: refreshData,
         compression: "high",
+        onSuccess: async (file) => {
+          console.log("🚀 ~ onSuccess: ~ file:", file, selectedRoom);
+          await uploadToSupabase(file.path, selectedRoom);
+          await refreshData();
+        },
       });
+      setShouldOpenCamera(false);
+      setSelectedRoom(null);
+      setShowRoomSelection(false);
     } catch (error) {
       console.error("Error taking photo:", error);
       toast.error("Failed to take photo");
@@ -200,6 +214,7 @@ export default function ProjectPhotos() {
 
   const handlePickImages = async () => {
     try {
+      setShouldOpenCamera(false);
       if (!selectedRoom) {
         setShowRoomSelection(true);
         return;
@@ -443,8 +458,8 @@ export default function ProjectPhotos() {
       {rooms.rooms.length > 0 && (
         <View style={styles.fabContainer}>
           <TouchableOpacity
-            onPress={() => router.push("../camera")}
-            // onPress={handleTakePhoto}
+            // onPress={() => router.push("../camera")}
+            onPress={handleTakePhoto}
             style={[styles.fab, isUploading && styles.fabDisabled]}
             disabled={isUploading}
           >

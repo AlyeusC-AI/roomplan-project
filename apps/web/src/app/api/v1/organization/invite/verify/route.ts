@@ -49,7 +49,10 @@ export async function GET(req: NextRequest) {
       .single();
     console.log("🚀 ~ GET ~ org:", org);
     let priceId = "";
-    if (org?.subscriptionPlan === "startup") {
+    if (
+      org?.subscriptionPlan === "startup" ||
+      org?.subscriptionPlan === "team"
+    ) {
       priceId = process.env.ADDITIONAL_USER_PRICE_ID!;
     } else if (org?.subscriptionPlan === "enterprise") {
       priceId = process.env.ADDITIONAL_USER_PRICE_ID_ENTERPRISE!;
@@ -66,33 +69,47 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // const subscriptionItems = await stripe.subscriptionItems.list({
-    //   subscription: org?.subscriptionId!,
-    // });
-    // const additionalUsersCount = subscriptionItems.data.filter(
-    //   (item) => item.price.id === priceId
-    // ).length;
-
-    // const finalMaxUsers =
-    //   (org?.maxUsersForSubscription || 0) + additionalUsersCount;
-
     if ((currentTeamMembers?.length || 0) >= org?.maxUsersForSubscription!) {
-      await stripe.subscriptions.update(org?.subscriptionId!, {
-        items: [
-          {
-            price: priceId,
-            quantity:
-              org?.maxUsersForSubscription! -
-              (currentTeamMembers?.length || 0) +
-              1,
-          },
-        ],
+      console.log("🚀 ~ GET ~ priceId:", priceId);
+
+      // First, get existing subscription items
+      const subscriptionItems = await stripe.subscriptionItems.list({
+        subscription: org?.subscriptionId!,
       });
 
-      //   return NextResponse.json(
-      //     { valid: false, message: "Organization is full" },
-      //     { status: 400 }
-      //   );
+      // Find the existing subscription item with our price
+      const existingItem = subscriptionItems.data.find(
+        (item) => item.price.id === priceId
+      );
+
+      if (existingItem) {
+        // Update the existing subscription item
+        await stripe.subscriptions.update(org?.subscriptionId!, {
+          items: [
+            {
+              id: existingItem.id,
+              quantity:
+                (existingItem.quantity || 0) +
+                (org?.maxUsersForSubscription! -
+                  (currentTeamMembers?.length || 0) +
+                  1),
+            },
+          ],
+        });
+      } else {
+        // Create new subscription item if it doesn't exist
+        await stripe.subscriptions.update(org?.subscriptionId!, {
+          items: [
+            {
+              price: priceId,
+              quantity:
+                org?.maxUsersForSubscription! -
+                (currentTeamMembers?.length || 0) +
+                1,
+            },
+          ],
+        });
+      }
     }
 
     const userOrg = await supabaseServiceRole

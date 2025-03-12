@@ -77,7 +77,7 @@ export default function Layout() {
               <View className="px-4 py-3 flex-row items-center justify-between">
                 <View className="flex-row items-center">
                   <TouchableOpacity
-                    onPress={() => router.dismiss()}
+                    onPress={() => router.back()}
                     className="mr-4 p-2 bg-white/10 rounded-full"
                   >
                     <ArrowLeft color="white" size={20} />
@@ -131,6 +131,7 @@ export default function Layout() {
         name="readings"
         options={{
           title: "Readings",
+          freezeOnBlur: true,
         }}
       />
       <Tabs.Screen
