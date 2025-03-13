@@ -1,11 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js";
-import { Twilio } from "npm:twilio@3.84.1";
-
-const twilioClient = new Twilio(
-  Deno.env.get("TWILIO_ACCOUNT_SID")!,
-  Deno.env.get("TWILIO_AUTH_TOKEN")!
-);
 
 Deno.serve(async (req: Request) => {
   if (req.method === "POST") {
@@ -28,7 +22,7 @@ Deno.serve(async (req: Request) => {
           title,
           description,
           Organization(phoneNumber, name),
-          Project(adjusterEmail, adjusterPhone, clientEmail, clientPhone, clientName, adjusterName, name)
+          Project(adjusterEmail, adjusterPhoneNumber, clientEmail, clientPhoneNumber, clientName, adjusterName, name)
         )
       `
       )
@@ -60,7 +54,7 @@ Deno.serve(async (req: Request) => {
         recipientName = project.clientName;
       } else if (reminder.reminderTarget === "projectCreator" && project) {
         recipientEmail = project.adjusterEmail;
-        recipientPhone = project.adjusterPhone;
+        recipientPhone = project.adjusterPhoneNumber;
         recipientName = project.adjusterName;
       }
 
@@ -73,13 +67,33 @@ Deno.serve(async (req: Request) => {
             project?.name || ""
           }\n\nBest regards,\n${organization?.name || "RestoreGeek Team"}`;
 
-          await twilioClient.messages.create({
-            body: message,
-            from: Deno.env.get("TWILIO_PHONE_NUMBER")!,
-            to: recipientPhone,
+          const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID")!;
+          const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN")!;
+          const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER")!;
+
+          const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
+
+          const formData = new URLSearchParams();
+          formData.append("To", recipientPhone);
+          formData.append("From", TWILIO_PHONE_NUMBER);
+          formData.append("Body", message);
+
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: formData.toString(),
           });
-          updates.textSentAt = currentDateTime;
-          console.log(`SMS sent to ${recipientName} at ${recipientPhone}`);
+
+          if (response.ok) {
+            updates.textSentAt = currentDateTime;
+            console.log(`SMS sent to ${recipientName} at ${recipientPhone}`);
+          } else {
+            const errorData = await response.json();
+            console.error("Failed to send SMS:", errorData);
+          }
         } catch (error) {
           console.error("Failed to send SMS:", error);
         }
