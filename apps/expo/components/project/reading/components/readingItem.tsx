@@ -53,6 +53,8 @@ const RoomReadingItem = ({
   wallName,
   floorName,
   updateRoomReading,
+  pickImage,
+  openImageViewer,
 }: {
   room: any;
   reading: any;
@@ -72,30 +74,14 @@ const RoomReadingItem = ({
   wallName: any;
   floorName: any;
   updateRoomReading: any;
+  pickImage: any;
+  openImageViewer: any;
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
   // Extended walls state
   const [extendedWalls, setExtendedWalls] = useState<ExtendedWallItem[]>([]);
-
-  const { pickImage, openImageViewer } = useImageHandling(reading, async () => {
-    // Function to refresh rooms data
-    await fetch(
-      `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "auth-token": supabaseSession?.access_token || "",
-        },
-      }
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        rooms.setRooms(data.rooms);
-      });
-  });
 
   const [computedGPP, setComputedGPP] = useState<string | null>(null);
 
@@ -371,15 +357,12 @@ const RoomReadingItem = ({
                   {reading.RoomReadingImage.filter(
                     (img: any) => img.type === "wall"
                   ).map((img: any, index: number) => (
-                    <Pressable
-                      key={img.imageKey}
+                    <OptimizedImage
                       onPress={() => openImageViewer(index, "wall")}
-                    >
-                      <OptimizedImage
-                        uri={roomImages[img.imageKey]}
-                        style={{ width: 80, height: 80, borderRadius: 6 }}
-                      />
-                    </Pressable>
+                      uri={roomImages[img.imageKey]}
+                      style={{ width: 80, height: 80, borderRadius: 6 }}
+                      key={img.imageKey}
+                    />
                   ))}
                 </View>
               )}
@@ -451,15 +434,12 @@ const RoomReadingItem = ({
                   {reading.RoomReadingImage.filter(
                     (img: any) => img.type === "floor"
                   ).map((img: any, index: number) => (
-                    <Pressable
+                    <OptimizedImage
+                      uri={roomImages[img.imageKey]}
+                      style={{ width: 80, height: 80, borderRadius: 6 }}
                       key={img.imageKey}
                       onPress={() => openImageViewer(index, "floor")}
-                    >
-                      <OptimizedImage
-                        uri={roomImages[img.imageKey]}
-                        style={{ width: 80, height: 80, borderRadius: 6 }}
-                      />
-                    </Pressable>
+                    />
                   ))}
                 </View>
               )}

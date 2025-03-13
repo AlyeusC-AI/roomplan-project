@@ -34,6 +34,7 @@ import {
 } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as ImageManipulator from "expo-image-manipulator";
 
 export const supabaseServiceRole = createClient(
   getConstants().supabaseUrl,
@@ -66,19 +67,20 @@ export default function CameraScreen() {
   const [showZoomSlider, setShowZoomSlider] = useState(false);
 
   const [selectedRoomId, setRoomId] = useState("");
+  const [uploadQueue, setUploadQueue] = useState<PhotoFile[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const onRoomSelect = (r: string) => {
     setRoomId(r);
   };
 
-  const processImage = async (photo: PhotoFile) => {
+  // Process image uploads in the background
+  const processImageUpload = async (photo: PhotoFile) => {
     try {
-      setIsProcessing(true);
+      setIsUploading(true);
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
-      console.log("Setting last photo", photo.path);
-      setLastPhoto(photo.path);
       console.log("Uploading photo");
       const fileName = photo.path.substring(photo.path.lastIndexOf("/") + 1);
       const supabasePath = `${user!.id}/${uuid.v4()}_${fileName}`;
@@ -88,45 +90,118 @@ export default function CameraScreen() {
         contentType = "image/png";
       }
 
-      const p = {
-        uri: photo.path,
-        type: contentType,
-        name: fileName,
-      };
-      const formData = new FormData();
-      // @ts-expect-error maaaaan react-native sucks
-      formData.append("file", p);
-
-      const { data, error } = await supabaseServiceRole.storage
-        .from("media")
-        .upload(supabasePath, formData, {
-          cacheControl: "3600",
-          contentType,
-          upsert: false,
-        });
-
-      console.log("Uploaded photo", data, error);
-      if (data) {
-        await fetch(
-          `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/image`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "auth-token": `${supabaseSession?.access_token}`,
-            },
-            body: JSON.stringify({
-              roomId: selectedRoomId,
-              imageId: data.path,
-            }),
-          }
+      // Resize the image to reduce file size
+      try {
+        // Resize and compress the image
+        const manipResult = await ImageManipulator.manipulateAsync(
+          photo.path,
+          [{ resize: { width: 1200 } }], // Resize to max width of 1200px
+          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG } // 70% quality JPEG
         );
+
+        // Use the resized image for upload
+        const p = {
+          uri: manipResult.uri,
+          type: "image/jpeg",
+          name: fileName,
+        };
+
+        const formData = new FormData();
+        // @ts-expect-error maaaaan react-native sucks
+        formData.append("file", p);
+
+        const { data, error } = await supabaseServiceRole.storage
+          .from("media")
+          .upload(supabasePath, formData, {
+            cacheControl: "3600",
+            contentType: "image/jpeg",
+            upsert: false,
+          });
+
+        console.log("Uploaded photo", data, error);
+        if (data) {
+          await fetch(
+            `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/image`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "auth-token": `${supabaseSession?.access_token}`,
+              },
+              body: JSON.stringify({
+                roomId: selectedRoomId,
+                imageId: data.path,
+              }),
+            }
+          );
+        }
+      } catch (resizeError) {
+        console.error("Error resizing image:", resizeError);
+
+        // Fallback to original image if resize fails
+        const p = {
+          uri: photo.path,
+          type: contentType,
+          name: fileName,
+        };
+
+        const formData = new FormData();
+        // @ts-expect-error maaaaan react-native sucks
+        formData.append("file", p);
+
+        const { data, error } = await supabaseServiceRole.storage
+          .from("media")
+          .upload(supabasePath, formData, {
+            cacheControl: "3600",
+            contentType,
+            upsert: false,
+          });
+
+        console.log("Uploaded original photo", data, error);
+        if (data) {
+          await fetch(
+            `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/image`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "auth-token": `${supabaseSession?.access_token}`,
+              },
+              body: JSON.stringify({
+                roomId: selectedRoomId,
+                imageId: data.path,
+              }),
+            }
+          );
+        }
       }
     } catch (error) {
-      console.error(error);
+      console.error("Upload error:", error);
     } finally {
-      setIsProcessing(false);
+      setIsUploading(false);
+      // Process next photo in queue if any
+      setUploadQueue((prevQueue) => {
+        const newQueue = [...prevQueue];
+        newQueue.shift(); // Remove the processed photo
+        return newQueue;
+      });
     }
+  };
+
+  // Handle the upload queue
+  useEffect(() => {
+    if (uploadQueue.length > 0 && !isUploading) {
+      processImageUpload(uploadQueue[0]);
+    }
+  }, [uploadQueue, isUploading]);
+
+  // Simplified function to just capture the photo and update UI immediately
+  const processImage = (photo: PhotoFile) => {
+    console.log("Setting last photo", photo.path);
+    setLastPhoto(photo.path);
+
+    // Add to upload queue to process in background
+    setUploadQueue((prevQueue) => [...prevQueue, photo]);
   };
 
   const SCALE_FULL_ZOOM = 3;
@@ -237,8 +312,9 @@ export default function CameraScreen() {
 
   const takePhoto = async () => {
     if (!camera || !camera.current) return;
-    if (disabled || isProcessing) return;
+    if (disabled) return; // Remove isProcessing check to allow taking photos while uploading
     setDisabled(true);
+    setIsProcessing(true); // Show processing indicator briefly
     try {
       console.log("TAKING PICTURE");
       const photo = await camera.current.takePhoto({
@@ -250,6 +326,7 @@ export default function CameraScreen() {
       console.error("Caught error");
       console.error(error);
     }
+    setIsProcessing(false); // Hide processing indicator immediately after capture
     setDisabled(false);
   };
 
@@ -401,9 +478,9 @@ export default function CameraScreen() {
             {/* Enhanced iOS-style shutter button */}
             <Pressable
               onPress={() => takePhoto()}
-              disabled={disabled || isProcessing}
+              disabled={disabled}
               className={`w-[80px] h-[80px] rounded-full items-center justify-center ${
-                disabled || isProcessing ? "opacity-50" : ""
+                disabled ? "opacity-50" : ""
               }`}
             >
               <View className="w-[76px] h-[76px] rounded-full border-[3px] border-white bg-transparent flex items-center justify-center">

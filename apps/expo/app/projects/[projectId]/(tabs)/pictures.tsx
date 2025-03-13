@@ -118,9 +118,9 @@ export default function ProjectPhotos() {
       urlMap.setUrlMap(imagesData.urlMap);
 
       // Set the first room as expanded by default if none is selected
-      if (!expandedValue && roomsData.rooms.length > 0) {
-        setExpandedValue(roomsData.rooms[0].name);
-      }
+      // if (!expandedValue && roomsData.rooms.length > 0) {
+      //   setExpandedValue(roomsData.rooms[0].name);
+      // }
     } catch (error) {
       console.error("Error refreshing data:", error);
       toast.error("Failed to load project data");

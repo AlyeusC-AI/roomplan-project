@@ -93,6 +93,8 @@ const RoomReading: React.FC<RoomReadingProps> = ({
     handleNextImage,
     handleDeleteImage,
     closeImageViewer,
+    pickImage,
+    openImageViewer,
   } = useImageHandling(reading, async () => {
     // Function to refresh rooms data
     await fetch(
@@ -233,6 +235,8 @@ const RoomReading: React.FC<RoomReadingProps> = ({
             wallName={wallName}
             floorName={floorName}
             updateRoomReading={updateRoomReading}
+            pickImage={pickImage}
+            openImageViewer={openImageViewer}
           />
         )}
       </Collapsible>
