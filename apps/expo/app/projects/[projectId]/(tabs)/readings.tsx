@@ -59,15 +59,7 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
   };
 
   return (
-    <Box
-      bg="white"
-      p={4}
-      rounded="lg"
-      shadow="1"
-      mb={4}
-      borderWidth={1}
-      borderColor="gray.100"
-    >
+    <View className="mt-3">
       <HStack
         w="full"
         justifyContent="space-between"
@@ -118,7 +110,7 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
           ))
         )}
       </VStack>
-    </Box>
+    </View>
   );
 };
 

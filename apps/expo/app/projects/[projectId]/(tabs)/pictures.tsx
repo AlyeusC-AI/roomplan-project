@@ -365,7 +365,11 @@ export default function ProjectPhotos() {
     return {
       ...room,
       Inference: room.Inference.filter(
-        (i) => !i.isDeleted && !i.Image?.isDeleted && i.Image
+        (i) =>
+          !i.isDeleted &&
+          !i.Image?.isDeleted &&
+          i.Image &&
+          i.imageKey !== "undefined"
       ),
     };
   });
@@ -458,8 +462,8 @@ export default function ProjectPhotos() {
       {rooms.rooms.length > 0 && (
         <View style={styles.fabContainer}>
           <TouchableOpacity
-            // onPress={() => router.push("../camera")}
-            onPress={handleTakePhoto}
+            onPress={() => router.push("../camera")}
+            // onPress={handleTakePhoto}
             style={[styles.fab, isUploading && styles.fabDisabled]}
             disabled={isUploading}
           >

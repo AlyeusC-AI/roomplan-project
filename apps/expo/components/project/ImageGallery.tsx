@@ -105,7 +105,8 @@ export default function ImageGallery({
       !!inference.imageKey &&
       typeof inference.imageKey === "string" &&
       !inference.isDeleted &&
-      !inference.Image?.isDeleted
+      !inference.Image?.isDeleted &&
+      !!inference.imageKey
   );
 
   // Organize inferences into rows for grid display
@@ -302,12 +303,14 @@ export default function ImageGallery({
   // Render image in the modal
   const renderModalItem = ({
     item,
+    index,
   }: {
     item: Inference & { imageKey: string };
     index: number;
   }) => {
     // console.log("🚀 ~ item.Image?.ImageNote:", item.Image?.ImageNote);
     let imageUrl = safelyGetImageUrl(urlMap, item.imageKey, "");
+    console.log("🚀 ~ imageUrl:", index, imageUrl, item.imageKey, item);
     if (!imageUrl) {
       imageUrl = getStorageUrl(item.imageKey);
     }
@@ -322,6 +325,7 @@ export default function ImageGallery({
           resizeMode="contain"
           imageKey={item.imageKey}
           showInfo={true}
+          backgroundColor="#000000"
           // showDeleteButton={true}
           // onDelete={() => {
           //   console.log(
@@ -623,6 +627,7 @@ export default function ImageGallery({
                         size="small"
                         imageKey={inference.imageKey}
                         disabled={true}
+                        backgroundColor="#000000"
                       />
                     </TouchableOpacity>
                   );

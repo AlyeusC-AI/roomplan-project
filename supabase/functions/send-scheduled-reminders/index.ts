@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js";
-import Twilio from "https://cdn.skypack.dev/twilio";
+import { Twilio } from "npm:twilio@3.84.1";
 
 const twilioClient = new Twilio(
   Deno.env.get("TWILIO_ACCOUNT_SID")!,

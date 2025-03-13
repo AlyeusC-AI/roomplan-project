@@ -119,6 +119,7 @@ export function OptimizedImage({
   imageKey,
   onRefresh,
   disabled = false,
+  backgroundColor,
 }: {
   uri: string;
   style: any;
@@ -134,6 +135,7 @@ export function OptimizedImage({
   imageKey?: string;
   onRefresh?: () => Promise<void>;
   disabled?: boolean;
+  backgroundColor?: string;
 }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -147,7 +149,7 @@ export function OptimizedImage({
   useEffect(() => {
     if (!isValidUri) {
       setLoading(true);
-      // setError(true);
+      setError(true);
       handleRetry();
     } else {
       setError(false);
@@ -174,8 +176,9 @@ export function OptimizedImage({
     }
   }
 
-  // Generate placeholder color based on the image key
-  const placeholderColor = generatePlaceholderColor(actualImageKey);
+  // Generate placeholder color based on the image key or use provided backgroundColor
+  const placeholderColor =
+    backgroundColor || generatePlaceholderColor(actualImageKey);
 
   // Optimize the URL based on the requested size
   const optimizedUri =
@@ -255,8 +258,7 @@ export function OptimizedImage({
         </Animated.View>
       )}
 
-      {loading && (
-        //  && !error
+      {loading && !error && (
         <View style={[styles.loadingContainer, style]}>
           <ActivityIndicator size="large" color="#1e40af" />
         </View>

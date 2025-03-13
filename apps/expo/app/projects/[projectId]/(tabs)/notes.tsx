@@ -824,10 +824,10 @@ function NoteCard({
         </View>
 
         {/* Action buttons moved to the top */}
-        <View style={{ flexDirection: "row", gap: 2 }}>
+        <View style={{ flexDirection: "row", gap: 0 }}>
           <Button
             variant="ghost"
-            className="p-2"
+            className="p-1"
             disabled={isUpdating || imageUploading}
             onPress={() => handleStart(note.publicId)}
           >
@@ -841,7 +841,7 @@ function NoteCard({
           {/* Combined image button for camera and gallery */}
           <Button
             variant="ghost"
-            className="p-2"
+            className="p-1"
             disabled={isUpdating || imageUploading}
             onPress={handleImageOptions}
           >
@@ -852,11 +852,28 @@ function NoteCard({
             )}
           </Button>
 
+          {/* Delete button with confirmation */}
           <Button
             variant="ghost"
-            className="p-2"
+            className="p-1"
             disabled={isDeleting}
-            onPress={() => deleteNote(note.publicId, room.publicId)}
+            onPress={() => {
+              Alert.alert(
+                "Delete Note",
+                "Are you sure you want to delete this note? This action cannot be undone.",
+                [
+                  {
+                    text: "Cancel",
+                    style: "cancel",
+                  },
+                  {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: () => deleteNote(note.publicId, room.publicId),
+                  },
+                ]
+              );
+            }}
           >
             {isDeleting ? (
               <ActivityIndicator />
