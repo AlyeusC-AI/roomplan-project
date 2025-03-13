@@ -1,1 +1,1 @@
-../../../../../../../node_modules/expo-file-system/ios/ExpoFileSystem.h
+../../../../../../../node_modules/.pnpm/expo-file-system@18.0.8_expo@52.0.28_@babel+core@7.26.0_@babel+preset-env@7.26.0_@babel+core@_sgaltcqistwinscyx5qy4shdpy/node_modules/expo-file-system/ios/ExpoFileSystem.h
