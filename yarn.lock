@@ -16430,10 +16430,10 @@ react-native-text-size@4.0.0-rc.1:
   resolved "https://registry.yarnpkg.com/react-native-text-size/-/react-native-text-size-4.0.0-rc.1.tgz#1e048d345dd6a5a8e1269e0585c1a5948c478da5"
   integrity sha512-CysqjU2jK6Yc+a+kEI222pUyTY2ywcU2HqbFqf1KHymW6OPTdvBBHqbEJKL0QiLhQaFYDbqicM+h990s9TP00g==
 
-react-native-ui-datepicker@^3.0.5:
-  version "3.0.5"
-  resolved "https://registry.yarnpkg.com/react-native-ui-datepicker/-/react-native-ui-datepicker-3.0.5.tgz#6993e5f8e371ad81bc5f121a40187e6677c44270"
-  integrity sha512-8nLz74M8xvML64B7KGIrHxUEYrsYL1ChvJ4PUWZKbk41uogpJbX8BTWLjXiRwXkDlW+NaKVnmNVmtbpeLvzs0w==
+react-native-ui-datepicker@^3.0.7:
+  version "3.0.7"
+  resolved "https://registry.yarnpkg.com/react-native-ui-datepicker/-/react-native-ui-datepicker-3.0.7.tgz#ea3efce22bdaf11c29eb65b463fccecdc488a51a"
+  integrity sha512-+p5xGLaKTQU8LQRjNxXR8rA9Fd2L+k+bHk+/Gz/JrnTY9K0hpkN1giWO3GbhGeNs8xPHaSPfm88SK/fAmfcxcw==
   dependencies:
     clsx "^2.1.1"
     dayjs "^1.11.13"

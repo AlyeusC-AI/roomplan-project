@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js";
-import { Twilio } from "npm:twilio@3.70.0";
+import Twilio from "https://cdn.skypack.dev/twilio";
 
 const twilioClient = new Twilio(
   Deno.env.get("TWILIO_ACCOUNT_SID")!,
@@ -24,7 +24,7 @@ Deno.serve(async (req: Request) => {
       .select(
         `
         *,
-        calendarEvent (
+        CalendarEvent (
           title,
           description,
           Organization(phoneNumber, name),
