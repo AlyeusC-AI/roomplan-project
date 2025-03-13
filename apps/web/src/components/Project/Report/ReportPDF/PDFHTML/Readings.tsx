@@ -52,12 +52,13 @@ export const ImageGallery = ({
 };
 
 const Readings = ({
-  roomName,
+  room,
   roomReadings,
 }: {
-  roomName: string;
+  room: any;
   roomReadings: ReadingsWithGenericReadings[];
 }) => {
+  const roomName = room.name;
   if (roomReadings.length === 0) return null;
   return (
     <div className='pdf new-page'>
@@ -116,14 +117,14 @@ const Readings = ({
                 </tr>
                 <tr>
                   <PDFTableTd>
-                    {typedReading.wallName || "Wall Moisture Content"}
+                    {room.wallName || "Wall Moisture Content"}
                   </PDFTableTd>
                   <PDFTableTd>{reading.moistureContentWall || "--"}</PDFTableTd>
                   <PDFTableTd>%</PDFTableTd>
                 </tr>
                 <tr>
                   <PDFTableTd>
-                    {typedReading.floorName || "Floor Moisture Content"}
+                    {room.floorName || "Floor Moisture Content"}
                   </PDFTableTd>
                   <PDFTableTd>
                     {reading.moistureContentFloor || "--"}
@@ -137,7 +138,7 @@ const Readings = ({
             {wallImages.length > 0 && (
               <div className='mt-3'>
                 <h3 className='text-md font-semibold'>
-                  {typedReading.wallName || "Wall"} Images
+                  {room.wallName || "Wall"} Images
                 </h3>
                 <ImageGallery images={wallImages} />
               </div>
@@ -147,7 +148,7 @@ const Readings = ({
             {floorImages.length > 0 && (
               <div className='mt-3'>
                 <h3 className='text-md font-semibold'>
-                  {typedReading.floorName || "Floor"} Images
+                  {room.floorName || "Floor"} Images
                 </h3>
                 <ImageGallery images={floorImages} />
               </div>

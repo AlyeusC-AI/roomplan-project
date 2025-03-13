@@ -22,26 +22,82 @@ export function AcceptInviteForm() {
   const supabase = createClient();
   useEffect(() => {
     supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("🚀 ~ supabase.auth.onAuthStateChange ~ event:", event);
-      if (
-        // event == "PASSWORD_RECOVERY" &&
+      console.log(
+        "🚀 ~ supabase.auth.onAuthStateChange ~ event:",
+        event,
         session
-      ) {
+      );
+      if (event == "INITIAL_SESSION" && session) {
         console.log("SETTING SESSION");
-        await supabase.auth.setSession({
-          access_token: session.access_token,
-          refresh_token: session.refresh_token,
-        });
+        try {
+          supabase.auth
+            .setSession({
+              access_token: session.access_token,
+              refresh_token: session.refresh_token,
+            })
+            .then((res) => {
+              console.log("🚀 ~ supabase.auth.onAuthStateChange ~ res:", res);
+            })
+            .catch((err) => {
+              console.log("🚀 ~ supabase.auth.onAuthStateChange ~ err:", err);
+            });
+        } catch (error) {
+          console.log("🚀 ~ supabase.auth.onAuthStateChange ~ error:", error);
+        }
+        console.log("SETTING SESSION2");
       }
     });
   }, []);
   useEffect(() => {
     // Verify the invite token and get organization details
     async function verifyInvite() {
+      let user = null;
       try {
+        try {
+          const {
+            data: { session },
+            error,
+          } = await supabase.auth.verifyOtp({
+            token_hash: searchParams.get("inviteCode")!,
+            type: "invite",
+          });
+
+          console.log("🚀 ~ verifyInvite ~ session:", session);
+          console.log("🚀 ~ verifyInvite ~ error:", error);
+          user = session?.user;
+
+          if (session?.access_token && session?.refresh_token) {
+            await supabase.auth.setSession({
+              access_token: session.access_token,
+              refresh_token: session.refresh_token,
+            });
+          }
+        } catch (error) {
+          console.error(error);
+        }
+        console.log("🚀 ~ verifyInvite ~ user:", user);
+
+        if (!user) {
+          // toast.error("Invalid invitation link");
+          // router.push("/login");
+          // setLoading(false);
+          // return;
+        }
+        console.log("🚀 ~ verifyInvite ~ user:", user);
+        supabase.auth
+          .getUser()
+          .then((res) => {
+            console.log("🚀 ~ verifyInvite ~ res:", res);
+          })
+          .catch((err) => {
+            console.log("🚀 ~ verifyInvite ~ err:", err);
+          });
+
+        const asas = await supabase.auth.getUser();
+        console.log("🚀 ~ verifyInvite ~ asas:", asas);
         const token =
-          (await supabase.auth.getUser()).data.user?.user_metadata.inviteId ||
-          searchParams.get("token");
+          user?.user_metadata?.inviteId ||
+          (await supabase.auth.getUser()).data.user?.user_metadata?.inviteId;
         console.log("🚀 ~ verifyInvite ~ token:", token);
         // try {
         //   await supabase.auth.verifyOtp({
@@ -57,6 +113,7 @@ export function AcceptInviteForm() {
         if (!token) {
           toast.error("Invalid invitation link");
           router.push("/login");
+          setLoading(false);
           return;
         }
 
@@ -77,15 +134,19 @@ export function AcceptInviteForm() {
         if (!data.valid) {
           toast.error(data.message || "Invalid or expired invitation");
           // router.push("/login");
+          setLoading(false);
           return;
         }
 
         setInviteData(data);
         setLoading(false);
       } catch (error) {
-        console.error(error);
+        console.log("🚀 ~ verifyInvite ~ error:", error);
         toast.error("Failed to verify invitation");
         router.push("/login");
+        setLoading(false);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -95,7 +156,16 @@ export function AcceptInviteForm() {
   const handleAcceptInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      setLoading(true);
+      // setLoading(true);
+      try {
+        const response = await fetch(
+          `/api/v1/organization/invite/verify?token=${token}`
+        );
+        const data = await response.json();
+        console.log("🚀 ~ handleAcceptInvite ~ data:", data);
+      } catch (error) {
+        console.log("🚀 ~ handleAcceptInvite ~ error:", error);
+      }
 
       if (!firstName || !lastName || !password || !phone) {
         toast.error("Please fill in all required fields");
@@ -150,13 +220,13 @@ export function AcceptInviteForm() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className='flex h-full items-center justify-center'>
-        <LoadingSpinner className='w-full' />
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className='flex h-full items-center justify-center'>
+  //       <LoadingSpinner className='w-full' />
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className='flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8'>
@@ -237,7 +307,11 @@ export function AcceptInviteForm() {
                 />
               </div>
 
-              <Button type='submit' className='w-full'>
+              <Button
+                type='submit'
+                onClick={handleAcceptInvite}
+                className='w-full'
+              >
                 Accept Invitation
               </Button>
 

@@ -14,23 +14,24 @@ export default async function Component({
   const search = await searchParams;
   const inviteCode = search.inviteCode;
   if (inviteCode) {
-    const { data, error } = await client.auth.verifyOtp({
-      token_hash: inviteCode,
-      type: "invite",
-    });
-    if (data.session?.access_token && data.session?.refresh_token) {
-      await client.auth.setSession({
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-      });
-    }
-    console.log("🚀 ~ Component ~ data:", JSON.stringify(data, null, 2));
-    console.log("🚀 ~ Component ~ error:", JSON.stringify(error, null, 2));
-    if (data.user?.user_metadata.inviteId) {
-      return redirect(
-        "/acceptInvite?token=" + data.user?.user_metadata.inviteId
-      );
-    }
+    // const { data, error } = await client.auth.verifyOtp({
+    //   token_hash: inviteCode,
+    //   type: "invite",
+    // });
+    // if (data.session?.access_token && data.session?.refresh_token) {
+    //   await client.auth.setSession({
+    //     access_token: data.session.access_token,
+    //     refresh_token: data.session.refresh_token,
+    //   });
+    // }
+    // console.log("🚀 ~ Component ~ data:", JSON.stringify(data, null, 2));
+    // console.log("🚀 ~ Component ~ error:", JSON.stringify(error, null, 2));
+    return redirect("/acceptInvite?inviteCode=" + inviteCode);
+    // if (data.user?.user_metadata.inviteId) {
+    //   return redirect(
+    //     "/acceptInvite?token=" + data.user?.user_metadata.inviteId
+    //   );
+    // }
   }
 
   console.log("🚀 ~ Component ~ search:", search);

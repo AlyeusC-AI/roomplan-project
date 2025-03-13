@@ -1,11 +1,4 @@
-import {
-  FlatList,
-  Box,
-  Heading,
-  VStack,
-  HStack,
-  Center,
-} from "native-base";
+import { FlatList, Box, Heading, VStack, HStack, Center } from "native-base";
 import React, { useEffect, useState } from "react";
 import RoomReading from "@/components/project/reading";
 import { userStore } from "@/lib/state/user";
@@ -18,10 +11,9 @@ import { ActivityIndicator, View } from "react-native";
 import { roomsStore } from "@/lib/state/rooms";
 import { Database } from "@/types/database";
 import { v4 } from "react-native-uuid/dist/v4";
-
-declare global {
-  type ReadingType = "generic" | "standard";
-}
+import AddRoomButton from "@/components/project/AddRoomButton";
+import { Text } from "@/components/ui/text";
+import { ReadingType } from "@/types/app";
 
 const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
   const [isAdding, setIsAdding] = useState(false);
@@ -29,12 +21,8 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
   const { projectId } = useGlobalSearchParams<{
     projectId: string;
   }>();
-  const addReading = async (
-    data:
-      | Database["public"]["Tables"]["RoomReading"]["Insert"]
-      | Database["public"]["Tables"]["GenericRoomReading"]["Insert"],
-    type: ReadingType
-  ) => {
+
+  const addReading = async (data: any, type: ReadingType) => {
     try {
       setIsAdding(true);
       const res = await fetch(
@@ -51,15 +39,12 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
           }),
         }
       );
-      console.log("🚀 ~ RoomReadingItem ~ res:", res)
 
       if (!res.ok) {
         throw new Error("Could not add reading");
       }
 
       const body = await res.json();
-
-      console.log(body);
 
       if (type === "standard") {
         roomsStore.getState().addReading(room.id, body.reading);
@@ -74,16 +59,15 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
   };
 
   return (
-    <>
+    <View className="mt-3">
       <HStack
         w="full"
         justifyContent="space-between"
-        alignItems="flex-start"
+        alignItems="center"
         direction="row"
         mb={4}
-        // px={4}
       >
-        <Heading>{room.name}</Heading>
+        <Heading size="md">{room.name}</Heading>
         <Button
           onPress={() => {
             addReading(
@@ -96,32 +80,37 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
             );
           }}
           size="sm"
+          variant="outline"
         >
           {isAdding ? (
             <ActivityIndicator />
           ) : (
-            <Plus color="#FFF" height={24} width={24} />
+            <View className="flex-row items-center">
+              <Plus color="#1e40af" height={18} width={18} />
+              <Text className="ml-1 text-primary">Add Reading</Text>
+            </View>
           )}
         </Button>
       </HStack>
-      <VStack w="100%" mb="3">
-        {room.RoomReading?.length === 0 && (
-          <Center w="full">
-            <Heading size="sm" mb="2" color="gray.400">
-              There are no readings yet
+      <VStack w="100%" space={2}>
+        {room.RoomReading?.length === 0 ? (
+          <Center w="full" py={4}>
+            <Heading size="sm" color="gray.400">
+              No readings yet
             </Heading>
           </Center>
+        ) : (
+          room.RoomReading?.map((reading) => (
+            <RoomReading
+              room={room}
+              key={reading.publicId}
+              reading={reading}
+              addReading={addReading}
+            />
+          ))
         )}
-        {room.RoomReading?.map((reading) => (
-          <RoomReading
-            room={room}
-            key={reading.publicId}
-            reading={reading}
-            addReading={addReading}
-          />
-        ))}
       </VStack>
-    </>
+    </View>
   );
 };
 
@@ -133,7 +122,6 @@ export default function RoomReadings() {
   }>();
   const [loading, setLoading] = useState(true);
   const rooms = roomsStore();
-
   const router = useRouter();
 
   const onCreateRoom = async () => {
@@ -175,9 +163,7 @@ export default function RoomReadings() {
         buttonText="Create a room"
         onPress={onCreateRoom}
         icon={<Building size={64} />}
-        secondaryIcon={
-          <Plus color="#FFF" height={24} width={24} />
-        }
+        secondaryIcon={<Plus color="#FFF" height={24} width={24} />}
       />
     );
   }
@@ -191,16 +177,21 @@ export default function RoomReadings() {
   }
 
   return (
-    <Box
-      flex={1}
-      alignItems="flex-start"
-      h="full"
-      pt={4}
-      px={4}
-      mt={4}
-      backgroundColor="white"
-    >
-      {/* <FlatList
+    <Box flex={1} bg="gray.50">
+      <Box
+        px={4}
+        py={3}
+        bg="white"
+        borderBottomWidth={1}
+        borderBottomColor="gray.100"
+      >
+        <HStack justifyContent="space-between" alignItems="center">
+          <Heading size="lg">Room Readings</Heading>
+          <AddRoomButton showText={false} size="sm" />
+        </HStack>
+      </Box>
+
+      <FlatList
         refreshing={loading}
         onRefresh={getReadings}
         data={rooms.rooms}
@@ -208,9 +199,11 @@ export default function RoomReadings() {
         renderItem={({ item: room }) => (
           <RoomReadingItem room={room} key={room.publicId} />
         )}
+        contentContainerStyle={{ padding: 16 }}
+        showsVerticalScrollIndicator={false}
         w="full"
         h="full"
-      /> */}
+      />
     </Box>
   );
 }

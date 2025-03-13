@@ -46,10 +46,7 @@ const PDFHTML = () => {
                   roomName={room.name}
                   areasAffected={room.AreaAffected}
                 />
-                <Readings
-                  roomName={room.name}
-                  roomReadings={room.RoomReading}
-                />
+                <Readings room={room} roomReadings={room.RoomReading} />
                 <Notes roomName={room.name} notes={room.Notes} />
               </div>
             ))}

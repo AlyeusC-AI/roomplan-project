@@ -102,20 +102,45 @@ export async function GET(
       .select("id")
       .eq("publicId", id);
 
-    const rooms: { data: RoomWithReadings[] | null; error: unknown } =
-      await supabaseServiceRole
-        .from("Room")
-        .select(
-          "*, Inference (*, Image (*)), Notes (*, NotesAuditTrail (*), NoteImage (*)), AreaAffected (*), RoomReading (*, RoomReadingImage (*), GenericRoomReading (* , GenericRoomReadingImage (*)))"
+    const rooms = await supabaseServiceRole
+      .from("Room")
+      .select(
+        `
+        *,
+        Inference (
+          *,
+          Image (
+            *,
+            ImageNote (
+              *,
+              User (*)
+            )
+          )
+        ),
+        Notes (
+          *,
+          NotesAuditTrail (*),
+          NoteImage (*)
+        ),
+        AreaAffected (*),
+        RoomReading (
+          *,
+          RoomReadingImage (*),
+          GenericRoomReading (
+            *,
+            GenericRoomReadingImage (*)
+          )
         )
-        .eq("isDeleted", false)
-        .eq("RoomReading.isDeleted", false)
-        .eq("RoomReading.GenericRoomReading.isDeleted", false)
-        .eq("Notes.isDeleted", false)
-        .eq("Inference.Image.isDeleted", false)
-        .eq("Inference.isDeleted", false)
-        .eq("AreaAffected.isDeleted", false)
-        .eq("projectId", project.data![0].id);
+      `
+      )
+      .eq("isDeleted", false)
+      .eq("RoomReading.isDeleted", false)
+      .eq("RoomReading.GenericRoomReading.isDeleted", false)
+      .eq("Notes.isDeleted", false)
+      .eq("Inference.Image.isDeleted", false)
+      .eq("Inference.isDeleted", false)
+      .eq("AreaAffected.isDeleted", false)
+      .eq("projectId", project.data![0].id);
 
     if (rooms.error || !rooms.data) {
       console.error(rooms.error);
