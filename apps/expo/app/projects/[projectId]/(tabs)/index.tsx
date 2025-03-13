@@ -361,7 +361,7 @@ export default function ProjectOverview() {
       <ScrollView className="flex-1">
         <View className="px-4">
           {/* Action buttons with text below icons for better responsiveness */}
-          <View className="flex-row justify-between mb-4">
+          <View className="flex-row justify-between mb-4 py-5">
             <Animated.View
               style={{
                 flex: 1,

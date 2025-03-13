@@ -412,6 +412,7 @@ export default function ImageGallery({
 
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : "height"}
+              keyboardVerticalOffset={Platform.OS === "ios" ? 200 : 20}
               style={styles.addNoteContainer}
             >
               <TextInput
@@ -791,15 +792,15 @@ const styles = StyleSheet.create({
   },
   notesSheet: {
     position: "absolute",
-    bottom: 117, // Position above the controller
+    bottom: 70, // Position above the controller
     left: 0,
     right: 0,
     backgroundColor: "#1a1a1a",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 20,
-    paddingBottom: 20,
-    maxHeight: SCREEN_HEIGHT * 0.5,
+    paddingBottom: Platform.OS === "ios" ? 30 : 20,
+    height: SCREEN_HEIGHT * 0.6,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -881,6 +882,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     gap: 10,
+    marginBottom: Platform.OS === "ios" ? 20 : 0,
   },
   noteInput: {
     flex: 1,

@@ -1,1 +1,1 @@
-../../../../../node_modules/.pnpm/expo-application@6.0.2_expo@52.0.38_@babel+core@7.26.10_@babel+preset-env@7.26.9_@babel_f95fdadfa5b1ee82086f735f9cfe80d6/node_modules/expo-application/ios/EXApplication/EXProvisioningProfile.h
+../../../../../../../node_modules/expo-application/ios/EXApplication/EXProvisioningProfile.h

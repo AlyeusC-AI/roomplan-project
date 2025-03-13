@@ -153,6 +153,8 @@ const DateInput: React.FC<{
               use12Hours={true}
               mode="single"
               timePicker
+              minDate={dayjs().toDate()}
+              maxDate={dayjs().endOf("year").toDate()}
               components={{
                 IconNext: <ChevronRight color="#1d4ed8" size={28} />,
                 IconPrev: <ChevronLeft color="#1d4ed8" size={28} />,
@@ -395,9 +397,9 @@ export default function NewEvent() {
               updateFormData("start", date);
               const endDate = dayjs(formData.end);
               const startDate = dayjs(date);
-              if (endDate.isBefore(startDate)) {
-                updateFormData("end", startDate.add(1, "hour").toDate());
-              }
+              // if (endDate.isBefore(startDate)) {
+              updateFormData("end", startDate.add(1, "hour").toDate());
+              // }
             }}
           />
 
@@ -408,7 +410,7 @@ export default function NewEvent() {
           />
 
           <Box>
-            <FormControl.Label>Project</FormControl.Label>
+            <FormControl.Label>Project (optional)</FormControl.Label>
             <ProjectSelector
               projectId={formData.projectId}
               projects={projects}
