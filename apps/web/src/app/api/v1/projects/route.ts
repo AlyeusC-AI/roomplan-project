@@ -46,6 +46,7 @@ export async function GET(req: NextRequest) {
         .select("*", { count: "exact" })
         .limit(limit)
         .range(offset * limit, (offset + 1) * limit)
+        .order("createdAt", { ascending: false })
         .eq("organizationId", organization.data.id);
     } else {
       projectsRaw = await supabaseServiceRole
