@@ -412,7 +412,7 @@ export default function ImageGallery({
 
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : "height"}
-              keyboardVerticalOffset={Platform.OS === "ios" ? 200 : 20}
+              keyboardVerticalOffset={Platform.OS === "ios" ? 240 : 20}
               style={styles.addNoteContainer}
             >
               <TextInput

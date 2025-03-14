@@ -874,8 +874,6 @@ const styles = StyleSheet.create({
   },
   projectNameLink: {
     color: "#0f172a",
-    textDecorationLine: "underline",
-    textDecorationColor: "#3b82f6",
   },
   projectLinkIndicator: {
     flexDirection: "row",

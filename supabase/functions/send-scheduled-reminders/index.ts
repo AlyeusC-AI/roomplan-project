@@ -19,8 +19,8 @@ Deno.serve(async (req: Request) => {
         `
         *,
         CalendarEvent (
-          title,
-          description,
+          subject,
+          payload,
           Organization(phoneNumber, name),
           Project(adjusterEmail, adjusterPhoneNumber, clientEmail, clientPhoneNumber, clientName, adjusterName, name)
         )
