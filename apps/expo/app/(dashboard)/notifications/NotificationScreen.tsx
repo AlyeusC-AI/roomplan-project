@@ -198,7 +198,9 @@ export default function NotificationScreen({
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
-            Authorization: `Basic ${btoa(`${twilioAccountSid}:${twilioAuthToken}`)}`,
+            Authorization: `Basic ${btoa(
+              `${twilioAccountSid}:${twilioAuthToken}`
+            )}`,
           },
           body: new URLSearchParams({
             To: formattedPhoneNumber,
@@ -222,7 +224,7 @@ export default function NotificationScreen({
           ...additionalData,
         };
 
-        await saveNotificationRecord(notificationData);
+        // await saveNotificationRecord(notificationData);
 
         Alert.alert("Success", `${title} notification sent successfully`, [
           { text: "OK", onPress: () => router.back() },

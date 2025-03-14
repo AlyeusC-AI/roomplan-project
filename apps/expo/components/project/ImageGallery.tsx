@@ -43,6 +43,13 @@ interface Inference {
   isDeleted?: boolean;
   projectId?: number;
   notes?: ImageNote[];
+  Image?: {
+    id: number;
+    publicId: string;
+    isDeleted?: boolean;
+    ImageNote?: ImageNote[];
+    includeInReport?: boolean;
+  };
 }
 
 interface ImageNote {
@@ -50,6 +57,10 @@ interface ImageNote {
   body: string;
   createdAt: string;
   imageId: number;
+  User?: {
+    firstName?: string;
+    lastName?: string;
+  };
 }
 
 interface ImageGalleryProps {
@@ -64,6 +75,7 @@ interface ImageGalleryProps {
   initialSelectedKeys?: string[];
   onDelete?: (imageKey: string) => Promise<void>;
   onAddNote?: (imageId: number, note: string) => Promise<void>;
+  projectId?: string;
 }
 
 export default function ImageGallery({
@@ -76,6 +88,7 @@ export default function ImageGallery({
   initialSelectedKeys = [],
   onDelete,
   onAddNote,
+  projectId,
 }: ImageGalleryProps) {
   // State for modal visibility and active image
   const [modalVisible, setModalVisible] = useState(false);

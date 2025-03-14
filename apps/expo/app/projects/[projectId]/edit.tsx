@@ -168,6 +168,7 @@ import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplet
 import { toast } from "sonner-native";
 import { FormInput, FormButton } from "@/components/ui/form";
 import { Box, VStack, HStack, FormControl, Pressable } from "native-base";
+import { projectsStore } from "@/lib/state/projects";
 
 export default function EditProject() {
   const { session: supabaseSession } = userStore((state) => state);
@@ -191,7 +192,12 @@ export default function EditProject() {
   const [currentAddress, setCurrentAddress] = useState(
     project.project?.location || ""
   );
-    console.log("🚀 ~ EditProject ~ project.project:",JSON.stringify({...project.project,currentAddress}, null, 2))
+  const { projects, setProjects } = projectsStore((state) => state);
+
+  console.log(
+    "🚀 ~ EditProject ~ project.project:",
+    JSON.stringify({ ...project.project, currentAddress }, null, 2)
+  );
 
   const navigation = useNavigation();
   const [firstTime, setFirstTime] = useState(true);
@@ -206,7 +212,7 @@ export default function EditProject() {
         clientEmail,
         clientName,
         clientPhoneNumber,
-      }
+      };
 
       if (address) {
         update.location = address.formattedAddress;
@@ -226,6 +232,11 @@ export default function EditProject() {
       );
       setLoading(false);
       project.updateProject(update);
+      setProjects(
+        projects.map((project) =>
+          project.id === projectId ? { ...project, ...update } : project
+        )
+      );
       router.dismiss();
     } catch {
       toast.error(
@@ -257,7 +268,7 @@ export default function EditProject() {
       </View>
 
       <KeyboardAwareScrollView style={styles.content}>
-        <VStack >
+        <VStack>
           <FormInput
             label="Client Name"
             placeholder="Enter client name"
@@ -318,12 +329,13 @@ export default function EditProject() {
                 textInputProps={{
                   // defaultValue: currentAddress,
                   value: currentAddress,
-                  onChangeText: (text) =>{
-                    console.log("🚀 ~ EditProject ~ text:", text)
-                    if(!text && firstTime){
-                      return setFirstTime(false)
+                  onChangeText: (text) => {
+                    console.log("🚀 ~ EditProject ~ text:", text);
+                    if (!text && firstTime) {
+                      return setFirstTime(false);
                     }
-                    setCurrentAddress(text??currentAddress)},
+                    setCurrentAddress(text ?? currentAddress);
+                  },
                 }}
                 styles={{
                   textInputContainer: {
@@ -356,7 +368,7 @@ export default function EditProject() {
                   description: {
                     fontSize: 14,
                     color: "#1d1d1d",
-                  }
+                  },
                 }}
                 enablePoweredByContainer={false}
               />
