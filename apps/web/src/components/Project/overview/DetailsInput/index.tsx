@@ -7,7 +7,7 @@ import InsuranceCompanyInformation from "./InsuranceCompanyInformation";
 import ProjectInformation from "./ProjectInformation";
 import PropertyOwnerInformation from "./PropertyOwnerInformation";
 import Notes from "./Notes";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { teamMembersStore } from "@atoms/team-members";
 
@@ -16,12 +16,20 @@ import { MentionMetadata } from "@components/DesignSystem/Mentions/useMentionsMe
 import { Button } from "@components/ui/button";
 import { Card } from "@components/ui/card";
 import { Separator } from "@components/ui/separator";
+import { useSidebar } from "@components/ui/sidebar";
 
 export default function DetailsInput() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { id } = useParams();
+  const { toggleSidebar, state } = useSidebar();
+  useEffect(() => {
+    if (state === "expanded") {
+      toggleSidebar();
+    }
+  }, []);
+
   const onDelete = async () => {
     if (!isConfirming) {
       setIsConfirming(true);

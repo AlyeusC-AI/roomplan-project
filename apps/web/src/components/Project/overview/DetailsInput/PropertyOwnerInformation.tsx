@@ -231,7 +231,7 @@ export default function ProjectOwnerInformation() {
           </form>
         </Form>
       </Card>
-      {project?.lat && project?.lng && <LocationData />}
+      {/* {project?.lat && project?.lng && <LocationData />} */}
     </div>
   );
 }
