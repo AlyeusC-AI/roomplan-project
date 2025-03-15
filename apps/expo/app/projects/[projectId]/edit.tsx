@@ -176,6 +176,7 @@ export default function EditProject() {
     projectId: string;
     projectName: string;
   }>();
+
   const { address, setAddress } = addressPickerStore((state) => state);
   const [loading, setLoading] = useState(false);
   const project = projectStore();
@@ -234,7 +235,7 @@ export default function EditProject() {
       project.updateProject(update);
       setProjects(
         projects.map((project) =>
-          project.id === projectId ? { ...project, ...update } : project
+          project.publicId === projectId ? { ...project, ...update } : project
         )
       );
       router.dismiss();

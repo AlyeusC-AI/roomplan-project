@@ -2,7 +2,12 @@ import DashboardHeader from "@/unused/Header";
 import NoProjects from "@/components/dashboard/no-projects";
 import ProjectCell from "@/components/project/cell";
 import { userStore } from "@/lib/state/user";
-import { Redirect, useNavigation, useRouter } from "expo-router";
+import {
+  Redirect,
+  useNavigation,
+  useRouter,
+  useFocusEffect,
+} from "expo-router";
 import { ChevronRight, Plus } from "lucide-react-native";
 import React, { useEffect, useState, useCallback } from "react";
 import {
@@ -49,6 +54,15 @@ export default function Dashboard() {
 
   const router = useRouter();
   const navigation = useNavigation();
+
+  // Add focus effect to refetch data
+  useFocusEffect(
+    useCallback(() => {
+      if (projects?.length > 0) {
+        fetchProjects(false); // Don't clear projects on focus refetch
+      }
+    }, [])
+  );
 
   useEffect(() => {
     navigation.setOptions({ headerTitle: "Dashboard" });

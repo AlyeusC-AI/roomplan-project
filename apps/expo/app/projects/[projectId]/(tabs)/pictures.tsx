@@ -50,6 +50,21 @@ interface PhotoResult {
   uri: string;
 }
 
+interface Inference {
+  isDeleted?: boolean;
+  Image?: {
+    isDeleted?: boolean;
+  };
+  imageKey?: string;
+}
+
+interface Room {
+  id: number;
+  name: string;
+  isDeleted?: boolean;
+  Inference: Inference[];
+}
+
 // Get screen dimensions for responsive sizing
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -307,6 +322,36 @@ export default function ProjectPhotos() {
     }
   };
 
+  const handleToggleIncludeInReport = async (publicId: string, includeInReport: boolean) => {
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/images`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": supabaseSession?.access_token || "",
+          },
+          body: JSON.stringify({
+            id: publicId,
+            includeInReport,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update image");
+      }
+
+      toast.success("Image updated successfully");
+      await refreshData();
+    } catch (error) {
+      console.error("Error updating image:", error);
+      toast.error("Failed to update image");
+      throw error; // Re-throw to be handled by the ImageGallery component
+    }
+  };
+
   if (loading && !rooms?.rooms?.length) {
     return (
       <View style={styles.loadingContainer}>
@@ -365,7 +410,7 @@ export default function ProjectPhotos() {
     return {
       ...room,
       Inference: room.Inference.filter(
-        (i) =>
+        (i: Inference) =>
           !i.isDeleted &&
           !i.Image?.isDeleted &&
           i.Image &&
@@ -450,6 +495,7 @@ export default function ProjectPhotos() {
                         roomName={room.name}
                         onDelete={onDelete}
                         onAddNote={handleAddNote}
+                        onToggleIncludeInReport={handleToggleIncludeInReport}
                       />
                     </View>
                   )}

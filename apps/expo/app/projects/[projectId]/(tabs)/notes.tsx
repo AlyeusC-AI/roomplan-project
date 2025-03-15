@@ -411,36 +411,51 @@ function NoteCard({
 
   useSpeechRecognitionEvent("start", () => setRecognizing(true));
   useSpeechRecognitionEvent("end", () => {
-    if (noteId != note.publicId) {
-      return;
-    }
-    setRecognizing(false);
-    console.log(transcript);
-    if (!tempNote.includes(transcript)) {
-      setNote(`${tempNote}${transcript}`);
-    }
-    setTimeout(() => setTranscript(""), 1000);
-    setNoteId("");
+    setNoteId((noteId) => {
+      console.log("🚀 ~ useSpeechRecognitionEvent ~ noteId:", noteId);
+      console.log("🚀 ~ setNoteId ~ note.publicId:", note.publicId);
+
+      if (noteId != note.publicId) {
+        return noteId;
+      }
+      setRecognizing(false);
+      console.log(transcript);
+      if (!tempNote.includes(transcript)) {
+        setNote(`${tempNote} ${transcript}`);
+      }
+      setTimeout(() => setTranscript(""), 1000);
+      return "";
+    });
   });
   useSpeechRecognitionEvent("result", (event) => {
     if (noteId != note.publicId) {
       return;
     }
     setTranscript(event.results[0]?.transcript);
+
+    console.log(
+      "🚀 ~ useSpeechRecognitionEvent ~ event.results[0]?.transcript:",
+      event.results[0]?.transcript
+    );
+
     // console.log(transcript);
   });
   useSpeechRecognitionEvent("error", (event) => {
+    toast.error(event.error ?? "Error recognizing speech");
     console.log("error code:", event.error, "error message:", event.message);
   });
 
   const handleStart = async (id: string) => {
+    console.log("🚀 ~ handleStart ~ id:", id, note.publicId);
+
     if (id != note.publicId) {
       return;
     }
+    setNoteId(id);
 
     if (recognizing) {
       setRecognizing(false);
-      setNoteId("");
+      // setNoteId("");
       ExpoSpeechRecognitionModule.stop();
       return;
     }
@@ -721,7 +736,7 @@ function NoteCard({
           onPress: () => takePhoto(note.id, refreshNotes),
         },
         {
-          text: "Choose from Gallery (Multiple)",
+          text: "Choose from Gallery",
           onPress: () => pickMultipleImages(note.id, refreshNotes),
         },
         {
@@ -962,8 +977,8 @@ function NoteCard({
                         note.NoteImage?.length === 2
                           ? "50%"
                           : note.NoteImage?.length === 3 && index === 0
-                            ? "100%"
-                            : "50%",
+                          ? "100%"
+                          : "50%",
                       padding: 4,
                       transform: [
                         { scale: highlightedImageIndex === index ? 1.05 : 1 },
