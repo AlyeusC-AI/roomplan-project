@@ -170,11 +170,13 @@ function OptimizedImage({
   style,
   resizeMode = "cover",
   size = "medium",
+  backgroundColor,
 }: {
   uri: string;
   style: any;
   resizeMode?: "cover" | "contain" | "stretch" | "center";
   size?: "small" | "medium" | "large";
+  backgroundColor?: string;
 }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -194,7 +196,9 @@ function OptimizedImage({
       : uri;
 
   return (
-    <View style={[{ backgroundColor: placeholderColor }, style]}>
+    <View
+      style={[{ backgroundColor: backgroundColor || placeholderColor }, style]}
+    >
       <Image
         source={{
           uri: optimizedUri,
@@ -593,7 +597,7 @@ function NoteCard({
       setImageUploading(true);
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
+        allowsEditing: false,
         quality: 0.8,
       });
 
@@ -1062,6 +1066,7 @@ function NoteCard({
             <View style={{ flex: 1, position: "relative" }}>
               <OptimizedImage
                 uri={`${SUPABASE_IMAGE_URL}/${note.NoteImage[selectedImageIndex].imageKey}`}
+                backgroundColor={"black"}
                 style={{
                   width: "100%",
                   height: "100%",
