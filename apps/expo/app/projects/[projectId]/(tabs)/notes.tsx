@@ -170,11 +170,13 @@ function OptimizedImage({
   style,
   resizeMode = "cover",
   size = "medium",
+  backgroundColor,
 }: {
   uri: string;
   style: any;
   resizeMode?: "cover" | "contain" | "stretch" | "center";
   size?: "small" | "medium" | "large";
+  backgroundColor?: string;
 }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -194,7 +196,9 @@ function OptimizedImage({
       : uri;
 
   return (
-    <View style={[{ backgroundColor: placeholderColor }, style]}>
+    <View
+      style={[{ backgroundColor: backgroundColor || placeholderColor }, style]}
+    >
       <Image
         source={{
           uri: optimizedUri,
@@ -411,36 +415,51 @@ function NoteCard({
 
   useSpeechRecognitionEvent("start", () => setRecognizing(true));
   useSpeechRecognitionEvent("end", () => {
-    if (noteId != note.publicId) {
-      return;
-    }
-    setRecognizing(false);
-    console.log(transcript);
-    if (!tempNote.includes(transcript)) {
-      setNote(`${tempNote}${transcript}`);
-    }
-    setTimeout(() => setTranscript(""), 1000);
-    setNoteId("");
+    setNoteId((noteId) => {
+      console.log("🚀 ~ useSpeechRecognitionEvent ~ noteId:", noteId);
+      console.log("🚀 ~ setNoteId ~ note.publicId:", note.publicId);
+
+      if (noteId != note.publicId) {
+        return noteId;
+      }
+      setRecognizing(false);
+      console.log(transcript);
+      if (!tempNote.includes(transcript)) {
+        setNote(`${tempNote} ${transcript}`);
+      }
+      setTimeout(() => setTranscript(""), 1000);
+      return "";
+    });
   });
   useSpeechRecognitionEvent("result", (event) => {
     if (noteId != note.publicId) {
       return;
     }
     setTranscript(event.results[0]?.transcript);
+
+    console.log(
+      "🚀 ~ useSpeechRecognitionEvent ~ event.results[0]?.transcript:",
+      event.results[0]?.transcript
+    );
+
     // console.log(transcript);
   });
   useSpeechRecognitionEvent("error", (event) => {
+    toast.error(event.error ?? "Error recognizing speech");
     console.log("error code:", event.error, "error message:", event.message);
   });
 
   const handleStart = async (id: string) => {
+    console.log("🚀 ~ handleStart ~ id:", id, note.publicId);
+
     if (id != note.publicId) {
       return;
     }
+    setNoteId(id);
 
     if (recognizing) {
       setRecognizing(false);
-      setNoteId("");
+      // setNoteId("");
       ExpoSpeechRecognitionModule.stop();
       return;
     }
@@ -578,7 +597,7 @@ function NoteCard({
       setImageUploading(true);
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
+        allowsEditing: false,
         quality: 0.8,
       });
 
@@ -721,7 +740,7 @@ function NoteCard({
           onPress: () => takePhoto(note.id, refreshNotes),
         },
         {
-          text: "Choose from Gallery (Multiple)",
+          text: "Choose from Gallery",
           onPress: () => pickMultipleImages(note.id, refreshNotes),
         },
         {
@@ -962,8 +981,8 @@ function NoteCard({
                         note.NoteImage?.length === 2
                           ? "50%"
                           : note.NoteImage?.length === 3 && index === 0
-                            ? "100%"
-                            : "50%",
+                          ? "100%"
+                          : "50%",
                       padding: 4,
                       transform: [
                         { scale: highlightedImageIndex === index ? 1.05 : 1 },
@@ -1047,6 +1066,7 @@ function NoteCard({
             <View style={{ flex: 1, position: "relative" }}>
               <OptimizedImage
                 uri={`${SUPABASE_IMAGE_URL}/${note.NoteImage[selectedImageIndex].imageKey}`}
+                backgroundColor={"black"}
                 style={{
                   width: "100%",
                   height: "100%",

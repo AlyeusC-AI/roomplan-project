@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
         .from("Project")
         .select("*", { count: "exact" })
         .limit(limit)
-        .range(offset * limit, (offset + 1) * limit)
+        .range(offset, offset + limit - 1)
         .order("createdAt", { ascending: false })
         .eq("organizationId", organization.data.id);
     } else {
@@ -53,7 +53,8 @@ export async function GET(req: NextRequest) {
         .from("Project")
         .select("*", { count: "exact" })
         .limit(limit)
-        .range(offset * limit, (offset + 1) * limit)
+        .order("createdAt", { ascending: false })
+        .range(offset, offset + limit - 1)
         .textSearch("name", searchText, {
           type: "phrase",
           config: "english",
