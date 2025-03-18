@@ -1,27 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { NativeModules, View, Text, StyleSheet,
-  TouchableOpacity, Platform } from 'react-native';
+  TouchableOpacity, Platform, NativeModule } from 'react-native';
 import { useRouter, useNavigation } from 'expo-router';
 import LidarScan from '@/components/project/LidarScan';
 import { MaterialIcons } from '@expo/vector-icons';
 
+const { RoomScanModule } = NativeModules;
+
 // Check if device has LiDAR sensor (iOS only)
 const hasLidarSensor = async (): Promise<boolean> => {
-  return true
-  if (Platform.OS === 'ios') {
-    const { ARKitModule } = NativeModules;
-    console.log('ARKitModule', ARKitModule)
-    if (ARKitModule && ARKitModule.isARDetectionAvailable) {
-      try {
-        const isLidarAvailable = await ARKitModule.isSceneReconstructionAvailable();
-        return isLidarAvailable;
-      } catch (error) {
-        console.error("Error checking LiDAR availability:", error);
-        return false;
-      }
-    }
-  }
-  return false;
+  return RoomScanModule && RoomScanModule.isAvailable();
 };
 
 interface LidarScanExampleProps {

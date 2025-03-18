@@ -3,6 +3,10 @@ import { View, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { requireNativeComponent, UIManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+type RoomScanViewProps = {
+  finish: boolean;
+}
+
 // Check if the RoomPlan component is available
 const isRoomPlanAvailable = () => {
   if (Platform.OS !== 'ios') return false;
@@ -13,7 +17,7 @@ const isRoomPlanAvailable = () => {
 
 // Create a native component wrapper if available
 const RoomScanView = isRoomPlanAvailable()
-  ? requireNativeComponent('RoomScanView')
+  ? requireNativeComponent<RoomScanViewProps>('RoomScanView')
   : null;
 
 interface LidarScanProps {
@@ -24,32 +28,23 @@ interface LidarScanProps {
 const LidarScan = ({ onScanComplete, style }: LidarScanProps) => {
   const [finish, setFinish] = useState(false);
 
-  const handleScanComplete = (event: any) => {
-    console.log('Scan complete:', event.nativeEvent);
-    if (onScanComplete) {
-      onScanComplete(event.nativeEvent);
-    }
-  };
-
-  const handleScanError = (event: any) => {
-    console.error('Scan error:', event.nativeEvent);
-  };
-
-  if (!isRoomPlanAvailable()) {
+  if (!RoomScanView) {
     return null;
   }
+
+  const handleScanComplete = async () => {
+    setFinish(true);
+  };
 
   // Render RoomPlan for supported iOS devices
   return (
     <View style={[styles.fullScreen, style]}>
       <RoomScanView
-        onCaptureCompleted={handleScanComplete}
-        onCaptureError={handleScanError}
         finish={finish}
       />
       <TouchableOpacity 
         style={styles.checkButton}
-        onPress={() => setFinish(true)}
+        onPress={handleScanComplete}
       >
         <Ionicons name="checkmark" size={32} color="white" />
       </TouchableOpacity>

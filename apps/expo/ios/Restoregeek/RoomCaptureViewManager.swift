@@ -1,3 +1,5 @@
+import simd
+import ARKit
 import UIKit
 import Foundation
 import RoomPlan
@@ -5,6 +7,28 @@ import React
 import ReactBridge
 
 let logger = Logger(subsystem: "com.servicegeek.servicegeekmobile", category: "Lidar Scan")
+
+@ReactModule
+class RoomScanModule: NSObject, RCTBridgeModule {
+  @ReactMathod
+  @objc func isAvailable(callback: RCTResponseSenderBlock) {
+    callback(ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh))
+  }
+
+  @ReactMathod
+  @objc func getOutputFiles(callback: RCTResponseSenderBlock) {
+    let destinationFolderURL = FileManager.default.temporaryDirectory.appending(path: "Export")
+    let destinationURL = destinationFolderURL.appending(path: "Room.usdz")
+    let capturedRoomURL = destinationFolderURL.appending(path: "Room.json")
+    let transformedRoomURL = destinationFolderURL.appending(path: "TransformedRoom.json")
+
+    callback([
+      "destinationURL": destinationURL,
+      "capturedRoomURL": capturedRoomURL,
+      "transformedRoomURL": transformedRoomURL
+    ])
+  }
+}
 
 @ReactView
 class RoomScanView: RCTViewManager {
@@ -90,16 +114,65 @@ class RoomCaptureViewWrapper : UIView, RoomCaptureViewDelegate {
         let destinationFolderURL = FileManager.default.temporaryDirectory.appending(path: "Export")
         let destinationURL = destinationFolderURL.appending(path: "Room.usdz")
         let capturedRoomURL = destinationFolderURL.appending(path: "Room.json")
+        let transformedRoomURL = destinationFolderURL.appending(path: "TransformedRoom.json")
         do {
             try FileManager.default.createDirectory(at: destinationFolderURL, withIntermediateDirectories: true)
             let jsonEncoder = JSONEncoder()
-            let jsonData = try jsonEncoder.encode(finalResults)
-            try jsonData.write(to: capturedRoomURL)
-            try finalResults?.export(to: destinationURL, exportOptions: .parametric)
+            let transformedRoom = getTransformedRoom()
+            let roomJsonData = try jsonEncoder.encode(finalResults)
+            let transformedRoomJsonData = try jsonEncoder.encode(transformedRoom)
+            try roomJsonData.write(to: capturedRoomURL)
+            try transformedRoomJsonData.write(to: transformedRoomURL)
+            try finalResults?.export(to: destinationURL, exportOptions: .mesh)
             
             logger.info("[RoomCapture] Successfully processed room \(destinationURL)")
         } catch {
             print("Error = \(error)")
         }
+    }
+
+    func transformPoint(_ point: simd_float3, using transform: simd_float4x4) -> simd_float3 {
+        let vector = simd_float4(point.x, point.y, point.z, 1.0)
+        let transformedVector = transform * vector
+        return simd_float3(transformedVector.x, transformedVector.y, transformedVector.z)
+    }
+
+    func surfaceToCoords(surfaces: [CapturedRoom.Surface]) -> [[simd_float3]] {
+      if #available(iOS 17.0, *) {
+        let transformedPoints = surfaces.map { surface in
+          let extendedCorners = surface.polygonCorners
+          if extendedCorners.isEmpty {
+              extendedCorners = [surface.dimensions * -0.5, surface.dimensions * 0.5]
+          }
+          return extendedCorners.map { transformPoint($0, using: surface.transform) }
+        }
+        return transformedPoints
+      }
+      return []
+    }
+
+    function objectToCoords(objects: [CapturedRoom.Object]) -> [[simd_float3]] {
+      if #available(iOS 17.0, *) {
+        let transformedPoints = objects.map { object in
+          let extendedCorners = [objects.dimensions * -0.5, objects.dimensions * 0.5]
+          return extendedCorners.map { transformPoint($0, using: objects.transform) }
+        }
+        return transformedPoints
+      }
+      return []
+    }
+
+    func getTransformedRoom() -> [String: [[simd_float3]]] {
+      if #available(iOS 17.0, *) {
+        return [
+          "floors": surfaceToCoords(surfaces: finalResults?.floors ?? []),
+          "walls": surfaceToCoords(surfaces: finalResults?.walls ?? []),
+          "doors": surfaceToCoords(surfaces: finalResults?.doors ?? []),
+          "windows": surfaceToCoords(surfaces: finalResults?.windows ?? []),
+          "openings": surfaceToCoords(surfaces: finalResults?.openings ?? []),
+          "objects": surfaceToCoords(surfaces: finalResults?.objects ?? []),
+        ]
+      }
+      return [:]
     }
 }
