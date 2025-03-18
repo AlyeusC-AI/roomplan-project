@@ -22,7 +22,7 @@ import {
 } from "@components/ui/dialog";
 import { userInfoStore } from "@atoms/user-info";
 import { teamMembersStore } from "@atoms/team-members";
-import { Trash2, FolderInput, X, Loader2 } from "lucide-react";
+import { Trash2, FolderInput, X, Loader2, Star } from "lucide-react";
 
 const PhotoList = ({
   photos,
@@ -37,6 +37,7 @@ const PhotoList = ({
   const [isRoomReassignOpen, setIsRoomReassignOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAssigningRoom, setIsAssigningRoom] = useState(false);
+  const [isUpdatingAll, setIsUpdatingAll] = useState(false);
   const { rooms, onlySelected } = useFilterParams();
   const roomList = roomStore((state) => state.rooms);
   const user = userInfoStore();
@@ -55,6 +56,43 @@ const PhotoList = ({
     } catch (error) {
       console.error("Error fetching images:", error);
       toast.error("Failed to refresh images");
+    }
+  };
+
+  const includeAllInReport = async () => {
+    if (!photos) return;
+    
+    try {
+      setIsUpdatingAll(true);
+      const response = await fetch(`/api/v1/projects/${id}/images`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ids: photos.map((img) => img.publicId),
+          includeInReport: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update images");
+      }
+
+      // Update local state
+      setPhotos(
+        photos.map((p) => ({
+          ...p,
+          includeInReport: true,
+        }))
+      );
+
+      toast.success("All images included in report");
+    } catch (error) {
+      console.error("Error updating images:", error);
+      toast.error("Failed to update images");
+    } finally {
+      setIsUpdatingAll(false);
     }
   };
 
@@ -206,6 +244,23 @@ const PhotoList = ({
 
   return (
     <div className='mt-4 flex flex-col gap-6'>
+      <div className='flex justify-end'>
+        <Button
+          size='sm'
+          variant='outline'
+          onClick={includeAllInReport}
+          disabled={isUpdatingAll || !photos?.length}
+          className='flex items-center gap-2'
+        >
+          {isUpdatingAll ? (
+            <Loader2 className='h-4 w-4 animate-spin' />
+          ) : (
+            <Star className='h-4 w-4' />
+          )}
+          Include All in Report
+        </Button>
+      </div>
+
       <AnimatePresence>
         {selectedPhotos.length > 0 && (
           <motion.div

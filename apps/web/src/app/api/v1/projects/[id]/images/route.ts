@@ -95,8 +95,24 @@ export async function PATCH(req: NextRequest) {
   try {
     await user(req);
 
-    const { id, ...props } = await req.json();
+    const { id, ids, ...props } = await req.json();
 
+    // Handle bulk update
+    if (ids && Array.isArray(ids)) {
+      const { data, error } = await supabaseServiceRole
+        .from("Image")
+        .update(props)
+        .in("publicId", ids);
+
+      if (error) {
+        console.error(error);
+        throw error;
+      }
+
+      return NextResponse.json({ data });
+    }
+
+    // Handle single update
     const { data, error } = await supabaseServiceRole
       .from("Image")
       .update(props)

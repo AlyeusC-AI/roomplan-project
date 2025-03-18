@@ -8,14 +8,34 @@ import {
   PopoverTrigger,
 } from "@components/ui/popover";
 import { cn } from "@lib/utils";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Plus, Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { roomStore } from "@atoms/room";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import GenericRoomReadings from "./GenericRoomReadings";
 import { LoadingSpinner } from "@components/ui/spinner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@components/ui/dialog";
+import { v4 } from "uuid";
+import debounce from "lodash/debounce";
+
+interface ExtendedWall {
+  id: string;
+  name: string;
+  value: string | null;
+  type: "wall" | "floor";
+  [key: string]: Json | undefined;
+}
+
+type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export default function RoomReadingCell({
   r,
@@ -26,6 +46,23 @@ export default function RoomReadingCell({
 }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [tempReading, setTempReading] = useState(r);
+  const [showWallNameEdit, setShowWallNameEdit] = useState(false);
+  const [showFloorNameEdit, setShowFloorNameEdit] = useState(false);
+  const [wallName, setWallName] = useState(room.wallName || "");
+  const [floorName, setFloorName] = useState(room.floorName || "");
+  const [originalWallName, setOriginalWallName] = useState(room.wallName || "");
+  const [originalFloorName, setOriginalFloorName] = useState(room.floorName || "");
+  const [isUpdatingWallName, setIsUpdatingWallName] = useState(false);
+  const [isUpdatingFloorName, setIsUpdatingFloorName] = useState(false);
+  const [extendedWalls, setExtendedWalls] = useState<ExtendedWall[]>(
+    (r.extendedWalls as unknown as ExtendedWall[]) || []
+  );
+  const [extendedWallsStructure, setExtendedWallsStructure] = useState<ExtendedWallItem[]>(
+    room.extendedWalls as unknown as ExtendedWall[] || []
+  );
+  const [showExtendedWallEdit, setShowExtendedWallEdit] = useState(false);
+  const [currentEditingWall, setCurrentEditingWall] = useState<ExtendedWall | null>(null);
+  const [isUpdatingExtendedWall, setIsUpdatingExtendedWall] = useState(false);
   const rooms = roomStore();
   const { id } = useParams<{ id: string }>();
 
@@ -36,45 +73,192 @@ export default function RoomReadingCell({
     );
   };
 
-  useEffect(() => {
-    setTempReading((prev) => ({
-      ...prev,
-      gpp: calculateGPP(Number(prev.temperature), Number(prev.humidity)),
-    }));
-  }, []);
-
-  const onSave = async () => {
+  const saveReading = useCallback(async (readingData: any) => {
     try {
       setIsUpdating(true);
-      const isolatedTemp = tempReading;
-      // @ts-expect-error just deleting before updating
+      const isolatedTemp = { ...readingData } as any;
+
+      // @ts-ignore
       delete isolatedTemp.GenericRoomReading;
+      //@ts-ignore
+      delete isolatedTemp.RoomReadingImage;
+
       await fetch(`/api/v1/projects/${id}/readings`, {
         method: "PATCH",
         body: JSON.stringify({
           type: "standard",
-          readingData: tempReading,
+          readingData: {
+            ...isolatedTemp,
+            moistureContentWall: readingData.moistureContentWall || null,
+            moistureContentFloor: readingData.moistureContentFloor || null,
+            extendedWalls: readingData.extendedWalls,
+          },
           readingId: r.publicId,
         }),
       });
 
-      toast.success("Reading updated");
-      rooms.updateReading(room.publicId, r.publicId, tempReading);
-    } catch {
+      rooms.updateReading(room.publicId, r.publicId, readingData);
+    } catch (error) {
       toast.error("Failed to update reading");
+    } finally {
+      setIsUpdating(false);
     }
-    setIsUpdating(false);
-    // updateReading.mutate({
-    //   projectPublicId: id,
-    //   roomPublicId: room.publicId,
-    //   readingPublicId: readingId,
-    //   temperature: data.temperature,
-    //   humidity: data.humidity,
-    //   moistureContentWall: data.moistureContentWall,
-    //   moistureContentFloor: data.moistureContentFloor,
-    //   date: data.date,
-    // });
+  }, [id, r.publicId, room.publicId, rooms]);
+
+  const debouncedSave = useCallback(
+    debounce((readingData: any) => {
+      saveReading(readingData);
+    }, 1000),
+    [saveReading]
+  );
+
+  useEffect(() => {
+    setTempReading((prev) => ({
+      ...prev,
+      gpp: calculateGPP(Number(prev.temperature), Number(prev.humidity))?.toString() || null,
+    }));
+  }, []);
+
+  // Auto-save when tempReading changes
+  useEffect(() => {
+    if (tempReading) {
+      debouncedSave(tempReading);
+    }
+  }, [tempReading, debouncedSave]);
+
+  const handleUpdateWallName = async () => {
+    try {
+      setIsUpdatingWallName(true);
+      const res = await fetch(`/api/v1/projects/${id}/room`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          wallName,
+          roomId: room.publicId,
+        }),
+      });
+      if (res.ok) {
+        roomStore.getState().updateRoom(room.publicId, { wallName });
+        setShowWallNameEdit(false);
+        setOriginalWallName(wallName);
+        toast.success("Wall name updated");
+      } else {
+        toast.error("Failed to update wall name");
+      }
+    } catch (error) {
+      toast.error("Failed to update wall name");
+    } finally {
+      setIsUpdatingWallName(false);
+    }
   };
+
+  const handleUpdateFloorName = async () => {
+    try {
+      setIsUpdatingFloorName(true);
+      const res = await fetch(`/api/v1/projects/${id}/room`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          floorName,
+          roomId: room.publicId,
+        }),
+      });
+      if (res.ok) {
+        roomStore.getState().updateRoom(room.publicId, { floorName });
+        setShowFloorNameEdit(false);
+        setOriginalFloorName(floorName);
+        toast.success("Floor name updated");
+      } else {
+        toast.error("Failed to update floor name");
+      }
+    } catch (error) {
+      toast.error("Failed to update floor name");
+    } finally {
+      setIsUpdatingFloorName(false);
+    }
+  };
+
+  const handleAddExtendedWall = (type: "wall" | "floor") => {
+    const newWall: ExtendedWall = {
+      id: v4(),
+      name: type === "wall" 
+        ? `Wall ${extendedWallsStructure.filter(w => w.type === "wall").length + 1}`
+        : `Floor ${extendedWallsStructure.filter(w => w.type === "floor").length + 1}`,
+      value: null,
+      type,
+    };
+    setCurrentEditingWall(newWall);
+    setShowExtendedWallEdit(true);
+  };
+
+  const handleSaveExtendedWall = async () => {
+    if (!currentEditingWall) return;
+
+    try {
+      setIsUpdatingExtendedWall(true);
+      const updatedWalls = currentEditingWall.id && extendedWallsStructure.some(w => w.id === currentEditingWall.id)
+        ? extendedWallsStructure.map(w => w.id === currentEditingWall.id ? currentEditingWall : w)
+        : [...extendedWallsStructure, currentEditingWall];
+
+      const extendedWallsJson = updatedWalls.map(w => ({
+        id: w.id,
+        name: w.name,
+        value: w.value,
+        type: w.type
+      })) as Json;
+
+      const res = await fetch(`/api/v1/projects/${id}/room`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          extendedWalls: extendedWallsJson,
+          roomId: room.publicId,
+        }),
+      });
+
+      if (res.ok) {
+        roomStore.getState().updateRoom(room.publicId, { extendedWalls: updatedWalls });
+        setExtendedWallsStructure(updatedWalls);
+        setShowExtendedWallEdit(false);
+        setCurrentEditingWall(null);
+        toast.success("Wall updated successfully");
+      } else {
+        toast.error("Failed to update wall");
+      }
+    } catch (error) {
+      toast.error("Failed to update wall");
+    } finally {
+      setIsUpdatingExtendedWall(false);
+    }
+  };
+
+  const handleDeleteExtendedWall = async (wallId: string) => {
+    try {
+      const updatedWalls = extendedWallsStructure.filter(w => w.id !== wallId);
+      const extendedWallsJson = updatedWalls.map(w => ({
+        id: w.id,
+        name: w.name,
+        value: w.value,
+        type: w.type
+      })) as Json;
+
+      const res = await fetch(`/api/v1/projects/${id}/room`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          extendedWalls: extendedWallsJson,
+          roomId: room.publicId,
+        }),
+      });
+
+      if (res.ok) {
+        roomStore.getState().updateRoom(room.publicId, { extendedWalls: updatedWalls });
+        setExtendedWallsStructure(updatedWalls);
+        toast.success("Wall deleted successfully");
+      } else {
+        toast.error("Failed to delete wall");
+      }
+    } catch (error) {
+      toast.error("Failed to delete wall");
+    }
+  };
+
   return (
     <div key={r.publicId} className='mt-6 border-l-2 border-gray-500 pl-4'>
       <div className='flex flex-col items-start space-y-2'>
@@ -125,7 +309,7 @@ export default function RoomReadingCell({
                 gpp: calculateGPP(
                   Number(newTemp),
                   Number(tempReading.humidity)
-                ),
+                )?.toString() || null,
               });
             }}
             name='temperature'
@@ -146,38 +330,13 @@ export default function RoomReadingCell({
                 gpp: calculateGPP(
                   Number(tempReading.temperature),
                   Number(newHumidity)
-                ),
+                )?.toString() || null,
               });
             }}
             name='relative-humidity'
             title='Relative Humidity'
           />
         </div>
-        {/* <div>
-              <label
-                htmlFor='gpp'
-                className='block text-sm font-medium text-gray-700'
-              >
-                Grains Per Pound
-              </label>
-              <div className={"relative mt-1 rounded-md shadow-sm"}>
-                <div
-                  id='gpp'
-                  className='block w-full rounded-md border-gray-300 bg-gray-300 p-2 pr-12 text-sm text-black focus:border-blue-500 focus:ring-blue-500'
-                  aria-describedby={`total-sqft-units`}
-                >
-                  {r.gpp || "--"}
-                </div>
-                <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3'>
-                  <span
-                    className={"text-black sm:text-sm"}
-                    id={`total-sqft-units`}
-                  >
-                    gpp
-                  </span>
-                </div>
-              </div>
-            </div> */}
         <div className='flex flex-col items-start space-y-2'>
           <Label>Grains Per Pound (gpp)</Label>
           <Input
@@ -187,8 +346,55 @@ export default function RoomReadingCell({
             placeholder='Grains Per Pound'
           />
         </div>
-        <div className='flex flex-col items-start space-y-2'>
-          <Label>Moisture Content (Wall) (%)</Label>
+
+        {/* Wall Moisture Content Section */}
+        <div className='col-span-2'>
+          <div className='flex items-center justify-between mb-2'>
+            <div className='flex items-center gap-2'>
+              {showWallNameEdit ? (
+                <div className='flex items-center gap-2'>
+                  <Input
+                    value={wallName}
+                    onChange={(e) => setWallName(e.target.value)}
+                    className='w-48'
+                  />
+                  <Button
+                    onClick={handleUpdateWallName}
+                    disabled={isUpdatingWallName}
+                  >
+                    {isUpdatingWallName ? <LoadingSpinner /> : "Save"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setWallName(originalWallName);
+                      setShowWallNameEdit(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <Label className='text-base'>{wallName || "Moisture Content (Wall)"}</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowWallNameEdit(true)}
+                  >
+                    <Pencil className='h-4 w-4' />
+                  </Button>
+                </>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleAddExtendedWall("wall")}
+              >
+                <Plus className='h-4 w-4' />
+              </Button>
+            </div>
+          </div>
           <Input
             className='col-span-1'
             defaultValue={r.moistureContentWall || ""}
@@ -202,9 +408,106 @@ export default function RoomReadingCell({
             title='Moisture Content (Wall)'
             placeholder='Moisture Content Percentage'
           />
+          {/* Extended Walls */}
+          {extendedWallsStructure
+            .filter(w => w.type === "wall")
+            .map((wall) => {
+              const wallReading = extendedWalls.find(w => w.id === wall.id);
+              if(!wallReading) {
+                setExtendedWalls(extendedWalls.concat({id: wall.id, name: wall.name, value: wall.value, type: wall.type}))
+              }
+              return (
+                <div key={wall.id} className='mt-2 flex items-center gap-2'>
+                  <div className='flex flex-col items-start space-y-2'>
+                    <div className='mt-2 flex items-center gap-0'>
+                      <Label className='text-base'>{wall.name}</Label>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setCurrentEditingWall(wall);
+                          setShowExtendedWallEdit(true);
+                        }}
+                      >
+                        <Pencil className='h-4 w-4' />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteExtendedWall(wall.id)}
+                      >
+                        <Trash2 className='h-4 w-4' />
+                      </Button>
+                    </div>
+                    <Input
+                      className='col-span-1'
+                      value={wallReading?.value || ""}
+                      onChange={(e) => {
+                        const updatedWalls = extendedWalls.map(w =>
+                          w.id === wall.id ? { ...w, value: e.target.value } : w
+                        );
+                        setExtendedWalls(updatedWalls);
+                        setTempReading(prev => ({
+                          ...prev,
+                          extendedWalls: updatedWalls
+                        }));
+                      }}
+                      placeholder={`${wall.name} Moisture Content`}
+                    />
+                  </div>
+                </div>
+              );
+            })}
         </div>
-        <div className='flex flex-col items-start space-y-2'>
-          <Label>Moisture Content (Floor) (%)</Label>
+
+        {/* Floor Moisture Content Section */}
+        <div className='col-span-2'>
+          <div className='flex items-center justify-between mb-2'>
+            <div className='flex items-center gap-2'>
+              {showFloorNameEdit ? (
+                <div className='flex items-center gap-2'>
+                  <Input
+                    value={floorName}
+                    onChange={(e) => setFloorName(e.target.value)}
+                    className='w-48'
+                  />
+                  <Button
+                    onClick={handleUpdateFloorName}
+                    disabled={isUpdatingFloorName}
+                  >
+                    {isUpdatingFloorName ? <LoadingSpinner /> : "Save"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setFloorName(originalFloorName);
+                      setShowFloorNameEdit(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <Label className='text-base'>{floorName || "Moisture Content (Floor)"}</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFloorNameEdit(true)}
+                  >
+                    <Pencil className='h-4 w-4' />
+                  </Button>
+                </>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleAddExtendedWall("floor")}
+              >
+                <Plus className='h-4 w-4' />
+              </Button>
+            </div>
+          </div>
           <Input
             className='col-span-1'
             defaultValue={r.moistureContentFloor || ""}
@@ -214,17 +517,105 @@ export default function RoomReadingCell({
                 moistureContentFloor: e.target.value,
               })
             }
-            name='moisture-wall'
+            name='moisture-floor'
             title='Moisture Content (Floor)'
             placeholder='Moisture Content Percentage'
           />
-        </div>
-        <div className='flex items-center justify-end'>
-          <Button disabled={isUpdating} onClick={onSave} className='mt-5 w-32'>
-            {isUpdating ? <LoadingSpinner /> : "Save Changes"}
-          </Button>
+          {/* Extended Floors */}
+          {extendedWallsStructure
+            .filter(w => w.type === "floor")
+            .map((floor) => {
+              const floorReading = extendedWalls.find(w => w.id === floor.id);
+              if(!floorReading) {
+                setExtendedWalls(extendedWalls.concat({id: floor.id, name: floor.name, value: floor.value, type: floor.type}))
+              }
+              return (
+                <div key={floor.id} className='mt-2 flex items-center gap-2'>
+                  <div className='flex flex-col items-start space-y-2'>
+                    <div className='mt-2 flex items-center gap-0'>
+                      <Label className='text-base'>{floor.name}</Label>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setCurrentEditingWall(floor);
+                          setShowExtendedWallEdit(true);
+                        }}
+                      >
+                        <Pencil className='h-4 w-4' />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteExtendedWall(floor.id)}
+                      >
+                        <Trash2 className='h-4 w-4' />
+                      </Button>
+                    </div>
+                    <Input
+                      className='col-span-1'
+                      value={floorReading?.value || ""}
+                      onChange={(e) => {
+                        const updatedWalls = extendedWalls.map(w =>
+                          w.id === floor.id ? { ...w, value: e.target.value } : w
+                        );
+                        setExtendedWalls(updatedWalls);
+                        setTempReading(prev => ({
+                          ...prev,
+                          extendedWalls: updatedWalls
+                        }));
+                      }}
+                      placeholder={`${floor.name} Moisture Content`}
+                    />
+                  </div>
+                </div>
+              );
+            })}
         </div>
       </div>
+
+      {/* Extended Wall Edit Dialog */}
+      <Dialog open={showExtendedWallEdit} onOpenChange={setShowExtendedWallEdit}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {currentEditingWall?.type === "wall" ? "Edit Wall" : "Edit Floor"}
+            </DialogTitle>
+            <DialogDescription>
+              Enter the name and moisture content for this {currentEditingWall?.type}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className='grid gap-4 py-4'>
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label htmlFor='name' className='text-right'>
+                Name
+              </Label>
+              <Input
+                id='name'
+                value={currentEditingWall?.name || ""}
+                onChange={(e) =>
+                  setCurrentEditingWall((prev) =>
+                    prev ? { ...prev, name: e.target.value } : null
+                  )
+                }
+                className='col-span-3'
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => setShowExtendedWallEdit(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveExtendedWall}>
+              {isUpdatingExtendedWall ? <LoadingSpinner /> : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <GenericRoomReadings room={room} reading={r} />
     </div>
   );
