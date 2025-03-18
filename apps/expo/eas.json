@@ -10,6 +10,13 @@
       "ios": {
         "resourceClass": "m-medium"
       },
+      "android": {
+        "gradleCommand": ":app:assembleDebug",
+        "buildType": "apk",
+        "env": {
+          "KOTLIN_VERSION": "1.9.25"
+        }
+      },
       "node": "20.11.1",
       "channel": "development"
     },
@@ -19,13 +26,24 @@
         "simulator": true,
         "resourceClass": "m-medium"
       },
+      "android": {
+        "buildType": "apk",
+        "env": {
+          "KOTLIN_VERSION": "1.9.25"
+        }
+      },
       "node": "20.11.1",
       "channel": "preview"
     },
     "production": {
       "ios": {
         "resourceClass": "m-medium"
-  
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "env": {
+          "KOTLIN_VERSION": "1.9.25"
+        }
       },
       "autoIncrement": true,
       "node": "20.11.1",
@@ -36,9 +54,10 @@
     "production": {
       "ios": {        
         "ascAppId": "6738036531"
-   
+      },
+      "android": {
+        "track": "production"
       }
     }
-    
   }
 }

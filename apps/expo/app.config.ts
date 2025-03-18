@@ -26,7 +26,7 @@ const config: ExpoConfig = {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#FFFFFF",
     },
-    permissions: ["com.google.android.gms.permission.AD_ID"],
+    permissions: ["com.google.android.gms.permission.AD_ID"]
   },
   ios: {
     bundleIdentifier: "com.servicegeek.servicegeekmobile",
@@ -75,8 +75,17 @@ const config: ExpoConfig = {
         android: {
           compileSdkVersion: 35,
           targetSdkVersion: 35,
-          buildToolsVersion: "30.0.2",
-          kotlinVersion: "1.7.10",
+          buildToolsVersion: "35.0.0",
+          kotlinVersion: "1.9.25",
+          enableProguardInReleaseBuilds: true,
+          proguardFiles: ["proguard-rules.pro"],
+          extraProperties: {
+            "kotlin.code.style": "official",
+            "kotlin.version": "1.9.25",
+            "android.kotlinCompilerVersion": "1.9.25",
+            "compose.kotlin.compiler.version": "1.9.25",
+            "compose.compiler.extension.version": "1.5.10"
+          }
         },
         ios: {
           deploymentTarget: "16.0",

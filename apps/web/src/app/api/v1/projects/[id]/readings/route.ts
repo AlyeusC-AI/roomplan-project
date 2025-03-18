@@ -41,6 +41,7 @@ export async function PATCH(req: NextRequest) {
 
     if (result.error) {
       console.error(result.error);
+      return NextResponse.json({ status: "failed" }, { status: 500 });
     }
 
     return NextResponse.json({ status: "ok" }, { status: 200 });
