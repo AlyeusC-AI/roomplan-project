@@ -5,7 +5,10 @@ import { ScaleLoader } from "react-spinners";
 import dynamic from "next/dynamic";
 
 import { Button } from "@components/ui/button";
+import { Switch } from "@components/ui/switch";
+import { Label } from "@components/ui/label";
 import { roomStore } from "@atoms/room";
+import { reportSettingsStore } from "@atoms/report-settings";
 import { useParams } from "next/navigation";
 import { LoadingPlaceholder } from "@components/ui/spinner";
 
@@ -20,6 +23,8 @@ const ReportPDF = dynamic(() => import("./ReportPDF"), {
 
 export default function Report() {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const { showDimensionsAndDetails, toggleDimensionsAndDetails } = reportSettingsStore();
+  
   const generatePDF = async () => {
     setIsGeneratingPdf(true);
     const pdfBody = document.getElementById("pdf-root");
@@ -66,9 +71,19 @@ export default function Report() {
             A summary of the work to be done for this project.
           </p>
         </div>
-        <Button onClick={generatePDF} disabled={isGeneratingPdf}>
-          {isGeneratingPdf ? <LoadingPlaceholder /> : "Generate PDF"}
-        </Button>
+        <div className='flex items-center gap-8'>
+          <div className='flex items-center space-x-2'>
+            <Switch
+              id="dimensions-details"
+              checked={showDimensionsAndDetails}
+              onCheckedChange={toggleDimensionsAndDetails}
+            />
+            <Label htmlFor="dimensions-details">Show Dimensions & Details</Label>
+          </div>
+          <Button onClick={generatePDF} disabled={isGeneratingPdf}>
+            {isGeneratingPdf ? <LoadingPlaceholder /> : "Generate PDF"}
+          </Button>
+        </div>
       </div>
       <ReportPDF />
     </div>
