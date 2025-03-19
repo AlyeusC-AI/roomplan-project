@@ -61,6 +61,10 @@ export default function CameraScreen() {
     projectId: string;
   }>();
   const rooms = roomsStore();
+  console.log(
+    "🚀 ~ CameraScreen ~ rooms:",
+    JSON.stringify(rooms.rooms, null, 2)
+  );
   const zoom = useSharedValue(1);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [flash, setFlash] = useState<"off" | "on" | "auto">("auto");
@@ -69,6 +73,30 @@ export default function CameraScreen() {
   const [selectedRoomId, setRoomId] = useState("");
   const [uploadQueue, setUploadQueue] = useState<PhotoFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const refetchRooms = async () => {
+    const roomsRes = await fetch(
+      `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": supabaseSession?.access_token || "",
+        },
+      }
+    );
+
+    const roomsData = await roomsRes.json();
+    console.log("🚀 ~ refreshData ~ roomsData:", roomsData.rooms);
+    rooms.setRooms(roomsData.rooms);
+  };
+  useEffect(() => {
+    console.log(
+      "🚀 ~ CameraScreen ~ rooms:",
+      JSON.stringify(rooms.rooms, null, 2)
+    );
+    refetchRooms();
+  }, []);
+
   const onRoomSelect = (r: string) => {
     setRoomId(r);
   };
