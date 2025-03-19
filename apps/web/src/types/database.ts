@@ -490,6 +490,254 @@ export type Database = {
           },
         ]
       }
+      Form: {
+        Row: {
+          created_at: string
+          desc: string | null
+          id: number
+          name: string | null
+          orgId: number | null
+        }
+        Insert: {
+          created_at?: string
+          desc?: string | null
+          id?: number
+          name?: string | null
+          orgId?: number | null
+        }
+        Update: {
+          created_at?: string
+          desc?: string | null
+          id?: number
+          name?: string | null
+          orgId?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Form_orgId_fkey"
+            columns: ["orgId"]
+            isOneToOne: false
+            referencedRelation: "Organization"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      FormField: {
+        Row: {
+          created_at: string
+          id: number
+          isRequired: boolean | null
+          name: string | null
+          order: number | null
+          sectionId: number | null
+          type: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          isRequired?: boolean | null
+          name?: string | null
+          order?: number | null
+          sectionId?: number | null
+          type?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          isRequired?: boolean | null
+          name?: string | null
+          order?: number | null
+          sectionId?: number | null
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "FormField_sectionId_fkey"
+            columns: ["sectionId"]
+            isOneToOne: false
+            referencedRelation: "FormSection"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      FormOption: {
+        Row: {
+          created_at: string
+          formFieldId: number | null
+          id: number
+          name: string | null
+          order: number | null
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          formFieldId?: number | null
+          id?: number
+          name?: string | null
+          order?: number | null
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          formFieldId?: number | null
+          id?: number
+          name?: string | null
+          order?: number | null
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "FormOption_formFieldId_fkey"
+            columns: ["formFieldId"]
+            isOneToOne: false
+            referencedRelation: "FormField"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      formProjects: {
+        Row: {
+          created_at: string
+          formId: number | null
+          id: number
+          projectId: number | null
+        }
+        Insert: {
+          created_at?: string
+          formId?: number | null
+          id?: number
+          projectId?: number | null
+        }
+        Update: {
+          created_at?: string
+          formId?: number | null
+          id?: number
+          projectId?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formProjects_formId_fkey"
+            columns: ["formId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "formProjects_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      FormResponse: {
+        Row: {
+          created_at: string
+          date: string | null
+          formId: number | null
+          id: number
+          projectId: number | null
+        }
+        Insert: {
+          created_at?: string
+          date?: string | null
+          formId?: number | null
+          id?: number
+          projectId?: number | null
+        }
+        Update: {
+          created_at?: string
+          date?: string | null
+          formId?: number | null
+          id?: number
+          projectId?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "FormResponse_formId_fkey"
+            columns: ["formId"]
+            isOneToOne: false
+            referencedRelation: "Form"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "FormResponse_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      FormResponseField: {
+        Row: {
+          created_at: string
+          formFieldId: number | null
+          formResponseId: number | null
+          id: number
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          formFieldId?: number | null
+          formResponseId?: number | null
+          id?: number
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          formFieldId?: number | null
+          formResponseId?: number | null
+          id?: number
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "FormResponseField_formFieldId_fkey"
+            columns: ["formFieldId"]
+            isOneToOne: false
+            referencedRelation: "FormField"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "FormResponseField_formResponseId_fkey"
+            columns: ["formResponseId"]
+            isOneToOne: false
+            referencedRelation: "FormResponse"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      FormSection: {
+        Row: {
+          created_at: string
+          formId: number | null
+          id: number
+          name: string | null
+        }
+        Insert: {
+          created_at?: string
+          formId?: number | null
+          id?: number
+          name?: string | null
+        }
+        Update: {
+          created_at?: string
+          formId?: number | null
+          id?: number
+          name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "FormSection_formId_fkey"
+            columns: ["formId"]
+            isOneToOne: false
+            referencedRelation: "Form"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       GenericRoomReading: {
         Row: {
           createdAt: string
@@ -1858,6 +2106,7 @@ export type Database = {
           name: string
           projectId: number
           publicId: string
+          roomPlanSVG: string | null
           temperature: string | null
           totalSqft: string | null
           wallName: string | null
@@ -1880,6 +2129,7 @@ export type Database = {
           name: string
           projectId: number
           publicId: string
+          roomPlanSVG?: string | null
           temperature?: string | null
           totalSqft?: string | null
           wallName?: string | null
@@ -1902,6 +2152,7 @@ export type Database = {
           name?: string
           projectId?: number
           publicId?: string
+          roomPlanSVG?: string | null
           temperature?: string | null
           totalSqft?: string | null
           wallName?: string | null
