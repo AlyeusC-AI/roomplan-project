@@ -88,6 +88,10 @@ const data = {
           url: "/settings/organization",
         },
         {
+          title: "Forms",
+          url: "/forms",
+        },
+        {
           title: "Billing",
           url: "/settings/billing",
         },

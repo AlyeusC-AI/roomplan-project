@@ -68,15 +68,15 @@ export function FormFieldEditor({ field, onUpdate, onDelete }: FormFieldEditorPr
   };
 
   return (
-    <div className="space-y-6 p-6 border rounded-lg bg-white shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 border rounded-lg bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all duration-200 dark:border-gray-700">
       <div className="flex justify-between items-start">
         <div className="space-y-2 flex-1">
-          <Label className="text-base font-medium">Field Name</Label>
+          <Label className="text-sm sm:text-base font-medium dark:text-gray-100">Field Name</Label>
           <Input
             value={field.name}
             onChange={(e) => handleFieldChange("name", e.target.value)}
             placeholder="Enter field name"
-            className="text-base"
+            className="text-sm sm:text-base dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
           />
         </div>
         <TooltipProvider>
@@ -86,7 +86,7 @@ export function FormFieldEditor({ field, onUpdate, onDelete }: FormFieldEditorPr
                 variant="ghost"
                 size="sm"
                 onClick={onDelete}
-                className="ml-4 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                className="ml-2 sm:ml-4 hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -99,65 +99,65 @@ export function FormFieldEditor({ field, onUpdate, onDelete }: FormFieldEditorPr
       </div>
 
       <div className="space-y-2">
-        <Label className="text-base font-medium">Field Type</Label>
+        <Label className="text-sm sm:text-base font-medium dark:text-gray-100">Field Type</Label>
         <Select
           value={field.type}
           onValueChange={(value: FormFieldType) => handleFieldChange("type", value)}
         >
-          <SelectTrigger className="text-base">
+          <SelectTrigger className="text-sm sm:text-base dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
             <SelectValue placeholder="Select field type" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="TEXT">Text</SelectItem>
-            <SelectItem value="TEXTAREA">Text Area</SelectItem>
-            <SelectItem value="NUMBER">Number</SelectItem>
-            <SelectItem value="DATE">Date</SelectItem>
-            <SelectItem value="RADIO">Radio</SelectItem>
-            <SelectItem value="CHECKBOX">Checkbox</SelectItem>
-            <SelectItem value="SELECT">Select</SelectItem>
-            <SelectItem value="FILE">File</SelectItem>
-            <SelectItem value="IMAGE">Image</SelectItem>
-            <SelectItem value="RATING">Rating</SelectItem>
-            <SelectItem value="SIGNATURE">Signature</SelectItem>
-            <SelectItem value="TIME">Time</SelectItem>
+          <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
+            <SelectItem value="TEXT" className="dark:text-gray-100">Text</SelectItem>
+            <SelectItem value="TEXTAREA" className="dark:text-gray-100">Text Area</SelectItem>
+            <SelectItem value="NUMBER" className="dark:text-gray-100">Number</SelectItem>
+            <SelectItem value="DATE" className="dark:text-gray-100">Date</SelectItem>
+            <SelectItem value="RADIO" className="dark:text-gray-100">Radio</SelectItem>
+            <SelectItem value="CHECKBOX" className="dark:text-gray-100">Checkbox</SelectItem>
+            <SelectItem value="SELECT" className="dark:text-gray-100">Select</SelectItem>
+            <SelectItem value="FILE" className="dark:text-gray-100">File</SelectItem>
+            <SelectItem value="IMAGE" className="dark:text-gray-100">Image</SelectItem>
+            <SelectItem value="RATING" className="dark:text-gray-100">Rating</SelectItem>
+            <SelectItem value="SIGNATURE" className="dark:text-gray-100">Signature</SelectItem>
+            <SelectItem value="TIME" className="dark:text-gray-100">Time</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-2 sm:space-x-3">
         <Switch
           checked={field.isRequired}
           onCheckedChange={(checked) => handleFieldChange("isRequired", checked)}
           className="data-[state=checked]:bg-primary"
         />
-        <Label className="text-base font-medium">Required Field</Label>
+        <Label className="text-sm sm:text-base font-medium dark:text-gray-100">Required Field</Label>
       </div>
 
       {(field.type === "RADIO" || field.type === "CHECKBOX" || field.type === "SELECT") && (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
-            <Label className="text-base font-medium">Options</Label>
+            <Label className="text-sm sm:text-base font-medium dark:text-gray-100">Options</Label>
             <Button
               variant="outline"
               size="sm"
               onClick={handleAddOption}
-              className="hover:bg-primary/5 transition-colors"
+              className="hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Option
             </Button>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {options.map((option, index) => (
               <div 
                 key={index} 
-                className="flex items-center space-x-3 group"
+                className="flex items-center space-x-2 sm:space-x-3 group"
               >
                 <Input
                   value={option.name}
                   onChange={(e) => handleUpdateOption(index, e.target.value)}
                   placeholder={`Option ${index + 1}`}
-                  className="flex-1"
+                  className="flex-1 text-sm sm:text-base dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                 />
                 <TooltipProvider>
                   <Tooltip>
@@ -166,7 +166,7 @@ export function FormFieldEditor({ field, onUpdate, onDelete }: FormFieldEditorPr
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteOption(index)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

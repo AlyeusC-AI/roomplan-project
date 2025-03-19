@@ -38,19 +38,22 @@ interface FormBuilderProps {
   onDelete: (formId: number) => void;
   setSelectedForm: (form: Form | null) => void;
   isFormsListCollapsed: boolean;
+  isSaving: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
 }
 
 function DragHandle({ className }: { className?: string }) {
   return (
     <button
       className={cn(
-        "cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded-md transition-all duration-200",
+        "cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all duration-200",
         "focus:outline-none focus:ring-2 focus:ring-primary/20",
         className
       )}
       aria-label="Drag to reorder"
     >
-      <GripVertical className="w-4 h-4 text-gray-400" />
+      <GripVertical className="w-4 h-4 text-gray-400 dark:text-gray-500" />
     </button>
   );
 }
@@ -83,13 +86,14 @@ function SortableSection({ section, onUpdate, onDelete, children }: {
       ref={setNodeRef} 
       style={style} 
       className={cn(
-        "p-6 transition-all duration-200 border-2",
-        isDragging ? "shadow-lg ring-2 ring-primary/20 bg-primary/5" : "hover:shadow-md",
+        "p-4 sm:p-6 transition-all duration-200 border-2",
+        "dark:bg-gray-800 dark:border-gray-700",
+        isDragging ? "shadow-lg ring-2 ring-primary/20 bg-primary/5 dark:bg-primary/10" : "hover:shadow-md",
         "group"
       )}
     >
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <div className="flex items-center space-x-2 sm:space-x-3">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -106,7 +110,7 @@ function SortableSection({ section, onUpdate, onDelete, children }: {
             variant="ghost"
             size="sm"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hover:bg-gray-100"
+            className="hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             {isCollapsed ? (
               <ChevronRight className="w-4 h-4" />
@@ -118,7 +122,7 @@ function SortableSection({ section, onUpdate, onDelete, children }: {
             value={section.name}
             onChange={(e) => onUpdate("name", e.target.value)}
             placeholder="Section name"
-            className="font-medium text-lg border-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent p-0 h-12"
+            className="font-medium text-base sm:text-lg border-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent p-0 h-10 sm:h-12 dark:text-gray-100"
           />
         </div>
         <TooltipProvider>
@@ -128,7 +132,7 @@ function SortableSection({ section, onUpdate, onDelete, children }: {
                 variant="ghost"
                 size="sm"
                 onClick={onDelete}
-                className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
+                className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -177,8 +181,9 @@ function SortableField({ field, sectionId, onUpdate, onDelete, children }: {
       ref={setNodeRef} 
       style={style} 
       className={cn(
-        "flex items-start space-x-4 p-6 rounded-lg transition-all duration-200 bg-white border",
-        isDragging ? "bg-primary/5 shadow-md" : "hover:bg-gray-50",
+        "flex items-start space-x-2 sm:space-x-4 p-4 sm:p-6 rounded-lg transition-all duration-200",
+        "bg-white dark:bg-gray-800 border dark:border-gray-700",
+        isDragging ? "bg-primary/5 dark:bg-primary/10 shadow-md" : "hover:bg-gray-50 dark:hover:bg-gray-700/50",
         "group"
       )}
     >
@@ -203,16 +208,26 @@ function SortableField({ field, sectionId, onUpdate, onDelete, children }: {
 
 function DragOverlayContent({ id, type }: { id: number; type: 'section' | 'field' }) {
   return (
-    <div className="bg-white rounded-lg shadow-lg p-4 flex items-center space-x-3 border-2 border-primary/20">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex items-center space-x-3 border-2 border-primary/20 dark:border-primary/30">
       <ArrowUpDown className="w-4 h-4 text-primary animate-pulse" />
-      <span className="text-sm font-medium">
+      <span className="text-sm font-medium dark:text-gray-100">
         {type === 'section' ? 'Section' : 'Field'} {id}
       </span>
     </div>
   );
 }
 
-export function FormBuilder({ form:currentForm, onSave, onUpdate, onDelete,setSelectedForm: setCurrentForm,isFormsListCollapsed}: FormBuilderProps) {
+export function FormBuilder({ 
+  form:currentForm, 
+  onSave, 
+  onUpdate, 
+  onDelete,
+  setSelectedForm: setCurrentForm,
+  isFormsListCollapsed,
+  isSaving,
+  isUpdating,
+  isDeleting
+}: FormBuilderProps) {
 //   const [currentForm, setCurrentForm] = useState<Form | null>(form);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [activeType, setActiveType] = useState<'section' | 'field' | null>(null);
@@ -458,38 +473,40 @@ export function FormBuilder({ form:currentForm, onSave, onUpdate, onDelete,setSe
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6 space-y-4 sm:space-y-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="formName" className="text-base font-medium">Form Name</Label>
+            <Label htmlFor="formName" className="text-base font-medium dark:text-gray-100">Form Name</Label>
             <Input
               id="formName"
               value={currentForm.name}
               onChange={(e) => handleFormChange("name", e.target.value)}
               placeholder="Enter form name"
-              className="text-lg font-medium h-12"
+              className="text-base sm:text-lg font-medium h-10 sm:h-12 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+              disabled={isSaving || isUpdating}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="formDescription" className="text-base font-medium">Description</Label>
+            <Label htmlFor="formDescription" className="text-base font-medium dark:text-gray-100">Description</Label>
             <Textarea
               id="formDescription"
               value={currentForm.desc || ""}
               onChange={(e) => handleFormChange("desc", e.target.value)}
               placeholder="Enter form description"
-              className="min-h-[100px] resize-y"
+              className="min-h-[100px] resize-y dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+              disabled={isSaving || isUpdating}
             />
           </div>
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-xl font-semibold">Form Sections</h3>
-            <p className="text-sm text-gray-500 mt-1">Organize your form into sections</p>
+            <h3 className="text-lg sm:text-xl font-semibold dark:text-gray-100">Form Sections</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Organize your form into sections</p>
           </div>
         </div>
 
@@ -607,8 +624,11 @@ export function FormBuilder({ form:currentForm, onSave, onUpdate, onDelete,setSe
         </DndContext>
       </div>
 
-      <div className={cn("sticky  bg-white border-t pt-4 mt-8", isFormsListCollapsed ? "bottom-4 py-4" : "bottom-0")}>
-        <div className="max-w-5xl mx-auto flex justify-end space-x-3">
+      <div className={cn(
+        "sticky bg-white dark:bg-gray-800 border-t dark:border-gray-700 pt-4 mt-8",
+        isFormsListCollapsed ? "bottom-0 py-4" : "bottom-0"
+      )}>
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
           {currentForm.id && (
             <TooltipProvider>
               <Tooltip>
@@ -616,9 +636,17 @@ export function FormBuilder({ form:currentForm, onSave, onUpdate, onDelete,setSe
                   <Button
                     variant="destructive"
                     onClick={() => currentForm.id && onDelete(currentForm.id)}
-                    className="hover:bg-destructive/90"
+                    className="w-full sm:w-auto hover:bg-destructive/90"
+                    disabled={isDeleting}
                   >
-                    Delete Form
+                    {isDeleting ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        Deleting...
+                      </>
+                    ) : (
+                      "Delete Form"
+                    )}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -632,9 +660,17 @@ export function FormBuilder({ form:currentForm, onSave, onUpdate, onDelete,setSe
               <TooltipTrigger asChild>
                 <Button 
                   onClick={handleSave}
-                  className="bg-primary hover:bg-primary/90"
+                  className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                  disabled={isSaving || isUpdating}
                 >
-                  {currentForm.id ? "Update Form" : "Save Form"}
+                  {isSaving || isUpdating ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      {isUpdating ? "Updating..." : "Saving..."}
+                    </>
+                  ) : (
+                    currentForm.id ? "Update Form" : "Save Form"
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
