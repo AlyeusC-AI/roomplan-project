@@ -10,23 +10,25 @@ let logger = Logger(subsystem: "com.servicegeek.servicegeekmobile", category: "L
 
 @ReactModule
 class RoomScanModule: NSObject, RCTBridgeModule {
-  @ReactMathod
-  @objc func isAvailable(callback: RCTResponseSenderBlock) {
-    callback(ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh))
+  @ReactMethod
+  @objc func isAvailable(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    let available = ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh)
+    logger.info("[RoomScanModule] isAvailable \(available)")
+    resolve(available)
   }
 
-  @ReactMathod
+  @ReactMethod
   @objc func getOutputFiles(callback: RCTResponseSenderBlock) {
     let destinationFolderURL = FileManager.default.temporaryDirectory.appending(path: "Export")
     let destinationURL = destinationFolderURL.appending(path: "Room.usdz")
     let capturedRoomURL = destinationFolderURL.appending(path: "Room.json")
     let transformedRoomURL = destinationFolderURL.appending(path: "TransformedRoom.json")
 
-    callback([
-      "destinationURL": destinationURL,
-      "capturedRoomURL": capturedRoomURL,
-      "transformedRoomURL": transformedRoomURL
-    ])
+    callback([[
+      "destinationURL": destinationURL.absoluteString,
+      "capturedRoomURL": capturedRoomURL.absoluteString,
+      "transformedRoomURL": transformedRoomURL.absoluteString
+    ]])
   }
 }
 
@@ -81,6 +83,9 @@ class RoomCaptureViewWrapper : UIView, RoomCaptureViewDelegate {
         logger.info("[RoomCapture] Setting up RoomCaptureView")
         roomCaptureView = RoomCaptureView(frame: self.bounds)
         roomCaptureView.delegate = self
+
+        let destinationFolderURL = FileManager.default.temporaryDirectory.appending(path: "Export")
+        try? FileManager.default.removeItem(at: destinationFolderURL)
 
         self.addSubview(roomCaptureView)
 
@@ -140,7 +145,7 @@ class RoomCaptureViewWrapper : UIView, RoomCaptureViewDelegate {
     func surfaceToCoords(surfaces: [CapturedRoom.Surface]) -> [[simd_float3]] {
       if #available(iOS 17.0, *) {
         let transformedPoints = surfaces.map { surface in
-          let extendedCorners = surface.polygonCorners
+          var extendedCorners = surface.polygonCorners
           if extendedCorners.isEmpty {
               extendedCorners = [surface.dimensions * -0.5, surface.dimensions * 0.5]
           }
@@ -151,11 +156,11 @@ class RoomCaptureViewWrapper : UIView, RoomCaptureViewDelegate {
       return []
     }
 
-    function objectToCoords(objects: [CapturedRoom.Object]) -> [[simd_float3]] {
+    func objectToCoords(objects: [CapturedRoom.Object]) -> [[simd_float3]] {
       if #available(iOS 17.0, *) {
         let transformedPoints = objects.map { object in
-          let extendedCorners = [objects.dimensions * -0.5, objects.dimensions * 0.5]
-          return extendedCorners.map { transformPoint($0, using: objects.transform) }
+          let extendedCorners = [object.dimensions * -0.5, object.dimensions * 0.5]
+          return extendedCorners.map { transformPoint($0, using: object.transform) }
         }
         return transformedPoints
       }
@@ -170,7 +175,7 @@ class RoomCaptureViewWrapper : UIView, RoomCaptureViewDelegate {
           "doors": surfaceToCoords(surfaces: finalResults?.doors ?? []),
           "windows": surfaceToCoords(surfaces: finalResults?.windows ?? []),
           "openings": surfaceToCoords(surfaces: finalResults?.openings ?? []),
-          "objects": surfaceToCoords(surfaces: finalResults?.objects ?? []),
+          "objects": objectToCoords(objects: finalResults?.objects ?? []),
         ]
       }
       return [:]
