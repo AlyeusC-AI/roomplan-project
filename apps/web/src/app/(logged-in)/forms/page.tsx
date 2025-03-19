@@ -41,7 +41,7 @@ export default function FormsPage() {
     fetchForms();
   }, []);
 
-  const fetchForms = async () => {
+  const fetchForms = async (newForm: Form | null = null) => {
     try {
       const response = await fetch("/api/v1/organization/forms");
       if (!response.ok) {
@@ -49,8 +49,10 @@ export default function FormsPage() {
       }
       const data = await response.json();
       setForms(data);
-      if(selectedForm){
-        setSelectedForm(data.find((form: Form) => form.id === selectedForm.id) || null);
+      console.log("🚀 ~ fetchForms ~ selectedForm:", selectedForm)
+
+      if(selectedForm||newForm){
+        setSelectedForm(data.find((form: Form) => form.id === (selectedForm?.id || newForm?.id)) || null);
       }
     } catch (error) {
       console.error("Error fetching forms:", error);
@@ -76,9 +78,11 @@ export default function FormsPage() {
       }
 
       const savedForm = await response.json();
+      console.log("🚀 ~ handleSaveForm ~ savedForm:", savedForm)
       toast.success("Form saved successfully");
+      setSelectedForm(savedForm);
      
-      fetchForms();
+      fetchForms(savedForm);
     } catch (error) {
       console.error("Error saving form:", error);
       toast.error("Failed to save form");

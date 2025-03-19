@@ -44,12 +44,15 @@ const PDFHTML = () => {
                   <OverviewPhotos room={room} />
                 </div>
                 {showDimensionsAndDetails && (
-                  <DimensionsAndDetails roomName={room.name} room={room} />
+                  <>
+                    <DimensionsAndDetails roomName={room.name} room={room} />
+                    <AffectedAreas
+                      roomName={room.name}
+                      areasAffected={room.AreaAffected}
+                    />
+                  </>
                 )}
-                <AffectedAreas
-                  roomName={room.name}
-                  areasAffected={room.AreaAffected}
-                />
+            
                 <Readings room={room} roomReadings={room.RoomReading} />
                 <Notes roomName={room.name} notes={room.Notes} />
               </div>
