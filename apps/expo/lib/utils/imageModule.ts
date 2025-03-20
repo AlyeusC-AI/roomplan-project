@@ -29,6 +29,9 @@ export const getStorageUrl = (
   imageKey: string,
   bucket = STORAGE_BUCKETS.PROJECT
 ): string => {
+  if (imageKey.startsWith("http")) {
+    return imageKey;
+  }
   return `${STORAGE_URLS[bucket]}/${imageKey}`;
 };
 

@@ -11967,6 +11967,11 @@ image-size@^1.0.2:
   dependencies:
     queue "6.0.2"
 
+imagekit-javascript@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/imagekit-javascript/-/imagekit-javascript-3.1.0.tgz#129fe885124a1a6086d9915cb439192bbc12f4f9"
+  integrity sha512-56YmmOg6vKarIg4A41E9T08qQ2ri8862AYU/Ykhrbr9Cd8i6BIeKkroR16cmsNYFOIoLk35/O7b8o7I8DoyGaQ==
+
 imagekit@^6.0.0:
   version "6.0.0"
   resolved "https://registry.yarnpkg.com/imagekit/-/imagekit-6.0.0.tgz#b34c6acfaedac07c95204cbe3c8b8c791c0c1f1b"
