@@ -184,7 +184,9 @@ export default function EditProject() {
   const { address, setAddress } = addressPickerStore((state) => state);
   const [loading, setLoading] = useState(false);
   const project = projectStore();
-  const [damageType, setDamageType] = useState<DamageType | undefined>();
+  const [damageType, setDamageType] = useState<DamageType | undefined>(
+    project.project?.damageType || undefined
+  );
   const [clientName, setClientName] = useState(
     project.project?.clientName || ""
   );
@@ -450,7 +452,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   sectionInput: {
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     height: 44,
     paddingHorizontal: 16,
     borderRadius: 12,

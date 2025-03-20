@@ -24,12 +24,14 @@ interface DamageTypeSelectorProps {
   value?: DamageType;
   onChange: (value: DamageType) => void;
   style?: StyleProp<ViewStyle>;
+  bodyStyle?: StyleProp<ViewStyle>;
 }
 
 export function DamageTypeSelector({
   value,
   onChange,
   style,
+  bodyStyle,
 }: DamageTypeSelectorProps) {
   const [modalVisible, setModalVisible] = useState(false);
   const selectedLabel = value
@@ -37,7 +39,7 @@ export function DamageTypeSelector({
     : "Select damage type";
 
   return (
-    <View style={styles.section}>
+    <View style={[styles.section, bodyStyle]}>
       <Text style={styles.sectionTitle}>Damage Type</Text>
 
       <View style={styles.sectionBody}>
@@ -98,7 +100,7 @@ export function DamageTypeSelector({
 
 const styles = StyleSheet.create({
   section: {
-    paddingTop: 12,
+    // paddingTop: 12,
   },
   sectionTitle: {
     margin: 8,
@@ -111,14 +113,7 @@ const styles = StyleSheet.create({
   },
   sectionBody: {
     borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
+ 
   },
   selectorInput: {
     backgroundColor: "transparent",

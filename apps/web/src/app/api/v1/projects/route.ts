@@ -128,7 +128,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const [, authUser] = await user(req);
 
-  const body: { location: AddressType; name: string } = await req.json();
+  const body: { location: AddressType; name: string; damageType: string } = await req.json();
 
   try {
     const { data } = await supabaseServiceRole
@@ -148,6 +148,7 @@ export async function POST(req: NextRequest) {
         lng: `${body.location.lng}`,
         organizationId: data!.id,
         status: "active",
+        damageType: body.damageType,
       })
       .select("*")
       .single();
