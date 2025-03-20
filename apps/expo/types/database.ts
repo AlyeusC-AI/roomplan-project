@@ -1757,6 +1757,7 @@ export type Database = {
           closedAt: string | null
           companyName: string
           createdAt: string
+          damageType: string | null
           forecast: string
           humidity: string
           id: number
@@ -1778,7 +1779,6 @@ export type Database = {
           roofSpecs: Json | null
           status: string | null
           temperature: string
-          type: string | null
           wind: string
         }
         Insert: {
@@ -1795,6 +1795,7 @@ export type Database = {
           closedAt?: string | null
           companyName?: string
           createdAt?: string
+          damageType?: string | null
           forecast?: string
           humidity?: string
           id?: number
@@ -1816,7 +1817,6 @@ export type Database = {
           roofSpecs?: Json | null
           status?: string | null
           temperature?: string
-          type?: string | null
           wind?: string
         }
         Update: {
@@ -1833,6 +1833,7 @@ export type Database = {
           closedAt?: string | null
           companyName?: string
           createdAt?: string
+          damageType?: string | null
           forecast?: string
           humidity?: string
           id?: number
@@ -1854,7 +1855,6 @@ export type Database = {
           roofSpecs?: Json | null
           status?: string | null
           temperature?: string
-          type?: string | null
           wind?: string
         }
         Relationships: [

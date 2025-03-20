@@ -169,6 +169,10 @@ import { toast } from "sonner-native";
 import { FormInput, FormButton } from "@/components/ui/form";
 import { Box, VStack, HStack, FormControl, Pressable } from "native-base";
 import { projectsStore } from "@/lib/state/projects";
+import {
+  DamageType,
+  DamageTypeSelector,
+} from "@/components/project/damageSelector";
 
 export default function EditProject() {
   const { session: supabaseSession } = userStore((state) => state);
@@ -180,7 +184,7 @@ export default function EditProject() {
   const { address, setAddress } = addressPickerStore((state) => state);
   const [loading, setLoading] = useState(false);
   const project = projectStore();
-
+  const [damageType, setDamageType] = useState<DamageType | undefined>();
   const [clientName, setClientName] = useState(
     project.project?.clientName || ""
   );
@@ -213,6 +217,7 @@ export default function EditProject() {
         clientEmail,
         clientName,
         clientPhoneNumber,
+        damageType,
       };
 
       if (address) {
@@ -297,6 +302,11 @@ export default function EditProject() {
                 </HStack>
               </Pressable>
             }
+          />
+          <DamageTypeSelector
+            value={damageType}
+            onChange={setDamageType}
+            style={styles.sectionInput}
           />
 
           <Box>

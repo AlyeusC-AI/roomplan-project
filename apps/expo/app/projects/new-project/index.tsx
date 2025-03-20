@@ -132,7 +132,7 @@ import {
 
 export default function NewProject() {
   const [projectName, setProjectName] = useState("");
-  const [damageType, setDamageType] = useState<DamageType>("fire");
+  const [damageType, setDamageType] = useState<DamageType | undefined>();
   const { address, setAddress } = addressPickerStore((state) => state);
   const projects = projectsStore();
   const { session } = userStore();
@@ -221,7 +221,11 @@ export default function NewProject() {
               </View>
             </View>
 
-            <DamageTypeSelector value={damageType} onChange={setDamageType} />
+            <DamageTypeSelector
+              value={damageType}
+              onChange={setDamageType}
+              style={styles.sectionInput}
+            />
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Street Address</Text>
