@@ -179,9 +179,9 @@ export default function CameraScreen() {
           },
           body: JSON.stringify({
             roomId: selectedRoomId,
-            imageId: uploadResult.fileId,
-            imageUrl: uploadResult.url,
-            imagePath: uploadResult.filePath,
+            imageId: uploadResult.url,
+            // imageUrl: uploadResult.fileId,
+            // imagePath: uploadResult.filePath,
           }),
         }
       );
@@ -445,7 +445,7 @@ export default function CameraScreen() {
             />
 
             {/* Upload Queue Overlay */}
-            {uploadQueue.length > 0 && (
+            {/* {uploadQueue.length > 0 && (
               <View className="absolute top-4 right-4 space-y-2">
                 {uploadQueue.map((item) => (
                   <View
@@ -480,7 +480,7 @@ export default function CameraScreen() {
                   </View>
                 ))}
               </View>
-            )}
+            )} */}
 
             {/* iOS-style zoom indicator */}
             {showZoomSlider && (
