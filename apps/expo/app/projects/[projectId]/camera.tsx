@@ -31,10 +31,14 @@ import {
   Camera as CameraIcon,
   Zap,
   ZapOff,
+  Upload,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImageManipulator from "expo-image-manipulator";
+import { uploadImage } from "@/lib/imagekit";
 
 export const supabaseServiceRole = createClient(
   getConstants().supabaseUrl,
@@ -48,12 +52,22 @@ Reanimated.addWhitelistedNativeProps({
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+interface UploadItem {
+  id: string;
+  progress: number;
+  status: "idle" | "uploading" | "success" | "error";
+  message: string;
+  photo: PhotoFile;
+}
+
 export default function CameraScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const camera = useRef<Camera>(null);
   const [lastPhoto, setLastPhoto] = useState("");
-  const device = useCameraDevice("back");
+  const device = useCameraDevice("back", {
+    physicalDevices: ["wide-angle-camera"],
+  });
   const [disabled, setDisabled] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const { session: supabaseSession } = userStore((state) => state);
@@ -61,139 +75,166 @@ export default function CameraScreen() {
     projectId: string;
   }>();
   const rooms = roomsStore();
+
   const zoom = useSharedValue(1);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [flash, setFlash] = useState<"off" | "on" | "auto">("auto");
   const [showZoomSlider, setShowZoomSlider] = useState(false);
 
   const [selectedRoomId, setRoomId] = useState("");
-  const [uploadQueue, setUploadQueue] = useState<PhotoFile[]>([]);
+  const [uploadQueue, setUploadQueue] = useState<UploadItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+
+  const refetchRooms = async () => {
+    const roomsRes = await fetch(
+      `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": supabaseSession?.access_token || "",
+        },
+      }
+    );
+
+    const roomsData = await roomsRes.json();
+    rooms.setRooms(roomsData.rooms);
+  };
+  useEffect(() => {
+    console.log(
+      "🚀 ~ CameraScreen ~ rooms:",
+      JSON.stringify(rooms.rooms, null, 2)
+    );
+    refetchRooms();
+  }, []);
+
   const onRoomSelect = (r: string) => {
     setRoomId(r);
   };
 
   // Process image uploads in the background
-  const processImageUpload = async (photo: PhotoFile) => {
+  const processImageUpload = async (uploadItem: UploadItem) => {
+    console.log("🚀 ~ processImageUpload ~ uploadItem:", uploadItem);
     try {
       setIsUploading(true);
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      setUploadQueue((prev) =>
+        prev.map((item) =>
+          item.id === uploadItem.id
+            ? {
+                ...item,
+                status: "uploading",
+                progress: 0,
+                message: "Preparing image...",
+              }
+            : item
+        )
+      );
 
-      console.log("Uploading photo");
-      const fileName = photo.path.substring(photo.path.lastIndexOf("/") + 1);
-      const supabasePath = `${user!.id}/${uuid.v4()}_${fileName}`;
+      setUploadQueue((prev) =>
+        prev.map((item) =>
+          item.id === uploadItem.id
+            ? { ...item, progress: 0.2, message: "Optimizing image..." }
+            : item
+        )
+      );
 
-      let contentType = "image/jpeg";
-      if (fileName.indexOf(".png") >= 0) {
-        contentType = "image/png";
-      }
+      // Convert PhotoFile to Blob for ImageKit upload
+      // const response = await fetch(uploadItem.photo.path);
+      // const blob = await response.blob();
 
-      // Resize the image to reduce file size
-      try {
-        // Resize and compress the image
-        const manipResult = await ImageManipulator.manipulateAsync(
-          photo.path,
-          [{ resize: { width: 1200 } }], // Resize to max width of 1200px
-          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG } // 70% quality JPEG
-        );
+      // console.log("🚀 ~ processImageUpload ~ blob:", blob);
 
-        // Use the resized image for upload
-        const p = {
-          uri: manipResult.uri,
-          type: "image/jpeg",
-          name: fileName,
-        };
+      setUploadQueue((prev) =>
+        prev.map((item) =>
+          item.id === uploadItem.id
+            ? { ...item, progress: 0.4, message: "Uploading..." }
+            : item
+        )
+      );
 
-        const formData = new FormData();
-        // @ts-expect-error maaaaan react-native sucks
-        formData.append("file", p);
+      // Upload to ImageKit
+      const uploadResult = await uploadImage(uploadItem.photo, {
+        folder: `projects/${projectId}/rooms/${selectedRoomId}`,
+        useUniqueFileName: true,
+        tags: [`project-${projectId}`, `room-${selectedRoomId}`],
+      });
+      console.log("🚀 ~ processImageUpload ~ uploadResult:", uploadResult);
 
-        const { data, error } = await supabaseServiceRole.storage
-          .from("media")
-          .upload(supabasePath, formData, {
-            cacheControl: "3600",
-            contentType: "image/jpeg",
-            upsert: false,
-          });
+      setUploadQueue((prev) =>
+        prev.map((item) =>
+          item.id === uploadItem.id
+            ? { ...item, progress: 0.8, message: "Finalizing..." }
+            : item
+        )
+      );
 
-        console.log("Uploaded photo", data, error);
-        if (data) {
-          await fetch(
-            `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/image`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "auth-token": `${supabaseSession?.access_token}`,
-              },
-              body: JSON.stringify({
-                roomId: selectedRoomId,
-                imageId: data.path,
-              }),
-            }
-          );
+      // Save image reference to your backend
+      const saveImageRes = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/image`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": `${supabaseSession?.access_token}`,
+          },
+          body: JSON.stringify({
+            roomId: selectedRoomId,
+            imageId: uploadResult.url,
+            // imageUrl: uploadResult.fileId,
+            // imagePath: uploadResult.filePath,
+          }),
         }
-      } catch (resizeError) {
-        console.error("Error resizing image:", resizeError);
+      );
+      console.log("🚀 ~ processImageUpload ~ saveImageRes:", saveImageRes);
 
-        // Fallback to original image if resize fails
-        const p = {
-          uri: photo.path,
-          type: contentType,
-          name: fileName,
-        };
+      const saveImageData = await saveImageRes.json();
+      console.log("🚀 ~ processImageUpload ~ saveImageData:", saveImageData);
 
-        const formData = new FormData();
-        // @ts-expect-error maaaaan react-native sucks
-        formData.append("file", p);
-
-        const { data, error } = await supabaseServiceRole.storage
-          .from("media")
-          .upload(supabasePath, formData, {
-            cacheControl: "3600",
-            contentType,
-            upsert: false,
-          });
-
-        console.log("Uploaded original photo", data, error);
-        if (data) {
-          await fetch(
-            `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/image`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "auth-token": `${supabaseSession?.access_token}`,
-              },
-              body: JSON.stringify({
-                roomId: selectedRoomId,
-                imageId: data.path,
-              }),
-            }
-          );
-        }
-      }
+      setUploadQueue((prev) =>
+        prev.map((item) =>
+          item.id === uploadItem.id
+            ? {
+                ...item,
+                status: "success",
+                progress: 1,
+                message: "Upload complete!",
+              }
+            : item
+        )
+      );
     } catch (error) {
       console.error("Upload error:", error);
+      setUploadQueue((prev) =>
+        prev.map((item) =>
+          item.id === uploadItem.id
+            ? { ...item, status: "error", message: "Upload failed" }
+            : item
+        )
+      );
     } finally {
-      setIsUploading(false);
-      // Process next photo in queue if any
-      setUploadQueue((prevQueue) => {
-        const newQueue = [...prevQueue];
-        newQueue.shift(); // Remove the processed photo
-        return newQueue;
-      });
+      // Remove the completed upload after a delay
+      setTimeout(() => {
+        setUploadQueue((prev) =>
+          prev.filter((item) => item.id !== uploadItem.id)
+        );
+        if (uploadQueue.length === 1) {
+          setIsUploading(false);
+        }
+      }, 2000);
     }
   };
 
   // Handle the upload queue
   useEffect(() => {
-    if (uploadQueue.length > 0 && !isUploading) {
-      processImageUpload(uploadQueue[0]);
+    if (uploadQueue.length > 0) {
+      const pendingUploads = uploadQueue.filter(
+        (item) => item.status === "idle"
+      );
+      pendingUploads.forEach((uploadItem) => {
+        processImageUpload(uploadItem);
+      });
     }
-  }, [uploadQueue, isUploading]);
+  }, [uploadQueue]);
 
   // Simplified function to just capture the photo and update UI immediately
   const processImage = (photo: PhotoFile) => {
@@ -201,7 +242,16 @@ export default function CameraScreen() {
     setLastPhoto(photo.path);
 
     // Add to upload queue to process in background
-    setUploadQueue((prevQueue) => [...prevQueue, photo]);
+    setUploadQueue((prev) => [
+      ...prev,
+      {
+        id: uuid.v4(),
+        progress: 0,
+        status: "idle",
+        message: "Queued",
+        photo,
+      },
+    ]);
   };
 
   const SCALE_FULL_ZOOM = 3;
@@ -393,6 +443,44 @@ export default function CameraScreen() {
               ref={camera}
               animatedProps={animatedProps}
             />
+
+            {/* Upload Queue Overlay */}
+            {/* {uploadQueue.length > 0 && (
+              <View className="absolute top-4 right-4 space-y-2">
+                {uploadQueue.map((item) => (
+                  <View
+                    key={item.id}
+                    className="bg-black/80 rounded-lg p-4 w-64"
+                  >
+                    <View className="flex-row items-center space-x-2 mb-2">
+                      {item.status === "success" ? (
+                        <CheckCircle2 size={20} color="#4CAF50" />
+                      ) : item.status === "error" ? (
+                        <XCircle size={20} color="#F44336" />
+                      ) : (
+                        <Upload size={20} color="white" />
+                      )}
+                      <Text className="text-white font-medium flex-1">
+                        {item.message}
+                      </Text>
+                      {item.status === "uploading" && (
+                        <Text className="text-white/70 text-xs">
+                          {Math.round(item.progress * 100)}%
+                        </Text>
+                      )}
+                    </View>
+                    {item.status === "uploading" && (
+                      <View className="h-1 bg-white/20 rounded-full overflow-hidden">
+                        <View
+                          className="h-full bg-white rounded-full"
+                          style={{ width: `${item.progress * 100}%` }}
+                        />
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </View>
+            )} */}
 
             {/* iOS-style zoom indicator */}
             {showZoomSlider && (

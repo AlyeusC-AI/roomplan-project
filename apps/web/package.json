@@ -90,6 +90,7 @@
     "formidable": "^2.1.1",
     "framer-motion": "^11.13.3",
     "html2pdf.js": "^0.10.2",
+    "imagekit": "^6.0.0",
     "immer": "9.0.16",
     "input-otp": "^1.4.2",
     "intercept-stdout": "^0.1.2",
