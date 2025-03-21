@@ -60,8 +60,6 @@ class RoomScanView: RCTViewManager {
 
 class RoomCaptureViewWrapper : UIView, RoomCaptureViewDelegate {
 
-    private var isScanning: Bool = false
-
     private var roomCaptureView: RoomCaptureView!
     private var roomCaptureSessionConfig: RoomCaptureSession.Configuration = RoomCaptureSession.Configuration()
     private var finalResults: CapturedRoom?
@@ -94,13 +92,11 @@ class RoomCaptureViewWrapper : UIView, RoomCaptureViewDelegate {
 
     public func startSession() {
         logger.info("[RoomCapture] Starting capture session")
-        isScanning = true
         roomCaptureView?.captureSession.run(configuration: roomCaptureSessionConfig)
     }
     
     public func stopSession() {
         logger.info("[RoomCapture] Stopping capture session")
-        isScanning = false
         roomCaptureView?.captureSession.stop()
     }
 

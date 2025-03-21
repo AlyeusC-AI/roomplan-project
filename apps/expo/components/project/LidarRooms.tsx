@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { roomsStore } from '@/lib/state/rooms';
-import { useRouter } from 'expo-router';
+import { useGlobalSearchParams, usePathname, useRouter } from 'expo-router';
 
 const PLACEHOLDER_SVG = `
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -16,12 +16,16 @@ const PLACEHOLDER_SVG = `
 </svg>
 `;
 
-export function LidarRooms({ projectId }: { projectId: string }) {
+export function LidarRooms() {
+  const { projectId } = useGlobalSearchParams<{
+    projectId: string;
+  }>();
   const { session: supabaseSession } = userStore((state) => state);
   const rooms = roomsStore();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     async function fetchRooms() {
@@ -49,12 +53,14 @@ export function LidarRooms({ projectId }: { projectId: string }) {
       }
     }
 
-    fetchRooms();
-  }, [projectId]);
+    if (pathname === `/projects/${projectId}/lidar/rooms`) {
+      fetchRooms();
+    }
+  }, [projectId, pathname]);
 
   const handleAddRoom = () => {
     router.push({
-      pathname: "/projects/[projectId]/lidar/scan",
+      pathname: `/projects/${projectId}/lidar/scan`,
       params: {
         roomId: undefined,
         roomPlanSVG: undefined,
@@ -64,7 +70,7 @@ export function LidarRooms({ projectId }: { projectId: string }) {
 
   const handleRoomPress = (roomId: number, roomPlanSVG: string) => {
     router.push({
-      pathname: "/projects/[projectId]/lidar/scan",
+      pathname: `/projects/${projectId}/lidar/scan`,
       params: { roomId, roomPlanSVG },
     });
   };

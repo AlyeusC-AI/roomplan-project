@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Platform, TouchableOpacity, NativeModules,
   requireNativeComponent, UIManager, Text, TextInput, Dimensions,
   SafeAreaView, Alert} from 'react-native';
@@ -10,6 +10,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { roomsStore } from '@/lib/state/rooms';
 import { roomInferenceStore } from '@/lib/state/readings-image';
 import { supabaseServiceRole } from '@/app/projects/[projectId]/camera';
+import { cn } from '@/lib/utils';
 
 const { RoomScanModule } = NativeModules;
 
@@ -36,7 +37,7 @@ const RoomScanView = isRoomPlanAvailable()
   : null;
 
 interface LidarScanProps {
-  onScanComplete?: () => void;
+  onScanComplete?: (roomId?: number) => void;
   onClose?: () => void;
   roomId?: number;
   roomPlanSVG?: string;
@@ -45,6 +46,7 @@ interface LidarScanProps {
 const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanProps) => {
   const [finish, setFinish] = useState(false);
   const [showScanner, setShowScanner] = useState<boolean>(false);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isSupported, setIsSupported] = useState<boolean | null>(null);
   const [newRoomName, setNewRoomName] = useState<string>('');
   const { session: supabaseSession } = userStore((state) => state);
@@ -53,6 +55,8 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
   }>();
   const deviceWidth = Dimensions.get('window').width;
   const svgSize = deviceWidth * 0.8;
+  const processedRoomId = useRef<number | undefined>(roomId);
+  const processedRoomPlanSVG = useRef<string | undefined>(roomPlanSVG);
 
   useEffect(() => {
     const checkSupport = async () => {
@@ -63,7 +67,43 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
     checkSupport();
   }, []);
 
-  const handleStartScan = () => {
+  const handleStartScan = async () => {
+    if (!processedRoomId.current) {
+      console.log("new room creation - projectId", projectId)
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": supabaseSession?.access_token || "",
+          },
+          body: JSON.stringify({
+            name: newRoomName,
+          }),
+        }
+      );
+
+      const json = await res.json();
+
+      console.log("json", json);
+
+      if (json.status === "failed") {
+        const errorMessage = json.reason === "existing-room" ? "Room already exists" : "Failed to create room";
+        Alert.alert(
+          'Error',
+          errorMessage,
+          [{ text: 'OK', style: 'cancel' }]
+        );
+        return;
+      }
+
+      processedRoomId.current = json.room.id;
+      console.log("json.room.id", json.room.id);
+
+      roomsStore.getState().addRoom({ ...json.room, RoomReading: [] });
+      roomInferenceStore.getState().addRoom({ ...json.room, Inference: [] });
+    }
     setShowScanner(true);
   };
 
@@ -95,11 +135,11 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
           style: 'default',
           onPress: async () => {
             setFinish(true);
+            setIsProcessing(true);
 
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             try {
-
               const result = await new Promise<{
                 destinationURL: string,
                 capturedRoomURL: string,
@@ -115,45 +155,45 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
               });
               const transformedJSON = await fetch(result.transformedRoomURL).then(res => res.json());
               const roomPlanSvg = makeSVG(transformedJSON);
-  
-              let processedRoomId = roomId;
-  
-              if (!processedRoomId) {
-                const res = await fetch(
-                  `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room`,
-                  {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      "auth-token": supabaseSession?.access_token || "",
-                    },
-                    body: JSON.stringify({
-                      name: newRoomName,
-                    }),
-                  }
-                );
-  
-                const json = await res.json();
-  
-                processedRoomId = json.room.id;
-  
-                roomsStore.getState().addRoom({ ...json.room, RoomReading: [] });
-                roomInferenceStore.getState().addRoom({ ...json.room, Inference: [] });
-              }
-  
+
+              const formData = new FormData();
+              const fileName = `${processedRoomId.current}.usdz`
+              // @ts-expect-error react-native form data typing issue
+              formData.append("file", {
+                uri: result.destinationURL,
+                name: fileName
+              });
+
+              await supabaseServiceRole.storage
+                .from("roomplan-usdz")
+                .upload(fileName, formData, {
+                  cacheControl: "3600",
+                  upsert: true,
+                });
+
               await supabaseServiceRole
                 .from("Room")
-                .update({ roomPlanSVG: roomPlanSvg })
-                .eq("id", processedRoomId);
-              
+                .update({
+                  roomPlanSVG: roomPlanSvg,
+                  scannedFileKey: fileName
+                })
+                .eq("id", processedRoomId.current);
+
+              processedRoomPlanSVG.current = roomPlanSvg;
+
               if (onScanComplete) {
                 setTimeout(() => {
-                  onScanComplete();
+                  setShowScanner(false);
+                  onScanComplete(processedRoomId.current);
                 }, 3000);
               }
             } catch (error) {
+              console.error('error',error);
               setShowScanner(false);
             }
+
+            setIsProcessing(false);
+            setFinish(false);
           }
         },
       ]
@@ -222,13 +262,21 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
         </View>
         <SafeAreaView className="flex-1 w-full relative z-20">
           <TouchableOpacity 
-            className="absolute bottom-[30px] right-[30px] w-[60px] h-[60px] rounded-full bg-[#007AFF] justify-center items-center shadow-md z-20"
+            className={cn(
+              "absolute bottom-[30px] right-[30px] w-[60px] h-[60px] rounded-full bg-[#007AFF] justify-center items-center shadow-md z-20",
+              { "opacity-50": isProcessing }
+            )}
+            disabled={isProcessing}
             onPress={handleScanComplete}
           >
             <Ionicons name="checkmark" size={32} color="white" />
           </TouchableOpacity>
           <TouchableOpacity 
-            className="absolute top-20 right-5 w-11 h-11 bg-black/50 rounded-[22px] justify-center items-center z-20"
+            className={cn(
+              "absolute top-20 right-5 w-11 h-11 bg-black/50 rounded-[22px] justify-center items-center z-20",
+              { "opacity-50": isProcessing }
+            )}
+            disabled={isProcessing}
             onPress={handleCancel}
           >
             <MaterialIcons name="close" size={32} color="white" />
@@ -246,7 +294,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
         This feature is only available on iOS devices with LiDAR sensors.
       </Text>
 
-      {!roomId && (
+      {!roomId && !processedRoomId.current && (
         <View className="mx-10 mb-5">
           <Text className="text-base mb-1 text-[#444]">Room Name:</Text>
           <TextInput
@@ -265,7 +313,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
         disabled={!roomId && !newRoomName}
       >
         <Text className="text-white text-lg font-semibold">
-          {roomId ? 'Rescan Room' : 'Start Room Scan'}
+          {roomId || processedRoomId.current ? 'Rescan Room' : 'Start Room Scan'}
         </Text>
       </TouchableOpacity>
       <TouchableOpacity 
@@ -276,10 +324,10 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
         <Text className="ml-1 text-base text-[#007AFF]">Back</Text>
       </TouchableOpacity>
 
-      {roomPlanSVG && (
+      {processedRoomPlanSVG.current && (
         <View className="mt-8">
           <View className="mx-auto" style={{ width: svgSize, height: svgSize }}>
-            <SvgXml xml={roomPlanSVG} width="100%" height="100%" />
+            <SvgXml xml={processedRoomPlanSVG.current} width="100%" height="100%" />
           </View>
         </View>
       )}

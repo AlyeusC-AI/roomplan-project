@@ -13,8 +13,8 @@ const LidarScanScreen: React.FC = () => {
     <LidarScan
       roomId={Number(roomId)}
       roomPlanSVG={roomPlanSVG}
-      onScanComplete={() => {
-        router.back();
+      onScanComplete={(roomId) => {
+        // pass
       }}
       onClose={() => {
         router.back();
