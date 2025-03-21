@@ -1757,6 +1757,7 @@ export type Database = {
           closedAt: string | null
           companyName: string
           createdAt: string
+          damageType: string | null
           forecast: string
           humidity: string
           id: number
@@ -1782,30 +1783,31 @@ export type Database = {
         }
         Insert: {
           actualValue?: number | null
-          adjusterEmail?: string
-          adjusterName?: string
-          adjusterPhoneNumber?: string
-          assignmentNumber?: string
+          adjusterEmail: string
+          adjusterName: string
+          adjusterPhoneNumber: string
+          assignmentNumber: string
           catCode?: number | null
-          claimSummary?: string
-          clientEmail?: string
-          clientName?: string
-          clientPhoneNumber?: string
+          claimSummary: string
+          clientEmail: string
+          clientName: string
+          clientPhoneNumber: string
           closedAt?: string | null
-          companyName?: string
+          companyName: string
           createdAt?: string
-          forecast?: string
-          humidity?: string
+          damageType?: string | null
+          forecast: string
+          humidity: string
           id?: number
-          insuranceClaimId?: string
-          insuranceCompanyName?: string
+          insuranceClaimId: string
+          insuranceCompanyName: string
           isDeleted?: boolean
           lastTimeWeatherFetched?: string | null
-          lat?: string
-          lng?: string
-          location?: string
-          lossType?: string
-          managerName?: string
+          lat: string
+          lng: string
+          location: string
+          lossType: string
+          managerName: string
           name: string
           organizationId: number
           projectStatusValueId?: number | null
@@ -1814,8 +1816,8 @@ export type Database = {
           roofSegments?: Json[] | null
           roofSpecs?: Json | null
           status?: string | null
-          temperature?: string
-          wind?: string
+          temperature: string
+          wind: string
         }
         Update: {
           actualValue?: number | null
@@ -1831,6 +1833,7 @@ export type Database = {
           closedAt?: string | null
           companyName?: string
           createdAt?: string
+          damageType?: string | null
           forecast?: string
           humidity?: string
           id?: number

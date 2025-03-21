@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Plus, Trash2, GripVertical, ArrowUpDown, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Trash2, GripVertical, ArrowUpDown, ChevronDown, ChevronRight, Badge } from "lucide-react";
 import { FormFieldEditor } from "./FormFieldEditor";
 import {
   DndContext,
@@ -30,6 +30,9 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DamageType, DAMAGE_TYPES } from "@/types/damage";
 
 interface FormBuilderProps {
   form: Form | null;
@@ -228,6 +231,7 @@ export function FormBuilder({
   isUpdating,
   isDeleting
 }: FormBuilderProps) {
+  console.log("🚀 ~ currentForm:", currentForm)
 //   const [currentForm, setCurrentForm] = useState<Form | null>(form);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [activeType, setActiveType] = useState<'section' | 'field' | null>(null);
@@ -464,6 +468,19 @@ export function FormBuilder({
     }
   };
 
+  const handleDamageTypeToggle = (type: DamageType) => {
+    if (!currentForm) return;
+    const currentTypes = currentForm.damageTypes || [];
+    const newTypes = currentTypes.includes(type)
+      ? currentTypes.filter(t => t !== type)
+      : [...currentTypes, type];
+    
+    setCurrentForm({
+      ...currentForm,
+      damageTypes: newTypes,
+    });
+  };
+
   if (!currentForm) {
     return (
       <div className="text-center text-gray-500 py-8">
@@ -488,6 +505,35 @@ export function FormBuilder({
             />
           </div>
 
+          <div className="space-y-2"> 
+            <Label htmlFor="formDamageTypes" className="text-base font-medium dark:text-gray-100">Damage Types</Label>
+            <div className="flex flex-wrap gap-2">
+              {DAMAGE_TYPES.map((type) => (
+                <div
+                  key={type.value}
+                  className={cn(
+                    "flex items-center space-x-2 rounded-md border px-3 py-2 cursor-pointer transition-colors",
+                    "hover:bg-gray-100 dark:hover:bg-gray-700",
+                    currentForm.damageTypes?.includes(type.value as DamageType)
+                      ? "border-primary bg-primary/5 dark:bg-primary/10"
+                      : "border-gray-200 dark:border-gray-700"
+                  )}
+                  onClick={() => handleDamageTypeToggle(type.value as DamageType)}
+                >
+                  <Checkbox
+                    id={`damage-type-${type.value}`}
+                    checked={currentForm.damageTypes?.includes(type.value as DamageType)}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                  <Label
+                    className="text-sm font-medium cursor-pointer"
+                  >
+                    {type.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="formDescription" className="text-base font-medium dark:text-gray-100">Description</Label>
             <Textarea
