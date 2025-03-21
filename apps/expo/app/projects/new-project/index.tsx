@@ -125,9 +125,14 @@ import { toast } from "sonner-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { uniqueId } from "lodash";
 import { projectsStore } from "@/lib/state/projects";
+import {
+  DamageType,
+  DamageTypeSelector,
+} from "@/components/project/damageSelector";
 
 export default function NewProject() {
   const [projectName, setProjectName] = useState("");
+  const [damageType, setDamageType] = useState<DamageType | undefined>();
   const { address, setAddress } = addressPickerStore((state) => state);
   const projects = projectsStore();
   const { session } = userStore();
@@ -160,6 +165,7 @@ export default function NewProject() {
           body: JSON.stringify({
             name: projectName,
             location: address,
+            damageType,
           }),
         }
       );
@@ -214,6 +220,22 @@ export default function NewProject() {
                 />
               </View>
             </View>
+
+            <DamageTypeSelector
+              value={damageType}
+              onChange={setDamageType}
+              style={styles.sectionInput}
+              bodyStyle={{
+                shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
+              }}
+            />
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Street Address</Text>

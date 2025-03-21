@@ -42,6 +42,11 @@ export default function Layout({ children }: React.PropsWithChildren) {
     //   title: "Roofing",
     //   href: `/projects/${id}/roofing`,
     // },
+
+    {
+      title: "Forms",
+      href: `/projects/${id}/forms`,
+    },
     {
       title: "Weather",
       href: `/projects/${id}/weather`,

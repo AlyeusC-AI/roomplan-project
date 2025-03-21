@@ -8,6 +8,8 @@ declare type ProjectStatus =
   | "completed"
   | "inactive"
   | "incomplete";
+  export  type DamageType = "fire" | "water" | "mold" | "other";
+
 
 declare type ReadingType = "generic" | "standard";
 
@@ -18,6 +20,7 @@ declare interface ProjectType {
   clientName?: string;
   location: string;
   status: ProjectStatus | null;
+  damageType?: DamageType;
   lat?: string;
   lng?: string;
   currentStatus?: {

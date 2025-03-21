@@ -1,3 +1,5 @@
+import { DamageType } from "@/types/damage";
+
 export type FormFieldType =
   | "TEXT"
   | "TEXTAREA"
@@ -40,4 +42,5 @@ export interface Form {
   name: string;
   desc?: string;
   sections?: FormSection[];
+  damageTypes?: DamageType[];
 } 

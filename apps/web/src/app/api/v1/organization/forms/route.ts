@@ -44,14 +44,16 @@ const formSectionSchema = z.object({
 const createFormSchema = z.object({
   name: z.string(),
   desc: z.string().optional(),
-  sections: z.array(formSectionSchema).optional()
+  sections: z.array(formSectionSchema).optional(),
+  damageTypes: z.array(z.string()).optional()
 });
 
 const updateFormSchema = z.object({
   id: z.number(),
   name: z.string().optional(),
   desc: z.string().optional(),
-  sections: z.array(formSectionSchema).optional()
+  sections: z.array(formSectionSchema).optional(),
+  damageTypes: z.array(z.string()).optional()
 });
 
 const deleteFormSchema = z.object({
@@ -134,7 +136,8 @@ export async function POST(req: NextRequest) {
       .insert({
         name: validatedData.name,
         desc: validatedData.desc,
-        orgId: org.data.id
+        orgId: org.data.id,
+        damageTypes: validatedData.damageTypes
       })
       .select()
       .single();
@@ -214,6 +217,7 @@ export async function PUT(req: NextRequest) {
       .update({
         name: validatedData.name,
         desc: validatedData.desc,
+        damageTypes: validatedData.damageTypes
       })
       .eq("id", validatedData.id)
       .select()

@@ -30,6 +30,7 @@ import {
   StickyNote,
   Video,
   X,
+  AlertTriangle,
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { projectStore } from "@/lib/state/project";
@@ -47,6 +48,7 @@ type Project = {
   clientEmail?: string;
   clientPhoneNumber?: string;
   assignees?: any[];
+  damageType?: "fire" | "water" | "mold" | "other";
 };
 
 export default function ProjectOverview() {
@@ -57,6 +59,7 @@ export default function ProjectOverview() {
   const members = teamMemberStore();
   const user = userStore();
   const project = projectStore();
+  console.log("🚀 ~ ProjectOverview ~ project:", JSON.stringify(project.project, null, 2));
   const { projectViewMode, setProjectViewMode } = uiPreferencesStore();
   // Add state to control client info modal visibility
   const [showClientInfo, setShowClientInfo] = useState(false);
@@ -278,6 +281,20 @@ export default function ProjectOverview() {
             </View>
 
             <View className="space-y-4">
+              {project.project?.damageType && (
+                <View className="flex flex-row items-center">
+                  <View className="bg-primary/10 p-2 rounded-lg">
+                    <AlertTriangle height={20} width={20} className="text-primary" />
+                  </View>
+                  <View className="ml-3">
+                    <Text className="text-sm text-muted-foreground">Damage Type</Text>
+                    <Text className="text-base text-foreground capitalize">
+                      {project.project.damageType.replace(/_/g, " ")}
+                    </Text>
+                  </View>
+                </View>
+              )}
+
               <TouchableOpacity
                 onPress={openInMaps}
                 onLongPress={() => copyText(project.project?.location)}
