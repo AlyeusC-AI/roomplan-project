@@ -23,6 +23,15 @@ interface FormResponse {
   }[];
 }
 
+interface ImageData {
+  url: string;
+  name?: string;
+  size?: number;
+  type?: string;
+  fileId?: string;
+  filePath?: string;
+}
+
 // Function to convert image URL to base64
 const getImageAsBase64 = async (url: string): Promise<string> => {
   try {
@@ -245,15 +254,92 @@ export async function generatePDF(responses: FormResponse[], title: string): Pro
           switch (fieldType) {
             case 'image': {
               try {
-                const imageData = JSON.parse(field.value);
-                if (imageData.url) {
+                let imageData: ImageData | ImageData[] = typeof field.value === 'string' 
+                  ? JSON.parse(field.value)
+                  : field.value;
+
+                if (Array.isArray(imageData)) {
+                  // Handle multiple images
+                  const imagePromises = imageData.map(async (img) => {
+                    try {
+                      const base64Image = await getImageAsBase64(img.url);
+                      if (base64Image) {
+                        return {
+                          image: base64Image,
+                          width: 200,
+                          margin: [0, 5, 0, 5],
+                          alignment: 'center'
+                        };
+                      }
+                      return null;
+                    } catch (error) {
+                      console.error('Error processing image:', error);
+                      return null;
+                    }
+                  });
+
+                  const processedImages = await Promise.all(imagePromises);
+                  const validImages = processedImages.filter(img => img !== null);
+
+                  if (validImages.length > 0) {
+                    // Calculate grid layout
+                    const imagesPerRow = 2; // Fixed 2 columns for better PDF layout
+                    const rows = Math.ceil(validImages.length / imagesPerRow);
+                    
+                    // Create grid rows
+                    const gridRows = [];
+                    for (let i = 0; i < rows; i++) {
+                      const rowImages = validImages.slice(i * imagesPerRow, (i + 1) * imagesPerRow);
+                      gridRows.push({
+                        columns: rowImages.map((img, index) => ({
+                          stack: [
+                            img,
+                            {
+                              text: `Image ${i * imagesPerRow + index + 1}`,
+                              style: 'meta',
+                              alignment: 'center',
+                              margin: [0, 0, 0, 10]
+                            }
+                          ],
+                          width: '*',
+                          margin: [0, 0, 10, 0]
+                        }))
+                      });
+                    }
+
+                    fieldContent.push({
+                      stack: [
+                        {
+                          text: 'Images',
+                          style: 'label',
+                          margin: [0, 0, 0, 5]
+                        },
+                        ...gridRows
+                      ],
+                      margin: [0, 15, 0, 15]
+                    });
+                  } else {
+                    fieldContent.push({ text: 'No images could be loaded', style: 'error' });
+                  }
+                } else if (imageData.url) {
+                  // Handle single image
                   const base64Image = await getImageAsBase64(imageData.url);
                   if (base64Image) {
                     fieldContent.push({
-                      image: base64Image,
-                      width: 300,
-                      margin: [0, 15, 0, 15],
-                      alignment: 'center'
+                      stack: [
+                        {
+                          image: base64Image,
+                          width: 300,
+                          margin: [0, 15, 0, 5],
+                          alignment: 'center'
+                        },
+                        {
+                          text: 'Image',
+                          style: 'meta',
+                          alignment: 'center',
+                          margin: [0, 0, 0, 10]
+                        }
+                      ]
                     });
                   } else {
                     fieldContent.push({
@@ -263,7 +349,8 @@ export async function generatePDF(responses: FormResponse[], title: string): Pro
                     });
                   }
                 }
-              } catch {
+              } catch (error) {
+                console.error('Error processing image:', error);
                 fieldContent.push({ text: 'No image uploaded', style: 'emptyValue' });
               }
               break;

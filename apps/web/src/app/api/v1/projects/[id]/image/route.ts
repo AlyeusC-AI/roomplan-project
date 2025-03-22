@@ -273,7 +273,7 @@ export async function POST(
 
     const { imageId: iId, roomId, roomName } = await req.json();
 
-    const imageId = encodeURIComponent(iId);
+    const imageId = iId.startsWith("http") ? iId : encodeURIComponent(iId);
     console.log("🚀 ~ imageId:", imageId);
 
     const projectId = await supabaseServiceRole

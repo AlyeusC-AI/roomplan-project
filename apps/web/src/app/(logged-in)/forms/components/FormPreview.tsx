@@ -23,6 +23,7 @@ interface FormPreviewProps {
 }
 
 export function FormPreview({ form, onSubmit, isSubmitting, initialValues = {} }: FormPreviewProps) {
+  console.log("🚀 ~ FormPreview ~ form:", initialValues)
   const signaturePadRefs = useRef<{ [key: number]: SignaturePad | null }>({});
   const [formData, setFormData] = useState<{ [key: string]: any }>(initialValues);
   const [uploadProgress, setUploadProgress] = useState<{ [key: number]: number }>({});
@@ -125,6 +126,65 @@ export function FormPreview({ form, onSubmit, isSubmitting, initialValues = {} }
       </div>
     );
   }
+
+  const ViewImage = ({ fieldId }: { fieldId: number }) => {
+
+const  images=typeof formData[fieldId] === "string"? JSON.parse(formData[fieldId]): formData[fieldId]
+
+    return (
+      <div>
+
+ 
+    {     Array.isArray(images) && images.length > 0 ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {images.map((image: any, index: number) => (
+              <div key={index} className="relative group">
+                <div className="aspect-square rounded-lg border border-border overflow-hidden">
+                  <img 
+                    src={typeof image === "string" ? JSON.parse(image).url : image.url} 
+                    alt={typeof image === "string" ? JSON.parse(image).name : image.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const newImages = [...images];
+                    newImages.splice(index, 1);
+                    handleInputChange(fieldId!, newImages);
+                  }}
+                  className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+          {uploadProgress[fieldId] < 100 && (
+            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-300"
+                style={{ width: `${uploadProgress[fieldId]}%` }}
+              />
+            </div>
+          )}
+          {uploadErrors[fieldId] && (
+            <p className="text-red-500 text-sm">{uploadErrors[fieldId]}</p>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <Image className="w-6 h-6 sm:w-8 sm:h-8 mx-auto" />
+          <p className="text-sm sm:text-base">Click to upload or drag and drop</p>
+          <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+        </div>
+      )}
+      </div>
+    );
+    
+  };
 
   return (
     <div className="space-y-6 sm:space-y-8 max-w-2xl mx-auto px-4 sm:px-0">
@@ -337,12 +397,20 @@ export function FormPreview({ form, onSubmit, isSubmitting, initialValues = {} }
                         <Input 
                           type="file" 
                           accept="image/*" 
+                          multiple
                           className="hidden" 
                           id={`image-${field.id}`}
                           onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              handleFileUpload(field.id!, file);
+                            const files = Array.from(e.target.files || []);
+                            if (files.length > 0) {
+                              // If it's the first upload, initialize as array
+                              if (!Array.isArray(formData[field.id!])) {
+                                handleInputChange(field.id!, []);
+                              }
+                              // Upload each file
+                              files.forEach(file => {
+                                handleFileUpload(field.id!, file);
+                              });
                             }
                           }}
                         />
@@ -350,34 +418,7 @@ export function FormPreview({ form, onSubmit, isSubmitting, initialValues = {} }
                           htmlFor={`image-${field.id}`}
                           className="cursor-pointer text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary"
                         >
-                          {(typeof formData[field.id!] === "string" ? JSON.parse(formData[field.id!]).url : formData[field.id!]?.url) ? (
-                            <div className="space-y-2">
-                              <div className="relative w-full aspect-video max-w-md mx-auto">
-                                <img 
-                                  src={typeof formData[field.id!] === "string" ? JSON.parse(formData[field.id!]).url : formData[field.id!]?.url} 
-                                  alt={typeof formData[field.id!] === "string" ? JSON.parse(formData[field.id!]).name : formData[field.id!]?.name}
-                                  className="rounded-lg object-cover w-full h-full"
-                                />
-                              </div>
-                              {uploadProgress[field.id!] < 100 && (
-                                <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                                  <div 
-                                    className="h-full bg-primary transition-all duration-300"
-                                    style={{ width: `${uploadProgress[field.id!]}%` }}
-                                  />
-                                </div>
-                              )}
-                              {uploadErrors[field.id!] && (
-                                <p className="text-red-500 text-sm">{uploadErrors[field.id!]}</p>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="space-y-2">
-                              <Image className="w-6 h-6 sm:w-8 sm:h-8 mx-auto" />
-                              <p className="text-sm sm:text-base">Click to upload or drag and drop</p>
-                              <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                            </div>
-                          )}
+                        <ViewImage fieldId={field.id!} />
                         </Label>
                       </div>
                     )}
