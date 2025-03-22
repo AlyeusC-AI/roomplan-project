@@ -1,13 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useEffect, useState } from "react";
+import { View, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ArrowLeft, Download, Eye, FileText, Pencil, Trash2 } from "lucide-react-native";
+import {
+  ArrowLeft,
+  Download,
+  Eye,
+  FileText,
+  Pencil,
+  Trash2,
+} from "lucide-react-native";
 import { userStore } from "@/lib/state/user";
 import { toast } from "sonner-native";
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
 import { useFormsStore } from "@/lib/state/forms";
 import { api } from "@/lib/api";
 
@@ -44,16 +51,16 @@ export default function ResponsesListScreen() {
     try {
       // Fetch forms which includes responses data
       await getForms(projectId as string);
-      
+
       // Filter responses for the current form
       const currentFormResponses = responses.filter(
-        response => response.formId === Number(formId)
+        (response) => response.formId === Number(formId)
       );
-      
+
       setFormResponses(currentFormResponses);
     } catch (error) {
-      console.error('Error fetching responses:', error);
-      toast.error('Failed to load responses');
+      console.error("Error fetching responses:", error);
+      toast.error("Failed to load responses");
     } finally {
       setLoading(false);
     }
@@ -64,7 +71,7 @@ export default function ResponsesListScreen() {
       const response = await api.get(
         `/api/v1/projects/${projectId}/forms/${formId}/responses/${responseId}/pdf`,
         {
-          responseType: 'blob'
+          responseType: "blob",
         }
       );
 
@@ -76,16 +83,18 @@ export default function ResponsesListScreen() {
       await FileSystem.writeAsStringAsync(fileUri, base64, {
         encoding: FileSystem.EncodingType.Base64,
       });
-      
+
       await Sharing.shareAsync(fileUri);
     } catch (error) {
-      console.error('Error downloading PDF:', error);
-      toast.error('Failed to download PDF');
+      console.error("Error downloading PDF:", error);
+      toast.error("Failed to download PDF");
     }
   };
 
   const handleEditResponse = (responseId: number) => {
-    router.push(`/projects/${projectId}/forms/${formId}/fill?responseId=${responseId}`);
+    router.push(
+      `/projects/${projectId}/forms/${formId}/fill?responseId=${responseId}`
+    );
   };
 
   const handleDeleteResponse = async (responseId: number) => {
@@ -95,7 +104,7 @@ export default function ResponsesListScreen() {
       [
         {
           text: "Cancel",
-          style: "cancel"
+          style: "cancel",
         },
         {
           text: "Delete",
@@ -107,14 +116,16 @@ export default function ResponsesListScreen() {
               );
 
               // Update local state and store
-              setFormResponses(prev => prev.filter(r => r.id !== responseId));
-              toast.success('Response deleted successfully');
+              setFormResponses((prev) =>
+                prev.filter((r) => r.id !== responseId)
+              );
+              toast.success("Response deleted successfully");
             } catch (error) {
-              console.error('Error deleting response:', error);
-              toast.error('Failed to delete response');
+              console.error("Error deleting response:", error);
+              toast.error("Failed to delete response");
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -130,10 +141,7 @@ export default function ResponsesListScreen() {
   return (
     <View className="flex-1 bg-background">
       <View className="flex-row items-center p-4 border-b border-border">
-        <TouchableOpacity 
-          onPress={() => router.back()}
-          className="mr-3"
-        >
+        <TouchableOpacity onPress={() => router.back()} className="mr-3">
           <ArrowLeft size={24} className="text-foreground" />
         </TouchableOpacity>
         <Text className="text-xl font-bold flex-1">Form Responses</Text>
@@ -146,21 +154,29 @@ export default function ResponsesListScreen() {
           </View>
         ) : (
           formResponses.map((response) => (
-            <Card key={response.id} className="mb-4 p-4">
-              <View className="flex-row items-center justify-between">
-                <View className="flex-1">
-                  <Text className="text-base font-semibold">
-                    Response #{response.id}
-                  </Text>
-                  <Text className="text-sm text-muted-foreground">
-                    Submitted on {new Date(response.date).toLocaleString()}
-                  </Text>
-                  <Text className="text-xs text-muted-foreground mt-1">
-                    {response.fields.length} fields completed
-                  </Text>
-                </View>
-                <View className="flex-row items-center">
-                  <TouchableOpacity
+            <TouchableOpacity
+              onPress={() =>
+                router.push(
+                  `/projects/${projectId}/forms/${formId}/fill?responseId=${response.id}`
+                )
+              }
+              key={response.id}
+            >
+              <Card className="mb-4 p-4">
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-1">
+                    <Text className="text-base font-semibold">
+                      Response #{response.id}
+                    </Text>
+                    <Text className="text-sm text-muted-foreground">
+                      Submitted on {new Date(response.date).toLocaleString()}
+                    </Text>
+                    <Text className="text-xs text-muted-foreground mt-1">
+                      {response.fields.length} fields completed
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center">
+                    {/* <TouchableOpacity
                     onPress={() => handleDownloadPDF(response.id)}
                     className="p-2"
                   >
@@ -171,25 +187,26 @@ export default function ResponsesListScreen() {
                     className="p-2"
                   >
                     <Eye size={20} className="text-muted-foreground" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => handleEditResponse(response.id)}
-                    className="p-2"
-                  >
-                    <Pencil size={20} className="text-muted-foreground" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => handleDeleteResponse(response.id)}
-                    className="p-2"
-                  >
-                    <Trash2 size={20} className="text-destructive" />
-                  </TouchableOpacity>
+                  </TouchableOpacity> */}
+                    <TouchableOpacity
+                      onPress={() => handleEditResponse(response.id)}
+                      className="p-2"
+                    >
+                      <Pencil size={20} className="text-muted-foreground" />
+                    </TouchableOpacity>
+                    {/* <TouchableOpacity
+                      onPress={() => handleDeleteResponse(response.id)}
+                      className="p-2"
+                    >
+                      <Trash2 size={20} className="text-destructive" />
+                    </TouchableOpacity> */}
+                  </View>
                 </View>
-              </View>
-            </Card>
+              </Card>
+            </TouchableOpacity>
           ))
         )}
       </ScrollView>
     </View>
   );
-} 
+}

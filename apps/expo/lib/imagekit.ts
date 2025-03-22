@@ -60,22 +60,33 @@ export const uploadImage = async (
     const response = await fetch(
       `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/imageKit`
     );
-    
 
     const { token, expire, signature } = await response.json();
     onProgress?.(20);
 
     // Optimize image before upload
     // const optimizedFile = await optimizeImage(file);
-    const manipResult = await ImageManipulator.manipulateAsync(file.path||file.uri, [], {
-      compress: 0.7,
-      format: ImageManipulator.SaveFormat.JPEG,
-      // base64: true,
-    });
+    const manipResult = await ImageManipulator.manipulateAsync(
+      file.path || file.uri,
+      [
+        {
+          resize: {
+            width: 1200,
+            height: 1200,
+          },
+        },
+      ],
+      {
+        compress: 0.7,
+        format: ImageManipulator.SaveFormat.JPEG,
+        // base64: true,
+        // base64: true,
+      }
+    );
     console.log("🚀 ~ manipResult:", manipResult);
     console.log("🚀 ~ returnnewPromise ~ file:", file);
-    const finalFile = {...file,...manipResult}
-    console.log("🚀 ~ finalFile:", finalFile)
+    const finalFile = { ...file, ...manipResult };
+    console.log("🚀 ~ finalFile:", finalFile);
     onProgress?.(40);
     return new Promise((resolve, reject) => {
       imagekit.upload(
@@ -84,9 +95,7 @@ export const uploadImage = async (
           fileName: options.useUniqueFileName
             ? `${Date.now()}_${file.name || "image.jpg"}`
             : file.name,
-          folder:
-               options.folder ||
-            "uploads",
+          folder: options.folder || "uploads",
           tags: options.tags || [],
           responseFields: options.responseFields || ["tags"],
           isPrivateFile: options.isPrivateFile || false,
@@ -95,7 +104,7 @@ export const uploadImage = async (
           signature,
         },
         (err: Error | null, result: ImageKitUploadResponse | null) => {
-          console.log("🚀 ~ returnnewPromise ~ result:", result)
+          console.log("🚀 ~ returnnewPromise ~ result:", result);
 
           if (err) {
             reject(err);

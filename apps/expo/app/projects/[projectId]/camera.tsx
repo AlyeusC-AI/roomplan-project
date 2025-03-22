@@ -1,6 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Image, View, StatusBar, Dimensions } from "react-native";
+import {
+  Image,
+  View,
+  StatusBar,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
 import { Camera, PhotoFile, useCameraDevice } from "react-native-vision-camera";
 import { getConstants } from "@/utils/constants";
 import RoomSelection from "@/components/RoomSelection";
@@ -34,11 +40,12 @@ import {
   Upload,
   CheckCircle2,
   XCircle,
+  Check,
 } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as ImageManipulator from "expo-image-manipulator";
 import { uploadImage } from "@/lib/imagekit";
+import { useCameraStore } from "@/lib/state/camera";
 
 export const supabaseServiceRole = createClient(
   getConstants().supabaseUrl,
@@ -78,7 +85,8 @@ export default function CameraScreen() {
     mode?: string;
   }>();
   const rooms = roomsStore();
-  const isFormMode = mode === 'form';
+  const isFormMode = mode === "form";
+  const { addImage, images } = useCameraStore();
 
   const zoom = useSharedValue(1);
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -155,15 +163,22 @@ export default function CameraScreen() {
       );
 
       // Upload to ImageKit
-      const uploadResult = await uploadImage({
-        uri: uploadItem.photo.path,
-        type: 'image/jpeg',
-        name: 'photo.jpg'
-      }, {
-        folder: isFormMode ? `forms/${formId}/fields/${fieldId}` : `projects/${projectId}/rooms/${selectedRoomId}`,
-        useUniqueFileName: true,
-        tags: isFormMode ? [`form-${formId}`, `field-${fieldId}`] : [`project-${projectId}`, `room-${selectedRoomId}`],
-      });
+      const uploadResult = await uploadImage(
+        {
+          uri: uploadItem.photo.path,
+          type: "image/jpeg",
+          name: "photo.jpg",
+        },
+        {
+          folder: isFormMode
+            ? `forms/${formId}/fields/${fieldId}`
+            : `projects/${projectId}/rooms/${selectedRoomId}`,
+          useUniqueFileName: true,
+          tags: isFormMode
+            ? [`form-${formId}`, `field-${fieldId}`]
+            : [`project-${projectId}`, `room-${selectedRoomId}`],
+        }
+      );
 
       setUploadQueue((prev) =>
         prev.map((item) =>
@@ -203,24 +218,26 @@ export default function CameraScreen() {
             : item
         )
       );
+      console.log("🚀 ~ processImageUpload ~ isFormMode:", isFormMode);
 
       // If in form mode, go back to form with the image data
       if (isFormMode) {
-        router.setParams({
-          cameraResult: JSON.stringify({
-            fieldId,
-            imageData: {
-              url: uploadResult.url,
-              name: 'photo.jpg',
-              size: uploadResult.size,
-              type: 'image/jpeg',
-              fileId: uploadResult.fileId,
-              filePath: uploadResult.filePath
-            }
-          })
+        // router.back();
+
+        addImage({
+          fieldId: fieldId as string,
+          url: uploadResult.url,
+          name: "photo.jpg",
+          type: "image/jpeg",
+          size: uploadResult.size,
+          fileId: uploadResult.fileId,
+          filePath: uploadResult.filePath,
+          // fileId: uploadResult.fileId,
+          // filePath: uploadResult.filePath,
         });
-        router.back();
       }
+
+      // Set the result in Zustand store
     } catch (error) {
       console.error("Upload error:", error);
       setUploadQueue((prev) =>
@@ -403,6 +420,10 @@ export default function CameraScreen() {
     if (flash === "off") setFlash("on");
     else if (flash === "on") setFlash("auto");
     else setFlash("off");
+  };
+
+  const handleComplete = () => {
+    router.back();
   };
 
   if (!device) {
@@ -601,7 +622,14 @@ export default function CameraScreen() {
               </View>
             </Pressable>
 
-            <View className="size-16" />
+            {/* Confirm button */}
+            <TouchableOpacity
+              onPress={handleComplete}
+              className="size-16 rounded-full bg-black/50 flex items-center justify-center"
+              // disabled={isProcessing || isUploading}
+            >
+              <Check size={24} color="white" />
+            </TouchableOpacity>
           </View>
         </View>
       </View>
