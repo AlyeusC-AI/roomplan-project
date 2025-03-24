@@ -490,9 +490,168 @@ export type Database = {
           },
         ]
       }
+      EstimateItems: {
+        Row: {
+          amount: number
+          createdAt: string | null
+          description: string
+          estimatePublicId: string
+          id: string
+          isDeleted: boolean | null
+          publicId: string
+          quantity: number
+          rate: number
+          sortOrder: number | null
+          updatedAt: string | null
+        }
+        Insert: {
+          amount: number
+          createdAt?: string | null
+          description: string
+          estimatePublicId: string
+          id?: string
+          isDeleted?: boolean | null
+          publicId?: string
+          quantity: number
+          rate: number
+          sortOrder?: number | null
+          updatedAt?: string | null
+        }
+        Update: {
+          amount?: number
+          createdAt?: string | null
+          description?: string
+          estimatePublicId?: string
+          id?: string
+          isDeleted?: boolean | null
+          publicId?: string
+          quantity?: number
+          rate?: number
+          sortOrder?: number | null
+          updatedAt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "EstimateItems_estimatePublicId_fkey"
+            columns: ["estimatePublicId"]
+            isOneToOne: false
+            referencedRelation: "Estimates"
+            referencedColumns: ["publicId"]
+          },
+        ]
+      }
+      Estimates: {
+        Row: {
+          amount: number
+          clientEmail: string | null
+          clientName: string
+          createdAt: string | null
+          daysToPay: number | null
+          depositAmount: number | null
+          depositPercentage: number | null
+          discountAmount: number | null
+          estimateDate: string | null
+          expiryDate: string | null
+          hasPaymentSchedule: boolean | null
+          id: string
+          isDeleted: boolean | null
+          markupAmount: number | null
+          markupPercentage: number | null
+          notes: string | null
+          number: string
+          organizationPublicId: string | null
+          poNumber: string | null
+          projectName: string
+          projectPublicId: string | null
+          publicId: string
+          status: Database["public"]["Enums"]["estimateStatus"]
+          subtotal: number
+          taxAmount: number | null
+          taxRate: number | null
+          updatedAt: string | null
+          userId: string
+        }
+        Insert: {
+          amount: number
+          clientEmail?: string | null
+          clientName: string
+          createdAt?: string | null
+          daysToPay?: number | null
+          depositAmount?: number | null
+          depositPercentage?: number | null
+          discountAmount?: number | null
+          estimateDate?: string | null
+          expiryDate?: string | null
+          hasPaymentSchedule?: boolean | null
+          id?: string
+          isDeleted?: boolean | null
+          markupAmount?: number | null
+          markupPercentage?: number | null
+          notes?: string | null
+          number: string
+          organizationPublicId?: string | null
+          poNumber?: string | null
+          projectName: string
+          projectPublicId?: string | null
+          publicId?: string
+          status?: Database["public"]["Enums"]["estimateStatus"]
+          subtotal: number
+          taxAmount?: number | null
+          taxRate?: number | null
+          updatedAt?: string | null
+          userId: string
+        }
+        Update: {
+          amount?: number
+          clientEmail?: string | null
+          clientName?: string
+          createdAt?: string | null
+          daysToPay?: number | null
+          depositAmount?: number | null
+          depositPercentage?: number | null
+          discountAmount?: number | null
+          estimateDate?: string | null
+          expiryDate?: string | null
+          hasPaymentSchedule?: boolean | null
+          id?: string
+          isDeleted?: boolean | null
+          markupAmount?: number | null
+          markupPercentage?: number | null
+          notes?: string | null
+          number?: string
+          organizationPublicId?: string | null
+          poNumber?: string | null
+          projectName?: string
+          projectPublicId?: string | null
+          publicId?: string
+          status?: Database["public"]["Enums"]["estimateStatus"]
+          subtotal?: number
+          taxAmount?: number | null
+          taxRate?: number | null
+          updatedAt?: string | null
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Estimates_organizationPublicId_fkey"
+            columns: ["organizationPublicId"]
+            isOneToOne: false
+            referencedRelation: "Organization"
+            referencedColumns: ["publicId"]
+          },
+          {
+            foreignKeyName: "Estimates_projectPublicId_fkey"
+            columns: ["projectPublicId"]
+            isOneToOne: false
+            referencedRelation: "Project"
+            referencedColumns: ["publicId"]
+          },
+        ]
+      }
       Form: {
         Row: {
           created_at: string
+          damageTypes: string[] | null
           desc: string | null
           id: number
           name: string | null
@@ -500,6 +659,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          damageTypes?: string[] | null
           desc?: string | null
           id?: number
           name?: string | null
@@ -507,6 +667,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          damageTypes?: string[] | null
           desc?: string | null
           id?: number
           name?: string | null
@@ -1783,31 +1944,31 @@ export type Database = {
         }
         Insert: {
           actualValue?: number | null
-          adjusterEmail: string
-          adjusterName: string
-          adjusterPhoneNumber: string
-          assignmentNumber: string
+          adjusterEmail?: string
+          adjusterName?: string
+          adjusterPhoneNumber?: string
+          assignmentNumber?: string
           catCode?: number | null
-          claimSummary: string
-          clientEmail: string
-          clientName: string
-          clientPhoneNumber: string
+          claimSummary?: string
+          clientEmail?: string
+          clientName?: string
+          clientPhoneNumber?: string
           closedAt?: string | null
-          companyName: string
+          companyName?: string
           createdAt?: string
           damageType?: string | null
-          forecast: string
-          humidity: string
+          forecast?: string
+          humidity?: string
           id?: number
-          insuranceClaimId: string
-          insuranceCompanyName: string
+          insuranceClaimId?: string
+          insuranceCompanyName?: string
           isDeleted?: boolean
           lastTimeWeatherFetched?: string | null
-          lat: string
-          lng: string
-          location: string
-          lossType: string
-          managerName: string
+          lat?: string
+          lng?: string
+          location?: string
+          lossType?: string
+          managerName?: string
           name: string
           organizationId: number
           projectStatusValueId?: number | null
@@ -1816,8 +1977,8 @@ export type Database = {
           roofSegments?: Json[] | null
           roofSpecs?: Json | null
           status?: string | null
-          temperature: string
-          wind: string
+          temperature?: string
+          wind?: string
         }
         Update: {
           actualValue?: number | null
@@ -2095,6 +2256,9 @@ export type Database = {
       Room: {
         Row: {
           createdAt: string
+          cubiModelId: string | null
+          cubiRoomPlan: string | null
+          cubiTicketId: string | null
           dehuReading: string | null
           doors: number | null
           equipmentUsed: string[] | null
@@ -2110,6 +2274,7 @@ export type Database = {
           projectId: number
           publicId: string
           roomPlanSVG: string | null
+          scannedFileKey: string | null
           temperature: string | null
           totalSqft: string | null
           wallName: string | null
@@ -2118,6 +2283,9 @@ export type Database = {
         }
         Insert: {
           createdAt?: string
+          cubiModelId?: string | null
+          cubiRoomPlan?: string | null
+          cubiTicketId?: string | null
           dehuReading?: string | null
           doors?: number | null
           equipmentUsed?: string[] | null
@@ -2133,6 +2301,7 @@ export type Database = {
           projectId: number
           publicId: string
           roomPlanSVG?: string | null
+          scannedFileKey?: string | null
           temperature?: string | null
           totalSqft?: string | null
           wallName?: string | null
@@ -2141,6 +2310,9 @@ export type Database = {
         }
         Update: {
           createdAt?: string
+          cubiModelId?: string | null
+          cubiRoomPlan?: string | null
+          cubiTicketId?: string | null
           dehuReading?: string | null
           doors?: number | null
           equipmentUsed?: string[] | null
@@ -2156,6 +2328,7 @@ export type Database = {
           projectId?: number
           publicId?: string
           roomPlanSVG?: string | null
+          scannedFileKey?: string | null
           temperature?: string | null
           totalSqft?: string | null
           wallName?: string | null
@@ -2273,6 +2446,53 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "RoomReading"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      SavedLineItems: {
+        Row: {
+          category: string | null
+          createdAt: string | null
+          description: string
+          id: string
+          isDeleted: boolean | null
+          organizationId: string
+          publicId: string
+          rate: number
+          updatedAt: string | null
+          userId: string
+        }
+        Insert: {
+          category?: string | null
+          createdAt?: string | null
+          description: string
+          id?: string
+          isDeleted?: boolean | null
+          organizationId: string
+          publicId?: string
+          rate?: number
+          updatedAt?: string | null
+          userId: string
+        }
+        Update: {
+          category?: string | null
+          createdAt?: string | null
+          description?: string
+          id?: string
+          isDeleted?: boolean | null
+          organizationId?: string
+          publicId?: string
+          rate?: number
+          updatedAt?: string | null
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "SavedLineItems_organizationId_fkey"
+            columns: ["organizationId"]
+            isOneToOne: false
+            referencedRelation: "Organization"
+            referencedColumns: ["publicId"]
           },
         ]
       }
@@ -2751,6 +2971,13 @@ export type Database = {
       DashboardViews: "listView" | "boardView" | "mapView"
       DimensionUnit: "sf" | "lf" | "ea"
       EqiupmentType: "fan" | "dehumidifier" | "airScrubber"
+      estimateStatus:
+        | "draft"
+        | "sent"
+        | "approved"
+        | "rejected"
+        | "cancelled"
+        | "expired"
       GroupByViews: "roomView" | "dateView"
       invoiceStatus: "draft" | "sent" | "paid" | "overdue" | "cancelled"
       NotesAuditAction: "updated" | "deleted" | "created"
