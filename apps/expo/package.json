@@ -102,7 +102,7 @@
     "react-native-signature-canvas": "^4.7.2",
     "react-native-svg": "^15.11.2",
     "react-native-svg-transformer": "^1.5.0",
-    "react-native-ui-datepicker": "^3.0.7",
+    "react-native-ui-datepicker": "3.0.7",
     "react-native-ui-lib": "7.2.4",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-uuid": "^2.0.1",

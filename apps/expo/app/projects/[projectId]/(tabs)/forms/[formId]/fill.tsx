@@ -143,7 +143,7 @@ const DateInput: React.FC<{
               height: 350,
             }}
           >
-            {/* <DateTimePicker
+            <DateTimePicker
               use12Hours={true}
               mode="single"
               minDate={dayjs().toDate()}
@@ -174,7 +174,7 @@ const DateInput: React.FC<{
                 },
               }}
               date={tempDate}
-            /> */}
+            />
           </Box>
           <HStack space={2} mt={4}>
             <Button
@@ -284,7 +284,7 @@ const TimeInput: React.FC<{
               height: 350,
             }}
           >
-            {/* <DateTimePicker
+            <DateTimePicker
               use12Hours={true}
               mode="single"
               timePicker
@@ -316,7 +316,7 @@ const TimeInput: React.FC<{
                 },
               }}
               date={tempTime}
-            /> */}
+            />
           </Box>
           <HStack space={2} mt={4}>
             <Button
