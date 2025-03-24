@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       status,
     } = body;
 
-    if (!projectId || !eventId || !message || !phoneNumber || !notificationType) {
+    if (  !message || !phoneNumber ) {
       return NextResponse.json(
         { status: "failed", message: "Missing required fields" },
         { status: 400 }
