@@ -493,6 +493,7 @@ export type Database = {
       Form: {
         Row: {
           created_at: string
+          damageTypes: string[] | null
           desc: string | null
           id: number
           name: string | null
@@ -500,6 +501,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          damageTypes?: string[] | null
           desc?: string | null
           id?: number
           name?: string | null
@@ -507,6 +509,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          damageTypes?: string[] | null
           desc?: string | null
           id?: number
           name?: string | null

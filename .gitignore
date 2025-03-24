@@ -36,3 +36,7 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+apps/expo/.expo/xcodebuild-error.log
+apps/expo/ios/.xcode.env.local
+apps/expo/ios/Pods

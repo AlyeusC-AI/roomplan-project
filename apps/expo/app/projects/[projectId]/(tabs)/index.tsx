@@ -128,6 +128,11 @@ export default function ProjectOverview() {
       description: "Manage insurance details",
     },
     {
+      path: "./lidar/rooms",
+      Icon: Video,
+      title: "Lidar Scan",
+      description: "View 3D scans",
+    }, {
       path: "./forms",
       Icon: FileText,
       title: "Forms",
