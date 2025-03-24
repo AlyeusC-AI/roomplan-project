@@ -15,6 +15,8 @@ const safelyGetImageUrl = (
   // If path is empty or null, return default
   if (!path) return defaultUrl;
   
+  path = decodeURIComponent(path);
+
   // If path is already a full URL, return it directly
   if (path.startsWith('http')) return path;
   

@@ -12,8 +12,12 @@ export default function Project() {
         options={{ headerShown: true, headerTitle: "Edit Insurance", headerBackTitle: "Back" }}
       />
       <Stack.Screen
-        name="lidar"
+        name="lidar/rooms"
         options={{ headerShown: true, headerTitle: "Lidar Scan", headerBackTitle: "Back" }}
+      />
+      <Stack.Screen
+        name="lidar/scan"
+        options={{ headerShown: false, headerTitle: "Lidar Scan" }}
       />
     </Stack>
   );
