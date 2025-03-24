@@ -11,6 +11,8 @@ import { roomsStore } from '@/lib/state/rooms';
 import { roomInferenceStore } from '@/lib/state/readings-image';
 import { supabaseServiceRole } from '@/app/projects/[projectId]/camera';
 
+import { RoomPlanImage } from './LidarRooms';;
+
 const { RoomScanModule } = NativeModules;
 
 // Check if device has LiDAR sensor (iOS only)
@@ -132,7 +134,12 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
       return
     }
 
-    const process = async () => {
+    if (url === "user-cancel") {
+      setShowScanner(false);
+      return
+    }
+
+    const processScanData = async () => {
       setIsProcessing(true);
       try {
         // upload zip file to supabase first
@@ -160,7 +167,20 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
         })
         .eq("id", processedRoomId.current);
 
-        // TODO call api to process zip file
+        // call api to process zip file
+        await fetch(
+          `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room/${processedRoomId.current}/cubicasa`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "auth-token": `${supabaseSession?.access_token}`,
+            },
+          }
+        );
+  
+        Alert.alert("Success", "Scan completed successfully, Your 2d plan will be ready shortly");
+        onClose && onClose()
       } catch(error) {
         console.error("Error processing image:", error);
         Alert.alert("Error", "Failed to process scan");
@@ -168,7 +188,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
       setIsProcessing(false);
       setShowScanner(false);
     }
-    process()
+    processScanData()
 
     return;
     // Show confirmation alert before completing scan
@@ -384,7 +404,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
       {processedRoomPlanSVG.current && (
         <View className="mt-8">
           <View className="mx-auto" style={{ width: svgSize, height: svgSize }}>
-            <SvgXml xml={processedRoomPlanSVG.current} width="100%" height="100%" />
+            <RoomPlanImage src={processedRoomPlanSVG.current} />
           </View>
         </View>
       )}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, Image } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { userStore } from "@/lib/state/user";
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,17 @@ import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { roomsStore } from '@/lib/state/rooms';
 import { useGlobalSearchParams, usePathname, useRouter } from 'expo-router';
+
+export const RoomPlanImage = ({ src }: { src: string }) => {
+  if (src.startsWith("http")) {
+    return (
+      <Image source={{ uri: src }} style={{ width: "100%", height: "100%" }} />
+    )
+  }
+  return (
+    <SvgXml xml={src} width="100%" height="100%" />
+  )
+}
 
 const PLACEHOLDER_SVG = `
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -118,14 +129,11 @@ export function LidarRooms() {
               <TouchableOpacity onPress={() => handleRoomPress(room.id, room.roomPlanSVG)}>
                 <View className="h-32 overflow-hidden bg-muted">
                   <View className="h-32 w-32 items-center justify-center mx-auto">
-                    <SvgXml 
-                      xml={room.roomPlanSVG || PLACEHOLDER_SVG} 
-                      width="100%" 
-                      height="100%" 
-                      className={cn(
-                        "relative",
-                      )}
-                    />
+                    {room.cubiTicketId && !room.cubiModelId ? (
+                      <Text>Processing your scan.</Text>
+                    ) : (
+                      <RoomPlanImage src={room.roomPlanSVG || PLACEHOLDER_SVG} />
+                    )}
                   </View>
                 </View>
               </TouchableOpacity>
