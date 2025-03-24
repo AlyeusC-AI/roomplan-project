@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Platform, TouchableOpacity, NativeModules,
   requireNativeComponent, UIManager, Text, TextInput, Dimensions,
-  SafeAreaView, Alert} from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+  SafeAreaView, Alert, ActivityIndicator } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { SvgXml } from 'react-native-svg';
 import { makeSVG } from '@/lib/utils/generate2DPlan';
 import { userStore } from '@/lib/state/user';
@@ -10,7 +10,6 @@ import { useLocalSearchParams } from 'expo-router';
 import { roomsStore } from '@/lib/state/rooms';
 import { roomInferenceStore } from '@/lib/state/readings-image';
 import { supabaseServiceRole } from '@/app/projects/[projectId]/camera';
-import { cn } from '@/lib/utils';
 
 const { RoomScanModule } = NativeModules;
 
@@ -20,7 +19,8 @@ const hasLidarSensor = async (): Promise<boolean> => {
 };
 
 type RoomScanViewProps = {
-  finish: boolean;
+  onCaptureCompleted: (ev: any) => void;
+  onCaptureError: (ev: any) => void;
 }
 
 // Check if the RoomPlan component is available
@@ -28,12 +28,12 @@ const isRoomPlanAvailable = () => {
   if (Platform.OS !== 'ios') return false;
   
   // Check if the native module exists
-  return UIManager.getViewManagerConfig('RoomScanView') != null;
+  return UIManager.getViewManagerConfig('CubiCasaScanView') != null;
 };
 
 // Create a native component wrapper if available
 const RoomScanView = isRoomPlanAvailable()
-  ? requireNativeComponent<RoomScanViewProps>('RoomScanView')
+  ? requireNativeComponent<RoomScanViewProps>('CubiCasaScanView')
   : null;
 
 interface LidarScanProps {
@@ -123,7 +123,54 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
     );
   };
 
-  const handleScanComplete = async () => {
+  const handleScanComplete = (ev: { nativeEvent: { url: string }}) => {
+    console.log("Complete -> handleScanComplete", ev.nativeEvent)
+    const url = ev.nativeEvent.url;
+    if (!url) {
+      Alert.alert('Error', 'No data received. Please scan again.');
+      setShowScanner(false);
+      return
+    }
+
+    const process = async () => {
+      setIsProcessing(true);
+      try {
+        // upload zip file to supabase first
+        const formData = new FormData();
+        const fileName = `room-${processedRoomId.current}.zip`
+        // @ts-expect-error react-native form data typing issue
+        formData.append("file", {
+          uri: url,
+          name: fileName
+        });
+        const storageRes = await supabaseServiceRole.storage
+          .from("cubi-zip-file")
+          .upload(fileName, formData, {
+            cacheControl: "3600",
+            upsert: true,
+          });
+
+        const zipFilePath = storageRes.data?.path
+        if (!zipFilePath) { throw new Error("Failed to upload zip file"); }
+
+        await supabaseServiceRole
+        .from("Room")
+        .update({
+          scannedFileKey: fileName
+        })
+        .eq("id", processedRoomId.current);
+
+        // TODO call api to process zip file
+      } catch(error) {
+        console.error("Error processing image:", error);
+        Alert.alert("Error", "Failed to process scan");
+      }
+      setIsProcessing(false);
+      setShowScanner(false);
+    }
+    process()
+
+    return;
     // Show confirmation alert before completing scan
     Alert.alert(
       'Finish Scan?',
@@ -200,6 +247,10 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
     );
   };
 
+  const handleScanError = (ev: { nativeEvent: { message: string }}) => {
+    console.log("Error -> handleScanError", ev.nativeEvent)
+    return;
+  }
 
   if (isSupported === null) {
     // Loading state
@@ -256,32 +307,38 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
         <View className="absolute inset-0 flex-1 w-full h-full z-10">
           {RoomScanView && (
             <RoomScanView
-              finish={finish}
+              onCaptureCompleted={handleScanComplete}
+              onCaptureError={handleScanError}
             />
           )}
         </View>
-        <SafeAreaView className="flex-1 w-full relative z-20">
-          <TouchableOpacity 
-            className={cn(
-              "absolute bottom-[30px] right-[30px] w-[60px] h-[60px] rounded-full bg-[#007AFF] justify-center items-center shadow-md z-20",
-              { "opacity-50": isProcessing }
-            )}
-            disabled={isProcessing}
-            onPress={handleScanComplete}
-          >
-            <Ionicons name="checkmark" size={32} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            className={cn(
-              "absolute top-20 right-5 w-11 h-11 bg-black/50 rounded-[22px] justify-center items-center z-20",
-              { "opacity-50": isProcessing }
-            )}
-            disabled={isProcessing}
-            onPress={handleCancel}
-          >
-            <MaterialIcons name="close" size={32} color="white" />
-          </TouchableOpacity>
-        </SafeAreaView>
+        {isProcessing && (
+          <View className="absolute inset-0 flex-1 w-full h-full bg-black opacity-50 z-20">
+            <View className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <ActivityIndicator size="large" color="#007AFF" />
+            </View>
+          </View>
+        )}
+        {/* <TouchableOpacity 
+          className={cn(
+            "absolute bottom-[30px] right-[30px] w-[60px] h-[60px] rounded-full bg-[#007AFF] justify-center items-center shadow-md z-20",
+            { "opacity-50": isProcessing }
+          )}
+          disabled={isProcessing}
+          onPress={handleScanComplete}
+        >
+          <Ionicons name="checkmark" size={32} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          className={cn(
+            `absolute top-[${insets.top + 20}px] right-5 w-11 h-11 bg-black/50 rounded-[22px] justify-center items-center z-20`,
+            { "opacity-50": isProcessing }
+          )}
+          disabled={isProcessing}
+          onPress={handleCancel}
+        >
+          <MaterialIcons name="close" size={32} color="white" />
+        </TouchableOpacity> */}
       </View>
     );
   }
