@@ -44,14 +44,14 @@ export async function POST(
       priority: "fast",
       webhook_url: "https://www.restoregeek.app/api/cubi-webhook",
       source_url: [url],
-      external_id: room.data?.id,
+      external_id: `${room.data?.id}`,
       address: {
-        formatted_address: "123 streetname, City, 12345, State, Country",
-        suite: "A1",
+        formatted_address: "6 Inverness Ct E Suite 240, Englewood, CO 80112",
+        suite: "6",
       },
     };
 
-    const result = await fetch("https://api.cubi.casa/conversion/ticke", {
+    const result = await fetch("https://api.cubi.casa/conversion/ticket", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
