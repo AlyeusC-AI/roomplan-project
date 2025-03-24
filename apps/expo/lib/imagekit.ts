@@ -7,7 +7,15 @@ const imagekit = new ImageKit({
   //   authenticationEndpoint: `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/imageKit`,
 });
 
-interface UploadResponse {
+export interface ImageKitUploadOptions {
+  folder?: string;
+  tags?: string[];
+  useUniqueFileName?: boolean;
+  responseFields?: string[];
+  isPrivateFile?: boolean;
+}
+
+export interface ImageKitUploadResponse {
   url: string;
   fileId: string;
   height: number;
@@ -17,45 +25,77 @@ interface UploadResponse {
   filePath: string;
 }
 
+export interface ImageKitTransformOptions {
+  width?: number;
+  height?: number;
+  quality?: number;
+  format?: "jpg" | "png" | "webp" | "auto";
+  crop?: "at_max" | "force" | "at_max_enlarge" | "at_least" | "maintain_ratio";
+}
+
+interface ExpoImageAsset {
+  uri: string;
+  width?: number;
+  height?: number;
+  type: string;
+  name: string;
+}
+
+/**
+ * Uploads an image to ImageKit
+ * @param file - File to upload (can be File object, Blob, or base64 string)
+ * @param options - Upload options
+ * @param onProgress - Callback function to track upload progress
+ * @returns Promise with upload response
+ */
 export const uploadImage = async (
-  file: any,
-  options: {
-    folder?: string;
-    tags?: string[];
-    useUniqueFileName?: boolean;
-    responseFields?: string[];
-    isPrivateFile?: boolean;
-  } = {}
-): Promise<UploadResponse> => {
+  file: ExpoImageAsset,
+  options: ImageKitUploadOptions = {},
+  onProgress?: (progress: number) => void
+): Promise<ImageKitUploadResponse> => {
   try {
-    // Get authentication token from your backend
+    onProgress?.(0);
+
+    // Get authentication parameters from your backend
     const response = await fetch(
       `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/imageKit`
     );
 
     const { token, expire, signature } = await response.json();
+    onProgress?.(20);
 
-    console.log("🚀 ~ token:", token);
     // Optimize image before upload
     // const optimizedFile = await optimizeImage(file);
-    const manipResult = await ImageManipulator.manipulateAsync(file.path, [], {
-      compress: 0.7,
-      format: ImageManipulator.SaveFormat.JPEG,
-      base64: true,
-    });
+    const manipResult = await ImageManipulator.manipulateAsync(
+      file.path || file.uri,
+      [
+        {
+          resize: {
+            width: 1200,
+            height: 1200,
+          },
+        },
+      ],
+      {
+        compress: 0.7,
+        format: ImageManipulator.SaveFormat.JPEG,
+        // base64: true,
+        // base64: true,
+      }
+    );
     console.log("🚀 ~ manipResult:", manipResult);
     console.log("🚀 ~ returnnewPromise ~ file:", file);
-
+    const finalFile = { ...file, ...manipResult };
+    console.log("🚀 ~ finalFile:", finalFile);
+    onProgress?.(40);
     return new Promise((resolve, reject) => {
       imagekit.upload(
         {
-          file: manipResult.base64 as string,
+          file: finalFile,
           fileName: options.useUniqueFileName
             ? `${Date.now()}_${file.name || "image.jpg"}`
             : file.name,
-          folder:
-               options.folder ||
-            "uploads",
+          folder: options.folder || "uploads",
           tags: options.tags || [],
           responseFields: options.responseFields || ["tags"],
           isPrivateFile: options.isPrivateFile || false,
@@ -63,12 +103,20 @@ export const uploadImage = async (
           expire,
           signature,
         },
-        (err, result) => {
+        (err: Error | null, result: ImageKitUploadResponse | null) => {
+          console.log("🚀 ~ returnnewPromise ~ result:", result);
+
           if (err) {
             reject(err);
             return;
           }
-          resolve(result as UploadResponse);
+
+          if (!result) {
+            reject(new Error("No result from ImageKit upload"));
+            return;
+          }
+          onProgress?.(100);
+          resolve(result);
         }
       );
     });
@@ -135,23 +183,23 @@ const optimizeImage = async (file: any): Promise<Blob> => {
   }
 };
 
-// Get optimized URL for an image
+/**
+ * Gets an optimized URL for an image
+ * @param filePath - Path of the image in ImageKit
+ * @param options - Transformation options
+ * @returns Optimized image URL
+ */
 export const getOptimizedImageUrl = (
   filePath: string,
-  options: {
-    width?: number;
-    height?: number;
-    quality?: number;
-    format?: string;
-  } = {}
+  options: ImageKitTransformOptions = {}
 ): string => {
-  const transformations = [];
+  const transformations: ImageKitTransformOptions[] = [];
 
   if (options.width || options.height) {
     transformations.push({
       width: options.width,
       height: options.height,
-      crop: "at_max",
+      crop: options.crop || "at_max",
     });
   }
 

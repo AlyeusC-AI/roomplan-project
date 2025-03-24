@@ -1,7 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Form } from "@/app/(logged-in)/forms/types";
-import { FileText, Image as ImageIcon } from "lucide-react";
+import { FileText, Image as ImageIcon, Maximize2 } from "lucide-react";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface ResponseViewerProps {
   response: {
@@ -19,6 +25,8 @@ interface ResponseViewerProps {
 }
 
 export function ResponseViewer({ response }: ResponseViewerProps) {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
   const renderValue = (field: ResponseViewerProps['response']['fields'][0]) => {
     try {
       const type = field.field.type.toLowerCase();
@@ -36,16 +44,62 @@ export function ResponseViewer({ response }: ResponseViewerProps) {
           if (!value.startsWith('data:image')) {
             const data = JSON.parse(value);
             imageUrl = data.url || value;
+            if(Array.isArray(data)) {
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {data.map(({url}, index) => (
+                    <Dialog key={index}>
+                      <DialogTrigger asChild>
+                        <div className="relative group cursor-pointer">
+                          <div className="aspect-square rounded-lg border border-border overflow-hidden">
+                            <img 
+                              src={url} 
+                              alt={`${field.field.name} ${index + 1}`}
+                              className="w-full h-full object-contain max-w-[400px]"
+                            />
+                          </div>
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Maximize2 className="h-6 w-6 text-white" />
+                          </div>
+                        </div>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl p-0">
+                        <img 
+                          src={url} 
+                          alt={`${field.field.name} ${index + 1}`}
+                          className="w-full max-h-[600px] object-contain "
+                        />
+                      </DialogContent>
+                    </Dialog>
+                  ))}
+                </div>
+              );
+            }
           }
           return (
-            <div className="flex items-center gap-2">
-              <ImageIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <img 
-                src={imageUrl} 
-                alt={field.field.name}
-                className="max-h-[200px] object-contain rounded border border-border"
-              />
-            </div>
+            <Dialog key={field.id} >
+              <DialogTrigger asChild >
+                <div className="relative group cursor-pointer max-w-[400px]">
+                  <div className="aspect-square rounded-lg border border-border overflow-hidden">
+                    <img 
+                      src={imageUrl} 
+                      alt={field.field.name}
+                      className="w-full h-full object-contain    max-w-[400px]"
+                    />
+                  </div>
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Maximize2 className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl p-0">
+                <img 
+                  src={imageUrl} 
+                  alt={field.field.name}
+                  className="w-full h-auto object-contain max-h-[600px]"
+                />
+              </DialogContent>
+            </Dialog>
           );
         } catch {
           return <span className="text-muted-foreground text-sm italic">Invalid image data</span>;

@@ -31,6 +31,7 @@ import {
   Video,
   X,
   AlertTriangle,
+  FileText,
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { projectStore } from "@/lib/state/project";
@@ -59,7 +60,6 @@ export default function ProjectOverview() {
   const members = teamMemberStore();
   const user = userStore();
   const project = projectStore();
-  console.log("🚀 ~ ProjectOverview ~ project:", JSON.stringify(project.project, null, 2));
   const { projectViewMode, setProjectViewMode } = uiPreferencesStore();
   // Add state to control client info modal visibility
   const [showClientInfo, setShowClientInfo] = useState(false);
@@ -132,7 +132,14 @@ export default function ProjectOverview() {
       Icon: Video,
       title: "Lidar Scan",
       description: "View 3D scans",
+    }, {
+      path: "./forms",
+      Icon: FileText,
+      title: "Forms",
+      description: "Manage project forms",
     },
+ 
+
     {
       path: "./pictures",
       Icon: Camera,
@@ -150,6 +157,12 @@ export default function ProjectOverview() {
       Icon: StickyNote,
       title: "Notes",
       description: "Project notes",
+    },
+    {
+      path: "./lidar",
+      Icon: Video,
+      title: "Lidar Scan",
+      description: "View 3D scans",
     },
     {
       Icon: ClipboardCheck,

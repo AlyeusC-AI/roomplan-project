@@ -84,7 +84,7 @@ export default function Dashboard() {
 
   const resetAndFetch = useCallback(async () => {
     setPage(0);
-    setProjects([]);
+    // setProjects([]);
     await fetchProjects(false);
   }, [searchTerm, selectedUser]);
 
