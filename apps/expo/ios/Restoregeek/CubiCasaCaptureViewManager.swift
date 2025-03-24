@@ -100,7 +100,7 @@ class CubiView: RCTView {
         case .failure(let error):
             // Don't show an error alert in case of user cancel
             if case .userCancel = error {
-                self.onCaptureCompleted?(["url": ""])
+                self.onCaptureCompleted?(["url": "user-cancel"])
                 return
             }
             let message = "Scan failed: \(error.localizedDescription)"
