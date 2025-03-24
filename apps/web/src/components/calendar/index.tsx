@@ -103,6 +103,7 @@ export default function CalendarComponent({
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [projectDetails, setProjectDetails] = useState<any>(null);
   const [mapImageUrl, setMapImageUrl] = useState<string | null>(null);
   const [isLoadingMap, setIsLoadingMap] = useState(false);
@@ -445,6 +446,8 @@ export default function CalendarComponent({
                     },
                   };
                 })}
+                onDateSelect={(date) => setSelectedDate(date)}
+                selectedDate={selectedDate}
               >
                 {({ feature }) => (
                   <CalendarItem
@@ -480,6 +483,7 @@ export default function CalendarComponent({
               }}
               getEventStatus={getEventStatus}
               onCreateEvent={() => setShowProjectsModal(true)}
+              selectedDate={selectedDate}
             />
           </Card>
         </div>

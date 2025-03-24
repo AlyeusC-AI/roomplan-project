@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { Clock, Edit, Trash2, CalendarPlus, ChevronRight } from "lucide-react";
 import { Badge } from "@components/ui/badge";
 import { Button } from "@components/ui/button";
@@ -15,6 +15,7 @@ interface EventsListProps {
   onDeleteEvent: (event: CalendarEvent) => void;
   getEventStatus: (date: Date) => { status: string; color: string };
   onCreateEvent: () => void;
+  selectedDate?: Date;
 }
 
 export function EventsList({
@@ -26,12 +27,15 @@ export function EventsList({
   onDeleteEvent,
   getEventStatus,
   onCreateEvent,
+  selectedDate,
 }: EventsListProps) {
   const now = new Date();
+  const targetDate = selectedDate || now;
+
   const filteredEvents = events
     .filter((event) => {
       const eventDate = event.start ? new Date(event.start) : new Date(event.date);
-      return eventDate >= now;
+      return isSameDay(eventDate, targetDate);
     })
     .sort((a, b) => {
       const dateA = a.start ? new Date(a.start) : new Date(a.date);
@@ -39,12 +43,19 @@ export function EventsList({
       return dateA.getTime() - dateB.getTime();
     });
 
+  const isToday = isSameDay(targetDate, now);
+  const dateTitle = isToday 
+    ? "Today's Events" 
+    : format(targetDate, "EEEE, MMMM d");
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Upcoming Events</h3>
-          <p className="text-sm text-gray-500 mt-1">Your next {filteredEvents.length} events</p>
+          <h3 className="text-lg font-semibold text-gray-900">{dateTitle}</h3>
+          <p className="text-sm text-gray-500 mt-1">
+            {filteredEvents.length} {filteredEvents.length === 1 ? 'event' : 'events'}
+          </p>
         </div>
         <Button
           variant="outline"
@@ -59,9 +70,13 @@ export function EventsList({
       {filteredEvents.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 rounded-lg p-6">
           <CalendarPlus className="w-10 h-10 text-gray-400 mb-3" />
-          <h4 className="text-base font-medium text-gray-900 mb-1">No upcoming events</h4>
+          <h4 className="text-base font-medium text-gray-900 mb-1">
+            {isToday ? "No events for today" : "No events for this day"}
+          </h4>
           <p className="text-sm text-gray-500 text-center mb-4">
-            Create your first event to get started
+            {isToday 
+              ? "Create an event to get started" 
+              : "Select another date or create a new event"}
           </p>
           <Button
             onClick={onCreateEvent}
@@ -108,9 +123,11 @@ export function EventsList({
                           <Clock className="w-3 h-3 mr-1" />
                           {format(eventDate, "h:mm a")}
                         </div>
-                        <div className="text-gray-400">
-                          {format(eventDate, "MMM d")}
-                        </div>
+                        {!isToday && (
+                          <div className="text-gray-400">
+                            {format(eventDate, "MMM d")}
+                          </div>
+                        )}
                       </div>
                     </div>
                     {project && (

@@ -85,10 +85,11 @@ export function FormPreview({ form, onSubmit, isSubmitting, initialValues = {} }
         filePath: result.filePath
       };
 
-      setFormData(prev => ({
-        ...prev,
-        [fieldId]: fileData
-      }));
+      return fileData;
+      // setFormData(prev => ({
+      //   ...prev,
+      //   [fieldId]: fileData
+      // }));
 
       setUploadProgress(prev => ({ ...prev, [fieldId]: 100 }));
     } catch (error) {
@@ -344,10 +345,15 @@ const  images=typeof formData[fieldId] === "string"? JSON.parse(formData[fieldId
                           type="file" 
                           className="hidden" 
                           id={`file-${field.id}`}
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              handleFileUpload(field.id!, file);
+                           const res= await handleFileUpload(field.id!, file);
+                              console.log("🚀 ~ FormPreview ~ file:", file)
+                              setFormData(prev => ({
+                                ...prev,
+                                [field.id!]: res
+                              }));
                             }
                           }}
                         />
@@ -400,17 +406,27 @@ const  images=typeof formData[fieldId] === "string"? JSON.parse(formData[fieldId
                           multiple
                           className="hidden" 
                           id={`image-${field.id}`}
-                          onChange={(e) => {
+                          onChange={async(e) => {
                             const files = Array.from(e.target.files || []);
+                            console.log("🚀 ~ FormPreview ~ files:", files)
                             if (files.length > 0) {
                               // If it's the first upload, initialize as array
                               if (!Array.isArray(formData[field.id!])) {
                                 handleInputChange(field.id!, []);
                               }
                               // Upload each file
-                              files.forEach(file => {
-                                handleFileUpload(field.id!, file);
-                              });
+                          for (const file of files) {
+
+                                console.log("🚀 ~ FormPreview ~ file:", file)
+
+                                
+                     const res       = await   handleFileUpload(field.id!, file);
+
+                     const newImages = [...(formData[field.id!]||[]),res];
+                     handleInputChange(field.id!, newImages);
+
+                     console.log("🚀 ~ FormPreview ~ res:", res)
+                              }
                             }
                           }}
                         />
