@@ -29,19 +29,13 @@ export async function POST(
 
     const fileKey = `room-${room.data?.id}.zip`;
 
-    const { data, error } = await supabaseServiceRole.storage
+    const url = supabaseServiceRole.storage
       .from("cubi-zip-file")
-      .createSignedUrl(fileKey, 3600 * 24);
-
-    if (error) {
-      return NextResponse.json({ status: "failed" }, { status: 500 });
-    }
-
-    const url = data?.signedUrl;
+      .getPublicUrl(fileKey).data.publicUrl;
 
     const cubiPayload = {
       conversion_type: "t3",
-      priority: "fast",
+      priority: "ultrafast",
       webhook_url: "https://www.restoregeek.app/api/cubi-webhook",
       source_url: [url],
       external_id: `${room.data?.id}`,
