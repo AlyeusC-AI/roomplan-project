@@ -14,7 +14,7 @@ export async function GET(
     const projectRaw: { data: FlatProject | null } = await supabaseServiceRole
       .from("Project")
       .select("*")
-      .eq("publicId", id)
+      .or(`publicId.eq.${id},id.eq.${id}`)
       .single();
 
     const project: Project = {
