@@ -159,12 +159,6 @@ export default function ProjectOverview() {
       description: "Project notes",
     },
     {
-      path: "./lidar",
-      Icon: Video,
-      title: "Lidar Scan",
-      description: "View 3D scans",
-    },
-    {
       Icon: ClipboardCheck,
       title: "Report",
       description: "Generate project report",
