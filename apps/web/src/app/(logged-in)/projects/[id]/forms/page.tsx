@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Form } from "@/app/(logged-in)/forms/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, ClipboardList, ArrowRight, CheckCircle2, AlertCircle } from "lucide-react";
+import { FileText, ClipboardList, ArrowRight, CheckCircle2, AlertCircle, Link as LinkIcon } from "lucide-react";
 import { FormPreview } from "@/app/(logged-in)/forms/components/FormPreview";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { FormConnectionModal } from "./components/FormConnectionModal";
 
 export default function ProjectFormsPage() {
   const [forms, setForms] = useState<Form[]>([]);
@@ -19,6 +20,7 @@ export default function ProjectFormsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [responseCount, setResponseCount] = useState<{[key: number]: number}>({});
+  const [isConnectionModalOpen, setIsConnectionModalOpen] = useState(false);
   const params = useParams();
   const projectId = params.id as string;
 
@@ -124,6 +126,12 @@ export default function ProjectFormsPage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
+      <FormConnectionModal
+        isOpen={isConnectionModalOpen}
+        onClose={() => setIsConnectionModalOpen(false)}
+        onConnectionChange={fetchProjectForms}
+      />
+
       <div className="space-y-6">
         <div className="flex justify-between items-start">
           <div>
@@ -132,12 +140,22 @@ export default function ProjectFormsPage() {
               View and fill out forms associated with this project
             </p>
           </div>
-          <Link href={`/projects/${projectId}/forms/responses`}>
-            <Button variant="outline" className="gap-2">
-              <ClipboardList className="h-4 w-4" />
-              View Responses
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsConnectionModalOpen(true)}
+              className="gap-2"
+            >
+              <LinkIcon className="h-4 w-4" />
+              Manage Forms
             </Button>
-          </Link>
+            <Link href={`/projects/${projectId}/forms/responses`}>
+              <Button variant="outline" className="gap-2">
+                <ClipboardList className="h-4 w-4" />
+                View Responses
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {forms.length === 0 ? (
@@ -146,10 +164,17 @@ export default function ProjectFormsPage() {
               <div className="rounded-full bg-muted p-3 mb-4">
                 <FileText className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="font-semibold mb-1">No forms available</h3>
-              <p className="text-sm text-muted-foreground max-w-sm">
-                There are no forms associated with this project's damage type.
+              <h3 className="font-semibold mb-1">No forms connected</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mb-4">
+                There are no forms connected to this project yet.
               </p>
+              <Button
+                onClick={() => setIsConnectionModalOpen(true)}
+                className="gap-2"
+              >
+                <LinkIcon className="h-4 w-4" />
+                Connect Forms
+              </Button>
             </div>
           </Card>
         ) : (

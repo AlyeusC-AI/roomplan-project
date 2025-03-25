@@ -97,7 +97,7 @@ export function EventDetailsSheet({
                 <h2 className="text-2xl font-bold">{event.subject}</h2>
                 <p className="text-muted-foreground">{event.payload}</p>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 mt-4">
                 <Button variant="outline" size="icon" onClick={onEdit}>
                   <Edit className="h-4 w-4" />
                 </Button>

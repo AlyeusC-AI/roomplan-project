@@ -2,19 +2,20 @@ import { createClient } from "@lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { user as getUser } from "@lib/supabase/get-user";
 import { z } from "zod";
+import { supabaseServiceRole } from "@lib/supabase/admin";
 
 // POST /api/v1/organization/forms/connect
 export async function POST(req: NextRequest) {
   try {
     const [, user] = await getUser(req);
-    const client = await createClient();
     const body = await req.json();
     
     // Validate request body
     const validatedData = z.object({
-      formIds: z.array(z.number()),
-      projectId: z.number()
+      formId: z.number(),
+      projectId: z.string()
     }).parse(body);
+    console.log("🚀 ~ POST ~ validatedData:", validatedData)
     
     const organizationId: string = user?.user_metadata.organizationId;
 
@@ -25,17 +26,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const org = await client.from("Organization").select("id").eq("publicId", organizationId).single();
+    const org = await supabaseServiceRole.from("Organization").select("id").eq("publicId", organizationId).single();
 
     if (org.error) throw org.error;
 
     // Verify project belongs to organization
-    const { data: project, error: projectError } = await client
+    const { data: project, error: projectError } = await supabaseServiceRole
       .from("Project")
       .select("id")
-      .eq("id", validatedData.projectId)
+      .eq("publicId", validatedData.projectId)
       .eq("organizationId", org.data.id)
       .single();
+      console.log("🚀 ~ POST ~ project:", project)
+      console.log("🚀 ~ POST ~ projectError:", projectError)
 
     if (projectError || !project) {
       return NextResponse.json(
@@ -45,15 +48,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify all forms belong to organization
-    const { data: forms, error: formsError } = await client
+    const { data: forms, error: formsError } = await supabaseServiceRole
       .from("Form")
       .select("id")
-      .in("id", validatedData.formIds)
+      .eq("id", validatedData.formId)
       .eq("orgId", org.data.id);
 
     if (formsError) throw formsError;
 
-    if (!forms || forms.length !== validatedData.formIds.length) {
+    if (!forms ) {
       return NextResponse.json(
         { error: "One or more forms not found or do not belong to organization" },
         { status: 404 }
@@ -61,29 +64,30 @@ export async function POST(req: NextRequest) {
     }
 
     // Get existing connections for this project
-    const { data: existingConnections, error: connectionsError } = await client
+    const { data: existingConnections, error: connectionsError } = await supabaseServiceRole
       .from("formProjects")
       .select("formId")
-      .eq("projectId", validatedData.projectId);
+      .eq("projectId", project.id)
+      .eq("formId", validatedData.formId);
 
     if (connectionsError) throw connectionsError;
 
-    // Find connections to delete (existing but not in the new list)
-    const existingFormIds = new Set(existingConnections?.map(conn => conn.formId) || []);
-    const formsToDelete = Array.from(existingFormIds).filter(id => !validatedData.formIds.includes(id!));
+    if (existingConnections.length > 0) {
+      return NextResponse.json(
+        { error: "Form already connected to project" },
+        { status: 400 }
+      );
+    }
 
-    // Find forms to connect (in the new list but not existing)
-    const formsToConnect = validatedData.formIds.filter(id => !existingFormIds.has(id));
-
+ 
     // Start a transaction
-    const { data: connections, error: insertError } = await client
+    const { data: connections, error: insertError } = await supabaseServiceRole
       .from("formProjects")
-      .upsert(
-        validatedData.formIds.map(formId => ({
-          formId,
-          projectId: validatedData.projectId
-        })),
-        { onConflict: 'formId,projectId' }
+      .insert(
+        {
+          formId: validatedData.formId,
+          projectId: project.id
+        }
       )
       .select();
 
@@ -92,8 +96,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       connected: connections,
-      deleted: formsToDelete.length,
-      skipped: validatedData.formIds.length - formsToConnect.length
+    
     });
   } catch (error) {
     console.error("Error upserting form-project connections:", error);
@@ -108,13 +111,12 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const [, user] = await getUser(req);
-    const client = await createClient();
     const body = await req.json();
     
     // Validate request body
     const validatedData = z.object({
-      formIds: z.array(z.number()),
-      projectId: z.number()
+      formId: z.number(),
+      projectId: z.string()
     }).parse(body);
     
     const organizationId: string = user?.user_metadata.organizationId;
@@ -126,15 +128,15 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const org = await client.from("Organization").select("id").eq("publicId", organizationId).single();
+    const org = await supabaseServiceRole.from("Organization").select("id").eq("publicId", organizationId).single();
 
     if (org.error) throw org.error;
 
     // Verify project belongs to organization
-    const { data: project, error: projectError } = await client
+    const { data: project, error: projectError } = await supabaseServiceRole
       .from("Project")
       .select("id")
-      .eq("id", validatedData.projectId)
+      .eq("publicId", validatedData.projectId)
       .eq("organizationId", org.data.id)
       .single();
 
@@ -146,38 +148,33 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Get existing connections
-    const { data: existingConnections, error: connectionsError } = await client
+    const { data: existingConnections, error: connectionsError } = await supabaseServiceRole
       .from("formProjects")
       .select("formId")
-      .eq("projectId", validatedData.projectId)
-      .in("formId", validatedData.formIds);
+      .eq("projectId", project.id)
+      .eq("formId", validatedData.formId);
 
     if (connectionsError) throw connectionsError;
 
-    // Filter out forms that are not connected
-    const existingFormIds = new Set(existingConnections?.map(conn => conn.formId) || []);
-    const formsToDelete = validatedData.formIds.filter(id => existingFormIds.has(id));
-
-    if (formsToDelete.length === 0) {
+   
+    if (existingConnections.length === 0) {
       return NextResponse.json(
-        { error: "No forms are connected to this project" },
+        { error: "Form not connected to project" },
         { status: 400 }
       );
     }
 
     // Delete connections
-    const { error: deleteError } = await client
+    const { error: deleteError } = await supabaseServiceRole
       .from("formProjects")
       .delete()
-      .eq("projectId", validatedData.projectId)
-      .in("formId", formsToDelete);
+      .eq("projectId", project.id)
+      .eq("formId", validatedData.formId);
 
     if (deleteError) throw deleteError;
 
     return NextResponse.json({
       success: true,
-      deleted: formsToDelete.length,
-      skipped: validatedData.formIds.length - formsToDelete.length
     });
   } catch (error) {
     console.error("Error disconnecting forms from project:", error);
@@ -187,3 +184,59 @@ export async function DELETE(req: NextRequest) {
     );
   }
 } 
+
+// GET /api/v1/organization/forms/connections
+export async function GET(req: NextRequest) {
+  try {
+    const [, user] = await getUser(req);
+    const { searchParams } = new URL(req.url);
+      const projectId = searchParams.get('projectId');
+
+    if (!projectId) {
+      return NextResponse.json(
+        { error: "Project ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const organizationId: string = user?.user_metadata.organizationId;
+
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: "Organization ID is required" },
+        { status: 400 }
+      )
+    }
+
+    const org = await supabaseServiceRole.from("Organization").select("id").eq("publicId", organizationId).single();
+
+    if (org.error) throw org.error;
+    
+    const { data: project, error: projectError } = await supabaseServiceRole
+      .from("Project")
+      .select("id")
+      .eq("publicId", projectId)
+      .eq("organizationId", org.data.id)
+      .single();
+
+    if (projectError || !project) {
+      return NextResponse.json(
+        { error: "Project not found or does not belong to organization" },
+        { status: 404 }
+      );
+    }
+
+        const { data: connections, error: connectionsError } = await supabaseServiceRole
+      .from("formProjects")
+      .select("formId, projectId")
+      .eq("projectId", project.id);
+    if (connectionsError) throw connectionsError; 
+    
+    return NextResponse.json({
+      connections
+    });
+  } catch (error) {
+    console.error("Error fetching form connections:", error);
+    return NextResponse.json({ error: "Failed to fetch form connections" }, { status: 500 });
+  }
+}
