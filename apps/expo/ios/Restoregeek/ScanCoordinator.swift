@@ -1,3 +1,4 @@
+// DO NOT DELETE THIS FILE @VINCENT
 //
 //  ScanCoordinator.swift
 //  CubiCaptureExample
