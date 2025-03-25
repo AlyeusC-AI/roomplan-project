@@ -1,6 +1,5 @@
 import { supabaseServiceRole } from "@lib/supabase/admin";
-import { createClient } from "@lib/supabase/server";
-import { NextRequest, NextResponse } from "next/server";
+  import { NextRequest, NextResponse } from "next/server";
 import { user as getUser } from "@lib/supabase/get-user";
 import { z } from "zod";
 
@@ -64,7 +63,6 @@ const deleteFormSchema = z.object({
 export async function GET(req: NextRequest) {
   try {
     const [, user] = await getUser(req);
-    const client = await createClient();
 
     const organizationId: string = user?.user_metadata.organizationId;
 
@@ -75,12 +73,12 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const org=await client.from("Organization").select("id").eq("publicId", organizationId).single();
+    const org=await supabaseServiceRole.from("Organization").select("id").eq("publicId", organizationId).single();
 
     if (org.error) throw org.error;
 
     // Get forms for the organization
-    const { data: forms, error } = await client
+          const { data: forms, error } = await supabaseServiceRole
       .from("Form")
       .select(`
         *,
@@ -110,7 +108,6 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const [, user] = await getUser(req);
-    const client = await createClient();
     const body = await req.json();
     
     // Validate request body
@@ -126,12 +123,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const org=await client.from("Organization").select("id").eq("publicId", organizationId).single();
+    const org=await supabaseServiceRole.from("Organization").select("id").eq("publicId", organizationId).single();
 
     if (org.error) throw org.error;
 
     // Start a transaction
-    const { data: form, error: formError } = await client
+    const { data: form, error: formError } = await supabaseServiceRole
       .from("Form")
       .insert({
         name: validatedData.name,
@@ -146,7 +143,7 @@ export async function POST(req: NextRequest) {
 
     // Create sections and fields
     for (const section of validatedData.sections || []) {
-      const { data: formSection, error: sectionError } = await client
+      const { data: formSection, error: sectionError } = await supabaseServiceRole
         .from("FormSection")
         .insert({
           name: section.name,
@@ -159,7 +156,7 @@ export async function POST(req: NextRequest) {
 
       // Create fields for this section
       for (const field of section.fields || []) {
-        const { data: formField, error: fieldError } = await client
+        const { data: formField, error: fieldError } = await supabaseServiceRole
           .from("FormField")
           .insert({
             name: field.name,
@@ -175,7 +172,7 @@ export async function POST(req: NextRequest) {
 
         // Create options if they exist
         if (field.options && field.options.length > 0) {
-          const { error: optionsError } = await client
+          const { error: optionsError } = await supabaseServiceRole
             .from("FormOption")
             .insert(
               field.options.map(option => ({
@@ -205,14 +202,13 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const [, user] = await getUser(req);
-    const client = await createClient();
     const body = await req.json();
     
     // Validate request body
     const validatedData = updateFormSchema.parse(body);
 
     // Update form
-    const { data: updatedForm, error: updateError } = await client
+    const { data: updatedForm, error: updateError } = await supabaseServiceRole
       .from("Form")
       .update({
         name: validatedData.name,
@@ -226,14 +222,14 @@ export async function PUT(req: NextRequest) {
     if (updateError) throw updateError;
 
     // Get existing sections and fields
-    const { data: existingSections, error: sectionsError } = await client
+    const { data: existingSections, error: sectionsError } = await supabaseServiceRole
       .from("FormSection")
       .select("id, name, formId")
       .eq("formId", validatedData.id);
 
     if (sectionsError) throw sectionsError;
 
-    const { data: existingFields, error: fieldsError } = await client
+    const { data: existingFields, error: fieldsError } = await supabaseServiceRole
       .from("FormField")
       .select("id, name, type, isRequired, order, sectionId")
       .in(
@@ -261,7 +257,7 @@ export async function PUT(req: NextRequest) {
       
       if (existingSection) {
         // Update existing section
-        const { error: sectionUpdateError } = await client
+        const { error: sectionUpdateError } = await supabaseServiceRole
           .from("FormSection")
           .update({ name: section.name })
           .eq("id", existingSection.id);
@@ -269,7 +265,7 @@ export async function PUT(req: NextRequest) {
         if (sectionUpdateError) throw sectionUpdateError;
       } else {
         // Create new section
-        const { data: newSection, error: sectionCreateError } = await client
+        const { data: newSection, error: sectionCreateError } = await supabaseServiceRole
           .from("FormSection")
           .insert({
             name: section.name,
@@ -293,7 +289,7 @@ export async function PUT(req: NextRequest) {
 
         if (existingField) {
           // Update existing field
-          const { error: fieldUpdateError } = await client
+          const { error: fieldUpdateError } = await supabaseServiceRole
             .from("FormField")
             .update({
               name: field.name,
@@ -308,7 +304,7 @@ export async function PUT(req: NextRequest) {
           // Handle options for existing field
           if (field.options && (field.type === "RADIO" || field.type === "CHECKBOX" || field.type === "SELECT")) {
             // Delete existing options
-            const { error: deleteOptionsError } = await client
+            const { error: deleteOptionsError } = await supabaseServiceRole
               .from("FormOption")
               .delete()
               .eq("formFieldId", existingField.id);
@@ -317,7 +313,7 @@ export async function PUT(req: NextRequest) {
 
             // Insert new options
             if (field.options.length > 0) {
-              const { error: insertOptionsError } = await client
+              const { error: insertOptionsError } = await supabaseServiceRole
                 .from("FormOption")
                 .insert(
                   field.options.map((option, index) => ({
@@ -333,7 +329,7 @@ export async function PUT(req: NextRequest) {
           }
         } else {
           // Create new field
-          const { data: newField, error: fieldCreateError } = await client
+          const { data: newField, error: fieldCreateError } = await supabaseServiceRole
             .from("FormField")
             .insert({
               name: field.name,
@@ -351,7 +347,7 @@ export async function PUT(req: NextRequest) {
           // Handle options for new field
           if (field.options && (field.type === "RADIO" || field.type === "CHECKBOX" || field.type === "SELECT")) {
             if (field.options.length > 0) {
-              const { error: insertOptionsError } = await client
+              const { error: insertOptionsError } = await supabaseServiceRole
                 .from("FormOption")
                 .insert(
                   field.options.map((option, index) => ({
@@ -374,7 +370,7 @@ export async function PUT(req: NextRequest) {
       .filter((section) => !validatedData.sections?.some((s) => s.name === section.name));
 
     if (sectionsToDelete.length > 0) {
-      const { error: deleteError } = await client
+      const { error: deleteError } = await supabaseServiceRole
         .from("FormSection")
         .delete()
         .in(
@@ -399,14 +395,13 @@ export async function PUT(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const [, user] = await getUser(req);
-    const client = await createClient();
     const body = await req.json();
     
     // Validate request body
     const validatedData = deleteFormSchema.parse(body);
 
     // Delete the form and all related data
-    const { error } = await client
+    const { error } = await supabaseServiceRole
       .from("Form")
       .delete()
       .eq("id", validatedData.id);
