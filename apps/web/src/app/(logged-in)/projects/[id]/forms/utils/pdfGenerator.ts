@@ -190,7 +190,7 @@ export async function generatePDF(responses: FormResponse[], title: string): Pro
             color: '#2563eb'
           }
         ],
-        margin: [0, 0, 0, 0]
+        margin: [0, 0, 0, 20]
       },
       {
         text: title,

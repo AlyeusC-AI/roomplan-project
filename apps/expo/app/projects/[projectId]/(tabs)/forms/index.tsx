@@ -17,6 +17,7 @@ import {
   Plus,
   CheckCircle2,
   AlertCircle,
+  Link as LinkIcon,
 } from "lucide-react-native";
 import { toast } from "sonner-native";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import { useFormsStore } from "@/lib/state/forms";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { FormConnectionModal } from "./components/FormConnectionModal";
 
 const { width } = Dimensions.get("window");
 
@@ -36,8 +38,8 @@ export default function FormsScreen() {
     responseCounts,
     loading,
   } = useFormsStore();
-  console.log("🚀 ~ FormsScreen ~ forms:", forms);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [isConnectionModalOpen, setIsConnectionModalOpen] = React.useState(false);
 
   const fetchForms = async (showLoading = true) => {
     await getForms(projectId as string);
@@ -109,105 +111,117 @@ export default function FormsScreen() {
             No forms found
           </Text>
           <Text className="mt-3 text-lg text-muted-foreground text-center max-w-[80%]">
-            Create your first form to start collecting responses
+            Create your first form or connect existing forms to start collecting responses
           </Text>
-          {/* <Button 
-            className="mt-6 bg-primary px-6 py-3 rounded-full"
-            onPress={() => router.push(`/projects/${projectId}/forms/new`)}
+          <Button 
+            className="mt-6 bg-primary px-6 py-3 rounded-full flex-row items-center gap-2"
+            onPress={() => setIsConnectionModalOpen(true)}
           >
-            <Text><Plus className="h-5 w-5 mr-2" /></Text>
-            <Text>Create Form</Text>
-          </Button> */}
+            <Text><LinkIcon className="h-5 w-5" color="white" /></Text>
+            <Text>Connect Forms</Text>
+          </Button>
         </View>
       </ScrollView>
     );
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-      }
-    >
-      <View className="px-4 py-6">
-        <View className="flex-row justify-between items-center mb-6">
-          <Text className="text-2xl font-bold">Forms</Text>
-          {/* <Button 
-            className="bg-primary px-4 py-2 rounded-full"
-            onPress={() => router.push(`/projects/${projectId}/forms/new`)}
-          >
-          <Plus className="h-4 w-4 mr-2" />
-           <Text>New Form</Text>   
-          </Button> */}
-        </View>
-
-        {forms?.map((form, index) => (
-          <View key={form.id}>
-            <Card
-              className={`overflow-hidden border-0 shadow-sm ${getFormStatusColor(
-                responseCounts[form.id] || 0
-              )}`}
+    <>
+      <ScrollView
+        className="flex-1 bg-background"
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View className="px-4 py-6">
+          <View className="flex-row justify-between items-center mb-6">
+            <Text className="text-2xl font-bold">Forms</Text>
+            <Button 
+              className="bg-primary px-4 py-2 rounded-full flex-row items-center gap-2"
+              onPress={() => setIsConnectionModalOpen(true)}
             >
-              <TouchableOpacity
-                onPress={() => handleFormPress(form.id)}
-                className="p-5"
+              <LinkIcon className="h-4 w-4 text-white" color="white" />
+              <Text>Connect Forms</Text>   
+            </Button>
+          </View>
+
+          {forms?.map((form, index) => (
+            <View key={form.id}>
+              <Card
+                className={`overflow-hidden border-0 mb-2 shadow-sm ${getFormStatusColor(
+                  responseCounts[form.id] || 0
+                )}`}
               >
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-1">
-                    <View className="flex-row items-center space-x-3">
-                      <Text className="text-xl font-semibold">{form.name}</Text>
-                      <View
-                        className={`flex-row items-center space-x-2 px-3 py-1 gap-4 rounded-full ${getFormStatusColor(
-                          responseCounts[form.id] || 0
-                        )}`}
-                      >
-                        {getFormStatusIcon(responseCounts[form.id] || 0)}
-                        <Text
-                          className={`font-medium ${getFormStatusText(
+                <TouchableOpacity
+                  onPress={() => handleFormPress(form.id)}
+                  className="p-5"
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1">
+                      <View className="flex-col items-start  ">
+                        <Text className="text-xl font-semibold">{form.name}</Text>
+                        <View
+                          className={`flex-row items-center  py-1 gap-4 rounded-full ${getFormStatusColor(
                             responseCounts[form.id] || 0
                           )}`}
                         >
-                          {responseCounts[form.id] > 0
-                            ? `${responseCounts[form.id]} responses`
-                            : "No responses yet"}
-                        </Text>
+                          {getFormStatusIcon(responseCounts[form.id] || 0)}
+                          <Text
+                            className={`font-medium ${getFormStatusText(
+                              responseCounts[form.id] || 0
+                            )}`}
+                          >
+                            {responseCounts[form.id] > 0
+                              ? `${responseCounts[form.id]} responses`
+                              : "No responses yet"}
+                          </Text>
+                        </View>
                       </View>
+                      {form.description && (
+                        <Text className="mt-2 text-base text-muted-foreground">
+                          {form.description}
+                        </Text>
+                      )}
+                      {responseCounts[form.id] === 0 && (
+                        <Text className="mt-2 text-sm text-orange-600 font-medium">
+                          Be the first to fill out this form!
+                        </Text>
+                      )}
                     </View>
-                    {form.description && (
-                      <Text className="mt-2 text-base text-muted-foreground">
-                        {form.description}
-                      </Text>
-                    )}
-                    {responseCounts[form.id] === 0 && (
-                      <Text className="mt-2 text-sm text-orange-600 font-medium">
-                        Be the first to fill out this form!
-                      </Text>
-                    )}
-                  </View>
-                  <View className="flex-row items-center space-x-3">
-                    <TouchableOpacity
-                      onPress={() =>
-                        router.push(
-                          `/projects/${projectId}/forms/${form.id}/responses`
-                        )
-                      }
-                      className="p-2 hover:bg-muted rounded-full"
-                    >
+                    <View className="flex-row items-center space-x-3">
+                      <TouchableOpacity
+                        onPress={() =>
+                          router.push(
+                            `/projects/${projectId}/forms/${form.id}/responses`
+                          )
+                        }
+                        className="p-2 hover:bg-muted rounded-full"
+                      >
+                        <Text>
+                          <FileText size={20} className="text-muted-foreground" />
+                        </Text>
+                      </TouchableOpacity>
                       <Text>
-                        <FileText size={20} className="text-muted-foreground" />
+                        <ArrowRight className="h-6 w-6 text-muted-foreground" />
                       </Text>
-                    </TouchableOpacity>
-                    <Text>
-                      <ArrowRight className="h-6 w-6 text-muted-foreground" />
-                    </Text>
+                    </View>
                   </View>
-                </View>
-              </TouchableOpacity>
-            </Card>
-          </View>
-        ))}
-      </View>
-    </ScrollView>
+                </TouchableOpacity>
+              </Card>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+
+      <FormConnectionModal
+        isOpen={isConnectionModalOpen}
+        onClose={() => setIsConnectionModalOpen(false)}
+        onConnectionChange={() => {
+          fetchForms();
+          setIsConnectionModalOpen(false);
+        }}
+        projectId={projectId as string}
+      />
+    </>
   );
 }

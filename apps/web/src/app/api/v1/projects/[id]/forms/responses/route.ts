@@ -6,10 +6,10 @@ import { v4 } from "uuid";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const [, user] = await getUser(req);
-  const projectId = params.id;
+  const {id:projectId} = await params;
   const client = await createClient();
 
   try {

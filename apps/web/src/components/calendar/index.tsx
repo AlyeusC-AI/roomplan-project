@@ -87,6 +87,7 @@ import { Separator } from "@components/ui/separator";
 import { useRouter } from "next/navigation";
 import { EventDetailsSheet } from "./event-details-sheet";
 import { EventForm } from "./event-form";
+import { EventsList } from "./events-list";
 import { calendarEventSchema, type CalendarEvent, type CreateEventValues } from "./types";
 
 export default function CalendarComponent({
@@ -102,6 +103,7 @@ export default function CalendarComponent({
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [projectDetails, setProjectDetails] = useState<any>(null);
   const [mapImageUrl, setMapImageUrl] = useState<string | null>(null);
   const [isLoadingMap, setIsLoadingMap] = useState(false);
@@ -412,54 +414,79 @@ export default function CalendarComponent({
             </div>
           </div>
         </header>
-        <Card className='mt-5'>
-          <CalendarProvider>
-            <CalendarDate>
-              <CalendarDatePicker>
-                <CalendarMonthPicker />
-                <CalendarYearPicker
-                  start={new Date().getFullYear()}
-                  end={new Date().getFullYear() + 1}
-                />
-              </CalendarDatePicker>
-              <CalendarDatePagination />
-            </CalendarDate>
-            <CalendarHeader />
-            <CalendarBody
-              features={events.map((event) => {
-                const start = new Date(event.start ?? event.date);
-                const end = new Date(event.end ?? event.date);
-                const status = getEventStatus(start);
-                return {
-                  id: event.publicId,
-                  name: `${event.subject} - ${start.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`,
-                  startAt: start,
-                  endAt: end,
-                  status: {
-                    id: status.status,
-                    name: status.status,
-                    color: status.color,
-                  },
-                };
-              })}
-            >
-              {({ feature }) => (
-                <CalendarItem
-                  onClick={() => {
-                    const event = events.find(
-                      (event) => event.publicId === feature.id
-                    );
-                    if (event) {
-                      handleEventClick(event);
-                    }
-                  }}
-                  key={feature.id}
-                  feature={feature}
-                />
-              )}
-            </CalendarBody>
-          </CalendarProvider>
-        </Card>
+
+        <div className="flex gap-6 mt-5 ">
+          <Card className='flex-1'>
+            <CalendarProvider>
+              <CalendarDate>
+                <CalendarDatePicker>
+                  <CalendarMonthPicker />
+                  <CalendarYearPicker
+                    start={new Date().getFullYear()}
+                    end={new Date().getFullYear() + 1}
+                  />
+                </CalendarDatePicker>
+                <CalendarDatePagination />
+              </CalendarDate>
+              <CalendarHeader />
+              <CalendarBody
+                features={events.map((event) => {
+                  const start = new Date(event.start ?? event.date);
+                  const end = new Date(event.end ?? event.date);
+                  const status = getEventStatus(start);
+                  return {
+                    id: event.publicId,
+                    name: `${event.subject} - ${start.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`,
+                    startAt: start,
+                    endAt: end,
+                    status: {
+                      id: status.status,
+                      name: status.status,
+                      color: status.color,
+                    },
+                  };
+                })}
+                onDateSelect={(date) => setSelectedDate(date)}
+                selectedDate={selectedDate}
+              >
+                {({ feature }) => (
+                  <CalendarItem
+                    onClick={() => {
+                      const event = events.find(
+                        (event) => event.publicId === feature.id
+                      );
+                      if (event) {
+                        handleEventClick(event);
+                      }
+                    }}
+                    key={feature.id}
+                    feature={feature}
+                  />
+                )}
+              </CalendarBody>
+            </CalendarProvider>
+          </Card>
+
+          <Card className='w-96 p-4'>
+            <EventsList
+              events={events}
+              selectedEvent={selectedEvent}
+              projects={projects}
+              onEventClick={handleEventClick}
+              onEditEvent={(event) => {
+                setEditingEvent(event);
+                setShowProjectsModal(true);
+              }}
+              onDeleteEvent={(event) => {
+                setSelectedEvent(event);
+                setConfirmDelete(true);
+              }}
+              getEventStatus={getEventStatus}
+              onCreateEvent={() => setShowProjectsModal(true)}
+              selectedDate={selectedDate}
+            />
+          </Card>
+        </div>
       </div>
     </div>
   );

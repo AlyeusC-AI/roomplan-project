@@ -28,7 +28,14 @@ export async function GET(
     }
 
   
-  
+    const { data: connecedForms, error: connecedFormsError } = await supabaseServiceRole
+    .from("formProjects")
+    .select(`
+     formId
+    `)
+    .eq("projectId", project.id)
+
+  if (connecedFormsError) throw connecedFormsError;
 
     // Get forms that match the project's damage type
     const { data: forms, error: formsError } = await supabaseServiceRole
@@ -45,12 +52,12 @@ export async function GET(
       `)
       .order("created_at", { ascending: false })
       .eq("orgId", project.organizationId)
-      .contains("damageTypes", [project.damageType]);
+      .or(`id.in.(${connecedForms.map(form => form.formId).join(",")}),damageTypes.cs.{${project.damageType}}`)
 
     if (formsError) throw formsError;
 
     // Return empty array if no forms found
-    return NextResponse.json({ forms: forms || [] });
+    return NextResponse.json({ forms: (forms || [])});
   } catch (error) {
     console.error("Error fetching forms:", error);
     return NextResponse.json(
