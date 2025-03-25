@@ -35,7 +35,7 @@ export async function POST(
 
     const cubiPayload = {
       conversion_type: "t3",
-      priority: "ultrafast",
+      priority: "fast",
       webhook_url: "https://www.restoregeek.app/api/cubi-webhook",
       source_url: [url],
       external_id: `${room.data?.id}`,

@@ -19,13 +19,13 @@ export async function POST(request: NextRequest) {
         .update({ cubiModelId: model_id })
         .eq("cubiTicketId", ticket_id);
 
-      const cubiUrl = `https://stoplight.io/mocks/cubicasa/exporter-api-floor-plans/449955005/floorplan/${model_id}`;
+      const cubiUrl = `https://api.cubi.casa/exporter/floorplan/${model_id}`;
 
       const cubiRes = await fetch(cubiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "api-key": cubiKey,
+          "x-api-key": cubiKey,
         },
         body: JSON.stringify({}),
       }).then((res) => res.json());
