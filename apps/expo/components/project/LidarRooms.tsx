@@ -130,7 +130,7 @@ export function LidarRooms() {
                 <View className="h-32 overflow-hidden bg-muted">
                   <View className="h-32 w-32 items-center justify-center mx-auto">
                     {room.cubiTicketId && !room.cubiModelId ? (
-                      <Text>Processing your scan.</Text>
+                      <Text>Processing your scan. It will be available within 6 hours.</Text>
                     ) : (
                       <RoomPlanImage src={room.roomPlanSVG || PLACEHOLDER_SVG} />
                     )}
