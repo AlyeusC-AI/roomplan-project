@@ -58,6 +58,33 @@ export async function GET(request: NextRequest) {
         })
       : null;
 
+    // Fetch available plans
+    const prices = await stripe.prices.list({
+      expand: ["data.product"],
+      active: true,
+      type: "recurring",
+      recurring: {
+        interval: "month",
+        usage_type: "licensed",
+      },
+      lookup_keys: ["enterprise", "team", "startup"],
+    });
+
+    const availablePlans = prices.data.map((price: Stripe.Price) => {
+      const product = price.product as Stripe.Product;
+      return {
+        id: price.id,
+        price: price.unit_amount! / 100,
+        product: {
+          name: product.name,
+          description: product.description,
+          marketing_features: product.metadata.marketing_features 
+            ? JSON.parse(product.metadata.marketing_features)
+            : [],
+        },
+      };
+    });
+
     // Format the response
     const subscriptionInfo = {
       status: org.subscriptionId ? subscription?.status : "never",
@@ -67,9 +94,9 @@ export async function GET(request: NextRequest) {
         name: (subscription.items.data[0].price.product as Stripe.Product).name,
         price: subscription.items.data[0].price.unit_amount! / 100,
         interval: subscription.items.data[0].price.recurring?.interval,
-            features: features.data[0].marketing_features.map((feature) => feature.name)
+        features: features.data[0].marketing_features.map((feature) => feature.name)
       } : null,
-      customer: customer ? {
+      customer: customer && !customer.deleted ? {
         email: customer.email,
         name: customer.name,
         phone: customer.phone,
@@ -87,6 +114,7 @@ export async function GET(request: NextRequest) {
         date: new Date(invoice.created * 1000).toISOString(),
         pdfUrl: invoice.invoice_pdf,
       })) || [],
+      availablePlans,
     };
 
     return NextResponse.json(subscriptionInfo);

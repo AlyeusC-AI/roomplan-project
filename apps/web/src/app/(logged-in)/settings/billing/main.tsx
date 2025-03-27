@@ -52,6 +52,17 @@ interface SubscriptionInfo {
   maxUsersForSubscription: number;
   cancelAtPeriodEnd: boolean;
   recentInvoices: Invoice[];
+  availablePlans?: Array<{
+    id: string;
+    price: number;
+    product: {
+      name: string;
+      description: string;
+      marketing_features: Array<{
+        name: string;
+      }>;
+    };
+  }>;
 }
 
 export default function BillingPage() {
@@ -72,6 +83,38 @@ export default function BillingPage() {
       setSubscriptionInfo(data);
     } catch (error) {
       toast.error("Failed to load subscription information");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const purchase = async (plan: NonNullable<SubscriptionInfo['availablePlans']>[0], noTrial: boolean) => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          priceId: plan.id,
+          type: "register",
+          plan: plan.product.name.toLowerCase(),
+          noTrial,
+        }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error(
+          "An error occurred while processing your payment. Please try again later."
+        );
+      }
+    } catch (error) {
+      toast.error(
+        "An error occurred while processing your payment. Please try again later."
+      );
     } finally {
       setLoading(false);
     }
@@ -101,97 +144,89 @@ export default function BillingPage() {
       {/* Header Section */}
 
       {/* Main Subscription Card */}
-      <Card className='overflow-hidden'>
-        <div className='bg-primary/5 p-6'>
-          <div className='flex items-center justify-between'>
-            <div className='space-y-1'>
-              <h2 className='text-2xl font-semibold'>
-                {subscriptionInfo?.plan?.name || "No Active Plan"}
-              </h2>
-              <p className='text-sm text-muted-foreground'>
-                {subscriptionInfo?.plan
-                  ? `${subscriptionInfo.maxUsersForSubscription} users included`
-                  : "Choose a plan to get started"}
+      {subscriptionInfo?.plan ? (
+        <Card className='overflow-hidden'>
+          <div className='bg-primary/5 p-6'>
+            <div className='flex items-center justify-between'>
+              <div className='space-y-1'>
+                <h2 className='text-2xl font-semibold'>
+                  {subscriptionInfo.plan.name}
+                </h2>
+                <p className='text-sm text-muted-foreground'>
+                  {subscriptionInfo.maxUsersForSubscription} users included
+                </p>
+              </div>
+              {subscriptionInfo?.status && (
+                <div className='flex items-center gap-3'>
+                  {subscriptionInfo.cancelAtPeriodEnd && (
+                    <Badge
+                      variant='outline'
+                      className='border-yellow-500/20 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
+                    >
+                      Cancels soon
+                    </Badge>
+                  )}
+                  <Badge
+                    variant={
+                      subscriptionInfo.status === "active"
+                        ? "default"
+                        : subscriptionInfo.status === "trialing"
+                          ? "secondary"
+                          : "destructive"
+                    }
+                    className='px-4 py-1'
+                  >
+                    {subscriptionInfo.status.charAt(0)?.toUpperCase() +
+                      subscriptionInfo.status.slice(1)}
+                  </Badge>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <CardContent className='grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-3'>
+            {/* Price Info */}
+            <div className='space-y-2'>
+              <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                <CreditCard className='h-4 w-4' />
+                Billing Amount
+              </div>
+              <div className='flex items-baseline gap-1'>
+                <span className='text-3xl font-bold'>
+                  ${subscriptionInfo.plan.price}
+                </span>
+                <span className='text-muted-foreground'>
+                  /{subscriptionInfo.plan.interval}
+                </span>
+              </div>
+            </div>
+
+            {/* Next Payment */}
+            <div className='space-y-2'>
+              <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                <Calendar className='h-4 w-4' />
+                Next Payment
+              </div>
+              <p className='text-xl font-medium'>
+                {subscriptionInfo.currentPeriodEnd
+                  ? new Date(subscriptionInfo.currentPeriodEnd).toLocaleDateString()
+                  : "N/A"}
               </p>
             </div>
-            {subscriptionInfo?.status && (
-              <div className='flex items-center gap-3'>
-                {subscriptionInfo.cancelAtPeriodEnd && (
-                  <Badge
-                    variant='outline'
-                    className='border-yellow-500/20 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
-                  >
-                    Cancels soon
-                  </Badge>
-                )}
-                <Badge
-                  variant={
-                    subscriptionInfo.status === "active"
-                      ? "default"
-                      : subscriptionInfo.status === "trialing"
-                        ? "secondary"
-                        : "destructive"
-                  }
-                  className='px-4 py-1'
-                >
-                  {subscriptionInfo.status.charAt(0)?.toUpperCase() +
-                    subscriptionInfo.status.slice(1)}
-                </Badge>
-              </div>
-            )}
-          </div>
-        </div>
 
-        <CardContent className='grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-3'>
-          {/* Price Info */}
-          {subscriptionInfo?.plan && (
-            <>
-              <div className='space-y-2'>
-                <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                  <CreditCard className='h-4 w-4' />
-                  Billing Amount
-                </div>
-                <div className='flex items-baseline gap-1'>
-                  <span className='text-3xl font-bold'>
-                    ${subscriptionInfo.plan.price}
-                  </span>
-                  <span className='text-muted-foreground'>
-                    /{subscriptionInfo.plan.interval}
-                  </span>
-                </div>
+            {/* User Limit */}
+            <div className='space-y-2'>
+              <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                <Users className='h-4 w-4' />
+                User Limit
               </div>
+              <p className='text-xl font-medium'>
+                {subscriptionInfo.maxUsersForSubscription} users
+              </p>
+            </div>
+          </CardContent>
 
-              {/* Next Payment */}
-              <div className='space-y-2'>
-                <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                  <Calendar className='h-4 w-4' />
-                  Next Payment
-                </div>
-                <p className='text-xl font-medium'>
-                  {subscriptionInfo.currentPeriodEnd
-                    ? new Date(
-                        subscriptionInfo.currentPeriodEnd
-                      ).toLocaleDateString()
-                    : "N/A"}
-                </p>
-              </div>
-
-              {/* User Limit */}
-              <div className='space-y-2'>
-                <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                  <Users className='h-4 w-4' />
-                  User Limit
-                </div>
-                <p className='text-xl font-medium'>
-                  {subscriptionInfo.maxUsersForSubscription} users
-                </p>
-              </div>
-            </>
-          )}
-        </CardContent>
-
-        {subscriptionInfo?.plan?.features?.length &&
-          subscriptionInfo?.plan?.features?.length > 0 && (
+          {subscriptionInfo.plan.features?.length > 0 && (
             <>
               <Separator />
               <CardContent className='p-6'>
@@ -208,30 +243,87 @@ export default function BillingPage() {
             </>
           )}
 
-        <Separator />
-        <CardFooter className='p-6'>
-          <div className='flex w-full flex-col gap-4 sm:flex-row'>
-            <Button
-              onClick={redirectToPortal}
-              disabled={portalLoading}
-              className='flex-1'
-              size='lg'
-            >
-              {portalLoading ? (
-                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-              ) : (
-                <CreditCard className='mr-2 h-4 w-4' />
-              )}
-              Manage Subscription
-            </Button>
-            {/* {!subscriptionInfo?.plan && (
-              <Button asChild variant='outline' size='lg' className='flex-1'>
-                <a href='/pricing'>View Plans</a>
+          <Separator />
+          <CardFooter className='p-6'>
+            <div className='flex w-full flex-col gap-4 sm:flex-row'>
+              <Button
+                onClick={redirectToPortal}
+                disabled={portalLoading}
+                className='flex-1'
+                size='lg'
+              >
+                {portalLoading ? (
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                ) : (
+                  <CreditCard className='mr-2 h-4 w-4' />
+                )}
+                Manage Subscription
               </Button>
-            )} */}
+            </div>
+          </CardFooter>
+        </Card>
+      ) : (
+        <div className='flex flex-col items-center justify-center'>
+          <div className='mx-auto mb-10 max-w-2xl text-center lg:mb-14'>
+            <h2 className='scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0'>
+              Choose Your Plan
+            </h2>
+            <p className='mt-1 text-muted-foreground'>
+              Select a plan that best fits your needs
+            </p>
           </div>
-        </CardFooter>
-      </Card>
+
+          <div className='mt-12 grid justify-center gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:items-center'>
+            {subscriptionInfo?.availablePlans?.map((plan) => (
+              <Card 
+                key={plan.id} 
+                className={`relative overflow-hidden transition-all hover:shadow-lg ${
+                  plan.product.name === "Team" 
+                    ? "border-primary shadow-lg" 
+                    : "border-border"
+                }`}
+              >
+                {plan.product.name === "Team" && (
+                  <div className="absolute -right-12 top-6 rotate-45 bg-primary px-12 py-1 text-xs font-semibold text-primary-foreground">
+                    Most Popular
+                  </div>
+                )}
+                <CardHeader className='pb-2 text-center'>
+                  <CardTitle className='mb-4 text-2xl'>{plan.product.name}</CardTitle>
+                  <div className='flex items-baseline justify-center gap-1'>
+                    <span className='text-4xl font-bold'>${plan.price}</span>
+                    <span className='text-muted-foreground'>/month</span>
+                  </div>
+                </CardHeader>
+                <CardDescription className='mx-auto w-11/12 text-center text-sm'>
+                  {plan.product.description}
+                </CardDescription>
+                <CardContent className='mt-6'>
+                  <ul className='space-y-3'>
+                    {plan.product.marketing_features.map((feature) => (
+                      <li key={feature.name} className='flex items-center gap-2'>
+                        <CheckIcon className='h-4 w-4 flex-shrink-0 text-primary' />
+                        <span className='text-sm text-muted-foreground'>
+                          {feature.name}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+                <CardFooter className='mt-6'>
+                  <Button
+                    onClick={() => purchase(plan, true)}
+                    className='w-full'
+                    size="lg"
+                  >
+                    Get Started
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Recent Invoices */}
       {subscriptionInfo?.recentInvoices &&
