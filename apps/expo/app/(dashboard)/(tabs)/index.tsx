@@ -24,6 +24,10 @@ import {
 } from "react-native";
 import { projectsStore } from "@/lib/state/projects";
 import { supabase } from "@/lib/supabase";
+// import { Platform } from "react-native";
+// import Constants from "expo-constants";
+
+// const buildNumber = Constants.expoVersion;
 
 interface Project {
   id: string;
@@ -205,6 +209,10 @@ export default function Dashboard() {
             selectedUser={selectedUser}
             setSelectedUser={setSelectedUser}
           />
+          <Text>
+            v1.2.66 
+            {/* ({buildNumber}) */}
+          </Text>
           <View
             style={styles.headerTitle}
             className="mt-4 flex flex-row items-center space-x-8"

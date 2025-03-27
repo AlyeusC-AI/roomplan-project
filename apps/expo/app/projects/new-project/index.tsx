@@ -138,6 +138,8 @@ export default function NewProject() {
   const { session } = userStore();
   const [currentAddress, setCurrentAddress] = useState("");
   const [loading, setLoading] = useState(false);
+  const [clientPhoneNumber, setClientPhoneNumber] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
 
   const submit = async () => {
     console.log("🚀 ~ submit ~ projectName:", projectName, address);
@@ -165,6 +167,8 @@ export default function NewProject() {
           body: JSON.stringify({
             name: projectName,
             location: address,
+            clientPhoneNumber: clientPhoneNumber,
+            clientEmail: clientEmail,
             damageType,
           }),
         }
@@ -293,6 +297,31 @@ export default function NewProject() {
                 />
               </View>
             </View>
+        
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Client Phone Number</Text>
+              <View style={styles.sectionBody}>
+                <TextInput
+                  onChangeText={setClientPhoneNumber}
+                  placeholder="Enter client phone number"
+                  style={styles.sectionInput} 
+                  value={clientPhoneNumber}
+                />
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Client Email</Text>
+              <View style={styles.sectionBody}>
+                <TextInput
+                  onChangeText={setClientEmail}
+                  placeholder="Enter client email"
+                  style={styles.sectionInput}
+                  value={clientEmail}
+                  />
+              </View>
+            </View>
+
           </View>
 
           <TouchableOpacity

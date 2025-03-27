@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FileText, Link as LinkIcon, Unlink, Search, X, ChevronRight } from "lucide-react-native";
 import { connectFormToProject, disconnectFormFromProject, getFormConnections } from "../utils/formConnection";
-import { BlurView } from "expo-blur";
 import { api } from "@/lib/api";
 
 interface Form {
@@ -42,10 +41,12 @@ export function FormConnectionModal({
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isConnecting, setIsConnecting] = useState<{ [key: number]: boolean }>({});
+  const [isVisible, setIsVisible] = useState(false);
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (isOpen) {
+      setIsVisible(true);
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 200,
@@ -58,7 +59,9 @@ export function FormConnectionModal({
         toValue: 0,
         duration: 200,
         useNativeDriver: true,
-      }).start();
+      }).start(() => {
+        setIsVisible(false);
+      });
     }
   }, [isOpen]);
 
@@ -70,7 +73,6 @@ export function FormConnectionModal({
       const data = response.data;
       setForms(data);
     } catch (error) {
-        
       console.error("Error fetching forms:", error);
     }
   };
@@ -112,8 +114,9 @@ export function FormConnectionModal({
     form.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (form.desc?.toLowerCase() || "").includes(searchQuery.toLowerCase())
   );
+  console.log("🚀 ~ filteredForms:", filteredForms)
 
-  if (!isOpen) return null;
+  if (!isOpen && !isVisible) return null;
 
   return (
     <Modal
@@ -146,18 +149,20 @@ export function FormConnectionModal({
               </TouchableOpacity>
             </View>
 
-            <View className="p-4">
-              <View className="relative mb-6">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <TextInput
-                  placeholder="Search forms..."
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  className="pl-12 pr-4 py-3 bg-muted/50 border border-border/50 rounded-xl text-base"
-                />
+            <View className="flex-1">
+              <View className="p-4">
+                <View className="mb-6 flex-row items-center">
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <TextInput
+                    placeholder="Search forms..."
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    className="pl-4 w-full py-3 bg-muted/50 border border-border/50 rounded-xl text-base"
+                  />
+                </View>
               </View>
 
-              <ScrollView className="flex-1">
+              <View className="flex-1 px-4">
                 {isLoading ? (
                   <View className="flex items-center justify-center h-64">
                     <ActivityIndicator size="large" color="#0000ff" />
@@ -171,7 +176,11 @@ export function FormConnectionModal({
                     <Text className="text-muted-foreground/80 text-sm mt-2">Try adjusting your search</Text>
                   </View>
                 ) : (
-                  <View className="space-y-3">
+                  <ScrollView 
+                    className="flex-1"
+                    contentContainerStyle={{ paddingBottom: 20 }}
+                    showsVerticalScrollIndicator={false}
+                  >
                     {filteredForms.map((form) => {
                       const isConnected = connections.some(c => c.formId === form.id);
                       const isProcessing = isConnecting[form.id!];
@@ -179,17 +188,17 @@ export function FormConnectionModal({
                       return (
                         <Card
                           key={form.id}
-                          className={`p-4 flex-row items-center justify-between ${
-                            isConnected ? "border-primary/50 bg-primary/5" : "border-border/50"
+                          className={`p-4 flex-row items-center justify-between mb-2 ${
+                            isConnected ? "border-green-500/50 bg-green-500/5" : "border-border/50"
                           }`}
                         >
                           <View className="flex-1 mr-4">
                             <View className="flex-row items-center space-x-3">
                               <View className={`p-2 rounded-lg ${
-                                isConnected ? "bg-primary/10" : "bg-muted/50"
+                                isConnected ? "bg-green-500/10" : "bg-muted/50"
                               }`}>
                                 <FileText className={`h-5 w-5 ${
-                                  isConnected ? "text-primary" : "text-muted-foreground"
+                                  isConnected ? "text-green-500" : "text-muted-foreground"
                                 }`} />
                               </View>
                               <View className="flex-1">
@@ -208,7 +217,7 @@ export function FormConnectionModal({
                             disabled={isProcessing}
                             className={`flex-row items-center space-x-2 px-4 py-2 rounded-full ${
                               isConnected 
-                                ? "bg-primary/10" 
+                                ? "bg-green-500/10" 
                                 : "bg-muted/50"
                             }`}
                           >
@@ -217,12 +226,12 @@ export function FormConnectionModal({
                             ) : (
                               <>
                                 {isConnected ? (
-                                  <Unlink className="h-4 w-4 text-primary" />
+                                  <Unlink className="h-4 w-4 text-green-500" />
                                 ) : (
                                   <LinkIcon className="h-4 w-4 text-muted-foreground" />
                                 )}
                                 <Text className={`font-medium ${
-                                  isConnected ? "text-primary" : "text-muted-foreground"
+                                  isConnected ? "text-green-500" : "text-muted-foreground"
                                 }`}>
                                   {isConnected ? "Connected" : "Connect"}
                                 </Text>
@@ -232,9 +241,9 @@ export function FormConnectionModal({
                         </Card>
                       );
                     })}
-                  </View>
+                  </ScrollView>
                 )}
-              </ScrollView>
+              </View>
             </View>
           </View>
         </Animated.View>

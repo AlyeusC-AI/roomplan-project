@@ -128,7 +128,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const [, authUser] = await user(req);
 
-  const body: { location: AddressType; name: string; damageType: string } = await req.json();
+  const body: { location: AddressType; name: string; damageType: string; clientPhoneNumber: string; clientEmail: string } = await req.json();
 
   try {
     const { data } = await supabaseServiceRole
@@ -143,6 +143,8 @@ export async function POST(req: NextRequest) {
         publicId: v4(),
         name: body.name,
         clientName: body.name,
+        clientPhoneNumber: body.clientPhoneNumber,
+        clientEmail: body.clientEmail,
         location: body.location.formattedAddress,
         lat: `${body.location.lat}`,
         lng: `${body.location.lng}`,
