@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Image,
@@ -13,7 +13,7 @@ import RoomSelection from "@/components/RoomSelection";
 import { createClient } from "@supabase/supabase-js";
 import uuid from "react-native-uuid";
 import { userStore } from "@/lib/state/user";
-import { useGlobalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useGlobalSearchParams, useRouter } from "expo-router";
 import { roomsStore } from "@/lib/state/rooms";
 import Reanimated, {
   Extrapolate,
@@ -78,6 +78,7 @@ export default function CameraScreen() {
   const [disabled, setDisabled] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const { session: supabaseSession } = userStore((state) => state);
+
   const { projectId, formId, fieldId, mode } = useGlobalSearchParams<{
     projectId: string;
     formId?: string;
@@ -86,7 +87,27 @@ export default function CameraScreen() {
   }>();
   const rooms = roomsStore();
   const isFormMode = mode === "form";
-  const { addImage, images } = useCameraStore();
+  const {
+    addImage,
+    images,
+    fieldId: cameraFieldId,
+    setFieldId,
+    clearImages,
+  } = useCameraStore();
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log("Screen is focused sssss");
+
+      return () => {
+        console.log("Screen lost focussssss");
+        setTimeout(() => {
+          setFieldId(null);
+          clearImages();
+        }, 10000);
+      };
+    }, [])
+  );
 
   const zoom = useSharedValue(1);
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -188,7 +209,7 @@ export default function CameraScreen() {
         )
       );
 
-      if (!isFormMode) {
+      if (!isFormMode && !cameraFieldId) {
         // Save image reference to your backend for room photos
         const saveImageRes = await fetch(
           `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/image`,
@@ -221,7 +242,7 @@ export default function CameraScreen() {
       console.log("🚀 ~ processImageUpload ~ isFormMode:", isFormMode);
 
       // If in form mode, go back to form with the image data
-      if (isFormMode) {
+      if (isFormMode || cameraFieldId) {
         // router.back();
 
         addImage({
@@ -451,7 +472,7 @@ export default function CameraScreen() {
           >
             <ArrowLeft size={24} color="white" />
           </Pressable>
-          {!isFormMode && (
+          {!isFormMode && !cameraFieldId && (
             <View className="flex-1 mx-2">
               <RoomSelection
                 rooms={rooms.rooms}

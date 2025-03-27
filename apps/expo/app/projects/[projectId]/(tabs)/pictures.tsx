@@ -18,6 +18,8 @@ import {
   Image as ImageIcon,
   Building2,
   ArrowDownToLine,
+  Star,
+  Loader,
 } from "lucide-react-native";
 import { userStore } from "@/lib/state/user";
 import { useGlobalSearchParams, useRouter } from "expo-router";
@@ -54,8 +56,11 @@ interface Inference {
   isDeleted?: boolean;
   Image?: {
     isDeleted?: boolean;
+    publicId?: string;
+    includeInReport?: boolean;
   };
   imageKey?: string;
+  publicId?: string;
 }
 
 interface Room {
@@ -83,6 +88,7 @@ export default function ProjectPhotos() {
   const [shouldOpenCamera, setShouldOpenCamera] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUpdatingAll, setIsUpdatingAll] = useState(false);
   const rooms = roomInferenceStore();
   const urlMap = urlMapStore();
   const router = useRouter();
@@ -352,6 +358,55 @@ export default function ProjectPhotos() {
     }
   };
 
+  const includeAllInReport = async () => {
+    try {
+      setIsUpdatingAll(true);
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/images`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": supabaseSession?.access_token || "",
+          },
+          body: JSON.stringify({
+            ids: rooms.rooms.flatMap(room => 
+              room.Inference
+                .filter((i: Inference) => !i.isDeleted && !i.Image?.isDeleted)
+                .map((i: Inference) => i.Image?.publicId || i.publicId)
+            ),
+            includeInReport: true,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update images");
+      }
+
+      toast.success("All images included in report");
+      await refreshData();
+    } catch (error) {
+      console.error("Error updating images:", error);
+      toast.error("Failed to update images");
+    } finally {
+      setIsUpdatingAll(false);
+    }
+  };
+
+  // Add function to check if all images are included in report
+  const areAllImagesIncluded = () => {
+    if (!rooms.rooms?.length) return false;
+    
+    return rooms.rooms.every(room => 
+      room.Inference.every((inference: Inference) => 
+        !inference.isDeleted && 
+        !inference.Image?.isDeleted && 
+        inference.Image?.includeInReport
+      )
+    );
+  };
+
   if (loading && !rooms?.rooms?.length) {
     return (
       <View style={styles.loadingContainer}>
@@ -430,22 +485,26 @@ export default function ProjectPhotos() {
       >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Project Photos</Text>
-          <View style={styles.buttonContainer} className="gap-2">
-            {/* <Button
-              className="mr-2"
-              variant="outline"
-              onPress={() => router.push("../rooms/create")}
+          <View style={styles.actionButtons}>
+            <TouchableOpacity 
+              style={[styles.actionButton, isUpdatingAll && styles.actionButtonDisabled]}
+              onPress={includeAllInReport}
+              disabled={isUpdatingAll || !rooms.rooms.length}
             >
-              <Plus size={18} color="#1e40af" />
-              <Text className="ml-1 text-primary">Add Room</Text>
-            </Button> */}
+              {isUpdatingAll ? (
+                <Loader size={20} color="#1e40af" />
+              ) : (
+                <Star 
+                  size={20} 
+                  color={areAllImagesIncluded() ? "#FBBF24" : "#1e40af"} 
+                  fill={areAllImagesIncluded() ? "#FBBF24" : "transparent"}
+                />
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={handlePickImages}>
+              <ImagePlus size={20} color="#1e40af" />
+            </TouchableOpacity>
             <AddRoomButton variant="outline" />
-            <Button variant="outline" onPress={handlePickImages}>
-              <View className="flex-row items-center">
-                <ImagePlus size={18} color="#1e40af" />
-                <Text className="ml-1 text-primary">Select Images</Text>
-              </View>
-            </Button>
           </View>
         </View>
 
@@ -614,12 +673,26 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 16,
     color: "#1e293b",
+    marginBottom: 16,
   },
-  buttonContainer: {
+  actionButtons: {
     flexDirection: "row",
+    gap: 12,
     justifyContent: "flex-end",
+  },
+  actionButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#f1f5f9",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  actionButtonDisabled: {
+    opacity: 0.5,
   },
   roomsContainer: {
     padding: 12,

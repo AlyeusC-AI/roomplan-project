@@ -47,12 +47,12 @@ import DateTimePicker, {
   useDefaultStyles,
 } from "react-native-ui-datepicker";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+// import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
+// import { Separator } from "@/components/ui/separator";
 import { Modal } from "@/components/ui/modal";
 import dayjs from "dayjs";
 import { uploadImage } from "@/lib/imagekit";
@@ -379,7 +379,6 @@ export default function FormFillScreen() {
     {}
   );
   const isEditMode = !!responseId;
-  const ref = useRef<SignatureViewRef>(null);
 
   // Handle camera results
   useEffect(() => {

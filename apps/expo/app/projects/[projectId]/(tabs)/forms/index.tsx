@@ -92,41 +92,39 @@ export default function FormsScreen() {
     );
   }
 
-  if (forms?.length === 0) {
-    return (
-      <ScrollView
-        className="flex-1 bg-background"
-        contentContainerStyle={{ flex: 1 }}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-        }
-      >
-        <View className="flex-1 items-center justify-center p-4">
-          <View className="bg-primary/10 p-8 rounded-full">
-            <Text>
-              <ClipboardList className="h-20 w-20 text-primary" />
-            </Text>
-          </View>
-          <Text className="mt-8 text-3xl font-bold text-center">
-            No forms found
-          </Text>
-          <Text className="mt-3 text-lg text-muted-foreground text-center max-w-[80%]">
-            Create your first form or connect existing forms to start collecting responses
-          </Text>
-          <Button 
-            className="mt-6 bg-primary px-6 py-3 rounded-full flex-row items-center gap-2"
-            onPress={() => setIsConnectionModalOpen(true)}
-          >
-            <Text><LinkIcon className="h-5 w-5" color="white" /></Text>
-            <Text>Connect Forms</Text>
-          </Button>
-        </View>
-      </ScrollView>
-    );
-  }
+ 
 
   return (
     <>
+    {forms?.length == 0 ? (
+           <ScrollView
+           className="flex-1 bg-background"
+           contentContainerStyle={{ flex: 1 }}
+           refreshControl={
+             <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+           }
+         >
+           <View className="flex-1 items-center justify-center p-4">
+             <View className="bg-primary/10 p-8 rounded-full">
+               <Text>
+                 <ClipboardList className="h-20 w-20 text-primary" />
+               </Text>
+             </View>
+             <Text className="mt-8 text-3xl font-bold text-center">
+               No forms found
+             </Text>
+             <Text className="mt-3 text-lg text-muted-foreground text-center max-w-[80%]">
+               Create your first form or connect existing forms to start collecting responses
+             </Text>
+             <Button 
+               className="mt-6 bg-primary px-6 py-3 rounded-full flex-row items-center gap-2"
+               onPress={() => setIsConnectionModalOpen(true)}
+             >
+               <Text><LinkIcon className="h-5 w-5" color="white" /></Text>
+               <Text>Connect Forms</Text>
+             </Button>
+           </View>
+         </ScrollView>) : (
       <ScrollView
         className="flex-1 bg-background"
         refreshControl={
@@ -211,7 +209,7 @@ export default function FormsScreen() {
             </View>
           ))}
         </View>
-      </ScrollView>
+        </ScrollView>)}
 
       <FormConnectionModal
         isOpen={isConnectionModalOpen}
