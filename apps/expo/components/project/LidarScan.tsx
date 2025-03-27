@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Platform, TouchableOpacity, NativeModules,
+import { View, Platform, TouchableOpacity, NativeModules, Modal,
   requireNativeComponent, UIManager, Text, TextInput, Dimensions,
   SafeAreaView, Alert, ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -59,6 +59,8 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
   const svgSize = deviceWidth * 0.8;
   const processedRoomId = useRef<number | undefined>(roomId);
   const processedRoomPlanSVG = useRef<string | undefined>(roomPlanSVG);
+  const [showPlanSelectionModal, setShowPlanSelectionModal] = useState<boolean>(false);
+  const [scanPlan, setScanPlan] = useState<'free' | 'fast'>('free');
 
   useEffect(() => {
     const checkSupport = async () => {
@@ -69,7 +71,9 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
     checkSupport();
   }, []);
 
-  const handleStartScan = async () => {
+  const handleStartScan = async (plan: 'free' | 'fast') => {
+    setScanPlan(plan);
+    setShowPlanSelectionModal(false);
     if (!processedRoomId.current) {
       console.log("new room creation - projectId", projectId)
       const res = await fetch(
@@ -169,7 +173,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
 
         // call api to process zip file
         await fetch(
-          `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room/${processedRoomId.current}/cubicasa`,
+          `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room/${processedRoomId.current}/cubicasa?plan=${scanPlan}`,
           {
             method: "POST",
             headers: {
@@ -192,6 +196,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
 
     return;
     // Show confirmation alert before completing scan
+    // Below is IOS Native Lidar Sensor integration. Keep this so that we use it when we come back from cubicasa
     Alert.alert(
       'Finish Scan?',
       'Are you finished scanning this room?',
@@ -386,7 +391,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
 
       <TouchableOpacity 
         className={`bg-[#007AFF] py-4 px-8 rounded-lg mx-10 mb-5 items-center ${(!roomId && !newRoomName) ? 'bg-[#A0C8FF] opacity-70' : ''}`}
-        onPress={handleStartScan}
+        onPress={() => setShowPlanSelectionModal(true)}
         disabled={!roomId && !newRoomName}
       >
         <Text className="text-white text-lg font-semibold">
@@ -408,6 +413,55 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
           </View>
         </View>
       )}
+
+      <Modal
+        visible={showPlanSelectionModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowPlanSelectionModal(false)}
+      >
+        <View className="flex-1 items-center justify-center bg-black/50">
+          <View className="bg-white rounded-2xl p-6 w-11/12 max-w-md">
+            <View className="flex-row justify-between items-center mb-6">
+              <Text className="text-2xl font-bold text-gray-900">Select Scan Plan</Text>
+              <TouchableOpacity 
+                onPress={() => setShowPlanSelectionModal(false)}
+                className="p-2"
+              >
+                <MaterialIcons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <View className="space-y-4 gap-4">
+              <TouchableOpacity
+                className="bg-white border-2 border-[#007AFF] rounded-xl p-4 active:opacity-80"
+                onPress={() => handleStartScan('free')}
+              >
+                <View className="flex-row items-center mb-2">
+                  <MaterialIcons name="room" size={24} color="#007AFF" />
+                  <Text className="text-xl font-semibold text-[#007AFF] ml-2">Free Scan</Text>
+                </View>
+                <Text className="text-gray-600 text-base leading-5">
+                  Take your time to scan the room carefully. This option provides the most accurate results but may take longer to complete.
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="bg-white border-2 border-[#007AFF] rounded-xl p-4 active:opacity-80"
+                onPress={() => handleStartScan('fast')}
+              >
+                <View className="flex-row items-center mb-2">
+                  <MaterialIcons name="speed" size={24} color="#007AFF" />
+                  <Text className="text-xl font-semibold text-[#007AFF] ml-2">Fast Scan</Text>
+                </View>
+                <Text className="text-gray-600 text-base leading-5">
+                  Everything in Free Scan, Plus faster results.
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
