@@ -16,7 +16,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null);
   const steps = [
     { label: "Account", icon: CircleUser },
-    { label: "Verify", icon: IdCard },
+    // { label: "Verify", icon: IdCard },
     { label: "Organization", icon: Building },
     { label: "Get Started", icon: CreditCard },
   ] satisfies StepItem[];

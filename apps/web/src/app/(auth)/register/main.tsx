@@ -336,8 +336,8 @@ export function RegisterForm() {
   switch (searchParams.get("page") ?? "1") {
     case "1":
       return <AccountForm />;
-    case "2":
-      return <VerifyEmailForm />;
+    // case "2":
+    //   return <VerifyEmailForm />;
     case "3":
       return <OrganizationForm />;
     case "4":
