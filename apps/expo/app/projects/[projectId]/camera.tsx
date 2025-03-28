@@ -46,7 +46,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { uploadImage } from "@/lib/imagekit";
 import { useCameraStore } from "@/lib/state/camera";
-
+import { toast } from "sonner-native";
 export const supabaseServiceRole = createClient(
   getConstants().supabaseUrl,
   getConstants().serviceRoleJwt
@@ -119,9 +119,10 @@ export default function CameraScreen() {
   const [isUploading, setIsUploading] = useState(false);
 
   const refetchRooms = async () => {
-    const roomsRes = await fetch(
-      `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room`,
-      {
+    try {
+      const roomsRes = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room`,
+        {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -130,8 +131,11 @@ export default function CameraScreen() {
       }
     );
 
-    const roomsData = await roomsRes.json();
-    rooms.setRooms(roomsData.rooms);
+      const roomsData = await roomsRes.json();
+      rooms.setRooms(roomsData.rooms);
+    } catch (error) {
+      console.error("Error fetching rooms:", error);
+    }
   };
   useEffect(() => {
     console.log(
@@ -172,10 +176,9 @@ export default function CameraScreen() {
       );
 
       // Convert PhotoFile to Blob for ImageKit upload
-      const response = await fetch(uploadItem.photo.path);
-      const blob = await response.blob();
-
-      setUploadQueue((prev) =>
+   
+    
+        setUploadQueue((prev) =>
         prev.map((item) =>
           item.id === uploadItem.id
             ? { ...item, progress: 0.4, message: "Uploading..." }
@@ -210,9 +213,10 @@ export default function CameraScreen() {
       );
 
       if (!isFormMode && !cameraFieldId) {
-        // Save image reference to your backend for room photos
-        const saveImageRes = await fetch(
-          `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/image`,
+        try {
+          // Save image reference to your backend for room photos
+          const saveImageRes = await fetch(
+            `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/image`,
           {
             method: "POST",
             headers: {
@@ -225,7 +229,11 @@ export default function CameraScreen() {
             }),
           }
         );
+      } catch (error) {
+        console.error("Error saving image:", error);
+        toast.error("Error saving image");
       }
+    }
 
       setUploadQueue((prev) =>
         prev.map((item) =>
@@ -274,7 +282,7 @@ export default function CameraScreen() {
         setUploadQueue((prev) =>
           prev.filter((item) => item.id !== uploadItem.id)
         );
-        if (uploadQueue.length === 1) {
+        if (uploadQueue?.length === 1) {
           setIsUploading(false);
         }
       }, 2000);
@@ -283,7 +291,7 @@ export default function CameraScreen() {
 
   // Handle the upload queue
   useEffect(() => {
-    if (uploadQueue.length > 0) {
+    if (uploadQueue?.length > 0) {
       const pendingUploads = uploadQueue.filter(
         (item) => item.status === "idle"
       );

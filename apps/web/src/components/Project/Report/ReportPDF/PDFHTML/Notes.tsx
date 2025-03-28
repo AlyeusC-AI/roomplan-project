@@ -18,7 +18,7 @@ const Notes = ({ roomName, notes }: { roomName: string; notes: Note[] }) => {
               {note.NoteImage.map((image, index) => (
                 <div key={image.imageKey} className='relative'>
                   <PDFSafeImage
-                    url={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/note-images/${image.imageKey}`}
+                    url={image.imageKey.startsWith("http") ? image.imageKey : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/note-images/${image.imageKey}`}
                     alt={`Note image ${index + 1}`}
                     className='h-48 w-full max-w-[400px] rounded-lg object-contain'
                   />
