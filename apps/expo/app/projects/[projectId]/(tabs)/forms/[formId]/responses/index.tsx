@@ -145,12 +145,21 @@ export default function ResponsesListScreen() {
         }
       );
 
-      const base64 = await FileSystem.readAsStringAsync(response.data, {
-        encoding: FileSystem.EncodingType.Base64,
+      // Convert blob to base64
+      const reader = new FileReader();
+      const base64 = await new Promise((resolve, reject) => {
+        reader.onload = () => {
+          const base64String = reader.result as string;
+          // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
+          const base64Content = base64String.split(',')[1];
+          resolve(base64Content);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(response.data);
       });
 
       const fileUri = `${FileSystem.documentDirectory}form-responses-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      await FileSystem.writeAsStringAsync(fileUri, base64, {
+      await FileSystem.writeAsStringAsync(fileUri, base64 as string, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
