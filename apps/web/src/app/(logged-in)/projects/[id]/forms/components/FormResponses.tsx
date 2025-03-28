@@ -143,7 +143,40 @@ export function FormResponses() {
     setIsLoading(true);
     const loadingToast = toast.loading('Generating PDF...');
     try {
-      await generatePDF(responses, title);
+      const response = await fetch(`/api/v1/projects/${projectId}/forms/responses/generatePdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          responses,
+          title,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF');
+      }
+
+      // Get the PDF blob from the response
+      const pdfBlob = await response.blob();
+      
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(pdfBlob);
+      
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `form-responses-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      
+      // Append to body, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the URL
+      window.URL.revokeObjectURL(url);
+
       toast.success('PDF generated successfully');
     } catch (error) {
       console.error('Error generating PDF:', error);

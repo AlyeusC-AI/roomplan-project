@@ -131,15 +131,24 @@ export default function FormsScreen() {
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
-        <View className="px-4 py-6">
-          <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-2xl font-bold">Forms</Text>
+        <View className="px-4 py-8">
+          <View className="flex-row justify-between items-start mb-10">
+            <View className="flex-row items-center gap-3 flex-1 mr-4">
+              <View className="bg-primary/10 p-2.5 rounded-xl">
+                <ClipboardList className="h-6 w-6 text-primary" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-2xl font-bold text-foreground">Forms</Text>
+                {/* <Text className="text-sm text-muted-foreground mt-1">Manage your project forms</Text> */}
+              </View>
+            </View>
             <Button 
-              className="bg-primary px-4 py-2 rounded-full flex-row items-center gap-2"
+              className="px-3 py-1.5 rounded-full flex-row items-center gap-1.5 shadow-sm"
               onPress={() => setIsConnectionModalOpen(true)}
+              variant="outline"
             >
-              <LinkIcon className="h-4 w-4 text-white" color="white" />
-              <Text>Connect Forms</Text>   
+              <LinkIcon className="h-3.5 w-3.5 "  />
+              <Text className="font-medium  text-sm">Connect Forms</Text>   
             </Button>
           </View>
 
@@ -186,7 +195,7 @@ export default function FormsScreen() {
                         </Text>
                       )}
                     </View>
-                    <View className="flex-row items-center space-x-3">
+                    <View className="flex-row items-center space-x-3 gap-4">
                       <TouchableOpacity
                         onPress={() =>
                           router.push(

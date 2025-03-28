@@ -10,6 +10,7 @@ import {
   FileText,
   Pencil,
   Trash2,
+  Printer,
 } from "lucide-react-native";
 import { userStore } from "@/lib/state/user";
 import { toast } from "sonner-native";
@@ -17,6 +18,7 @@ import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { useFormsStore } from "@/lib/state/forms";
 import { api } from "@/lib/api";
+import { format } from "date-fns";
 
 interface FormResponse {
   id: number;
@@ -130,6 +132,36 @@ export default function ResponsesListScreen() {
     );
   };
 
+  const handleGeneratePDF = async (responses: FormResponse[], title: string) => {
+    try {
+      const response = await api.post(
+        `/api/v1/projects/${projectId}/forms/responses/generatePdf`,
+        {
+          responses,
+          title,
+        },
+        {
+          responseType: "blob",
+        }
+      );
+
+      const base64 = await FileSystem.readAsStringAsync(response.data, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      const fileUri = `${FileSystem.documentDirectory}form-responses-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      await FileSystem.writeAsStringAsync(fileUri, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      await Sharing.shareAsync(fileUri);
+      toast.success("PDF generated successfully");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Failed to generate PDF");
+    }
+  };
+
   if (loading) {
     return (
       <View className="flex-1 bg-background justify-center items-center">
@@ -145,6 +177,14 @@ export default function ResponsesListScreen() {
           <ArrowLeft size={24} className="text-foreground" />
         </TouchableOpacity>
         <Text className="text-xl font-bold flex-1">Form Responses</Text>
+        {formResponses.length > 0 && (
+          <TouchableOpacity
+            onPress={() => handleGeneratePDF(formResponses, "Form Responses")}
+            className="p-2"
+          >
+            <Printer size={24} className="text-foreground" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView className="flex-1 p-4">
@@ -176,18 +216,12 @@ export default function ResponsesListScreen() {
                     </Text>
                   </View>
                   <View className="flex-row items-center">
-                    {/* <TouchableOpacity
-                    onPress={() => handleDownloadPDF(response.id)}
-                    className="p-2"
-                  >
-                    <Download size={20} className="text-muted-foreground" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => router.push(`/projects/${projectId}/forms/${formId}/responses/${response.id}`)}
-                    className="p-2"
-                  >
-                    <Eye size={20} className="text-muted-foreground" />
-                  </TouchableOpacity> */}
+                    <TouchableOpacity
+                      onPress={() => handleGeneratePDF([response], `${response.form.name} - Response #${response.id}`)}
+                      className="p-2"
+                    >
+                      <Printer size={20} className="text-muted-foreground" />
+                    </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => handleEditResponse(response.id)}
                       className="p-2"

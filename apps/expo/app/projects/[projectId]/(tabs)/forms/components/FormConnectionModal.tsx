@@ -135,7 +135,7 @@ export function FormConnectionModal({
         >
           <View className="flex-1">
             <View className="flex-row items-center justify-between p-4 border-b border-border/50">
-              <View className="flex-row items-center space-x-3">
+              <View className="flex-row items-center space-x-3 gap-4">
                 <View className="bg-primary/10 p-2 rounded-lg">
                   <LinkIcon className="h-5 w-5 text-primary" />
                 </View>
@@ -215,7 +215,7 @@ export function FormConnectionModal({
                           <TouchableOpacity
                             onPress={() => handleToggleConnection(form)}
                             disabled={isProcessing}
-                            className={`flex-row items-center space-x-2 px-4 py-2 rounded-full ${
+                            className={`flex-row items-center space-x-2 px-4 py-2 rounded-full gap-2 ${
                               isConnected 
                                 ? "bg-green-500/10" 
                                 : "bg-muted/50"
