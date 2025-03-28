@@ -362,6 +362,51 @@ const TimeInput: React.FC<{
   );
 };
 
+const FormSection: React.FC<{
+  section: FormSection;
+  formData: Record<string, any>;
+  errors: Record<string, string>;
+  handleInputChange: (fieldId: number, value: any) => void;
+  renderField: (field: FormField) => React.ReactNode;
+}> = ({ section, formData, errors, handleInputChange, renderField }) => {
+  return (
+    <VStack key={section.id} space={6}>
+      <VStack space={2}>
+        <Text fontSize="lg" fontWeight="semibold" color="gray.800">
+          {section.name}
+        </Text>
+        {section.description && (
+          <Text color="gray.500" fontSize="sm">
+            {section.description}
+          </Text>
+        )}
+      </VStack>
+      <VStack space={8}>
+        {section.fields.map((field: FormField) => (
+          <VStack key={field.id} space={3}>
+            <HStack space={1} alignItems="center">
+              <Text fontWeight="medium" color="gray.700">
+                {field.name}
+              </Text>
+              {field.isRequired && (
+                <Text color="red.500" fontSize="sm">
+                  *
+                </Text>
+              )}
+            </HStack>
+            {renderField(field)}
+            {errors[field.id] && (
+              <Text color="red.500" fontSize="sm">
+                {errors[field.id]}
+              </Text>
+            )}
+          </VStack>
+        ))}
+      </VStack>
+    </VStack>
+  );
+};
+
 export default function FormFillScreen() {
   const { formId, projectId, responseId } = useLocalSearchParams();
   const router = useRouter();
@@ -915,7 +960,7 @@ export default function FormFillScreen() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#ffffff" }}>
-      <VStack space={6} p={4}>
+      <VStack space={8} p={4}>
         <VStack space={2}>
           <Text fontSize="2xl" fontWeight="bold" color="gray.800">
             {form.name}
@@ -927,41 +972,16 @@ export default function FormFillScreen() {
           )}
         </VStack>
 
-        {form.sections?.map((section: FormSection) => (
-          <VStack key={section.id} space={4}>
-            <VStack space={1}>
-              <Text fontSize="lg" fontWeight="semibold" color="gray.800">
-                {section.name}
-              </Text>
-              {section.description && (
-                <Text color="gray.500" fontSize="sm">
-                  {section.description}
-                </Text>
-              )}
-            </VStack>
-            <VStack space={5}>
-              {section.fields.map((field: FormField) => (
-                <VStack key={field.id} space={2}>
-                  <HStack space={1} alignItems="center">
-                    <Text fontWeight="medium" color="gray.700">
-                      {field.name}
-                    </Text>
-                    {field.isRequired && (
-                      <Text color="red.500" fontSize="sm">
-                        *
-                      </Text>
-                    )}
-                  </HStack>
-                  {renderField(field)}
-                  {errors[field.id] && (
-                    <Text color="red.500" fontSize="sm">
-                      {errors[field.id]}
-                    </Text>
-                  )}
-                </VStack>
-              ))}
-            </VStack>
-          </VStack>
+        {form.sections?.map((section: FormSection, index: number) => (
+          <React.Fragment key={section.id}>
+            <FormSection
+              section={section}
+              formData={formData}
+              errors={errors}
+              handleInputChange={handleInputChange}
+              renderField={renderField}
+            />
+          </React.Fragment>
         ))}
 
         <Button

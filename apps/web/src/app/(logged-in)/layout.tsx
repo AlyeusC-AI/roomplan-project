@@ -89,7 +89,9 @@ export default function Layout({ children }: React.PropsWithChildren) {
         }
       })
       .finally(() => {
-        setLoading(false);
+        setTimeout(() => {
+          setLoading(false);
+        }, 2000);
       });
     // });
   }, []);

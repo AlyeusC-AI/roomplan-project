@@ -8,7 +8,7 @@ const OverviewPhoto = ({ imageKey }: { imageKey: string }) => {
   if (!url) return null;
   return (
     <div className='image-div'>
-      <PDFSafeImage url={url} />
+      <PDFSafeImage url={url} alt={`Overview photo`} className="w-full h-full" />
     </div>
   );
 };

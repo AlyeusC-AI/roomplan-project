@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, ScrollView, TouchableOpacity, Alert } from "react-native";
+import { View, ScrollView, TouchableOpacity, Alert, Image, Modal, Pressable } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -10,6 +10,9 @@ import {
   FileText,
   Pencil,
   Trash2,
+  Printer,
+  Maximize2,
+  X,
 } from "lucide-react-native";
 import { userStore } from "@/lib/state/user";
 import { toast } from "sonner-native";
@@ -17,6 +20,10 @@ import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { useFormsStore } from "@/lib/state/forms";
 import { api } from "@/lib/api";
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import * as Linking from 'expo-linking';
 
 interface FormResponse {
   id: number;
@@ -35,6 +42,203 @@ interface FormResponse {
   }[];
 }
 
+const ResponseViewer = ({ response, onClose, onEdit, onGeneratePDF }: { 
+  response: FormResponse; 
+  onClose: () => void;
+  onEdit: () => void;
+  onGeneratePDF: () => void;
+}) => {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const renderValue = (field: FormResponse['fields'][0]) => {
+    try {
+      const type = field.field.type.toLowerCase();
+      const value = field.value;
+
+      // Handle empty values
+      if (!value) {
+        return <Text className="text-muted-foreground text-sm italic">No response provided</Text>;
+      }
+
+      // Handle images and signatures
+      if (type === 'image' || type === 'signature' || value.startsWith('data:image')) {
+        try {
+          let imageUrl = value;
+          if (!value.startsWith('data:image')) {
+            const data = JSON.parse(value);
+            imageUrl = data.url || value;
+            if (Array.isArray(data)) {
+              return (
+                <View className="flex-row flex-wrap gap-4 pt-2">
+                  {data.map(({ url }, index) => (
+                    <Pressable
+                      key={index}
+                      onPress={() => setSelectedImage(url)}
+                      className="relative w-[150px] h-[150px]"
+                    >
+                      <Image
+                        source={{ uri: url }}
+                        className="w-full h-full rounded-lg"
+                        resizeMode="cover"
+                      />
+                      <View className="absolute inset-0 bg-black/50 opacity-0 justify-center items-center">
+                        <Maximize2 size={24} color="white" />
+                      </View>
+                    </Pressable>
+                  ))}
+                </View>
+              );
+            }
+          }
+          return (
+            <Pressable
+              onPress={() => setSelectedImage(imageUrl)}
+              className="relative w-[200px] h-[200px] mt-2"
+            >
+              <Image
+                source={{ uri: imageUrl }}
+                className="w-full h-full rounded-lg"
+                resizeMode="cover"
+              />
+              <View className="absolute inset-0 bg-black/50 opacity-0 justify-center items-center">
+                <Maximize2 size={24} color="white" />
+              </View>
+            </Pressable>
+          );
+        } catch {
+          return <Text className="text-muted-foreground text-sm italic">Invalid image data</Text>;
+        }
+      }
+
+      // Handle files
+      if (type === 'file' || value.startsWith('http')) {
+        try {
+          let fileUrl = value;
+          let fileName = 'Download File';
+          if (!value.startsWith('http')) {
+            const data = JSON.parse(value);
+            fileUrl = data.url;
+            fileName = data.name || fileName;
+          }
+          return (
+            <TouchableOpacity
+              onPress={() => Linking.openURL(fileUrl)}
+              className="flex-row items-center gap-2"
+            >
+              <FileText size={16} className="text-primary" />
+              <Text className="text-primary text-sm">{fileName}</Text>
+            </TouchableOpacity>
+          );
+        } catch {
+          return <Text className="text-muted-foreground text-sm italic">Invalid file data</Text>;
+        }
+      }
+
+      // Handle arrays (lists, checkboxes)
+      try {
+        const items = JSON.parse(value);
+        if (Array.isArray(items)) {
+          return (
+            <View className="space-y-1">
+              {items.map((item, index) => (
+                <View key={index} className="flex-row items-center gap-2">
+                  <Text className="text-muted-foreground">•</Text>
+                  <Text className="text-sm">{item}</Text>
+                </View>
+              ))}
+            </View>
+          );
+        }
+      } catch {}
+
+      // Default text display
+      return <Text className="text-sm">{value}</Text>;
+    } catch (error) {
+      return <Text className="text-destructive text-sm italic">Error displaying value</Text>;
+    }
+  };
+
+  return (
+    <View className="flex-1 bg-background">
+      <View className="flex-row items-center p-4 border-b border-border">
+        <TouchableOpacity onPress={onClose} className="mr-3">
+          <ArrowLeft size={24} className="text-foreground" />
+        </TouchableOpacity>
+        <Text className="text-xl font-bold flex-1">Response #{response.id}</Text>
+        <View className="flex-row items-center gap-2">
+          <TouchableOpacity
+            onPress={onGeneratePDF}
+            className="p-2"
+          >
+            <Printer size={20} className="text-foreground" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={onEdit}
+            className="p-2"
+          >
+            <Pencil size={20} className="text-foreground" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView className="flex-1 p-4">
+        <View className="space-y-6">
+          <View>
+            <Text className="text-base font-semibold mb-2">{response.form.name}</Text>
+            <Text className="text-sm text-muted-foreground">
+              Submitted on {format(new Date(response.date), 'MMMM d, yyyy')} at {format(new Date(response.date), 'h:mm a')}
+            </Text>
+          </View>
+
+          <Separator />
+
+          <View className="space-y-4">
+            {response.fields.map((field) => (
+              <View key={field.id} className="space-y-2">
+                <View className="flex-row items-center gap-2">
+                  <Text className="font-medium text-sm">{field.field.name}</Text>
+                  <Badge variant="secondary" className="text-xs font-normal capitalize">
+                    {field.field.type}
+                  </Badge>
+                </View>
+                <View className="text-foreground">
+                  {renderValue(field)}
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
+
+      <Modal
+        visible={!!selectedImage}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedImage(null)}
+      >
+        <Pressable
+          className="flex-1 bg-black/80 justify-center items-center"
+          onPress={() => setSelectedImage(null)}
+        >
+          <View className="relative w-full h-full justify-center items-center">
+            <Image
+              source={{ uri: selectedImage || '' }}
+              className="w-full h-full"
+              resizeMode="contain"
+            />
+            <TouchableOpacity
+              onPress={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 bg-black/50 p-2 rounded-full"
+            >
+              <X size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
+    </View>
+  );
+};
+
 export default function ResponsesListScreen() {
   const router = useRouter();
   const { projectId, formId } = useLocalSearchParams();
@@ -42,6 +246,7 @@ export default function ResponsesListScreen() {
   const { responses, getForms } = useFormsStore();
   const [loading, setLoading] = useState(true);
   const [formResponses, setFormResponses] = useState<FormResponse[]>([]);
+  const [selectedResponse, setSelectedResponse] = useState<FormResponse | null>(null);
 
   useEffect(() => {
     fetchResponses();
@@ -130,11 +335,64 @@ export default function ResponsesListScreen() {
     );
   };
 
+  const handleGeneratePDF = async (responses: FormResponse[], title: string) => {
+    try {
+      const response = await api.post(
+        `/api/v1/projects/${projectId}/forms/responses/generatePdf`,
+        {
+          responses,
+          title,
+        },
+        {
+          responseType: "blob",
+        }
+      );
+
+      // Convert blob to base64
+      const reader = new FileReader();
+      const base64 = await new Promise((resolve, reject) => {
+        reader.onload = () => {
+          const base64String = reader.result as string;
+          // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
+          const base64Content = base64String.split(',')[1];
+          resolve(base64Content);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(response.data);
+      });
+
+      const fileUri = `${FileSystem.documentDirectory}form-responses-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      await FileSystem.writeAsStringAsync(fileUri, base64 as string, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      await Sharing.shareAsync(fileUri);
+      toast.success("PDF generated successfully");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Failed to generate PDF");
+    }
+  };
+
   if (loading) {
     return (
       <View className="flex-1 bg-background justify-center items-center">
         <Text className="text-muted-foreground">Loading responses...</Text>
       </View>
+    );
+  }
+
+  if (selectedResponse) {
+    return (
+      <ResponseViewer 
+        response={selectedResponse} 
+        onClose={() => setSelectedResponse(null)}
+        onEdit={() => {
+          setSelectedResponse(null);
+          handleEditResponse(selectedResponse.id);
+        }}
+        onGeneratePDF={() => handleGeneratePDF([selectedResponse], `${selectedResponse.form.name} - Response #${selectedResponse.id}`)}
+      />
     );
   }
 
@@ -145,6 +403,14 @@ export default function ResponsesListScreen() {
           <ArrowLeft size={24} className="text-foreground" />
         </TouchableOpacity>
         <Text className="text-xl font-bold flex-1">Form Responses</Text>
+        {formResponses.length > 0 && (
+          <TouchableOpacity
+            onPress={() => handleGeneratePDF(formResponses, "Form Responses")}
+            className="p-2"
+          >
+            <Printer size={24} className="text-foreground" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView className="flex-1 p-4">
@@ -154,56 +420,41 @@ export default function ResponsesListScreen() {
           </View>
         ) : (
           formResponses.map((response) => (
-            <TouchableOpacity
-              onPress={() =>
-                router.push(
-                  `/projects/${projectId}/forms/${formId}/fill?responseId=${response.id}`
-                )
-              }
-              key={response.id}
-            >
-              <Card className="mb-4 p-4">
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-1">
-                    <Text className="text-base font-semibold">
-                      Response #{response.id}
-                    </Text>
-                    <Text className="text-sm text-muted-foreground">
-                      Submitted on {new Date(response.date).toLocaleString()}
-                    </Text>
-                    <Text className="text-xs text-muted-foreground mt-1">
-                      {response.fields.length} fields completed
-                    </Text>
-                  </View>
-                  <View className="flex-row items-center">
-                    {/* <TouchableOpacity
-                    onPress={() => handleDownloadPDF(response.id)}
-                    className="p-2"
-                  >
-                    <Download size={20} className="text-muted-foreground" />
-                  </TouchableOpacity>
+            <Card key={response.id} className="mb-4 p-4">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-1">
+                  <Text className="text-base font-semibold">
+                    Response #{response.id}
+                  </Text>
+                  <Text className="text-sm text-muted-foreground">
+                    Submitted on {new Date(response.date).toLocaleString()}
+                  </Text>
+                  <Text className="text-xs text-muted-foreground mt-1">
+                    {response.fields.length} fields completed
+                  </Text>
+                </View>
+                <View className="flex-row items-center">
                   <TouchableOpacity
-                    onPress={() => router.push(`/projects/${projectId}/forms/${formId}/responses/${response.id}`)}
+                    onPress={() => setSelectedResponse(response)}
                     className="p-2"
                   >
                     <Eye size={20} className="text-muted-foreground" />
-                  </TouchableOpacity> */}
-                    <TouchableOpacity
-                      onPress={() => handleEditResponse(response.id)}
-                      className="p-2"
-                    >
-                      <Pencil size={20} className="text-muted-foreground" />
-                    </TouchableOpacity>
-                    {/* <TouchableOpacity
-                      onPress={() => handleDeleteResponse(response.id)}
-                      className="p-2"
-                    >
-                      <Trash2 size={20} className="text-destructive" />
-                    </TouchableOpacity> */}
-                  </View>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => handleGeneratePDF([response], `${response.form.name} - Response #${response.id}`)}
+                    className="p-2"
+                  >
+                    <Printer size={20} className="text-muted-foreground" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => handleEditResponse(response.id)}
+                    className="p-2"
+                  >
+                    <Pencil size={20} className="text-muted-foreground" />
+                  </TouchableOpacity>
                 </View>
-              </Card>
-            </TouchableOpacity>
+              </View>
+            </Card>
           ))
         )}
       </ScrollView>

@@ -209,10 +209,9 @@ export default function Dashboard() {
             selectedUser={selectedUser}
             setSelectedUser={setSelectedUser}
           />
-          <Text>
+          {/* <Text>
             v1.2.66 
-            {/* ({buildNumber}) */}
-          </Text>
+          </Text> */}
           <View
             style={styles.headerTitle}
             className="mt-4 flex flex-row items-center space-x-8"

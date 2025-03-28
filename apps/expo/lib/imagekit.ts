@@ -1,6 +1,6 @@
 import * as ImageManipulator from "expo-image-manipulator";
 import ImageKit from "imagekit-javascript";
-
+import { toast } from "sonner-native";
 const imagekit = new ImageKit({
   publicKey: "public_3P95CgUAWGTwOS3848WAhIWOjBs=",
   urlEndpoint: "https://ik.imagekit.io/wzgdjvwfm",
@@ -122,7 +122,8 @@ export const uploadImage = async (
     });
   } catch (error) {
     console.error("ImageKit upload error:", error);
-    throw error;
+    toast.error("Failed to upload image");
+    // throw error;
   }
 };
 
