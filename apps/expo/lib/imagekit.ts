@@ -1,6 +1,8 @@
 import * as ImageManipulator from "expo-image-manipulator";
 import ImageKit from "imagekit-javascript";
 import { toast } from "sonner-native";
+import { api } from "./api";
+
 export const imagekit = new ImageKit({
   publicKey: "public_3P95CgUAWGTwOS3848WAhIWOjBs=",
   urlEndpoint: "https://ik.imagekit.io/wzgdjvwfm",
@@ -57,11 +59,9 @@ export const uploadImage = async (
     onProgress?.(0);
 
     // Get authentication parameters from your backend
-    const response = await fetch(
-      `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/imageKit`
-    );
+      const response = await api.get(`/api/v1/imageKit`);
 
-    const { token, expire, signature } = await response.json();
+    const { token, expire, signature } = response.data;
     onProgress?.(20);
 
     // Optimize image before upload
@@ -112,7 +112,7 @@ export const uploadImage = async (
           }
 
           if (!result) {
-            reject(new Error("No result from ImageKit upload"));
+            reject("No result from ImageKit upload");
             return;
           }
           onProgress?.(100);
