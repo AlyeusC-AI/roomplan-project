@@ -47,6 +47,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { uploadImage } from "@/lib/imagekit";
 import { useCameraStore } from "@/lib/state/camera";
 import { toast } from "sonner-native";
+import { api } from "@/lib/api";
 export const supabaseServiceRole = createClient(
   getConstants().supabaseUrl,
   getConstants().serviceRoleJwt
@@ -120,18 +121,12 @@ export default function CameraScreen() {
 
   const refetchRooms = async () => {
     try {
-      const roomsRes = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room`,
-        {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "auth-token": supabaseSession?.access_token || "",
-        },
+      const roomsRes = await api.get(`/api/v1/projects/${projectId}/room`, {
+      
       }
     );
 
-      const roomsData = await roomsRes.json();
+      const roomsData = await roomsRes.data;
       rooms.setRooms(roomsData.rooms);
     } catch (error) {
       console.error("Error fetching rooms:", error);
@@ -215,20 +210,11 @@ export default function CameraScreen() {
       if (!isFormMode && !cameraFieldId) {
         try {
           // Save image reference to your backend for room photos
-          const saveImageRes = await fetch(
-            `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/image`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "auth-token": `${supabaseSession?.access_token}`,
-            },
-            body: JSON.stringify({
-              roomId: selectedRoomId,
-              imageId: uploadResult.url,
-            }),
-          }
-        );
+         await api.post(`/api/v1/projects/${projectId}/image`, {
+            roomId: selectedRoomId,
+            imageId: uploadResult.url,
+          });
+        
       } catch (error) {
         console.error("Error saving image:", error);
         toast.error("Error saving image");
