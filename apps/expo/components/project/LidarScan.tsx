@@ -1,5 +1,6 @@
+import { Buffer } from "buffer";
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Platform, TouchableOpacity, NativeModules, Modal,
+import { View, Platform, TouchableOpacity, NativeModules, Share,
   requireNativeComponent, UIManager, Text, TextInput, Dimensions,
   SafeAreaView, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -13,6 +14,7 @@ import { supabaseServiceRole } from '@/app/projects/[projectId]/camera';
 import { RoomPlanImage } from './LidarRooms';
 import { cn } from '@/lib/utils';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { imagekit, ImageKitUploadResponse } from "@/lib/imagekit";
 
 const { RoomScanModule } = NativeModules;
 
@@ -54,12 +56,13 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isSupported, setIsSupported] = useState<boolean | null>(null);
   const [newRoomName, setNewRoomName] = useState<string>('');
+  const [imgkitLoading, setImgkitLoading] = useState<boolean>(false);
   const { session: supabaseSession } = userStore((state) => state);
   const { projectId } = useLocalSearchParams<{
     projectId: string;
   }>();
   const deviceWidth = Dimensions.get('window').width;
-  const svgSize = deviceWidth * 0.8;
+  const svgSize = deviceWidth * 0.95;
   const processedRoomId = useRef<number | undefined>(roomId);
   const processedRoomPlanSVG = useRef<string | undefined>(roomPlanSVG);
   const insets = useSafeAreaInsets();
@@ -221,6 +224,64 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
     return;
   }
 
+  const handleShareRoomPlan = async () => {
+    if (processedRoomPlanSVG.current) {
+      setImgkitLoading(true);
+      try {
+
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/imageKit`
+        );
+    
+        const { token, expire, signature } = await response.json();
+    
+        const base64Svg = Buffer.from(processedRoomPlanSVG.current, "utf8").toString("base64");
+        const file = `data:image/svg+xml;base64,${base64Svg}`
+        const uploadResult: ImageKitUploadResponse = await new Promise((resolve, reject) => imagekit.upload(
+          {
+            file,
+            fileName: `roomplan-${processedRoomId.current}.svg`,
+            folder: "roomplan-svg",
+            tags: [],
+            useUniqueFileName: false,
+            responseFields: ["tags"],
+            isPrivateFile: false,
+            token,
+            expire,
+            signature,
+          },
+          (err: Error | null, result: ImageKitUploadResponse | null) => {
+            console.log("🚀 ~ returnnewPromise ~ result:", result);
+  
+            if (err) {
+              reject(err);
+              return;
+            }
+  
+            if (!result) {
+              reject(new Error("No result from ImageKit upload"));
+              return;
+            }
+            resolve(result);
+          }
+        ));
+        const imageUrl = imagekit.url({
+          src: uploadResult.url,
+          transformation: [{
+            raw: 'f-png'
+          }]
+        })
+        Share.share({
+          url: imageUrl,
+        })
+      } catch (error) {
+        console.error('error', error);
+      } finally {
+        setImgkitLoading(false);
+      }
+    }
+  }
+
   if (isSupported === null) {
     // Loading state
     return (
@@ -373,6 +434,20 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
           <View className="mx-auto" style={{ width: svgSize, height: svgSize }}>
             <RoomPlanImage src={processedRoomPlanSVG.current} />
           </View>
+          <TouchableOpacity
+            className="flex-row items-center justify-center mt-5 py-2.5 px-5"
+            onPress={handleShareRoomPlan}
+            disabled={imgkitLoading}
+          >
+            {imgkitLoading ? (
+              <ActivityIndicator size="small" color="#007AFF" />
+            ) : (
+              <>
+                <MaterialIcons name="share" size={24} color="#007AFF" />
+                <Text className="ml-1 text-base text-[#007AFF]">Share Room Plan</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
       )}
     </SafeAreaView>
