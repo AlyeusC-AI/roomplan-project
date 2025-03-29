@@ -268,7 +268,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
         const imageUrl = imagekit.url({
           src: uploadResult.url,
           transformation: [{
-            raw: 'f-png'
+            raw: 'f-png,w-1400'
           }]
         })
         Share.share({
