@@ -8,6 +8,9 @@ import RoomPlan
 import React
 import ReactBridge
 
+import SwiftUI
+import _SpriteKit_SwiftUI
+
 let logger = Logger(subsystem: "com.servicegeek.servicegeekmobile", category: "Lidar Scan")
 
 @ReactModule
@@ -60,7 +63,7 @@ class RoomScanView: RCTViewManager {
     var onCaptureError: RCTBubblingEventBlock?
 }
 
-class RoomCaptureViewWrapper : UIView, RoomCaptureViewDelegate {
+class RoomCaptureViewWrapper : RCTView, RoomCaptureViewDelegate {
 
     private var roomCaptureView: RoomCaptureView!
     private var roomCaptureSessionConfig: RoomCaptureSession.Configuration = RoomCaptureSession.Configuration()
@@ -131,7 +134,9 @@ class RoomCaptureViewWrapper : UIView, RoomCaptureViewDelegate {
             logger.info("[RoomCapture] Successfully processed room \(destinationURL)")
         } catch {
             print("Error = \(error)")
+            self.onCaptureError?(["message": "Error = \(error)"])
         }
+        self.onCaptureCompleted?(["url": destinationFolderURL])
     }
 
     func transformPoint(_ point: simd_float3, using transform: simd_float4x4) -> simd_float3 {
@@ -157,7 +162,13 @@ class RoomCaptureViewWrapper : UIView, RoomCaptureViewDelegate {
     func objectToCoords(objects: [CapturedRoom.Object]) -> [[simd_float3]] {
       if #available(iOS 17.0, *) {
         let transformedPoints = objects.map { object in
-          let extendedCorners = [object.dimensions * -0.5, object.dimensions * 0.5]
+          var pll = object.dimensions * -0.5
+          var ptr = object.dimensions * 0.5
+          let plr = simd_make_float3(pll.x, 0, ptr.z)
+          let ptl = simd_make_float3(ptr.x, 0, pll.z)
+          pll.y = 0
+          ptr.y = 0
+          let extendedCorners = [pll, plr, ptr, ptl, pll]
           return extendedCorners.map { transformPoint($0, using: object.transform) }
         }
         return transformedPoints

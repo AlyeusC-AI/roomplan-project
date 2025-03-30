@@ -2,7 +2,8 @@ import * as ImageManipulator from "expo-image-manipulator";
 import ImageKit from "imagekit-javascript";
 import { toast } from "sonner-native";
 import { api } from "./api";
-const imagekit = new ImageKit({
+
+export const imagekit = new ImageKit({
   publicKey: "public_3P95CgUAWGTwOS3848WAhIWOjBs=",
   urlEndpoint: "https://ik.imagekit.io/wzgdjvwfm",
   //   authenticationEndpoint: `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/imageKit`,

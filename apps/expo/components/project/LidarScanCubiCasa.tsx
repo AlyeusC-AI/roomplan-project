@@ -1,20 +1,15 @@
-import { Buffer } from "buffer";
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Platform, TouchableOpacity, NativeModules, Share,
+import { View, Platform, TouchableOpacity, NativeModules, Modal,
   requireNativeComponent, UIManager, Text, TextInput, Dimensions,
   SafeAreaView, Alert, ActivityIndicator } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { makeSVG } from '@/lib/utils/generate2DPlan';
+import { MaterialIcons } from '@expo/vector-icons';
 import { userStore } from '@/lib/state/user';
 import { useLocalSearchParams } from 'expo-router';
 import { roomsStore } from '@/lib/state/rooms';
 import { roomInferenceStore } from '@/lib/state/readings-image';
 import { supabaseServiceRole } from '@/app/projects/[projectId]/camera';
 
-import { RoomPlanImage } from './LidarRooms';
-import { cn } from '@/lib/utils';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { imagekit, ImageKitUploadResponse } from "@/lib/imagekit";
+import { RoomPlanImage } from './LidarRooms';;
 
 const { RoomScanModule } = NativeModules;
 
@@ -24,7 +19,6 @@ const hasLidarSensor = async (): Promise<boolean> => {
 };
 
 type RoomScanViewProps = {
-  finish: boolean;
   onCaptureCompleted: (ev: any) => void;
   onCaptureError: (ev: any) => void;
 }
@@ -34,12 +28,12 @@ const isRoomPlanAvailable = () => {
   if (Platform.OS !== 'ios') return false;
   
   // Check if the native module exists
-  return UIManager.getViewManagerConfig('RoomScanView') != null;
+  return UIManager.getViewManagerConfig('CubiCasaScanView') != null;
 };
 
 // Create a native component wrapper if available
 const RoomScanView = isRoomPlanAvailable()
-  ? requireNativeComponent<RoomScanViewProps>('RoomScanView')
+  ? requireNativeComponent<RoomScanViewProps>('CubiCasaScanView')
   : null;
 
 interface LidarScanProps {
@@ -49,23 +43,22 @@ interface LidarScanProps {
   roomPlanSVG?: string;
 }
 
-const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanProps) => {
+const LidarScanCubiCasa = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanProps) => {
   const [finish, setFinish] = useState(false);
   const [showScanner, setShowScanner] = useState<boolean>(false);
-  const [isScanProcessed, setIsScanProcessed] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isSupported, setIsSupported] = useState<boolean | null>(null);
   const [newRoomName, setNewRoomName] = useState<string>('');
-  const [imgkitLoading, setImgkitLoading] = useState<boolean>(false);
   const { session: supabaseSession } = userStore((state) => state);
   const { projectId } = useLocalSearchParams<{
     projectId: string;
   }>();
   const deviceWidth = Dimensions.get('window').width;
-  const svgSize = deviceWidth * 0.95;
+  const svgSize = deviceWidth * 0.8;
   const processedRoomId = useRef<number | undefined>(roomId);
   const processedRoomPlanSVG = useRef<string | undefined>(roomPlanSVG);
-  const insets = useSafeAreaInsets();
+  const [showPlanSelectionModal, setShowPlanSelectionModal] = useState<boolean>(false);
+  const [scanPlan, setScanPlan] = useState<'free' | 'fast'>('free');
 
   useEffect(() => {
     const checkSupport = async () => {
@@ -76,8 +69,9 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
     checkSupport();
   }, []);
 
-  const handleStartScan = async () => {
-    setIsScanProcessed(false)
+  const handleStartScan = async (plan: 'free' | 'fast') => {
+    setScanPlan(plan);
+    setShowPlanSelectionModal(false);
     if (!processedRoomId.current) {
       console.log("new room creation - projectId", projectId)
       const res = await fetch(
@@ -133,153 +127,77 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
     );
   };
 
-  const handleScanComplete = async () => {
-    try {
-      const result = await new Promise<{
-        destinationURL: string,
-        capturedRoomURL: string,
-        transformedRoomURL: string
-      }>((resolve, reject) => {
-        RoomScanModule.getOutputFiles((result: {
-          destinationURL: string,
-          capturedRoomURL: string,
-          transformedRoomURL: string
-        }) => {
-          resolve(result);
+  const handleScanComplete = (ev: { nativeEvent: { url: string }}) => {
+    console.log("Complete -> handleScanComplete", ev.nativeEvent)
+    const url = ev.nativeEvent.url;
+    if (!url) {
+      Alert.alert('Error', 'No data received. Please scan again.');
+      setShowScanner(false);
+      return
+    }
+
+    if (url === "user-cancel") {
+      setShowScanner(false);
+      return
+    }
+
+    const processScanData = async () => {
+      setIsProcessing(true);
+      try {
+        // upload zip file to supabase first
+        const formData = new FormData();
+        const fileName = `room-${processedRoomId.current}.zip`
+        // @ts-expect-error react-native form data typing issue
+        formData.append("file", {
+          uri: url,
+          name: fileName
         });
-      });
-      const transformedJSON = await fetch(result.transformedRoomURL).then(res => res.json());
-      const roomPlanSvg = makeSVG(transformedJSON);
+        const storageRes = await supabaseServiceRole.storage
+          .from("cubi-zip-file")
+          .upload(fileName, formData, {
+            cacheControl: "3600",
+            upsert: true,
+          });
 
-      const formData = new FormData();
-      const fileName = `${processedRoomId.current}.usdz`
-      // @ts-expect-error react-native form data typing issue
-      formData.append("file", {
-        uri: result.destinationURL,
-        name: fileName
-      });
+        const zipFilePath = storageRes.data?.path
+        if (!zipFilePath) { throw new Error("Failed to upload zip file"); }
 
-      await supabaseServiceRole.storage
-        .from("roomplan-usdz")
-        .upload(fileName, formData, {
-          cacheControl: "3600",
-          upsert: true,
-        });
-
-      await supabaseServiceRole
+        await supabaseServiceRole
         .from("Room")
         .update({
-          roomPlanSVG: roomPlanSvg,
           scannedFileKey: fileName
         })
         .eq("id", processedRoomId.current);
 
-      processedRoomPlanSVG.current = roomPlanSvg;
-
-      if (onScanComplete) {
-        setTimeout(() => {
-          // setShowScanner(false);
-          onScanComplete(processedRoomId.current);
-        }, 3000);
+        // call api to process zip file
+        await fetch(
+          `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room/${processedRoomId.current}/cubicasa?plan=${scanPlan}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "auth-token": `${supabaseSession?.access_token}`,
+            },
+          }
+        );
+  
+        Alert.alert("Success", "Scan completed successfully, Your 2d plan will be ready shortly");
+        onClose && onClose()
+      } catch(error) {
+        console.error("Error processing image:", error);
+        Alert.alert("Error", "Failed to process scan");
       }
-      setIsScanProcessed(true)
-    } catch (error) {
-      console.error('error',error);
+      setIsProcessing(false);
       setShowScanner(false);
     }
+    processScanData()
 
-    setIsProcessing(false);
-    setFinish(false);
-  }
-
-  const confirmScanComplete = () => {
-    // Show confirmation alert before completing scan
-    // Below is IOS Native Lidar Sensor integration. Keep this so that we use it when we come back from cubicasa
-    Alert.alert(
-      'Finish Scan?',
-      'Are you finished scanning this room?',
-      [
-        { text: 'Continue Scanning', style: 'cancel' },
-        { 
-          text: 'Finish Scan', 
-          style: 'default',
-          onPress: () => {
-            setFinish(true);
-            setIsProcessing(true);
-          }
-        },
-      ]
-    );
+    return;
   };
 
   const handleScanError = (ev: { nativeEvent: { message: string }}) => {
     console.log("Error -> handleScanError", ev.nativeEvent)
-    Alert.alert(
-      'Error',
-      'Failed to capture room. Please try again.',
-      [{ text: 'OK', style: 'cancel' }]
-    )
-    setIsProcessing(false)
-    setShowScanner(false)
     return;
-  }
-
-  const handleShareRoomPlan = async () => {
-    if (processedRoomPlanSVG.current) {
-      setImgkitLoading(true);
-      try {
-
-        const response = await fetch(
-          `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/imageKit`
-        );
-    
-        const { token, expire, signature } = await response.json();
-    
-        const base64Svg = Buffer.from(processedRoomPlanSVG.current, "utf8").toString("base64");
-        const file = `data:image/svg+xml;base64,${base64Svg}`
-        const uploadResult: ImageKitUploadResponse = await new Promise((resolve, reject) => imagekit.upload(
-          {
-            file,
-            fileName: `roomplan-${processedRoomId.current}.svg`,
-            folder: "roomplan-svg",
-            tags: [],
-            useUniqueFileName: false,
-            responseFields: ["tags"],
-            isPrivateFile: false,
-            token,
-            expire,
-            signature,
-          },
-          (err: Error | null, result: ImageKitUploadResponse | null) => {
-            console.log("🚀 ~ returnnewPromise ~ result:", result);
-  
-            if (err) {
-              reject(err);
-              return;
-            }
-  
-            if (!result) {
-              reject(new Error("No result from ImageKit upload"));
-              return;
-            }
-            resolve(result);
-          }
-        ));
-        const imageUrl = imagekit.url({
-          src: uploadResult.url,
-          transformation: [{
-            raw: 'f-png'
-          }]
-        })
-        Share.share({
-          url: imageUrl,
-        })
-      } catch (error) {
-        console.error('error', error);
-      } finally {
-        setImgkitLoading(false);
-      }
-    }
   }
 
   if (isSupported === null) {
@@ -332,14 +250,11 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
   }
 
   if (showScanner) {
-    const cancelButtonPosition = `top-[${insets.top + 20}px]`
-
     return (
       <View className="relative inset-0 flex-1 bg-black">
         <View className="absolute inset-0 flex-1 w-full h-full z-10">
           {RoomScanView && (
             <RoomScanView
-              finish={finish}
               onCaptureCompleted={handleScanComplete}
               onCaptureError={handleScanError}
             />
@@ -351,41 +266,6 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
               <ActivityIndicator size="large" color="#007AFF" />
             </View>
           </View>
-        )}
-        {!isScanProcessed && (
-          <TouchableOpacity 
-            className={cn(
-              "absolute bottom-[30px] right-[30px] w-[60px] h-[60px] rounded-full bg-[#007AFF] justify-center items-center shadow-md z-20",
-              { "opacity-50": isProcessing }
-            )}
-            disabled={isProcessing}
-            onPress={confirmScanComplete}
-          >
-            <Ionicons name="checkmark" size={32} color="white" />
-          </TouchableOpacity>
-        )}
-        {isScanProcessed && (
-          <TouchableOpacity 
-            className="absolute bottom-[30px] left-1/2 -translate-x-1/2 py-4 px-5 rounded-lg bg-black/50 justify-center items-center z-20"
-            onPress={() => {
-              setIsScanProcessed(false)
-              setShowScanner(false)
-            }}
-          >
-            <Text className="text-white text-base">Scan processed. Tap To Close</Text>
-          </TouchableOpacity>
-        )}
-        {!isScanProcessed && (
-          <TouchableOpacity 
-            className={cn(
-              `absolute top-[80px] right-5 w-11 h-11 bg-black/50 rounded-[22px] justify-center items-center z-20`,
-              { "opacity-50": isProcessing }
-            )}
-            disabled={isProcessing}
-            onPress={handleCancel}
-          >
-            <MaterialIcons name="close" size={32} color="white" />
-          </TouchableOpacity>
         )}
       </View>
     );
@@ -414,7 +294,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
 
       <TouchableOpacity 
         className={`bg-[#007AFF] py-4 px-8 rounded-lg mx-10 mb-5 items-center ${(!roomId && !newRoomName) ? 'bg-[#A0C8FF] opacity-70' : ''}`}
-        onPress={handleStartScan}
+        onPress={() => setShowPlanSelectionModal(true)}
         disabled={!roomId && !newRoomName}
       >
         <Text className="text-white text-lg font-semibold">
@@ -434,24 +314,59 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
           <View className="mx-auto" style={{ width: svgSize, height: svgSize }}>
             <RoomPlanImage src={processedRoomPlanSVG.current} />
           </View>
-          <TouchableOpacity
-            className="flex-row items-center justify-center mt-5 py-2.5 px-5"
-            onPress={handleShareRoomPlan}
-            disabled={imgkitLoading}
-          >
-            {imgkitLoading ? (
-              <ActivityIndicator size="small" color="#007AFF" />
-            ) : (
-              <>
-                <MaterialIcons name="share" size={24} color="#007AFF" />
-                <Text className="ml-1 text-base text-[#007AFF]">Share Room Plan</Text>
-              </>
-            )}
-          </TouchableOpacity>
         </View>
       )}
+
+      <Modal
+        visible={showPlanSelectionModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowPlanSelectionModal(false)}
+      >
+        <View className="flex-1 items-center justify-center bg-black/50">
+          <View className="bg-white rounded-2xl p-6 w-11/12 max-w-md">
+            <View className="flex-row justify-between items-center mb-6">
+              <Text className="text-2xl font-bold text-gray-900">Select Scan Plan</Text>
+              <TouchableOpacity 
+                onPress={() => setShowPlanSelectionModal(false)}
+                className="p-2"
+              >
+                <MaterialIcons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <View className="space-y-4 gap-4">
+              <TouchableOpacity
+                className="bg-white border-2 border-[#007AFF] rounded-xl p-4 active:opacity-80"
+                onPress={() => handleStartScan('free')}
+              >
+                <View className="flex-row items-center mb-2">
+                  <MaterialIcons name="room" size={24} color="#007AFF" />
+                  <Text className="text-xl font-semibold text-[#007AFF] ml-2">Free Scan</Text>
+                </View>
+                <Text className="text-gray-600 text-base leading-5">
+                  Take your time to scan the room carefully. This option provides the most accurate results but may take longer to complete.
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="bg-white border-2 border-[#007AFF] rounded-xl p-4 active:opacity-80"
+                onPress={() => handleStartScan('fast')}
+              >
+                <View className="flex-row items-center mb-2">
+                  <MaterialIcons name="speed" size={24} color="#007AFF" />
+                  <Text className="text-xl font-semibold text-[#007AFF] ml-2">Fast Scan</Text>
+                </View>
+                <Text className="text-gray-600 text-base leading-5">
+                  Everything in Free Scan, Plus faster results.
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
 
-export default LidarScan; 
+export default LidarScanCubiCasa; 
