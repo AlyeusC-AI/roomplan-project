@@ -5,11 +5,17 @@ import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
 import { Stack } from "expo-router";
 import "@/global.css";
 import { supabase } from "@/lib/supabase";
-import { AppState, View } from "react-native";
+import { AppState, View, StatusBar, SafeAreaView } from "react-native";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { PortalHost } from "@rn-primitives/portal";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as SplashScreen from 'expo-splash-screen';
+import { userStore } from "@/lib/state/user";
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useFonts } from 'expo-font';
+import * as Network from 'expo-network';
+import { invoicesStore } from '@/lib/state/invoices';
+import { projectsStore } from '@/lib/state/projects';
 
 console.log('App initialization started');
 
@@ -27,6 +33,7 @@ AppState.addEventListener("change", (state) => {
 });
 
 export default function AppRoot() {
+  const { setSession } = userStore();
   console.log('AppRoot component started rendering');
   
   const theme = extendTheme({
@@ -53,6 +60,24 @@ export default function AppRoot() {
     async function prepare() {
       try {
         console.log('Starting app preparation');
+        
+        // Initialize Supabase session
+        const { data, error } = await supabase.auth.getSession();
+        if (data.session) {
+          console.log('Supabase session found, setting in userStore');
+          setSession(data.session);
+        } else if (error) {
+          console.error('Error getting Supabase session:', error);
+        }
+        
+        // Setup auth state change listener
+        const { data: authListener } = supabase.auth.onAuthStateChange(
+          (event, session) => {
+            console.log('Auth state changed:', event);
+            setSession(session);
+          }
+        );
+        
         await requestTrackingPermissionsAsync();
         console.log('Tracking permissions requested');
         setAppIsReady(true);
@@ -62,7 +87,12 @@ export default function AppRoot() {
     }
 
     prepare();
-  }, []);
+    
+    // Return cleanup function
+    return () => {
+      // Clean up any listeners if needed
+    };
+  }, [setSession]);
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
@@ -136,6 +166,11 @@ export default function AppRoot() {
         <Toaster visibleToasts={1} position="top-center" closeButton />
         <PortalHost />
       </GestureHandlerRootView>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#f5f5f5"
+        networkActivityIndicatorVisible={true}
+      />
     </View>
   );
 }

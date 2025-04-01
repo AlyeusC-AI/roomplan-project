@@ -1,1 +1,1 @@
-../../../../../../node_modules/.pnpm/expo@52.0.38_@babel+core@7.26.10_@babel+preset-env@7.26.9_@babel+core@7.26.10__@expo+me_91f3d12b088a4f3b1921dbf416b07124/node_modules/expo/ios/EXAppDefinesLoader.h
+../../../../../../../../node_modules/expo/ios/EXAppDefinesLoader.h

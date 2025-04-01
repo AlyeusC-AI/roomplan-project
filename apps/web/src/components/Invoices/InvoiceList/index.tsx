@@ -29,16 +29,21 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { ChevronRightIcon, CheckCircle, Send, AlertTriangle, Ban } from "lucide-react";
+import {
+  ChevronRightIcon,
+  CheckCircle,
+  Send,
+  AlertTriangle,
+  Ban,
+  Ellipsis,
+} from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@components/ui/badge";
 import { LoadingPlaceholder } from "@components/ui/spinner";
 import { Input } from "@components/ui/input";
 import { cn } from "@lib/utils";
 import { toast } from "sonner";
-import { Database } from "@/types/database";
-import { Invoice } from "@atoms/invoices";
-import { fetchInvoices } from "@/services/api/invoices";
+import { fetchInvoices } from "@/lib/invoices";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,12 +51,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type DashboardView = Database["public"]["Enums"]["DashboardViews"];
-
 export default function InvoiceList() {
-  const { invoices, totalInvoices, setInvoices } = invoicesStore(
-    (state) => state
-  );
+  const { totalInvoices, setInvoices } = invoicesStore((state) => state);
   const { user } = userInfoStore((state) => state);
   const [isCreatingNewInvoice, setIsCreatingNewInvoice] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -64,180 +65,19 @@ export default function InvoiceList() {
     const status = search.get("status") || undefined;
     const fetchData = async () => {
       setLoading(true);
-      
+
       try {
         const result = await fetchInvoices(status);
-        
-        if (result.error) {
-          toast.error(result.error);
-        } else if (result.data) {
-          setInvoices(result.data, result.data.length);
-        }
+
+        setInvoices(result, result.length);
       } catch (error) {
         console.error("Error fetching invoices:", error);
         toast.error("Failed to load invoices. Please try again.");
-        
-        // Fallback to dummy data if API fails
-        useDummyData();
       } finally {
         setLoading(false);
       }
     };
-    
-    // Fallback function to use dummy data (temporarily)
-    const useDummyData = () => {
-      // Existing dummy data code
-      const dummyInvoices: Invoice[] = [
-        {
-          id: "1",
-          publicId: "INV-001",
-          number: "INV-001",
-          clientName: "Acme Corporation",
-          clientEmail: "billing@acme.com",
-          projectName: "Website Redesign",
-          projectId: "PRJ-001",
-          amount: 1500.00,
-          status: "draft",
-          createdAt: "2023-05-15T12:00:00Z",
-          dueDate: "2023-06-15T12:00:00Z",
-          items: [
-            {
-              id: "item1",
-              description: "Design Work",
-              quantity: 10,
-              rate: 75,
-              amount: 750
-            },
-            {
-              id: "item2",
-              description: "Development",
-              quantity: 15,
-              rate: 50,
-              amount: 750
-            }
-          ]
-        },
-        {
-          id: "2",
-          publicId: "INV-002",
-          number: "INV-002",
-          clientName: "TechStart Inc",
-          clientEmail: "accounts@techstart.com",
-          projectName: "Mobile App Development",
-          projectId: "PRJ-002",
-          amount: 3000.00,
-          status: "sent",
-          createdAt: "2023-05-20T12:00:00Z",
-          dueDate: "2023-06-20T12:00:00Z",
-          items: [
-            {
-              id: "item1",
-              description: "UI/UX Design",
-              quantity: 20,
-              rate: 75,
-              amount: 1500
-            },
-            {
-              id: "item2",
-              description: "Frontend Development",
-              quantity: 30,
-              rate: 50,
-              amount: 1500
-            }
-          ]
-        },
-        {
-          id: "3",
-          publicId: "INV-003",
-          number: "INV-003",
-          clientName: "Global Services LLC",
-          clientEmail: "finance@globalservices.com",
-          projectName: "SEO Optimization",
-          projectId: "PRJ-003",
-          amount: 750.00,
-          status: "paid",
-          createdAt: "2023-05-10T12:00:00Z",
-          dueDate: "2023-06-10T12:00:00Z",
-          items: [
-            {
-              id: "item1",
-              description: "Keyword Research",
-              quantity: 5,
-              rate: 75,
-              amount: 375
-            },
-            {
-              id: "item2",
-              description: "On-Page Optimization",
-              quantity: 7.5,
-              rate: 50,
-              amount: 375
-            }
-          ]
-        },
-        {
-          id: "4",
-          publicId: "INV-004",
-          number: "INV-004",
-          clientName: "Retail Solutions Co",
-          clientEmail: "ap@retailsolutions.com",
-          projectName: "E-commerce Integration",
-          projectId: "PRJ-004",
-          amount: 2200.00,
-          status: "overdue",
-          createdAt: "2023-04-15T12:00:00Z",
-          dueDate: "2023-05-15T12:00:00Z",
-          items: [
-            {
-              id: "item1",
-              description: "Payment Gateway Integration",
-              quantity: 15,
-              rate: 80,
-              amount: 1200
-            },
-            {
-              id: "item2",
-              description: "Inventory Sync Setup",
-              quantity: 20,
-              rate: 50,
-              amount: 1000
-            }
-          ]
-        },
-        {
-          id: "5",
-          publicId: "INV-005",
-          number: "INV-005",
-          clientName: "Creative Designs Ltd",
-          clientEmail: "payments@creativedesigns.com",
-          projectName: "Brand Identity",
-          projectId: "PRJ-005",
-          amount: 1800.00,
-          status: "cancelled",
-          createdAt: "2023-05-01T12:00:00Z",
-          dueDate: "2023-06-01T12:00:00Z",
-          items: [
-            {
-              id: "item1",
-              description: "Logo Design",
-              quantity: 1,
-              rate: 800,
-              amount: 800
-            },
-            {
-              id: "item2",
-              description: "Brand Guidelines",
-              quantity: 1,
-              rate: 1000,
-              amount: 1000
-            }
-          ]
-        }
-      ];
-      
-      setInvoices(dummyInvoices, dummyInvoices.length);
-    };
-    
+
     fetchData();
   }, [search.get("query"), search.get("page"), search.get("status")]);
 
@@ -289,7 +129,7 @@ export default function InvoiceList() {
           />
           <Tabs
             defaultValue={user?.savedDashboardView || "listView"}
-            className="hidden lg:block"
+            className='hidden lg:block'
           >
             <TabsList>
               <TabsTrigger value={"listView"}>List View</TabsTrigger>
@@ -345,30 +185,36 @@ export default function InvoiceList() {
   );
 }
 
-export const Table = ({ onRowClick }: { onRowClick?: (invoiceId: string) => void }) => {
+export const Table = ({
+  onRowClick,
+}: {
+  onRowClick?: (invoiceId: string) => void;
+}) => {
   const { invoices } = invoicesStore((state) => state);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'draft':
-        return 'bg-gray-200 text-gray-800';
-      case 'sent':
-        return 'bg-blue-100 text-blue-800';
-      case 'paid':
-        return 'bg-green-100 text-green-800';
-      case 'overdue':
-        return 'bg-red-100 text-red-800';
-      case 'cancelled':
-        return 'bg-gray-100 text-gray-800';
+      case "draft":
+        return "bg-gray-200 text-gray-800";
+      case "sent":
+        return "bg-blue-100 text-blue-800";
+      case "paid":
+        return "bg-green-100 text-green-800";
+      case "overdue":
+        return "bg-red-100 text-red-800";
+      case "cancelled":
+        return "bg-gray-100 text-gray-800";
       default:
-        return '';
+        return "";
     }
   };
 
   const columns: ColumnDef<Invoice>[] = [
     {
       accessorKey: "number",
-      header: ({ column }) => <TableColumnHeader column={column} title="Invoice #" />,
+      header: ({ column }) => (
+        <TableColumnHeader column={column} title='Invoice #' />
+      ),
       cell: ({ row }) => (
         <div className='flex items-center gap-2'>
           <div>
@@ -384,7 +230,9 @@ export const Table = ({ onRowClick }: { onRowClick?: (invoiceId: string) => void
     },
     {
       accessorKey: "amount",
-      header: ({ column }) => <TableColumnHeader column={column} title="Amount" />,
+      header: ({ column }) => (
+        <TableColumnHeader column={column} title='Amount' />
+      ),
       cell: ({ row }) =>
         new Intl.NumberFormat("en-US", {
           style: "currency",
@@ -393,31 +241,37 @@ export const Table = ({ onRowClick }: { onRowClick?: (invoiceId: string) => void
     },
     {
       accessorKey: "createdAt",
-      header: ({ column }) => <TableColumnHeader column={column} title="Created Date" />,
+      header: ({ column }) => (
+        <TableColumnHeader column={column} title='Created Date' />
+      ),
       cell: ({ row }) =>
         new Intl.DateTimeFormat("en-US", {
           dateStyle: "medium",
-        }).format(new Date(row.original.createdAt)),
+        }).format(new Date(row.original.createdAt ?? new Date())),
     },
     {
       accessorKey: "dueDate",
-      header: ({ column }) => <TableColumnHeader column={column} title="Due Date" />,
+      header: ({ column }) => (
+        <TableColumnHeader column={column} title='Due Date' />
+      ),
       cell: ({ row }) =>
         new Intl.DateTimeFormat("en-US", {
           dateStyle: "medium",
-        }).format(new Date(row.original.dueDate)),
+        }).format(new Date(row.original.dueDate ?? new Date())),
     },
     {
       accessorKey: "status",
-      header: ({ column }) => <TableColumnHeader column={column} title="Status" />,
+      header: ({ column }) => (
+        <TableColumnHeader column={column} title='Status' />
+      ),
       cell: ({ row }) => {
         const invoice = row.original;
         return (
-          <div className="flex items-center">
+          <div className='flex items-center'>
             <Badge
-              variant="outline"
+              variant='outline'
               className={cn(
-                "text-xs px-2 py-1",
+                "px-2 py-1 text-xs",
                 getStatusColor(invoice.status)
               )}
             >
@@ -425,44 +279,64 @@ export const Table = ({ onRowClick }: { onRowClick?: (invoiceId: string) => void
             </Badge>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 ml-2">
-                  <ChevronRightIcon className="h-4 w-4" />
-                  <span className="sr-only">Open menu</span>
+                <Button variant='ghost' size='icon' className='ml-2 size-8'>
+                  <Ellipsis className='size-4' />
+                  <span className='sr-only'>Open menu</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem 
-                  onClick={() => invoicesStore.getState().handleUpdateStatus(invoice.publicId, 'draft')}
-                  disabled={invoice.status === 'draft'}
+              <DropdownMenuContent align='end'>
+                <DropdownMenuItem
+                  onClick={() =>
+                    invoicesStore
+                      .getState()
+                      .handleUpdateStatus(invoice.publicId, "draft")
+                  }
+                  disabled={invoice.status === "draft"}
                 >
                   Mark as Draft
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => invoicesStore.getState().handleUpdateStatus(invoice.publicId, 'sent')}
-                  disabled={invoice.status === 'sent'}
+                <DropdownMenuItem
+                  onClick={() =>
+                    invoicesStore
+                      .getState()
+                      .handleUpdateStatus(invoice.publicId, "sent")
+                  }
+                  disabled={invoice.status === "sent"}
                 >
-                  <Send className="mr-2 h-4 w-4" />
+                  <Send className='mr-2 size-4' />
                   Mark as Sent
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => invoicesStore.getState().handleUpdateStatus(invoice.publicId, 'paid')}
-                  disabled={invoice.status === 'paid'}
+                <DropdownMenuItem
+                  onClick={() =>
+                    invoicesStore
+                      .getState()
+                      .handleUpdateStatus(invoice.publicId, "paid")
+                  }
+                  disabled={invoice.status === "paid"}
                 >
-                  <CheckCircle className="mr-2 h-4 w-4" />
+                  <CheckCircle className='mr-2 size-4' />
                   Mark as Paid
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => invoicesStore.getState().handleUpdateStatus(invoice.publicId, 'overdue')}
-                  disabled={invoice.status === 'overdue'}
+                <DropdownMenuItem
+                  onClick={() =>
+                    invoicesStore
+                      .getState()
+                      .handleUpdateStatus(invoice.publicId, "overdue")
+                  }
+                  disabled={invoice.status === "overdue"}
                 >
-                  <AlertTriangle className="mr-2 h-4 w-4" />
+                  <AlertTriangle className='mr-2 size-4' />
                   Mark as Overdue
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => invoicesStore.getState().handleUpdateStatus(invoice.publicId, 'cancelled')}
-                  disabled={invoice.status === 'cancelled'}
+                <DropdownMenuItem
+                  onClick={() =>
+                    invoicesStore
+                      .getState()
+                      .handleUpdateStatus(invoice.publicId, "cancelled")
+                  }
+                  disabled={invoice.status === "cancelled"}
                 >
-                  <Ban className="mr-2 h-4 w-4" />
+                  <Ban className='mr-2 size-4' />
                   Mark as Cancelled
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -473,21 +347,21 @@ export const Table = ({ onRowClick }: { onRowClick?: (invoiceId: string) => void
     },
     {
       id: "actions",
-      header: ({ column }) => <TableColumnHeader column={column} title="" />,
+      header: ({ column }) => <TableColumnHeader column={column} title='' />,
       cell: ({ row }) => {
         const invoice = row.original;
         return (
-          <div className="text-right">
+          <div className='text-right'>
             <Button
-              variant="ghost"
-              size="icon"
+              variant='ghost'
+              size='icon'
               onClick={(e) => {
                 e.stopPropagation(); // Prevent row click
                 onRowClick && onRowClick(invoice.publicId);
               }}
             >
-              <ChevronRightIcon className="h-4 w-4" />
-              <span className="sr-only">View details</span>
+              <ChevronRightIcon className='size-4' />
+              <span className='sr-only'>View details</span>
             </Button>
           </div>
         );
@@ -506,18 +380,16 @@ export const Table = ({ onRowClick }: { onRowClick?: (invoiceId: string) => void
       </TableHeader>
       <TableBody>
         {({ row }) => (
-          <TableRow 
-            key={row.id} 
+          <TableRow
+            key={row.id}
             row={row}
-            className="cursor-pointer hover:bg-muted"
+            className='cursor-pointer hover:bg-muted'
             onClick={() => onRowClick && onRowClick(row.original.publicId)}
           >
-            {({ cell }) => (
-              <TableCell key={cell.id} cell={cell} />
-            )}
+            {({ cell }) => <TableCell key={cell.id} cell={cell} />}
           </TableRow>
         )}
       </TableBody>
     </TableProvider>
   );
-}; 
+};

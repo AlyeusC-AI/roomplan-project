@@ -17,10 +17,9 @@ import {
   RefreshControl,
 } from "react-native";
 import { projectsStore } from "@/lib/state/projects";
-import { supabase } from "@/lib/supabase";
 
 export default function Dashboard() {
-  const { session, setSession } = userStore((state) => state);
+  const { session } = userStore((state) => state);
 
   const [loading, setLoading] = useState(true);
   const { projects, setProjects } = projectsStore((state) => state);
@@ -36,24 +35,21 @@ export default function Dashboard() {
   }, [navigation]);
 
   useEffect(() => {
-    // supabase.auth.getSession().then(({ data: { session } }) => {
-    //   setSession(session);
-    //   fetchProjects();
-    // });
-
-    supabase.auth.setSession(session);
-
-    supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-      fetchProjects();
-    });
-  }, []);
+    // Fetch projects on initial load
+    fetchProjects();
+  }, [session]); // Re-fetch when session changes
 
   useEffect(() => {
+    // Re-fetch when search or filters change
     fetchProjects();
   }, [searchTerm, selectedUser]);
 
   function fetchProjects() {
+    if (!session) {
+      console.log('No session available, skipping fetch');
+      return;
+    }
+    
     setLoading(true);
     fetch(
       `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects?${
@@ -78,7 +74,6 @@ export default function Dashboard() {
       .catch((err) => {
         setLoading(false);
         console.error(err);
-        // router.replace("/login");
       });
   }
 

@@ -1,1 +1,1 @@
-../../../../../node_modules/react-native-ui-lib/lib/ios/reactnativeuilib/highlighterview/HighlighterViewManager.h
+../../../../../../../node_modules/react-native-ui-lib/lib/ios/reactnativeuilib/highlighterview/HighlighterViewManager.h

@@ -16,6 +16,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarMenuSubTrigger,
 } from "@/components/ui/sidebar";
 import { cn } from "@lib/utils";
 import { useState } from "react";
@@ -33,8 +34,15 @@ interface SidebarItem {
 }
 
 export function NavMain({ items }: { items: SidebarItem[] }) {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const pathname = usePathname();
+
+  const handleOpenChange = (itemTitle: string, isOpen: boolean) => {
+    setOpenItems(prev => ({
+      ...prev,
+      [itemTitle]: isOpen
+    }));
+  };
 
   return (
     <SidebarGroup>
@@ -44,16 +52,16 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
           <Collapsible
             key={item.title}
             asChild
-            defaultOpen={item.isActive}
-            onOpenChange={(isOpen) => setIsSettingsOpen(isOpen)}
-            open={isSettingsOpen || pathname.includes(item.url)}
+            defaultOpen={item.isActive || pathname.includes(item.url)}
+            onOpenChange={(isOpen) => handleOpenChange(item.title, isOpen)}
+            open={openItems[item.title] || pathname.includes(item.url)}
             className='group/collapsible'
           >
             <SidebarMenuItem>
               {item.items ? (
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton
-                    isActive={isSettingsOpen || pathname.includes(item.url)}
+                    isActive={openItems[item.title] || pathname.includes(item.url)}
                     tooltip={item.title}
                   >
                     {item.icon && <item.icon size={16} />}

@@ -36,3 +36,8 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+.yarn/
+.yarnrc
+.yarnrc.yml
+.pnp.cjs
+.pnp.loader.mjs
