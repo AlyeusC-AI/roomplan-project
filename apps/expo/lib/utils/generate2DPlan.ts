@@ -27,10 +27,129 @@ export type Room = {
     objects: Point[][];
 }
 
+const inchText = (meters: number) => {
+    const inches = Math.round(meters * 39.3701); // Convert meters to inches
+    const inchesText = `${Math.floor(inches/12)}'${inches%12}"`;
+    return inchesText;
+}
+
+function checkPointInPolygon(point: Point, polygons: Point[][]) {
+    const [px, _p, py] = point;
+    let inside = false;
+
+    for (let i = 0, j = polygons.length - 1; i < polygons.length; j = i++) {
+        const polygon = polygons[i];
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            const [xi, _q, yi] = polygon[i];
+            const [xj, _r, yj] = polygon[j];
+            const intersect = ((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+        }
+    }
+    return inside;
+}
+
+function drawWallLength(points: Point[], floors: Point[][], color = "black", width = 0.01, fill="none") {
+    const w0 = wallWidth * 3, w1 = -wallWidth * 3;
+    let minX = Math.min(...points.map(p => p[0]));
+    let maxX = Math.max(...points.map(p => p[0]));
+    let minY = Math.min(...points.map(p => p[2]));
+    let maxY = Math.max(...points.map(p => p[2]));
+
+    let mp = [minX + (maxX - minX) / 2, minY + (maxY - minY) / 2];
+
+    let length = Math.sqrt(Math.pow(maxX - minX, 2) + Math.pow(maxY - minY, 2));
+    const p0 = [minX, minY];
+    const p1 = [maxX, maxY];
+    const dx = p0[0] - p1[0];
+    const dy = p0[1] - p1[1];
+    const ux = -dy / length;
+    const uy = dx / length;
+    const fontSize = wallWidth * 2;
+
+    const p00 = [p0[0] + ux * w0, p0[1] + uy * w0];
+    const p01 = [p0[0] + ux * w1, p0[1] + uy * w1];
+    const p10 = [p1[0] + ux * w0, p1[1] + uy * w0];
+    const p11 = [p1[0] + ux * w1, p1[1] + uy * w1];
+
+    const mp0 = [mp[0] + ux * w0, mp[1] + uy * w0];
+    const mp1 = [mp[0] + ux * w1, mp[1] + uy * w1];
+
+    const p0InFloor = checkPointInPolygon([mp0[0], 0, mp0[1]], floors);
+    const p1InFloor = checkPointInPolygon([mp1[0], 0, mp1[1]], floors);
+    const xor = p0InFloor !== p1InFloor;
+
+    const inchesText = inchText(length);
+
+    const measureLine = xor ? (p1InFloor ? [p00, p10] : [p01, p11]) : [p00, p10]
+    // Draw measurement line
+    const textLength = inchesText.length * (fontSize / 1.5);
+    const dashLength = (length - textLength) / 2;
+    const lineSvg = `<line x1="${measureLine[0][0]}" y1="${measureLine[0][1]}" x2="${measureLine[1][0]}" y2="${measureLine[1][1]}" stroke-dasharray="${dashLength} ${textLength}" stroke="${color}" stroke-width="${width}" fill="${fill}" />`;
+
+    // Calculate midpoint and rotation angle
+    const midX = (measureLine[0][0] + measureLine[1][0]) / 2;
+    const midY = (measureLine[0][1] + measureLine[1][1]) / 2;
+    const angle = Math.atan2(
+        measureLine[1][1] - measureLine[0][1],
+        measureLine[1][0] - measureLine[0][0]
+    ) * (180 / Math.PI);
+
+    // Create text element
+    const textSvg = `<text x="${midX}" y="${midY}" text-anchor="middle" dominant-baseline="middle" fill="${color}" font-size="${fontSize}" transform="rotate(${angle}, ${midX}, ${midY})">${inchesText}</text>`;
+    return lineSvg + textSvg;
+}
+
+function getSmallestBoundingSquare(points: [number, number][]): { width: number, height: number } {
+    if (points.length < 3) throw new Error("A polygon requires at least 3 points");
+
+    function getRotatedPoints(points: [number, number][], angle: number): [number, number][] {
+        return points.map(([x, y]) => {
+            return [
+                x * Math.cos(angle) - y * Math.sin(angle),
+                x * Math.sin(angle) + y * Math.cos(angle)
+            ];
+        });
+    }
+    
+    function getBoundingBox(points: [number, number][]) {
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (const [x, y] of points) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+        }
+        return { width: maxX - minX, height: maxY - minY };
+    }
+    
+    let minSquareSize = Infinity;
+    let bestBoundingBox: { width: number, height: number } = {
+        width: 0,
+        height: 0
+    };
+    
+    for (let i = 0; i < points.length; i++) {
+        let p1 = points[i];
+        let p2 = points[(i + 1) % points.length];
+        let angle = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
+        let rotatedPoints = getRotatedPoints(points, -angle);
+        let { width, height } = getBoundingBox(rotatedPoints);
+        let squareSize = Math.max(width, height);
+        
+        if (squareSize < minSquareSize) {
+            minSquareSize = squareSize;
+            bestBoundingBox = { width: squareSize, height: squareSize };
+        }
+    }
+    
+    return bestBoundingBox;
+}
+
 function calculatePolygonProperties(inputPoints: Point[]) {
     if (inputPoints.length < 3) return { area: 0, centroid: null }; // Not a polygon
 
-    const points = inputPoints.map(p => [p[0], p[2]]);
+    const points: [number, number][] = inputPoints.map(p => [p[0], p[2]]);
 
     let area = 0;
     let cx = 0, cy = 0;
@@ -52,7 +171,9 @@ function calculatePolygonProperties(inputPoints: Point[]) {
     cx = cx / (6 * area);
     cy = cy / (6 * area);
 
-    return { area, centroid: { x: cx, y: cy } };
+    const boundingBox = getSmallestBoundingSquare(points);
+
+    return { area, centroid: { x: cx, y: cy }, boundingBox };
 }
 
 function rotatePointXZ(point: Point, angle: number): Point {
@@ -157,8 +278,10 @@ export function makeSVG(data: Room) {
     room.floors.forEach(floor => {
         if (floor.length) {
             svgContent += createPolyline(floor, floorColor, floorWidth, floorFill);
-            const { area, centroid } = calculatePolygonProperties(floor);
+            const { area, centroid, boundingBox } = calculatePolygonProperties(floor);
             const areaInSqFt = (area * 10.764).toFixed(1); // Convert m² to ft²
+            const widthInFeet = inchText(boundingBox?.width ?? 0);
+            const heightInFeet = inchText(boundingBox?.height ?? 0);
             if (centroid) {
                 sqftContent += `<text x="${centroid.x}" y="${centroid.y}" 
                     fill="${ftFill}" 
@@ -167,7 +290,7 @@ export function makeSVG(data: Room) {
                     text-anchor="middle" 
                     dominant-baseline="middle"
                     font-weight="bold"
-                    font-size="0.3">${areaInSqFt} ft²</text>`;
+                    font-size="0.25">${widthInFeet}&times;${heightInFeet}</text>`;
             }
         }
     });
@@ -175,7 +298,10 @@ export function makeSVG(data: Room) {
         if (object.length) svgContent += createPolyline(object, objectColor, objectWidth, objectFill);
     });
     room.walls.forEach(wall => {
-        if (wall.length) svgContent += createPolyline(wall, wallColor, wallWidth);
+        if (wall.length) {
+            svgContent += createPolyline(wall, wallColor, wallWidth);
+            svgContent += drawWallLength(wall, room.floors, wallColor, wallWidth / 5);
+        }
     });
     room.doors.forEach(door => {
         if (door.length) {
@@ -199,7 +325,7 @@ export function makeSVG(data: Room) {
             svgContent += `<line x1="${start[0]}" y1="${start[2]}" x2="${rotatedX}" y2="${rotatedZ}"
                 stroke="${doorColor}"
                 stroke-width="${wallWidth}"
-                stroke-linecap="butt"/>`;
+                stroke-linecap="square"/>`;
         }
     });
     room.windows.forEach(window => {
