@@ -159,9 +159,26 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
         name: fileName
       });
 
+      const jsonFormData = new FormData();
+      const jsonFileName = `${processedRoomId.current}.json`
+
+      // @ts-expect-error react-native form data typing issue
+      jsonFormData.append("file", {
+        uri: result.capturedRoomURL,
+        name: jsonFileName
+      })
+
       await supabaseServiceRole.storage
         .from("roomplan-usdz")
         .upload(fileName, formData, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+
+      await supabaseServiceRole.storage
+        .from("roomplan-usdz")
+        .upload(jsonFileName, jsonFormData, {
           cacheControl: "3600",
           upsert: true,
         });
@@ -265,12 +282,17 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
             resolve(result);
           }
         ));
+
+        const re = /<svg viewBox="[\d\.\-]*\s[\d\.\-]*\s([\d\.\-]*)\s([\d\.\-]*)">/
+        const [_, w, h] = processedRoomPlanSVG.current.match(re) || []
+
         const imageUrl = imagekit.url({
           src: uploadResult.url,
           transformation: [{
-            raw: 'f-png,w-1400'
+            raw: `f-png,w-${parseFloat(w) * 200},h-${parseFloat(h) * 200}`
           }]
         })
+
         Share.share({
           url: imageUrl,
         })

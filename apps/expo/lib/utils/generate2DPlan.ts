@@ -87,6 +87,8 @@ function drawWallLength(points: Point[], floors: Point[][], color = "black", wid
     const dashLength = (length - textLength) / 2;
     const lineSvg = `<line x1="${measureLine[0][0]}" y1="${measureLine[0][1]}" x2="${measureLine[1][0]}" y2="${measureLine[1][1]}" stroke-dasharray="${dashLength} ${textLength}" stroke="${color}" stroke-width="${width}" fill="${fill}" />`;
 
+    const dotSvg = `<circle cx="${measureLine[0][0]}" cy="${measureLine[0][1]}" r="${fontSize / 4}" fill="${color}" /><circle cx="${measureLine[1][0]}" cy="${measureLine[1][1]}" r="${fontSize / 4}" fill="${color}" />`;
+
     // Calculate midpoint and rotation angle
     const midX = (measureLine[0][0] + measureLine[1][0]) / 2;
     const midY = (measureLine[0][1] + measureLine[1][1]) / 2;
@@ -97,7 +99,7 @@ function drawWallLength(points: Point[], floors: Point[][], color = "black", wid
 
     // Create text element
     const textSvg = `<text x="${midX}" y="${midY}" text-anchor="middle" dominant-baseline="middle" fill="${color}" font-size="${fontSize}" transform="rotate(${angle}, ${midX}, ${midY})">${inchesText}</text>`;
-    return lineSvg + textSvg;
+    return lineSvg + textSvg + dotSvg;
 }
 
 function getSmallestBoundingSquare(points: [number, number][]): { width: number, height: number } {
@@ -135,11 +137,11 @@ function getSmallestBoundingSquare(points: [number, number][]): { width: number,
         let angle = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
         let rotatedPoints = getRotatedPoints(points, -angle);
         let { width, height } = getBoundingBox(rotatedPoints);
-        let squareSize = Math.max(width, height);
+        let squareSize = width * height;
         
         if (squareSize < minSquareSize) {
             minSquareSize = squareSize;
-            bestBoundingBox = { width: squareSize, height: squareSize };
+            bestBoundingBox = { width, height };
         }
     }
     
@@ -280,8 +282,8 @@ export function makeSVG(data: Room) {
             svgContent += createPolyline(floor, floorColor, floorWidth, floorFill);
             const { area, centroid, boundingBox } = calculatePolygonProperties(floor);
             const areaInSqFt = (area * 10.764).toFixed(1); // Convert m² to ft²
-            const widthInFeet = inchText(boundingBox?.width ?? 0);
-            const heightInFeet = inchText(boundingBox?.height ?? 0);
+            // const widthInFeet = inchText(boundingBox?.width ?? 0);
+            // const heightInFeet = inchText(boundingBox?.height ?? 0);
             if (centroid) {
                 sqftContent += `<text x="${centroid.x}" y="${centroid.y}" 
                     fill="${ftFill}" 
@@ -290,7 +292,7 @@ export function makeSVG(data: Room) {
                     text-anchor="middle" 
                     dominant-baseline="middle"
                     font-weight="bold"
-                    font-size="0.25">${widthInFeet}&times;${heightInFeet}</text>`;
+                    font-size="0.25">${areaInSqFt} ft²</text>`;
             }
         }
     });
@@ -331,9 +333,9 @@ export function makeSVG(data: Room) {
     room.windows.forEach(window => {
         if (window.length) svgContent += createPoylLineOverWall(window, windowColor, windowWidth);
     });
-    room.openings.forEach(opening => {
-        if (opening.length) svgContent += createPolyline(opening, openingColor, openingWidth);
-    });
+    // room.openings.forEach(opening => {
+    //     if (opening.length) svgContent += createPolyline(opening, openingColor, openingWidth);
+    // });
     if (sqftContent) svgContent += sqftContent;
 
     return `<svg viewBox="${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}">${svgContent}</svg>`;
