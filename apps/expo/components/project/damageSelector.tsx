@@ -25,6 +25,7 @@ interface DamageTypeSelectorProps {
   onChange: (value: DamageType) => void;
   style?: StyleProp<ViewStyle>;
   bodyStyle?: StyleProp<ViewStyle>;
+  disabled?: boolean;
 }
 
 export function DamageTypeSelector({
@@ -32,6 +33,7 @@ export function DamageTypeSelector({
   onChange,
   style,
   bodyStyle,
+  disabled = false,
 }: DamageTypeSelectorProps) {
   const [modalVisible, setModalVisible] = useState(false);
   const selectedLabel = value
@@ -44,13 +46,14 @@ export function DamageTypeSelector({
 
       <View style={styles.sectionBody}>
         <TouchableOpacity
-          style={[styles.selectorInput, style]}
-          onPress={() => setModalVisible(true)}
+          style={[styles.selectorInput, style, disabled && styles.disabledInput]}
+          onPress={() => !disabled && setModalVisible(true)}
+          disabled={disabled}
         >
-          <Text style={[styles.inputText, !value && styles.placeholderText]}>
+          <Text style={[styles.inputText, !value && styles.placeholderText, disabled && styles.disabledText]}>
             {selectedLabel}
           </Text>
-          <ChevronDown size={20} color="#1d1d1d" />
+          {!disabled && <ChevronDown size={20} color="#1d1d1d" />}
         </TouchableOpacity>
 
         <Modal
@@ -173,5 +176,12 @@ const styles = StyleSheet.create({
   selectedOptionText: {
     fontWeight: "600",
     color: "#1e40af",
+  },
+  disabledInput: {
+    backgroundColor: "#f8f8f8",
+    opacity: 0.7,
+  },
+  disabledText: {
+    color: "#666",
   },
 });

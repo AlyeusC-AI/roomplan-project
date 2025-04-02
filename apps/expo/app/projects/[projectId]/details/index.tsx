@@ -1,0 +1,596 @@
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
+  Platform,
+} from "react-native";
+import { projectStore } from "@/lib/state/project";
+import { FormInput } from "@/components/ui/form";
+import { Box, VStack, HStack, Button, Spinner } from "native-base";
+import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import { DamageTypeSelector } from "@/components/project/damageSelector";
+import { 
+  Phone, 
+  ChevronLeft, 
+  User, 
+  Mail, 
+  MapPin, 
+  Building2, 
+  ClipboardList, 
+  AlertTriangle,
+  Shield,
+  FileText,
+  PhoneCall,
+  Mail as MailIcon,
+  Hash,
+  Briefcase,
+  UserCircle,
+  Building,
+  FileCheck,
+  AlertCircle,
+  Save
+} from "lucide-react-native";
+import { Linking } from "react-native";
+import { router, useGlobalSearchParams } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { userStore } from "@/lib/state/user";
+import { toast } from "sonner-native";
+import { api } from "@/lib/api";
+
+type TabType = "customer" | "loss" | "insurance";
+
+export default function ProjectDetails() {
+  const [activeTab, setActiveTab] = useState<TabType>("customer");
+  const project = projectStore();
+  const searchParams = useGlobalSearchParams();
+  console.log("🚀 ~ ProjectDetails ~ searchParams:", searchParams)
+
+  useEffect(() => {
+
+    if (searchParams.activeTab) {
+      setActiveTab(searchParams.activeTab as TabType);
+    }
+  }, [searchParams.activeTab]);
+  const [loading, setLoading] = useState(false);
+  const [currentAddress, setCurrentAddress] = useState(project.project?.location || "");
+  const [firstTime, setFirstTime] = useState(true);
+  const [clientName, setClientName] = useState(project.project?.clientName || "");
+  const [clientPhoneNumber, setClientPhoneNumber] = useState(project.project?.clientPhoneNumber || "");
+  const [clientEmail, setClientEmail] = useState(project.project?.clientEmail || "");
+  const [damageType, setDamageType] = useState(project.project?.damageType);
+  const [projectName, setProjectName] = useState(project.project?.name || "");
+  const [managerName, setManagerName] = useState(project.project?.managerName || "");
+  const [companyName, setCompanyName] = useState(project.project?.companyName || "");
+  const [insuranceCompanyName, setInsuranceCompanyName] = useState(project.project?.insuranceCompanyName || "");
+  const [adjusterName, setAdjusterName] = useState(project.project?.adjusterName || "");
+  const [adjusterEmail, setAdjusterEmail] = useState(project.project?.adjusterEmail || "");
+  const [adjusterPhoneNumber, setAdjusterPhoneNumber] = useState(project.project?.adjusterPhoneNumber || "");
+  const [insuranceClaimId, setInsuranceClaimId] = useState(project.project?.insuranceClaimId || "");
+  const [catCode, setCatCode] = useState(Number(project.project?.catCode) || "");
+  const [claimSummary, setClaimSummary] = useState(project.project?.claimSummary || "");
+  console.log("🚀 ~ ProjectDetails ~ project:", currentAddress)
+
+  const handleCallPress = () => {
+    if (project.project?.clientPhoneNumber) {
+      Linking.openURL(`tel:${project.project.clientPhoneNumber}`);
+    }
+  };
+
+  const updateProject = async () => {
+    try {
+      setLoading(true);
+      const update = {
+        clientName,
+        clientPhoneNumber,
+        clientEmail,
+        location: currentAddress,
+        damageType,
+        name: projectName,
+        managerName,
+        companyName,
+        insuranceCompanyName,
+        adjusterName,
+        adjusterEmail,
+        adjusterPhoneNumber,
+        insuranceClaimId,
+        catCode: Number(catCode),
+        claimSummary,
+      };
+
+      const res = await api.patch   (
+        `/api/v1/projects/${project.project?.publicId}`,
+        update,
+       
+      );
+      console.log("🚀 ~ updateProject ~ res:", res.data)
+
+      if (res.status === 200) {
+        project.updateProject(update);
+        toast.success("Project updated successfully!");
+      } else {
+        toast.error("Could not update project. Please try again.");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Could not update project. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderCustomerTab = () => (
+    <VStack space={4}>
+      <View style={styles.section}>
+        <HStack space={2} alignItems="center" mb={4}>
+          <UserCircle size={24} color="#2563eb" />
+          <Text style={styles.sectionTitle}>Contact Information</Text>
+        </HStack>
+        <FormInput
+          label="Customer Name"
+          placeholder="Enter customer name"
+          value={clientName}
+          onChangeText={setClientName}
+          containerStyle={styles.inputContainer}
+          leftElement={<User size={20} color="#94a3b8" style={styles.inputIcon} />}
+        />
+        <FormInput
+          label="Phone Number"
+          placeholder="Enter phone number"
+          value={clientPhoneNumber}
+          onChangeText={setClientPhoneNumber}
+          containerStyle={styles.inputContainer}
+          leftElement={<Phone size={20} color="#94a3b8" style={styles.inputIcon} />}
+          rightElement={
+            <TouchableOpacity onPress={handleCallPress} style={styles.callButton}>
+              <HStack space={1} alignItems="center">
+                <PhoneCall size={16} color="#2563eb" />
+                <Text style={styles.callText}>Call</Text>
+              </HStack>
+            </TouchableOpacity>
+          }
+        />
+        <FormInput
+          label="Email Address"
+          placeholder="Enter email address"
+          value={clientEmail}
+          onChangeText={setClientEmail}
+          containerStyle={styles.inputContainer}
+          leftElement={<Mail size={20} color="#94a3b8" style={styles.inputIcon} />}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <HStack space={2} alignItems="center" mb={4}>
+          <MapPin size={24} color="#2563eb" />
+          <Text style={styles.sectionTitle}>Location</Text>
+        </HStack>
+        <Box style={styles.addressContainer}>
+          <GooglePlacesAutocomplete
+            placeholder="Enter your street address"
+            onPress={(data, details = null) => {
+              console.log("🚀 ~ ProjectDetails ~ details:", details)
+              if (details) {
+                setCurrentAddress(data.description);
+              }
+            }}
+            query={{
+              key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+              language: "en",
+            }}
+            textInputProps={{
+              value: currentAddress,
+              defaultValue: currentAddress,
+              onChangeText: (text) => {
+                console.log("🚀 ~ ProjectDetails ~ text:", text)
+                if (!text && firstTime) {
+                  return setFirstTime(false);
+                }
+                
+                (text ?? currentAddress)&&   setCurrentAddress(text ?? currentAddress);
+              },
+            }}
+            styles={{
+              textInputContainer: {
+                backgroundColor: "transparent",
+              },
+              textInput: {
+                height: 44,
+                fontSize: 16,
+                fontWeight: "500",
+                color: "#1d1d1d",
+                borderWidth: 1,
+                borderColor: "rgb(212, 212, 212)",
+                borderRadius: 8,
+                paddingHorizontal: 12,
+                backgroundColor: "transparent",
+              },
+              container: {
+                flex: 0,
+              },
+              listView: {
+                borderWidth: 1,
+                borderColor: "rgb(212, 212, 212)",
+                borderRadius: 8,
+                backgroundColor: "white",
+                marginTop: 4,
+              },
+              row: {
+                padding: 13,
+              },
+              description: {
+                fontSize: 14,
+                color: "#1d1d1d",
+              },
+            }}
+            enablePoweredByContainer={false}
+          />
+        </Box>
+      </View>
+    </VStack>
+  );
+
+  const renderLossTab = () => (
+    <VStack space={4}>
+      <View style={styles.section}>
+        <HStack space={2} alignItems="center" mb={4}>
+          <Building2 size={24} color="#2563eb" />
+          <Text style={styles.sectionTitle}>Project Information</Text>
+        </HStack>
+        <FormInput
+          label="Project Name"
+          placeholder="Enter project name"
+          value={projectName}
+          onChangeText={setProjectName}
+          containerStyle={styles.inputContainer}
+          leftElement={<FileText size={20} color="#94a3b8" style={styles.inputIcon} />}
+        />
+        <FormInput
+          label="Project Manager Name"
+          placeholder="Enter project manager name"
+          value={managerName}
+          onChangeText={setManagerName}
+          containerStyle={styles.inputContainer}
+          leftElement={<UserCircle size={20} color="#94a3b8" style={styles.inputIcon} />}
+        />
+        <FormInput
+          label="Company Name"
+          placeholder="Enter company name"
+          value={companyName}
+          onChangeText={setCompanyName}
+          containerStyle={styles.inputContainer}
+          leftElement={<Building size={20} color="#94a3b8" style={styles.inputIcon} />}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <HStack space={2} alignItems="center" mb={4}>
+          <AlertTriangle size={24} color="#2563eb" />
+          <Text style={styles.sectionTitle}>Loss Details</Text>
+        </HStack>
+        <Box style={styles.damageTypeContainer}>
+          <Text style={styles.label}>Type of Loss</Text>
+          <DamageTypeSelector
+            value={damageType}
+            onChange={setDamageType}
+            style={styles.sectionInput}
+          />
+        </Box>
+        <FormInput
+          label="Category Code"
+          placeholder="Enter category code"
+          value={catCode.toString()}
+          onChangeText={setCatCode}
+          keyboardType="numeric"
+          containerStyle={styles.inputContainer}
+          leftElement={<Hash size={20} color="#94a3b8" style={styles.inputIcon} />}
+        />
+        <FormInput
+          label="Claim Summary"
+          placeholder="Enter claim summary"
+          value={claimSummary}
+          onChangeText={setClaimSummary}
+          multiline
+          numberOfLines={4}
+          containerStyle={styles.inputContainer}
+          leftElement={<FileCheck size={20} color="#94a3b8" style={styles.inputIcon} />}
+        />
+      </View>
+    </VStack>
+  );
+
+  const renderInsuranceTab = () => (
+    <VStack space={4}>
+      <View style={styles.section}>
+        <HStack space={2} alignItems="center" mb={4}>
+          <Shield size={24} color="#2563eb" />
+          <Text style={styles.sectionTitle}>Insurance Information</Text>
+        </HStack>
+        <FormInput
+          label="Insurance Company Name"
+          placeholder="Enter insurance company name"
+          value={insuranceCompanyName}
+          onChangeText={setInsuranceCompanyName}
+          containerStyle={styles.inputContainer}
+          leftElement={<Building2 size={20} color="#94a3b8" style={styles.inputIcon} />}
+        />
+        <FormInput
+          label="Adjuster Name"
+          placeholder="Enter adjuster name"
+          value={adjusterName}
+          onChangeText={setAdjusterName}
+          containerStyle={styles.inputContainer}
+          leftElement={<User size={20} color="#94a3b8" style={styles.inputIcon} />}
+        />
+        <FormInput
+          label="Adjuster Email"
+          placeholder="Enter adjuster email"
+          value={adjusterEmail}
+          onChangeText={setAdjusterEmail}
+          containerStyle={styles.inputContainer}
+          leftElement={<MailIcon size={20} color="#94a3b8" style={styles.inputIcon} />}
+        />
+        <FormInput
+          label="Adjuster Number"
+          placeholder="Enter adjuster number"
+          value={adjusterPhoneNumber}
+          onChangeText={setAdjusterPhoneNumber}
+          containerStyle={styles.inputContainer}
+          leftElement={<Phone size={20} color="#94a3b8" style={styles.inputIcon} />}
+        />
+        <FormInput
+          label="Insurance Claim ID"
+          placeholder="Enter insurance claim ID"
+          value={insuranceClaimId}
+          onChangeText={setInsuranceClaimId}
+          containerStyle={styles.inputContainer}
+          leftElement={<FileText size={20} color="#94a3b8" style={styles.inputIcon} />}
+        />
+      </View>
+    </VStack>
+  );
+
+  const { top } = useSafeAreaInsets();
+
+  return (
+    <View style={[styles.container,{
+        // paddingTop: top,
+        // // backgroundColor: "#2563eb"
+    }]} >
+      <StatusBar backgroundColor="#2563eb" />
+      <View style={[styles.header,{
+        paddingTop: top,
+      }]}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <ChevronLeft size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Project Details</Text>
+        <TouchableOpacity onPress={updateProject} style={styles.saveButton}>
+          {loading ? (
+            <Spinner size="sm" color="#fff" />
+          ) : (
+            <HStack space={1} alignItems="center">
+              <Save size={20} color="#fff" />
+              <Text style={styles.saveText}>Save</Text>
+            </HStack>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "customer" && styles.activeTab]}
+          onPress={() => setActiveTab("customer")}
+        >
+          <HStack space={2} alignItems="center">
+            <UserCircle size={20} color={activeTab === "customer" ? "#1e88e5" : "#94a3b8"} />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "customer" && styles.activeTabText,
+              ]}
+            >
+              Customer
+            </Text>
+          </HStack>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "loss" && styles.activeTab]}
+          onPress={() => setActiveTab("loss")}
+        >
+          <HStack space={2} alignItems="center">
+            <AlertCircle size={20} color={activeTab === "loss" ? "#1e88e5" : "#94a3b8"} />
+            <Text
+              style={[styles.tabText, activeTab === "loss" && styles.activeTabText]}
+            >
+              Loss
+            </Text>
+          </HStack>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "insurance" && styles.activeTab]}
+          onPress={() => setActiveTab("insurance")}
+        >
+          <HStack space={2} alignItems="center">
+            <Shield size={20} color={activeTab === "insurance" ? "#1e88e5" : "#94a3b8"} />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "insurance" && styles.activeTabText,
+              ]}
+            >
+              Insurance
+            </Text>
+          </HStack>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {activeTab === "customer" && renderCustomerTab()}
+        {activeTab === "loss" && renderLossTab()}
+        {activeTab === "insurance" && renderInsuranceTab()}
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f8f8f8",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "#1e88e5",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  backButton: {
+    padding: 8,
+    marginRight: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 8,
+  },
+  saveButton: {
+    padding: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 8,
+  },
+  saveText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#fff",
+    flex: 1,
+  },
+  tabContainer: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e5e5",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: "#1e88e5",
+  },
+  tabText: {
+    fontSize: 16,
+    color: "#666",
+    fontWeight: "500",
+  },
+  activeTabText: {
+    color: "#1e88e5",
+    fontWeight: "600",
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  section: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1d1d1d",
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  inputIcon: {
+    marginHorizontal: 8,
+  },
+  label: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 8,
+    fontWeight: "500",
+  },
+  value: {
+    fontSize: 16,
+    color: "#000",
+  },
+  sectionInput: {
+    height: 44,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    fontSize: 17,
+    fontWeight: "500",
+    color: "#1d1d1d",
+    borderWidth: 1,
+    borderColor: "rgb(212, 212, 212)",
+    backgroundColor: "#f8f8f8",
+  },
+  callText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#1e88e5",
+  },
+  callButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#e6f0ff",
+  },
+  addressContainer: {
+    backgroundColor: "#f8f8f8",
+    borderRadius: 8,
+    padding: 12,
+  },
+  addressText: {
+    fontSize: 16,
+    color: "#1d1d1d",
+    lineHeight: 24,
+  },
+  damageTypeContainer: {
+    marginBottom: 16,
+  },
+});

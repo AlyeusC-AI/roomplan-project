@@ -122,7 +122,8 @@ export default function ProjectOverview() {
 
   const navigationItems = [
     {
-      path: "./edit-insurance",
+      path: "./details",
+      params: { activeTab: "insurance" },
       Icon: Cog,
       title: "Insurance Adjuster",
       description: "Manage insurance details",
@@ -140,24 +141,24 @@ export default function ProjectOverview() {
     },
  
 
-    {
-      path: "./pictures",
-      Icon: Camera,
-      title: "Photos",
-      description: "Project documentation",
-    },
-    {
-      path: "./readings",
-      Icon: Book,
-      title: "Readings",
-      description: "View measurements",
-    },
-    {
-      path: "./notes",
-      Icon: StickyNote,
-      title: "Notes",
-      description: "Project notes",
-    },
+    // {
+    //   path: "./pictures",
+    //   Icon: Camera,
+    //   title: "Photos",
+    //   description: "Project documentation",
+    // },
+    // {
+    //   path: "./readings",
+    //   Icon: Book,
+    //   title: "Readings",
+    //   description: "View measurements",
+    // },
+    // {
+    //   path: "./notes",
+    //   Icon: StickyNote,
+    //   title: "Notes",
+    //   description: "Project notes",
+    // },
     {
       Icon: ClipboardCheck,
       title: "Report",
@@ -213,7 +214,8 @@ export default function ProjectOverview() {
       <View className="px-4 pt-4 pb-2 bg-background">
         <View className="w-full flex-row justify-between items-center">
           <TouchableOpacity
-            onPress={() => setShowClientInfo(true)}
+            // onPress={() => setShowClientInfo(true)}
+            onPress={() => router.push({ pathname: "./details", params: { activeTab: "customer" } })}
             className="flex-row items-center"
           >
             <Text className="text-2xl font-bold text-foreground">
@@ -492,6 +494,7 @@ export default function ProjectOverview() {
                     key={index}
                     project={project.project}
                     path={item.path}
+                    params={item.params}
                     Icon={item.Icon}
                     title={item.title}
                     description={item.description}
@@ -506,6 +509,7 @@ export default function ProjectOverview() {
                     key={index}
                     project={project.project}
                     path={item.path}
+                    params={item.params}
                     Icon={item.Icon}
                     title={item.title}
                     description={item.description}
@@ -524,6 +528,7 @@ export default function ProjectOverview() {
 function NavigationCell({
   project,
   path,
+  params,
   Icon,
   title,
   description,
@@ -531,6 +536,7 @@ function NavigationCell({
 }: {
   project: Project | null;
   path?: string;
+  params?: { activeTab?: string };
   Icon: LucideIcon;
   title: string;
   description: string;
@@ -549,6 +555,7 @@ function NavigationCell({
           router.navigate({
             pathname: path,
             params: {
+              ...params,
               projectName: project?.clientName || "",
             },
           });
@@ -583,15 +590,18 @@ function GridCell({
   Icon,
   title,
   description,
+  params,
   onPress,
 }: {
   project: Project | null;
   path?: string;
+  params?: { activeTab?: string };
   Icon: LucideIcon;
   title: string;
   description: string;
   onPress?: () => void;
 }) {
+  console.log("🚀 ~ params:", params)
   const router = useRouter();
   return (
     <TouchableOpacity
@@ -605,6 +615,7 @@ function GridCell({
           router.navigate({
             pathname: path,
             params: {
+              ...params,
               projectName: project?.clientName || "",
             },
           });
