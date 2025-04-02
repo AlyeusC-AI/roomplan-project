@@ -14,15 +14,16 @@ interface FormInputProps extends IInputProps {
   label?: string;
   rightElement?: React.ReactElement | React.ReactElement[];
   rightElementContainerStyle?: any;
+  containerStyle?: any;
 }
 
 interface FormButtonProps extends IButtonProps {
   variant?: 'primary' | 'danger';
 }
 
-export function FormInput({ label, rightElement, rightElementContainerStyle, ...props }: FormInputProps) {
+export function FormInput({ label, rightElement, rightElementContainerStyle, containerStyle, ...props }: FormInputProps) {
   return (
-    <FormControl mb={4}>
+    <FormControl mb={4} style={containerStyle}>
       {label && (
         <HStack justifyContent="space-between" alignItems="center" mb={2}>
           <FormControl.Label>{label}</FormControl.Label>

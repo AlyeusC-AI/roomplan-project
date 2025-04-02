@@ -88,7 +88,9 @@ export default function Layout() {
                 </View>
                 {route.name === "index" && (
                   <TouchableOpacity
-                    onPress={() => router.push({ pathname: "./edit" })}
+                    // onPress={() => router.push({ pathname: "./edit" })}
+                    onPress={() => router.push({ pathname: "./details", params: { activeTab: "loss" } })}
+
                     className="bg-white/10 px-4 py-2 rounded-full"
                   >
                     <Text className="text-white font-medium">Edit</Text>
