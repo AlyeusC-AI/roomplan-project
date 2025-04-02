@@ -289,7 +289,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
         const imageUrl = imagekit.url({
           src: uploadResult.url,
           transformation: [{
-            raw: `f-png,w-${parseFloat(w) * 200},h-${parseFloat(h) * 200}`
+            raw: `f-png,w-${Math.floor(parseFloat(w) * 250)},h-${Math.floor(parseFloat(h) * 250)}`
           }]
         })
 
