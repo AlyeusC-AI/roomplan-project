@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, Image } from 'react-native';
-import { SvgXml } from 'react-native-svg';
 import { userStore } from "@/lib/state/user";
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import { roomsStore } from '@/lib/state/rooms';
 import { useGlobalSearchParams, usePathname, useRouter } from 'expo-router';
 import { WebView } from "react-native-webview";
 
-export const RoomPlanImage = ({ src }: { src: string }) => {
+export const RoomPlanImage = ({ src, onPngReady = null }:
+{ src: string, onPngReady?: ((data: string) => void) | null }) => {
   if (src.startsWith("http")) {
     return (
       <Image source={{ uri: src }} style={{ width: "100%", height: "100%" }} />
     )
   }
+
+  const re = /<svg viewBox="[\d\.\-]*\s[\d\.\-]*\s([\d\.\-]*)\s([\d\.\-]*)">/
+  let [_, w, h] = src.match(re) || []
+  w = Math.floor(parseFloat(w) * 1.5)
+  h = Math.floor(parseFloat(h) * 1.5)
+
   const htmlContent = `
     <!DOCTYPE html>
     <html lang="en">
@@ -25,16 +29,57 @@ export const RoomPlanImage = ({ src }: { src: string }) => {
             body {
               margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh;
             }
-            svg { width: 100%; height: 100%; }
+            svg, img { width: 100%; height: 100%; }
         </style>
     </head>
     <body>${src}</body>
     </html>
   `;
+
+  const script = `
+    function svgToPngBase64(width, height, callback) {
+      var svg = document.querySelector('svg');
+      var xml = new XMLSerializer().serializeToString(svg);
+      xml = xml.replace("ft²", "ft");
+      var svg64 = btoa(xml);
+      var b64Start = 'data:image/svg+xml;base64,';
+      var url = b64Start + svg64;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      const img = document.createElement('img');
+      img.width = width;
+      img.height = height;
+      img.onload = function () {
+        ctx.beginPath();
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const pngBase64 = canvas.toDataURL('image/png');
+        callback(pngBase64);
+      };
+      img.onerror=alert;
+      img.src = url;
+    }
+
+    svgToPngBase64(${w}, ${h}, (pngBase64) => {
+      window.ReactNativeWebView.postMessage(pngBase64);
+    });
+  `
+
   return (
     <WebView
       className="h-full w-full"
       source={{ html: htmlContent }}
+      javaScriptEnabled={!!onPngReady}
+      injectedJavaScript={onPngReady ? script : ''}
+      onMessage={(ev => {
+        onPngReady && onPngReady(ev.nativeEvent.data)
+      })}
     />
   )
 }

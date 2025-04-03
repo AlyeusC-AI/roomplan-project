@@ -35,6 +35,31 @@ class RoomScanModule: NSObject, RCTBridgeModule {
       "transformedRoomURL": transformedRoomURL.absoluteString
     ]])
   }
+
+  @ReactMethod
+  @objc func savePngFile(pngBase64: String, callback: RCTResponseSenderBlock) {
+    let destinationFolderURL = FileManager.default.temporaryDirectory.appending(path: "Export")
+    let destinationURL = destinationFolderURL.appending(path: "Room.png")
+
+    do {
+      try FileManager.default.createDirectory(at: destinationFolderURL, withIntermediateDirectories: true)
+
+      // Remove "data:image/png;base64," prefix if present
+      let base64String = pngBase64.replacingOccurrences(of: "data:image/png;base64,", with: "")
+
+      if let imageData = Data(base64Encoded: base64String) {
+        try imageData.write(to: destinationURL)
+        logger.info("[RoomScanModule] Successfully saved PNG to \(destinationURL)")
+        callback([["success": true, "path": destinationURL.absoluteString]])
+      } else {
+        logger.error("[RoomScanModule] Failed to decode base64 string")
+        callback([["success": false, "error": "Failed to decode base64 string"]])
+      }
+    } catch {
+      logger.error("[RoomScanModule] Error saving PNG: \(error)")
+      callback([["success": false, "error": error.localizedDescription]])
+    }
+  }
 }
 
 @ReactView
