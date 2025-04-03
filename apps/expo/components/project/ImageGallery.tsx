@@ -24,6 +24,8 @@ import {
   Trash2,
   ImageIcon,
   MessageCircle,
+  Star,
+  Loader,
 } from "lucide-react-native";
 import { Button } from "@/components/ui/button";
 import { deleteImage, getStorageUrl } from "@/lib/utils/imageModule";
@@ -43,6 +45,13 @@ interface Inference {
   isDeleted?: boolean;
   projectId?: number;
   notes?: ImageNote[];
+  Image?: {
+    id: number;
+    publicId: string;
+    isDeleted?: boolean;
+    ImageNote?: ImageNote[];
+    includeInReport?: boolean;
+  };
 }
 
 interface ImageNote {
@@ -50,6 +59,10 @@ interface ImageNote {
   body: string;
   createdAt: string;
   imageId: number;
+  User?: {
+    firstName?: string;
+    lastName?: string;
+  };
 }
 
 interface ImageGalleryProps {
@@ -64,6 +77,7 @@ interface ImageGalleryProps {
   initialSelectedKeys?: string[];
   onDelete?: (imageKey: string) => Promise<void>;
   onAddNote?: (imageId: number, note: string) => Promise<void>;
+  onToggleIncludeInReport?: (publicId: string, includeInReport: boolean) => Promise<void>;
 }
 
 export default function ImageGallery({
@@ -76,6 +90,7 @@ export default function ImageGallery({
   initialSelectedKeys = [],
   onDelete,
   onAddNote,
+  onToggleIncludeInReport,
 }: ImageGalleryProps) {
   // State for modal visibility and active image
   const [modalVisible, setModalVisible] = useState(false);
@@ -86,6 +101,7 @@ export default function ImageGallery({
   const notesSheetAnim = useRef(new Animated.Value(0)).current;
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAddingNote, setIsAddingNote] = useState(false);
+  const [isUpdatingReport, setIsUpdatingReport] = useState(false);
 
   // Refs for scrolling and input
   const modalScrollRef = useRef<FlatList>(null);
@@ -256,6 +272,27 @@ export default function ImageGallery({
     }
   };
 
+  // Add toggleIncludeInReport function
+  const handleToggleIncludeInReport = async (inference: Inference) => {
+    if (!onToggleIncludeInReport || isUpdatingReport) return;
+    
+    try {
+      setIsUpdatingReport(true);
+      await onToggleIncludeInReport(
+        inference.Image?.publicId || inference.publicId,
+        !inference.Image?.includeInReport
+      );
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } catch (error) {
+      console.error("Error updating image:", error);
+      Alert.alert("Error", "Failed to update image");
+    } finally {
+      setIsUpdatingReport(false);
+    }
+  };
+
   // Render image item in the grid
   const renderGridItem = (inference: Inference | null, index: number) => {
     if (!inference || !inference.imageKey) {
@@ -308,9 +345,7 @@ export default function ImageGallery({
     item: Inference & { imageKey: string };
     index: number;
   }) => {
-    // console.log("🚀 ~ item.Image?.ImageNote:", item.Image?.ImageNote);
     let imageUrl = safelyGetImageUrl(urlMap, item.imageKey, "");
-    console.log("🚀 ~ imageUrl:", index, imageUrl, item.imageKey, item);
     if (!imageUrl) {
       imageUrl = getStorageUrl(item.imageKey);
     }
@@ -326,15 +361,6 @@ export default function ImageGallery({
           imageKey={item.imageKey}
           showInfo={true}
           backgroundColor="#000000"
-          // showDeleteButton={true}
-          // onDelete={() => {
-          //   console.log(
-          //     "🚀 ~ renderModalItem ~ item:",
-          //     JSON.stringify(item, null, 2)
-          //   );
-          //   handleDeleteImage(item.imageKey, item.Image?.publicId || "");
-          // }}
-          onRefresh={onRefresh}
         />
 
         {/* Action Buttons */}
@@ -342,11 +368,27 @@ export default function ImageGallery({
           <TouchableOpacity
             style={[styles.actionButton, isDeleting && styles.disabledButton]}
             onPress={() =>
-              handleDeleteImage(item.imageKey, item.Image?.publicId)
+              handleDeleteImage(item.imageKey, item.Image?.publicId || "")
             }
             disabled={isDeleting}
           >
             <Trash2 size={24} color="#fff" opacity={isDeleting ? 0.5 : 1} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, isUpdatingReport && styles.disabledButton]}
+            onPress={() => handleToggleIncludeInReport(item)}
+            disabled={isUpdatingReport}
+          >
+            {isUpdatingReport ? (
+              <Loader size={24} color="#fff" />
+            ) : (
+              <Star
+                size={24}
+                color="#fff"
+                fill={item.Image?.includeInReport ? "#FBBF24" : "transparent"}
+              />
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionButton} onPress={toggleNotes}>
@@ -392,8 +434,8 @@ export default function ImageGallery({
                   <View style={styles.noteHeader}>
                     <View style={styles.noteAvatar}>
                       <Text style={styles.noteAvatarText}>
-                        {note.User?.firstName?.charAt(0) +
-                          note.User?.lastName?.charAt(0)}
+                        {note.User?.firstName?.charAt(0) || "N"} +
+                       {   note.User?.lastName?.charAt(0) || "N"}
                       </Text>
                     </View>
                     <View style={styles.noteMetadata}>
@@ -412,6 +454,7 @@ export default function ImageGallery({
 
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : "height"}
+              keyboardVerticalOffset={Platform.OS === "ios" ? 240 : 20}
               style={styles.addNoteContainer}
             >
               <TextInput
@@ -791,15 +834,15 @@ const styles = StyleSheet.create({
   },
   notesSheet: {
     position: "absolute",
-    bottom: 117, // Position above the controller
+    bottom: 70, // Position above the controller
     left: 0,
     right: 0,
     backgroundColor: "#1a1a1a",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 20,
-    paddingBottom: 20,
-    maxHeight: SCREEN_HEIGHT * 0.5,
+    paddingBottom: Platform.OS === "ios" ? 30 : 20,
+    height: SCREEN_HEIGHT * 0.6,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -881,6 +924,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     gap: 10,
+    marginBottom: Platform.OS === "ios" ? 20 : 0,
   },
   noteInput: {
     flex: 1,

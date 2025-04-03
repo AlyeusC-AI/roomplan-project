@@ -1,13 +1,19 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Image, View, StatusBar, Dimensions } from "react-native";
+import {
+  Image,
+  View,
+  StatusBar,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
 import { Camera, PhotoFile, useCameraDevice } from "react-native-vision-camera";
 import { getConstants } from "@/utils/constants";
 import RoomSelection from "@/components/RoomSelection";
 import { createClient } from "@supabase/supabase-js";
 import uuid from "react-native-uuid";
 import { userStore } from "@/lib/state/user";
-import { useGlobalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useGlobalSearchParams, useRouter } from "expo-router";
 import { roomsStore } from "@/lib/state/rooms";
 import Reanimated, {
   Extrapolate,
@@ -31,10 +37,17 @@ import {
   Camera as CameraIcon,
   Zap,
   ZapOff,
+  Upload,
+  CheckCircle2,
+  XCircle,
+  Check,
 } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
+import { uploadImage } from "@/lib/imagekit";
+import { useCameraStore } from "@/lib/state/camera";
+import { toast } from "sonner-native";
+import { api } from "@/lib/api";
 export const supabaseServiceRole = createClient(
   getConstants().supabaseUrl,
   getConstants().serviceRoleJwt
@@ -47,86 +60,249 @@ Reanimated.addWhitelistedNativeProps({
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+interface UploadItem {
+  id: string;
+  progress: number;
+  status: "idle" | "uploading" | "success" | "error";
+  message: string;
+  photo: PhotoFile;
+}
+
 export default function CameraScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const camera = useRef<Camera>(null);
   const [lastPhoto, setLastPhoto] = useState("");
-  const device = useCameraDevice("back");
+  const device = useCameraDevice("back", {
+    physicalDevices: ["wide-angle-camera"],
+  });
   const [disabled, setDisabled] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const { session: supabaseSession } = userStore((state) => state);
-  const { projectId } = useGlobalSearchParams<{
+
+  const { projectId, formId, fieldId, mode } = useGlobalSearchParams<{
     projectId: string;
+    formId?: string;
+    fieldId?: string;
+    mode?: string;
   }>();
   const rooms = roomsStore();
+  const isFormMode = mode === "form";
+  const {
+    addImage,
+    images,
+    fieldId: cameraFieldId,
+    setFieldId,
+    clearImages,
+  } = useCameraStore();
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log("Screen is focused sssss");
+
+      return () => {
+        console.log("Screen lost focussssss");
+        setTimeout(() => {
+          setFieldId(null);
+          clearImages();
+        }, 10000);
+      };
+    }, [])
+  );
+
   const zoom = useSharedValue(1);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [flash, setFlash] = useState<"off" | "on" | "auto">("auto");
   const [showZoomSlider, setShowZoomSlider] = useState(false);
 
   const [selectedRoomId, setRoomId] = useState("");
+  const [uploadQueue, setUploadQueue] = useState<UploadItem[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const refetchRooms = async () => {
+    try {
+      const roomsRes = await api.get(`/api/v1/projects/${projectId}/room`, {
+      
+      }
+    );
+
+      const roomsData = await roomsRes.data;
+      rooms.setRooms(roomsData.rooms);
+    } catch (error) {
+      console.error("Error fetching rooms:", error);
+    }
+  };
+  useEffect(() => {
+    console.log(
+      "🚀 ~ CameraScreen ~ rooms:",
+      JSON.stringify(rooms.rooms, null, 2)
+    );
+    refetchRooms();
+  }, []);
+
   const onRoomSelect = (r: string) => {
     setRoomId(r);
   };
 
-  const processImage = async (photo: PhotoFile) => {
+  // Process image uploads in the background
+  const processImageUpload = async (uploadItem: UploadItem) => {
+    console.log("🚀 ~ processImageUpload ~ uploadItem:", uploadItem);
     try {
-      setIsProcessing(true);
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      setIsUploading(true);
+      setUploadQueue((prev) =>
+        prev.map((item) =>
+          item.id === uploadItem.id
+            ? {
+                ...item,
+                status: "uploading",
+                progress: 0,
+                message: "Preparing image...",
+              }
+            : item
+        )
+      );
 
-      console.log("Setting last photo", photo.path);
-      setLastPhoto(photo.path);
-      console.log("Uploading photo");
-      const fileName = photo.path.substring(photo.path.lastIndexOf("/") + 1);
-      const supabasePath = `${user!.id}/${uuid.v4()}_${fileName}`;
+      setUploadQueue((prev) =>
+        prev.map((item) =>
+          item.id === uploadItem.id
+            ? { ...item, progress: 0.2, message: "Optimizing image..." }
+            : item
+        )
+      );
 
-      let contentType = "image/jpeg";
-      if (fileName.indexOf(".png") >= 0) {
-        contentType = "image/png";
+      // Convert PhotoFile to Blob for ImageKit upload
+   
+    
+        setUploadQueue((prev) =>
+        prev.map((item) =>
+          item.id === uploadItem.id
+            ? { ...item, progress: 0.4, message: "Uploading..." }
+            : item
+        )
+      );
+
+      // Upload to ImageKit
+      const uploadResult = await uploadImage(
+        {
+          uri: uploadItem.photo.path,
+          type: "image/jpeg",
+          name: "photo.jpg",
+        },
+        {
+          folder: isFormMode
+            ? `forms/${formId}/fields/${fieldId}`
+            : `projects/${projectId}/rooms/${selectedRoomId}`,
+          useUniqueFileName: true,
+          tags: isFormMode
+            ? [`form-${formId}`, `field-${fieldId}`]
+            : [`project-${projectId}`, `room-${selectedRoomId}`],
+        }
+      );
+
+      setUploadQueue((prev) =>
+        prev.map((item) =>
+          item.id === uploadItem.id
+            ? { ...item, progress: 0.8, message: "Finalizing..." }
+            : item
+        )
+      );
+
+      if (!isFormMode && !cameraFieldId) {
+        try {
+          // Save image reference to your backend for room photos
+         await api.post(`/api/v1/projects/${projectId}/image`, {
+            roomId: selectedRoomId,
+            imageId: uploadResult.url,
+          });
+        
+      } catch (error) {
+        console.error("Error saving image:", error);
+        toast.error("Error saving image");
       }
-
-      const p = {
-        uri: photo.path,
-        type: contentType,
-        name: fileName,
-      };
-      const formData = new FormData();
-      // @ts-expect-error maaaaan react-native sucks
-      formData.append("file", p);
-
-      const { data, error } = await supabaseServiceRole.storage
-        .from("media")
-        .upload(supabasePath, formData, {
-          cacheControl: "3600",
-          contentType,
-          upsert: false,
-        });
-
-      console.log("Uploaded photo", data, error);
-      if (data) {
-        await fetch(
-          `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/image`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "auth-token": `${supabaseSession?.access_token}`,
-            },
-            body: JSON.stringify({
-              roomId: selectedRoomId,
-              imageId: data.path,
-            }),
-          }
-        );
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsProcessing(false);
     }
+
+      setUploadQueue((prev) =>
+        prev.map((item) =>
+          item.id === uploadItem.id
+            ? {
+                ...item,
+                status: "success",
+                progress: 1,
+                message: "Upload complete!",
+              }
+            : item
+        )
+      );
+      console.log("🚀 ~ processImageUpload ~ isFormMode:", isFormMode);
+
+      // If in form mode, go back to form with the image data
+      if (isFormMode || cameraFieldId) {
+        // router.back();
+
+        addImage({
+          fieldId: fieldId as string,
+          url: uploadResult.url,
+          name: "photo.jpg",
+          type: "image/jpeg",
+          size: uploadResult.size,
+          fileId: uploadResult.fileId,
+          filePath: uploadResult.filePath,
+          // fileId: uploadResult.fileId,
+          // filePath: uploadResult.filePath,
+        });
+      }
+
+      // Set the result in Zustand store
+    } catch (error) {
+      console.error("Upload error:", error);
+      setUploadQueue((prev) =>
+        prev.map((item) =>
+          item.id === uploadItem.id
+            ? { ...item, status: "error", message: "Upload failed" }
+            : item
+        )
+      );
+    } finally {
+      // Remove the completed upload after a delay
+      setTimeout(() => {
+        setUploadQueue((prev) =>
+          prev.filter((item) => item.id !== uploadItem.id)
+        );
+        if (uploadQueue?.length === 1) {
+          setIsUploading(false);
+        }
+      }, 2000);
+    }
+  };
+
+  // Handle the upload queue
+  useEffect(() => {
+    if (uploadQueue?.length > 0) {
+      const pendingUploads = uploadQueue.filter(
+        (item) => item.status === "idle"
+      );
+      pendingUploads.forEach((uploadItem) => {
+        processImageUpload(uploadItem);
+      });
+    }
+  }, [uploadQueue]);
+
+  // Simplified function to just capture the photo and update UI immediately
+  const processImage = (photo: PhotoFile) => {
+    console.log("Setting last photo", photo.path);
+    setLastPhoto(photo.path);
+
+    // Add to upload queue to process in background
+    setUploadQueue((prev) => [
+      ...prev,
+      {
+        id: uuid.v4(),
+        progress: 0,
+        status: "idle",
+        message: "Queued",
+        photo,
+      },
+    ]);
   };
 
   const SCALE_FULL_ZOOM = 3;
@@ -237,8 +413,9 @@ export default function CameraScreen() {
 
   const takePhoto = async () => {
     if (!camera || !camera.current) return;
-    if (disabled || isProcessing) return;
+    if (disabled) return; // Remove isProcessing check to allow taking photos while uploading
     setDisabled(true);
+    setIsProcessing(true); // Show processing indicator briefly
     try {
       console.log("TAKING PICTURE");
       const photo = await camera.current.takePhoto({
@@ -250,6 +427,7 @@ export default function CameraScreen() {
       console.error("Caught error");
       console.error(error);
     }
+    setIsProcessing(false); // Hide processing indicator immediately after capture
     setDisabled(false);
   };
 
@@ -257,6 +435,10 @@ export default function CameraScreen() {
     if (flash === "off") setFlash("on");
     else if (flash === "on") setFlash("auto");
     else setFlash("off");
+  };
+
+  const handleComplete = () => {
+    router.back();
   };
 
   if (!device) {
@@ -276,7 +458,7 @@ export default function CameraScreen() {
         className="w-full h-full justify-between"
         style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
       >
-        {/* Reverted header */}
+        {/* Header */}
         <View className="py-2 bg-black px-4 flex-row justify-between items-center">
           <Pressable
             onPress={() => router.back()}
@@ -284,13 +466,15 @@ export default function CameraScreen() {
           >
             <ArrowLeft size={24} color="white" />
           </Pressable>
-          <View className="flex-1 mx-2">
-            <RoomSelection
-              rooms={rooms.rooms}
-              selectedRoom={selectedRoomId}
-              onChange={onRoomSelect}
-            />
-          </View>
+          {!isFormMode && !cameraFieldId && (
+            <View className="flex-1 mx-2">
+              <RoomSelection
+                rooms={rooms.rooms}
+                selectedRoom={selectedRoomId}
+                onChange={onRoomSelect}
+              />
+            </View>
+          )}
           <Pressable
             onPress={toggleFlash}
             className="p-2 bg-black/50 rounded-full"
@@ -316,6 +500,44 @@ export default function CameraScreen() {
               ref={camera}
               animatedProps={animatedProps}
             />
+
+            {/* Upload Queue Overlay */}
+            {/* {uploadQueue.length > 0 && (
+              <View className="absolute top-4 right-4 space-y-2">
+                {uploadQueue.map((item) => (
+                  <View
+                    key={item.id}
+                    className="bg-black/80 rounded-lg p-4 w-64"
+                  >
+                    <View className="flex-row items-center space-x-2 mb-2">
+                      {item.status === "success" ? (
+                        <CheckCircle2 size={20} color="#4CAF50" />
+                      ) : item.status === "error" ? (
+                        <XCircle size={20} color="#F44336" />
+                      ) : (
+                        <Upload size={20} color="white" />
+                      )}
+                      <Text className="text-white font-medium flex-1">
+                        {item.message}
+                      </Text>
+                      {item.status === "uploading" && (
+                        <Text className="text-white/70 text-xs">
+                          {Math.round(item.progress * 100)}%
+                        </Text>
+                      )}
+                    </View>
+                    {item.status === "uploading" && (
+                      <View className="h-1 bg-white/20 rounded-full overflow-hidden">
+                        <View
+                          className="h-full bg-white rounded-full"
+                          style={{ width: `${item.progress * 100}%` }}
+                        />
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </View>
+            )} */}
 
             {/* iOS-style zoom indicator */}
             {showZoomSlider && (
@@ -401,9 +623,9 @@ export default function CameraScreen() {
             {/* Enhanced iOS-style shutter button */}
             <Pressable
               onPress={() => takePhoto()}
-              disabled={disabled || isProcessing}
+              disabled={disabled}
               className={`w-[80px] h-[80px] rounded-full items-center justify-center ${
-                disabled || isProcessing ? "opacity-50" : ""
+                disabled ? "opacity-50" : ""
               }`}
             >
               <View className="w-[76px] h-[76px] rounded-full border-[3px] border-white bg-transparent flex items-center justify-center">
@@ -415,7 +637,14 @@ export default function CameraScreen() {
               </View>
             </Pressable>
 
-            <View className="size-16" />
+            {/* Confirm button */}
+            <TouchableOpacity
+              onPress={handleComplete}
+              className="size-16 rounded-full bg-black/50 flex items-center justify-center"
+              // disabled={isProcessing || isUploading}
+            >
+              <Check size={24} color="white" />
+            </TouchableOpacity>
           </View>
         </View>
       </View>

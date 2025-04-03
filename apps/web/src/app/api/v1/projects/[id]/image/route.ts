@@ -273,7 +273,7 @@ export async function POST(
 
     const { imageId: iId, roomId, roomName } = await req.json();
 
-    const imageId = encodeURIComponent(iId);
+    const imageId = iId.startsWith("http") ? iId : encodeURIComponent(iId);
     console.log("🚀 ~ imageId:", imageId);
 
     const projectId = await supabaseServiceRole
@@ -313,8 +313,18 @@ export async function POST(
       room = r.data!;
       console.log("🚀 ~ room:", room);
     } else {
-      const r = await supabaseServiceRole
+      const { data: existingRoom } = await supabaseServiceRole
         .from("Room")
+        .select("*")
+        .eq("projectId", projectId.data!.id)
+        .eq("name", roomName ?? "Unknown Room")
+        .single();
+
+      if (existingRoom) {
+        room = existingRoom;
+      } else {
+        const r = await supabaseServiceRole
+          .from("Room")
         .insert({
           projectId: projectId.data!.id,
           name: roomName ?? "Unknown Room",
@@ -324,12 +334,13 @@ export async function POST(
         .single();
       console.log("🚀 ~ r:", r);
       room = r.data!;
+      }
     }
 
     await supabaseServiceRole.from("Inference").insert({
       publicId: v4(),
       imageId: image.data!.id,
-      roomId: room!.id,
+        roomId: room!.id,
       imageKey: imageId,
       projectId: projectId.data!.id,
     });

@@ -16,6 +16,10 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import AddressAutoComplete from "@components/ui/address-automplete";
 import { LoadingPlaceholder } from "@components/ui/spinner";
+import { DAMAGE_TYPES, DamageType } from "@types/damage";
+import { Checkbox } from "@components/ui/checkbox";
+import { cn } from "@lib/utils";
+
 
 const CreateNewProject = ({
   open,
@@ -28,6 +32,9 @@ const CreateNewProject = ({
   const [projectLocation, setProjectLocation] = useState<AddressType | null>(
     null
   );
+  const [clientPhoneNumber, setClientPhoneNumber] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [damageType, setDamageType] = useState<DamageType | undefined>();
   const [searchInput, setSearchInput] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const { track } = useAmplitudeTrack();
@@ -49,6 +56,10 @@ const CreateNewProject = ({
         body: JSON.stringify({
           name: projectName,
           location: projectLocation,
+          clientPhoneNumber: clientPhoneNumber,
+          clientEmail: clientEmail,
+          damageType: damageType,
+
         }),
       });
       if (res.ok) {
@@ -77,7 +88,7 @@ const CreateNewProject = ({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         {isCreating ? (
           <DialogDescription>Creating project...</DialogDescription>
         ) : (
@@ -92,7 +103,7 @@ const CreateNewProject = ({
             <div className='grid gap-4 py-4'>
               <div className='grid grid-cols-4 items-center gap-4'>
                 <Label htmlFor='project-name' className='text-right'>
-                  Client Name
+                  Client Name *
                 </Label>
                 <Input
                   id='project-name'
@@ -107,8 +118,9 @@ const CreateNewProject = ({
                 <Label
                   htmlFor='project-location'
                   className='whitespace-nowrap text-right'
+                  
                 >
-                  Project Location
+                  Project Location *
                 </Label>
                 <div className='col-span-3'>
                   <AddressAutoComplete
@@ -121,7 +133,72 @@ const CreateNewProject = ({
                     placeholder='Enter address'
                   />
                 </div>
+                </div>
+
+                <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='project-name' className='text-right' 
+                
+                >
+                  Client Phone Number 
+                </Label>
+                <Input
+                  id='project-name'
+                  value={clientPhoneNumber}
+                  onChange={(e) => setClientPhoneNumber(e.target.value)}
+                  className='col-span-3'
+                  placeholder='Client Phone Number'
+                  required
+                />
               </div>
+
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='project-name' className='text-right'>
+                  Client Email
+                </Label>
+                <Input
+                  id='project-name'
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  className='col-span-3'
+                  placeholder='Client Email'
+                  required
+                />
+              </div>
+          
+                <div className="space-y-2"> 
+            <Label htmlFor="formDamageTypes" className="text-base font-medium dark:text-gray-100">Damage Types</Label>
+            <div className="flex flex-wrap gap-2">
+              {DAMAGE_TYPES.map((type) => (
+                <div
+                  key={type.value}
+                  className={cn(
+                    "flex items-center space-x-2 rounded-md border px-3 py-2 cursor-pointer transition-colors",
+                    "hover:bg-gray-100 dark:hover:bg-gray-700",
+                    damageType === type.value
+                      ? "border-primary bg-primary/5 dark:bg-primary/10"
+                      : "border-gray-200 dark:border-gray-700"
+                  )}
+                  onClick={() => setDamageType(type.value as DamageType)}
+                >
+                  <Checkbox
+                    id={`damage-type-${type.value}`}
+                      checked={damageType === type.value}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                  <Label
+                    className="text-sm font-medium cursor-pointer"
+                  >
+                    {type.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+
+
+
+
             </div>
             <DialogFooter>
               <Button

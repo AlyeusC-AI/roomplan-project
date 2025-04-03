@@ -113,15 +113,12 @@ export const GenericRoomReadingSection: React.FC<GenericRoomReadingProps> = ({
             <View className="flex-row flex-wrap gap-1.5 mt-1 mb-1">
               {reading.GenericRoomReadingImage.map(
                 (img: any, imgIndex: number) => (
-                  <Pressable
+                  <OptimizedImage
+                    uri={genericImages[img.imageKey]}
+                    style={{ width: 80, height: 80, borderRadius: 6 }}
                     key={img.imageKey}
                     onPress={() => onImagePress(imgIndex, reading.id)}
-                  >
-                    <OptimizedImage
-                      uri={genericImages[img.imageKey]}
-                      style={{ width: 80, height: 80, borderRadius: 6 }}
-                    />
-                  </Pressable>
+                  />
                 )
               )}
             </View>

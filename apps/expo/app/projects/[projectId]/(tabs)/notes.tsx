@@ -1,10 +1,16 @@
 import { Button } from "@/components/ui/button";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { format, formatDistance } from "date-fns";
-import { Alert } from "react-native";
-
-import { userStore } from "@/lib/state/user";
-import { router, useGlobalSearchParams } from "expo-router";
+import {
+  Alert,
+  Modal,
+  SafeAreaView,
+  StatusBar,
+  FlatList,
+  TouchableOpacity,
+  Platform,
+  Animated,
+} from "react-native";
 import {
   Building,
   Camera,
@@ -24,13 +30,7 @@ import {
 import { toast } from "sonner-native";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  ActivityIndicator,
-  ScrollView,
-  Image,
-  Dimensions,
-  Platform,
-} from "react-native";
+import { ActivityIndicator, ScrollView, Image, Dimensions } from "react-native";
 import Empty from "@/components/project/empty";
 import { RefreshControl, View, Pressable, StyleSheet } from "react-native";
 import { Text } from "@/components/ui/text";
@@ -52,8 +52,11 @@ import { useDebounce } from "@/utils/debounce";
 import { supabaseServiceRole } from "../camera";
 import { v4 } from "react-native-uuid/dist/v4";
 import AddRoomButton from "@/components/project/AddRoomButton";
+import { useCameraStore } from "@/lib/state/camera";
+import { userStore } from "@/lib/state/user";
+import { router, useGlobalSearchParams } from "expo-router";
 
-const { width: screenWidth } = Dimensions.get("window");
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
   noteCard: {
@@ -133,6 +136,76 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(0,0,0,0.1)",
   },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.9)",
+  },
+  modalContent: {
+    flex: 1,
+    marginTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+  },
+  modalTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  modalImageContainer: {
+    width: screenWidth,
+    height: screenHeight - 200,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  navigationContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  navButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "rgba(30, 64, 175, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  navButtonDisabled: {
+    opacity: 0.5,
+  },
+  pageIndicator: {
+    color: "#fff",
+    fontSize: 16,
+  },
+  thumbnailContainer: {
+    height: 80,
+    backgroundColor: "rgba(0,0,0,0.8)",
+  },
+  thumbnailScroll: {
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+  },
+  thumbnail: {
+    width: 60,
+    height: 60,
+    marginHorizontal: 5,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  activeThumbnail: {
+    borderWidth: 2,
+    borderColor: "#1e40af",
+  },
+  thumbnailImage: {
+    width: "100%",
+    height: "100%",
+  },
 });
 
 const SUPABASE_IMAGE_URL =
@@ -143,7 +216,9 @@ const getOptimizedImageUrl = (
   imageKey: string,
   size: "small" | "medium" | "large" = "medium"
 ): string => {
-  const baseUrl = `${SUPABASE_IMAGE_URL}/${imageKey}`;
+  const baseUrl = imageKey.startsWith("http")
+    ? imageKey
+    : `${SUPABASE_IMAGE_URL}/${imageKey}`;
 
   // For now, we're just returning the base URL, but in a real optimization
   // scenario, you might append query parameters for resizing
@@ -170,11 +245,13 @@ function OptimizedImage({
   style,
   resizeMode = "cover",
   size = "medium",
+  backgroundColor,
 }: {
   uri: string;
   style: any;
   resizeMode?: "cover" | "contain" | "stretch" | "center";
   size?: "small" | "medium" | "large";
+  backgroundColor?: string;
 }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -194,7 +271,9 @@ function OptimizedImage({
       : uri;
 
   return (
-    <View style={[{ backgroundColor: placeholderColor }, style]}>
+    <View
+      style={[{ backgroundColor: backgroundColor || placeholderColor }, style]}
+    >
       <Image
         source={{
           uri: optimizedUri,
@@ -372,6 +451,252 @@ function EditNoteModal({
   );
 }
 
+// Add new ImageGalleryModal component
+const ImageGalleryModal = ({
+  visible,
+  onClose,
+  images,
+  initialIndex,
+  onDeleteImage,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  images: any[];
+  initialIndex: number;
+  onDeleteImage: (imageKey: string) => void;
+}) => {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const modalScrollRef = useRef<FlatList>(null);
+  const thumbnailScrollRef = useRef<ScrollView>(null);
+
+  // Handle modal open
+  useEffect(() => {
+    if (visible) {
+      setCurrentIndex(initialIndex);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible, initialIndex]);
+
+  // Handle modal close
+  const handleClose = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      onClose();
+    });
+  };
+
+  // Handle scroll end
+  const handleScrollEnd = (e: any) => {
+    const contentOffset = e.nativeEvent.contentOffset;
+    const index = Math.round(contentOffset.x / screenWidth);
+    setCurrentIndex(index);
+  };
+
+  // Render image in the modal
+  const renderModalItem = ({ item }: { item: any }) => (
+    <View style={styles.modalImageContainer}>
+      <OptimizedImage
+        uri={
+          item.imageKey.startsWith("http")
+            ? item.imageKey
+            : `${SUPABASE_IMAGE_URL}/${item.imageKey}`
+        }
+        style={styles.modalImage}
+        resizeMode="contain"
+        backgroundColor="#000000"
+      />
+    </View>
+  );
+
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="none"
+      onRequestClose={handleClose}
+    >
+      <Animated.View
+        style={[
+          styles.modalContainer,
+          {
+            opacity: fadeAnim,
+            backgroundColor: "rgba(0,0,0,0.9)",
+          },
+        ]}
+      >
+        <SafeAreaView style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Pressable
+              onPress={handleClose}
+              style={styles.closeButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <X size={24} color="#fff" />
+            </Pressable>
+            <Text style={styles.modalTitle}>Image Gallery</Text>
+            {images[currentIndex] && (
+              <TouchableOpacity
+                onPress={() => {
+                  Alert.alert(
+                    "Delete Image",
+                    "Are you sure you want to delete this image?",
+                    [
+                      {
+                        text: "Cancel",
+                        style: "cancel",
+                      },
+                      {
+                        text: "Delete",
+                        style: "destructive",
+                        onPress: () => {
+                          onDeleteImage(images[currentIndex].imageKey);
+                        },
+                      },
+                    ]
+                  );
+                }}
+                style={[styles.closeButton, { right: 60 }]}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Trash size={24} color="#fff" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <FlatList
+            ref={modalScrollRef}
+            data={images}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            initialScrollIndex={currentIndex}
+            getItemLayout={(_, index) => ({
+              length: screenWidth,
+              offset: screenWidth * index,
+              index,
+            })}
+            renderItem={renderModalItem}
+            keyExtractor={(item) => item.imageKey}
+            onMomentumScrollEnd={handleScrollEnd}
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={3}
+            windowSize={3}
+            scrollEventThrottle={16}
+            decelerationRate="fast"
+          />
+
+          <View style={styles.navigationContainer}>
+            <TouchableOpacity
+              onPress={() => {
+                if (currentIndex > 0) {
+                  setCurrentIndex(currentIndex - 1);
+                  modalScrollRef.current?.scrollToIndex({
+                    index: currentIndex - 1,
+                    animated: true,
+                  });
+                }
+              }}
+              style={[
+                styles.navButton,
+                currentIndex === 0 && styles.navButtonDisabled,
+              ]}
+              disabled={currentIndex === 0}
+            >
+              <ChevronLeft
+                size={30}
+                color={currentIndex === 0 ? "#666" : "#fff"}
+              />
+            </TouchableOpacity>
+
+            <Text style={styles.pageIndicator}>
+              {currentIndex + 1} / {images.length}
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => {
+                if (currentIndex < images.length - 1) {
+                  setCurrentIndex(currentIndex + 1);
+                  modalScrollRef.current?.scrollToIndex({
+                    index: currentIndex + 1,
+                    animated: true,
+                  });
+                }
+              }}
+              style={[
+                styles.navButton,
+                currentIndex === images.length - 1 && styles.navButtonDisabled,
+              ]}
+              disabled={currentIndex === images.length - 1}
+            >
+              <ChevronRight
+                size={30}
+                color={currentIndex === images.length - 1 ? "#666" : "#fff"}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.thumbnailContainer}>
+            <ScrollView
+              ref={thumbnailScrollRef}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.thumbnailScroll}
+              scrollEventThrottle={16}
+              bounces={false}
+              decelerationRate="fast"
+              snapToInterval={70}
+              snapToAlignment="start"
+            >
+              {images.map((image, index) => (
+                <TouchableOpacity
+                  key={image.imageKey}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  onPress={() => {
+                    setCurrentIndex(index);
+                    modalScrollRef.current?.scrollToIndex({
+                      index,
+                      animated: true,
+                      viewPosition: 0.5,
+                    });
+                    thumbnailScrollRef.current?.scrollTo({
+                      x: index * 70,
+                      animated: true,
+                    });
+                  }}
+                  style={[
+                    styles.thumbnail,
+                    index === currentIndex && styles.activeThumbnail,
+                  ]}
+                >
+                  <OptimizedImage
+                    uri={
+                      image.imageKey.startsWith("http")
+                        ? image.imageKey
+                        : `${SUPABASE_IMAGE_URL}/${image.imageKey}`
+                    }
+                    style={styles.thumbnailImage}
+                    size="small"
+                    backgroundColor="#000000"
+                  />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </SafeAreaView>
+      </Animated.View>
+    </Modal>
+  );
+};
+
 function NoteCard({
   note,
   room,
@@ -389,6 +714,7 @@ function NoteCard({
   const [isDeleting, setIsDeleting] = useState(false);
   const [tempNote, setNote] = useState(note.body);
   const notes = notesStore();
+  const { setFieldId, images, clearImages, fieldId } = useCameraStore();
   const { session } = userStore((state) => state);
   const { projectId } = useGlobalSearchParams<{
     projectId: string;
@@ -411,36 +737,51 @@ function NoteCard({
 
   useSpeechRecognitionEvent("start", () => setRecognizing(true));
   useSpeechRecognitionEvent("end", () => {
-    if (noteId != note.publicId) {
-      return;
-    }
-    setRecognizing(false);
-    console.log(transcript);
-    if (!tempNote.includes(transcript)) {
-      setNote(`${tempNote}${transcript}`);
-    }
-    setTimeout(() => setTranscript(""), 1000);
-    setNoteId("");
+    setNoteId((noteId) => {
+      console.log("🚀 ~ useSpeechRecognitionEvent ~ noteId:", noteId);
+      console.log("🚀 ~ setNoteId ~ note.publicId:", note.publicId);
+
+      if (noteId != note.publicId) {
+        return noteId;
+      }
+      setRecognizing(false);
+      console.log(transcript);
+      if (!tempNote.includes(transcript)) {
+        setNote(`${tempNote} ${transcript}`);
+      }
+      setTimeout(() => setTranscript(""), 1000);
+      return "";
+    });
   });
   useSpeechRecognitionEvent("result", (event) => {
     if (noteId != note.publicId) {
       return;
     }
     setTranscript(event.results[0]?.transcript);
+
+    console.log(
+      "🚀 ~ useSpeechRecognitionEvent ~ event.results[0]?.transcript:",
+      event.results[0]?.transcript
+    );
+
     // console.log(transcript);
   });
   useSpeechRecognitionEvent("error", (event) => {
+    toast.error(event.error ?? "Error recognizing speech");
     console.log("error code:", event.error, "error message:", event.message);
   });
 
   const handleStart = async (id: string) => {
+    console.log("🚀 ~ handleStart ~ id:", id, note.publicId);
+
     if (id != note.publicId) {
       return;
     }
+    setNoteId(id);
 
     if (recognizing) {
       setRecognizing(false);
-      setNoteId("");
+      // setNoteId("");
       ExpoSpeechRecognitionModule.stop();
       return;
     }
@@ -562,10 +903,35 @@ function NoteCard({
 
   const [imageUploading, setImageUploading] = useState(false);
 
+  useEffect(() => {
+    console.log("🚀 ~ useEffect ~ images:", images);
+
+    if (images.length > 0 && note.id == fieldId) {
+      // Add to NoteImage table
+      supabaseServiceRole
+        .from("NoteImage")
+        .insert({
+          noteId: note.id,
+          imageKey: images[0].url,
+        })
+        .then(({ data, error }) => {
+          console.log("🚀 ~ .then ~ data, error:", data, error);
+
+          clearImages();
+          refreshNotes();
+        });
+    }
+  }, [images, fieldId]);
+
   /**
    * Handles taking a photo with the camera
    */
   const takePhoto = async (noteId: number, onSuccess?: () => void) => {
+    console.log("🚀 ~ takePhoto ~ noteId:", noteId);
+    setFieldId(noteId.toString());
+    router.push("../camera");
+
+    return;
     // Request camera permissions
     const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
 
@@ -578,7 +944,7 @@ function NoteCard({
       setImageUploading(true);
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
+        allowsEditing: false,
         quality: 0.8,
       });
 
@@ -646,36 +1012,26 @@ function NoteCard({
     }
   };
 
-  const handlePrevImage = () => {
-    if (note.NoteImage && selectedImageIndex !== null) {
-      setSelectedImageIndex(
-        selectedImageIndex === 0
-          ? note.NoteImage.length - 1
-          : selectedImageIndex - 1
-      );
-    }
-  };
-
-  const handleNextImage = () => {
-    if (note.NoteImage && selectedImageIndex !== null) {
-      setSelectedImageIndex(
-        selectedImageIndex === note.NoteImage.length - 1
-          ? 0
-          : selectedImageIndex + 1
-      );
-    }
-  };
-
   const deleteImage = async (imageKey: string) => {
     try {
       // Delete from storage
-      await supabaseServiceRole.storage.from("note-images").remove([imageKey]);
+      const storageResult = await supabaseServiceRole.storage
+        .from("note-images")
+        .remove([imageKey]);
+
+      if (storageResult.error) {
+        throw storageResult.error;
+      }
 
       // Delete from database
-      await supabaseServiceRole
+      const dbResult = await supabaseServiceRole
         .from("NoteImage")
         .delete()
         .eq("imageKey", imageKey);
+
+      if (dbResult.error) {
+        throw dbResult.error;
+      }
 
       // Fetch fresh data after deletion
       const notesRes = await fetch(
@@ -686,7 +1042,14 @@ function NoteCard({
           },
         }
       );
+
+      if (!notesRes.ok) {
+        throw new Error("Failed to fetch updated notes");
+      }
+
       const data = await notesRes.json();
+
+      // Update the notes state
       notes.setNotes(data.notes);
 
       // Update modal state
@@ -696,15 +1059,17 @@ function NoteCard({
           .find((n: NoteWithAudits) => n.publicId === note.publicId);
 
         if (!updatedNote?.NoteImage?.length) {
-          setSelectedImageIndex(null);
+          // If no images left, close the modal
+          handleCloseModal();
         } else if (selectedImageIndex >= updatedNote.NoteImage.length) {
+          // If current index is beyond available images, go to last image
           setSelectedImageIndex(updatedNote.NoteImage.length - 1);
         }
       }
 
       toast.success("Image deleted successfully");
     } catch (error) {
-      console.error(error);
+      console.error("Delete image error:", error);
       toast.error("Failed to delete image");
     }
   };
@@ -721,7 +1086,7 @@ function NoteCard({
           onPress: () => takePhoto(note.id, refreshNotes),
         },
         {
-          text: "Choose from Gallery (Multiple)",
+          text: "Choose from Gallery",
           onPress: () => pickMultipleImages(note.id, refreshNotes),
         },
         {
@@ -794,6 +1159,26 @@ function NoteCard({
       setImageUploading(false);
     }
   };
+
+  // Update modal close handling
+  const handleCloseModal = useCallback(() => {
+    // First animate out
+    setSelectedImageIndex(null);
+  }, []);
+
+  // Update modal open handling
+  const handleOpenModal = useCallback((index: number) => {
+    // Set the index first
+    setSelectedImageIndex(index);
+  }, []);
+
+  // Add cleanup effect
+  useEffect(() => {
+    return () => {
+      // Cleanup when component unmounts
+      setSelectedImageIndex(null);
+    };
+  }, []);
 
   return (
     <Card style={styles.noteCard} ref={noteRef}>
@@ -934,9 +1319,13 @@ function NoteCard({
       {note.NoteImage && note.NoteImage.length > 0 && (
         <View style={{ marginBottom: 16, borderRadius: 8, overflow: "hidden" }}>
           {note.NoteImage.length === 1 ? (
-            <Pressable onPress={() => setSelectedImageIndex(0)}>
+            <Pressable onPress={() => handleOpenModal(0)}>
               <OptimizedImage
-                uri={`${SUPABASE_IMAGE_URL}/${note.NoteImage[0].imageKey}`}
+                uri={
+                  note.NoteImage[0].imageKey.startsWith("http")
+                    ? note.NoteImage[0].imageKey
+                    : `${SUPABASE_IMAGE_URL}/${note.NoteImage[0].imageKey}`
+                }
                 style={{
                   ...styles.singleImage,
                   borderWidth: highlightedImageIndex === 0 ? 3 : 0,
@@ -949,21 +1338,20 @@ function NoteCard({
           ) : (
             <>
               <View style={styles.imageGrid}>
-                {/* Only show up to PREVIEW_IMAGE_COUNT images when not expanded */}
                 {(expandedImageGrid
                   ? note.NoteImage
                   : note.NoteImage.slice(0, PREVIEW_IMAGE_COUNT)
                 ).map((image, index) => (
                   <Pressable
                     key={`${note.publicId}-image-${index}`}
-                    onPress={() => setSelectedImageIndex(index)}
+                    onPress={() => handleOpenModal(index)}
                     style={{
                       width:
                         note.NoteImage?.length === 2
                           ? "50%"
                           : note.NoteImage?.length === 3 && index === 0
-                            ? "100%"
-                            : "50%",
+                          ? "100%"
+                          : "50%",
                       padding: 4,
                       transform: [
                         { scale: highlightedImageIndex === index ? 1.05 : 1 },
@@ -971,7 +1359,11 @@ function NoteCard({
                     }}
                   >
                     <OptimizedImage
-                      uri={`${SUPABASE_IMAGE_URL}/${image.imageKey}`}
+                      uri={
+                        image.imageKey.startsWith("http")
+                          ? image.imageKey
+                          : `${SUPABASE_IMAGE_URL}/${image.imageKey}`
+                      }
                       style={{
                         width: "100%",
                         height: 150,
@@ -1034,97 +1426,13 @@ function NoteCard({
         </Text>
       )}
 
-      <Dialog
-        open={selectedImageIndex !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelectedImageIndex(null);
-          }
-        }}
-      >
-        <DialogContent className="p-0 bg-black w-screen h-screen">
-          {note.NoteImage && selectedImageIndex !== null && (
-            <View style={{ flex: 1, position: "relative" }}>
-              <OptimizedImage
-                uri={`${SUPABASE_IMAGE_URL}/${note.NoteImage[selectedImageIndex].imageKey}`}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                }}
-                resizeMode="contain"
-                size="large"
-              />
-
-              {/* Close button with improved hitbox */}
-              <Pressable
-                style={styles.closeButton}
-                onPress={() => setSelectedImageIndex(null)}
-                hitSlop={{ top: 20, right: 20, bottom: 20, left: 20 }}
-              >
-                <View
-                  style={{
-                    backgroundColor: "rgba(0,0,0,0.5)",
-                    borderRadius: 20,
-                    padding: 8,
-                  }}
-                >
-                  <X color="white" size={24} />
-                </View>
-              </Pressable>
-
-              {/* Image navigation controls */}
-              {note.NoteImage.length > 1 && (
-                <View style={styles.modalControls}>
-                  <Pressable
-                    onPress={handlePrevImage}
-                    style={{
-                      padding: 10,
-                      backgroundColor: "rgba(255,255,255,0.2)",
-                      borderRadius: 20,
-                    }}
-                  >
-                    <ChevronLeft color="white" size={24} />
-                  </Pressable>
-
-                  <Text style={{ color: "white", fontSize: 16 }}>
-                    {selectedImageIndex + 1} / {note.NoteImage.length}
-                  </Text>
-
-                  <Pressable
-                    onPress={handleNextImage}
-                    style={{
-                      padding: 10,
-                      backgroundColor: "rgba(255,255,255,0.2)",
-                      borderRadius: 20,
-                    }}
-                  >
-                    <ChevronRight color="white" size={24} />
-                  </Pressable>
-                </View>
-              )}
-
-              {/* Delete button */}
-              <Pressable
-                style={{
-                  position: "absolute",
-                  top: 40,
-                  left: 16,
-                  backgroundColor: "rgba(0,0,0,0.5)",
-                  borderRadius: 20,
-                  padding: 8,
-                }}
-                onPress={() => {
-                  if (note.NoteImage && selectedImageIndex !== null) {
-                    deleteImage(note.NoteImage[selectedImageIndex].imageKey);
-                  }
-                }}
-              >
-                <Trash color="white" size={24} />
-              </Pressable>
-            </View>
-          )}
-        </DialogContent>
-      </Dialog>
+      <ImageGalleryModal
+        visible={selectedImageIndex !== null}
+        onClose={() => setSelectedImageIndex(null)}
+        images={note.NoteImage || []}
+        initialIndex={selectedImageIndex || 0}
+        onDeleteImage={deleteImage}
+      />
     </Card>
   );
 }

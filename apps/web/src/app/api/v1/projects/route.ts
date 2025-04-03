@@ -45,14 +45,16 @@ export async function GET(req: NextRequest) {
         .from("Project")
         .select("*", { count: "exact" })
         .limit(limit)
-        .range(offset * limit, (offset + 1) * limit)
+        .range(offset, offset + limit - 1)
+        .order("createdAt", { ascending: false })
         .eq("organizationId", organization.data.id);
     } else {
       projectsRaw = await supabaseServiceRole
         .from("Project")
         .select("*", { count: "exact" })
         .limit(limit)
-        .range(offset * limit, (offset + 1) * limit)
+        .order("createdAt", { ascending: false })
+        .range(offset, offset + limit - 1)
         .textSearch("name", searchText, {
           type: "phrase",
           config: "english",
@@ -126,7 +128,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const [, authUser] = await user(req);
 
-  const body: { location: AddressType; name: string } = await req.json();
+  const body: { location: AddressType; name: string; damageType: string; clientPhoneNumber: string; clientEmail: string } = await req.json();
 
   try {
     const { data } = await supabaseServiceRole
@@ -141,11 +143,14 @@ export async function POST(req: NextRequest) {
         publicId: v4(),
         name: body.name,
         clientName: body.name,
+        clientPhoneNumber: body.clientPhoneNumber,
+        clientEmail: body.clientEmail,
         location: body.location.formattedAddress,
         lat: `${body.location.lat}`,
         lng: `${body.location.lng}`,
         organizationId: data!.id,
         status: "active",
+        damageType: body.damageType,
       })
       .select("*")
       .single();

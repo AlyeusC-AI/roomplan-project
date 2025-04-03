@@ -181,9 +181,11 @@ const OutOfBoundsDay = ({ day }: OutOfBoundsDayProps) => (
 export type CalendarBodyProps = {
   features: Feature[];
   children: (props: { feature: Feature }) => ReactNode;
+  onDateSelect?: (date: Date) => void;
+  selectedDate?: Date;
 };
 
-export const CalendarBody = ({ features, children }: CalendarBodyProps) => {
+export const CalendarBody = ({ features, children, onDateSelect, selectedDate }: CalendarBodyProps) => {
   const { month, year } = useCalendar();
   const { startDay } = useContext(CalendarContext);
   const daysInMonth = getDaysInMonth(new Date(year, month, 1));
@@ -207,14 +209,19 @@ export const CalendarBody = ({ features, children }: CalendarBodyProps) => {
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
+    const currentDate = new Date(year, month, day);
     const featuresForDay = features.filter((feature) => {
-      return isSameDay(new Date(feature.endAt), new Date(year, month, day));
+      return isSameDay(new Date(feature.endAt), currentDate);
     });
 
     days.push(
       <div
         key={day}
-        className='relative flex size-full min-h-[100px] flex-col gap-1 p-1 text-xs text-muted-foreground'
+        className={cn(
+          'relative flex size-full min-h-[100px] flex-col gap-1 p-1 text-xs text-muted-foreground cursor-pointer hover:bg-accent/50',
+          selectedDate && isSameDay(currentDate, selectedDate) && 'bg-accent'
+        )}
+        onClick={() => onDateSelect?.(currentDate)}
       >
         {day}
         <div>

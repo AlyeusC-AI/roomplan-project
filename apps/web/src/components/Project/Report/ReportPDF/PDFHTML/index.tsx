@@ -1,4 +1,7 @@
 import { orgStore } from "@atoms/organization";
+import { roomStore } from "@atoms/room";
+import { reportSettingsStore } from "@atoms/report-settings";
+import Script from "next/script";
 
 import AffectedAreas from "./AffectedAreas";
 import DimensionsAndDetails from "./DimensionsAndDetails";
@@ -9,14 +12,13 @@ import PageCount from "./PageCount";
 import Readings from "./Readings";
 import TitlePage from "./TitlePage";
 import WeatherReporting from "./WeatherReporting";
-import { roomStore } from "@atoms/room";
-import Script from "next/script";
 
 import "@/styles/shared-pdf-styles.css";
 import "@/styles/unshared-pdf-styles.css";
 
 const PDFHTML = () => {
   const rooms = roomStore((state) => state.rooms);
+  const { showDimensionsAndDetails } = reportSettingsStore();
 
   return (
     <div className='flex'>
@@ -41,11 +43,16 @@ const PDFHTML = () => {
                   <h2 className='pdf room-section-title'>{room.name}</h2>
                   <OverviewPhotos room={room} />
                 </div>
-                <DimensionsAndDetails roomName={room.name} room={room} />
-                <AffectedAreas
-                  roomName={room.name}
-                  areasAffected={room.AreaAffected}
-                />
+                {showDimensionsAndDetails && (
+                  <>
+                    <DimensionsAndDetails roomName={room.name} room={room} />
+                    <AffectedAreas
+                      roomName={room.name}
+                      areasAffected={room.AreaAffected}
+                    />
+                  </>
+                )}
+            
                 <Readings room={room} roomReadings={room.RoomReading} />
                 <Notes roomName={room.name} notes={room.Notes} />
               </div>

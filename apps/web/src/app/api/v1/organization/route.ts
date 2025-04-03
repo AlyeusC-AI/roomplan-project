@@ -144,7 +144,7 @@ export async function PATCH(req: NextRequest) {
       data.accessLevel === "accountManager" ||
       userData?.accessLevel === "owner" ||
       userData?.accessLevel === "admin" ||
-      userData?.accessLevel === "accountManager";
+      userData?.accessLevel === "accountManager"||data.accessLevel==="owner";
 
     if (!isAllowed) {
       console.error("Not allowed");

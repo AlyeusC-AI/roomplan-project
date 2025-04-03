@@ -14,7 +14,23 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@components/ui/sheet";
-import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
+import {
+  CalendarIcon,
+  Check,
+  ChevronsUpDown,
+  Mail,
+  Phone,
+  MapPin,
+  Building,
+  FileText,
+  PlayCircle,
+  CheckCircle,
+  MapPin as MapPinIcon,
+  Edit,
+  Trash2,
+  ChevronRight,
+  Clock,
+} from "lucide-react";
 import { Input } from "@components/ui/input";
 import { Card } from "@components/ui/card";
 import { Button } from "@components/ui/button";
@@ -65,84 +81,54 @@ import {
   AlertDialogTitle,
 } from "@components/ui/alert-dialog";
 import { RadioGroup, RadioGroupItem } from "@components/ui/radio-group";
-
-type CalendarEvent = {
-  id: number;
-  publicId: string;
-  subject: string;
-  payload: string;
-  date: string;
-  start: string | null;
-  end: string | null;
-  dynamicId: string;
-  projectId: number | null;
-  organizationId: string | null;
-  isDeleted: boolean;
-  createdAt: string;
-  updatedAt: string;
-  remindClient: boolean;
-  remindProjectOwners: boolean;
-  reminderTime?: "24h" | "2h" | "40m";
-};
-
-const calendarEventSchema = z.object({
-  subject: z
-    .string()
-    .min(2, {
-      message: "Event subject must be at least 2 characters.",
-    })
-    .max(30, {
-      message: "Event subject must not be longer than 30 characters.",
-    }),
-  projectId: z.number().optional(),
-  payload: z
-    .string()
-    .min(2, {
-      message: "Event message must be at least 2 characters.",
-    })
-    .max(200, {
-      message: "Event message must not be longer than 200 characters.",
-    }),
-  remindProjectOwners: z.boolean().optional(),
-  remindClient: z.boolean().optional(),
-  start: z.date({
-    required_error: "Date is required",
-  }),
-  end: z.date({
-    required_error: "Date is required",
-  }),
-  reminderTime: z.enum(["24h", "2h", "40m"]).optional(),
-});
-
-type CreateEventValues = z.infer<typeof calendarEventSchema>;
+import { Badge } from "@components/ui/badge";
+import { ScrollArea } from "@components/ui/scroll-area";
+import { Separator } from "@components/ui/separator";
+import { useRouter } from "next/navigation";
+import { EventDetailsSheet } from "./event-details-sheet";
+import { EventForm } from "./event-form";
+import { EventsList } from "./events-list";
+import { calendarEventSchema, type CalendarEvent, type CreateEventValues } from "./types";
 
 export default function CalendarComponent({
   project = null,
 }: {
   project: Project | null;
 }) {
+  const router = useRouter();
   const [createPopover, setCreatePopover] = useState(false);
   const [showProjectsModal, setShowProjectsModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [projectDetails, setProjectDetails] = useState<any>(null);
+  const [mapImageUrl, setMapImageUrl] = useState<string | null>(null);
+  const [isLoadingMap, setIsLoadingMap] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [projectDetailsLoading, setProjectDetailsLoading] = useState(false);  
 
   const form = useForm<CreateEventValues>({
     resolver: zodResolver(calendarEventSchema),
     mode: "onChange",
   });
 
+  const fetchEvents = async () => {
+    const response = await fetch(`/api/v1/projects/calendar-events${project ? `?projectId=${project.id}` : ""}`);
+    const data = await response.json();
+    setEvents(data.data);
+  }
+
   useEffect(() => {
-    fetch(
-      `/api/v1/projects/calendar-events${project ? `?projectId=${project.id}` : ""}`
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-        setLoading(false);
-        setEvents(data.data);
-      });
+    fetchEvents().then(() => {
+      setLoading(false);
+    }).catch((error) => {
+      console.error("Error fetching events:", error);
+      setLoading(false);
+    });
   }, []);
 
   function getEventStatus(eventDate: Date): { status: string; color: string } {
@@ -191,11 +177,12 @@ export default function CalendarComponent({
       if (response.ok) {
         const event = await response.json();
         if (editingEvent) {
-          setEvents(
-            events.map((e) =>
-              event.publicId === editingEvent.publicId ? event : e
-            )
-          );
+          fetchEvents();
+          // setEvents(
+          //   events.map((e) =>
+          //     event.publicId === editingEvent.publicId ? event : e
+          //   )
+          // );
         } else {
           setEvents([...events, event.data]);
         }
@@ -219,27 +206,29 @@ export default function CalendarComponent({
     setIsCreating(false);
   }
 
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
   const onDelete = async () => {
     try {
       setIsDeleting(true);
+      console.log("🚀 ~ onDelete ~ editingEvent:", editingEvent)
+      const event = selectedEvent || editingEvent;
       const response = await fetch("/api/v1/projects/calendar-events", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          publicId: editingEvent?.publicId,
+          publicId: event?.publicId,
         }),
       });
 
       if (response.ok) {
         setEvents(
-          events.filter((event) => event.publicId !== editingEvent?.publicId)
+          events.filter((oldEvent) => oldEvent.publicId !== event?.publicId)
         );
         setShowProjectsModal(false);
+        setSelectedEvent(null);
+        setEditingEvent(null);
+        
         toast.success("Event deleted successfully.");
       } else {
         toast.error("Failed to delete event.");
@@ -252,6 +241,82 @@ export default function CalendarComponent({
   };
 
   const { projects } = projectsStore((state) => state);
+  console.log("🚀 ~ projects:", projects)
+
+  const getStatusColor = (status: string): string => {
+    switch (status?.toLowerCase()) {
+      case "active":
+        return "bg-green-500";
+      case "pending":
+        return "bg-yellow-500";
+      case "completed":
+        return "bg-blue-500";
+      case "cancelled":
+        return "bg-red-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
+  const handleEventClick = async (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    console.log("🚀 ~ handleEventClick ~ event:", event)
+
+    if (event.projectId) {
+      setProjectDetailsLoading(true);
+      try {
+        // const project = projects.find((p) => p.id === event.projectId);
+        // if (project) {
+        //   setProjectDetails(project);
+        //   if (project.location) {
+        //     getGoogleMapsImageUrl(project.location);
+        //   }
+        // }
+
+
+        const response = await fetch(`/api/v1/projects/${event.projectId}`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log("🚀 ~ handleEventClick ~ data:", data)
+          setProjectDetails(data.data);
+          if (data.data.location) {
+            getGoogleMapsImageUrl(data.data.location);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching project details:", error);
+      } finally {
+        setProjectDetailsLoading(false);
+      } 
+    }
+  };
+
+  const getGoogleMapsImageUrl = async (address: string) => {
+    try {
+      setIsLoadingMap(true);
+      if (projectDetails?.lat && projectDetails?.lng) {
+        const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${projectDetails.lat},${projectDetails.lng}&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C${projectDetails.lat},${projectDetails.lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+        setMapImageUrl(staticMapUrl);
+      } else {
+        const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(
+          address
+        )}&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C${encodeURIComponent(
+          address
+        )}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+        setMapImageUrl(staticMapUrl);
+      }
+    } catch (error) {
+      console.error("Error getting map image:", error);
+    } finally {
+      setIsLoadingMap(false);
+    }
+  };
+
+  const handleNotificationClick = (type: 'arrival' | 'start' | 'complete') => {
+    if (selectedEvent) {
+      router.push(`/notifications/${type}?projectId=${selectedEvent.projectId}&eventId=${selectedEvent.publicId}`);
+    }
+  };
 
   if (loading) {
     return <LoadingPlaceholder />;
@@ -259,6 +324,30 @@ export default function CalendarComponent({
 
   return (
     <div className='mb-10 flex h-screen flex-col'>
+      {/* Event Details Sheet */}
+      <EventDetailsSheet
+        event={selectedEvent}
+        projectDetails={projectDetails}
+        mapImageUrl={mapImageUrl}
+        onClose={() => setSelectedEvent(null)}
+        isLoading={projectDetailsLoading}
+        onEdit={() => {
+          setEditingEvent(selectedEvent);
+          setSelectedEvent(null);
+          setShowProjectsModal(true);
+          // form.setValue("subject", selectedEvent?.subject || "");
+          // form.setValue("payload", selectedEvent?.payload || "");
+          // form.setValue("start", selectedEvent?.start ? new Date(selectedEvent.start) : new Date());
+          // form.setValue("end", selectedEvent?.end ? new Date(selectedEvent.end) : new Date());
+          // form.setValue("remindClient", selectedEvent?.remindClient || false);
+          // form.setValue("remindProjectOwners", selectedEvent?.remindProjectOwners || false);
+          // form.setValue("reminderTime", selectedEvent?.reminderTime || null);
+
+        }}
+        onDelete={() => setConfirmDelete(true)}
+      />
+
+      {/* Create/Edit Event Sheet */}
       <Sheet
         open={showProjectsModal}
         onOpenChange={() => {
@@ -276,328 +365,20 @@ export default function CalendarComponent({
               event.
             </SheetDescription>
           </SheetHeader>
-          <Form {...form}>
-            <form className='space-y-8 pt-3'>
-              <FormField
-                control={form.control}
-                name='projectId'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Project (optional)</FormLabel>
-                    <FormControl>
-                      <Popover
-                        open={createPopover}
-                        onOpenChange={setCreatePopover}
-                        modal
-                      >
-                        <PopoverTrigger disabled={project != null} asChild>
-                          <Button
-                            variant='outline'
-                            role='combobox'
-                            aria-expanded={createPopover}
-                            className='w-full justify-between'
-                          >
-                            {(project?.publicId ?? field.value)
-                              ? projects.find(
-                                  (framework) => framework.id === field.value
-                                )?.name
-                              : "Select project..."}
-                            <ChevronsUpDown className='ml-2 size-4 shrink-0 opacity-50' />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className='w-full p-0'>
-                          <Command>
-                            <CommandInput placeholder='Search projects...' />
-                            <CommandList>
-                              <CommandEmpty>No project found.</CommandEmpty>
-                              <CommandGroup>
-                                {projects.map((project) => (
-                                  <CommandItem
-                                    key={project.publicId}
-                                    value={project.name}
-                                    onSelect={() => {
-                                      field.onChange(
-                                        project.id === field.value
-                                          ? 0
-                                          : project.id
-                                      );
-                                      setCreatePopover(false);
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        field.value === project.id
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                    {project.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </FormControl>
-                    <FormDescription>
-                      Select the project you want for your event.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='subject'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Event Subject</FormLabel>
-                    <FormControl>
-                      <Input placeholder='Event Name' {...field} />
-                    </FormControl>
-                    <FormDescription>The name of your event.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='payload'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Event Description</FormLabel>
-                    <FormControl>
-                      <Input placeholder='Event Description' {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      The description of your event.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='start'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Event Start Date</FormLabel>
-                    <FormControl>
-                      <DateTimePicker
-                        date={field.value}
-                        setDate={(date) => {
-                          field.onChange(date);
-                          // Set end date to 1 hour after start date
-                          const endDate = new Date(date);
-                          endDate.setHours(endDate.getHours() + 1);
-                          form.setValue("end", endDate);
-                        }}
-                      />
-                      {/* <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className='mr-2 size-4' />
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className='w-full p-0'>
-                          <Calendar
-                            mode='single'
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover> */}
-                    </FormControl>
-                    <FormDescription>
-                      The time you want your event to start.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='end'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Event End Date</FormLabel>
-                    <FormControl>
-                      <DateTimePicker
-                        date={field.value}
-                        setDate={(date) => {
-                          field.onChange(date);
-                        }}
-                      />
-                      {/* <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className='mr-2 size-4' />
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className='w-full p-0'>
-                          <Calendar
-                            mode='single'
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover> */}
-                    </FormControl>
-                    <FormDescription>
-                      The end time of your event
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='reminderTime'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Reminder Time</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className='flex flex-col space-y-1'
-                      >
-                        <FormItem className='flex items-center space-x-3 space-y-0'>
-                          <FormControl>
-                            <RadioGroupItem value='24h' />
-                          </FormControl>
-                          <FormLabel className='font-normal'>
-                            24 hours before
-                          </FormLabel>
-                        </FormItem>
-                        <FormItem className='flex items-center space-x-3 space-y-0'>
-                          <FormControl>
-                            <RadioGroupItem value='2h' />
-                          </FormControl>
-                          <FormLabel className='font-normal'>
-                            2 hours before
-                          </FormLabel>
-                        </FormItem>
-                        <FormItem className='flex items-center space-x-3 space-y-0'>
-                          <FormControl>
-                            <RadioGroupItem value='40m' />
-                          </FormControl>
-                          <FormLabel className='font-normal'>
-                            40 minutes before
-                          </FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormDescription>
-                      Select when you want to be reminded about the event.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormItem>
-                <FormLabel>Reminders</FormLabel>
-                <FormField
-                  control={form.control}
-                  name='remindProjectOwners'
-                  render={({ field }) => (
-                    <div className='mt-3 flex items-center space-x-2'>
-                      <Checkbox
-                        id='terms1'
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                      <div className='grid gap-1.5 leading-none'>
-                        <label
-                          htmlFor='terms1'
-                          className='text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
-                        >
-                          Remind Project Owners
-                        </label>
-                      </div>
-                    </div>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name='remindClient'
-                  render={({ field }) => (
-                    <div className='mt-3 flex items-center space-x-2'>
-                      <Checkbox
-                        id='terms1'
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                      <div className='grid gap-1.5 leading-none'>
-                        <label
-                          htmlFor='terms1'
-                          className='text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
-                        >
-                          Remind Client
-                        </label>
-                      </div>
-                    </div>
-                  )}
-                />
-
-                <FormDescription>
-                  Select who you'd like to remind about the event.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            </form>
-            <div className='mt-3 flex justify-between'>
-              {editingEvent && (
-                <Button
-                  variant='destructive'
-                  onClick={() => setConfirmDelete(true)}
-                >
-                  Delete
-                </Button>
-              )}
-              <Button
-                onClick={form.handleSubmit(onSubmit)}
-                disabled={isCreating}
-              >
-                {isCreating ? (
-                  <LoadingSpinner />
-                ) : editingEvent ? (
-                  "Update Event"
-                ) : (
-                  "Create Event"
-                )}
-              </Button>
-            </div>
-          </Form>
+          <EventForm
+            form={form}
+            onSubmit={onSubmit}
+            isCreating={isCreating}
+            editingEvent={editingEvent}
+            createPopover={createPopover}
+            setCreatePopover={setCreatePopover}
+            project={project}
+            setConfirmDelete={setConfirmDelete}
+          />
         </SheetContent>
       </Sheet>
+
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -615,12 +396,13 @@ export default function CalendarComponent({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
       <div className='my-4 lg:h-full'>
         <header className='flex items-center justify-between border-b border-gray-200 pb-4 pl-3 lg:flex-none'>
           <div className='space-y-0.5'>
             <h2 className='text-2xl font-bold tracking-tight'>Calendar</h2>
             <p className='text-muted-foreground'>
-              All calender reminders from all your projects.
+              All calendar reminders from all your projects.
             </p>
           </div>
 
@@ -632,72 +414,79 @@ export default function CalendarComponent({
             </div>
           </div>
         </header>
-        <Card className='mt-5'>
-          <CalendarProvider>
-            <CalendarDate>
-              <CalendarDatePicker>
-                <CalendarMonthPicker />
-                <CalendarYearPicker
-                  start={new Date().getFullYear()}
-                  end={new Date().getFullYear() + 1}
-                />
-              </CalendarDatePicker>
-              <CalendarDatePagination />
-            </CalendarDate>
-            <CalendarHeader />
-            <CalendarBody
-              features={events.map((event) => {
-                const start = new Date(event.start ?? event.date);
-                const end = new Date(event.end ?? event.date);
-                const status = getEventStatus(start);
-                return {
-                  id: event.publicId,
-                  name: `${event.subject} - ${start.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`,
-                  startAt: start,
-                  endAt: end,
-                  status: {
-                    id: status.status,
-                    name: status.status,
-                    color: status.color,
-                  },
-                };
-              })}
-            >
-              {({ feature }) => (
-                <CalendarItem
-                  onClick={() => {
-                    const event = events.find(
-                      (event) => event.publicId === feature.id
-                    );
 
-                    if (!event) {
-                      return;
-                    }
+        <div className="flex gap-6 mt-5 ">
+          <Card className='flex-1'>
+            <CalendarProvider>
+              <CalendarDate>
+                <CalendarDatePicker>
+                  <CalendarMonthPicker />
+                  <CalendarYearPicker
+                    start={new Date().getFullYear()}
+                    end={new Date().getFullYear() + 1}
+                  />
+                </CalendarDatePicker>
+                <CalendarDatePagination />
+              </CalendarDate>
+              <CalendarHeader />
+              <CalendarBody
+                features={events.map((event) => {
+                  const start = new Date(event.start ?? event.date);
+                  const end = new Date(event.end ?? event.date);
+                  const status = getEventStatus(start);
+                  return {
+                    id: event.publicId,
+                    name: `${event.subject} - ${start.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`,
+                    startAt: start,
+                    endAt: end,
+                    status: {
+                      id: status.status,
+                      name: status.status,
+                      color: status.color,
+                    },
+                  };
+                })}
+                onDateSelect={(date) => setSelectedDate(date)}
+                selectedDate={selectedDate}
+              >
+                {({ feature }) => (
+                  <CalendarItem
+                    onClick={() => {
+                      const event = events.find(
+                        (event) => event.publicId === feature.id
+                      );
+                      if (event) {
+                        handleEventClick(event);
+                      }
+                    }}
+                    key={feature.id}
+                    feature={feature}
+                  />
+                )}
+              </CalendarBody>
+            </CalendarProvider>
+          </Card>
 
-                    setEditingEvent(event);
-                    form.setValue("projectId", event.projectId ?? undefined);
-                    form.setValue("subject", event.subject);
-                    form.setValue("payload", event.payload);
-                    form.setValue("start", new Date(event.start ?? event.date));
-                    form.setValue("end", new Date(event.end ?? event.date));
-                    form.setValue(
-                      "remindProjectOwners",
-                      event.remindProjectOwners
-                    );
-                    form.setValue("remindClient", event.remindClient);
-                    form.setValue(
-                      "reminderTime",
-                      event.reminderTime ?? undefined
-                    );
-                    setShowProjectsModal(true);
-                  }}
-                  key={feature.id}
-                  feature={feature}
-                />
-              )}
-            </CalendarBody>
-          </CalendarProvider>
-        </Card>
+          <Card className='w-96 p-4'>
+            <EventsList
+              events={events}
+              selectedEvent={selectedEvent}
+              projects={projects}
+              onEventClick={handleEventClick}
+              onEditEvent={(event) => {
+                setEditingEvent(event);
+                setShowProjectsModal(true);
+              }}
+              onDeleteEvent={(event) => {
+                setSelectedEvent(event);
+                setConfirmDelete(true);
+              }}
+              getEventStatus={getEventStatus}
+              onCreateEvent={() => setShowProjectsModal(true)}
+              selectedDate={selectedDate}
+            />
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -2,89 +2,246 @@ import DashboardHeader from "@/unused/Header";
 import NoProjects from "@/components/dashboard/no-projects";
 import ProjectCell from "@/components/project/cell";
 import { userStore } from "@/lib/state/user";
-import { Redirect, useNavigation, useRouter } from "expo-router";
+import {
+  Redirect,
+  useNavigation,
+  useRouter,
+  useFocusEffect,
+} from "expo-router";
 import { ChevronRight, Plus } from "lucide-react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   StyleSheet,
   SafeAreaView,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   View,
   Text,
   Keyboard,
   TouchableWithoutFeedback,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { projectsStore } from "@/lib/state/projects";
+import { supabase } from "@/lib/supabase";
+// import { Platform } from "react-native";
+// import Constants from "expo-constants";
+
+// const buildNumber = Constants.expoVersion;
+
+interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  // Add other project properties as needed
+}
+
+interface ProjectsResponse {
+  projects: Project[];
+  total: number;
+}
 
 export default function Dashboard() {
-  const { session } = userStore((state) => state);
-
-  const [loading, setLoading] = useState(true);
+  // State
+  const { session, setSession } = userStore((state) => state);
   const { projects, setProjects } = projectsStore((state) => state);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
+  const limit = 100;
+  const hasMore = projects?.length < total;
+  
+  // Refs to avoid stale closures
+  const sessionRef = useRef(session);
+  const searchTermRef = useRef(searchTerm);
+  const selectedUserRef = useRef(selectedUser);
+  const pageRef = useRef(page);
+  const projectsRef = useRef(projects);
+  
+  // Update refs when values change
+  useEffect(() => {
+    sessionRef.current = session;
+    searchTermRef.current = searchTerm;
+    selectedUserRef.current = selectedUser;
+    pageRef.current = page;
+    projectsRef.current = projects;
+  }, [session, searchTerm, selectedUser, page, projects]);
 
   const router = useRouter();
-
   const navigation = useNavigation();
 
+  // Set navigation title
   useEffect(() => {
     navigation.setOptions({ headerTitle: "Dashboard" });
   }, [navigation]);
 
-  useEffect(() => {
-    // Fetch projects on initial load
-    fetchProjects();
-  }, [session]); // Re-fetch when session changes
+  // Fetch projects function that doesn't depend on state variables directly
+  const fetchProjects = useCallback(async (isLoadingMore: boolean) => {
+    // Use refs instead of state directly to avoid dependency cycles
+    const currentSession = sessionRef.current;
+    const currentSearchTerm = searchTermRef.current;
+    const currentPage = isLoadingMore ? pageRef.current : 0;
+    const currentProjects = projectsRef.current || [];
 
-  useEffect(() => {
-    // Re-fetch when search or filters change
-    fetchProjects();
-  }, [searchTerm, selectedUser]);
-
-  function fetchProjects() {
-    if (!session) {
-      console.log('No session available, skipping fetch');
+    if (loadingMore || loading) return;
+    if (!currentSession) {
+      console.log("No session available, skipping fetch");
       return;
     }
-    
-    setLoading(true);
-    fetch(
-      `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects?${
-        searchTerm.length > 0 && `query=${searchTerm}`
-      }`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "auth-token": `${session?.access_token}`,
-        },
+
+    if (isLoadingMore) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+
+    const offset = currentPage * limit;
+
+    try {
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects?${
+          currentSearchTerm.length > 0 ? `query=${currentSearchTerm}&` : ""
+        }limit=${limit}&offset=${offset}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": `${currentSession?.access_token}`,
+          },
+        }
+      );
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! Status: ${res.status}`);
       }
-    )
-      .then((res) => {
-        return res.json();
-      })
-      .then((data) => {
-        console.log(data);
+      
+      const data: ProjectsResponse = await res.json();
+
+      if (isLoadingMore) {
+        setProjects(
+          [...currentProjects, ...data.projects].reduce((acc: Project[], curr) => {
+            const existingIndex = acc.findIndex((p) => p.id === curr.id);
+            if (existingIndex !== -1) {
+              acc[existingIndex] = curr;
+            } else {
+              acc.push(curr);
+            }
+            return acc;
+          }, [] as Project[])
+        );
+      } else {
         setProjects(data.projects);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setLoading(false);
-        console.error(err);
-      });
-  }
+      }
+
+      setTotal(data.total);
+    } catch (err) {
+      console.error("Error fetching projects:", err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [loading, loadingMore, limit, setProjects]);
+
+  // Initialize Supabase and load initial data
+  useEffect(() => {
+    const initializeData = async () => {
+      if (session) {
+        try {
+          await supabase.auth.setSession(session);
+          fetchProjects(false);
+        } catch (error) {
+          console.error("Error initializing:", error);
+        }
+      }
+    };
+
+    const { data } = supabase.auth.onAuthStateChange((event, newSession) => {
+      setSession(newSession);
+      if (newSession) {
+        fetchProjects(false);
+      }
+    });
+
+    initializeData();
+
+    return () => {
+      data?.subscription.unsubscribe();
+    };
+  }, [fetchProjects, setSession]);
+
+  // Handle search and filter changes
+  useEffect(() => {
+    if (session) {
+      const timer = setTimeout(() => {
+        setPage(0);
+        fetchProjects(false);
+      }, 300);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [searchTerm, selectedUser, fetchProjects, session]);
+
+  // Focus effect to refresh data
+  useFocusEffect(
+    useCallback(() => {
+      if (projects?.length > 0 && session) {
+        fetchProjects(false);
+      }
+    }, [fetchProjects, projects?.length, session])
+  );
+
+  const resetAndFetch = useCallback(() => {
+    setPage(0);
+    fetchProjects(false);
+  }, [fetchProjects]);
+
+  const loadMore = useCallback(() => {
+    if (!loadingMore && hasMore) {
+      setPage((prev) => prev + 1);
+      fetchProjects(true);
+    }
+  }, [loadingMore, hasMore, fetchProjects]);
+
+  const renderFooter = () => {
+    if (!loadingMore || !hasMore) return null;
+    return (
+      <View style={styles.loadingMore}>
+        <ActivityIndicator size="small" color="#2563eb" />
+        <Text style={styles.loadingMoreText}>Loading more projects...</Text>
+      </View>
+    );
+  };
+
+  const renderItem = ({ item: project }: { item: Project }) => (
+    <ProjectCell project={project} />
+  );
 
   if (!session) {
     return <Redirect href="/login" />;
   }
 
-  const noProjects = projects && projects.length === 0;
-
-  if (noProjects && searchTerm.length === 0) {
+  const renderEmpty = () => {
+    if (searchTerm.length > 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>
+            No projects found matching "{searchTerm}"
+          </Text>
+        </View>
+      );
+    }
     return <NoProjects />;
+  };
+
+  if (loading && !projects?.length) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#2563eb" />
+      </View>
+    );
   }
 
   return (
@@ -96,43 +253,39 @@ export default function Dashboard() {
             selectedUser={selectedUser}
             setSelectedUser={setSelectedUser}
           />
+          {/* <Text>
+            v1.2.66 
+          </Text> */}
           <View
             style={styles.headerTitle}
             className="mt-4 flex flex-row items-center space-x-8"
           >
-            <Text className=" font-bold text-3xl mx-2">My Projects</Text>
+            <Text className="font-bold text-3xl mx-2">My Projects</Text>
             <ChevronRight color="#2563eb" />
           </View>
         </View>
 
-        <ScrollView
-          contentContainerStyle={styles.content}
+        <FlatList
+          data={projects}
+          renderItem={renderItem}
+          keyExtractor={(item) => `project-${item?.id}`}
+          contentContainerStyle={[
+            styles.content,
+            !projects?.length && styles.emptyContent,
+          ]}
           refreshControl={
-            <RefreshControl refreshing={loading} onRefresh={fetchProjects} />
+            <RefreshControl refreshing={loading} onRefresh={resetAndFetch} />
           }
-        >
-          {projects &&
-            projects.map((project, index) => {
-              return <ProjectCell project={project} key={index} />;
-            })}
-        </ScrollView>
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.3}
+          ListEmptyComponent={renderEmpty}
+          ListFooterComponent={renderFooter}
+          showsVerticalScrollIndicator={false}
+        />
+
         <TouchableOpacity
           onPress={() => router.push("/projects/new-project")}
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-            width: 60,
-            position: "absolute",
-            bottom: 20,
-            right: 15,
-            height: 60,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 3 },
-            shadowOpacity: 0.3,
-            shadowRadius: 1,
-            backgroundColor: "#1e88e5",
-            borderRadius: 100,
-          }}
+          style={styles.fabButton}
         >
           <Plus size={30} color="#fff" />
         </TouchableOpacity>
@@ -145,6 +298,23 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: 8,
     paddingHorizontal: 16,
+    paddingBottom: 20,
+    flexGrow: 1,
+  },
+  emptyContent: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 32,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#6b7280",
+    textAlign: "center",
   },
   /** Header */
   header: {
@@ -159,93 +329,30 @@ const styles = StyleSheet.create({
     color: "#1d1d1d",
     marginTop: 15,
   },
+  loadingMore: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 16,
+    gap: 8,
+  },
+  loadingMoreText: {
+    color: "#6b7280",
+    fontSize: 14,
+  },
+  fabButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 60,
+    position: "absolute",
+    bottom: 20,
+    right: 15,
+    height: 60,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 1,
+    backgroundColor: "#1e88e5",
+    borderRadius: 100,
+  },
 });
-
-// import { useEffect, useState } from "react";
-// import { Keyboard, TouchableWithoutFeedback } from "react-native";
-// import React from "react";
-// import ProjectListItem from "@/components/project/project-cell";
-// import DashboardHeader from "@/components/dashboard/Header";
-// import { userStore } from "@/utils/state/user";
-// import { useNavigation, useRouter } from "expo-router";
-// import NoProjects from "@/components/dashboard/no-projects";
-// import { Plus } from "lucide-react-native";
-
-// export default function Dashboard() {
-//   const { session: supabaseSession } = userStore((state) => state);
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const [selectedUser, setSelectedUser] = useState("");
-
-//   const router = useRouter();
-
-//   const onPress = (projectId: string, projectName: string) => {
-//     // navigation.navigate("Project", { projectName, projectId });
-//   };
-
-//   const onCreateProject = () => {
-//     // navigation.navigate("CreateProject");
-//   };
-
-//   const navigation = useNavigation();
-
-//   useEffect(() => {
-//     navigation.setOptions({ headerTitle: "Dashboard" });
-//   }, [navigation]);
-
-//   const dashboardQuery = api.mobile.getDashboardData.useQuery({
-//     page: 0,
-//     jwt: supabaseSession ? supabaseSession["access_token"] : "null",
-//     searchTerm,
-//     userIdFilter: selectedUser,
-//   });
-
-//   const noProjects =
-//     !dashboardQuery.isLoading &&
-//     dashboardQuery.data &&
-//     dashboardQuery.data.data.length === 0;
-
-//   if (dashboardQuery.data?.showOrganizationSetup) {
-//     return router.push("/org-setup");
-//   }
-
-//   if (noProjects) {
-//     return <NoProjects />;
-//   }
-
-//   return (
-//     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-//         <>
-//           <DashboardHeader
-//             isFetchingProjects={dashboardQuery.isLoading}
-//             teamMembers={dashboardQuery.data?.teamMembers || []}
-//             refetch={(s: string) => setSearchTerm(s)}
-//             selectedUser={selectedUser}
-//             setSelectedUser={setSelectedUser}
-//           />
-//           {/* <FlatList
-//             data={dashboardQuery.data?.data}
-//             keyExtractor={(item) => item.publicId}
-//             renderItem={({ item }) => (
-
-//             )}
-//             w="full"
-//             paddingX={4}
-//             refreshing={dashboardQuery.isFetching}
-//             onRefresh={dashboardQuery.refetch}
-//           /> */}
-//           <ProjectListItem
-//                 projects={dashboardQuery.data?.data ?? []}
-//                 onPress={onPress}
-//                 urlMap={dashboardQuery.data?.urlMap}
-//               />
-//           <Fab
-//             onPress={() => onCreateProject()}
-//             renderInPortal={false}
-//             shadow={2}
-//             size="sm"
-//             icon={<Plus size={26} color="white" />}
-//           />
-//         </>
-//     </TouchableWithoutFeedback>
-//   );
-// }

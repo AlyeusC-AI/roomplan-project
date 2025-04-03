@@ -20,5 +20,5 @@ const Text = React.forwardRef<TextRef, SlottableTextProps>(
   }
 );
 Text.displayName = 'Text';
-
 export { Text, TextClassContext };
+

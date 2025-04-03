@@ -21,7 +21,7 @@ import {
 import { cn } from "@lib/utils";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-
+import Link from "next/link";
 interface SidebarItem {
   title: string;
   url: string;
@@ -73,7 +73,7 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
               ) : (
-                <a href={item.url}>
+                <Link href={item.url}>
                   <div
                     data-active={pathname == item.url}
                     className={cn(
@@ -90,7 +90,7 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
                       />
                     )}
                   </div>
-                </a>
+                </Link>
               )}
               <CollapsibleContent>
                 {item.items?.map((subItem) => (
@@ -100,9 +100,9 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
                   >
                     <SidebarMenuSubItem key={subItem.title}>
                       <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
+                        <Link href={subItem.url}>
                           <span>{subItem.title}</span>
-                        </a>
+                        </Link>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   </SidebarMenuSub>

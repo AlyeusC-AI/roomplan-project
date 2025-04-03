@@ -29,7 +29,11 @@ export const getStorageUrl = (
   imageKey: string,
   bucket = STORAGE_BUCKETS.PROJECT
 ): string => {
-  return `${STORAGE_URLS[bucket]}/${imageKey}`;
+  const decodedKey = decodeURIComponent(imageKey);
+  if (decodedKey.startsWith("http")) {
+    return decodedKey;
+  }
+  return `${STORAGE_URLS[bucket]}/${decodedKey}`;
 };
 
 /**

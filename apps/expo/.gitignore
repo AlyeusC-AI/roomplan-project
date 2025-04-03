@@ -38,3 +38,7 @@ yarn-error.*
 app-example
 Pods
 build
+# Expo
+.expo
+dist/
+web-build/

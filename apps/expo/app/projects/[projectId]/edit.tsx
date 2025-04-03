@@ -168,6 +168,11 @@ import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplet
 import { toast } from "sonner-native";
 import { FormInput, FormButton } from "@/components/ui/form";
 import { Box, VStack, HStack, FormControl, Pressable } from "native-base";
+import { projectsStore } from "@/lib/state/projects";
+import {
+  DamageType,
+  DamageTypeSelector,
+} from "@/components/project/damageSelector";
 
 export default function EditProject() {
   const { session: supabaseSession } = userStore((state) => state);
@@ -175,10 +180,13 @@ export default function EditProject() {
     projectId: string;
     projectName: string;
   }>();
+
   const { address, setAddress } = addressPickerStore((state) => state);
   const [loading, setLoading] = useState(false);
   const project = projectStore();
-
+  const [damageType, setDamageType] = useState<DamageType | undefined>(
+    project.project?.damageType || undefined
+  );
   const [clientName, setClientName] = useState(
     project.project?.clientName || ""
   );
@@ -191,7 +199,12 @@ export default function EditProject() {
   const [currentAddress, setCurrentAddress] = useState(
     project.project?.location || ""
   );
-    console.log("🚀 ~ EditProject ~ project.project:",JSON.stringify({...project.project,currentAddress}, null, 2))
+  const { projects, setProjects } = projectsStore((state) => state);
+
+  console.log(
+    "🚀 ~ EditProject ~ project.project:",
+    JSON.stringify({ ...project.project, currentAddress }, null, 2)
+  );
 
   const navigation = useNavigation();
   const [firstTime, setFirstTime] = useState(true);
@@ -206,7 +219,8 @@ export default function EditProject() {
         clientEmail,
         clientName,
         clientPhoneNumber,
-      }
+        damageType,
+      };
 
       if (address) {
         update.location = address.formattedAddress;
@@ -226,6 +240,11 @@ export default function EditProject() {
       );
       setLoading(false);
       project.updateProject(update);
+      setProjects(
+        projects.map((project) =>
+          project.publicId === projectId ? { ...project, ...update } : project
+        )
+      );
       router.dismiss();
     } catch {
       toast.error(
@@ -257,7 +276,7 @@ export default function EditProject() {
       </View>
 
       <KeyboardAwareScrollView style={styles.content}>
-        <VStack >
+        <VStack>
           <FormInput
             label="Client Name"
             placeholder="Enter client name"
@@ -285,6 +304,11 @@ export default function EditProject() {
                 </HStack>
               </Pressable>
             }
+          />
+          <DamageTypeSelector
+            value={damageType}
+            onChange={setDamageType}
+            style={styles.sectionInput}
           />
 
           <Box>
@@ -318,12 +342,13 @@ export default function EditProject() {
                 textInputProps={{
                   // defaultValue: currentAddress,
                   value: currentAddress,
-                  onChangeText: (text) =>{
-                    console.log("🚀 ~ EditProject ~ text:", text)
-                    if(!text && firstTime){
-                      return setFirstTime(false)
+                  onChangeText: (text) => {
+                    console.log("🚀 ~ EditProject ~ text:", text);
+                    if (!text && firstTime) {
+                      return setFirstTime(false);
                     }
-                    setCurrentAddress(text??currentAddress)},
+                    setCurrentAddress(text ?? currentAddress);
+                  },
                 }}
                 styles={{
                   textInputContainer: {
@@ -356,7 +381,7 @@ export default function EditProject() {
                   description: {
                     fontSize: 14,
                     color: "#1d1d1d",
-                  }
+                  },
                 }}
                 enablePoweredByContainer={false}
               />
@@ -427,7 +452,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   sectionInput: {
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     height: 44,
     paddingHorizontal: 16,
     borderRadius: 12,

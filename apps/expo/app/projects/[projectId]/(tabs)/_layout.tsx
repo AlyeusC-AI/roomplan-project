@@ -6,6 +6,7 @@ import {
   House,
   Images,
   StickyNote,
+  ClipboardList,
 } from "lucide-react-native";
 import { router, Tabs, useGlobalSearchParams } from "expo-router";
 import {
@@ -37,7 +38,6 @@ export default function Layout() {
       .then((res) => res.json())
       .then((data) => {
         setLoading(false);
-        console.log(data);
         project.setProject(data.data);
         console.log("Project fetched");
       });
@@ -111,6 +111,9 @@ export default function Layout() {
           if (route.name === "notes") {
             return <StickyNote size={24} color={color} />;
           }
+          if (route.name === "forms") {
+            return <ClipboardList size={24} color={color} />;
+          }
           return null;
         },
       })}
@@ -139,6 +142,14 @@ export default function Layout() {
         options={{
           title: "Notes",
         }}
+      />
+      <Tabs.Screen
+        name="forms"
+        options={{
+          title: "Forms",
+          href: null,
+        }}
+
       />
     </Tabs>
   );

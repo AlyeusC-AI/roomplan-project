@@ -32,8 +32,6 @@ export function useRoomReadingState(
   // Basic component state
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
   const [date, setDate] = useState(new Date(reading.date));
 
   // Wall and floor name state
@@ -52,6 +50,8 @@ export function useRoomReadingState(
   >(room.extendedWalls || []);
 
   useEffect(() => {
+    if (isCollapsed) return;
+
     if (room) {
       // Only update if values have actually changed
       if (wallName !== (room.wallName || "")) {
@@ -73,17 +73,18 @@ export function useRoomReadingState(
         setExtendedWallsStructure(room.extendedWalls || []);
       }
     }
-  }, [room]);
+  }, [room, isCollapsed]);
 
   // Separate effect for extendedWalls since it depends on typedReading
   useEffect(() => {
+    if (isCollapsed) return;
     if (
       JSON.stringify(extendedWalls) !==
       JSON.stringify(typedReading.extendedWalls || [])
     ) {
       setExtendedWalls(typedReading.extendedWalls || []);
     }
-  }, [typedReading.extendedWalls]);
+  }, [typedReading.extendedWalls, isCollapsed]);
 
   // Extended walls state
   const [extendedWalls, setExtendedWalls] = useState<ExtendedWallItem[]>(
@@ -125,44 +126,6 @@ export function useRoomReadingState(
     (img) => img.type === "floor"
   );
 
-  // Define the updateRoomReading function to access projectId and other variables
-  async function updateRoomReading(
-    readingId: string,
-    type: ReadingType,
-    data:
-      | (Database["public"]["Tables"]["RoomReading"]["Update"] & {
-          wallName?: string;
-          floorName?: string;
-          extendedWalls?: ExtendedWallItem[];
-        })
-      | Database["public"]["Tables"]["GenericRoomReading"]["Update"]
-  ) {
-    try {
-      await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/readings`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": supabaseSession?.access_token || "",
-          },
-          body: JSON.stringify({
-            readingData: data,
-            readingId,
-            type,
-          }),
-        }
-      );
-
-      if (type === "standard") {
-        // Use type assertion for the data
-        rooms.updateRoomReading(room.id, reading.id, data as any);
-      }
-    } catch {
-      toast.error("Could not update reading");
-    }
-  }
-
   async function updateRoom(
     data: Database["public"]["Tables"]["Room"]["Update"]
   ) {
@@ -193,31 +156,6 @@ export function useRoomReadingState(
     }
   }
 
-  const deleteReading = async (readingId: string, type: ReadingType) => {
-    try {
-      setIsDeleting(true);
-      await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/readings`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": supabaseSession?.access_token || "",
-          },
-          body: JSON.stringify({
-            type,
-            readingId,
-          }),
-        }
-      );
-      rooms.removeReading(room.id, reading.id);
-    } catch {
-      toast.error("Could not delete reading");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
   // Load images when reading changes
   useEffect(() => {
     if (isCollapsed) return;
@@ -235,15 +173,12 @@ export function useRoomReadingState(
           .from("readings-images")
           .createSignedUrls(imageKeys || [], 3600);
 
-        const urlMap = urlData?.reduce(
-          (acc, curr) => {
-            if (curr.path && curr.signedUrl) {
-              acc[curr.path] = curr.signedUrl;
-            }
-            return acc;
-          },
-          {} as { [key: string]: string }
-        );
+        const urlMap = urlData?.reduce((acc, curr) => {
+          if (curr.path && curr.signedUrl) {
+            acc[curr.path] = curr.signedUrl;
+          }
+          return acc;
+        }, {} as { [key: string]: string });
         console.log("🚀 ~ loadRoomImages ~ urlMap:", urlMap);
 
         setRoomImages(urlMap || {});
@@ -282,32 +217,61 @@ export function useRoomReadingState(
           .from("readings-images")
           .createSignedUrls(imageKeys, 3600);
 
-        const urlMap = urlData?.reduce(
-          (acc, curr) => {
-            if (curr.path && curr.signedUrl) {
-              acc[curr.path] = curr.signedUrl;
-            }
-            return acc;
-          },
-          {} as { [key: string]: string }
-        );
+        const urlMap = urlData?.reduce((acc, curr) => {
+          if (curr.path && curr.signedUrl) {
+            acc[curr.path] = curr.signedUrl;
+          }
+          return acc;
+        }, {} as { [key: string]: string });
 
         setGenericImages(urlMap || {});
       };
       loadGenericImages();
     }
   }, [reading, isCollapsed]);
+  // Define the updateRoomReading function to access projectId and other variables
+  async function updateRoomReading(
+    readingId: string,
+    type: ReadingType,
+    data:
+      | (Database["public"]["Tables"]["RoomReading"]["Update"] & {
+          wallName?: string;
+          floorName?: string;
+          extendedWalls?: ExtendedWallItem[];
+        })
+      | Database["public"]["Tables"]["GenericRoomReading"]["Update"]
+  ) {
+    try {
+      await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/readings`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "auth-token": supabaseSession?.access_token || "",
+          },
+          body: JSON.stringify({
+            readingData: data,
+            readingId,
+            type,
+          }),
+        }
+      );
 
+      if (type === "standard") {
+        // Use type assertion for the data
+        rooms.updateRoomReading(room.id, reading.id, data as any);
+      }
+    } catch {
+      toast.error("Could not update reading");
+    }
+  }
   return {
     // Basic state
     isCollapsed,
     setIsCollapsed,
     showDatePicker,
     setShowDatePicker,
-    isDeleting,
-    setIsDeleting,
-    isAdding,
-    setIsAdding,
     date,
     setDate,
     updateRoom,
@@ -328,7 +292,6 @@ export function useRoomReadingState(
     setIsUpdatingWallName,
     isUpdatingFloorName,
     setIsUpdatingFloorName,
-
     // Extended walls state
     extendedWalls,
     setExtendedWalls,
@@ -353,11 +316,7 @@ export function useRoomReadingState(
     extendedWallImages,
     wallImages,
     floorImages,
-
-    // Functions
     updateRoomReading,
-    deleteReading,
-
     // Store access
     supabaseSession,
     rooms,

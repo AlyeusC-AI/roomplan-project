@@ -12,7 +12,22 @@ import {
   ActivityIndicator,
   Animated,
 } from "react-native";
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, Clock, Trash2, Edit, Building, User, FileText, PlayCircle, CheckCircle } from "lucide-react-native";
+import {
+  ArrowLeft,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  Clock,
+  Trash2,
+  Edit,
+  Building,
+  User,
+  FileText,
+  PlayCircle,
+  CheckCircle,
+  ChevronRight,
+} from "lucide-react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { userStore } from "@/lib/state/user";
 import dayjs from "dayjs";
@@ -51,7 +66,9 @@ export default function EventDetailsScreen() {
   const { session: supabaseSession } = userStore((state) => state);
   const [mapImageUrl, setMapImageUrl] = useState<string | null>(null);
   const [isLoadingMap, setIsLoadingMap] = useState(false);
-  const [projectDetails, setProjectDetails] = useState<ProjectDetails | null>(null);
+  const [projectDetails, setProjectDetails] = useState<ProjectDetails | null>(
+    null
+  );
   const [isLoadingProject, setIsLoadingProject] = useState(false);
   const arrivalScale = useRef(new Animated.Value(1)).current;
   const startScale = useRef(new Animated.Value(1)).current;
@@ -65,21 +82,36 @@ export default function EventDetailsScreen() {
   const start = params.start as string;
   const end = params.end as string;
   const projectId = params.projectId ? Number(params.projectId) : null;
-  
+
   // Format date and time for display
   const eventDate = start ? new Date(start) : new Date(date);
   const eventEndDate = end ? new Date(end) : null;
-  const formattedDate = eventDate.toLocaleDateString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  const formattedStartTime = eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const formattedEndTime = eventEndDate ? eventEndDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
-  const timeDisplay = formattedEndTime ? `${formattedStartTime} to ${formattedEndTime}` : formattedStartTime;
-  
+  const formattedDate = eventDate.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const formattedStartTime = eventDate.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const formattedEndTime = eventEndDate
+    ? eventEndDate.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
+  const timeDisplay = formattedEndTime
+    ? `${formattedStartTime} to ${formattedEndTime}`
+    : formattedStartTime;
+
   // Get project details if available
-  const project = projectId ? projects.find(p => p.id === projectId) : null;
+  const project = projectId ? projects.find((p) => p.id === projectId) : null;
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
-    
+
     // Fetch project details if we have a projectId
     if (projectId) {
       fetchProjectDetails();
@@ -88,16 +120,19 @@ export default function EventDetailsScreen() {
 
   useEffect(() => {
     // Get map image if we have a location from project details
-    if (projectDetails?.location && process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY) {
+    if (
+      projectDetails?.location &&
+      process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+    ) {
       getGoogleMapsImageUrl(projectDetails.location);
     }
   }, [projectDetails]);
 
   const fetchProjectDetails = async () => {
-    console.log("🚀 ~ fetchProjectDetails ~ projectId:", projectId)
+    console.log("🚀 ~ fetchProjectDetails ~ projectId:", projectId);
 
     if (!project?.publicId) return;
-    
+
     try {
       setIsLoadingProject(true);
       const response = await fetch(
@@ -110,7 +145,7 @@ export default function EventDetailsScreen() {
           },
         }
       );
-      
+
       if (response.ok) {
         const data = await response.json();
         setProjectDetails(data.data);
@@ -127,14 +162,18 @@ export default function EventDetailsScreen() {
   const getGoogleMapsImageUrl = async (address: string) => {
     try {
       setIsLoadingMap(true);
-      
+
       // If we have lat/lng in project details, use those directly
       if (projectDetails?.lat && projectDetails?.lng) {
         const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${projectDetails.lat},${projectDetails.lng}&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C${projectDetails.lat},${projectDetails.lng}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
         setMapImageUrl(staticMapUrl);
       } else {
         // Otherwise, use the address directly (Google Maps API can geocode addresses)
-        const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(address)}&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C${encodeURIComponent(address)}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+        const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(
+          address
+        )}&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C${encodeURIComponent(
+          address
+        )}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
         setMapImageUrl(staticMapUrl);
       }
     } catch (error) {
@@ -158,7 +197,7 @@ export default function EventDetailsScreen() {
         remindClient: params.remindClient || "false",
         remindProjectOwners: params.remindProjectOwners || "false",
         reminderTime: params.reminderTime || "",
-      }
+      },
     });
   };
 
@@ -169,13 +208,13 @@ export default function EventDetailsScreen() {
       [
         {
           text: "Cancel",
-          style: "cancel"
+          style: "cancel",
         },
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => deleteEvent()
-        }
+          onPress: () => deleteEvent(),
+        },
       ]
     );
   };
@@ -192,7 +231,7 @@ export default function EventDetailsScreen() {
           },
         }
       );
-      
+
       if (response.ok) {
         router.back();
       } else {
@@ -220,10 +259,25 @@ export default function EventDetailsScreen() {
     if (projectDetails?.location) {
       // Use Google Maps for navigation
       if (projectDetails.lat && projectDetails.lng) {
-        Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${projectDetails.lat},${projectDetails.lng}`);
+        Linking.openURL(
+          `https://www.google.com/maps/search/?api=1&query=${projectDetails.lat},${projectDetails.lng}`
+        );
       } else {
-        Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(projectDetails.location)}`);
+        Linking.openURL(
+          `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            projectDetails.location
+          )}`
+        );
       }
+    }
+  };
+
+  const handleProjectPress = () => {
+    if (projectDetails && projectDetails.publicId) {
+      router.push({
+        pathname: "/projects/[id]",
+        params: { id: projectDetails.publicId },
+      });
     }
   };
 
@@ -246,21 +300,33 @@ export default function EventDetailsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
           <ArrowLeft color="#000" size={24} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Schedule Details</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity onPress={handleEditEvent} style={styles.headerAction}>
+          <TouchableOpacity
+            onPress={handleEditEvent}
+            style={styles.headerAction}
+          >
             <Edit color="#000" size={20} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleDeleteEvent} style={styles.headerAction}>
+          <TouchableOpacity
+            onPress={handleDeleteEvent}
+            style={styles.headerAction}
+          >
             <Trash2 color="#ef4444" size={20} />
           </TouchableOpacity>
         </View>
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.contentContainer}
+      >
         {isLoadingProject ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#3b82f6" />
@@ -269,35 +335,75 @@ export default function EventDetailsScreen() {
           <>
             {projectDetails && (
               <View style={styles.customerSection}>
-                <Text style={styles.customerName}>{projectDetails.clientName}</Text>
-                
+                <TouchableOpacity onPress={handleProjectPress}>
+                  <Text style={[styles.customerName, styles.projectNameLink]}>
+                    {projectDetails.clientName}
+                  </Text>
+                  <View style={styles.projectLinkIndicator}>
+                    <Text style={styles.viewProjectText}>
+                      View project details
+                    </Text>
+                    <ChevronRight size={16} color="#3b82f6" />
+                  </View>
+                </TouchableOpacity>
+
                 {projectDetails.clientEmail && (
-                  <TouchableOpacity onPress={handleEmailPress} style={styles.contactItem}>
-                    <Mail size={18} color="#3b82f6" style={styles.contactIcon} />
-                    <Text style={styles.contactText}>{projectDetails.clientEmail}</Text>
+                  <TouchableOpacity
+                    onPress={handleEmailPress}
+                    style={styles.contactItem}
+                  >
+                    <Mail
+                      size={18}
+                      color="#3b82f6"
+                      style={styles.contactIcon}
+                    />
+                    <Text style={styles.contactText}>
+                      {projectDetails.clientEmail}
+                    </Text>
                   </TouchableOpacity>
                 )}
-                
+
                 {projectDetails.clientPhoneNumber && (
-                  <TouchableOpacity onPress={handlePhonePress} style={styles.contactItem}>
-                    <Phone size={18} color="#3b82f6" style={styles.contactIcon} />
-                    <Text style={styles.contactText}>{projectDetails.clientPhoneNumber}</Text>
+                  <TouchableOpacity
+                    onPress={handlePhonePress}
+                    style={styles.contactItem}
+                  >
+                    <Phone
+                      size={18}
+                      color="#3b82f6"
+                      style={styles.contactIcon}
+                    />
+                    <Text style={styles.contactText}>
+                      {projectDetails.clientPhoneNumber}
+                    </Text>
                   </TouchableOpacity>
                 )}
 
                 {projectDetails.companyName && (
                   <View style={styles.contactItem}>
-                    <Building size={18} color="#64748b" style={styles.contactIcon} />
-                    <Text style={styles.contactTextSecondary}>{projectDetails.companyName}</Text>
+                    <Building
+                      size={18}
+                      color="#64748b"
+                      style={styles.contactIcon}
+                    />
+                    <Text style={styles.contactTextSecondary}>
+                      {projectDetails.companyName}
+                    </Text>
                   </View>
                 )}
 
                 {projectDetails.insuranceCompanyName && (
                   <View style={styles.contactItem}>
-                    <FileText size={18} color="#64748b" style={styles.contactIcon} />
+                    <FileText
+                      size={18}
+                      color="#64748b"
+                      style={styles.contactIcon}
+                    />
                     <Text style={styles.contactTextSecondary}>
                       {projectDetails.insuranceCompanyName}
-                      {projectDetails.insuranceClaimId ? ` • Claim #${projectDetails.insuranceClaimId}` : ''}
+                      {projectDetails.insuranceClaimId
+                        ? ` • Claim #${projectDetails.insuranceClaimId}`
+                        : ""}
                     </Text>
                   </View>
                 )}
@@ -306,7 +412,11 @@ export default function EventDetailsScreen() {
 
             <View style={styles.dateTimeSection}>
               <View style={styles.dateTimeItem}>
-                <Calendar size={18} color="#64748b" style={styles.dateTimeIcon} />
+                <Calendar
+                  size={18}
+                  color="#64748b"
+                  style={styles.dateTimeIcon}
+                />
                 <Text style={styles.dateTimeText}>{formattedDate}</Text>
               </View>
               <View style={styles.dateTimeItem}>
@@ -316,12 +426,21 @@ export default function EventDetailsScreen() {
             </View>
 
             {projectDetails?.location && (
-              <TouchableOpacity onPress={handleAddressPress} style={styles.addressSection}>
+              <TouchableOpacity
+                onPress={handleAddressPress}
+                style={styles.addressSection}
+              >
                 <View style={styles.addressHeader}>
-                  <MapPin size={18} color="#64748b" style={styles.addressIcon} />
+                  <MapPin
+                    size={18}
+                    color="#64748b"
+                    style={styles.addressIcon}
+                  />
                   <Text style={styles.addressLabel}>Project Location:</Text>
                 </View>
-                <Text style={styles.addressText}>{projectDetails.location}</Text>
+                <Text style={styles.addressText}>
+                  {projectDetails.location}
+                </Text>
                 {/* Map preview using Google Maps */}
                 {process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY && (
                   <View style={styles.mapPreview}>
@@ -330,8 +449,8 @@ export default function EventDetailsScreen() {
                         <ActivityIndicator size="small" color="#3b82f6" />
                       </View>
                     ) : mapImageUrl ? (
-                      <Image 
-                        source={{ uri: mapImageUrl }} 
+                      <Image
+                        source={{ uri: mapImageUrl }}
                         style={styles.mapImage}
                         resizeMode="cover"
                       />
@@ -351,25 +470,38 @@ export default function EventDetailsScreen() {
                 <View style={styles.projectHeader}>
                   <Text style={styles.projectLabel}>Project Details:</Text>
                 </View>
-                
+
                 <View style={styles.projectDetail}>
                   <Text style={styles.projectDetailLabel}>Status:</Text>
-                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(projectDetails.status) }]}>
-                    <Text style={styles.statusText}>{projectDetails.status}</Text>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      {
+                        backgroundColor: getStatusColor(projectDetails.status),
+                      },
+                    ]}
+                  >
+                    <Text style={styles.statusText}>
+                      {projectDetails.status}
+                    </Text>
                   </View>
                 </View>
-                
+
                 {projectDetails.lossType && (
                   <View style={styles.projectDetail}>
                     <Text style={styles.projectDetailLabel}>Loss Type:</Text>
-                    <Text style={styles.projectDetailValue}>{projectDetails.lossType}</Text>
+                    <Text style={styles.projectDetailValue}>
+                      {projectDetails.lossType}
+                    </Text>
                   </View>
                 )}
-                
+
                 {projectDetails.rcvValue && (
                   <View style={styles.projectDetail}>
                     <Text style={styles.projectDetailLabel}>RCV Value:</Text>
-                    <Text style={styles.projectDetailValue}>${projectDetails.rcvValue.toLocaleString()}</Text>
+                    <Text style={styles.projectDetailValue}>
+                      ${projectDetails.rcvValue.toLocaleString()}
+                    </Text>
                   </View>
                 )}
               </View>
@@ -382,12 +514,14 @@ export default function EventDetailsScreen() {
       {!isLoadingProject && (
         <View style={styles.bottomNotificationContainer}>
           <View style={styles.notificationButtons}>
-            <Animated.View style={{ 
-              flex: 1, 
-              transform: [{ scale: arrivalScale }],
-              marginHorizontal: 4,
-            }}>
-              <TouchableOpacity 
+            <Animated.View
+              style={{
+                flex: 1,
+                transform: [{ scale: arrivalScale }],
+                marginHorizontal: 4,
+              }}
+            >
+              <TouchableOpacity
                 style={[styles.notificationButton, styles.arrivalButton]}
                 onPress={() => {
                   animateButton(arrivalScale);
@@ -396,8 +530,8 @@ export default function EventDetailsScreen() {
                       pathname: "/notifications/arrival",
                       params: {
                         projectId: projectId?.toString(),
-                        eventId: eventId
-                      }
+                        eventId: eventId,
+                      },
                     });
                   }, 200);
                 }}
@@ -411,13 +545,15 @@ export default function EventDetailsScreen() {
                 </View>
               </TouchableOpacity>
             </Animated.View>
-            
-            <Animated.View style={{ 
-              flex: 1, 
-              transform: [{ scale: startScale }],
-              marginHorizontal: 4,
-            }}>
-              <TouchableOpacity 
+
+            <Animated.View
+              style={{
+                flex: 1,
+                transform: [{ scale: startScale }],
+                marginHorizontal: 4,
+              }}
+            >
+              <TouchableOpacity
                 style={[styles.notificationButton, styles.startButton]}
                 onPress={() => {
                   animateButton(startScale);
@@ -426,8 +562,8 @@ export default function EventDetailsScreen() {
                       pathname: "/notifications/start-work",
                       params: {
                         projectId: projectId?.toString(),
-                        eventId: eventId
-                      }
+                        eventId: eventId,
+                      },
                     });
                   }, 200);
                 }}
@@ -441,13 +577,15 @@ export default function EventDetailsScreen() {
                 </View>
               </TouchableOpacity>
             </Animated.View>
-            
-            <Animated.View style={{ 
-              flex: 1, 
-              transform: [{ scale: completeScale }],
-              marginHorizontal: 4,
-            }}>
-              <TouchableOpacity 
+
+            <Animated.View
+              style={{
+                flex: 1,
+                transform: [{ scale: completeScale }],
+                marginHorizontal: 4,
+              }}
+            >
+              <TouchableOpacity
                 style={[styles.notificationButton, styles.completeButton]}
                 onPress={() => {
                   animateButton(completeScale);
@@ -456,8 +594,8 @@ export default function EventDetailsScreen() {
                       pathname: "/notifications/complete-work",
                       params: {
                         projectId: projectId?.toString(),
-                        eventId: eventId
-                      }
+                        eventId: eventId,
+                      },
                     });
                   }, 200);
                 }}
@@ -481,16 +619,16 @@ export default function EventDetailsScreen() {
 // Helper function to get color based on status
 const getStatusColor = (status: string): string => {
   switch (status?.toLowerCase()) {
-    case 'active':
-      return '#22c55e';
-    case 'pending':
-      return '#f59e0b';
-    case 'completed':
-      return '#3b82f6';
-    case 'cancelled':
-      return '#ef4444';
+    case "active":
+      return "#22c55e";
+    case "pending":
+      return "#f59e0b";
+    case "completed":
+      return "#3b82f6";
+    case "cancelled":
+      return "#ef4444";
     default:
-      return '#64748b';
+      return "#64748b";
   }
 };
 
@@ -533,8 +671,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     padding: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   customerSection: {
     backgroundColor: "#fff",
@@ -545,7 +683,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "600",
     color: "#0f172a",
-    marginBottom: 12,
+    marginBottom: 4,
   },
   contactItem: {
     flexDirection: "row",
@@ -616,8 +754,8 @@ const styles = StyleSheet.create({
   },
   mapLoading: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   detailsSection: {
     backgroundColor: "#fff",
@@ -675,48 +813,48 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
   },
   bottomNotificationContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
-    shadowColor: '#000',
+    borderTopColor: "#e2e8f0",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 8,
   },
   notificationButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: 12
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: 14,
   },
   notificationButton: {
     flex: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 4,
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   arrivalButton: {
-    backgroundColor: '#4338ca', // Darker indigo
+    backgroundColor: "#4338ca", // Darker indigo
   },
   startButton: {
-    backgroundColor: '#0e7490', // Darker cyan
+    backgroundColor: "#0e7490", // Darker cyan
   },
   completeButton: {
-    backgroundColor: '#15803d', // Darker green
+    backgroundColor: "#15803d", // Darker green
   },
   notificationContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 10,
   },
@@ -724,16 +862,27 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
   },
   notificationButtonText: {
-    color: '#ffffff',
-    fontWeight: '600',
+    color: "#ffffff",
+    fontWeight: "600",
     fontSize: 13,
   },
-}); 
-
-
+  projectNameLink: {
+    color: "#0f172a",
+  },
+  projectLinkIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  viewProjectText: {
+    fontSize: 14,
+    color: "#3b82f6",
+    marginRight: 4,
+  },
+});

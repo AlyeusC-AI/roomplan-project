@@ -62,13 +62,6 @@ class RNSVGFeColorMatrixEventEmitter : public ViewEventEmitter {
   
   
 };
-class RNSVGFeCompositeEventEmitter : public ViewEventEmitter {
- public:
-  using ViewEventEmitter::ViewEventEmitter;
-
-  
-  
-};
 class RNSVGFeFloodEventEmitter : public ViewEventEmitter {
  public:
   using ViewEventEmitter::ViewEventEmitter;

@@ -2,14 +2,8 @@ import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   SafeAreaView,
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
   ActivityIndicator,
   Alert,
-  Pressable,
-  TextInput,
 } from "react-native";
 import dayjs from "dayjs";
 import DateTimePicker, {
@@ -25,6 +19,8 @@ import {
   Trash2,
   Calendar as CalendarIcon,
   X,
+  ChevronDown,
+  Search,
 } from "lucide-react-native";
 import { useNavigation, useRouter, useLocalSearchParams } from "expo-router";
 import { userStore } from "@/lib/state/user";
@@ -41,8 +37,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { projectsStore } from "@/lib/state/projects";
-import { Box, VStack, HStack, FormControl, Radio, Stack } from "native-base";
+import { Box, VStack, HStack, FormControl, Radio, Stack, Input, Pressable, ScrollView, Text } from "native-base";
 import { Modal } from "@/components/ui/modal";
+import { Select } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 interface EventFormData {
   subject: string;
@@ -55,59 +53,105 @@ interface EventFormData {
   reminderTime?: "24h" | "2h" | "40m";
 }
 
+interface Project {
+  id: number;
+  name: string;
+}
+
+interface SelectItem {
+  label: string;
+  value: string;
+}
+
 const Header: React.FC<{ isEditMode: boolean }> = ({ isEditMode }) => {
   const router = useRouter();
   return (
-    <View style={styles.header}>
-      <View style={styles.headerAction}>
+    <Box style={styles.header}>
+      <Box style={styles.headerAction}>
         <Pressable onPress={() => router.back()}>
           <ArrowLeft color="#000" size={24} />
         </Pressable>
-      </View>
+      </Box>
       <Text numberOfLines={1} style={styles.headerTitle}>
         {isEditMode ? "Edit Event" : "New Event"}
       </Text>
-      <View style={[styles.headerAction, { alignItems: "flex-end" }]} />
-    </View>
+      <Box style={[styles.headerAction, { alignItems: "flex-end" }]} />
+    </Box>
   );
 };
 
 const ProjectSelector: React.FC<{
   projectId: number | null;
-  projects: Array<{ id: number; name: string }>;
+  projects: Project[];
   onSelect: (id: number) => void;
-}> = ({ projectId, projects, onSelect }) => (
-  <DropdownMenu>
-    <DropdownMenuTrigger asChild>
-      <Button variant="outline">
-        <Text>
-          {projectId
-            ? projects.find((e) => e.id === projectId)?.name ??
-              "Select A Project"
-            : "Select A Project"}
+}> = ({ projectId, projects, onSelect }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const selectedProject = projects.find(p => p.id === projectId);
+
+  const filteredProjects = projects.filter(project =>
+    project.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <Box>
+      <Pressable
+        onPress={() => setIsOpen(true)}
+        className="flex-row items-center justify-between px-3 py-2 rounded-md bg-background border border-input"
+      >
+        <Text className={cn(
+          "text-sm",
+          projectId ? "text-foreground" : "text-muted-foreground"
+        )}>
+          {selectedProject?.name || "Select a project"}
         </Text>
-      </Button>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent className="w-64 native:w-72">
-      <DropdownMenuGroup>
-        <ScrollView>
-          {projects.map((project) => (
-            <React.Fragment key={project.id}>
-              <DropdownMenuItem
-                onPress={() => onSelect(project.id)}
-                className="flex justify-between"
+        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+      </Pressable>
+
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <Box style={styles.calendarContainer}>
+          <HStack justifyContent="space-between" alignItems="center" mb={4}>
+            <Text style={styles.modalTitle}>Select Project</Text>
+            <Pressable onPress={() => setIsOpen(false)}>
+              <X color="#64748b" size={20} />
+            </Pressable>
+          </HStack>
+
+          <Box mb={4}>
+            <Input
+              placeholder="Search projects..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              leftElement={<Search size={20} color="#64748b" style={{ marginLeft: 12 }} />}
+              className="bg-background border border-input rounded-md"
+            />
+          </Box>
+
+          <ScrollView style={{ maxHeight: 300 }}>
+            {filteredProjects.map((project) => (
+              <Pressable
+                key={project.id}
+                onPress={() => {
+                  onSelect(project.id);
+                  setIsOpen(false);
+                }}
+                className={cn(
+                  "flex-row items-center justify-between px-4 py-3",
+                  projectId === project.id ? "bg-primary/10" : "hover:bg-muted"
+                )}
               >
-                <Text>{project.name}</Text>
-                {projectId === project.id && <Check size={17} />}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-            </React.Fragment>
-          ))}
-        </ScrollView>
-      </DropdownMenuGroup>
-    </DropdownMenuContent>
-  </DropdownMenu>
-);
+                <Text className="text-sm">{project.name}</Text>
+                {projectId === project.id && (
+                  <Check size={20} color="#1d4ed8" />
+                )}
+              </Pressable>
+            ))}
+          </ScrollView>
+        </Box>
+      </Modal>
+    </Box>
+  );
+};
 
 const DateInput: React.FC<{
   label: string;
@@ -130,7 +174,7 @@ const DateInput: React.FC<{
   return (
     <Box>
       <FormControl.Label>{label}</FormControl.Label>
-      <TouchableOpacity
+      <Pressable
         onPress={() => setShowPicker(true)}
         style={styles.dateInput}
       >
@@ -138,7 +182,7 @@ const DateInput: React.FC<{
           {dayjs(value).format("MMM D, YYYY h:mm A")}
         </Text>
         <CalendarIcon color="#64748b" size={20} />
-      </TouchableOpacity>
+      </Pressable>
 
       <Modal isOpen={showPicker} onClose={() => setShowPicker(false)}>
         <Box style={styles.calendarContainer}>
@@ -153,6 +197,8 @@ const DateInput: React.FC<{
               use12Hours={true}
               mode="single"
               timePicker
+              minDate={dayjs().toDate()}
+              maxDate={dayjs().endOf("year").toDate()}
               components={{
                 IconNext: <ChevronRight color="#1d4ed8" size={28} />,
                 IconPrev: <ChevronLeft color="#1d4ed8" size={28} />,
@@ -369,7 +415,7 @@ export default function NewEvent() {
 
   if (loading || isDeleting) {
     return (
-      <View className="w-full h-full flex justify-center items-center">
+      <Box className="w-full h-full flex justify-center items-center">
         <ActivityIndicator size="large" color="#2563eb" />
         <Text style={{ marginTop: 10, color: "#64748b" }}>
           {isDeleting
@@ -378,7 +424,7 @@ export default function NewEvent() {
             ? "Updating event..."
             : "Creating event..."}
         </Text>
-      </View>
+      </Box>
     );
   }
 
@@ -395,9 +441,9 @@ export default function NewEvent() {
               updateFormData("start", date);
               const endDate = dayjs(formData.end);
               const startDate = dayjs(date);
-              if (endDate.isBefore(startDate)) {
-                updateFormData("end", startDate.add(1, "hour").toDate());
-              }
+              // if (endDate.isBefore(startDate)) {
+              updateFormData("end", startDate.add(1, "hour").toDate());
+              // }
             }}
           />
 
@@ -408,7 +454,7 @@ export default function NewEvent() {
           />
 
           <Box>
-            <FormControl.Label>Project</FormControl.Label>
+            <FormControl.Label>Project (optional)</FormControl.Label>
             <ProjectSelector
               projectId={formData.projectId}
               projects={projects}

@@ -9,12 +9,14 @@ export async function GET(
   await user(req);
 
   const id = (await params).id;
+  const isIdNumber = !isNaN(Number(id));
+
 
   try {
     const projectRaw: { data: FlatProject | null } = await supabaseServiceRole
       .from("Project")
       .select("*")
-      .eq("publicId", id)
+      .eq(isIdNumber ? "id" : "publicId", id)
       .single();
 
     const project: Project = {

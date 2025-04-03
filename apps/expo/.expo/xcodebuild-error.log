@@ -1,3 +1,9 @@
 --- xcodebuild: WARNING: Using the first of multiple matching destinations:
-{ platform:iOS Simulator, id:CD1A1D41-9C4A-48E4-9D50-A233CC162BE1, OS:18.2, name:iPhone Default }
-{ platform:iOS Simulator, id:CD1A1D41-9C4A-48E4-9D50-A233CC162BE1, OS:18.2, name:iPhone Default }
+{ platform:iOS Simulator, arch:arm64, id:CD1A1D41-9C4A-48E4-9D50-A233CC162BE1, OS:18.2, name:iPhone Default }
+{ platform:iOS Simulator, arch:x86_64, id:CD1A1D41-9C4A-48E4-9D50-A233CC162BE1, OS:18.2, name:iPhone Default }
+** BUILD FAILED **
+
+
+The following build commands failed:
+	Building project Restoregeek with scheme Restoregeek and configuration Debug
+(1 failure)

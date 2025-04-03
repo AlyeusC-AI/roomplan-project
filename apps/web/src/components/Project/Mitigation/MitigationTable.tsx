@@ -28,7 +28,7 @@ import { Switch } from "@components/ui/switch";
 import { Label } from "@components/ui/label";
 
 export default function MitigationTable() {
-  const [isFilterOptionOpen, setIsFilterOptionOpen] = useState(false);
+  const [isFilterOptionOpen, setIsFilterOptionOpen] = useState(true);
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const reactSelectId = useId();
@@ -166,10 +166,10 @@ export default function MitigationTable() {
 
   return (
     <div className='space-y-4'>
-      <Card className='p-4'>
+      <div className='p-4'>
         <div className='relative'>
           {/* Top Controls Bar */}
-          <div className='flex items-center gap-4'>
+          <div className='flex items-end gap-4'>
             <div className='flex flex-wrap items-center gap-2'>
               <div>
                 <FilterLabel>Filters</FilterLabel>
@@ -220,9 +220,9 @@ export default function MitigationTable() {
               <div className='flex-1 rounded border bg-card p-2 text-sm shadow-sm'>
                 <div className='flex items-center gap-4'>
                   <div className='flex items-center gap-3'>
-                    {/* <h3 className='whitespace-nowrap text-sm font-medium'>
+                    <h3 className='whitespace-nowrap text-sm font-medium'>
                       Filters:
-                    </h3> */}
+                    </h3>
 
                     <div className='min-w-[200px] flex-1'>
                       <Select
@@ -281,7 +281,7 @@ export default function MitigationTable() {
             )}
           </div>
         </div>
-      </Card>
+      </div>
 
       <div className='space-y-4'>
         <OptimisticUploadUI />
