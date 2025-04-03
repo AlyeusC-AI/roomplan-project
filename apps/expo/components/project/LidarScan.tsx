@@ -66,6 +66,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
   const processedRoomId = useRef<number | undefined>(roomId);
   const processedRoomPlanSVG = useRef<string | undefined>(roomPlanSVG);
   const insets = useSafeAreaInsets();
+  const pngBase64 = useRef<string>('');
 
   useEffect(() => {
     const checkSupport = async () => {
@@ -242,59 +243,17 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
   }
 
   const handleShareRoomPlan = async () => {
-    if (processedRoomPlanSVG.current) {
+    if (pngBase64.current) {
       setImgkitLoading(true);
       try {
+        console.log('>>>>')
+        console.log(pngBase64.current)
+        const result = await new Promise(res => RoomScanModule.savePngFile(pngBase64.current, res))
 
-        const response = await fetch(
-          `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/imageKit`
-        );
-    
-        const { token, expire, signature } = await response.json();
-    
-        const base64Svg = Buffer.from(processedRoomPlanSVG.current, "utf8").toString("base64");
-        const file = `data:image/svg+xml;base64,${base64Svg}`
-        const uploadResult: ImageKitUploadResponse = await new Promise((resolve, reject) => imagekit.upload(
-          {
-            file,
-            fileName: `roomplan-${processedRoomId.current}.svg`,
-            folder: "roomplan-svg",
-            tags: [],
-            useUniqueFileName: false,
-            responseFields: ["tags"],
-            isPrivateFile: false,
-            token,
-            expire,
-            signature,
-          },
-          (err: Error | null, result: ImageKitUploadResponse | null) => {
-            console.log("🚀 ~ returnnewPromise ~ result:", result);
-  
-            if (err) {
-              reject(err);
-              return;
-            }
-  
-            if (!result) {
-              reject(new Error("No result from ImageKit upload"));
-              return;
-            }
-            resolve(result);
-          }
-        ));
-
-        const re = /<svg viewBox="[\d\.\-]*\s[\d\.\-]*\s([\d\.\-]*)\s([\d\.\-]*)">/
-        const [_, w, h] = processedRoomPlanSVG.current.match(re) || []
-
-        const imageUrl = imagekit.url({
-          src: uploadResult.url,
-          transformation: [{
-            raw: `f-png,w-${Math.floor(parseFloat(w) * 250)},h-${Math.floor(parseFloat(h) * 250)}`
-          }]
-        })
+        console.log(result)
 
         Share.share({
-          url: imageUrl,
+          url: result.path,
         })
       } catch (error) {
         console.error('error', error);
@@ -454,7 +413,11 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
       {processedRoomPlanSVG.current && (
         <View className="mt-8">
           <View className="mx-auto" style={{ width: svgSize, height: svgSize }}>
-            <RoomPlanImage src={processedRoomPlanSVG.current} />
+            <RoomPlanImage
+              key={processedRoomPlanSVG.current}
+              src={processedRoomPlanSVG.current}
+              onPngReady={data => pngBase64.current = data}
+            />
           </View>
           <TouchableOpacity
             className="flex-row items-center justify-center mt-5 py-2.5 px-5"

@@ -1,12 +1,5 @@
 type Point = [number, number, number]
 
-const wallWidth = 0.08;
-const floorWidth = 0.08;
-const doorWidth = 0.02;
-const windowWidth = 0.02;
-const objectWidth = 0.05;
-const openingWidth = 0.04;
-
 const wallColor = "#050505";
 const floorColor = "#eaeaea";
 const floorFill = "#eaeaea";
@@ -17,6 +10,15 @@ const objectFill = "#bababa";
 const openingColor = "#3d3d3d";
 const ftFill = "#ffffff";
 const ftColor = "#000000";
+
+const scaleFactor = 100;
+
+const wallWidth = 0.08 * scaleFactor;
+const floorWidth = 0.08 * scaleFactor;
+const doorWidth = 0.02 * scaleFactor;
+const windowWidth = 0.02 * scaleFactor;
+const objectWidth = 0.05 * scaleFactor;
+const openingWidth = 0.04 * scaleFactor;
 
 export type Room = {
     walls: Point[][];
@@ -79,7 +81,7 @@ function drawWallLength(points: Point[], floors: Point[][], color = "black", wid
     const p1InFloor = checkPointInPolygon([mp1[0], 0, mp1[1]], floors);
     const xor = p0InFloor !== p1InFloor;
 
-    const inchesText = inchText(length);
+    const inchesText = inchText(length / scaleFactor);
 
     const measureLine = xor ? (p1InFloor ? [p00, p10] : [p01, p11]) : [p00, p10]
     // Draw measurement line
@@ -98,7 +100,12 @@ function drawWallLength(points: Point[], floors: Point[][], color = "black", wid
     ) * (180 / Math.PI);
 
     // Create text element
-    const textSvg = `<text x="${midX}" y="${midY}" text-anchor="middle" dominant-baseline="middle" fill="${color}" font-size="${fontSize}" transform="rotate(${angle}, ${midX}, ${midY})">${inchesText}</text>`;
+    const textSvg = `<text x="${midX}" y="${midY}"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        font-family="monospace"
+        fill="${color}" font-size="${fontSize}"
+        transform="rotate(${angle}, ${midX}, ${midY})">${inchesText}</text>`;
     return lineSvg + textSvg + dotSvg;
 }
 
@@ -175,7 +182,11 @@ function calculatePolygonProperties(inputPoints: Point[]) {
 
     const boundingBox = getSmallestBoundingSquare(points);
 
-    return { area, centroid: { x: cx, y: cy }, boundingBox };
+    return {
+        area: area / scaleFactor / scaleFactor,
+        centroid: { x: cx, y: cy },
+        boundingBox
+    };
 }
 
 function rotatePointXZ(point: Point, angle: number): Point {
@@ -248,6 +259,13 @@ export function makeSVG(data: Room) {
         return wallCover + `<polyline stroke-dasharray="${wallWidth} ${wallWidth / 1.5}" stroke-linecap="butt" points="${pointsStr}" stroke="${color}" stroke-width="${width}" fill="${fill}" />`;
     }
 
+    const keys = ['floors', 'objects', 'walls', 'doors', 'windows', 'openings'];
+    for (const key of keys) {
+        if (room[key]) {
+            room[key] = (room[key] || []).map((points: Point[]) => points.map(([x, y, z]) => [x * scaleFactor, 0, z * scaleFactor]));
+        }
+    }
+
     // Get all points from the room
     const allPoints = [
         ...room.walls.flat(),
@@ -277,22 +295,34 @@ export function makeSVG(data: Room) {
     // Construct SVG string
     let svgContent = "";
     let sqftContent = "";
+    let wallLengthMeasure = "";
     room.floors.forEach(floor => {
         if (floor.length) {
             svgContent += createPolyline(floor, floorColor, floorWidth, floorFill);
             const { area, centroid, boundingBox } = calculatePolygonProperties(floor);
+            const minLen = boundingBox?.width > boundingBox?.height ? boundingBox.height: boundingBox.height
             const areaInSqFt = (area * 10.764).toFixed(1); // Convert m² to ft²
+            const ftSize = Math.max(minLen / 35, 18);
             // const widthInFeet = inchText(boundingBox?.width ?? 0);
             // const heightInFeet = inchText(boundingBox?.height ?? 0);
             if (centroid) {
                 sqftContent += `<text x="${centroid.x}" y="${centroid.y}" 
                     fill="${ftFill}" 
                     stroke="${ftColor}"
-                    stroke-width="0.02"
+                    stroke-width="${ftSize / 15}"
                     text-anchor="middle" 
                     dominant-baseline="middle"
                     font-weight="bold"
-                    font-size="0.25">${areaInSqFt} ft²</text>`;
+                    font-family="monospace"
+                    font-size="${ftSize}">${areaInSqFt}ft</text>`;
+                sqftContent += `<text x="${centroid.x + (areaInSqFt.length + 2) / 2 * ftSize / 1.5}" y="${centroid.y - ftSize / 3}" 
+                    fill="${ftFill}"
+                    stroke="${ftColor}"
+                    stroke-width="${ftSize / 20}"
+                    font-family="monospace"
+                    text-anchor="middle"
+                    font-weight="bold"
+                    font-size="${ftSize / 3}">2</text>`;
             }
         }
     });
@@ -302,7 +332,7 @@ export function makeSVG(data: Room) {
     room.walls.forEach(wall => {
         if (wall.length) {
             svgContent += createPolyline(wall, wallColor, wallWidth);
-            svgContent += drawWallLength(wall, room.floors, wallColor, wallWidth / 5);
+            wallLengthMeasure += drawWallLength(wall, room.floors, wallColor, wallWidth / 5);
         }
     });
     room.doors.forEach(door => {
@@ -337,6 +367,7 @@ export function makeSVG(data: Room) {
     //     if (opening.length) svgContent += createPolyline(opening, openingColor, openingWidth);
     // });
     if (sqftContent) svgContent += sqftContent;
+    if (wallLengthMeasure) svgContent += wallLengthMeasure;
 
     return `<svg viewBox="${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}">${svgContent}</svg>`;
 }
