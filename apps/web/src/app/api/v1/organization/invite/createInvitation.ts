@@ -22,7 +22,17 @@ const createInvitation = async (userId: string, email: string) => {
   const organizationId = organization?.id;
   if (!organizationId) return { failed: true, reason: "no-org" };
 
-  const isAdmin =
+  const { data: userToOrganization } = await supabaseClient
+    .from("UserToOrganization")
+    .select("*")
+    .eq("organizationId", organizationId)
+    .eq("userId", userId)
+    .eq("isDeleted", false)
+    .single();
+  console.log("🚀 ~ POST ~ userToOrganization:", userToOrganization);
+  
+
+  const isAdmin = userToOrganization?.accessLevel === "owner" || userToOrganization?.accessLevel === "admin"||
     haloUser?.accessLevel === "owner" || haloUser?.accessLevel === "admin";
   if (!isAdmin) return { failed: true, reason: "not-allowed" };
 

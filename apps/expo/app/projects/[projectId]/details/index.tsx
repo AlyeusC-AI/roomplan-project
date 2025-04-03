@@ -7,6 +7,9 @@ import {
   ScrollView,
   SafeAreaView,
   Platform,
+  KeyboardAvoidingView,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { projectStore } from "@/lib/state/project";
 import { FormInput } from "@/components/ui/form";
@@ -75,9 +78,9 @@ export default function ProjectDetails() {
   const [claimSummary, setClaimSummary] = useState(project.project?.claimSummary || "");
   console.log("🚀 ~ ProjectDetails ~ project:", currentAddress)
 
-  const handleCallPress = () => {
-    if (project.project?.clientPhoneNumber) {
-      Linking.openURL(`tel:${project.project.clientPhoneNumber}`);
+  const handleCallPress = (phoneNumber: string) => {
+    if (phoneNumber) {
+      Linking.openURL(`tel:${phoneNumber}`);
     }
   };
 
@@ -124,117 +127,125 @@ export default function ProjectDetails() {
   };
 
   const renderCustomerTab = () => (
-    <VStack space={4}>
-      <View style={styles.section}>
-        <HStack space={2} alignItems="center" mb={4}>
-          <UserCircle size={24} color="#2563eb" />
-          <Text style={styles.sectionTitle}>Contact Information</Text>
-        </HStack>
-        <FormInput
-          label="Customer Name"
-          placeholder="Enter customer name"
-          value={clientName}
-          onChangeText={setClientName}
-          containerStyle={styles.inputContainer}
-          leftElement={<User size={20} color="#94a3b8" style={styles.inputIcon} />}
-        />
-        <FormInput
-          label="Phone Number"
-          placeholder="Enter phone number"
-          value={clientPhoneNumber}
-          onChangeText={setClientPhoneNumber}
-          containerStyle={styles.inputContainer}
-          leftElement={<Phone size={20} color="#94a3b8" style={styles.inputIcon} />}
-          rightElement={
-            <TouchableOpacity onPress={handleCallPress} style={styles.callButton}>
-              <HStack space={1} alignItems="center">
-                <PhoneCall size={16} color="#2563eb" />
-                <Text style={styles.callText}>Call</Text>
-              </HStack>
-            </TouchableOpacity>
-          }
-        />
-        <FormInput
-          label="Email Address"
-          placeholder="Enter email address"
-          value={clientEmail}
-          onChangeText={setClientEmail}
-          containerStyle={styles.inputContainer}
-          leftElement={<Mail size={20} color="#94a3b8" style={styles.inputIcon} />}
-        />
-      </View>
-
-      <View style={styles.section}>
-        <HStack space={2} alignItems="center" mb={4}>
-          <MapPin size={24} color="#2563eb" />
-          <Text style={styles.sectionTitle}>Location</Text>
-        </HStack>
-        <Box style={styles.addressContainer}>
-          <GooglePlacesAutocomplete
-            placeholder="Enter your street address"
-            onPress={(data, details = null) => {
-              console.log("🚀 ~ ProjectDetails ~ details:", details)
-              if (details) {
-                setCurrentAddress(data.description);
-              }
-            }}
-            query={{
-              key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-              language: "en",
-            }}
-            textInputProps={{
-              value: currentAddress,
-              defaultValue: currentAddress,
-              onChangeText: (text) => {
-                console.log("🚀 ~ ProjectDetails ~ text:", text)
-                if (!text && firstTime) {
-                  return setFirstTime(false);
-                }
-                
-                (text ?? currentAddress)&&   setCurrentAddress(text ?? currentAddress);
-              },
-            }}
-            styles={{
-              textInputContainer: {
-                backgroundColor: "transparent",
-              },
-              textInput: {
-                height: 44,
-                fontSize: 16,
-                fontWeight: "500",
-                color: "#1d1d1d",
-                borderWidth: 1,
-                borderColor: "rgb(212, 212, 212)",
-                borderRadius: 8,
-                paddingHorizontal: 12,
-                backgroundColor: "transparent",
-              },
-              container: {
-                flex: 0,
-              },
-              listView: {
-                borderWidth: 1,
-                borderColor: "rgb(212, 212, 212)",
-                borderRadius: 8,
-                backgroundColor: "white",
-                marginTop: 4,
-              },
-              row: {
-                padding: 13,
-              },
-              description: {
-                fontSize: 14,
-                color: "#1d1d1d",
-              },
-            }}
-            enablePoweredByContainer={false}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <VStack space={4}>
+        <View style={styles.section}>
+          <HStack space={2} alignItems="center" mb={4}>
+            <UserCircle size={24} color="#2563eb" />
+            <Text style={styles.sectionTitle}>Contact Information</Text>
+          </HStack>
+          <FormInput
+            label="Customer Name"
+            placeholder="Enter customer name"
+            value={clientName}
+            onChangeText={setClientName}
+            containerStyle={styles.inputContainer}
+            leftElement={<User size={20} color="#94a3b8" style={styles.inputIcon} />}
           />
-        </Box>
-      </View>
-    </VStack>
+          <FormInput
+            label="Phone Number"
+            placeholder="Enter phone number"
+            value={clientPhoneNumber}
+            onChangeText={setClientPhoneNumber}
+            containerStyle={styles.inputContainer}
+            leftElement={<Phone size={20} color="#94a3b8" style={styles.inputIcon} />}
+            rightElement={
+              <TouchableOpacity 
+                onPress={() => handleCallPress(clientPhoneNumber)} 
+                style={styles.callButton}
+                disabled={!clientPhoneNumber}
+              >
+                <HStack space={1} alignItems="center">
+                  <PhoneCall size={16} color={clientPhoneNumber ? "#2563eb" : "#94a3b8"} />
+                  <Text style={[styles.callText, !clientPhoneNumber && styles.callTextDisabled]}>Call</Text>
+                </HStack>
+              </TouchableOpacity>
+            }
+          />
+          <FormInput
+            label="Email Address"
+            placeholder="Enter email address"
+            value={clientEmail}
+            onChangeText={setClientEmail}
+            containerStyle={styles.inputContainer}
+            leftElement={<Mail size={20} color="#94a3b8" style={styles.inputIcon} />}
+          />
+        </View>
+
+        <View style={styles.section}>
+          <HStack space={2} alignItems="center" mb={4}>
+            <MapPin size={24} color="#2563eb" />
+            <Text style={styles.sectionTitle}>Location</Text>
+          </HStack>
+          <Box style={styles.addressContainer}>
+            <GooglePlacesAutocomplete
+              placeholder="Enter your street address"
+              onPress={(data, details = null) => {
+                console.log("🚀 ~ ProjectDetails ~ details:", details)
+                if (details) {
+                  setCurrentAddress(data.description);
+                }
+              }}
+              query={{
+                key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+                language: "en",
+              }}
+              textInputProps={{
+                value: currentAddress,
+                defaultValue: currentAddress,
+                onChangeText: (text) => {
+                  console.log("🚀 ~ ProjectDetails ~ text:", text)
+                  if (!text && firstTime) {
+                    return setFirstTime(false);
+                  }
+                  
+                  (text ?? currentAddress)&&   setCurrentAddress(text ?? currentAddress);
+                },
+              }}
+              styles={{
+                textInputContainer: {
+                  backgroundColor: "transparent",
+                },
+                textInput: {
+                  height: 44,
+                  fontSize: 16,
+                  fontWeight: "500",
+                  color: "#1d1d1d",
+                  borderWidth: 1,
+                  borderColor: "rgb(212, 212, 212)",
+                  borderRadius: 8,
+                  paddingHorizontal: 12,
+                  backgroundColor: "transparent",
+                },
+                container: {
+                  flex: 0,
+                },
+                listView: {
+                  borderWidth: 1,
+                  borderColor: "rgb(212, 212, 212)",
+                  borderRadius: 8,
+                  backgroundColor: "white",
+                  marginTop: 4,
+                },
+                row: {
+                  padding: 13,
+                },
+                description: {
+                  fontSize: 14,
+                  color: "#1d1d1d",
+                },
+              }}
+              enablePoweredByContainer={false}
+            />
+          </Box>
+        </View>
+      </VStack>
+    </TouchableWithoutFeedback>
   );
 
   const renderLossTab = () => (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+
     <VStack space={4}>
       <View style={styles.section}>
         <HStack space={2} alignItems="center" mb={4}>
@@ -300,141 +311,168 @@ export default function ProjectDetails() {
           leftElement={<FileCheck size={20} color="#94a3b8" style={styles.inputIcon} />}
         />
       </View>
+  
     </VStack>
+    </TouchableWithoutFeedback>
   );
 
   const renderInsuranceTab = () => (
-    <VStack space={4}>
-      <View style={styles.section}>
-        <HStack space={2} alignItems="center" mb={4}>
-          <Shield size={24} color="#2563eb" />
-          <Text style={styles.sectionTitle}>Insurance Information</Text>
-        </HStack>
-        <FormInput
-          label="Insurance Company Name"
-          placeholder="Enter insurance company name"
-          value={insuranceCompanyName}
-          onChangeText={setInsuranceCompanyName}
-          containerStyle={styles.inputContainer}
-          leftElement={<Building2 size={20} color="#94a3b8" style={styles.inputIcon} />}
-        />
-        <FormInput
-          label="Adjuster Name"
-          placeholder="Enter adjuster name"
-          value={adjusterName}
-          onChangeText={setAdjusterName}
-          containerStyle={styles.inputContainer}
-          leftElement={<User size={20} color="#94a3b8" style={styles.inputIcon} />}
-        />
-        <FormInput
-          label="Adjuster Email"
-          placeholder="Enter adjuster email"
-          value={adjusterEmail}
-          onChangeText={setAdjusterEmail}
-          containerStyle={styles.inputContainer}
-          leftElement={<MailIcon size={20} color="#94a3b8" style={styles.inputIcon} />}
-        />
-        <FormInput
-          label="Adjuster Number"
-          placeholder="Enter adjuster number"
-          value={adjusterPhoneNumber}
-          onChangeText={setAdjusterPhoneNumber}
-          containerStyle={styles.inputContainer}
-          leftElement={<Phone size={20} color="#94a3b8" style={styles.inputIcon} />}
-        />
-        <FormInput
-          label="Insurance Claim ID"
-          placeholder="Enter insurance claim ID"
-          value={insuranceClaimId}
-          onChangeText={setInsuranceClaimId}
-          containerStyle={styles.inputContainer}
-          leftElement={<FileText size={20} color="#94a3b8" style={styles.inputIcon} />}
-        />
-      </View>
-    </VStack>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <VStack space={4}>
+        <View style={styles.section}>
+          <HStack space={2} alignItems="center" mb={4}>
+            <Shield size={24} color="#2563eb" />
+            <Text style={styles.sectionTitle}>Insurance Information</Text>
+          </HStack>
+          <FormInput
+            label="Insurance Company Name"
+            placeholder="Enter insurance company name"
+            value={insuranceCompanyName}
+            onChangeText={setInsuranceCompanyName}
+            containerStyle={styles.inputContainer}
+            leftElement={<Building2 size={20} color="#94a3b8" style={styles.inputIcon} />}
+          />
+          <FormInput
+            label="Adjuster Name"
+            placeholder="Enter adjuster name"
+            value={adjusterName}
+            onChangeText={setAdjusterName}
+            containerStyle={styles.inputContainer}
+            leftElement={<User size={20} color="#94a3b8" style={styles.inputIcon} />}
+          />
+          <FormInput
+            label="Adjuster Email"
+            placeholder="Enter adjuster email"
+            value={adjusterEmail}
+            onChangeText={setAdjusterEmail}
+            containerStyle={styles.inputContainer}
+            leftElement={<MailIcon size={20} color="#94a3b8" style={styles.inputIcon} />}
+          />
+          <FormInput
+            label="Adjuster Number"
+            placeholder="Enter adjuster number"
+            value={adjusterPhoneNumber}
+            onChangeText={setAdjusterPhoneNumber}
+            containerStyle={styles.inputContainer}
+            leftElement={<Phone size={20} color="#94a3b8" style={styles.inputIcon} />}
+            rightElement={
+              <TouchableOpacity 
+                onPress={() => handleCallPress(adjusterPhoneNumber)} 
+                style={styles.callButton}
+                disabled={!adjusterPhoneNumber}
+              >
+                <HStack space={1} alignItems="center">
+                  <PhoneCall size={16} color={adjusterPhoneNumber ? "#2563eb" : "#94a3b8"} />
+                  <Text style={[styles.callText, !adjusterPhoneNumber && styles.callTextDisabled]}>Call</Text>
+                </HStack>
+              </TouchableOpacity>
+            }
+          />
+          <FormInput
+            label="Insurance Claim ID"
+            placeholder="Enter insurance claim ID"
+            value={insuranceClaimId}
+            onChangeText={setInsuranceClaimId}
+            containerStyle={styles.inputContainer}
+            leftElement={<FileText size={20} color="#94a3b8" style={styles.inputIcon} />}
+          />
+        </View>
+      </VStack>
+    </TouchableWithoutFeedback>
   );
 
   const { top } = useSafeAreaInsets();
 
   return (
-    <View style={[styles.container,{
-        // paddingTop: top,
-        // // backgroundColor: "#2563eb"
-    }]} >
-      <StatusBar backgroundColor="#2563eb" />
-      <View style={[styles.header,{
-        paddingTop: top,
-      }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <ChevronLeft size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Project Details</Text>
-        <TouchableOpacity onPress={updateProject} style={styles.saveButton}>
-          {loading ? (
-            <Spinner size="sm" color="#fff" />
-          ) : (
-            <HStack space={1} alignItems="center">
-              <Save size={20} color="#fff" />
-              <Text style={styles.saveText}>Save</Text>
-            </HStack>
-          )}
-        </TouchableOpacity>
-      </View>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
+        <View style={styles.container}>
+          <StatusBar backgroundColor="#2563eb" />
+          <View style={[styles.header,{
+            paddingTop: top,
+          }]}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <ChevronLeft size={24} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Project Details</Text>
+            <TouchableOpacity onPress={updateProject} style={styles.saveButton}>
+              {loading ? (
+                <Spinner size="sm" color="#fff" />
+              ) : (
+                <HStack space={1} alignItems="center">
+                  <Save size={20} color="#fff" />
+                  <Text style={styles.saveText}>Save</Text>
+                </HStack>
+              )}
+            </TouchableOpacity>
+          </View>
 
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "customer" && styles.activeTab]}
-          onPress={() => setActiveTab("customer")}
-        >
-          <HStack space={2} alignItems="center">
-            <UserCircle size={20} color={activeTab === "customer" ? "#1e88e5" : "#94a3b8"} />
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "customer" && styles.activeTabText,
-              ]}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "customer" && styles.activeTab]}
+              onPress={() => setActiveTab("customer")}
             >
-              Customer
-            </Text>
-          </HStack>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "loss" && styles.activeTab]}
-          onPress={() => setActiveTab("loss")}
-        >
-          <HStack space={2} alignItems="center">
-            <AlertCircle size={20} color={activeTab === "loss" ? "#1e88e5" : "#94a3b8"} />
-            <Text
-              style={[styles.tabText, activeTab === "loss" && styles.activeTabText]}
+              <HStack space={2} alignItems="center">
+                <UserCircle size={20} color={activeTab === "customer" ? "#1e88e5" : "#94a3b8"} />
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === "customer" && styles.activeTabText,
+                  ]}
+                >
+                  Customer
+                </Text>
+              </HStack>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "loss" && styles.activeTab]}
+              onPress={() => setActiveTab("loss")}
             >
-              Loss
-            </Text>
-          </HStack>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "insurance" && styles.activeTab]}
-          onPress={() => setActiveTab("insurance")}
-        >
-          <HStack space={2} alignItems="center">
-            <Shield size={20} color={activeTab === "insurance" ? "#1e88e5" : "#94a3b8"} />
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "insurance" && styles.activeTabText,
-              ]}
+              <HStack space={2} alignItems="center">
+                <AlertCircle size={20} color={activeTab === "loss" ? "#1e88e5" : "#94a3b8"} />
+                <Text
+                  style={[styles.tabText, activeTab === "loss" && styles.activeTabText]}
+                >
+                  Loss
+                </Text>
+              </HStack>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "insurance" && styles.activeTab]}
+              onPress={() => setActiveTab("insurance")}
             >
-              Insurance
-            </Text>
-          </HStack>
-        </TouchableOpacity>
-      </View>
+              <HStack space={2} alignItems="center">
+                <Shield size={20} color={activeTab === "insurance" ? "#1e88e5" : "#94a3b8"} />
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === "insurance" && styles.activeTabText,
+                  ]}
+                >
+                  Insurance
+                </Text>
+              </HStack>
+            </TouchableOpacity>
+          </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {activeTab === "customer" && renderCustomerTab()}
-        {activeTab === "loss" && renderLossTab()}
-        {activeTab === "insurance" && renderInsuranceTab()}
-      </ScrollView>
-    </View>
+          <ScrollView 
+            style={styles.content} 
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="always"
+            contentContainerStyle={{ paddingBottom: 20 }}
+            bounces={true}
+            alwaysBounceVertical={true}
+          >
+            {activeTab === "customer" && renderCustomerTab()}
+            {activeTab === "loss" && renderLossTab()}
+            {activeTab === "insurance" && renderInsuranceTab()}
+
+          </ScrollView>
+        </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -447,6 +485,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
+    paddingBottom: 10,
     backgroundColor: "#1e88e5",
     ...Platform.select({
       ios: {
@@ -520,6 +559,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 16,
+    flexGrow: 1,
   },
   section: {
     backgroundColor: "#fff",
@@ -574,6 +614,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     color: "#1e88e5",
+  },
+  callTextDisabled: {
+    color: "#94a3b8",
   },
   callButton: {
     padding: 8,

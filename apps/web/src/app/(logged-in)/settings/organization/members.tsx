@@ -61,7 +61,7 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
       .then((res) => res.json())
       .then((data) => {
         console.log("team members", data);
-        teamMembersStore.getState().setTeamMembers(data.members);
+        teamMembersStore.getState().setTeamMembers(data.members||[]);
         // setTeamMembers(data.members);
         console.log(data);
       });
@@ -127,7 +127,7 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
   };
 
   const filteredTeamMembers = useMemo(
-    () => teamMembers.filter(({ id }) => id !== userInfo?.id),
+    () => teamMembers?.filter(({ id }) => id !== userInfo?.id),
     [teamMembers, userInfo]
   );
 
