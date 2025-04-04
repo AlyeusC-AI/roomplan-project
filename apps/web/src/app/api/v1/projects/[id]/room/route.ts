@@ -52,6 +52,8 @@ export async function POST(
 }
 
 export async function PATCH(req: NextRequest) {
+  await user(req);
+
   // const supabase = await createClient();
 
   // const {
