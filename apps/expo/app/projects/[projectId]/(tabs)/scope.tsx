@@ -195,8 +195,8 @@ export default function ScopeScreen() {
             <Empty
               title="No rooms added"
               description="Add rooms to start documenting scope of work"
-              buttonText="Add First Room"
-              onPress={onCreateRoom}
+            //   buttonText="Add First Room"
+            //   onPress={onCreateRoom}
               icon={Ruler}
             />
           ) : (
@@ -249,7 +249,7 @@ export default function ScopeScreen() {
                               Doors
                             </Text>
                           </View>
-                          <Text style={styles.statValue}>{room.numDoors || 0}</Text>
+                          <Text style={styles.statValue}>{room.doors || 0}</Text>
                         </View>
                         <View style={styles.statBox}>
                           <View className="flex-row items-center mb-1">
@@ -258,7 +258,7 @@ export default function ScopeScreen() {
                               Windows
                             </Text>
                           </View>
-                          <Text style={styles.statValue}>{room.numWindows || 0}</Text>
+                          <Text style={styles.statValue}>{room.windows || 0}</Text>
                         </View>
                       </View>
 
@@ -312,13 +312,13 @@ export default function ScopeScreen() {
         </View>
       </ScrollView>
 
-      <TouchableOpacity
+      {/* <TouchableOpacity
         onPress={onCreateRoom}
         style={styles.createButton}
         activeOpacity={0.8}
       >
         <Text style={styles.createButtonText}>Add New Room</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 } 

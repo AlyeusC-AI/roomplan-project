@@ -247,38 +247,7 @@ export default function ProjectDetails() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
 
     <VStack space={4}>
-      <View style={styles.section}>
-        <HStack space={2} alignItems="center" mb={4}>
-          <Building2 size={24} color="#2563eb" />
-          <Text style={styles.sectionTitle}>Project Information</Text>
-        </HStack>
-        <FormInput
-          label="Project Name"
-          placeholder="Enter project name"
-          value={projectName}
-          onChangeText={setProjectName}
-          containerStyle={styles.inputContainer}
-          leftElement={<FileText size={20} color="#94a3b8" style={styles.inputIcon} />}
-        />
-        <FormInput
-          label="Project Manager Name"
-          placeholder="Enter project manager name"
-          value={managerName}
-          onChangeText={setManagerName}
-          containerStyle={styles.inputContainer}
-          leftElement={<UserCircle size={20} color="#94a3b8" style={styles.inputIcon} />}
-        />
-        <FormInput
-          label="Company Name"
-          placeholder="Enter company name"
-          value={companyName}
-          onChangeText={setCompanyName}
-          containerStyle={styles.inputContainer}
-          leftElement={<Building size={20} color="#94a3b8" style={styles.inputIcon} />}
-        />
-      </View>
-
-      <View style={styles.section}>
+    <View style={styles.section}>
         <HStack space={2} alignItems="center" mb={4}>
           <AlertTriangle size={24} color="#2563eb" />
           <Text style={styles.sectionTitle}>Loss Details</Text>
@@ -311,6 +280,38 @@ export default function ProjectDetails() {
           leftElement={<FileCheck size={20} color="#94a3b8" style={styles.inputIcon} />}
         />
       </View>
+      <View style={styles.section}>
+        <HStack space={2} alignItems="center" mb={4}>
+          <Building2 size={24} color="#2563eb" />
+          <Text style={styles.sectionTitle}>Project Information</Text>
+        </HStack>
+        <FormInput
+          label="Project Name"
+          placeholder="Enter project name"
+          value={projectName}
+          onChangeText={setProjectName}
+          containerStyle={styles.inputContainer}
+          leftElement={<FileText size={20} color="#94a3b8" style={styles.inputIcon} />}
+        />
+        <FormInput
+          label="Project Manager Name"
+          placeholder="Enter project manager name"
+          value={managerName}
+          onChangeText={setManagerName}
+          containerStyle={styles.inputContainer}
+          leftElement={<UserCircle size={20} color="#94a3b8" style={styles.inputIcon} />}
+        />
+        <FormInput
+          label="Company Name"
+          placeholder="Enter company name"
+          value={companyName}
+          onChangeText={setCompanyName}
+          containerStyle={styles.inputContainer}
+          leftElement={<Building size={20} color="#94a3b8" style={styles.inputIcon} />}
+        />
+      </View>
+
+     
   
     </VStack>
     </TouchableWithoutFeedback>

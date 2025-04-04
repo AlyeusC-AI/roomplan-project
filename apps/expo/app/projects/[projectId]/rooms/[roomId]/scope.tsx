@@ -10,6 +10,10 @@ import {
   FlatList,
   Dimensions,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { Text } from "@/components/ui/text";
 import { router, useGlobalSearchParams, useRouter } from "expo-router";
@@ -20,9 +24,8 @@ import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { Platform } from "react-native";
 import { BlurView } from "expo-blur";
 import { api } from "@/lib/api";
 
@@ -255,7 +258,7 @@ export default function RoomScopeScreen() {
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
   const [equipmentSearch, setEquipmentSearch] = useState("");
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
-
+  const { top, bottom } = useSafeAreaInsets();
   useEffect(() => {
     // Find the room in the rooms store
     const foundRoom = rooms.rooms.find((r) => r.publicId === roomId);
@@ -331,6 +334,7 @@ export default function RoomScopeScreen() {
         
         setRoom(updatedRoom);
         toast.success("Changes saved successfully");
+        fetchRoom();
         setHasChanges(false);
         setLocalChanges({});
       }
@@ -400,6 +404,7 @@ export default function RoomScopeScreen() {
       }
 
       toast.success("Area updated successfully");
+      fetchRoom();
     } catch (error) {
       console.error("Error toggling area:", error);
       toast.error("Failed to update area");
@@ -553,9 +558,13 @@ export default function RoomScopeScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <StatusBar style="light" />
-      <View style={styles.headerContainer}>
+    <KeyboardAvoidingView
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+    style={{ flex: 1 }}
+    keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+  >
+    <View className="flex-1 bg-background" >
+      <View style={[styles.headerContainer, { paddingTop: top }]}>
         <View className="px-6 py-4 flex-row items-center">
           <TouchableOpacity
             onPress={() => router.back()}
@@ -774,7 +783,9 @@ export default function RoomScopeScreen() {
                     if (area.type !== activeTab) return null;
                     
                     return (
+                      
                       <View key={area.publicId} className="space-y-6">
+                       
                         <View style={styles.detailCard}>
                           <Text style={styles.inputLabel}>
                             {area.type === "wall"
@@ -951,7 +962,7 @@ export default function RoomScopeScreen() {
 
       {hasChanges && (
         <BlurView intensity={20} tint="light" style={styles.saveBar}>
-          <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center justify-between" style={{ paddingBottom: bottom }}>
             <Text className="text-sm font-medium text-slate-600">
               {saving ? "Saving changes..." : "You have unsaved changes"}
             </Text>
@@ -979,6 +990,8 @@ export default function RoomScopeScreen() {
           </View>
         </BlurView>
       )}
-    </SafeAreaView>
+    </View>
+    </KeyboardAvoidingView>
+
   );
 } 

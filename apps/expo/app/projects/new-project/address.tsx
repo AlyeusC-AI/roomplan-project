@@ -12,7 +12,7 @@ import {
 import { toast } from "sonner-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { addressPickerStore } from "@/lib/state/address-picker";
-import MapView, { Marker } from "react-native-maps";
+// import MapView, { Marker } from "react-native-maps";
 
 export default function Address() {
   const { address } = addressPickerStore((state) => state);
@@ -66,7 +66,7 @@ export default function Address() {
       </View>
 
       <KeyboardAwareScrollView>
-        {address && (
+        {/* {address && (
           <MapView
             scrollEnabled={false}
             style={{
@@ -88,7 +88,7 @@ export default function Address() {
               title={address.address1}
             />
           </MapView>
-        )}
+        )} */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Street Address</Text>
 
