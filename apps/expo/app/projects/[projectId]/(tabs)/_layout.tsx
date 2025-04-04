@@ -7,6 +7,7 @@ import {
   Images,
   StickyNote,
   ClipboardList,
+  Ruler,
 } from "lucide-react-native";
 import { router, Tabs, useGlobalSearchParams } from "expo-router";
 import {
@@ -83,7 +84,7 @@ export default function Layout() {
                     <ArrowLeft color="white" size={20} />
                   </TouchableOpacity>
                   <Text className="text-white text-lg font-semibold">
-                    {project.project?.clientName || "Project"}
+                    { route.name === "scope" ? "Scope": project.project?.clientName || "Project"}
                   </Text>
                 </View>
                 {route.name === "index" && (
@@ -116,6 +117,9 @@ export default function Layout() {
           if (route.name === "forms") {
             return <ClipboardList size={24} color={color} />;
           }
+          if (route.name === "scope") {
+            return <Ruler size={24} color={color} />;
+          }
           return null;
         },
       })}
@@ -143,6 +147,12 @@ export default function Layout() {
         name="notes"
         options={{
           title: "Notes",
+        }}
+      />
+      <Tabs.Screen
+        name="scope"
+        options={{
+          title: "Scope",
         }}
       />
       <Tabs.Screen

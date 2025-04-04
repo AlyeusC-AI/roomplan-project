@@ -7,6 +7,7 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const user = userStore.getState();
+
   if (user.session?.access_token) {
     config.headers["auth-token"] = user.session.access_token;
   }
