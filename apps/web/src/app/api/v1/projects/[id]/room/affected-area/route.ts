@@ -42,7 +42,14 @@ export async function POST(
         .single();
 
       if (existingArea) {
-        return NextResponse.json({ status: "ok", areaAffected: existingArea }, { status: 200 });
+        await supabaseServiceRole
+        .from("AreaAffected")
+        .update({
+          isDeleted: false
+        })
+        .eq("roomId", room!.id)
+        .eq("type", body.type);
+        return NextResponse.json({ status: "ok", areaAffected: {...existingArea, isDeleted: false} }, { status: 200 });
       }
 
       const result = await supabaseServiceRole
