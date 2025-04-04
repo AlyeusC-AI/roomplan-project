@@ -290,8 +290,6 @@ export default function RoomScopeScreen() {
       });
   };
 
-
-
   const saveAffectedArea = async (
     data: any,
     type: string,
@@ -312,7 +310,6 @@ export default function RoomScopeScreen() {
       } else {
         toast.success("Changes saved successfully");
       }
-
 
       if (res.status !== 200) {
         toast.error("Failed to save changes");
@@ -354,7 +351,9 @@ export default function RoomScopeScreen() {
       const existingArea = room.AreaAffected.find(
         (a: any) => a.type === type && !a.isDeleted
       );
-
+      console.log("🚀 ~ handleAreaToggle ~ room.AreaAffected:", room.AreaAffected)
+      console.log("🚀 ~ handleAreaToggle ~ existingArea:",roomId,type, existingArea)
+    //   return;
       setSaving(true);
 
       if (existingArea) {
@@ -366,11 +365,9 @@ export default function RoomScopeScreen() {
         });
 
         if (res.status !== 200) {
-      
           throw new Error("Failed to update area");
         }
 
-        
         // Update local state
         setRoom((prevRoom: any) => ({
           ...prevRoom,
@@ -387,6 +384,7 @@ export default function RoomScopeScreen() {
           type,
         });
         const json = res.data;
+        console.log("🚀 ~ handleAreaToggle ~ json:", json)
         if (res.status !== 200) {
           throw new Error("Failed to create area");
         }
@@ -409,10 +407,6 @@ export default function RoomScopeScreen() {
       setSaving(false);
     }
   };
-
-
-     
-  
 
   const handleInputChange = (
     field: string,
@@ -453,6 +447,12 @@ export default function RoomScopeScreen() {
       toast.success("Room details saved successfully");
       setHasChanges(false);
       setLocalChanges({});
+      setRoom({
+        ...room,
+        ...data
+      });
+      // Refetch room data to ensure we have the latest state
+      fetchRoom();
     } catch (e) {
       console.error(e);
       toast.error("Failed to save room details");
@@ -491,7 +491,7 @@ export default function RoomScopeScreen() {
         : [...prev, equipment];
 
       // Update the room equipment field
-      handleRoomDetailChange("equipment", newSelection.join(","));
+      handleRoomDetailChange("equipmentUsed", newSelection);
       return newSelection;
     });
   };
@@ -536,13 +536,15 @@ export default function RoomScopeScreen() {
   };
 
   useEffect(() => {
+    console.log("🚀 ~ useEffect ~ room:", room)
+
     // Set initial equipment selection when room data is loaded
-    if (room?.equipment) {
-      setSelectedEquipment(room.equipment.split(",").filter(Boolean));
+    if (room?.equipmentUsed) {
+      setSelectedEquipment(room.equipmentUsed);
     }
   }, [room]);
 
-  if (loading) {
+  if (loading && !room) {
     return (
       <View className="flex items-center justify-center h-full w-full">
         <ActivityIndicator />
@@ -637,8 +639,8 @@ export default function RoomScopeScreen() {
                       style={styles.input}
                       placeholder="0"
                       keyboardType="numeric"
-                      value={getRoomFieldValue(room, "numDoors")}
-                      onChangeText={(text) => handleRoomDetailChange("numDoors", text)}
+                      value={(getRoomFieldValue(room, "doors")).toString()}
+                      onChangeText={(text) => handleRoomDetailChange("doors", text)}
                       placeholderTextColor="#94a3b8"
                     />
                   </View>
@@ -651,8 +653,8 @@ export default function RoomScopeScreen() {
                       style={styles.input}
                       placeholder="0"
                       keyboardType="numeric"
-                      value={getRoomFieldValue(room, "numWindows")}
-                      onChangeText={(text) => handleRoomDetailChange("numWindows", text)}
+                      value={(getRoomFieldValue(room, "windows")).toString()}
+                      onChangeText={(text) => handleRoomDetailChange("windows", text)}
                       placeholderTextColor="#94a3b8"
                     />
                   </View>
