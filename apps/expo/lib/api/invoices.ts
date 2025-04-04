@@ -1,5 +1,5 @@
 import { Invoice, InvoiceItem } from "@/lib/state/invoices";
-import { userStore } from "@/lib/state/user";
+import { apiClient } from './client';
 
 // Interface for API requests
 interface CreateInvoiceRequest {
@@ -17,7 +17,7 @@ interface CreateInvoiceRequest {
     tax?: number;
     total: number;
     deposit?: number;
-    status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+    status?: "draft" | "sent" | "paid" | "overdue" | "cancelled";
     notes?: string;
     terms?: string;
   };
@@ -41,47 +41,25 @@ interface ApiResponse<T> {
   error?: string;
 }
 
-const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL;
-
-// Helper function to get auth token
-const getAuthToken = (): string | null => {
-  const { session } = userStore.getState();
-  return session?.access_token || null;
-};
-
 /**
  * Fetch all invoices, optionally filtered by status
  */
-export async function fetchInvoices(status?: string): Promise<ApiResponse<Invoice[]>> {
+export async function fetchInvoices(
+  status?: string
+): Promise<ApiResponse<Invoice[]>> {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return { error: "Not authenticated" };
-    }
+    const url = status
+      ? `/api/v1/invoices?status=${encodeURIComponent(status)}`
+      : "/api/v1/invoices";
 
-    const url = status 
-      ? `${BASE_URL}/api/v1/invoices?status=${encodeURIComponent(status)}`
-      : `${BASE_URL}/api/v1/invoices`;
+    const response = await apiClient(url);
     
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "auth-token": token
-      }
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to fetch invoices');
-    }
-    
-    const data = await response.json();
-    return { data: data.invoices };
+    return { data: response.invoices };
   } catch (error) {
-    console.error('Error fetching invoices:', error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    console.error("Error fetching invoices:", error);
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -89,32 +67,20 @@ export async function fetchInvoices(status?: string): Promise<ApiResponse<Invoic
 /**
  * Fetch a single invoice by its public ID
  */
-export async function fetchInvoiceById(publicId: string): Promise<ApiResponse<Invoice>> {
+export async function fetchInvoiceById(
+  publicId: string
+): Promise<ApiResponse<Invoice>> {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return { error: "Not authenticated" };
-    }
-
-    const response = await fetch(`${BASE_URL}/api/v1/invoices/${encodeURIComponent(publicId)}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "auth-token": token
-      }
-    });
+    const response = await apiClient(
+      `/api/v1/invoices/${encodeURIComponent(publicId)}`
+    );
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to fetch invoice');
-    }
-    
-    const data = await response.json();
-    return { data: data.invoice };
+    return { data: response.invoice };
   } catch (error) {
     console.error(`Error fetching invoice ${publicId}:`, error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -122,33 +88,21 @@ export async function fetchInvoiceById(publicId: string): Promise<ApiResponse<In
 /**
  * Create a new invoice
  */
-export async function createInvoice(data: CreateInvoiceRequest): Promise<ApiResponse<Invoice>> {
+export async function createInvoice(
+  data: CreateInvoiceRequest
+): Promise<ApiResponse<Invoice>> {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return { error: "Not authenticated" };
-    }
-
-    const response = await fetch(`${BASE_URL}/api/v1/invoices`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        "auth-token": token
-      },
+    const response = await apiClient("/api/v1/invoices", {
+      method: "POST",
       body: JSON.stringify(data),
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to create invoice');
-    }
-    
-    const responseData = await response.json();
-    return { data: responseData.invoice };
+
+    return { data: response.invoice };
   } catch (error) {
-    console.error('Error creating invoice:', error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    console.error("Error creating invoice:", error);
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -156,33 +110,25 @@ export async function createInvoice(data: CreateInvoiceRequest): Promise<ApiResp
 /**
  * Update an existing invoice
  */
-export async function updateInvoice(publicId: string, updates: Partial<CreateInvoiceRequest['invoice']>): Promise<ApiResponse<Invoice>> {
+export async function updateInvoice(
+  publicId: string,
+  updates: Partial<CreateInvoiceRequest["invoice"]>
+): Promise<ApiResponse<Invoice>> {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return { error: "Not authenticated" };
-    }
+    const response = await apiClient(
+      `/api/v1/invoices/${encodeURIComponent(publicId)}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ invoice: updates }),
+      }
+    );
 
-    const response = await fetch(`${BASE_URL}/api/v1/invoices/${encodeURIComponent(publicId)}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        "auth-token": token
-      },
-      body: JSON.stringify({ invoice: updates }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to update invoice');
-    }
-    
-    const data = await response.json();
-    return { data: data.invoice };
+    return { data: response.invoice };
   } catch (error) {
     console.error(`Error updating invoice ${publicId}:`, error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -190,31 +136,23 @@ export async function updateInvoice(publicId: string, updates: Partial<CreateInv
 /**
  * Delete an invoice (soft delete)
  */
-export async function deleteInvoice(publicId: string): Promise<ApiResponse<{ success: boolean }>> {
+export async function deleteInvoice(
+  publicId: string
+): Promise<ApiResponse<{ success: boolean }>> {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return { error: "Not authenticated" };
-    }
-
-    const response = await fetch(`${BASE_URL}/api/v1/invoices/${encodeURIComponent(publicId)}`, {
-      method: 'DELETE',
-      headers: {
-        "Content-Type": "application/json",
-        "auth-token": token
+    await apiClient(
+      `/api/v1/invoices/${encodeURIComponent(publicId)}`,
+      {
+        method: "DELETE",
       }
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to delete invoice');
-    }
-    
+    );
+
     return { data: { success: true } };
   } catch (error) {
     console.error(`Error deleting invoice ${publicId}:`, error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -223,35 +161,100 @@ export async function deleteInvoice(publicId: string): Promise<ApiResponse<{ suc
  * Update invoice status
  */
 export async function updateInvoiceStatus(
-  publicId: string, 
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
+  publicId: string,
+  status: "draft" | "sent" | "paid" | "overdue" | "cancelled"
 ): Promise<ApiResponse<Invoice>> {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return { error: "Not authenticated" };
-    }
+    const response = await apiClient(
+      `/api/v1/invoices/${encodeURIComponent(publicId)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }
+    );
 
-    const response = await fetch(`${BASE_URL}/api/v1/invoices/${encodeURIComponent(publicId)}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        "auth-token": token
-      },
-      body: JSON.stringify({ status }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to update invoice status');
-    }
-    
-    const data = await response.json();
-    return { data: data.invoice };
+    return { data: response.invoice };
   } catch (error) {
     console.error(`Error updating invoice status for ${publicId}:`, error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
+    };
+  }
+}
+
+/**
+ * Add an item to an invoice
+ */
+export async function addInvoiceItem(
+  invoicePublicId: string,
+  item: Omit<InvoiceItem, "id">
+): Promise<ApiResponse<InvoiceItem>> {
+  try {
+    const response = await apiClient(
+      `/api/v1/invoices/${encodeURIComponent(invoicePublicId)}/items`,
+      {
+        method: "POST",
+        body: JSON.stringify(item),
+      }
+    );
+
+    return { data: response.item };
+  } catch (error) {
+    console.error(`Error adding item to invoice ${invoicePublicId}:`, error);
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
+    };
+  }
+}
+
+/**
+ * Update an invoice item
+ */
+export async function updateInvoiceItem(
+  itemPublicId: string,
+  updates: Partial<InvoiceItem>
+): Promise<ApiResponse<InvoiceItem>> {
+  try {
+    const response = await apiClient(
+      `/api/v1/invoice-items/${encodeURIComponent(itemPublicId)}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(updates),
+      }
+    );
+
+    return { data: response.item };
+  } catch (error) {
+    console.error(`Error updating invoice item ${itemPublicId}:`, error);
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
+    };
+  }
+}
+
+/**
+ * Delete an invoice item
+ */
+export async function deleteInvoiceItem(
+  itemPublicId: string
+): Promise<ApiResponse<{ success: boolean }>> {
+  try {
+    await apiClient(
+      `/api/v1/invoice-items/${encodeURIComponent(itemPublicId)}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    return { data: { success: true } };
+  } catch (error) {
+    console.error(`Error deleting invoice item ${itemPublicId}:`, error);
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -259,32 +262,51 @@ export async function updateInvoiceStatus(
 /**
  * Fetch invoices by project ID
  */
-export async function fetchInvoicesByProject(projectPublicId: string): Promise<ApiResponse<Invoice[]>> {
+export async function fetchInvoicesByProject(
+  projectPublicId: string
+): Promise<ApiResponse<Invoice[]>> {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return { error: "Not authenticated" };
-    }
-
-    const response = await fetch(`${BASE_URL}/api/v1/projects/${encodeURIComponent(projectPublicId)}/invoices`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "auth-token": token
-      }
-    });
+    const response = await apiClient(
+      `/api/v1/projects/${encodeURIComponent(projectPublicId)}/invoices`
+    );
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to fetch project invoices');
-    }
-    
-    const data = await response.json();
-    return { data: data.invoices };
+    return { data: response.invoices };
   } catch (error) {
     console.error(`Error fetching invoices for project ${projectPublicId}:`, error);
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
+    };
+  }
+}
+
+/**
+ * Email an invoice to the client
+ */
+export async function emailInvoice(
+  publicId: string,
+  message?: string
+): Promise<ApiResponse<{ success: boolean; message: string }>> {
+  try {
+    const response = await apiClient(
+      `/api/v1/invoices/${encodeURIComponent(publicId)}/email`,
+      {
+        method: "POST",
+        body: JSON.stringify({ message }),
+      }
+    );
+
     return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      data: { 
+        success: true, 
+        message: response.message || "Invoice sent successfully" 
+      } 
+    };
+  } catch (error) {
+    console.error(`Error emailing invoice ${publicId}:`, error);
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 } 

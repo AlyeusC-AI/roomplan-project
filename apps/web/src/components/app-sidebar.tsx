@@ -5,8 +5,6 @@ import {
   AudioWaveform,
   CalendarDays,
   ChartLine,
-  ChevronLeft,
-  ChevronRight,
   Command,
   FileUser,
   FolderKanban,
@@ -15,6 +13,7 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
+  Receipt,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -70,9 +69,30 @@ const data = {
       icon: ChartLine,
     },
     {
+      title: "Estimates",
+      url: "/estimates",
+      icon: Receipt,
+      items: [
+        {
+          title: "All Estimates",
+          url: "/estimates",
+        },
+      ],
+    },
+    {
       title: "Invoices",
       url: "/invoices",
       icon: FileUser,
+      items: [
+        {
+          title: "All Invoices",
+          url: "/invoices",
+        },
+        {
+          title: "Saved Line Items",
+          url: "/invoices/saved-items",
+        },
+      ],
     },
     {
       title: "Settings",
@@ -144,9 +164,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             }
           >
             {state === "collapsed" ? (
-              <PanelLeftOpen className='h-5 w-5 text-gray-600 dark:text-gray-400' />
+              <PanelLeftOpen className='size-5 text-gray-600 dark:text-gray-400' />
             ) : (
-              <PanelLeftClose className='h-5 w-5 text-gray-600 dark:text-gray-400' />
+              <PanelLeftClose className='size-5 text-gray-600 dark:text-gray-400' />
             )}
           </button>
         </div>

@@ -1,184 +1,143 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import {
-  getInvoiceByPublicId,
-  updateInvoice,
-  deleteInvoice,
-  updateInvoiceStatus,
-} from "@/lib/invoices";
+import { user } from "@/lib/supabase/get-user";
 
-// GET - Get a single invoice by its public ID
+// GET /api/v1/invoices/[id] - Get a specific invoice by ID
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ publicId: string }> }
 ) {
   try {
-    const supabase = await createClient();
+    // Authenticate the user with the user function
+    const [supabase, authenticatedUser] = await user(req);
 
-    // Check if user is authenticated
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Not authorized" }, { status: 401 });
-    }
+    const invoiceId = (await params).publicId;
 
-    const { publicId } = await params;
+    // Get the invoice
+    const { data: invoice, error } = await supabase
+      .from("Invoices")
+      .select("*, InvoiceItems(*)")
+      .eq("publicId", invoiceId)
+      .eq("userId", authenticatedUser.id)
+      .eq("isDeleted", false)
+      .single();
 
-    // Get invoice details
-    const invoice = await getInvoiceByPublicId(publicId);
+    if (error) throw error;
 
-    // Check if this invoice belongs to the user or their organization
-    if (invoice.userId !== user.id) {
-      // TODO: Add organization check once org access is configured
-      return NextResponse.json(
-        { error: "Not authorized to access this invoice" },
-        { status: 403 }
-      );
-    }
-
-    return NextResponse.json({ invoice }, { status: 200 });
+    return NextResponse.json({ invoice });
   } catch (error) {
-    const { publicId } = await params;
-    console.error(`Error in GET /api/v1/invoices/${publicId}`, error);
-    const errorMessage =
-      error instanceof Error ? error.message : "Error fetching invoice";
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    console.error(`API error getting invoices:`, error);
+    return NextResponse.json(
+      { error: "Unauthorized or invoice not found" },
+      { status: 401 }
+    );
   }
 }
 
-// PUT - Update an invoice
+// PUT /api/v1/invoices/[id] - Update an invoice
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ publicId: string }> }
 ) {
   try {
-    const supabase = await createClient();
-
-    // Check if user is authenticated
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Not authorized" }, { status: 401 });
-    }
+    // Authenticate the user with the user function
+    const [supabase, authenticatedUser] = await user(req);
 
     const { publicId } = await params;
+    const invoiceId = publicId;
+    const { invoice } = await req.json();
 
-    // Check if this invoice belongs to the user
-    const existingInvoice = await getInvoiceByPublicId(publicId);
-    if (existingInvoice.userId !== user.id) {
-      return NextResponse.json(
-        { error: "Not authorized to update this invoice" },
-        { status: 403 }
-      );
-    }
+    // Verify that the invoice exists and belongs to the user
+    const { error: fetchError } = await supabase
+      .from("Invoices")
+      .select("*")
+      .eq("publicId", invoiceId)
+      .eq("userId", authenticatedUser.id)
+      .single();
 
-    // Get updates from request body
-    const updates = await req.json();
-
-    // Don't allow changing the userId
-    delete updates.userId;
-    delete updates.publicId;
+    if (fetchError) throw fetchError;
 
     // Update the invoice
-    const updatedInvoice = await updateInvoice(publicId, updates);
+    const { data: updatedInvoice, error } = await supabase
+      .from("Invoices")
+      .update(invoice)
+      .eq("publicId", invoiceId)
+      .eq("userId", authenticatedUser.id)
+      .select()
+      .single();
 
-    return NextResponse.json({ invoice: updatedInvoice }, { status: 200 });
+    if (error) throw error;
+
+    return NextResponse.json({ invoice: updatedInvoice });
   } catch (error) {
-    const { publicId } = await params;
-    console.error(`Error in PUT /api/v1/invoices/${publicId}`, error);
-    const errorMessage =
-      error instanceof Error ? error.message : "Error updating invoice";
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    console.error(`API error updating invoice:`, error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "An error occurred" },
+      { status: 400 }
+    );
   }
 }
 
-// DELETE - Soft delete an invoice
+// DELETE /api/v1/invoices/[id] - Soft delete an invoice
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ publicId: string }> }
 ) {
   try {
-    const supabase = await createClient();
-
-    // Check if user is authenticated
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Not authorized" }, { status: 401 });
-    }
+    // Authenticate the user with the user function
+    const [supabase, authenticatedUser] = await user(req);
 
     const { publicId } = await params;
-
-    // Check if this invoice belongs to the user
-    const existingInvoice = await getInvoiceByPublicId(publicId);
-    if (existingInvoice.userId !== user.id) {
-      return NextResponse.json(
-        { error: "Not authorized to delete this invoice" },
-        { status: 403 }
-      );
-    }
+    const invoiceId = publicId;
 
     // Soft delete the invoice
-    await deleteInvoice(publicId);
+    const { error } = await supabase
+      .from("Invoices")
+      .update({ isDeleted: true })
+      .eq("publicId", invoiceId)
+      .eq("userId", authenticatedUser.id);
 
-    return NextResponse.json({ success: true }, { status: 200 });
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    const { publicId } = await params;
-    console.error(`Error in DELETE /api/v1/invoices/${publicId}`, error);
-    const errorMessage =
-      error instanceof Error ? error.message : "Error deleting invoice";
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    console.error(`API error deleting invoice:`, error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "An error occurred" },
+      { status: 400 }
+    );
   }
 }
 
-// PATCH - Update invoice status
+// PATCH /api/v1/invoices/[id] - Update invoice status
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ publicId: string }> }
 ) {
   try {
-    const supabase = await createClient();
-
-    // Check if user is authenticated
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Not authorized" }, { status: 401 });
-    }
+    // Authenticate the user with the user function
+    const [supabase, authenticatedUser] = await user(req);
 
     const { publicId } = await params;
-
-    // Check if this invoice belongs to the user
-    const existingInvoice = await getInvoiceByPublicId(publicId);
-    if (existingInvoice.userId !== user.id) {
-      return NextResponse.json(
-        { error: "Not authorized to update this invoice" },
-        { status: 403 }
-      );
-    }
-
-    // Get status from request body
+    const invoiceId = publicId;
     const { status } = await req.json();
-    if (!status) {
-      return NextResponse.json(
-        { error: "Status is required" },
-        { status: 400 }
-      );
-    }
 
     // Update the invoice status
-    const updatedInvoice = await updateInvoiceStatus(publicId, status);
+    const { data: updatedInvoice, error } = await supabase
+      .from("Invoices")
+      .update({ status })
+      .eq("publicId", invoiceId)
+      .eq("userId", authenticatedUser.id)
+      .select()
+      .single();
 
-    return NextResponse.json({ invoice: updatedInvoice }, { status: 200 });
+    if (error) throw error;
+
+    return NextResponse.json({ invoice: updatedInvoice });
   } catch (error) {
-    const { publicId } = await params;
-    console.error(`Error in PATCH /api/v1/invoices/${publicId}`, error);
-    const errorMessage =
-      error instanceof Error ? error.message : "Error updating invoice status";
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    console.error(`API error updating invoice status:`, error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "An error occurred" },
+      { status: 400 }
+    );
   }
 }

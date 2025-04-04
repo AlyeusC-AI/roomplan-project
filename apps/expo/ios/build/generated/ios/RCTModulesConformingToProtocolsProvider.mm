@@ -12,7 +12,7 @@
 +(NSArray<NSString *> *)imageURLLoaderClassNames
 {
   return @[
-    
+    @"MediaLibraryImageLoader"
   ];
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "ExpoModulesCore",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "summary": "The core of Expo Modules architecture",
   "description": "The core of Expo Modules architecture",
   "license": "MIT",
@@ -40,6 +40,7 @@
     "React-RCTAppDelegate": [],
     "React-NativeModulesApple": [],
     "React-RCTFabric": [],
+    "ReactAppDependencyProvider": [],
     "RCT-Folly": [
       "2024.01.01.00"
     ],
@@ -58,7 +59,7 @@
     "React-rendererdebug": [],
     "DoubleConversion": []
   },
-  "compiler_flags": "-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_CFG_NO_COROUTINES=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -Wno-comma -Wno-shorten-64-to-32 -DREACT_NATIVE_TARGET_VERSION=76 -DUSE_HERMES",
+  "compiler_flags": "-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_CFG_NO_COROUTINES=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -Wno-comma -Wno-shorten-64-to-32 -DREACT_NATIVE_TARGET_VERSION=78 -DUSE_HERMES",
   "source_files": [
     "ios/**/*.{h,m,mm,swift,cpp}",
     "common/cpp/**/*.{h,cpp}"

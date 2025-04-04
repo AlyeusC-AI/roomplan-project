@@ -1207,6 +1207,7 @@ export type Database = {
           subtotal: number
           taxAmount: number | null
           taxRate: number | null
+          terms: string | null
           updatedAt: string | null
           userId: string
         }
@@ -1237,6 +1238,7 @@ export type Database = {
           subtotal: number
           taxAmount?: number | null
           taxRate?: number | null
+          terms?: string | null
           updatedAt?: string | null
           userId: string
         }
@@ -1267,6 +1269,7 @@ export type Database = {
           subtotal?: number
           taxAmount?: number | null
           taxRate?: number | null
+          terms?: string | null
           updatedAt?: string | null
           userId?: string
         }

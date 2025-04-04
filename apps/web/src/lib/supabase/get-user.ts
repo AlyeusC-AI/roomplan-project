@@ -24,6 +24,8 @@ export async function user(
     error,
   } = await supabase.auth.getUser(authToken);
 
+  console.log(req.headers.get("auth-token"));
+
   // Check if there is an error
   if (!user || error) {
     throw new Error("Unauthorized");
