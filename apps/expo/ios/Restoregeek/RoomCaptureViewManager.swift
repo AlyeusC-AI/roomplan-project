@@ -62,6 +62,7 @@ class RoomScanModule: NSObject, RCTBridgeModule {
   }
 }
 
+@available(iOS 17.0, *)
 @ReactView
 class RoomScanView: RCTViewManager {
     override func view() -> UIView! {
@@ -71,13 +72,17 @@ class RoomScanView: RCTViewManager {
     }
     
     @ReactProperty(isCustom: true)
-    var finish: Bool?
+    var finish: NSNumber?
     
-    @objc
+  @available(iOS 17.0, *)
+  @objc
     func set_finish(_ json: NSNumber?, forView: RoomCaptureViewWrapper?, withDefaultView: RoomCaptureViewWrapper?) {
-        finish = json?.boolValue
-        if finish == true {
-            forView?.stopSession()
+        finish = json
+        if finish as! Int > 0 {
+            forView?.stopSession(finish: finish ?? 0)
+        }
+        if finish as! Int == -1 {
+            forView?.startSession()
         }
     }
     
@@ -88,11 +93,14 @@ class RoomScanView: RCTViewManager {
     var onCaptureError: RCTBubblingEventBlock?
 }
 
-class RoomCaptureViewWrapper : RCTView, RoomCaptureViewDelegate {
+@available(iOS 17.0, *)
+class RoomCaptureViewWrapper : RCTView, RoomCaptureSessionDelegate {
 
     private var roomCaptureView: RoomCaptureView!
     private var roomCaptureSessionConfig: RoomCaptureSession.Configuration = RoomCaptureSession.Configuration()
-    private var finalResults: CapturedRoom?
+    private var finalResults: CapturedStructure?
+    private var roomsArray: [CapturedRoom] = []
+    private var needFinish: Bool = false
 
     @objc var onCaptureCompleted: RCTBubblingEventBlock?
     @objc var onCaptureError: RCTBubblingEventBlock?
@@ -109,37 +117,67 @@ class RoomCaptureViewWrapper : RCTView, RoomCaptureViewDelegate {
 
     private func setupRoomCapture() {
         logger.info("[RoomCapture] Setting up RoomCaptureView")
-        roomCaptureView = RoomCaptureView(frame: self.bounds)
-        roomCaptureView.delegate = self
+        self.roomCaptureView = RoomCaptureView(frame: self.bounds)
+        self.roomCaptureView.captureSession.delegate = self
 
         let destinationFolderURL = FileManager.default.temporaryDirectory.appending(path: "Export")
         try? FileManager.default.removeItem(at: destinationFolderURL)
 
         self.addSubview(roomCaptureView)
-
-        startSession()
     }
 
     public func startSession() {
         logger.info("[RoomCapture] Starting capture session")
         roomCaptureView?.captureSession.run(configuration: roomCaptureSessionConfig)
     }
-    
-    public func stopSession() {
-        logger.info("[RoomCapture] Stopping capture session")
-        roomCaptureView?.captureSession.stop()
+
+    public func stopSession(finish: NSNumber) {
+        self.needFinish = finish == 2
+        logger.info("[RoomCapture] Stopping capture session  \(self.needFinish)")
+        self.roomCaptureView?.captureSession.stop(pauseARSession: self.needFinish)
     }
 
     func captureView(shouldPresent roomDataForProcessing: CapturedRoomData, error: Error?) -> Bool {
         return true
     }
 
-    func captureView(didPresent processedResult: CapturedRoom, error: Error?) {
-        logger.info("[RoomCapture] didPresent processedResult")
-        finalResults = processedResult
-        
-        saveRoomResult()
+    func captureSession(_ session: RoomCaptureSession, didEndWith data: CapturedRoomData, error: Error?) {
+        logger.info("[RoomCapture] didEndWith data")
+        if ((error) != nil) { return }
+        Task {
+            let roomBuilder = RoomBuilder(options: [.beautifyObjects])
+            if let capturedRoom = try? await roomBuilder.capturedRoom(from: data) {
+              self.roomsArray.append(capturedRoom)
+
+              if (self.needFinish) {
+                  do {
+                      let structureBuilder = StructureBuilder(options: .beautifyObjects)
+                      try self.finalResults = await structureBuilder.capturedStructure(from: self.roomsArray)
+                      self.saveRoomResult()
+                  } catch {
+                      print("Error = \(error)")
+                      self.onCaptureError?(["message": "Error = \(error)"])
+                  }
+              }
+            }
+        }
     }
+
+//    func captureView(didPresent processedResult: CapturedRoom, error: Error?) async {
+//        logger.info("[RoomCapture] didPresent processedResult")
+//        self.roomsArray.append(processedResult)
+//
+//        if (self.needFinish) {
+//            do {
+//                let structureBuilder = StructureBuilder(options: .beautifyObjects)
+//                try self.finalResults = await structureBuilder.capturedStructure(from: self.roomsArray)
+//                self.saveRoomResult()
+//            } catch {
+//                print("Error = \(error)")
+//                self.onCaptureError?(["message": "Error = \(error)"])
+//            }
+//        }
+//    }
 
     func saveRoomResult() {
         let destinationFolderURL = FileManager.default.temporaryDirectory.appending(path: "Export")
@@ -154,8 +192,8 @@ class RoomCaptureViewWrapper : RCTView, RoomCaptureViewDelegate {
             let transformedRoomJsonData = try jsonEncoder.encode(transformedRoom)
             try roomJsonData.write(to: capturedRoomURL)
             try transformedRoomJsonData.write(to: transformedRoomURL)
-            try finalResults?.export(to: destinationURL, exportOptions: .mesh)
-            
+            try self.finalResults?.export(to: destinationURL, exportOptions: .mesh)
+
             logger.info("[RoomCapture] Successfully processed room \(destinationURL)")
         } catch {
             print("Error = \(error)")
@@ -171,47 +209,38 @@ class RoomCaptureViewWrapper : RCTView, RoomCaptureViewDelegate {
     }
 
     func surfaceToCoords(surfaces: [CapturedRoom.Surface]) -> [[simd_float3]] {
-      if #available(iOS 17.0, *) {
-        let transformedPoints = surfaces.map { surface in
-          var extendedCorners = surface.polygonCorners
-          if extendedCorners.isEmpty {
-              extendedCorners = [surface.dimensions * -0.5, surface.dimensions * 0.5]
-          }
-          return extendedCorners.map { transformPoint($0, using: surface.transform) }
+      let transformedPoints = surfaces.map { surface in
+        var extendedCorners = surface.polygonCorners
+        if extendedCorners.isEmpty {
+            extendedCorners = [surface.dimensions * -0.5, surface.dimensions * 0.5]
         }
-        return transformedPoints
+        return extendedCorners.map { transformPoint($0, using: surface.transform) }
       }
-      return []
+      return transformedPoints
     }
 
     func objectToCoords(objects: [CapturedRoom.Object]) -> [[simd_float3]] {
-      if #available(iOS 17.0, *) {
-        let transformedPoints = objects.map { object in
-          var pll = object.dimensions * -0.5
-          var ptr = object.dimensions * 0.5
-          let plr = simd_make_float3(pll.x, 0, ptr.z)
-          let ptl = simd_make_float3(ptr.x, 0, pll.z)
-          pll.y = 0
-          ptr.y = 0
-          let extendedCorners = [pll, plr, ptr, ptl, pll]
-          return extendedCorners.map { transformPoint($0, using: object.transform) }
-        }
-        return transformedPoints
+      let transformedPoints = objects.map { object in
+        var pll = object.dimensions * -0.5
+        var ptr = object.dimensions * 0.5
+        let plr = simd_make_float3(pll.x, 0, ptr.z)
+        let ptl = simd_make_float3(ptr.x, 0, pll.z)
+        pll.y = 0
+        ptr.y = 0
+        let extendedCorners = [pll, plr, ptr, ptl, pll]
+        return extendedCorners.map { transformPoint($0, using: object.transform) }
       }
-      return []
+      return transformedPoints
     }
 
     func getTransformedRoom() -> [String: [[simd_float3]]] {
-      if #available(iOS 17.0, *) {
-        return [
-          "floors": surfaceToCoords(surfaces: finalResults?.floors ?? []),
-          "walls": surfaceToCoords(surfaces: finalResults?.walls ?? []),
-          "doors": surfaceToCoords(surfaces: finalResults?.doors ?? []),
-          "windows": surfaceToCoords(surfaces: finalResults?.windows ?? []),
-          "openings": surfaceToCoords(surfaces: finalResults?.openings ?? []),
-          "objects": objectToCoords(objects: finalResults?.objects ?? []),
-        ]
-      }
-      return [:]
+      return [
+        "floors": surfaceToCoords(surfaces: self.finalResults?.floors ?? []),
+        "walls": surfaceToCoords(surfaces: self.finalResults?.walls ?? []),
+        "doors": surfaceToCoords(surfaces: self.finalResults?.doors ?? []),
+        "windows": surfaceToCoords(surfaces: self.finalResults?.windows ?? []),
+        "openings": surfaceToCoords(surfaces: self.finalResults?.openings ?? []),
+        "objects": objectToCoords(objects: self.finalResults?.objects ?? []),
+      ]
     }
 }
