@@ -36,6 +36,11 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+.yarn/
+.yarnrc
+.yarnrc.yml
+.pnp.cjs
+.pnp.loader.mjs
 
 apps/expo/.expo/xcodebuild-error.log
 apps/expo/ios/.xcode.env.local

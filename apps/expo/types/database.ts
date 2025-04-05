@@ -2833,9 +2833,167 @@ export type Database = {
             referencedRelation: "Project"
             referencedColumns: ["id"]
           },
-        ]
-      }
-    }
+        ];
+      };
+      EstimateItems: {
+        Row: {
+          amount: number;
+          createdAt: string | null;
+          description: string;
+          estimatePublicId: string;
+          id: string;
+          isDeleted: boolean | null;
+          publicId: string;
+          quantity: number;
+          rate: number;
+          sortOrder: number | null;
+          updatedAt: string | null;
+        };
+        Insert: {
+          amount: number;
+          createdAt?: string | null;
+          description: string;
+          estimatePublicId: string;
+          id?: string;
+          isDeleted?: boolean | null;
+          publicId?: string;
+          quantity: number;
+          rate: number;
+          sortOrder?: number | null;
+          updatedAt?: string | null;
+        };
+        Update: {
+          amount?: number;
+          createdAt?: string | null;
+          description?: string;
+          estimatePublicId?: string;
+          id?: string;
+          isDeleted?: boolean | null;
+          publicId?: string;
+          quantity?: number;
+          rate?: number;
+          sortOrder?: number | null;
+          updatedAt?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "EstimateItems_estimatePublicId_fkey";
+            columns: ["estimatePublicId"];
+            isOneToOne: false;
+            referencedRelation: "Estimates";
+            referencedColumns: ["publicId"];
+          },
+        ];
+      };
+      Estimates: {
+        Row: {
+          amount: number;
+          clientEmail: string | null;
+          clientName: string;
+          createdAt: string | null;
+          daysToPay: number | null;
+          depositAmount: number | null;
+          depositPercentage: number | null;
+          discountAmount: number | null;
+          estimateDate: string | null;
+          expiryDate: string | null;
+          hasPaymentSchedule: boolean | null;
+          id: string;
+          isDeleted: boolean | null;
+          markupAmount: number | null;
+          markupPercentage: number | null;
+          notes: string | null;
+          number: string;
+          organizationPublicId: string | null;
+          poNumber: string | null;
+          projectName: string;
+          projectPublicId: string | null;
+          publicId: string;
+          status: Database["public"]["Enums"]["estimateStatus"];
+          subtotal: number;
+          taxAmount: number | null;
+          taxRate: number | null;
+          updatedAt: string | null;
+          userId: string;
+        };
+        Insert: {
+          amount: number;
+          clientEmail?: string | null;
+          clientName: string;
+          createdAt?: string | null;
+          daysToPay?: number | null;
+          depositAmount?: number | null;
+          depositPercentage?: number | null;
+          discountAmount?: number | null;
+          estimateDate?: string | null;
+          expiryDate?: string | null;
+          hasPaymentSchedule?: boolean | null;
+          id?: string;
+          isDeleted?: boolean | null;
+          markupAmount?: number | null;
+          markupPercentage?: number | null;
+          notes?: string | null;
+          number: string;
+          organizationPublicId?: string | null;
+          poNumber?: string | null;
+          projectName: string;
+          projectPublicId?: string | null;
+          publicId?: string;
+          status?: Database["public"]["Enums"]["estimateStatus"];
+          subtotal: number;
+          taxAmount?: number | null;
+          taxRate?: number | null;
+          updatedAt?: string | null;
+          userId: string;
+        };
+        Update: {
+          amount?: number;
+          clientEmail?: string | null;
+          clientName?: string;
+          createdAt?: string | null;
+          daysToPay?: number | null;
+          depositAmount?: number | null;
+          depositPercentage?: number | null;
+          discountAmount?: number | null;
+          estimateDate?: string | null;
+          expiryDate?: string | null;
+          hasPaymentSchedule?: boolean | null;
+          id?: string;
+          isDeleted?: boolean | null;
+          markupAmount?: number | null;
+          markupPercentage?: number | null;
+          notes?: string | null;
+          number?: string;
+          organizationPublicId?: string | null;
+          poNumber?: string | null;
+          projectName?: string;
+          projectPublicId?: string | null;
+          publicId?: string;
+          status?: Database["public"]["Enums"]["estimateStatus"];
+          subtotal?: number;
+          taxAmount?: number | null;
+          taxRate?: number | null;
+          updatedAt?: string | null;
+          userId?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "Estimates_organizationPublicId_fkey";
+            columns: ["organizationPublicId"];
+            isOneToOne: false;
+            referencedRelation: "Organization";
+            referencedColumns: ["publicId"];
+          },
+          {
+            foreignKeyName: "Estimates_projectPublicId_fkey";
+            columns: ["projectPublicId"];
+            isOneToOne: false;
+            referencedRelation: "Project";
+            referencedColumns: ["publicId"];
+          },
+        ];
+      };
+    };
     Views: {
       [_ in never]: never
     }
@@ -3004,8 +3162,10 @@ export type Database = {
         | "incomplete"
         | "incomplete_expired"
         | "past_due"
-        | "unpaid"
-    }
+        | "unpaid";
+      estimateStatus: "draft" | "sent" | "approved" | "rejected" | "cancelled" | "expired";
+      invoiceStatus: "draft" | "sent" | "paid" | "overdue" | "cancelled";
+    };
     CompositeTypes: {
       http_header: {
         field: string | null

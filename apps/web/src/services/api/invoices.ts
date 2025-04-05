@@ -1,5 +1,3 @@
-import { Invoice, InvoiceItem } from "@/atoms/invoices";
-
 // Interface for API requests
 interface CreateInvoiceRequest {
   invoice: {
@@ -16,7 +14,7 @@ interface CreateInvoiceRequest {
     tax?: number;
     total: number;
     deposit?: number;
-    status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+    status?: "draft" | "sent" | "paid" | "overdue" | "cancelled";
     notes?: string;
     terms?: string;
   };
@@ -43,24 +41,27 @@ interface ApiResponse<T> {
 /**
  * Fetch all invoices, optionally filtered by status
  */
-export async function fetchInvoices(status?: string): Promise<ApiResponse<Invoice[]>> {
+export async function fetchInvoices(
+  status?: string
+): Promise<ApiResponse<Invoice[]>> {
   try {
-    const url = status 
+    const url = status
       ? `/api/v1/invoices?status=${encodeURIComponent(status)}`
-      : '/api/v1/invoices';
-    
+      : "/api/v1/invoices";
+
     const response = await fetch(url);
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to fetch invoices');
+      throw new Error(errorData.error || "Failed to fetch invoices");
     }
-    
+
     const data = await response.json();
     return { data: data.invoices };
   } catch (error) {
-    console.error('Error fetching invoices:', error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    console.error("Error fetching invoices:", error);
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -68,20 +69,25 @@ export async function fetchInvoices(status?: string): Promise<ApiResponse<Invoic
 /**
  * Fetch a single invoice by its public ID
  */
-export async function fetchInvoiceById(publicId: string): Promise<ApiResponse<Invoice>> {
+export async function fetchInvoiceById(
+  publicId: string
+): Promise<ApiResponse<Invoice>> {
   try {
-    const response = await fetch(`/api/v1/invoices/${encodeURIComponent(publicId)}`);
+    const response = await fetch(
+      `/api/v1/invoices/${encodeURIComponent(publicId)}`
+    );
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to fetch invoice');
+      throw new Error(errorData.error || "Failed to fetch invoice");
     }
-    
+
     const data = await response.json();
     return { data: data.invoice };
   } catch (error) {
     console.error(`Error fetching invoice ${publicId}:`, error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -89,27 +95,30 @@ export async function fetchInvoiceById(publicId: string): Promise<ApiResponse<In
 /**
  * Create a new invoice
  */
-export async function createInvoice(data: CreateInvoiceRequest): Promise<ApiResponse<Invoice>> {
+export async function createInvoice(
+  data: CreateInvoiceRequest
+): Promise<ApiResponse<Invoice>> {
   try {
-    const response = await fetch('/api/v1/invoices', {
-      method: 'POST',
+    const response = await fetch("/api/v1/invoices", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to create invoice');
+      throw new Error(errorData.error || "Failed to create invoice");
     }
-    
+
     const responseData = await response.json();
     return { data: responseData.invoice };
   } catch (error) {
-    console.error('Error creating invoice:', error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    console.error("Error creating invoice:", error);
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -117,27 +126,34 @@ export async function createInvoice(data: CreateInvoiceRequest): Promise<ApiResp
 /**
  * Update an existing invoice
  */
-export async function updateInvoice(publicId: string, updates: Partial<CreateInvoiceRequest['invoice']>): Promise<ApiResponse<Invoice>> {
+export async function updateInvoice(
+  publicId: string,
+  updates: Partial<CreateInvoiceRequest["invoice"]>
+): Promise<ApiResponse<Invoice>> {
   try {
-    const response = await fetch(`/api/v1/invoices/${encodeURIComponent(publicId)}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ invoice: updates }),
-    });
-    
+    const response = await fetch(
+      `/api/v1/invoices/${encodeURIComponent(publicId)}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ invoice: updates }),
+      }
+    );
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to update invoice');
+      throw new Error(errorData.error || "Failed to update invoice");
     }
-    
+
     const data = await response.json();
     return { data: data.invoice };
   } catch (error) {
     console.error(`Error updating invoice ${publicId}:`, error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -145,22 +161,28 @@ export async function updateInvoice(publicId: string, updates: Partial<CreateInv
 /**
  * Delete an invoice (soft delete)
  */
-export async function deleteInvoice(publicId: string): Promise<ApiResponse<{ success: boolean }>> {
+export async function deleteInvoice(
+  publicId: string
+): Promise<ApiResponse<{ success: boolean }>> {
   try {
-    const response = await fetch(`/api/v1/invoices/${encodeURIComponent(publicId)}`, {
-      method: 'DELETE',
-    });
-    
+    const response = await fetch(
+      `/api/v1/invoices/${encodeURIComponent(publicId)}`,
+      {
+        method: "DELETE",
+      }
+    );
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to delete invoice');
+      throw new Error(errorData.error || "Failed to delete invoice");
     }
-    
+
     return { data: { success: true } };
   } catch (error) {
     console.error(`Error deleting invoice ${publicId}:`, error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -169,29 +191,33 @@ export async function deleteInvoice(publicId: string): Promise<ApiResponse<{ suc
  * Update invoice status
  */
 export async function updateInvoiceStatus(
-  publicId: string, 
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
+  publicId: string,
+  status: "draft" | "sent" | "paid" | "overdue" | "cancelled"
 ): Promise<ApiResponse<Invoice>> {
   try {
-    const response = await fetch(`/api/v1/invoices/${encodeURIComponent(publicId)}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ status }),
-    });
-    
+    const response = await fetch(
+      `/api/v1/invoices/${encodeURIComponent(publicId)}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      }
+    );
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to update invoice status');
+      throw new Error(errorData.error || "Failed to update invoice status");
     }
-    
+
     const data = await response.json();
     return { data: data.invoice };
   } catch (error) {
     console.error(`Error updating invoice status for ${publicId}:`, error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -200,29 +226,33 @@ export async function updateInvoiceStatus(
  * Add an item to an invoice
  */
 export async function addInvoiceItem(
-  invoicePublicId: string, 
-  item: Omit<InvoiceItem, 'id'>
+  invoicePublicId: string,
+  item: Omit<InvoiceItem, "id">
 ): Promise<ApiResponse<InvoiceItem>> {
   try {
-    const response = await fetch(`/api/v1/invoices/${encodeURIComponent(invoicePublicId)}/items`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(item),
-    });
-    
+    const response = await fetch(
+      `/api/v1/invoices/${encodeURIComponent(invoicePublicId)}/items`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(item),
+      }
+    );
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to add invoice item');
+      throw new Error(errorData.error || "Failed to add invoice item");
     }
-    
+
     const data = await response.json();
     return { data: data.item };
   } catch (error) {
     console.error(`Error adding item to invoice ${invoicePublicId}:`, error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -231,29 +261,33 @@ export async function addInvoiceItem(
  * Update an invoice item
  */
 export async function updateInvoiceItem(
-  itemPublicId: string, 
+  itemPublicId: string,
   updates: Partial<InvoiceItem>
 ): Promise<ApiResponse<InvoiceItem>> {
   try {
-    const response = await fetch(`/api/v1/invoices/items/${encodeURIComponent(itemPublicId)}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updates),
-    });
-    
+    const response = await fetch(
+      `/api/v1/invoices/items/${encodeURIComponent(itemPublicId)}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updates),
+      }
+    );
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to update invoice item');
+      throw new Error(errorData.error || "Failed to update invoice item");
     }
-    
+
     const data = await response.json();
     return { data: data.item };
   } catch (error) {
     console.error(`Error updating invoice item ${itemPublicId}:`, error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -261,22 +295,28 @@ export async function updateInvoiceItem(
 /**
  * Delete an invoice item
  */
-export async function deleteInvoiceItem(itemPublicId: string): Promise<ApiResponse<{ success: boolean }>> {
+export async function deleteInvoiceItem(
+  itemPublicId: string
+): Promise<ApiResponse<{ success: boolean }>> {
   try {
-    const response = await fetch(`/api/v1/invoices/items/${encodeURIComponent(itemPublicId)}`, {
-      method: 'DELETE',
-    });
-    
+    const response = await fetch(
+      `/api/v1/invoices/items/${encodeURIComponent(itemPublicId)}`,
+      {
+        method: "DELETE",
+      }
+    );
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to delete invoice item');
+      throw new Error(errorData.error || "Failed to delete invoice item");
     }
-    
+
     return { data: { success: true } };
   } catch (error) {
     console.error(`Error deleting invoice item ${itemPublicId}:`, error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -284,20 +324,66 @@ export async function deleteInvoiceItem(itemPublicId: string): Promise<ApiRespon
 /**
  * Fetch invoices for a specific project
  */
-export async function fetchInvoicesByProject(projectPublicId: string): Promise<ApiResponse<Invoice[]>> {
+export async function fetchInvoicesByProject(
+  projectPublicId: string
+): Promise<ApiResponse<Invoice[]>> {
   try {
-    const response = await fetch(`/api/v1/projects/${encodeURIComponent(projectPublicId)}/invoices`);
+    const response = await fetch(
+      `/api/v1/projects/${encodeURIComponent(projectPublicId)}/invoices`
+    );
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to fetch project invoices');
+      throw new Error(errorData.error || "Failed to fetch project invoices");
     }
-    
+
     const data = await response.json();
     return { data: data.invoices };
   } catch (error) {
-    console.error(`Error fetching invoices for project ${projectPublicId}:`, error);
-    return { 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    console.error("Error fetching project invoices:", error);
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
-} 
+}
+
+/**
+ * Send an invoice to client via email
+ */
+export async function emailInvoice(
+  publicId: string,
+  message?: string
+): Promise<ApiResponse<{ success: boolean; message: string }>> {
+  try {
+    const response = await fetch(
+      `/api/v1/invoices/${encodeURIComponent(publicId)}/email`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.error || "Failed to email invoice" };
+    }
+
+    return {
+      data: {
+        success: data.success,
+        message: data.message,
+      },
+    };
+  } catch (error) {
+    console.error(`Error emailing invoice ${publicId}:`, error);
+    return {
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
+    };
+  }
+}

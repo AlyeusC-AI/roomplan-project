@@ -3,32 +3,19 @@ import { persist } from "zustand/middleware";
 import { updateInvoiceStatus } from "@/services/api/invoices";
 import { toast } from "sonner";
 
-export interface Invoice {
+export interface SavedLineItem {
   id: string;
   publicId: string;
-  number: string;
-  clientName: string;
-  clientEmail: string;
-  projectName: string;
-  projectId: string;
-  amount: number;
-  status: "draft" | "sent" | "paid" | "overdue" | "cancelled";
-  createdAt: string;
-  dueDate: string;
-  items: InvoiceItem[];
-}
-
-export interface InvoiceItem {
-  id: string;
   description: string;
-  quantity: number;
   rate: number;
-  amount: number;
+  category?: string;
+  createdAt?: string;
 }
 
 interface State {
   invoices: Invoice[];
   totalInvoices: number;
+  savedLineItems: SavedLineItem[];
 }
 
 interface Actions {
@@ -37,7 +24,15 @@ interface Actions {
   removeInvoice: (id: string) => void;
   setInvoices: (invoices: Invoice[], total: number) => void;
   updateInvoice: (invoice: Partial<Invoice>) => void;
-  handleUpdateStatus: (invoiceId: string, newStatus: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled') => Promise<void>;
+  handleUpdateStatus: (
+    invoiceId: string,
+    newStatus: "draft" | "sent" | "paid" | "overdue" | "cancelled"
+  ) => Promise<void>;
+  // Saved line items actions
+  setSavedLineItems: (items: SavedLineItem[]) => void;
+  addSavedLineItem: (item: SavedLineItem) => void;
+  updateSavedLineItem: (item: SavedLineItem) => void;
+  removeSavedLineItem: (id: string) => void;
 }
 
 export const invoicesStore = create<State & Actions>()(
@@ -45,6 +40,7 @@ export const invoicesStore = create<State & Actions>()(
     (set, get) => ({
       invoices: [],
       totalInvoices: 0,
+      savedLineItems: [],
       addInvoice: (invoice) =>
         set((state) => ({ invoices: [...state.invoices, invoice] })),
       addInvoices: (invoices) =>
@@ -64,29 +60,43 @@ export const invoicesStore = create<State & Actions>()(
       handleUpdateStatus: async (invoiceId, newStatus) => {
         try {
           const result = await updateInvoiceStatus(invoiceId, newStatus);
-          
+
           if (result.error) {
             toast.error(result.error);
             return;
           }
-          
+
           if (result.data) {
             // Update the invoice in our local store
             get().updateInvoice({
               publicId: invoiceId,
-              status: newStatus
+              status: newStatus,
             });
-            
+
             toast.success(`Invoice status updated to ${newStatus}`);
           }
         } catch (error) {
           console.error("Error updating invoice status:", error);
           toast.error("Failed to update invoice status");
         }
-      }
+      },
+      // Saved line items implementations
+      setSavedLineItems: (items) => set(() => ({ savedLineItems: items })),
+      addSavedLineItem: (item) =>
+        set((state) => ({ savedLineItems: [...state.savedLineItems, item] })),
+      updateSavedLineItem: (item) =>
+        set((state) => ({
+          savedLineItems: state.savedLineItems.map((i) =>
+            i.publicId === item.publicId ? { ...i, ...item } : i
+          ),
+        })),
+      removeSavedLineItem: (id) =>
+        set((state) => ({
+          savedLineItems: state.savedLineItems.filter((i) => i.publicId !== id),
+        })),
     }),
     {
       name: "invoices",
     }
   )
-); 
+);

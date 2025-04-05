@@ -17,10 +17,10 @@
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "yarn@1.22.22",
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
- 
+  ],
+  "packageManager": "yarn@1.22.22"
+
 }

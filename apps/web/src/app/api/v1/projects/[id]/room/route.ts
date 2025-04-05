@@ -52,15 +52,17 @@ export async function POST(
 }
 
 export async function PATCH(req: NextRequest) {
-  const supabase = await createClient();
+  await user(req);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    console.error("Session does not exist.");
-    return NextResponse.json({ status: "failed" }, { status: 500 });
-  }
+  // const supabase = await createClient();
+
+  // const {
+  //   data: { user },
+  // } = await supabase.auth.getUser();
+  // if (!user) {
+  //   console.error("Session does not exist.");
+  //   return NextResponse.json({ status: "failed" }, { status: 500 });
+  // }
   const { roomId, ...data } = await req.json();
 
   try {

@@ -9,7 +9,7 @@ import {
   useFocusEffect,
 } from "expo-router";
 import { ChevronRight, Plus } from "lucide-react-native";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   StyleSheet,
   SafeAreaView,
@@ -42,60 +42,55 @@ interface ProjectsResponse {
 }
 
 export default function Dashboard() {
+  // State
   const { session, setSession } = userStore((state) => state);
+  const { projects, setProjects } = projectsStore((state) => state);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const { projects, setProjects } = projectsStore((state) => state);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
   const [total, setTotal] = useState(0);
-  console.log("🚀 ~ Dashboard ~ total:", total);
   const [page, setPage] = useState(0);
-  console.log("🚀 ~ Dashboard ~ page:", page);
   const limit = 100;
   const hasMore = projects?.length < total;
-  console.log("🚀 ~ Dashboard ~ hasMore:", hasMore);
+  
+  // Refs to avoid stale closures
+  const sessionRef = useRef(session);
+  const searchTermRef = useRef(searchTerm);
+  const selectedUserRef = useRef(selectedUser);
+  const pageRef = useRef(page);
+  const projectsRef = useRef(projects);
+  
+  // Update refs when values change
+  useEffect(() => {
+    sessionRef.current = session;
+    searchTermRef.current = searchTerm;
+    selectedUserRef.current = selectedUser;
+    pageRef.current = page;
+    projectsRef.current = projects;
+  }, [session, searchTerm, selectedUser, page, projects]);
 
   const router = useRouter();
   const navigation = useNavigation();
 
-  // Add focus effect to refetch data
-  useFocusEffect(
-    useCallback(() => {
-      if (projects?.length > 0) {
-        fetchProjects(false); // Don't clear projects on focus refetch
-      }
-    }, [])
-  );
-
+  // Set navigation title
   useEffect(() => {
     navigation.setOptions({ headerTitle: "Dashboard" });
   }, [navigation]);
 
-  useEffect(() => {
-    supabase.auth.setSession(session);
-
-    supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-      fetchProjects(false);
-    });
-  }, []);
-
-  // Reset and fetch when search or user filter changes
-  useEffect(() => {
-    resetAndFetch();
-  }, [searchTerm, selectedUser]);
-
-  const resetAndFetch = useCallback(async () => {
-    setPage(0);
-    // setProjects([]);
-    await fetchProjects(false);
-  }, [searchTerm, selectedUser]);
-
-  async function fetchProjects(isLoadingMore: boolean) {
-    console.log("🚀 ~ fetchProjects ~ loading:", loading);
+  // Fetch projects function that doesn't depend on state variables directly
+  const fetchProjects = useCallback(async (isLoadingMore: boolean) => {
+    // Use refs instead of state directly to avoid dependency cycles
+    const currentSession = sessionRef.current;
+    const currentSearchTerm = searchTermRef.current;
+    const currentPage = isLoadingMore ? pageRef.current : 0;
+    const currentProjects = projectsRef.current || [];
 
     if (loadingMore || loading) return;
+    if (!currentSession) {
+      console.log("No session available, skipping fetch");
+      return;
+    }
 
     if (isLoadingMore) {
       setLoadingMore(true);
@@ -103,30 +98,31 @@ export default function Dashboard() {
       setLoading(true);
     }
 
-    const currentPage = isLoadingMore ? page : 0;
-    console.log("🚀 ~ fetchProjects ~ currentPage:", currentPage);
     const offset = currentPage * limit;
-    console.log("🚀 ~ fetchProjects ~ offset:", offset);
 
     try {
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects?${
-          searchTerm.length > 0 ? `query=${searchTerm}&` : ""
+          currentSearchTerm.length > 0 ? `query=${currentSearchTerm}&` : ""
         }limit=${limit}&offset=${offset}`,
         {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "auth-token": `${session?.access_token}`,
+            "auth-token": `${currentSession?.access_token}`,
           },
         }
       );
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! Status: ${res.status}`);
+      }
+      
       const data: ProjectsResponse = await res.json();
-      console.log("🚀 ~ fetchProjects ~ res:", data);
 
       if (isLoadingMore) {
         setProjects(
-          [...projects, ...data.projects].reduce((acc, curr) => {
+          [...currentProjects, ...data.projects].reduce((acc: Project[], curr) => {
             const existingIndex = acc.findIndex((p) => p.id === curr.id);
             if (existingIndex !== -1) {
               acc[existingIndex] = curr;
@@ -134,32 +130,80 @@ export default function Dashboard() {
               acc.push(curr);
             }
             return acc;
-          }, [])
+          }, [] as Project[])
         );
       } else {
         setProjects(data.projects);
       }
-      setLoading(false);
 
       setTotal(data.total);
     } catch (err) {
-      setLoading(false);
-
-      console.error(err);
+      console.error("Error fetching projects:", err);
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  }
+  }, [loading, loadingMore, limit, setProjects]);
+
+  // Initialize Supabase and load initial data
+  useEffect(() => {
+    const initializeData = async () => {
+      if (session) {
+        try {
+          await supabase.auth.setSession(session);
+          fetchProjects(false);
+        } catch (error) {
+          console.error("Error initializing:", error);
+        }
+      }
+    };
+
+    const { data } = supabase.auth.onAuthStateChange((event, newSession) => {
+      setSession(newSession);
+      if (newSession) {
+        fetchProjects(false);
+      }
+    });
+
+    initializeData();
+
+    return () => {
+      data?.subscription.unsubscribe();
+    };
+  }, [fetchProjects, setSession]);
+
+  // Handle search and filter changes
+  useEffect(() => {
+    if (session) {
+      const timer = setTimeout(() => {
+        setPage(0);
+        fetchProjects(false);
+      }, 300);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [searchTerm, selectedUser, fetchProjects, session]);
+
+  // Focus effect to refresh data
+  useFocusEffect(
+    useCallback(() => {
+      if (projects?.length > 0 && session) {
+        fetchProjects(false);
+      }
+    }, [fetchProjects, projects?.length, session])
+  );
+
+  const resetAndFetch = useCallback(() => {
+    setPage(0);
+    fetchProjects(false);
+  }, [fetchProjects]);
 
   const loadMore = useCallback(() => {
-    console.log("🚀 ~ loadMore ~ loadingMore:", loadingMore);
-
     if (!loadingMore && hasMore) {
       setPage((prev) => prev + 1);
       fetchProjects(true);
     }
-  }, [loadingMore, hasMore]);
+  }, [loadingMore, hasMore, fetchProjects]);
 
   const renderFooter = () => {
     if (!loadingMore || !hasMore) return null;
@@ -312,92 +356,3 @@ const styles = StyleSheet.create({
     borderRadius: 100,
   },
 });
-
-// import { useEffect, useState } from "react";
-// import { Keyboard, TouchableWithoutFeedback } from "react-native";
-// import React from "react";
-// import ProjectListItem from "@/components/project/project-cell";
-// import DashboardHeader from "@/components/dashboard/Header";
-// import { userStore } from "@/utils/state/user";
-// import { useNavigation, useRouter } from "expo-router";
-// import NoProjects from "@/components/dashboard/no-projects";
-// import { Plus } from "lucide-react-native";
-
-// export default function Dashboard() {
-//   const { session: supabaseSession } = userStore((state) => state);
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const [selectedUser, setSelectedUser] = useState("");
-
-//   const router = useRouter();
-
-//   const onPress = (projectId: string, projectName: string) => {
-//     // navigation.navigate("Project", { projectName, projectId });
-//   };
-
-//   const onCreateProject = () => {
-//     // navigation.navigate("CreateProject");
-//   };
-
-//   const navigation = useNavigation();
-
-//   useEffect(() => {
-//     navigation.setOptions({ headerTitle: "Dashboard" });
-//   }, [navigation]);
-
-//   const dashboardQuery = api.mobile.getDashboardData.useQuery({
-//     page: 0,
-//     jwt: supabaseSession ? supabaseSession["access_token"] : "null",
-//     searchTerm,
-//     userIdFilter: selectedUser,
-//   });
-
-//   const noProjects =
-//     !dashboardQuery.isLoading &&
-//     dashboardQuery.data &&
-//     dashboardQuery.data.data.length === 0;
-
-//   if (dashboardQuery.data?.showOrganizationSetup) {
-//     return router.push("/org-setup");
-//   }
-
-//   if (noProjects) {
-//     return <NoProjects />;
-//   }
-
-//   return (
-//     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-//         <>
-//           <DashboardHeader
-//             isFetchingProjects={dashboardQuery.isLoading}
-//             teamMembers={dashboardQuery.data?.teamMembers || []}
-//             refetch={(s: string) => setSearchTerm(s)}
-//             selectedUser={selectedUser}
-//             setSelectedUser={setSelectedUser}
-//           />
-//           {/* <FlatList
-//             data={dashboardQuery.data?.data}
-//             keyExtractor={(item) => item.publicId}
-//             renderItem={({ item }) => (
-
-//             )}
-//             w="full"
-//             paddingX={4}
-//             refreshing={dashboardQuery.isFetching}
-//             onRefresh={dashboardQuery.refetch}
-//           /> */}
-//           <ProjectListItem
-//                 projects={dashboardQuery.data?.data ?? []}
-//                 onPress={onPress}
-//                 urlMap={dashboardQuery.data?.urlMap}
-//               />
-//           <Fab
-//             onPress={() => onCreateProject()}
-//             renderInPortal={false}
-//             shadow={2}
-//             size="sm"
-//             icon={<Plus size={26} color="white" />}
-//           />
-//         </>
-//     </TouchableWithoutFeedback>
-//   );
-// }

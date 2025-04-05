@@ -34,6 +34,24 @@ export async function POST(
         .eq("publicId", body.roomId)
         .single();
 
+        const { data: existingArea } = await supabaseServiceRole
+        .from("AreaAffected")
+        .select("*")
+        .eq("roomId", room!.id)
+        .eq("type", body.type)
+        .single();
+
+      if (existingArea) {
+        await supabaseServiceRole
+        .from("AreaAffected")
+        .update({
+          isDeleted: false
+        })
+        .eq("roomId", room!.id)
+        .eq("type", body.type);
+        return NextResponse.json({ status: "ok", areaAffected: {...existingArea, isDeleted: false} }, { status: 200 });
+      }
+
       const result = await supabaseServiceRole
         .from("AreaAffected")
         .insert({

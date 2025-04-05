@@ -1,67 +1,101 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createInvoice, getInvoices } from "@/lib/invoices";
+import { user } from "@/lib/supabase/get-user";
+import { supabaseServiceRole } from "@lib/supabase/admin";
 
-// GET - Retrieve all invoices
+// GET /api/v1/invoices - List all invoices
 export async function GET(req: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Authenticate the user with the user function
+    const [, authenticatedUser] = await user(req);
 
-    // Check if user is authenticated
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Not authorized" }, { status: 401 });
+    // Parse query parameters
+    const url = new URL(req.url);
+    const status = url.searchParams.get("status");
+
+    // Build query
+    let query = supabaseServiceRole
+      .from("Invoices")
+      .select("*")
+      .eq(
+        "organizationPublicId",
+        authenticatedUser.user_metadata.organizationId
+      )
+      .eq("isDeleted", false)
+      .order("createdAt", { ascending: false });
+
+    // Apply status filter if provided
+    if (status) {
+      query = query.eq("status", status);
     }
 
-    // Get status filter from query params
-    const url = new URL(req.url);
-    const status = url.searchParams.get("status") || undefined;
+    // Execute query
+    const { data: invoices, error } = await query;
 
-    // Get invoices for the current user
-    const invoices = await getInvoices(user.id, status);
+    console.log(authenticatedUser.user_metadata.organizationId);
+    console.log(invoices);
+    console.log(error);
 
-    return NextResponse.json({ invoices }, { status: 200 });
+    if (error) throw error;
+    return NextResponse.json({ invoices });
   } catch (error) {
-    console.error("Error in GET /api/v1/invoices", error);
-    const errorMessage =
-      error instanceof Error ? error.message : "Error fetching invoices";
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    console.error("API error:", error);
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }
 
-// POST - Create a new invoice
+// POST /api/v1/invoices - Create a new invoice
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Authenticate the user with the user function
+    const [supabase, authenticatedUser] = await user(req);
 
-    // Check if user is authenticated
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Not authorized" }, { status: 401 });
+    // Parse request body
+    const body = await req.json();
+    const { invoice, invoiceItems } = body;
+
+    // Add user ID to the invoice
+    invoice.userId = authenticatedUser.id;
+
+    // Insert invoice
+    const { data: createdInvoice, error } = await supabase
+      .from("Invoices")
+      .insert({
+        ...invoice,
+        organizationPublicId: authenticatedUser.user_metadata.organizationId,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Insert invoice items
+    if (invoiceItems && invoiceItems.length > 0) {
+      const itemsWithInvoiceId = invoiceItems.map(
+        (item: {
+          description: string;
+          quantity: number;
+          rate: number;
+          amount: number;
+          notes?: string;
+        }) => ({
+          ...item,
+          invoicePublicId: createdInvoice.publicId,
+        })
+      );
+
+      const { error: itemsError } = await supabase
+        .from("InvoiceItems")
+        .insert(itemsWithInvoiceId);
+
+      if (itemsError) throw itemsError;
     }
 
-    // Get request body
-    const { invoice, invoiceItems, paymentSchedules } = await req.json();
-
-    // Make sure userId is set to the current user
-    invoice.userId = user.id;
-
-    // Create the invoice
-    const newInvoice = await createInvoice(
-      invoice,
-      invoiceItems,
-      paymentSchedules
-    );
-
-    return NextResponse.json({ invoice: newInvoice }, { status: 201 });
+    return NextResponse.json({ invoice: createdInvoice });
   } catch (error) {
-    console.error("Error in POST /api/v1/invoices", error);
-    const errorMessage =
-      error instanceof Error ? error.message : "Error creating invoice";
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    console.error("API error:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "An error occurred" },
+      { status: 400 }
+    );
   }
 }

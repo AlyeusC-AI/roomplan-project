@@ -1,15 +1,6 @@
 {
-  "originHash" : "c5a877928d4d22e6637f40c7d409dc42de4e7f9131bc3c0e9205a984299e51c9",
+  "originHash" : "2ffeb4d7d4428466b0ce09b22e86d396dd42dc89604ed02f74db5573f88ec6a4",
   "pins" : [
-    {
-      "identity" : "ios-sdk-distribution",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/CubiCasa/ios-sdk-distribution/",
-      "state" : {
-        "revision" : "9a95527138ad0f2b2c0414cbb965ab0cea189ba5",
-        "version" : "3.0.5"
-      }
-    },
     {
       "identity" : "reactbridge",
       "kind" : "remoteSourceControl",
@@ -26,24 +17,6 @@
       "state" : {
         "revision" : "0687f71944021d616d34d922343dcef086855920",
         "version" : "600.0.1"
-      }
-    },
-    {
-      "identity" : "zip",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/marmelroy/Zip.git",
-      "state" : {
-        "revision" : "67fa55813b9e7b3b9acee9c0ae501def28746d76",
-        "version" : "2.1.2"
-      }
-    },
-    {
-      "identity" : "zipfoundation",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/weichsel/ZIPFoundation.git",
-      "state" : {
-        "revision" : "02b6abe5f6eef7e3cbd5f247c5cc24e246efcfe0",
-        "version" : "0.9.19"
       }
     }
   ],
