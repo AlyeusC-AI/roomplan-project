@@ -115,6 +115,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
       roomsStore.getState().addRoom({ ...json.room, RoomReading: [] });
       roomInferenceStore.getState().addRoom({ ...json.room, Inference: [] });
     }
+    setFinish(-1);
     setShowScanner(true);
   };
 
@@ -346,6 +347,13 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
             </View>
           </View>
         )}
+        {!isScanProcessed && !isProcessing && finish === 0 && (
+          <View className="absolute bottom-[110px] w-72 left-1/2 -translate-x-1/2 z-20 bg-black/50 rounded-lg py-4 px-5">
+            <Text className="text-white text-lg text-center font-semibold">
+              Please go to the next room and begin the scan when you're ready.
+            </Text>
+          </View>
+        )}
         {!isScanProcessed && (
           <TouchableOpacity 
             className={cn(
@@ -355,9 +363,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
             disabled={isProcessing}
             onPress={() => { finish !== -1 ? setFinish(-1): confirmScanComplete() }}
           >
-            {finish === -1 && (
-              <Ionicons name="stop" size={32} color="white" />
-            )}
+            <Ionicons name={finish === -1 ? "stop" : "scan-circle"} size={36} color="white" />
           </TouchableOpacity>
         )}
         {isScanProcessed && (
