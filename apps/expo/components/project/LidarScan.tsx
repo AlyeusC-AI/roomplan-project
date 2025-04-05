@@ -24,7 +24,7 @@ const hasLidarSensor = async (): Promise<boolean> => {
 };
 
 type RoomScanViewProps = {
-  finish: boolean;
+  finish: -1 | 0 | 1 | 2;
   onCaptureCompleted: (ev: any) => void;
   onCaptureError: (ev: any) => void;
 }
@@ -50,7 +50,7 @@ interface LidarScanProps {
 }
 
 const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanProps) => {
-  const [finish, setFinish] = useState(false);
+  const [finish, setFinish] = useState<-1 | 0 | 1 | 2>(0);
   const [showScanner, setShowScanner] = useState<boolean>(false);
   const [isScanProcessed, setIsScanProcessed] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -115,6 +115,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
       roomsStore.getState().addRoom({ ...json.room, RoomReading: [] });
       roomInferenceStore.getState().addRoom({ ...json.room, Inference: [] });
     }
+    setFinish(-1);
     setShowScanner(true);
   };
 
@@ -207,8 +208,14 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
     }
 
     setIsProcessing(false);
-    setFinish(false);
+    setFinish(0);
   }
+
+  useEffect(() => {
+    if (finish > 0) {
+      setFinish(0)
+    }
+  }, [finish])
 
   const confirmScanComplete = () => {
     // Show confirmation alert before completing scan
@@ -219,10 +226,17 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
       [
         { text: 'Continue Scanning', style: 'cancel' },
         { 
-          text: 'Finish Scan', 
+          text: 'Finish This Room', 
           style: 'default',
           onPress: () => {
-            setFinish(true);
+            setFinish(1);
+          }
+        },
+        { 
+          text: 'Finish Entire Structure', 
+          style: 'default',
+          onPress: () => {
+            setFinish(2);
             setIsProcessing(true);
           }
         },
@@ -333,16 +347,23 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
             </View>
           </View>
         )}
+        {!isScanProcessed && !isProcessing && finish === 0 && (
+          <View className="absolute bottom-[110px] w-72 left-1/2 -translate-x-1/2 z-20 bg-black/50 rounded-lg py-4 px-5">
+            <Text className="text-white text-lg text-center font-semibold">
+              Please go to the next room and begin the scan when you're ready.
+            </Text>
+          </View>
+        )}
         {!isScanProcessed && (
           <TouchableOpacity 
             className={cn(
-              "absolute bottom-[30px] right-[30px] w-[60px] h-[60px] rounded-full bg-[#007AFF] justify-center items-center shadow-md z-20",
+              "absolute bottom-[30px] left-1/2 -translate-x-1/2 w-[60px] h-[60px] rounded-full bg-red-500 justify-center items-center shadow-md z-20",
               { "opacity-50": isProcessing }
             )}
             disabled={isProcessing}
-            onPress={confirmScanComplete}
+            onPress={() => { finish !== -1 ? setFinish(-1): confirmScanComplete() }}
           >
-            <Ionicons name="checkmark" size={32} color="white" />
+            <Ionicons name={finish === -1 ? "stop" : "scan-circle"} size={36} color="white" />
           </TouchableOpacity>
         )}
         {isScanProcessed && (
