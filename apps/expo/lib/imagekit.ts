@@ -1,13 +1,16 @@
 import * as ImageManipulator from "expo-image-manipulator";
-import ImageKit from "imagekit-javascript";
+// import ImageKit from "imagekit-javascript";
 import { toast } from "sonner-native";
 import { api } from "./api";
+import { STORAGE_BUCKETS } from "./utils/imageHelpers";
+import { supabaseServiceRole } from "@/unused/screens/CameraScreen";
+import { v4 } from "uuid";
 
-export const imagekit = new ImageKit({
-  publicKey: "public_3P95CgUAWGTwOS3848WAhIWOjBs=",
-  urlEndpoint: "https://ik.imagekit.io/wzgdjvwfm",
-  //   authenticationEndpoint: `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/imageKit`,
-});
+// export const imagekit = new ImageKit({
+//   publicKey: "public_3P95CgUAWGTwOS3848WAhIWOjBs=",
+//   urlEndpoint: "https://ik.imagekit.io/wzgdjvwfm",
+//   //   authenticationEndpoint: `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/imageKit`,
+// });
 
 export interface ImageKitUploadOptions {
   folder?: string;
@@ -19,12 +22,12 @@ export interface ImageKitUploadOptions {
 
 export interface ImageKitUploadResponse {
   url: string;
-  fileId: string;
-  height: number;
-  width: number;
-  size: number;
-  name: string;
-  filePath: string;
+  fileId?: string;
+  height?: number;
+  width?: number;
+  size?: number;
+  name?: string;
+  filePath?: string;
 }
 
 export interface ImageKitTransformOptions {
@@ -59,9 +62,9 @@ export const uploadImage = async (
     onProgress?.(0);
 
     // Get authentication parameters from your backend
-      const response = await api.get(`/api/v1/imageKit`);
+    //   const response = await api.get(`/api/v1/imageKit`);
 
-    const { token, expire, signature } = response.data;
+    // const { token, expire, signature } = response.data;
     onProgress?.(20);
 
     // Optimize image before upload
@@ -79,6 +82,7 @@ export const uploadImage = async (
       {
         compress: 0.7,
         format: ImageManipulator.SaveFormat.JPEG,
+        
         // base64: true,
         // base64: true,
       }
@@ -88,37 +92,73 @@ export const uploadImage = async (
     const finalFile = { ...file, ...manipResult };
     console.log("🚀 ~ finalFile:", finalFile);
     onProgress?.(40);
-    return new Promise((resolve, reject) => {
-      imagekit.upload(
-        {
-          file: finalFile,
-          fileName: options.useUniqueFileName
-            ? `${Date.now()}_${file.name || "image.jpg"}`
-            : file.name,
-          folder: options.folder || "uploads",
-          tags: options.tags || [],
-          responseFields: options.responseFields || ["tags"],
-          isPrivateFile: options.isPrivateFile || false,
-          token,
-          expire,
-          signature,
-        },
-        (err: Error | null, result: ImageKitUploadResponse | null) => {
-          console.log("🚀 ~ returnnewPromise ~ result:", result);
 
-          if (err) {
-            reject(err);
-            return;
-          }
-
-          if (!result) {
-            reject("No result from ImageKit upload");
-            return;
-          }
-          onProgress?.(100);
-          resolve(result);
+    return new Promise(async (resolve, reject) => {
+      const p = {
+        uri: finalFile.uri,
+        name: 
+        // finalFile.name ||
+         `${v4()+Date.now()}.jpeg`,
+        type: finalFile.type || "image/jpeg",
+      };
+    
+      const formData = new FormData();
+      // @ts-expect-error react-native form data typing issue
+      formData.append("file", p);
+const { data: uploadData, error: uploadError } = await supabaseServiceRole.storage
+        .from(STORAGE_BUCKETS.PROJECT)
+        .upload((options.folder || "uploads/")+p.name+Date.now(), formData, {
+          contentType: 'image/jpeg',
+          upsert: false,
+        });
+        console.log("🚀 ~ returnnewPromise ~ uploadData:", uploadData)
+        console.log("🚀 ~ returnnewPromise ~ uploadError:", uploadError)
+        if (uploadError) {
+          reject(uploadError);
+          return;
         }
-      );
+
+        const result = {
+          url: "https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/" + uploadData.fullPath,
+          fileId: uploadData.path,
+          height: finalFile.height,
+          width: finalFile.width,
+          size: finalFile.uri.length,
+          name: finalFile.name,
+          filePath: uploadData.path,
+        };
+        resolve(result);
+    
+      // imagekit.upload(
+      //   {
+      //     file: finalFile,
+      //     fileName: options.useUniqueFileName
+      //       ? `${Date.now()}_${file.name || "image.jpg"}`
+      //       : file.name,
+      //     folder: options.folder || "uploads",
+      //     tags: options.tags || [],
+      //     responseFields: options.responseFields || ["tags"],
+      //     isPrivateFile: options.isPrivateFile || false,
+      //     token,
+      //     expire,
+      //     signature,
+      //   },
+      //   (err: Error | null, result: ImageKitUploadResponse | null) => {
+      //     console.log("🚀 ~ returnnewPromise ~ result:", result);
+
+      //     if (err) {
+      //       reject(err);
+      //       return;
+      //     }
+
+      //     if (!result) {
+      //       reject("No result from ImageKit upload");
+      //       return;
+      //     }
+      //     onProgress?.(100);
+      //     resolve(result);
+      //   }
+      // );
     });
   } catch (error) {
     console.error("ImageKit upload error:", error);
@@ -215,10 +255,10 @@ export const getOptimizedImageUrl = (
       format: options.format,
     });
   }
-
-  return imagekit.url({
-    path: filePath,
-    transformation: transformations,
-    transformationPosition: "path",
-  });
+  return filePath;
+  // return imagekit.url({
+  //   path: filePath,
+  //   transformation: transformations,
+  //   transformationPosition: "path",
+  // });
 };

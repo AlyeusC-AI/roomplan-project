@@ -143,7 +143,7 @@ export default function Dashboard() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [loading, loadingMore, limit, setProjects]);
+  }, [loading, loadingMore, limit]);
 
   // Initialize Supabase and load initial data
   useEffect(() => {
@@ -170,7 +170,7 @@ export default function Dashboard() {
     return () => {
       data?.subscription.unsubscribe();
     };
-  }, [fetchProjects, setSession]);
+  }, []);
 
   // Handle search and filter changes
   useEffect(() => {
@@ -182,7 +182,7 @@ export default function Dashboard() {
       
       return () => clearTimeout(timer);
     }
-  }, [searchTerm, selectedUser, fetchProjects, session]);
+  }, [searchTerm, selectedUser, session]);
 
   // Focus effect to refresh data
   useFocusEffect(
@@ -190,20 +190,20 @@ export default function Dashboard() {
       if (projects?.length > 0 && session) {
         fetchProjects(false);
       }
-    }, [fetchProjects, projects?.length, session])
+    }, [])
   );
 
   const resetAndFetch = useCallback(() => {
     setPage(0);
     fetchProjects(false);
-  }, [fetchProjects]);
+  }, []);
 
   const loadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
       setPage((prev) => prev + 1);
       fetchProjects(true);
     }
-  }, [loadingMore, hasMore, fetchProjects]);
+  }, [loadingMore, hasMore]);
 
   const renderFooter = () => {
     if (!loadingMore || !hasMore) return null;
