@@ -43,6 +43,7 @@ import { uiPreferencesStore } from "@/lib/state/ui-preferences";
 import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner-native";
+import { api } from "@/lib/api";
 
 // Import Project type to fix linter errors
 type Project = {
@@ -108,18 +109,15 @@ export default function ProjectOverview() {
     ]).start();
   };
 
+  const fetchMembers = async () => {
+    const res = await api.get(`/api/v1/organization/members`, {
+    
+    });
+    members.setMembers(res.data.members);
+  };
+
   useEffect(() => {
-    fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/organization/members`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "auth-token": user.session?.access_token || "",
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        members.setMembers(data.members);
-      });
+    fetchMembers();
   }, []);
 
   const navigationItems = [

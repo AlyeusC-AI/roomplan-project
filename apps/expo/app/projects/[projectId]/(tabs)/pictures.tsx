@@ -47,6 +47,7 @@ import * as FileSystem from "expo-file-system";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/lib/supabase";
 import AddRoomButton from "@/components/project/AddRoomButton";
+import { projectStore } from "@/lib/state/project";
 
 interface PhotoResult {
   uri: string;
@@ -83,6 +84,7 @@ export default function ProjectPhotos() {
   const [expandedValue, setExpandedValue] = useState<string | undefined>(
     undefined
   );
+  const {project} = projectStore();
   const [showRoomSelection, setShowRoomSelection] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
   const [shouldOpenCamera, setShouldOpenCamera] = useState(false);
@@ -420,12 +422,20 @@ export default function ProjectPhotos() {
       <Empty
         title="No Images"
         description="Upload images to associate with this project. Images of rooms can be automatically assigned a room"
-        buttonText="Start Taking Pictures"
+        // buttonText="Start Taking Pictures"
+        buttonText="Create a room"
+
         icon={<CameraIcon height={50} width={50} />}
         secondaryIcon={
           <CameraIcon height={20} width={20} color="#fff" className="ml-4" />
         }
-        onPress={() => router.push("../camera")}
+        // onPress={() => router.push("../camera")}
+        onPress={() =>
+          router.push({
+            pathname: "../rooms/create",
+            params: { projectName: project.name },
+          })
+        }
       />
     );
   }

@@ -25,23 +25,14 @@ import { userStore } from "@/lib/state/user";
 export default function Layout() {
   const { projectId } = useGlobalSearchParams();
   const [loading, setLoading] = React.useState(true);
-  const project = projectStore();
-  const { session } = userStore((state) => state);
+  const { fetchProject,project } = projectStore();
 
   useEffect(() => {
-    fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "auth-token": session!.access_token,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setLoading(false);
-        project.setProject(data.data);
-        console.log("Project fetched");
-      });
+
+    fetchProject(projectId as string).finally(() => {
+      setLoading(false);
+    });
+   
   }, []);
 
   if (loading) {
@@ -84,7 +75,7 @@ export default function Layout() {
                     <ArrowLeft color="white" size={20} />
                   </TouchableOpacity>
                   <Text className="text-white text-lg font-semibold">
-                    { route.name === "scope" ? "Scope": project.project?.clientName || "Project"}
+                    { route.name === "scope" ? "Scope": project?.clientName || "Project"}
                   </Text>
                 </View>
                 {route.name === "index" && (

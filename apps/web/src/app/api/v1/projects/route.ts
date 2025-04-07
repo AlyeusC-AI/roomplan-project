@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
 
       const formattedImages: Image[] = (images.data ?? []).map((image) => ({
         ...image,
-        url: supabaseServiceRole.storage
+        url:image.key.includes("http") ? image.key : supabaseServiceRole.storage
           .from("media")
           .getPublicUrl(decodeURIComponent(image.key)).data.publicUrl,
       }));

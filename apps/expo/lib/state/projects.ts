@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import "../../types/app"; // This will make the Project type available globally
 
 interface State {
   projects: Project[];
@@ -29,6 +30,8 @@ export const projectsStore = create<State & Actions>()(
 
       // Add a log entry (not persisted)
       addLog: (message) => set((state) => ({ logs: [...state.logs, message] })),
+
+     
     }),
     {
       // Persist configuration
