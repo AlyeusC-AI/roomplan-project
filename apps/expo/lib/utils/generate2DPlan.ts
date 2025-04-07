@@ -3,6 +3,8 @@ type Point = [number, number, number]
 const wallColor = "#050505";
 const floorColor = "#eaeaea";
 const floorFill = "#eaeaea";
+const subFloorColor = "#e0e0e0";
+const subFloorFill = "#e0e0e0";
 const doorColor = "#111111";
 const windowColor = "#1c1c1c";
 const objectColor = "#9b9b9b";
@@ -15,10 +17,16 @@ const scaleFactor = 100;
 
 const wallWidth = 0.08 * scaleFactor;
 const floorWidth = 0.08 * scaleFactor;
+const subFloorWidth = 0.04 * scaleFactor;
 const doorWidth = 0.02 * scaleFactor;
 const windowWidth = 0.02 * scaleFactor;
 const objectWidth = 0.05 * scaleFactor;
 const openingWidth = 0.04 * scaleFactor;
+
+export type EntireRooms = {
+    entireRoom: Room,
+    rooms: Room[]
+}
 
 export type Room = {
     walls: Point[][];
@@ -209,10 +217,10 @@ function calculateRotationAngleXZ(wall: Point[]) {
     return -Math.atan2(dz, dx);   // Angle to align with x-axis
 }
 
-function alignRoomHorizontallyXZ(room: Room) {
+function alignRoomHorizontallyXZ(room: Room, initAngle: number | undefined = undefined) {
     // Choose a wall to align with the x-axis in the xz plane
     const wall = room.walls[0];
-    const angle = calculateRotationAngleXZ(wall);
+    const angle = initAngle || calculateRotationAngleXZ(wall);
 
     // Function to rotate all points in the room around the y-axis
     function rotateAllPointsXZ(points: Point[]) {
@@ -242,11 +250,12 @@ function alignRoomHorizontallyXZ(room: Room) {
         room.openings = room.openings.map(opening => rotateAllPointsXZ(opening));
     }
 
-    return room;
+    return {room, angle};
 }
 
-export function makeSVG(data: Room) {
-    const room = alignRoomHorizontallyXZ(data);
+export function makeSVG(data: EntireRooms) {
+    const {room, angle} = alignRoomHorizontallyXZ(data.entireRoom);
+    const subRooms = data.rooms.map(room => alignRoomHorizontallyXZ(room, angle).room);
 
     function createPolyline(points: Point[], color = "black", width = 0.05, fill="none") {
         const pointsStr = points.map(p => `${p[0]},${p[2]}`).join(" ");
@@ -264,6 +273,11 @@ export function makeSVG(data: Room) {
         if (room[key]) {
             room[key] = (room[key] || []).map((points: Point[]) => points.map(([x, y, z]) => [x * scaleFactor, 0, z * scaleFactor]));
         }
+        subRooms.forEach(subRoom => {
+            if (subRoom[key]) {
+                subRoom[key] = (subRoom[key] || []).map((points: Point[]) => points.map(([x, y, z]) => [x * scaleFactor, 0, z * scaleFactor]));
+            }
+        })
     }
 
     // Get all points from the room
@@ -275,7 +289,14 @@ export function makeSVG(data: Room) {
         ...room.openings.flat()
     ];
 
-    if (allPoints.length === 0) return "<svg></svg>"; // Return empty SVG if no points exist
+    if (allPoints.length === 0) return {
+        x1: Infinity,
+        y1: Infinity,
+        x2: -Infinity,
+        y2: -Infinity,
+        svg: '',
+        area: 0
+    }; // Return empty SVG if no points exist
 
     // Calculate bounding box
     const minX = Math.min(...allPoints.map(p => p[0]));
@@ -296,13 +317,18 @@ export function makeSVG(data: Room) {
     let svgContent = "";
     let sqftContent = "";
     let wallLengthMeasure = "";
-    room.floors.forEach(floor => {
+    let totalArea = 0;
+    const processFLoor = (floor: Point[], isMainRoom = true) => {
         if (floor.length) {
-            svgContent += createPolyline(floor, floorColor, floorWidth, floorFill);
-            const { area, centroid, boundingBox } = calculatePolygonProperties(floor);
-            const minLen = boundingBox?.width > boundingBox?.height ? boundingBox.height: boundingBox.height
+            svgContent += createPolyline(floor,
+                isMainRoom ? floorColor : subFloorColor,
+                isMainRoom ? floorWidth : subFloorWidth,
+                isMainRoom ? floorFill : subFloorFill
+            );
+            const { area, centroid } = calculatePolygonProperties(floor);
+            if (isMainRoom) { totalArea += area }
             const areaInSqFt = (area * 10.764).toFixed(1); // Convert m² to ft²
-            const ftSize = Math.max(minLen / 35, 18);
+            const ftSize = isMainRoom ? 22 : 18;
             // const widthInFeet = inchText(boundingBox?.width ?? 0);
             // const heightInFeet = inchText(boundingBox?.height ?? 0);
             if (centroid) {
@@ -325,7 +351,15 @@ export function makeSVG(data: Room) {
                     font-size="${ftSize / 3}">2</text>`;
             }
         }
+    }
+    room.floors.forEach(floor => {
+        processFLoor(floor, true)
     });
+    subRooms.forEach(subRoom => {
+        subRoom.floors.forEach(floor => {
+            processFLoor(floor, false)
+        });
+    })
     room.objects.forEach(object => {
         if (object.length) svgContent += createPolyline(object, objectColor, objectWidth, objectFill);
     });

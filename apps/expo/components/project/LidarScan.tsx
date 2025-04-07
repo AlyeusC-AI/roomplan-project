@@ -1,4 +1,3 @@
-import { Buffer } from "buffer";
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Platform, TouchableOpacity, NativeModules, Share,
   requireNativeComponent, UIManager, Text, TextInput, Dimensions,
@@ -67,6 +66,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
   const processedRoomPlanSVG = useRef<string | undefined>(roomPlanSVG);
   const insets = useSafeAreaInsets();
   const pngBase64 = useRef<string>('');
+  const rooms = roomsStore();
 
   useEffect(() => {
     const checkSupport = async () => {
@@ -114,6 +114,11 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
 
       roomsStore.getState().addRoom({ ...json.room, RoomReading: [] });
       roomInferenceStore.getState().addRoom({ ...json.room, Inference: [] });
+    } else {
+      const room = rooms.rooms.find(room => room.id === processedRoomId.current);
+      if (room) {
+        setNewRoomName(room.name);
+      }
     }
     setFinish(-1);
     setShowScanner(true);
@@ -327,8 +332,6 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
   }
 
   if (showScanner) {
-    const cancelButtonPosition = `top-[${insets.top + 20}px]`
-
     return (
       <View className="relative inset-0 flex-1 bg-black">
         <View className="absolute inset-0 flex-1 w-full h-full z-10">
