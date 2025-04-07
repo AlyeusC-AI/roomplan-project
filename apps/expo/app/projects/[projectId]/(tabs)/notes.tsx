@@ -55,6 +55,7 @@ import AddRoomButton from "@/components/project/AddRoomButton";
 import { useCameraStore } from "@/lib/state/camera";
 import { userStore } from "@/lib/state/user";
 import { router, useGlobalSearchParams } from "expo-router";
+import { uploadImage } from "@/lib/imagekit";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -1457,21 +1458,37 @@ const uploadImageToSupabase = async (
 
   try {
     // Upload to Supabase storage
-    const res = await supabaseServiceRole.storage
-      .from("note-images")
-      .upload(`/${noteId}/${v4()}.jpeg`, formData, {
-        cacheControl: "3600",
-        upsert: false,
-      });
+    // const res = await supabaseServiceRole.storage
+    //   .from("note-images")
+    //   .upload(`/${noteId}/${v4()}.jpeg`, formData, {
+    //     cacheControl: "3600",
+    //     upsert: false,
+    //   });
 
-    if (!res.data?.path) {
+       // Upload to ImageKit
+       const uploadResult = await uploadImage(
+        {
+          uri: photo.uri,
+          type: "image/jpeg",
+          name: photo.fileName || `${v4()}.jpeg`,
+        },
+        {
+          // folder: `projects/${projectId}/notes/${noteId}`,
+          // useUniqueFileName: true,
+          // tags: [`project-${projectId}`, `note-${noteId}`],
+        }
+      );
+       console.log("🚀 ~ uploadResult:", uploadResult)
+
+
+    if (!uploadResult.url) {
       throw new Error("Failed to upload image");
     }
 
     // Add to NoteImage table
     const { data, error } = await supabaseServiceRole.from("NoteImage").insert({
       noteId,
-      imageKey: res.data.path,
+      imageKey: uploadResult.url,
     });
 
     if (error) {
@@ -1488,7 +1505,7 @@ const uploadImageToSupabase = async (
       await onSuccess();
     }
 
-    return res.data.path;
+    return uploadResult.url;
   } catch (error) {
     console.error("Upload error:", error);
     throw error;

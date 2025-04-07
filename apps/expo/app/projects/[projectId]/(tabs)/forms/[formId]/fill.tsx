@@ -59,6 +59,7 @@ import { uploadImage } from "@/lib/imagekit";
 import { useCameraStore } from "@/lib/state/camera";
 import { useIsFocused } from "@react-navigation/native";
 import { Signature } from "@/components/ui/signature";
+import { v4 } from "uuid";
 
 interface FormResponse {
   formId: string;
@@ -498,12 +499,12 @@ export default function FormFillScreen() {
           {
             uri: image.uri,
             type: "image/jpeg",
-            name: "image.jpg",
+            name: `${v4()+Date.now()}.jpeg`,
           },
           {
-            folder: "form-uploads",
+            folder: `forms/${formId}/fields/${fieldId}`,
             useUniqueFileName: true,
-            tags: ["form-submission"],
+            tags: [`form-${formId}`, `field-${fieldId}`],
           },
           (progress) => {
             setUploadProgress((prev) => ({ ...prev, [fieldId]: progress }));

@@ -153,6 +153,7 @@ export default function Layout() {
         name="scope"
         options={{
           title: "Scope",
+          href: null,
         }}
       />
       <Tabs.Screen
