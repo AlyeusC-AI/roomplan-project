@@ -1,10 +1,10 @@
 import { useState } from "react";
 import useAmplitudeTrack from "@utils/hooks/useAmplitudeTrack";
 import { event } from "nextjs-google-analytics";
+import { ChevronDown, ChevronRight, Pencil, Trash } from "lucide-react";
 
 import Readings from "./Readings";
 import { roomStore } from "@atoms/room";
-import { Pencil, Trash } from "lucide-react";
 import { useParams } from "next/navigation";
 import { Button } from "@components/ui/button";
 import { LoadingSpinner } from "@components/ui/spinner";
@@ -23,6 +23,7 @@ const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const { track } = useAmplitudeTrack();
   const [internalRoomName, setInternalRoomName] = useState(room.name);
   const [isCreating, setIsCreating] = useState(false);
@@ -110,77 +111,105 @@ const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
   };
 
   return (
-    <div className='py-8 text-sm md:text-base'>
-      <div className='flex items-center justify-between'>
-        <div className='flex items-center'>
-          {isEditingTitle ? (
-            <>
-              <Input
-                value={internalRoomName}
-                onChange={(e) => setInternalRoomName(e.target.value)}
-                disabled={isSaving}
-              />
-              <Button
-                onClick={() => setIsEditingTitle(false)}
-                className='ml-4'
-                variant='outline'
-                disabled={isSaving}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => updateRoomName()}
-                className='ml-4'
-                disabled={isSaving}
-              >
-                {isSaving ? <LoadingSpinner /> : "Save"}
-              </Button>
-            </>
-          ) : (
-            <>
-              <h1 className='text-2xl font-semibold'>{room.name}</h1>
-              <Button
-                variant='outline'
-                onClick={() => setIsEditingTitle(true)}
-                className='ml-4'
-              >
-                <Pencil className='h-4' />
-              </Button>
-            </>
-          )}
+    <div className="rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md">
+      <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="h-8 w-8"
+          >
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
+          <div className="flex items-center">
+            {isEditingTitle ? (
+              <>
+                <Input
+                  value={internalRoomName}
+                  onChange={(e) => setInternalRoomName(e.target.value)}
+                  disabled={isSaving}
+                  className="h-8 w-48"
+                />
+                <Button
+                  onClick={() => setIsEditingTitle(false)}
+                  className="ml-2 h-8"
+                  variant="outline"
+                  disabled={isSaving}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => updateRoomName()}
+                  className="ml-2 h-8"
+                  disabled={isSaving}
+                >
+                  {isSaving ? <LoadingSpinner /> : "Save"}
+                </Button>
+              </>
+            ) : (
+              <>
+                <h1 className="text-lg font-semibold">{room.name}</h1>
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsEditingTitle(true)}
+                  className="ml-2 h-8 w-8 p-0"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
         </div>
-        <div className='flex items-center justify-center gap-4'>
-          <Button disabled={isCreating} onClick={() => addReading()}>
+        <div className="flex items-center space-x-2">
+          <Button
+            disabled={isCreating}
+            onClick={() => addReading()}
+            className="h-8"
+          >
             {isCreating ? <LoadingSpinner /> : "Add Reading"}
           </Button>
           <Button
             onClick={() => setIsConfirmingDelete(true)}
-            variant='destructive'
+            variant="destructive"
+            className="h-8 w-8 p-0"
           >
-            <Trash className='h-6' />
+            <Trash className="h-4 w-4" />
           </Button>
         </div>
-        <Dialog open={isConfirmingDelete} onOpenChange={setIsConfirmingDelete}>
-          <DialogContent>
-            <DialogHeader>Delete Room</DialogHeader>
-            <DialogDescription>
-              Permanently delete this room and everything associated within it
-            </DialogDescription>
-            <div className='flex items-center justify-end space-x-4'>
-              <Button
-                variant='outline'
-                onClick={() => setIsConfirmingDelete(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={deleteRoom} variant='destructive'>
-                {isDeleting ? <LoadingSpinner /> : "Yes, delete the room."}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
-      <Readings room={room} />
+      <div
+        className={`overflow-hidden transition-all duration-200 ${
+          isExpanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="p-4">
+          <Readings room={room} />
+        </div>
+      </div>
+      <Dialog open={isConfirmingDelete} onOpenChange={setIsConfirmingDelete}>
+        <DialogContent>
+          <DialogHeader>Delete Room</DialogHeader>
+          <DialogDescription>
+            Permanently delete this room and everything associated within it
+          </DialogDescription>
+          <div className="flex items-center justify-end space-x-4">
+            <Button
+              variant="outline"
+              onClick={() => setIsConfirmingDelete(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={deleteRoom} variant="destructive">
+              {isDeleting ? <LoadingSpinner /> : "Yes, delete the room."}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

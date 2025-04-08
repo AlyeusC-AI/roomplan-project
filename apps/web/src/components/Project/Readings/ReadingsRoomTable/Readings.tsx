@@ -1,6 +1,22 @@
+import { useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import RoomReadingCell from "./room-reading-cell";
 
 const Readings = ({ room }: { room: RoomWithReadings }) => {
+  const [expandedReadings, setExpandedReadings] = useState<Set<string>>(new Set());
+
+  const toggleReading = (publicId: string) => {
+    setExpandedReadings((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(publicId)) {
+        newSet.delete(publicId);
+      } else {
+        newSet.add(publicId);
+      }
+      return newSet;
+    });
+  };
+
   // const updateReading = trpc.readings.updateReading.useMutation({
   //   async onMutate({
   //     projectPublicId,
@@ -43,28 +59,49 @@ const Readings = ({ room }: { room: RoomWithReadings }) => {
   //   },
   // });
   return (
-    <div>
-      {room.RoomReading.sort((a, b) =>
+    <div className="space-y-2">
+      {room.RoomReading?.sort((a, b) =>
         new Date(a.createdAt) > new Date(b.createdAt) ? -1 : 1
-      ).map((r) => (
-        <RoomReadingCell key={r.publicId} r={r} room={room} />
-      ))}
+      ).map((r) => {
+        const isExpanded = expandedReadings.has(r.publicId);
+        return (
+          <div
+            key={r.publicId}
+            className="rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md"
+          >
+            <button
+              onClick={() => toggleReading(r.publicId)}
+              className="flex w-full items-center justify-between p-3 hover:bg-gray-50"
+            >
+              <span className="font-medium">
+                {new Date(r.date).toLocaleDateString()}
+              </span>
+              {isExpanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </button>
+            <div
+              className={`overflow-hidden transition-all duration-200 ${
+                isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+              }`}
+            >
+              <div className="p-4 pt-0">
+                <RoomReadingCell r={r} room={room} />
+              </div>
+            </div>
+          </div>
+        );
+      })}
       {room.RoomReading.length === 0 && (
-        <div className='ml-2 mt-4 flex items-center justify-start'>
-          <div>
-            <h3 className='text-lg font-medium'>No reading data</h3>
-            <p className='text-sm text-muted-foreground'>
-              Click &quot;Add Reading&quot; to record temperature, humidity, and
-              dehumidifer readings.
+        <div className="flex items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8">
+          <div className="text-center">
+            <h3 className="text-lg font-medium text-gray-900">No reading data</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Click "Add Reading" to record temperature, humidity, and dehumidifer readings.
             </p>
           </div>
-          {/* <div className='max-w-[35%] border-l-2 border-l-gray-400 px-2'>
-            <h5 className='text-lg font-semibold'>No reading data</h5>
-            <p className='text-gray-500'>
-              Click &quot;Add Reading&quot; to record temperature, humidity, and
-              dehumidifer readings.
-            </p>
-          </div> */}
         </div>
       )}
     </div>
