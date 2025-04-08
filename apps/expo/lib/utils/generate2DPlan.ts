@@ -25,7 +25,8 @@ const openingWidth = 0.04 * scaleFactor;
 
 export type EntireRooms = {
     entireRoom: Room,
-    rooms: Room[]
+    rooms: Room[],
+    originalRooms: Room[]
 }
 
 export type Room = {
@@ -59,18 +60,27 @@ function checkPointInPolygon(point: Point, polygons: Point[][]) {
     return inside;
 }
 
+function findEdgePointsOfLine(points: Point[]) {
+    const minX = Math.min(...points.map(p => p[0]));
+    const maxX = Math.max(...points.map(p => p[0]));
+    const minZ = Math.min(...points.map(p => p[2]));
+    const maxZ = Math.max(...points.map(p => p[2]));
+
+    const p00 = [[minX, 0, minZ], [maxX, 0, maxZ]];
+    const p01 = [[minX, 0, maxZ], [maxX, 0, minZ]];
+
+    return points.find(p => p[0] === minX && p[2] === minZ) ? p00 : p01;
+}
+
 function drawWallLength(points: Point[], floors: Point[][], color = "black", width = 0.01, fill="none") {
     const w0 = wallWidth * 3, w1 = -wallWidth * 3;
-    let minX = Math.min(...points.map(p => p[0]));
-    let maxX = Math.max(...points.map(p => p[0]));
-    let minY = Math.min(...points.map(p => p[2]));
-    let maxY = Math.max(...points.map(p => p[2]));
+    let mp = [points[0][0] + (points[1][0] - points[0][0]) / 2, points[0][2] + (points[1][2] - points[0][2]) / 2];
 
-    let mp = [minX + (maxX - minX) / 2, minY + (maxY - minY) / 2];
+    const [_p0, _p1] = findEdgePointsOfLine(points);
+    const p0 = [_p0[0], _p0[2]];
+    const p1 = [_p1[0], _p1[2]];
+    let length = Math.sqrt(Math.pow(p0[0] - p1[0], 2) + Math.pow(p0[1] - p1[1], 2));
 
-    let length = Math.sqrt(Math.pow(maxX - minX, 2) + Math.pow(maxY - minY, 2));
-    const p0 = [minX, minY];
-    const p1 = [maxX, maxY];
     const dx = p0[0] - p1[0];
     const dy = p0[1] - p1[1];
     const ux = -dy / length;
@@ -219,7 +229,16 @@ function calculateRotationAngleXZ(wall: Point[]) {
 
 function alignRoomHorizontallyXZ(room: Room, initAngle: number | undefined = undefined) {
     // Choose a wall to align with the x-axis in the xz plane
-    const wall = room.walls[0];
+    let maxLength = -Infinity
+    let wall = room.walls[0];
+    room.walls.forEach(_wall => {
+        const [p0, p1] = findEdgePointsOfLine(_wall)
+        const length = Math.sqrt(Math.pow(p0[0] - p1[0], 2) + Math.pow(p0[2] - p1[2], 2));
+        if (length > maxLength) {
+            maxLength = length;
+            wall = _wall;
+        }
+    });
     const angle = initAngle || calculateRotationAngleXZ(wall);
 
     // Function to rotate all points in the room around the y-axis
@@ -253,9 +272,15 @@ function alignRoomHorizontallyXZ(room: Room, initAngle: number | undefined = und
     return {room, angle};
 }
 
-export function makeSVG(data: EntireRooms) {
-    const {room, angle} = alignRoomHorizontallyXZ(data.entireRoom);
-    const subRooms = data.rooms.map(room => alignRoomHorizontallyXZ(room, angle).room);
+export function makeSVG(data: EntireRooms, roomNames: string[], mainRoomName: string) {
+    // const {room, angle} = alignRoomHorizontallyXZ(data.entireRoom);
+    // const subRooms = data.rooms.map(room => alignRoomHorizontallyXZ(room, angle).room);
+
+    const _room: Room = JSON.parse(JSON.stringify(data.entireRoom))
+    const _subRooms: Room[] = JSON.parse(JSON.stringify(data.rooms));
+
+    const {room, angle} = alignRoomHorizontallyXZ(_room);
+    const subRooms = _subRooms.map(room => alignRoomHorizontallyXZ(room, angle).room);
 
     function createPolyline(points: Point[], color = "black", width = 0.05, fill="none") {
         const pointsStr = points.map(p => `${p[0]},${p[2]}`).join(" ");
@@ -318,8 +343,9 @@ export function makeSVG(data: EntireRooms) {
     let sqftContent = "";
     let wallLengthMeasure = "";
     let totalArea = 0;
-    const processFLoor = (floor: Point[], isMainRoom = true) => {
+    const processFLoor = (floor: Point[], isMainRoom = true, roomIndex = 0) => {
         if (floor.length) {
+            const roomName = isMainRoom ? mainRoomName : roomNames[roomIndex];
             svgContent += createPolyline(floor,
                 isMainRoom ? floorColor : subFloorColor,
                 isMainRoom ? floorWidth : subFloorWidth,
@@ -332,6 +358,15 @@ export function makeSVG(data: EntireRooms) {
             // const widthInFeet = inchText(boundingBox?.width ?? 0);
             // const heightInFeet = inchText(boundingBox?.height ?? 0);
             if (centroid) {
+                sqftContent += `<text x="${centroid.x}" y="${centroid.y - ftSize * 1.5}" 
+                    fill="${isMainRoom ? ftColor : ftFill}" 
+                    stroke="${ftColor}"
+                    stroke-width="${ftSize / 15}"
+                    text-anchor="middle" 
+                    dominant-baseline="middle"
+                    font-weight="bold"
+                    font-family="monospace"
+                    font-size="${ftSize}">${roomName}</text>`;
                 sqftContent += `<text x="${centroid.x}" y="${centroid.y}" 
                     fill="${ftFill}" 
                     stroke="${ftColor}"
@@ -355,10 +390,16 @@ export function makeSVG(data: EntireRooms) {
     room.floors.forEach(floor => {
         processFLoor(floor, true)
     });
-    subRooms.forEach(subRoom => {
+    subRooms.forEach((subRoom, sIdx) => {
         subRoom.floors.forEach(floor => {
-            processFLoor(floor, false)
+            processFLoor(floor, false, sIdx)
         });
+        // subRoom.walls.forEach(wall => {
+        //     if (wall.length) {
+        //         svgContent += createPolyline(wall, wallColor, wallWidth);
+        //         wallLengthMeasure += drawWallLength(wall, room.floors, wallColor, wallWidth / 5);
+        //     }
+        // })
     })
     room.objects.forEach(object => {
         if (object.length) svgContent += createPolyline(object, objectColor, objectWidth, objectFill);

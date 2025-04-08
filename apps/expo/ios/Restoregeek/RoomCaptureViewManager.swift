@@ -65,6 +65,7 @@ class RoomScanModule: NSObject, RCTBridgeModule {
 struct TransformedRoomValue: Codable {
   let entireRoom: [String: [[simd_float3]]]
   let rooms: [[String: [[simd_float3]]]]
+  let originalRooms: [[String: [[simd_float3]]]]
 }
 
 @available(iOS 17.0, *)
@@ -195,7 +196,8 @@ class RoomCaptureViewWrapper : RCTView, RoomCaptureSessionDelegate {
       let roomJsonData = try jsonEncoder.encode(finalResults)
       let transformedRoom = TransformedRoomValue(
         entireRoom: self.getTransformedRoom(),
-        rooms: self.getTransformedRooms()
+        rooms: self.getTransformedRooms(),
+        originalRooms: self.getOriginalTransformedRooms()
       )
       let transformedRoomJsonData = try jsonEncoder.encode(transformedRoom)
       try roomJsonData.write(to: capturedRoomURL)
@@ -241,6 +243,19 @@ class RoomCaptureViewWrapper : RCTView, RoomCaptureSessionDelegate {
     return transformedPoints
   }
 
+  func getOriginalTransformedRooms() -> [[String: [[simd_float3]]]] {
+    return self.roomsArray.map { room in
+      return [
+        "floors": surfaceToCoords(surfaces: room.floors),
+        "walls": surfaceToCoords(surfaces: room.walls),
+        "doors": surfaceToCoords(surfaces: room.doors),
+        "windows": surfaceToCoords(surfaces: room.windows),
+        "openings": surfaceToCoords(surfaces: room.openings),
+        "objects": objectToCoords(objects: room.objects),
+      ]
+    }
+  }
+  
   func getTransformedRooms() -> [[String: [[simd_float3]]]] {
     let rooms = self.finalResults?.rooms ?? []
     return rooms.map { room in
