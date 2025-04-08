@@ -1,32 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { FlatList } from 'native-base';
+import { Input } from 'native-base';
 import React, { useEffect, useRef } from 'react';
 import { TouchableOpacity, View, Text, SafeAreaView, Dimensions } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
-
-const roomTypes = [
-  { value: 'bedroom', label: 'Bedroom' },
-  { value: 'living_room', label: 'Living Room' },
-  { value: 'kitchen', label: 'Kitchen' },
-  { value: 'bathroom', label: 'Bathroom' },
-  { value: 'dining_room', label: 'Dining Room' },
-  { value: 'office', label: 'Office' },
-  { value: 'garage', label: 'Garage' },
-  { value: 'basement', label: 'Basement' },
-  { value: 'attic', label: 'Attic' },
-  { value: 'hallway', label: 'Hallway' },
-  { value: 'laundry_room', label: 'Laundry Room' },
-  { value: 'pantry', label: 'Pantry' },
-  { value: 'closet', label: 'Closet' },
-  { value: 'playroom', label: 'Playroom' },
-  { value: 'gym', label: 'Gym' },
-  { value: 'library', label: 'Library' },
-  { value: 'guest_room', label: 'Guest Room' },
-  { value: 'sunroom', label: 'Sunroom' },
-  { value: 'mudroom', label: 'Mudroom' },
-  { value: 'storage_room', label: 'Storage Room' },
-  { value: 'other', label: 'Other' }
-]
 
 export interface RBSheetRef {
   /**
@@ -56,7 +32,6 @@ export const LidarRoomTypeSelect = ({ onSelect, onCancel }: {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <RBSheet
-        height={Dimensions.get('window').height * 0.8}
         ref={rbSheetRef}
         closeOnPressBack={false}
         closeOnPressMask={false}
@@ -76,10 +51,10 @@ export const LidarRoomTypeSelect = ({ onSelect, onCancel }: {
       >
         <View className='p-4 relative'>
           <Text className='text-lg font-bold'>
-            Select Room Type
+            Input Room name
           </Text>
           <Text className='text-sm text-gray-500'>
-            Choose the type of room you want to scan.
+            Input the name of the room you want to scan.
           </Text>
 
           <View className='absolute top-4 right-4'>
@@ -94,25 +69,29 @@ export const LidarRoomTypeSelect = ({ onSelect, onCancel }: {
             </TouchableOpacity>
           </View>
         </View>
-        <FlatList
-          className='mb-12'
-          data={roomTypes}
-          keyExtractor={(item) => item.value}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={() => {
-                selected.current = item.label;
+        <View className='p-4 pt-0'>
+          <Input
+            placeholder="Room Name"
+            variant="filled"
+            size="lg"
+            onChangeText={(text) => {
+              selected.current = text;
+            }}
+            className='my-2'
+          />
+          <TouchableOpacity
+            onPress={() => {
+              if (selected.current) {
                 rbSheetRef.current?.close();
-              }}
-            >
-              <View className='px-4 py-3'>
-                <Text className='text-lg'>
-                  {item.label}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          )}
-        />
+              }
+            }}
+            className='bg-blue-500 p-4 rounded-lg mt-4'
+          >
+            <Text className='text-white text-center font-bold text-lg'>
+              Start Scan
+            </Text>
+          </TouchableOpacity>
+        </View>
       </RBSheet>
     </SafeAreaView>
   )
