@@ -8,7 +8,7 @@ import {
   ChevronRight,
   ChevronUp,
 } from "lucide-react-native";
-import { TouchableOpacity, Text, View } from "react-native";
+import { TouchableOpacity, Text, View,  } from "react-native";
 
 import { ReadingType } from "@/types/app";
 // Import refactored components
@@ -194,7 +194,7 @@ const RoomReading: React.FC<RoomReadingProps> = ({
   };
 
   return (
-    <>
+  <>
       <Button
         variant="outline"
         onPress={() => setIsCollapsed((o) => !o)}
@@ -334,7 +334,7 @@ const RoomReading: React.FC<RoomReadingProps> = ({
           isLoading={isUpdatingExtendedWall}
         />
       )}
-    </>
+      </>
   );
 };
 
