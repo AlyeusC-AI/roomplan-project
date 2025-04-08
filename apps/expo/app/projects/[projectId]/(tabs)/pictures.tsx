@@ -92,6 +92,7 @@ export default function ProjectPhotos() {
   const [isUploading, setIsUploading] = useState(false);
   const [isUpdatingAll, setIsUpdatingAll] = useState(false);
   const rooms = roomInferenceStore();
+  console.log("🚀 ~ ProjectPhotos ~ rooms:",JSON.stringify(rooms, null, 2))
   const urlMap = urlMapStore();
   const router = useRouter();
   useEffect(() => {
@@ -401,7 +402,7 @@ export default function ProjectPhotos() {
     if (!rooms.rooms?.length) return false;
     
     return rooms.rooms.every(room => 
-      room.Inference.every((inference: Inference) => 
+      room.Inference?.every((inference: Inference) => 
         !inference.isDeleted && 
         !inference.Image?.isDeleted && 
         inference.Image?.includeInReport
@@ -474,7 +475,7 @@ export default function ProjectPhotos() {
   const finalRooms = rooms?.rooms?.map((room) => {
     return {
       ...room,
-      Inference: room.Inference.filter(
+      Inference: room.Inference?.filter(
         (i: Inference) =>
           !i.isDeleted &&
           !i.Image?.isDeleted &&
@@ -524,6 +525,7 @@ export default function ProjectPhotos() {
             ?.map((room) => {
               const previewImageUrl = getRoomPreviewImage(room.Inference);
               const imageCount = room.Inference?.length || 0;
+              console.log("🚀 ~ ?.map ~ imageCount:", imageCount)
 
               return (
                 <TouchableOpacity

@@ -47,7 +47,8 @@ export async function GET(req: NextRequest) {
         .limit(limit)
         .range(offset, offset + limit - 1)
         .order("createdAt", { ascending: false })
-        .eq("organizationId", organization.data.id);
+        .eq("organizationId", organization.data.id)
+        .eq("isDeleted", false);
     } else {
       projectsRaw = await supabaseServiceRole
         .from("Project")
@@ -176,7 +177,9 @@ export async function DELETE(
 ) {
   await user(req);
 
-  const projectId = (await params).id;
+  const projectId =
+  //  (await params).id || 
+  (await req.json()).id;
 
   try {
     await supabaseServiceRole
@@ -184,7 +187,9 @@ export async function DELETE(
       .update({ isDeleted: true })
       .eq("publicId", projectId);
 
-    return NextResponse.redirect("/projects");
+      const url = req.nextUrl.clone()
+      url.pathname = '/projects'
+      return NextResponse.redirect(url);
   } catch (err) {
     console.error(err);
     return NextResponse.json({ status: "failed" }, { status: 500 });

@@ -98,15 +98,15 @@ const AssigneeSelect: React.FC<AssigneeSelectProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger className="flex flex-row items-center space-x-2 p-2 gap-2 rounded-lg hover:bg-gray-100">
-        <Users height={20} width={20} className="text-primary" />
+        <Users height={24} width={24} className="text-black" color="#000" />
         <View className="flex-row items-center gap-2">
           {selectedMembers.length > 0 ? (
             <>
-              <Text className="text-sm text-primary font-medium">
+              <Text className=" text-primary font-medium">
                 {selectedMembers[0].User?.firstName || selectedMembers[0].User?.email}
               </Text>
               {selectedMembers.length > 1 && (
-                <Text className="text-sm text-gray-500 ml-1">
+                <Text className=" text-gray-500 ml-1">
                   +{selectedMembers.length - 1} more
                 </Text>
               )}

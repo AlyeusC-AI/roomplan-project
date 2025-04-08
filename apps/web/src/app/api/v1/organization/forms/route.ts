@@ -1,5 +1,5 @@
 import { supabaseServiceRole } from "@lib/supabase/admin";
-  import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { user as getUser } from "@lib/supabase/get-user";
 import { z } from "zod";
 
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
     if (org.error) throw org.error;
 
     // Get forms for the organization
-          const { data: forms, error } = await supabaseServiceRole
+    const { data: forms, error } = await supabaseServiceRole
       .from("Form")
       .select(`
         *,
@@ -241,7 +241,7 @@ export async function PUT(req: NextRequest) {
 
     // Create maps for quick lookup
     const existingSectionsMap = new Map(
-      existingSections?.map((section) => [section.name, section]) || []
+      existingSections?.map((section) => [section.id, section]) || []
     );
     const existingFieldsMap = new Map<number, typeof existingFields[number]>(
       existingFields?.map((field) => {
@@ -249,18 +249,16 @@ export async function PUT(req: NextRequest) {
         return [field.id, field];
       }).filter((entry): entry is [number, typeof existingFields[number]] => entry !== null) || []
     );
-    console.log("🚀 ~ PUT ~ validatedData.sections:",JSON.stringify(validatedData.sections, null, 2))
 
     // Update or create sections
     for (const section of validatedData.sections || []) {
-      const existingSection = existingSectionsMap.get(section.name);
-      
-      if (existingSection) {
+    let sectionId = section.id;
+      if (sectionId) {
         // Update existing section
         const { error: sectionUpdateError } = await supabaseServiceRole
           .from("FormSection")
           .update({ name: section.name })
-          .eq("id", existingSection.id);
+          .eq("id", sectionId);
 
         if (sectionUpdateError) throw sectionUpdateError;
       } else {
@@ -275,17 +273,19 @@ export async function PUT(req: NextRequest) {
           .single();
 
         if (sectionCreateError) throw sectionCreateError;
-        existingSectionsMap.set(section.name, newSection);
+        existingSectionsMap.set(newSection.id, {
+          ...newSection,
+          isNew: true
+        });
+        sectionId = newSection.id;
       }
 
       // Update or create fields for this section
       for (const field of section.fields || []) {
-        const sectionId = existingSection?.id || existingSectionsMap.get(section.name)?.id;
         if (!sectionId) throw new Error("Section ID not found");
 
         const fieldKey = field.id || 0;
         const existingField = existingFieldsMap.get(fieldKey);
-        console.log("🚀 ~ PUT ~ existingField:", existingField)
 
         if (existingField) {
           // Update existing field
@@ -367,7 +367,8 @@ export async function PUT(req: NextRequest) {
 
     // Soft delete removed sections and their fields
     const sectionsToDelete = Array.from(existingSectionsMap.values())
-      .filter((section) => !validatedData.sections?.some((s) => s.name === section.name));
+      .filter((section) => !validatedData.sections?.some((s) => section.isNew|| s.id === section.id));
+      console.log("🚀 ~ PUT ~ sectionsToDelete:", sectionsToDelete,existingSectionsMap,validatedData.sections)
 
     if (sectionsToDelete.length > 0) {
       const { error: deleteError } = await supabaseServiceRole

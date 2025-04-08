@@ -1,4 +1,4 @@
-import React, { useState }   from "react";
+import React, { useState, useEffect } from "react";
 import { TouchableOpacity, Image, View, StyleSheet, Text } from "react-native";
 import { router } from "expo-router";
 import { Separator } from "@/components/ui/separator";
@@ -30,8 +30,10 @@ export default function ProjectCell({ project }: { project: Project }) {
   };
 
         const images = project.images?.filter((image) =>   !image.isDeleted).map((image) => image.url)
-          console.log("🚀 ~ ProjectCell ~ images:",project.name, images[0])
           const [imageUrl, setImageUrl] = useState(images[0]);
+          useEffect(() => {
+            setImageUrl(images[0]);
+          }, [images[0]]);
 
   return (
     <TouchableOpacity
@@ -47,7 +49,7 @@ export default function ProjectCell({ project }: { project: Project }) {
     >
       <View style={styles.card}>
         { 
-        images[0] ? (
+       imageUrl ? (
           <Image
             source={{
               uri: imageUrl,

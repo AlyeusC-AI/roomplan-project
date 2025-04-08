@@ -571,8 +571,8 @@ function NavigationCell({
     >
       <Card className="p-4">
         <View className="flex-row items-center">
-          <View className="bg-primary p-3 rounded-xl">
-            <Icon height={24} width={24} className="text-white" color="#fff" />
+          <View className="bg-primary/10 p-3 rounded-xl">
+            <Icon height={24} width={24} className="text-white" color="#000" />
           </View>
           <View className="flex-1 ml-4">
             <Text className="text-base font-semibold text-foreground">
@@ -631,8 +631,8 @@ function GridCell({
     >
       <Card className="overflow-hidden h-[110px]">
         <View className="items-center p-3 h-full justify-center">
-          <View className="h-14 w-14 rounded-full bg-primary items-center justify-center mb-3">
-            <Icon height={22} width={22} color="#fff" />
+          <View className="h-14 w-14 rounded-full bg-primary/10 items-center justify-center mb-3">
+            <Icon height={22} width={22} color="#000" />
           </View>
           <Text className="text-sm font-semibold text-center text-foreground">
             {title}

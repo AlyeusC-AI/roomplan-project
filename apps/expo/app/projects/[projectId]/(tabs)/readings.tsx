@@ -7,7 +7,7 @@ import { toast } from "sonner-native";
 import Empty from "@/components/project/empty";
 import { Building, Plus } from "lucide-react-native";
 import { Button } from "@/components/ui/button";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, TouchableOpacity   } from "react-native";
 import { roomsStore } from "@/lib/state/rooms";
 import { Database } from "@/types/database";
 import { v4 } from "react-native-uuid/dist/v4";
@@ -21,7 +21,7 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
   const { projectId } = useGlobalSearchParams<{
     projectId: string;
   }>();
-
+  const router = useRouter();
   const addReading = async (data: any, type: ReadingType) => {
     try {
       setIsAdding(true);
@@ -67,7 +67,9 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
         direction="row"
         mb={4}
       >
-        <Heading size="md">{room.name}</Heading>
+        <TouchableOpacity onPress={() => router.push(`/projects/${projectId}/rooms/create?roomId=${room.publicId}&roomName=${room.name}`)}>
+          <Heading size="md">{room.name}</Heading>
+        </TouchableOpacity>
         <Button
           onPress={() => {
             addReading(

@@ -118,12 +118,14 @@ export default function ImageGallery({
   // Filter out inferences without imageKey or with undefined urlMap entries
   const validInferences = inferences.filter(
     (inference): inference is Inference & { imageKey: string } =>
-      !!inference.imageKey &&
-      typeof inference.imageKey === "string" &&
+      // !!inference.imageKey &&
+      // typeof inference.imageKey === "string" &&
       !inference.isDeleted &&
-      !inference.Image?.isDeleted &&
-      !!inference.imageKey
+      !inference.Image?.isDeleted
+      //  &&
+      // !!inference.imageKey
   );
+  console.log("🚀 ~ validInferences:", validInferences)
 
   // Organize inferences into rows for grid display
   const rows = Array.from({
@@ -295,11 +297,12 @@ export default function ImageGallery({
 
   // Render image item in the grid
   const renderGridItem = (inference: Inference | null, index: number) => {
-    if (!inference || !inference.imageKey) {
+    if (!inference || (!inference.imageKey && !inference.Image?.key)) {
       return <View key={`empty-${index}`} style={styles.galleryItem} />;
     }
 
-    const { imageKey } = inference;
+    const imageKey = inference.imageKey || inference.Image?.key || "";
+
 
     // Try to get the URL from the map first, then fall back to direct construction
     let imageUrl = safelyGetImageUrl(urlMap, imageKey, "");
@@ -345,9 +348,10 @@ export default function ImageGallery({
     item: Inference & { imageKey: string };
     index: number;
   }) => {
-    let imageUrl = safelyGetImageUrl(urlMap, item.imageKey, "");
+    const imageKey = item.imageKey || item.Image?.key || "";
+    let imageUrl = safelyGetImageUrl(urlMap, imageKey, "");
     if (!imageUrl) {
-      imageUrl = getStorageUrl(item.imageKey);
+      imageUrl = getStorageUrl(imageKey);
     }
 
     const noteCount = item.notes?.length || 0;
@@ -358,7 +362,7 @@ export default function ImageGallery({
           uri={imageUrl}
           style={styles.modalImage}
           resizeMode="contain"
-          imageKey={item.imageKey}
+          imageKey={imageKey}
           showInfo={true}
           backgroundColor="#000000"
         />
@@ -574,7 +578,7 @@ export default function ImageGallery({
                 index,
               })}
               renderItem={renderModalItem}
-              keyExtractor={(item) => item.imageKey}
+              keyExtractor={(item) => item.imageKey || item.Image?.key || ""}
               onMomentumScrollEnd={handleScrollEnd}
             />
 
@@ -631,19 +635,21 @@ export default function ImageGallery({
                 snapToAlignment="start"
               >
                 {validInferences.map((inference, index) => {
+                  const imageKey = inference.imageKey || inference.Image?.key || "";
                   let imageUrl = safelyGetImageUrl(
                     urlMap,
-                    inference.imageKey,
+                    imageKey,
                     ""
                   );
 
                   if (!imageUrl) {
-                    imageUrl = getStorageUrl(inference.imageKey);
+                    imageUrl = getStorageUrl(imageKey);
                   }
+                  console.log("🚀 ~ {validInferences.map ~ imageUrl:", imageUrl)
 
                   return (
                     <TouchableOpacity
-                      key={inference.imageKey}
+                      key={imageKey}
                       activeOpacity={0.7}
                       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                       onPress={() => {
@@ -668,7 +674,7 @@ export default function ImageGallery({
                         uri={imageUrl}
                         style={styles.thumbnailImage}
                         size="small"
-                        imageKey={inference.imageKey}
+                        imageKey={imageKey}
                         disabled={true}
                         backgroundColor="#000000"
                       />
