@@ -34,10 +34,10 @@ export default function Layout({ children }: React.PropsWithChildren) {
       title: "Expenses",
       href: `/projects/${id}/expenses`,
     },
-    {
-      title: "Calendar",
-      href: `/projects/${id}/calendar`,
-    },
+    // {
+    //   title: "Calendar",
+    //   href: `/projects/${id}/calendar`,
+    // },
     // {
     //   title: "Roofing",
     //   href: `/projects/${id}/roofing`,

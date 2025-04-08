@@ -35,6 +35,7 @@ function downloadFile(file: File) {
 
 const FileUploader = () => {
   const [isUploading, setIsUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const files = projectStore();
   const orgInfo = orgStore((state) => state.organization);
   const supabase = createClient();
@@ -52,12 +53,21 @@ const FileUploader = () => {
   };
 
   useEffect(() => {
-    fetchFiles();
-    fetch(`/api/v1/projects/${id}/reports`)
-      .then((res) => res.json())
+    setLoading(true);
+    fetchFiles()
+      .then(() => {
+        fetch(`/api/v1/projects/${id}/reports`)
+          .then((res) => res.json())
       .then((data) => {
         console.log(data);
         // files.setReports(data);
+      })
+        .finally(() => {
+          setLoading(false);
+        });
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, []);
 
@@ -137,7 +147,7 @@ const FileUploader = () => {
         .createSignedUrl(`${orgInfo?.publicId}/${id}/${file.name}`, 60);
 
       if (!data?.signedUrl) {
-        toast.error("Could not access file");
+        // toast.error("Could not access file");
         return;
       }
 
@@ -166,7 +176,7 @@ const FileUploader = () => {
       }
     } catch (e) {
       console.error(e);
-      toast.error("Could not access file");
+      // toast.error("Could not access file");
     }
   };
 
@@ -191,6 +201,10 @@ const FileUploader = () => {
       toast.error("Could not delete file.");
     }
   };
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className='space-y-4'>

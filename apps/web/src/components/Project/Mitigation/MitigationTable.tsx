@@ -28,7 +28,7 @@ import { Switch } from "@components/ui/switch";
 import { Label } from "@components/ui/label";
 
 export default function MitigationTable() {
-  const [isFilterOptionOpen, setIsFilterOptionOpen] = useState(true);
+  const [isFilterOptionOpen, setIsFilterOptionOpen] = useState(false);
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const reactSelectId = useId();
