@@ -58,7 +58,9 @@ export function LoginForm() {
       } else if (data.user.email_confirmed_at) {
         router.push("/register?page=3");
       } else {
-        router.push(`/register?page=2&email=${email}`);
+        // router.push(`/register?page=2&email=${email}`);
+        router.push(`/register?page=3&email=${email}`);
+
       }
     } catch (error) {
       // Logging The Error To The Console

@@ -47,6 +47,7 @@ import * as FileSystem from "expo-file-system";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/lib/supabase";
 import AddRoomButton from "@/components/project/AddRoomButton";
+import { projectStore } from "@/lib/state/project";
 
 interface PhotoResult {
   uri: string;
@@ -83,6 +84,7 @@ export default function ProjectPhotos() {
   const [expandedValue, setExpandedValue] = useState<string | undefined>(
     undefined
   );
+  const {project} = projectStore();
   const [showRoomSelection, setShowRoomSelection] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
   const [shouldOpenCamera, setShouldOpenCamera] = useState(false);
@@ -90,6 +92,7 @@ export default function ProjectPhotos() {
   const [isUploading, setIsUploading] = useState(false);
   const [isUpdatingAll, setIsUpdatingAll] = useState(false);
   const rooms = roomInferenceStore();
+  console.log("🚀 ~ ProjectPhotos ~ rooms:",JSON.stringify(rooms, null, 2))
   const urlMap = urlMapStore();
   const router = useRouter();
   useEffect(() => {
@@ -399,7 +402,7 @@ export default function ProjectPhotos() {
     if (!rooms.rooms?.length) return false;
     
     return rooms.rooms.every(room => 
-      room.Inference.every((inference: Inference) => 
+      room.Inference?.every((inference: Inference) => 
         !inference.isDeleted && 
         !inference.Image?.isDeleted && 
         inference.Image?.includeInReport
@@ -420,12 +423,20 @@ export default function ProjectPhotos() {
       <Empty
         title="No Images"
         description="Upload images to associate with this project. Images of rooms can be automatically assigned a room"
-        buttonText="Start Taking Pictures"
+        // buttonText="Start Taking Pictures"
+        buttonText="Create a room"
+
         icon={<CameraIcon height={50} width={50} />}
         secondaryIcon={
           <CameraIcon height={20} width={20} color="#fff" className="ml-4" />
         }
-        onPress={() => router.push("../camera")}
+        // onPress={() => router.push("../camera")}
+        onPress={() =>
+          router.push({
+            pathname: "../rooms/create",
+            params: { projectName: project.name },
+          })
+        }
       />
     );
   }
@@ -464,7 +475,7 @@ export default function ProjectPhotos() {
   const finalRooms = rooms?.rooms?.map((room) => {
     return {
       ...room,
-      Inference: room.Inference.filter(
+      Inference: room.Inference?.filter(
         (i: Inference) =>
           !i.isDeleted &&
           !i.Image?.isDeleted &&
@@ -514,6 +525,7 @@ export default function ProjectPhotos() {
             ?.map((room) => {
               const previewImageUrl = getRoomPreviewImage(room.Inference);
               const imageCount = room.Inference?.length || 0;
+              console.log("🚀 ~ ?.map ~ imageCount:", imageCount)
 
               return (
                 <TouchableOpacity

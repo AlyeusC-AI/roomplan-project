@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { TouchableOpacity, Image, View, StyleSheet, Text } from "react-native";
 import { router } from "expo-router";
 import { Separator } from "@/components/ui/separator";
@@ -29,6 +29,12 @@ export default function ProjectCell({ project }: { project: Project }) {
     return name.split(" ").join("+");
   };
 
+        const images = project.images?.filter((image) =>   !image.isDeleted).map((image) => image.url)
+          const [imageUrl, setImageUrl] = useState(images[0]);
+          useEffect(() => {
+            setImageUrl(images[0]);
+          }, [images[0]]);
+
   return (
     <TouchableOpacity
       className="mt-3"
@@ -42,15 +48,19 @@ export default function ProjectCell({ project }: { project: Project }) {
       }
     >
       <View style={styles.card}>
-        {project.images &&
-        project.images.length > 0 &&
-        project.images.find((_, index) => index === 0)?.url ? (
+        { 
+       imageUrl ? (
           <Image
             source={{
-              uri: project.images.find((_, index) => index === 0)?.url,
+              uri: imageUrl,
             }}
             alt="Image"
             resizeMode="cover"
+            onError={() =>
+              setImageUrl(
+                `https://eu.ui-avatars.com/api/?name=${formatProjectName(project.name)}&size=250`
+              )
+            }
             style={styles.cardImg}
           />
         ) : (

@@ -37,8 +37,11 @@ export default function DetailsInput() {
     }
     setIsLoading(false);
     try {
-      const res = await fetch(`/api/project/${id}`, {
+      const res = await fetch(`/api/v1/projects`, {
         method: "DELETE",
+        body: JSON.stringify({
+          id: id as string,
+        }),
       });
       if (res.ok) {
         router.push("/projects");

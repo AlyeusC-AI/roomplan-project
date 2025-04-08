@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { api } from "../api";
 
 interface State {
   project: Project | null;
@@ -13,6 +14,7 @@ interface Actions {
   addLog: (message: string) => void;
   addAssignee: (assignee: Assignee) => void;
   removeAssignee: (assigneeId: string) => void;
+  fetchProject: (projectId: string) => Promise<void>;
 }
 
 // Define the store with persistence and partialize
@@ -44,6 +46,12 @@ export const projectStore = create<State & Actions>()(
             ),
           },
         })),
+      fetchProject: async (projectId: string) => {
+        const res = await api.get(`/api/v1/projects/${projectId}`);
+        set((state) => ({ project: res.data.data }));
+        console.log("🚀 ~ fetchProject: ~ res:", res.data);
+        return res.data;
+      },
 
       // Add a log entry (not persisted)
       addLog: (message) => set((state) => ({ logs: [...state.logs, message] })),

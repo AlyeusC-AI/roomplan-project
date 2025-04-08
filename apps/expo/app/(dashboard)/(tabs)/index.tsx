@@ -24,6 +24,7 @@ import {
 } from "react-native";
 import { projectsStore } from "@/lib/state/projects";
 import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
 // import { Platform } from "react-native";
 // import Constants from "expo-constants";
 
@@ -46,29 +47,30 @@ export default function Dashboard() {
   const { session, setSession } = userStore((state) => state);
   const { projects, setProjects } = projectsStore((state) => state);
   const [loading, setLoading] = useState(false);
+  console.log("🚀 ~ Dashboard ~ loading:", loading)
   const [loadingMore, setLoadingMore] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
-  const limit = 100;
+  const limit = 20;
   const hasMore = projects?.length < total;
   
-  // Refs to avoid stale closures
-  const sessionRef = useRef(session);
-  const searchTermRef = useRef(searchTerm);
-  const selectedUserRef = useRef(selectedUser);
-  const pageRef = useRef(page);
-  const projectsRef = useRef(projects);
+  // // Refs to avoid stale closures
+  // const sessionRef = useRef(session);
+  // const searchTermRef = useRef(searchTerm);
+  // const selectedUserRef = useRef(selectedUser);
+  // const pageRef = useRef(page);
+  // const projectsRef = useRef(projects);
   
-  // Update refs when values change
-  useEffect(() => {
-    sessionRef.current = session;
-    searchTermRef.current = searchTerm;
-    selectedUserRef.current = selectedUser;
-    pageRef.current = page;
-    projectsRef.current = projects;
-  }, [session, searchTerm, selectedUser, page, projects]);
+  // // Update refs when values change
+  // useEffect(() => {
+  //   sessionRef.current = session;
+  //   searchTermRef.current = searchTerm;
+  //   selectedUserRef.current = selectedUser;
+  //   pageRef.current = page;
+  //   projectsRef.current = projects;
+  // }, [session, searchTerm, selectedUser, page, projects]);
 
   const router = useRouter();
   const navigation = useNavigation();
@@ -79,12 +81,17 @@ export default function Dashboard() {
   }, [navigation]);
 
   // Fetch projects function that doesn't depend on state variables directly
-  const fetchProjects = useCallback(async (isLoadingMore: boolean) => {
+  const fetchProjects = useCallback(async (isLoadingMore: boolean|number) => {
     // Use refs instead of state directly to avoid dependency cycles
-    const currentSession = sessionRef.current;
-    const currentSearchTerm = searchTermRef.current;
-    const currentPage = isLoadingMore ? pageRef.current : 0;
-    const currentProjects = projectsRef.current || [];
+    // const currentSession = sessionRef.current;
+    // const currentSearchTerm = searchTermRef.current;
+    // const currentPage = isLoadingMore ? pageRef.current : 0;
+    // const currentProjects = projectsRef.current || [];
+    const currentSession = session;
+    const currentSearchTerm = searchTerm;
+    const currentPage = isLoadingMore || 0;
+    const currentProjects = projects || [];
+    console.log("🚀 ~ fetchProjects ~ currentPage:", currentPage)
 
     if (loadingMore || loading) return;
     if (!currentSession) {
@@ -101,24 +108,17 @@ export default function Dashboard() {
     const offset = currentPage * limit;
 
     try {
-      const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects?${
+      const res = await api.get(
+        `/api/v1/projects?${
           currentSearchTerm.length > 0 ? `query=${currentSearchTerm}&` : ""
-        }limit=${limit}&offset=${offset}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": `${currentSession?.access_token}`,
-          },
-        }
+        }limit=${limit}&offset=${offset}`
       );
       
-      if (!res.ok) {
+      if (res.status !== 200) {
         throw new Error(`HTTP error! Status: ${res.status}`);
       }
       
-      const data: ProjectsResponse = await res.json();
+      const data: ProjectsResponse = res.data;
 
       if (isLoadingMore) {
         setProjects(
@@ -188,6 +188,7 @@ export default function Dashboard() {
   useFocusEffect(
     useCallback(() => {
       if (projects?.length > 0 && session) {
+        setLoading(false);
         fetchProjects(false);
       }
     }, [])
@@ -198,12 +199,14 @@ export default function Dashboard() {
     fetchProjects(false);
   }, []);
 
-  const loadMore = useCallback(() => {
+  const loadMore = () => {
+    console.log("🚀 ~ loadMore ~ hasMore:", hasMore,loadingMore)
+
     if (!loadingMore && hasMore) {
       setPage((prev) => prev + 1);
-      fetchProjects(true);
+      fetchProjects(page+1);
     }
-  }, [loadingMore, hasMore]);
+  };
 
   const renderFooter = () => {
     if (!loadingMore || !hasMore) return null;
@@ -277,7 +280,7 @@ export default function Dashboard() {
             <RefreshControl refreshing={loading} onRefresh={resetAndFetch} />
           }
           onEndReached={loadMore}
-          onEndReachedThreshold={0.3}
+          // onEndReachedThreshold={0.3}
           ListEmptyComponent={renderEmpty}
           ListFooterComponent={renderFooter}
           showsVerticalScrollIndicator={false}

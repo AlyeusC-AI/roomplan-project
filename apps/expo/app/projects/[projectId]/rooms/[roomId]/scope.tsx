@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   View,
   ScrollView,
@@ -14,6 +14,7 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  Animated,
 } from "react-native";
 import { Text } from "@/components/ui/text";
 import { router, useGlobalSearchParams, useRouter } from "expo-router";
@@ -28,6 +29,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { StatusBar } from "expo-status-bar";
 import { BlurView } from "expo-blur";
 import { api } from "@/lib/api";
+import { useDebounce } from "@/utils/debounce";
 
 // Constants for area types and equipment
 const areaAffectedTitle = {
@@ -190,10 +192,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   saveBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     borderTopWidth: 1,
     borderTopColor: "rgba(0,0,0,0.05)",
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+  },
+  saveBarContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  saveText: {
+    fontSize: 13,
+    color: '#64748b',
   },
   iconContainer: {
     width: 44,
@@ -259,6 +281,10 @@ export default function RoomScopeScreen() {
   const [equipmentSearch, setEquipmentSearch] = useState("");
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
   const { top, bottom } = useSafeAreaInsets();
+  const [saveBarOpacity] = useState(new Animated.Value(0));
+  const [saveBarHeight] = useState(new Animated.Value(0));
+  const debouncedChanges = useDebounce(localChanges, 1000);
+
   useEffect(() => {
     // Find the room in the rooms store
     const foundRoom = rooms.rooms.find((r) => r.publicId === roomId);
@@ -311,7 +337,7 @@ export default function RoomScopeScreen() {
       if (res.status !== 200) {
         toast.error("Failed to save changes");
       } else {
-        toast.success("Changes saved successfully");
+        // toast.success("Changes saved successfully");
       }
 
       if (res.status !== 200) {
@@ -333,7 +359,7 @@ export default function RoomScopeScreen() {
         }
         
         setRoom(updatedRoom);
-        toast.success("Changes saved successfully");
+        // toast.success("Changes saved successfully");
         fetchRoom();
         setHasChanges(false);
         setLocalChanges({});
@@ -346,6 +372,119 @@ export default function RoomScopeScreen() {
     }
   };
 
+  // Add animation functions
+  const showSaveBar = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(saveBarOpacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(saveBarHeight, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const hideSaveBar = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(saveBarOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(saveBarHeight, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  // Remove the old debounce function and autoSave
+  const saveChanges = useCallback(async () => {
+    if (Object.keys(debouncedChanges).length === 0) return;
+    
+    showSaveBar();
+    setSaving(true);
+    
+    try {
+      // First, save room details if they've changed
+      const roomChanges = Object.entries(debouncedChanges)
+        .filter(([key]) => key.startsWith("room_"))
+        .reduce((acc, [key, value]) => ({
+          ...acc,
+          [key.replace("room_", "")]: value
+        }), {});
+
+      if (Object.keys(roomChanges).length > 0) {
+        await saveRoomDetails(roomChanges);
+      }
+
+      // Then save area changes
+      const areaChanges = Object.entries(debouncedChanges)
+        .filter(([key]) => !key.startsWith("room_"))
+        .reduce((acc, [key, value]) => {
+          const [areaType, areaId, field] = key.split('_');
+          if (!acc[`${areaType}_${areaId}`]) {
+            acc[`${areaType}_${areaId}`] = {};
+          }
+          acc[`${areaType}_${areaId}`][field] = value;
+          return acc;
+        }, {} as Record<string, Record<string, any>>);
+
+      for (const [key, changes] of Object.entries(areaChanges)) {
+        const [areaType, areaId] = key.split('_');
+        await saveAffectedArea(
+          { ...changes, id: parseInt(areaId) },
+          areaType,
+          room.publicId
+        );
+      }
+
+      setHasChanges(false);
+      setLocalChanges({});
+      // toast.success("Changes saved successfully");
+    } catch (error) {
+      console.error("Error saving changes:", error);
+      toast.error("Failed to save changes");
+    } finally {
+      setSaving(false);
+      setTimeout(hideSaveBar, 2000);
+    }
+  }, [debouncedChanges, room?.publicId]);
+
+  // Add effect to trigger save when debounced changes occur
+  useEffect(() => {
+    saveChanges();
+  }, [debouncedChanges, saveChanges]);
+
+  // Modify handleInputChange to be simpler
+  const handleInputChange = (
+    field: string,
+    value: string,
+    areaType: string,
+    areaId: number
+  ) => {
+    setLocalChanges(prev => ({
+      ...prev,
+      [`${areaType}_${areaId}_${field}`]: value
+    }));
+    setHasChanges(true);
+  };
+
+  // Modify handleRoomDetailChange to be simpler
+  const handleRoomDetailChange = (field: string, value: string | string[]) => {
+    setLocalChanges((prev: Record<string, any>) => ({
+      ...prev,
+      [`room_${field}`]: value
+    }));
+    setHasChanges(true);
+  };
+
+  // Modify handleAreaToggle to trigger auto-save
   const handleAreaToggle = async (type: string, checked: boolean) => {
     try {
       if (!room?.AreaAffected) {
@@ -355,9 +494,6 @@ export default function RoomScopeScreen() {
       const existingArea = room.AreaAffected.find(
         (a: any) => a.type === type && !a.isDeleted
       );
-      console.log("🚀 ~ handleAreaToggle ~ room.AreaAffected:", room.AreaAffected)
-      console.log("🚀 ~ handleAreaToggle ~ existingArea:",roomId,type, existingArea)
-    //   return;
       setSaving(true);
 
       if (existingArea) {
@@ -388,7 +524,6 @@ export default function RoomScopeScreen() {
           type,
         });
         const json = res.data;
-        console.log("🚀 ~ handleAreaToggle ~ json:", json)
         if (res.status !== 200) {
           throw new Error("Failed to create area");
         }
@@ -413,20 +548,6 @@ export default function RoomScopeScreen() {
     }
   };
 
-  const handleInputChange = (
-    field: string,
-    value: string,
-    areaType: string,
-    areaId: number
-  ) => {
-    // Store the change locally first
-    setLocalChanges(prev => ({
-      ...prev,
-      [`${areaType}_${areaId}_${field}`]: value
-    }));
-    setHasChanges(true);
-  };
-
   const saveRoomDetails = async (data: any) => {
     console.log("🚀 ~ saveRoomDetails ~ data:", data)
     console.log("🚀 ~ saveRoomDetails ~ roomId:", roomId)
@@ -449,7 +570,7 @@ export default function RoomScopeScreen() {
 
       const json = res.data;
       setRoom((prev: Record<string, any>) => ({ ...prev, ...json.room }));
-      toast.success("Room details saved successfully");
+      // toast.success("Room details saved successfully");
       setHasChanges(false);
       setLocalChanges({});
       setRoom({
@@ -466,14 +587,6 @@ export default function RoomScopeScreen() {
     }
   };
 
-  const handleRoomDetailChange = (field: string, value: string) => {
-    setLocalChanges((prev: Record<string, any>) => ({
-      ...prev,
-      [`room_${field}`]: value
-    }));
-    setHasChanges(true);
-  };
-
   const getRoomFieldValue = (obj: any, field: string) => {
     if (!obj) return "";
     
@@ -488,6 +601,7 @@ export default function RoomScopeScreen() {
     return localChanges[key] !== undefined ? localChanges[key] : obj[field] || "";
   };
 
+  // Modify toggleEquipment to handle string[] type
   const toggleEquipment = (equipment: string) => {
     setSelectedEquipment((prev) => {
       const isSelected = prev.includes(equipment);
@@ -504,50 +618,6 @@ export default function RoomScopeScreen() {
   const filteredEquipment = equipmentOptions.filter(equipment =>
     equipment.toLowerCase().includes(equipmentSearch.toLowerCase())
   );
-
-  const saveAllChanges = () => {
-    // First, save room details if they've changed
-    const roomChanges = Object.entries(localChanges)
-      .filter(([key]) => key.startsWith("room_"))
-      .reduce((acc, [key, value]) => ({
-        ...acc,
-        [key.replace("room_", "")]: value
-      }), {});
-
-    if (Object.keys(roomChanges).length > 0) {
-      saveRoomDetails(roomChanges);
-    }
-
-    // Then save area changes
-    const areaChanges = Object.entries(localChanges)
-      .filter(([key]) => !key.startsWith("room_"))
-      .reduce((acc, [key, value]) => {
-        const [areaType, areaId, field] = key.split('_');
-        if (!acc[`${areaType}_${areaId}`]) {
-          acc[`${areaType}_${areaId}`] = {};
-        }
-        acc[`${areaType}_${areaId}`][field] = value;
-        return acc;
-      }, {} as Record<string, Record<string, any>>);
-
-    Object.entries(areaChanges).forEach(([key, changes]) => {
-      const [areaType, areaId] = key.split('_');
-      saveAffectedArea(
-        { ...changes, id: parseInt(areaId) },
-        areaType,
-        room.publicId
-      );
-    });
-  };
-
-  useEffect(() => {
-    console.log("🚀 ~ useEffect ~ room:", room)
-
-    // Set initial equipment selection when room data is loaded
-    if (room?.equipmentUsed) {
-      setSelectedEquipment(room.equipmentUsed);
-    }
-  }, [room]);
 
   if (loading && !room) {
     return (
@@ -960,36 +1030,36 @@ export default function RoomScopeScreen() {
         </View>
       </Modal>
 
-      {hasChanges && (
-        <BlurView intensity={20} tint="light" style={styles.saveBar}>
-          <View className="flex-row items-center justify-between" style={{ paddingBottom: bottom }}>
-            <Text className="text-sm font-medium text-slate-600">
-              {saving ? "Saving changes..." : "You have unsaved changes"}
-            </Text>
-            <View className="flex-row items-center gap-3">
-              <TouchableOpacity
-                onPress={() => {
-                  setHasChanges(false);
-                  setLocalChanges({});
-                }}
-                className="rounded-xl px-4 py-2 bg-slate-100"
-                disabled={saving}
-              >
-                <Text className="text-sm font-medium text-slate-700">Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={saveAllChanges}
-                className="rounded-xl bg-primary px-6 py-2"
-                disabled={saving}
-              >
-                <Text className="text-sm font-medium text-white">
-                  {saving ? "Saving..." : "Save Changes"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </BlurView>
-      )}
+      <Animated.View
+        style={[
+          styles.saveBar,
+          {
+            opacity: saveBarOpacity,
+            transform: [
+              {
+                translateY: Animated.multiply(
+                  saveBarHeight,
+                  new Animated.Value(-50)
+                ),
+              },
+            ],
+          },
+        ]}
+      >
+        <View style={styles.saveBarContent}>
+          {saving ? (
+            <>
+              <View style={[styles.saveIndicator, { backgroundColor: '#3b82f6' }]} />
+              <Text style={styles.saveText}>Saving changes...</Text>
+            </>
+          ) : (
+            <>
+              <View style={[styles.saveIndicator, { backgroundColor: '#10b981' }]} />
+              <Text style={styles.saveText}>Changes saved</Text>
+            </>
+          )}
+        </View>
+      </Animated.View>
     </View>
     </KeyboardAvoidingView>
 

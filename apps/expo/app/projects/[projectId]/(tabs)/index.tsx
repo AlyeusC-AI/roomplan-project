@@ -43,6 +43,7 @@ import { uiPreferencesStore } from "@/lib/state/ui-preferences";
 import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner-native";
+import { api } from "@/lib/api";
 
 // Import Project type to fix linter errors
 type Project = {
@@ -108,18 +109,15 @@ export default function ProjectOverview() {
     ]).start();
   };
 
+  const fetchMembers = async () => {
+    const res = await api.get(`/api/v1/organization/members`, {
+    
+    });
+    members.setMembers(res.data.members);
+  };
+
   useEffect(() => {
-    fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/organization/members`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "auth-token": user.session?.access_token || "",
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        members.setMembers(data.members);
-      });
+    fetchMembers();
   }, []);
 
   const navigationItems = [
@@ -573,8 +571,8 @@ function NavigationCell({
     >
       <Card className="p-4">
         <View className="flex-row items-center">
-          <View className="bg-primary p-3 rounded-xl">
-            <Icon height={24} width={24} className="text-white" color="#fff" />
+          <View className="bg-primary/10 p-3 rounded-xl">
+            <Icon height={24} width={24} className="text-white" color="#000" />
           </View>
           <View className="flex-1 ml-4">
             <Text className="text-base font-semibold text-foreground">
@@ -633,8 +631,8 @@ function GridCell({
     >
       <Card className="overflow-hidden h-[110px]">
         <View className="items-center p-3 h-full justify-center">
-          <View className="h-14 w-14 rounded-full bg-primary items-center justify-center mb-3">
-            <Icon height={22} width={22} color="#fff" />
+          <View className="h-14 w-14 rounded-full bg-primary/10 items-center justify-center mb-3">
+            <Icon height={22} width={22} color="#000" />
           </View>
           <Text className="text-sm font-semibold text-center text-foreground">
             {title}

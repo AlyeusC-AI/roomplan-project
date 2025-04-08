@@ -156,7 +156,8 @@ export function AccountForm() {
           }
         );
       }
-      router.replace(`/register?page=2&email=${email}`);
+      // router.replace(`/register?page=2&email=${email}`);
+      router.replace(`/register?page=3&email=${email}`);
       stepper.nextStep();
     } catch (error) {
       if (error instanceof AuthApiError && error.code === "email_exists") {

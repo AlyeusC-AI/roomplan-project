@@ -72,12 +72,12 @@ export const uploadImage = async (
     const manipResult = await ImageManipulator.manipulateAsync(
       file.path || file.uri,
       [
-        {
-          resize: {
-            width: 1200,
-            height: 1200,
-          },
-        },
+        // {
+        //   resize: {
+        //     width: 1200,
+        //     height: 1200,
+        //   },
+        // },
       ],
       {
         compress: 0.7,

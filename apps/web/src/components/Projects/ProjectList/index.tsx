@@ -249,7 +249,7 @@ export const Table = () => {
           <div className='relative'>
             <Avatar className='size-16 rounded-full'>
               <AvatarImage
-                src={row.original.images.find((_, index) => index === 0)?.url}
+                src={row.original.images.find((_, index) => !_.isDeleted)?.url}
                 alt={row.original.clientName}
               />
               <AvatarFallback className='rounded-lg'>

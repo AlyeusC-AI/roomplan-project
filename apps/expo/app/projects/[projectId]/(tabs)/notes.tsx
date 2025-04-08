@@ -349,7 +349,14 @@ const RoomNoteListItem = ({
           >
             <Building size={20} color="#0369A1" />
           </View>
-          <Text style={{ fontSize: 18, fontWeight: "600" }}>{room.name}</Text>
+          <TouchableOpacity onPress={() => {
+            router.push({
+              pathname: "../rooms/create",
+              params: {  roomName: room.name, roomId: room.publicId },
+            })
+          }}>
+            <Text style={{ fontSize: 18, fontWeight: "600" }}>{room.name}</Text>
+          </TouchableOpacity>
         </View>
         <Button variant="ghost" onPress={onAdd} className="p-2">
           <Plus color="#1e40af" size={20} />
