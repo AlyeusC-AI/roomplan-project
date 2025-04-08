@@ -13,7 +13,7 @@ import { supabaseServiceRole } from '@/app/projects/[projectId]/camera';
 import { RoomPlanImage } from './LidarRooms';
 import { cn } from '@/lib/utils';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { imagekit, ImageKitUploadResponse } from "@/lib/imagekit";
+import { LidarRoomTypeSelect } from './LidarRoomTypeSelect';
 
 const { RoomScanModule } = NativeModules;
 
@@ -22,6 +22,13 @@ const hasLidarSensor = async (): Promise<boolean> => {
   return await RoomScanModule && RoomScanModule.isAvailable();
 };
 
+/**
+ * finish values:
+ * -1: scanning
+ * 0: scan completed
+ * 1: finish this room
+ * 2: finish entire structure
+ */
 type RoomScanViewProps = {
   finish: -1 | 0 | 1 | 2;
   onCaptureCompleted: (ev: any) => void;
@@ -57,16 +64,15 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
   const [newRoomName, setNewRoomName] = useState<string>('');
   const [imgkitLoading, setImgkitLoading] = useState<boolean>(false);
   const { session: supabaseSession } = userStore((state) => state);
-  const { projectId } = useLocalSearchParams<{
-    projectId: string;
-  }>();
+  const { projectId } = useLocalSearchParams<{ projectId: string }>();
   const deviceWidth = Dimensions.get('window').width;
   const svgSize = deviceWidth * 0.95;
   const processedRoomId = useRef<number | undefined>(roomId);
   const processedRoomPlanSVG = useRef<string | undefined>(roomPlanSVG);
-  const insets = useSafeAreaInsets();
   const pngBase64 = useRef<string>('');
   const rooms = roomsStore();
+  const [roomNames, setRoomNames] = useState<string[]>([]);
+  const [showROomTypeSelect, setShowRoomTypeSelect] = useState(false);
 
   useEffect(() => {
     const checkSupport = async () => {
@@ -120,8 +126,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
         setNewRoomName(room.name);
       }
     }
-    setFinish(-1);
-    setShowScanner(true);
+    setShowRoomTypeSelect(true);
   };
 
   const handleCancel = () => {
@@ -156,7 +161,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
         });
       });
       const transformedJSON = await fetch(result.transformedRoomURL).then(res => res.json());
-      const roomPlanSvg = makeSVG(transformedJSON);
+      const roomPlanSvg = makeSVG(transformedJSON, roomNames, newRoomName);
 
       const formData = new FormData();
       const fileName = `${processedRoomId.current}.usdz`
@@ -259,6 +264,10 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
     setIsProcessing(false)
     setShowScanner(false)
     return;
+  }
+
+  const handleNextRoomScanStart = () => {
+    setShowRoomTypeSelect(true);
   }
 
   const handleShareRoomPlan = async () => {
@@ -364,7 +373,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
               { "opacity-50": isProcessing }
             )}
             disabled={isProcessing}
-            onPress={() => { finish !== -1 ? setFinish(-1): confirmScanComplete() }}
+            onPress={() => { finish !== -1 ? handleNextRoomScanStart(): confirmScanComplete() }}
           >
             <Ionicons name={finish === -1 ? "stop" : "scan-circle"} size={36} color="white" />
           </TouchableOpacity>
@@ -391,6 +400,16 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
           >
             <MaterialIcons name="close" size={32} color="white" />
           </TouchableOpacity>
+        )}
+        {showROomTypeSelect && (
+          <LidarRoomTypeSelect
+            onSelect={(roomType) => {
+              setRoomNames(roomNames.concat(roomType))
+              setFinish(-1)
+              setShowRoomTypeSelect(false)
+            }}
+            onCancel={() => { setShowRoomTypeSelect(false) }}
+          />
         )}
       </View>
     );
@@ -458,6 +477,17 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
             )}
           </TouchableOpacity>
         </View>
+      )}
+      {showROomTypeSelect && (
+        <LidarRoomTypeSelect
+          onSelect={(roomType) => {
+            setRoomNames(roomNames.concat(roomType))
+            setShowScanner(true)
+            setFinish(-1)
+            setShowRoomTypeSelect(false)
+          }}
+          onCancel={() => { setShowRoomTypeSelect(false) }}
+        />
       )}
     </SafeAreaView>
   );
