@@ -2534,6 +2534,38 @@ export type Database = {
           },
         ]
       }
+      Signature: {
+        Row: {
+          created_at: string
+          id: number
+          name: string | null
+          orgId: number | null
+          sign: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          name?: string | null
+          orgId?: number | null
+          sign?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          name?: string | null
+          orgId?: number | null
+          sign?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Signature_orgId_fkey"
+            columns: ["orgId"]
+            isOneToOne: false
+            referencedRelation: "Organization"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Subscriptions: {
         Row: {
           cancelAt: string | null

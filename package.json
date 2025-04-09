@@ -21,6 +21,9 @@
     "apps/*",
     "packages/*"
   ],
-  "packageManager": "yarn@1.22.22"
-
+  "packageManager": "yarn@1.22.22",
+  "dependencies": {
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1"
+  }
 }
