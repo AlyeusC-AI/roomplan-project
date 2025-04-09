@@ -345,7 +345,7 @@ export function makeSVG(data: EntireRooms, roomNames: string[], mainRoomName: st
     let totalArea = 0;
     const processFLoor = (floor: Point[], isMainRoom = true, roomIndex = 0) => {
         if (floor.length) {
-            const roomName = isMainRoom ? mainRoomName : roomNames[roomIndex];
+            const roomName = isMainRoom ? 'Total' : roomNames[roomIndex];
             svgContent += createPolyline(floor,
                 isMainRoom ? floorColor : subFloorColor,
                 isMainRoom ? floorWidth : subFloorWidth,
@@ -390,17 +390,19 @@ export function makeSVG(data: EntireRooms, roomNames: string[], mainRoomName: st
     room.floors.forEach(floor => {
         processFLoor(floor, true)
     });
-    subRooms.forEach((subRoom, sIdx) => {
-        subRoom.floors.forEach(floor => {
-            processFLoor(floor, false, sIdx)
-        });
-        // subRoom.walls.forEach(wall => {
-        //     if (wall.length) {
-        //         svgContent += createPolyline(wall, wallColor, wallWidth);
-        //         wallLengthMeasure += drawWallLength(wall, room.floors, wallColor, wallWidth / 5);
-        //     }
-        // })
-    })
+    if (subRooms.length > 1) {
+        subRooms.forEach((subRoom, sIdx) => {
+            subRoom.floors.forEach(floor => {
+                processFLoor(floor, false, sIdx)
+            });
+            // subRoom.walls.forEach(wall => {
+            //     if (wall.length) {
+            //         svgContent += createPolyline(wall, wallColor, wallWidth);
+            //         wallLengthMeasure += drawWallLength(wall, room.floors, wallColor, wallWidth / 5);
+            //     }
+            // })
+        })
+    }
     room.objects.forEach(object => {
         if (object.length) svgContent += createPolyline(object, objectColor, objectWidth, objectFill);
     });
