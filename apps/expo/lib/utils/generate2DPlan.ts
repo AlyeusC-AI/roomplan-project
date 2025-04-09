@@ -72,7 +72,7 @@ function findEdgePointsOfLine(points: Point[]) {
     return points.find(p => p[0] === minX && p[2] === minZ) ? p00 : p01;
 }
 
-function drawWallLength(points: Point[], floors: Point[][], color = "black", width = 0.01, fill="none") {
+function drawWallLength(points: Point[], floors: Point[][], rootFloors: Point[][], color = "black", width = 0.01, fill="none") {
     const w0 = wallWidth * 3, w1 = -wallWidth * 3;
     let mp = [points[0][0] + (points[1][0] - points[0][0]) / 2, points[0][2] + (points[1][2] - points[0][2]) / 2];
 
@@ -96,12 +96,29 @@ function drawWallLength(points: Point[], floors: Point[][], color = "black", wid
     const mp1 = [mp[0] + ux * w1, mp[1] + uy * w1];
 
     const p0InFloor = checkPointInPolygon([mp0[0], 0, mp0[1]], floors);
+    const p0InRootFloor = checkPointInPolygon([mp0[0], 0, mp0[1]], rootFloors);
     const p1InFloor = checkPointInPolygon([mp1[0], 0, mp1[1]], floors);
-    const xor = p0InFloor !== p1InFloor;
+    const p1InRootFloor = checkPointInPolygon([mp1[0], 0, mp1[1]], rootFloors);
+
+    let measureLine = null
+
+    if (!measureLine && !p0InFloor && !p0InRootFloor) {
+        measureLine = [p00, p10]
+    }
+    if (!measureLine && !p1InFloor && !p1InRootFloor) {
+        measureLine = [p01, p11]
+    }
+    if (!measureLine && p0InFloor && p0InRootFloor) {
+        measureLine = [p00, p10]
+    }
+    if (!measureLine && p1InFloor && p1InRootFloor) {
+        measureLine = [p01, p11]
+    }
+
+    if (!measureLine) { return }
 
     const inchesText = inchText(length / scaleFactor);
 
-    const measureLine = xor ? (p1InFloor ? [p00, p10] : [p01, p11]) : [p00, p10]
     // Draw measurement line
     const textLength = inchesText.length * (fontSize / 1.5);
     const dashLength = (length - textLength) / 2;
@@ -272,9 +289,22 @@ function alignRoomHorizontallyXZ(room: Room, initAngle: number | undefined = und
     return {room, angle};
 }
 
-export function makeSVG(data: EntireRooms, roomNames: string[], mainRoomName: string) {
+export function makeSVG(data: EntireRooms, _roomNames: string[], mainRoomName: string) {
     // const {room, angle} = alignRoomHorizontallyXZ(data.entireRoom);
     // const subRooms = data.rooms.map(room => alignRoomHorizontallyXZ(room, angle).room);
+
+    const originalRoomKeys = data.originalRooms.map(room => `${room.walls.length}-${room.floors.length}-${room.doors.length}-${room.windows.length}-${room.openings.length}-${room.objects.length}`);
+    const newRooMkeys = data.rooms.map(room => `${room.walls.length}-${room.floors.length}-${room.doors.length}-${room.windows.length}-${room.openings.length}-${room.objects.length}`);
+
+    const roomNames: string[] = []
+    newRooMkeys.forEach((key) => {
+        const idx = originalRoomKeys.findIndex(originalKey => originalKey === key);
+        if (idx !== -1) {
+            roomNames.push(_roomNames[idx]);
+        } else {
+            roomNames.push('');
+        }
+    })
 
     const _room: Room = JSON.parse(JSON.stringify(data.entireRoom))
     const _subRooms: Room[] = JSON.parse(JSON.stringify(data.rooms));
@@ -359,34 +389,23 @@ export function makeSVG(data: EntireRooms, roomNames: string[], mainRoomName: st
             // const heightInFeet = inchText(boundingBox?.height ?? 0);
             if (centroid) {
                 sqftContent += `<text x="${centroid.x}" y="${centroid.y - ftSize * 1.5}" 
-                    fill="${isMainRoom ? ftColor : ftFill}" 
-                    stroke="${ftColor}"
-                    stroke-width="${ftSize / 15}"
+                    fill="${ftColor}"
                     text-anchor="middle" 
                     dominant-baseline="middle"
                     font-weight="bold"
-                    font-family="monospace"
+                    font-family="Arial, Helvetica, sans-serif"
                     font-size="${ftSize}">${roomName}</text>`;
                 sqftContent += `<text x="${centroid.x}" y="${centroid.y}" 
-                    fill="${ftFill}" 
-                    stroke="${ftColor}"
-                    stroke-width="${ftSize / 15}"
+                    fill="${ftColor}"
                     text-anchor="middle" 
                     dominant-baseline="middle"
                     font-weight="bold"
-                    font-family="monospace"
-                    font-size="${ftSize}">${areaInSqFt}ft</text>`;
-                sqftContent += `<text x="${centroid.x + (areaInSqFt.length + 2) / 2 * ftSize / 1.5}" y="${centroid.y - ftSize / 3}" 
-                    fill="${ftFill}"
-                    stroke="${ftColor}"
-                    stroke-width="${ftSize / 20}"
-                    font-family="monospace"
-                    text-anchor="middle"
-                    font-weight="bold"
-                    font-size="${ftSize / 3}">2</text>`;
+                    font-family="Arial, Helvetica, sans-serif"
+                    font-size="${ftSize}">${areaInSqFt} sq ft</text>`;
             }
         }
     }
+
     room.floors.forEach(floor => {
         processFLoor(floor, true)
     });
@@ -395,23 +414,28 @@ export function makeSVG(data: EntireRooms, roomNames: string[], mainRoomName: st
             subRoom.floors.forEach(floor => {
                 processFLoor(floor, false, sIdx)
             });
-            // subRoom.walls.forEach(wall => {
-            //     if (wall.length) {
-            //         svgContent += createPolyline(wall, wallColor, wallWidth);
-            //         wallLengthMeasure += drawWallLength(wall, room.floors, wallColor, wallWidth / 5);
-            //     }
-            // })
         })
     }
     room.objects.forEach(object => {
         if (object.length) svgContent += createPolyline(object, objectColor, objectWidth, objectFill);
     });
-    room.walls.forEach(wall => {
-        if (wall.length) {
-            svgContent += createPolyline(wall, wallColor, wallWidth);
-            wallLengthMeasure += drawWallLength(wall, room.floors, wallColor, wallWidth / 5);
-        }
-    });
+    if (subRooms.length > 1) {
+        subRooms.forEach((subRoom, sIdx) => {
+            subRoom.walls.forEach(wall => {
+                if (wall.length) {
+                    svgContent += createPolyline(wall, wallColor, wallWidth);
+                    wallLengthMeasure += drawWallLength(wall, subRoom.floors, room.floors, wallColor, wallWidth / 5);
+                }
+            })
+        })
+    } else {
+        room.walls.forEach(wall => {
+            if (wall.length) {
+                svgContent += createPolyline(wall, wallColor, wallWidth);
+                wallLengthMeasure += drawWallLength(wall, room.floors, room.floors, wallColor, wallWidth / 5);
+            }
+        });
+    }
     room.doors.forEach(door => {
         if (door.length) {
             svgContent += createPoylLineOverWall(door, doorColor, doorWidth);
