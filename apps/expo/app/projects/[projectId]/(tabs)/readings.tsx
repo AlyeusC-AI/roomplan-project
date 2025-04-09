@@ -7,7 +7,7 @@ import { toast } from "sonner-native";
 import Empty from "@/components/project/empty";
 import { Building, Plus } from "lucide-react-native";
 import { Button } from "@/components/ui/button";
-import { ActivityIndicator, View, TouchableOpacity   } from "react-native";
+import { ActivityIndicator, View, TouchableOpacity, Platform, KeyboardAvoidingView, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { roomsStore } from "@/lib/state/rooms";
 import { Database } from "@/types/database";
 import { v4 } from "react-native-uuid/dist/v4";
@@ -59,6 +59,7 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
   };
 
   return (
+  
     <View className="mt-3">
       <HStack
         w="full"
@@ -102,6 +103,7 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
             </Heading>
           </Center>
         ) : (
+         
           room.RoomReading?.map((reading) => (
             <RoomReading
               room={room}
@@ -110,6 +112,7 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
               addReading={addReading}
             />
           ))
+
         )}
       </VStack>
     </View>
@@ -179,33 +182,40 @@ export default function RoomReadings() {
   }
 
   return (
-    <Box flex={1} bg="gray.50">
-      <Box
-        px={4}
-        py={3}
-        bg="white"
-        borderBottomWidth={1}
-        borderBottomColor="gray.100"
-      >
-        <HStack justifyContent="space-between" alignItems="center">
-          <Heading size="lg">Room Readings</Heading>
-          <AddRoomButton showText={false} size="sm" />
-        </HStack>
-      </Box>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <Box flex={1} bg="gray.50">
+          <Box
+            px={4}
+            py={3}
+            bg="white"
+            borderBottomWidth={1}
+            borderBottomColor="gray.100"
+          >
+            <HStack justifyContent="space-between" alignItems="center">
+              <Heading size="lg">Room Readings</Heading>
+              <AddRoomButton showText={false} size="sm" />
+            </HStack>
+          </Box>
 
-      <FlatList
-        refreshing={loading}
-        onRefresh={getReadings}
-        data={rooms.rooms}
-        keyExtractor={(room) => room.publicId}
-        renderItem={({ item: room }) => (
-          <RoomReadingItem room={room} key={room.publicId} />
-        )}
-        contentContainerStyle={{ padding: 16 }}
-        showsVerticalScrollIndicator={false}
-        w="full"
-        h="full"
-      />
-    </Box>
+          <FlatList
+            refreshing={loading}
+            onRefresh={getReadings}
+            data={rooms.rooms}
+            keyExtractor={(room) => room.publicId}
+            renderItem={({ item: room }) => (
+              <RoomReadingItem room={room} key={room.publicId} />
+            )}
+            contentContainerStyle={{ padding: 16 }}
+            showsVerticalScrollIndicator={false}
+            w="full"
+            h="full"
+          />
+        </Box>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }

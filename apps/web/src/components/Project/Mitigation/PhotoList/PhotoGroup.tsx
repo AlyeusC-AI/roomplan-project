@@ -79,7 +79,7 @@ const PhotoGroup = ({
           className={clsx(
             "mt-4 flex",
             user.user?.photoView === "photoGridView" &&
-              "flex-wrap gap-x-4 gap-y-8",
+              "flex-wrap gap-x-3 gap-y-8",
             user.user?.photoView === "photoListView" && "flex-col"
           )}
         >

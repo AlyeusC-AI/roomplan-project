@@ -2,17 +2,19 @@ import { useState, useEffect, useCallback } from "react";
 import clsx from "clsx";
 import { format, formatDistance } from "date-fns";
 import { roomStore } from "@atoms/room";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Trash, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@components/ui/spinner";
 import { Button } from "@components/ui/button";
 import { useParams } from "next/navigation";
 import { Textarea } from "@components/ui/textarea";
 import debounce from "lodash/debounce";
+import ImageGallery from "./ImageGallery";
 
 const Note = ({ roomPublicId, note }: { roomPublicId: string; note: Note }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [body, setBody] = useState(note.body);
   const [lastSavedBody, setLastSavedBody] = useState(note.body);
   const { id } = useParams<{ id: string }>();
@@ -99,6 +101,63 @@ const Note = ({ roomPublicId, note }: { roomPublicId: string; note: Note }) => {
     debouncedSave(newBody);
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("noteId", note.publicId);
+      formData.append("roomId", roomPublicId);
+
+      const res = await fetch(`/api/v1/projects/${id}/notes/images`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        roomStore.getState().updateRoomNote(roomPublicId, note.publicId, {
+          NoteImage: [...(note.NoteImage || []), json.image],
+        } as Partial<Note>);
+        toast.success("Image uploaded successfully");
+      } else {
+        toast.error("Failed to upload image");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to upload image");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDeleteImage = async (imageKey: string) => {
+    try {
+      const res = await fetch(`/api/v1/projects/${id}/notes/images`, {
+        method: "DELETE",
+        body: JSON.stringify({
+          roomId: roomPublicId,
+          noteId: note.publicId,
+          imageKey,
+        }),
+      });
+
+      if (res.ok) {
+        roomStore.getState().updateRoomNote(roomPublicId, note.publicId, {
+          NoteImage: note.NoteImage?.filter((img) => img.imageKey !== imageKey),
+        } as Partial<Note>);
+      } else {
+        throw new Error("Failed to delete image");
+      }
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  };
+
   const hasUnsavedChanges = body !== lastSavedBody;
 
   return (
@@ -125,6 +184,23 @@ const Note = ({ roomPublicId, note }: { roomPublicId: string; note: Note }) => {
                 </>
               )}
             </Button>
+            {/* <Button
+              variant='outline'
+              className='relative'
+              disabled={isUploading}
+            >
+              <Camera className='h-6' />
+              <input
+                type="file"
+                accept="image/*"
+                className="absolute inset-0 cursor-pointer opacity-0"
+                onChange={handleImageUpload}
+                disabled={isUploading}
+              />
+              {isUploading && (
+                <LoadingSpinner className="absolute inset-0 m-auto" />
+              )}
+            </Button> */}
             <Button
               variant='destructive'
               onClick={onDeleteNote}
@@ -170,6 +246,9 @@ const Note = ({ roomPublicId, note }: { roomPublicId: string; note: Note }) => {
           </div>
         </div>
       </div>
+      {note.NoteImage && note.NoteImage.length > 0 && (
+        <ImageGallery images={note.NoteImage} onDeleteImage={handleDeleteImage} />
+      )}
     </div>
   );
 };

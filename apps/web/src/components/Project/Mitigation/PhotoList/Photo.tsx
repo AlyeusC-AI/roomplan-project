@@ -113,9 +113,10 @@ const Photo = ({
   return (
     <div className='group relative'>
       {user.user?.photoView === "photoGridView" ? (
-        <div className='group relative'>
+                  <Card className="border group p-2 relative border-gray-200 shadow-sm hover:border-gray-300 transition-colors">
+
           <div
-            className='group relative block size-64 cursor-pointer overflow-hidden rounded-lg'
+            className='group relative block size-56 cursor-pointer overflow-hidden rounded-lg'
             onClick={(e) => {
               e.stopPropagation();
               onPhotoClick(photo.key);
@@ -189,9 +190,9 @@ const Photo = ({
               </TooltipProvider>
             </div>
           </div>
-        </div>
+        </Card>
       ) : (
-        <Card>
+        <Card className="border border-gray-200 shadow-sm mb-2 hover:border-gray-300 transition-colors">
           <div className='flex cursor-pointer p-2' onClick={handleSelect}>
             <div className='mr-2 flex items-center justify-center'>
               <div
@@ -206,7 +207,7 @@ const Photo = ({
               </div>
             </div>
             <div
-              className='group relative block size-12 cursor-pointer overflow-hidden rounded-lg'
+              className='group relative block size-24 cursor-pointer overflow-hidden rounded-lg'
               onClick={(e) => {
                 e.stopPropagation();
                 onPhotoClick(photo.key);
