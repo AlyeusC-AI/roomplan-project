@@ -18,12 +18,14 @@ export async function POST(
   try {
     const [_, authenticatedUser] = await user(req);
     const id = (await params).id;
+    const body = await req.json();
+    const roomId = body.roomId;
 
     // Get project details
     const { data: project, error: projectError } = await supabaseServiceRole
       .from("Project")
       .select("*")
-      .eq("id", id)
+      .eq("publicId", id)
       .single();
 
     if (projectError) {
@@ -47,7 +49,7 @@ export async function POST(
     const { data: room, error: roomError } = await supabaseServiceRole
       .from("Room")
       .select("*")
-      .eq("projectId", project.id)
+      .eq("publicId", roomId)
       .single();
 
     if (roomError) {
