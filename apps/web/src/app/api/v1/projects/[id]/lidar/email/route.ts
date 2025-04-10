@@ -52,10 +52,10 @@ export async function POST(
       .eq("organizationId", organization.id)
       .single();
 
-    if (ownerError) {
-      console.error("Error fetching owner:", ownerError);
-      return NextResponse.json({ error: "Owner not found" }, { status: 404 });
-    }
+    // if (ownerError) {
+    //   console.error("Error fetching owner:", ownerError);
+    //   return NextResponse.json({ error: "Owner not found" }, { status: 404 });
+    // }
 
     // Get room details
     const { data: room, error: roomError } = await supabaseServiceRole
@@ -82,7 +82,7 @@ export async function POST(
         organization: {
           name: organization.name,
           phone: organization.phoneNumber || "Not provided",
-          email: owner.User?.email || "Not provided",
+          email: owner?.User?.email || "Not provided",
           requestor: authenticatedUser.email || "Not provided",
         },
         project: {
