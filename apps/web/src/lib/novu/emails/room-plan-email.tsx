@@ -1,5 +1,5 @@
 import { Html, Head, Body, Container, Section, Column, Text, Img, Button } from '@react-email/components';
-import { Resvg } from '@resvg/resvg-js';
+import { svg2png } from 'svg2png';
 
 interface RoomPlanEmailProps {
   organization: {
@@ -16,22 +16,18 @@ interface RoomPlanEmailProps {
   roomPlanSVG: string;
 }
 
-export const RoomPlanEmailTemplate = ({ organization, project, roomPlanSVG }: RoomPlanEmailProps) => {
-  // Convert SVG to base64 PNG using resvg
-  const svgToPngBase64 = (svg: string): string => {
-    const resvg = new Resvg(svg, {
-      fitTo: {
-        mode: 'width',
-        value: 800,
-      },
+export const RoomPlanEmailTemplate = async ({ organization, project, roomPlanSVG }: RoomPlanEmailProps) => {
+  // Convert SVG to base64 PNG using svg2png
+  const svgToPngBase64 = async (svg: string): Promise<string> => {
+    const pngBuffer = await svg2png(svg, {
+      width: 800,
+      height: 600
     });
-    const pngData = resvg.render();
-    const pngBuffer = pngData.asPng();
     return `data:image/png;base64,${pngBuffer.toString('base64')}`;
   };
 
   // Convert SVG to PNG and use it in the email
-  const roomPlanImage = svgToPngBase64(roomPlanSVG);
+  const roomPlanImage = await svgToPngBase64(roomPlanSVG);
 
   return (
     <Html>
