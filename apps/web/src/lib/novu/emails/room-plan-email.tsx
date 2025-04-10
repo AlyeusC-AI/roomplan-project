@@ -1,4 +1,5 @@
 import { Html, Head, Body, Container, Section, Column, Text, Img, Button } from '@react-email/components';
+import sharp from 'sharp';
 
 interface RoomPlanEmailProps {
   organization: {
@@ -16,26 +17,12 @@ interface RoomPlanEmailProps {
 }
 
 export const RoomPlanEmailTemplate = async ({ organization, project, roomPlanSVG }: RoomPlanEmailProps) => {
-  // Convert SVG to base64 PNG
+  // Convert SVG to base64 PNG using sharp
   const svgToPngBase64 = async (svg: string): Promise<string> => {
-    const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-    const DOMURL = window.URL || window.webkitURL || window;
-    const url = DOMURL.createObjectURL(svgBlob);
-    const img = new Image();
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    return new Promise((resolve) => {
-      img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx?.drawImage(img, 0, 0);
-        DOMURL.revokeObjectURL(url);
-        const pngBase64 = canvas.toDataURL('image/png');
-        resolve(pngBase64);
-      };
-      img.src = url;
-    });
+    const pngBuffer = await sharp(Buffer.from(svg))
+      .png()
+      .toBuffer();
+    return `data:image/png;base64,${pngBuffer.toString('base64')}`;
   };
 
   // Convert SVG to PNG and use it in the email

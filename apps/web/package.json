@@ -153,6 +153,7 @@
     "remark-parse": "^11.0.0",
     "resend": "^4.2.0",
     "server-only": "^0.0.1",
+    "sharp": "^0.34.1",
     "soap": "0.45.0",
     "sonner": "^1.7.1",
     "stripe": "17.6.0",
