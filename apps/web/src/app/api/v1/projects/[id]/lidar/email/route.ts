@@ -47,9 +47,9 @@ export async function POST(
     }
 
     const { data: owner, error: ownerError } = await supabaseServiceRole
-      .from("UserToOrganization")
-      .select("*, User(*)")
-      .eq("role", "owner")
+      .from("User")
+      .select("*")
+      .eq("accessLevel", "owner")
       .eq("organizationId", organization.id)
       .single();
 
@@ -86,7 +86,7 @@ export async function POST(
         organization: {
           name: organization.name,
           phone: organization.phoneNumber || "Not provided",
-          email: owner?.User?.email || "Not provided",
+          email: owner?.email || "Not provided",
           requestor: authenticatedUser.email || "Not provided",
         },
         project: {
