@@ -2,25 +2,39 @@ import { Button } from '@components/ui/button';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Rnd } from 'react-rnd';
 import type { DraggableEvent, DraggableData } from 'react-draggable';
-import { PenLine, Type, Image, Save, Trash2, ChevronLeft, ChevronRight, Pencil, X, FileText, GripVertical, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { PenLine, Type, Image, Save, Trash2, ChevronLeft, ChevronRight, Pencil, X, FileText, GripVertical, ZoomIn, ZoomOut, RotateCcw, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Document as DocumentType, Annotation } from '../types';
 import { useState, useEffect } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@components/ui/dialog';
 
 interface PDFViewerProps {
   currentDocument: DocumentType | null;
   pageNumber: number;
   numPages: number | null;
   setPageNumber: (page: number) => void;
-  setNumPages: (pages: number) => void;
+  setNumPages: (pages: number | null) => void;
   isLoading: boolean;
   setShowSignatureList: (show: boolean) => void;
   setShowTextInput: (show: boolean) => void;
   handleSaveDocument: () => void;
   handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  setShowDeleteConfirm: (state: { type: 'document' | 'signature' | 'annotation'; id: number; name?: string } | null) => void;
+  setShowDeleteConfirm: (state: any) => void;
   pdfContainerRef: React.RefObject<HTMLDivElement>;
   annotations: Record<number, Annotation[]>;
+  setAnnotations: (annotations: Record<number, Annotation[]>) => void;
   selectedAnnotation: number | null;
   setSelectedAnnotation: (index: number | null) => void;
   handleAnnotationUpdate: (index: number, updates: Partial<Annotation>) => void;
@@ -44,17 +58,20 @@ export default function PDFViewer({
   setShowDeleteConfirm,
   pdfContainerRef,
   annotations,
+  setAnnotations,
   selectedAnnotation,
   setSelectedAnnotation,
   handleAnnotationUpdate,
   handleAnnotationDelete,
   handleEditAnnotation,
   pdfError,
-  setPdfError
+  setPdfError,
 }: PDFViewerProps) {
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [showToolbar, setShowToolbar] = useState(true);
+  const [showNameInput, setShowNameInput] = useState(false);
+  const [placeholderName, setPlaceholderName] = useState('');
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -80,6 +97,36 @@ export default function PDFViewer({
     toast.error('Failed to load PDF. Please try again.');
   };
 
+  const handleAddClientSignaturePlaceholder = () => {
+    setShowNameInput(true);
+  };
+
+  const handleConfirmPlaceholder = () => {
+    if (!placeholderName.trim()) {
+      toast.error('Please enter a name for the placeholder');
+      return;
+    }
+
+    const newAnnotation: Annotation = {
+      type: 'clientSignature',
+      x: 100,
+      y: 100,
+      data: '',
+      width: 200,
+      height: 100,
+      pageNumber: pageNumber,
+      isPlaceholder: true,
+      name: placeholderName
+    };
+    setAnnotations({
+      ...annotations,
+      [pageNumber]: [...(annotations[pageNumber] || []), newAnnotation]
+    });
+    setShowNameInput(false);
+    setPlaceholderName('');
+    toast.success('Client signature placeholder added');
+  };
+
   return (
     <div className="col-span-9">
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
@@ -93,26 +140,6 @@ export default function PDFViewer({
                 <p className="text-sm text-gray-500">Page {pageNumber} of {numPages}</p>
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  onClick={() => setShowSignatureList(true)}
-                  disabled={isLoading}
-                  variant="outline"
-                  size="sm"
-                  className="relative group"
-                >
-                  <PenLine className="w-4 h-4 mr-2" />
-                  Add Signature
-                </Button>
-                <Button
-                  onClick={() => setShowTextInput(true)}
-                  disabled={isLoading}
-                  variant="outline"
-                  size="sm"
-                  className="group"
-                >
-                  <Type className="w-4 h-4 mr-2" />
-                  Add Text
-                </Button>
                 <input
                   type="file"
                   accept="image/*"
@@ -121,16 +148,48 @@ export default function PDFViewer({
                   className="hidden"
                   id="image-upload"
                 />
-                <Button
-                  onClick={() => document.getElementById('image-upload')?.click()}
-                  disabled={isLoading}
-                  variant="outline"
-                  size="sm"
-                  className="group"
-                >
-                  <Image className="w-4 h-4 mr-2" />
-                  Add Image
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Annotation
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem
+                      onClick={() => setShowSignatureList(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <PenLine className="w-4 h-4" />
+                      Add Signature
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setShowTextInput(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <Type className="w-4 h-4" />
+                      Add Text
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => document.getElementById('image-upload')?.click()}
+                      className="flex items-center gap-2"
+                    >
+                      <Image className="w-4 h-4" />
+                      Add Image
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleAddClientSignaturePlaceholder}
+                      className="flex items-center gap-2"
+                    >
+                      <PenLine className="w-4 h-4" />
+                      Add Client Signature Placeholder
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <div className="h-6 w-px bg-gray-200 mx-2" />
                 <Button
                   onClick={handleSaveDocument}
@@ -204,7 +263,7 @@ export default function PDFViewer({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setPageNumber(prev => Math.max(prev - 1, 1))}
+                  onClick={() => setPageNumber(pageNumber - 1)}
                   disabled={pageNumber <= 1}
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -215,7 +274,7 @@ export default function PDFViewer({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setPageNumber(prev => Math.min(prev + 1, numPages || prev))}
+                  onClick={() => setPageNumber(pageNumber + 1)}
                   disabled={!numPages || pageNumber >= numPages}
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -256,7 +315,7 @@ export default function PDFViewer({
                 />
                 {annotations[pageNumber]?.map((annotation, index) => (
                   <Rnd
-                    key={`${pageNumber}-${index}`}
+                    key={index}
                     default={{
                       x: annotation.x,
                       y: annotation.y,
@@ -264,40 +323,10 @@ export default function PDFViewer({
                       height: annotation.height || 100,
                     }}
                     bounds="parent"
-                    enableUserSelectHack={false}
-                    cancel=".no-drag"
-                    enableResizing={{
-                      top: true,
-                      right: true,
-                      bottom: true,
-                      left: true,
-                      topRight: true,
-                      bottomRight: true,
-                      bottomLeft: true,
-                      topLeft: true
-                    }}
-                    enableDragging={true}
-                    dragHandleClassName="drag-handle"
-                    resizeHandleClasses={{
-                      top: 'resize-handle resize-handle-top',
-                      right: 'resize-handle resize-handle-right',
-                      bottom: 'resize-handle resize-handle-bottom',
-                      left: 'resize-handle resize-handle-left',
-                      topRight: 'resize-handle resize-handle-top-right',
-                      bottomRight: 'resize-handle resize-handle-bottom-right',
-                      bottomLeft: 'resize-handle resize-handle-bottom-left',
-                      topLeft: 'resize-handle resize-handle-top-left'
-                    }}
-                    onDragStop={(e: DraggableEvent, d: DraggableData) => {
+                    onDragStop={(e, d) => {
                       handleAnnotationUpdate(index, { x: d.x, y: d.y });
                     }}
-                    onResizeStop={(
-                      e: DraggableEvent,
-                      direction: string,
-                      ref: HTMLElement,
-                      delta: { width: number; height: number },
-                      position: { x: number; y: number }
-                    ) => {
+                    onResizeStop={(e, direction, ref, delta, position) => {
                       handleAnnotationUpdate(index, {
                         x: position.x,
                         y: position.y,
@@ -311,67 +340,33 @@ export default function PDFViewer({
                         : 'border-transparent hover:border-primary/20'
                     } z-50`}
                     style={{ zIndex: 50 }}
-                    onClick={() => setSelectedAnnotation(index)}
                   >
-                    <div className="w-full h-full relative bg-white/80 backdrop-blur-sm rounded-lg overflow-hidden">
-                      <style jsx>{`
-                        .resize-handle {
-                          width: 8px;
-                          height: 8px;
-                          background: white;
-                          border: 2px solid #2563eb;
-                          border-radius: 4px;
-                          position: absolute;
-                        }
-                        .resize-handle-top {
-                          top: 0;
-                          left: 50%;
-                          transform: translateX(-50%);
-                          cursor: ns-resize;
-                        }
-                        .resize-handle-right {
-                          right: 0;
-                          top: 50%;
-                          transform: translateY(-50%);
-                          cursor: ew-resize;
-                        }
-                        .resize-handle-bottom {
-                          bottom: 0;
-                          left: 50%;
-                          transform: translateX(-50%);
-                          cursor: ns-resize;
-                        }
-                        .resize-handle-left {
-                          left: 0;
-                          top: 50%;
-                          transform: translateY(-50%);
-                          cursor: ew-resize;
-                        }
-                        .resize-handle-top-right {
-                          top: 0;
-                          right: 0;
-                          cursor: nwse-resize;
-                        }
-                        .resize-handle-bottom-right {
-                          bottom: 0;
-                          right: 0;
-                          cursor: nesw-resize;
-                        }
-                        .resize-handle-bottom-left {
-                          bottom: 0;
-                          left: 0;
-                          cursor: nwse-resize;
-                        }
-                        .resize-handle-top-left {
-                          top: 0;
-                          left: 0;
-                          cursor: nesw-resize;
-                        }
-                      `}</style>
-                      <div className="absolute top-1 left-1 flex gap-1 drag-handle">
-                        <div className="cursor-move text-gray-400 hover:text-gray-600 transition-colors duration-200">
-                          <GripVertical className="w-4 h-4" />
-                        </div>
+                    <div className="w-full h-full relative group">
+                      <div className="absolute top-1 left-1 cursor-move text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                        <GripVertical className="w-4 h-4" />
+                      </div>
+                      <div className="absolute top-1 right-1 flex gap-1">
+                        {annotation.type === 'text' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditAnnotation(index)}
+                            className="h-6 w-6 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowDeleteConfirm({
+                            type: 'annotation',
+                            id: index
+                          })}
+                          className="h-6 w-6 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
                       </div>
                       {annotation.type === 'signature' ? (
                         <img
@@ -385,7 +380,14 @@ export default function PDFViewer({
                           alt="Annotation"
                           className="w-full h-full object-contain"
                         />
-                      ) : (
+                      ) : annotation.type === 'clientSignature' ? (
+                        <div className="w-full h-full flex items-center justify-center p-2 border-2 border-dashed border-gray-300 rounded-lg">
+                          <div className="text-center">
+                            <PenLine className="w-6 h-6 mx-auto text-gray-400" />
+                            <p className="text-sm text-gray-500 mt-2">{annotation.name || 'Client Signature Placeholder'}</p>
+                          </div>
+                        </div>
+                      ) : annotation.type === 'text' ? (
                         <div className="w-full h-full flex items-center justify-center p-2">
                           <p
                             className="text-sm"
@@ -397,35 +399,7 @@ export default function PDFViewer({
                             {annotation.text}
                           </p>
                         </div>
-                      )}
-                      {selectedAnnotation === index && (
-                        <div className="absolute top-1 right-1 flex gap-1">
-                          {annotation.type === 'text' && (
-                              <Button
-                              variant="ghost"
-                              size="sm"
-                              className="p-1 h-6 w-6 hover:bg-gray-100"
-                              onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditAnnotation(index);
-                            }}
-                          >
-                            <Pencil className="w-3 h-3" />
-                          </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="p-1 h-6 w-6 hover:bg-red-50 hover:text-red-500"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAnnotationDelete(index);
-                            }}
-                          >
-                            <X className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      )}
+                      ) : null}
                     </div>
                   </Rnd>
                 ))}
@@ -442,6 +416,45 @@ export default function PDFViewer({
           </div>
         )}
       </div>
+
+      <Dialog open={showNameInput} onOpenChange={setShowNameInput}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Client Signature Placeholder</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Placeholder Name
+              </label>
+              <input
+                type="text"
+                value={placeholderName}
+                onChange={(e) => setPlaceholderName(e.target.value)}
+                placeholder="Enter placeholder name"
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowNameInput(false);
+                setPlaceholderName('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmPlaceholder}
+              className="bg-primary text-white hover:bg-primary/90 transition-colors duration-200"
+            >
+              Add Placeholder
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

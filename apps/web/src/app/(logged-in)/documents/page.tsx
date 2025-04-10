@@ -30,7 +30,7 @@ interface Document {
 }
 
 interface Annotation {
-  type: 'signature' | 'image' | 'text';
+  type: 'signature' | 'image' | 'text' | 'clientSignature';
   x: number;
   y: number;
   data: string;
@@ -40,6 +40,8 @@ interface Annotation {
   fontSize?: number;
   color?: string;
   pageNumber: number;
+  isPlaceholder?: boolean;
+  name?: string;
 }
 
 interface Signature {
@@ -486,6 +488,25 @@ export default function DocumentsPage() {
     toast.success('Signature added to document');
   };
 
+  const handleAddClientSignaturePlaceholder = () => {
+    const newAnnotation: Annotation = {
+      type: 'clientSignature',
+      x: 100,
+      y: 100,
+      data: '',
+      width: 200,
+      height: 100,
+      pageNumber: pageNumber,
+      isPlaceholder: true,
+      name: `Client Signature ${Object.keys(annotations).length + 1}`
+    };
+    setAnnotations(prev => ({
+      ...prev,
+      [pageNumber]: [...(prev[pageNumber] || []), newAnnotation]
+    }));
+    toast.success('Client signature placeholder added');
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="flex flex-col gap-8">
@@ -538,6 +559,7 @@ export default function DocumentsPage() {
             setShowDeleteConfirm={setShowDeleteConfirm}
             pdfContainerRef={pdfContainerRef}
             annotations={annotations}
+            setAnnotations={setAnnotations}
             selectedAnnotation={selectedAnnotation}
             setSelectedAnnotation={setSelectedAnnotation}
             handleAnnotationUpdate={handleAnnotationUpdate}
@@ -545,11 +567,12 @@ export default function DocumentsPage() {
             handleEditAnnotation={handleEditAnnotation}
             pdfError={pdfError}
             setPdfError={setPdfError}
+            handleAddClientSignaturePlaceholder={handleAddClientSignaturePlaceholder}
           />
         </div>
       </div>
 
-      <SignaturePadModal
+      <SignaturePadModal  
         show={showSignaturePad}
         setShow={setShowSignaturePad}
         signaturePadRef={signaturePadRef}

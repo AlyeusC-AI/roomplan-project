@@ -6,7 +6,7 @@ export interface Document {
 }
 
 export interface Annotation {
-  type: 'signature' | 'image' | 'text';
+  type: 'signature' | 'image' | 'text' | 'clientSignature';
   x: number;
   y: number;
   data: string;
@@ -16,6 +16,8 @@ export interface Annotation {
   fontSize?: number;
   color?: string;
   pageNumber: number;
+  isPlaceholder?: boolean;
+  name?: string;
 }
 
 export interface Signature {

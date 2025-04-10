@@ -15,7 +15,32 @@ interface RoomPlanEmailProps {
   roomPlanSVG: string;
 }
 
-export const RoomPlanEmailTemplate = ({ organization, project, roomPlanSVG }: RoomPlanEmailProps) => {
+export const RoomPlanEmailTemplate = async ({ organization, project, roomPlanSVG }: RoomPlanEmailProps) => {
+  // Convert SVG to base64 PNG
+  const svgToPngBase64 = async (svg: string): Promise<string> => {
+    const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+    const DOMURL = window.URL || window.webkitURL || window;
+    const url = DOMURL.createObjectURL(svgBlob);
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    return new Promise((resolve) => {
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx?.drawImage(img, 0, 0);
+        DOMURL.revokeObjectURL(url);
+        const pngBase64 = canvas.toDataURL('image/png');
+        resolve(pngBase64);
+      };
+      img.src = url;
+    });
+  };
+
+  // Convert SVG to PNG and use it in the email
+  const roomPlanImage = await svgToPngBase64(roomPlanSVG);
+
   return (
     <Html>
       <Head />
@@ -42,7 +67,11 @@ export const RoomPlanEmailTemplate = ({ organization, project, roomPlanSVG }: Ro
 
           <Section style={{ marginTop: '20px' }}>
             <Column>
-              <div dangerouslySetInnerHTML={{ __html: roomPlanSVG }} />
+              <Img
+                src={roomPlanImage}
+                alt="Room Plan"
+                style={{ maxWidth: '100%', height: 'auto' }}
+              />
             </Column>
           </Section>
 

@@ -78,7 +78,7 @@ export async function POST(
       from: "RestoreGeek <team@servicegeek.io>",
       to: "Files@restoregeek.io",
       subject: `Room Plan for ${project.name}`,
-      react: RoomPlanEmailTemplate({
+      react: await RoomPlanEmailTemplate({
         organization: {
           name: organization.name,
           phone: organization.phoneNumber || "Not provided",
