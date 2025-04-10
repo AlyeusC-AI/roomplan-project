@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, Image, Alert } from 'react-native';
 import { userStore } from "@/lib/state/user";
 import { Button } from '@/components/ui/button';
 import { roomsStore } from '@/lib/state/rooms';
 import { useGlobalSearchParams, usePathname, useRouter } from 'expo-router';
 import { WebView } from "react-native-webview";
+import { Ionicons } from '@expo/vector-icons';
+import { api } from '@/lib/api';
 
 export const RoomPlanImage = ({ src, onPngReady = null }:
 { src: string, onPngReady?: ((data: string) => void) | null }) => {
@@ -98,6 +100,7 @@ export function LidarRooms() {
   const rooms = roomsStore();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [sendingEmail, setSendingEmail] = useState<boolean>(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -149,6 +152,38 @@ export function LidarRooms() {
     });
   };
 
+  const handleSendEmail = async (roomId: number, roomPlanSVG: string) => {
+    try {
+      setSendingEmail(true);
+      
+      const response = await api.post(
+        `/api/v1/projects/${projectId}/lidar/email`,
+        {
+          roomId,
+          roomPlanSVG,
+        }
+      );
+
+      if (response.status !== 200) {
+        throw new Error(response.data.error || 'Failed to send email');
+      }
+
+      Alert.alert(
+        'ESX Version Requested',
+        'Your room plan has been sent to ESX for professional analysis. You will receive a detailed report within 24 hours.',
+        [{ text: 'OK' }]
+      );
+    } catch (err) {
+      Alert.alert(
+        'Error',
+        'Failed to request ESX version. Please try again later.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   if (loading) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -173,9 +208,7 @@ export function LidarRooms() {
       <View className="flex-row flex-wrap p-4">
         {/* Add New Room Card */}
         <View className="w-1/2 p-2 h-44">
-          <TouchableOpacity 
-            onPress={handleAddRoom}
-          >
+          <TouchableOpacity onPress={handleAddRoom}>
             <View className="h-full flex items-center justify-center border-dashed border-2 border-muted-foreground/50 rounded-lg">
               <View className="flex items-center justify-center">
                 <Text className="text-5xl text-muted-foreground">+</Text>
@@ -197,6 +230,20 @@ export function LidarRooms() {
               <View className="h-8 justify-center pl-2 bg-muted-foreground/10">
                 <Text className="font-semibold" numberOfLines={1}>{room.name}</Text>
               </View>
+              {room.roomPlanSVG && (
+                <View className="absolute top-2 right-2 flex-row items-center">
+                  <TouchableOpacity
+                    onPress={() => handleSendEmail(room.id, room.roomPlanSVG)}
+                    disabled={sendingEmail}
+                    className="bg-primary/90 px-3 py-1 rounded-full flex-row items-center"
+                  >
+                    <Ionicons name="analytics" size={14} color="white" />
+                    <Text className="text-white text-xs ml-1 font-medium">
+                      {sendingEmail ? 'Sending...' : 'Get ESX Version'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           </View>
         ))}

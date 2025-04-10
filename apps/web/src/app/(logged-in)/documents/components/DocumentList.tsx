@@ -1,7 +1,15 @@
 import { Button } from '@components/ui/button';
-import { FileText, ArrowUpDown, Clock, Trash2, Eye } from 'lucide-react';
+import { FileText, ArrowUpDown, Clock, Trash2, Eye, Pencil } from 'lucide-react';
 import { Document, DeleteConfirmState } from '../types';
 import { formatDistanceToNow } from 'date-fns';
+import { useState } from 'react';
+import EditDocumentNameModal from './EditDocumentNameModal';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@components/ui/tooltip';
 
 interface DocumentListProps {
   documents: Document[];
@@ -9,6 +17,7 @@ interface DocumentListProps {
   isLoading: boolean;
   setCurrentDocument: (doc: Document) => void;
   setShowDeleteConfirm: (state: DeleteConfirmState | null) => void;
+  onRefetch: () => Promise<void>;
 }
 
 export default function DocumentList({
@@ -16,8 +25,17 @@ export default function DocumentList({
   currentDocument,
   isLoading,
   setCurrentDocument,
-  setShowDeleteConfirm
+  setShowDeleteConfirm,
+  onRefetch
 }: DocumentListProps) {
+  const [editingDoc, setEditingDoc] = useState<Document | null>(null);
+
+  const handleEditSuccess = async (updatedDoc: Document) => {
+    setCurrentDocument(updatedDoc);
+    setEditingDoc(null);
+    await onRefetch();
+  };
+
   return (
     <div className="col-span-3">
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -35,7 +53,7 @@ export default function DocumentList({
             </div>
           </div>
         </div>
-        <div className="p-2 space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
+        <div className="divide-y divide-gray-100">
           {documents.length === 0 ? (
             <div className="p-8 text-center">
               <FileText className="w-12 h-12 mx-auto text-gray-400 mb-3" />
@@ -43,64 +61,90 @@ export default function DocumentList({
               <p className="text-xs text-gray-500">Upload a PDF to get started</p>
             </div>
           ) : (
-            documents.map((doc) => {
-              const documentData = JSON.parse(doc.json);
-              const annotationCount = Object.keys(documentData.annotations || {}).reduce(
-                (acc, page) => acc + (documentData.annotations[page]?.length || 0),
-                0
-              );
-              
-              return (
-                <div
-                  key={doc.id}
-                  className={`group p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-                    currentDocument?.id === doc.id
-                      ? 'bg-primary/5 border border-primary/20 shadow-sm'
-                      : 'hover:bg-gray-50 border border-transparent'
-                  } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  onClick={() => !isLoading && setCurrentDocument(doc)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2.5 rounded-lg transition-colors duration-200 ${
-                      currentDocument?.id === doc.id 
-                        ? 'bg-primary/10 text-primary' 
-                        : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
-                    }`}>
-                      <FileText className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-900 truncate block">
-                          {doc.name}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          {/* {annotationCount > 0 && (
-                            <span className="flex items-center text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                              {annotationCount} annotations
+            <TooltipProvider>
+              {documents.map((doc) => {
+                const documentData = JSON.parse(doc.json);
+                const annotationCount = Object.keys(documentData.annotations || {}).reduce(
+                  (acc, page) => acc + (documentData.annotations[page]?.length || 0),
+                  0
+                );
+                
+                return (
+                  <div
+                    key={doc.id}
+                    className={`group px-4 py-3 hover:bg-gray-50 transition-colors duration-200 ${
+                      currentDocument?.id === doc.id
+                        ? 'bg-primary/5'
+                        : ''
+                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    onClick={() => !isLoading && setCurrentDocument(doc)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`flex-shrink-0 p-2 rounded-lg transition-colors duration-200 ${
+                        currentDocument?.id === doc.id 
+                          ? 'bg-primary/10 text-primary' 
+                          : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
+                      }`}>
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0 flex items-center justify-between gap-3">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-sm font-medium text-gray-900 truncate block max-w-[200px]">
+                              {doc.name}
                             </span>
-                          )} */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className=" group-hover:opacity-100 transition-opacity duration-200 p-1 h-6 w-6"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowDeleteConfirm({ type: 'document', id: doc.id, name: doc.name });
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4 text-gray-500 hover:text-red-500" />
-                          </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{doc.name}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {annotationCount > 0 && (
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                              {annotationCount}
+                            </span>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingDoc(doc);
+                              }}
+                            >
+                              <Pencil className="w-4 h-4 text-gray-500" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowDeleteConfirm({ type: 'document', id: doc.id, name: doc.name });
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4 text-gray-500" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                  
                     </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </TooltipProvider>
           )}
         </div>
       </div>
+
+      <EditDocumentNameModal
+        show={!!editingDoc}
+        setShow={(show) => !show && setEditingDoc(null)}
+        document={editingDoc}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 } 

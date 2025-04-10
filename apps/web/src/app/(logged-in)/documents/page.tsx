@@ -521,11 +521,12 @@ export default function DocumentsPage() {
             isLoading={isLoading}
             setCurrentDocument={setCurrentDocument}
             setShowDeleteConfirm={setShowDeleteConfirm}
+            onRefetch={fetchDocuments}
           />
 
           <PDFViewer
             currentDocument={currentDocument}
-                        pageNumber={pageNumber}
+            pageNumber={pageNumber}
             numPages={numPages}
             setPageNumber={setPageNumber}
             setNumPages={setNumPages}
