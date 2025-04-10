@@ -159,6 +159,7 @@
     "sonner": "^1.7.1",
     "stripe": "17.6.0",
     "superjson": "1.11.0",
+    "svg2png": "^4.1.1",
     "swr": "^2.3.0",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
