@@ -7,6 +7,7 @@ import { useGlobalSearchParams, usePathname, useRouter } from 'expo-router';
 import { WebView } from "react-native-webview";
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '@/lib/api';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const RoomPlanImage = ({ src, onPngReady = null }:
 { src: string, onPngReady?: ((data: string) => void) | null }) => {
@@ -100,9 +101,10 @@ export function LidarRooms() {
   const rooms = roomsStore();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [sendingEmail, setSendingEmail] = useState<boolean>(false);
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     async function fetchRooms() {
@@ -152,9 +154,10 @@ export function LidarRooms() {
     });
   };
 
-  const handleSendEmail = async (roomId: number, roomPlanSVG: string) => {
+  const handleSendEmail = async (roomId: string, roomPlanSVG: string) => {
+    console.log("🚀 ~ handleSendEmail ~ roomId:", roomId)
     try {
-      setSendingEmail(true);
+      setSendingEmail(roomId);
       
       const response = await api.post(
         `/api/v1/projects/${projectId}/lidar/email`,
@@ -180,7 +183,7 @@ export function LidarRooms() {
         [{ text: 'OK' }]
       );
     } finally {
-      setSendingEmail(false);
+      setSendingEmail(null);
     }
   };
 
@@ -204,51 +207,69 @@ export function LidarRooms() {
   }
 
   return (
-    <ScrollView className="flex-1">
-      <View className="flex-row flex-wrap p-4">
-        {/* Add New Room Card */}
-        <View className="w-1/2 p-2 h-44">
-          <TouchableOpacity onPress={handleAddRoom}>
-            <View className="h-full flex items-center justify-center border-dashed border-2 border-muted-foreground/50 rounded-lg">
-              <View className="flex items-center justify-center">
-                <Text className="text-5xl text-muted-foreground">+</Text>
-                <Text className="text-muted-foreground mt-2">New Room</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        {/* Room Cards */}
-        {rooms.rooms?.map((room) => (
-          <View key={room.id} className="w-1/2 p-2 h-44">
-            <View className="h-full border border-muted-foreground/40 rounded-lg">
-              <TouchableOpacity onPress={() => handleRoomPress(room.id, room.roomPlanSVG)}>
-                <View className="h-32 overflow-hidden">
-                  <RoomPlanImage src={room.roomPlanSVG || PLACEHOLDER_SVG} />
+    <View className="flex-1">
+      <ScrollView className="flex-1">
+        <View className="flex-row flex-wrap p-4">
+          {/* Add New Room Card */}
+          <View className="w-1/2 p-2 h-44">
+            <TouchableOpacity onPress={handleAddRoom}>
+              <View className="h-full flex items-center justify-center border-dashed border-2 border-muted-foreground/50 rounded-lg">
+                <View className="flex items-center justify-center">
+                  <Text className="text-5xl text-muted-foreground">+</Text>
+                  <Text className="text-muted-foreground mt-2">New Room</Text>
                 </View>
-              </TouchableOpacity>
-              <View className="h-8 justify-center pl-2 bg-muted-foreground/10">
-                <Text className="font-semibold" numberOfLines={1}>{room.name}</Text>
               </View>
-              {room.roomPlanSVG && (
-                <View className="absolute top-2 right-2 flex-row items-center">
-                  <TouchableOpacity
-                    onPress={() => handleSendEmail(room.id, room.roomPlanSVG)}
-                    disabled={sendingEmail}
-                    className="bg-primary/90 px-3 py-1 rounded-full flex-row items-center"
-                  >
-                    <Ionicons name="analytics" size={14} color="white" />
-                    <Text className="text-white text-xs ml-1 font-medium">
-                      {sendingEmail ? 'Sending...' : 'Get ESX Version'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
+            </TouchableOpacity>
           </View>
-        ))}
+
+          {/* Room Cards */}
+          {rooms.rooms?.map((room) => (
+            <View key={room.id} className="w-1/2 p-2 h-44">
+              <View className="h-full border border-muted-foreground/40 rounded-lg">
+                <TouchableOpacity onPress={() => handleRoomPress(room.id, room.roomPlanSVG)}>
+                  <View className="h-32 overflow-hidden">
+                    <RoomPlanImage src={room.roomPlanSVG || PLACEHOLDER_SVG} />
+                  </View>
+                </TouchableOpacity>
+                <View className="h-8 justify-center pl-2 bg-muted-foreground/10">
+                  <Text className="font-semibold" numberOfLines={1}>{room.name}</Text>
+                </View>
+                {room.roomPlanSVG && (
+                  <View className="absolute top-2 right-2">
+                    <TouchableOpacity
+                      onPress={() => handleSendEmail(room.publicId, room.roomPlanSVG)}
+                      disabled={sendingEmail === room.publicId}
+                      className="bg-primary/90 px-3 py-1 rounded-full flex-row items-center"
+                    >
+                      <Ionicons name="analytics" size={14} color="white" />
+                      <Text className="text-white text-xs ml-1 font-medium">
+                        {sendingEmail === room.publicId ? 'Sending...' : 'Get ESX Version'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+
+      {/* Cost Information Banner */}
+      <View 
+        className="bg-primary/10 p-3 border-t border-muted"
+        style={{ paddingBottom: insets.bottom }}
+      >
+        <View className="flex-row items-center justify-center">
+          <Ionicons name="information-circle" size={16} color="hsl(var(--primary))" />
+          <Text className="text-primary text-sm ml-2 font-medium">
+            ESX Version Analysis: $5.50 per room
+          </Text>
+        </View>
+        <Text className="text-muted-foreground text-xs text-center mt-1">
+          Professional analysis and detailed report included
+        </Text>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
