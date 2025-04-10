@@ -64,7 +64,7 @@ export async function POST(
     // Send email using Resend
     const { data, error } = await resend.emails.send({
       from: "RestoreGeek <team@servicegeek.io>",
-      to: "Esx@restoregeek.io",
+      to: "Files@restoregeek.io",
       subject: `Room Plan for ${project.name}`,
       react: RoomPlanEmailTemplate({
         organization: {
