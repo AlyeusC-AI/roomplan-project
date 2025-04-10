@@ -8,6 +8,7 @@ import { WebView } from "react-native-webview";
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '@/lib/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ReactDOM from 'react-dom';
 
 export const RoomPlanImage = ({ src, onPngReady = null }:
 { src: string, onPngReady?: ((data: string) => void) | null }) => {
@@ -159,11 +160,83 @@ export function LidarRooms() {
     try {
       setSendingEmail(roomId);
       
+      // Convert SVG to PNG base64 using the existing RoomPlanImage component
+      const pngBase64 = await new Promise<string>((resolve) => {
+        const re = /<svg viewBox="[\d\.\-]*\s[\d\.\-]*\s([\d\.\-]*)\s([\d\.\-]*)">/
+        let [_, w, h] = roomPlanSVG.match(re) || []
+        const width = Math.floor(parseFloat(w) * 1.5).toString()
+        const height = Math.floor(parseFloat(h) * 1.5).toString()
+
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                  body {
+                    margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh;
+                  }
+                  svg, img { width: 100%; height: 100%; }
+              </style>
+          </head>
+          <body>${roomPlanSVG}</body>
+          </html>
+        `;
+
+        const script = `
+          function svgToPngBase64(width, height, callback) {
+            var svg = document.querySelector('svg');
+            var xml = new XMLSerializer().serializeToString(svg);
+            xml = xml.replace("ft²", "ft");
+            var svg64 = btoa(xml);
+            var b64Start = 'data:image/svg+xml;base64,';
+            var url = b64Start + svg64;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            const img = document.createElement('img');
+            img.width = width;
+            img.height = height;
+            img.onload = function () {
+              ctx.beginPath();
+              ctx.fillStyle = "#fff";
+              ctx.fillRect(0, 0, width, height);
+
+              ctx.drawImage(img, 0, 0, width, height);
+
+              const pngBase64 = canvas.toDataURL('image/png');
+              callback(pngBase64);
+            };
+            img.onerror=alert;
+            img.src = url;
+          }
+
+          svgToPngBase64(${width}, ${height}, (pngBase64) => {
+            window.ReactNativeWebView.postMessage(pngBase64);
+          });
+        `;
+
+        return (
+          <WebView
+            source={{ html: htmlContent }}
+            javaScriptEnabled={true}
+            injectedJavaScript={script}
+            onMessage={(ev) => {
+              resolve(ev.nativeEvent.data);
+            }}
+            style={{ width: 0, height: 0 }}
+          />
+        );
+      });
+
       const response = await api.post(
         `/api/v1/projects/${projectId}/lidar/email`,
         {
           roomId,
-          roomPlanSVG,
+          roomPlanSVG: pngBase64, // Send PNG base64 instead of SVG
         }
       );
 
