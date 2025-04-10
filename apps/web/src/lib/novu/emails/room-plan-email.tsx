@@ -5,6 +5,7 @@ interface RoomPlanEmailProps {
     name: string;
     phone: string;
     email: string;
+    requestor: string;
   };
   project: {
     name: string;
@@ -75,6 +76,9 @@ export const RoomPlanEmailTemplate = ({ organization, project, roomPlanSVG }: Ro
               </Text>
               <Text style={{ fontSize: '14px', color: '#666' }}>
                 Email: {organization.email}
+              </Text>
+              <Text style={{ fontSize: '14px', color: '#666' }}>
+                Requestor: {organization.requestor}
               </Text>
             </Column>
           </Section>
