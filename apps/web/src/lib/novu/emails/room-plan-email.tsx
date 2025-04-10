@@ -1,5 +1,4 @@
 import { Html, Head, Body, Container, Section, Column, Text, Img, Button } from '@react-email/components';
-import ImageKit from 'imagekit';
 
 interface RoomPlanEmailProps {
   organization: {
@@ -13,44 +12,10 @@ interface RoomPlanEmailProps {
     address: string;
     clientName: string;
   };
-  roomPlanSVG: string;
+  roomPlanImage: string;
 }
 
-const imagekit = new ImageKit({
-  publicKey: process.env.IMAGEKIT_PUBLIC_KEY || '',
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || '',
-  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || '',
-});
-
- const svgToPngBase64 = async (svg: string): Promise<string> => {
-  // Convert SVG to base64
-  const svgBase64 = Buffer.from(svg).toString('base64');
-  const svgDataUrl = `data:image/svg+xml;base64,${svgBase64}`;
-
-  // Upload the SVG to ImageKit
-  const uploadResponse = await imagekit.upload({
-    file: svgDataUrl,
-    fileName: 'room-plan.svg',
-  });
-  console.log("🚀 ~ svgToPngBase64 ~ uploadResponse:", uploadResponse)
-
-  // Generate a transformed URL for PNG version
-  const pngUrl = imagekit.url({
-    path: uploadResponse.filePath,
-    transformation: [{
-      width: 800,
-      height: 600,
-      crop: 'at_max',
-      format: 'png',
-    }],
-  });
-
-  return pngUrl;
-};
-export const RoomPlanEmailTemplate = async ({ organization, project, roomPlanSVG }: RoomPlanEmailProps) => {
-  // Convert SVG to PNG and use it in the email
-  const roomPlanImage = await svgToPngBase64(roomPlanSVG);
-
+export const RoomPlanEmailTemplate = async ({ organization, project, roomPlanImage }: RoomPlanEmailProps) => {
   return (
     <Html>
       <Head />

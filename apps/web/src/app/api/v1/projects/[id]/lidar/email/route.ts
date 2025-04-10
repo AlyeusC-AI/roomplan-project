@@ -4,6 +4,7 @@ import { supabaseServiceRole } from "@lib/supabase/admin";
 import { Resend } from "resend";
 import { RoomPlanEmailTemplate } from "@lib/novu/emails/room-plan-email";
 import { Database } from "@/types/database";
+import { convertSvgToPng } from "@lib/utils/imagekit";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -73,12 +74,15 @@ export async function POST(
       return NextResponse.json({ error: "Room plan SVG not found" }, { status: 404 });
     }
 
+    // Convert SVG to PNG once
+    const { url: pngUrl, buffer: pngBuffer } = await convertSvgToPng(room.roomPlanSVG);
+
     // Send email using Resend
     const { data, error } = await resend.emails.send({
       from: "RestoreGeek <team@servicegeek.io>",
       to: "Files@restoregeek.io",
       subject: `Room Plan for ${project.name}`,
-      react:await  RoomPlanEmailTemplate({
+      react: await RoomPlanEmailTemplate({
         organization: {
           name: organization.name,
           phone: organization.phoneNumber || "Not provided",
@@ -90,8 +94,12 @@ export async function POST(
           address: project.location || "Not provided",
           clientName: project.clientName,
         },
-        roomPlanSVG: room.roomPlanSVG,
+        roomPlanImage: pngUrl, // Pass the PNG URL directly
       }),
+      attachments: [{
+        filename: 'room-plan.png',
+        content: pngBuffer,
+      }],
     });
 
     if (error) {
