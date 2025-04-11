@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getInvoicesByProject } from "@/lib/invoices";
+import { fetchInvoicesByProject } from "@/lib/invoices";
 
 // GET - Retrieve all invoices for a specific project
 export async function GET(
@@ -22,7 +22,7 @@ export async function GET(
 
     // Get invoices for the project
     // Authorization is handled by RLS policies
-    const invoices = await getInvoicesByProject(projectId);
+    const invoices = await fetchInvoicesByProject(projectId);
 
     return NextResponse.json({ invoices }, { status: 200 });
   } catch (error) {

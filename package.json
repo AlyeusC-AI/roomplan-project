@@ -21,6 +21,12 @@
     "apps/*",
     "packages/*"
   ],
-  "packageManager": "yarn@1.22.22"
-
+  "packageManager": "yarn@1.22.22",
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
+    "sharp": "^0.34.1",
+    "svg2png": "^4.1.1"
+  }
 }

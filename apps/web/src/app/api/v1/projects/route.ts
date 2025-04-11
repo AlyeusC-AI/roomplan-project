@@ -1,3 +1,4 @@
+
 import { supabaseServiceRole } from "@lib/supabase/admin";
 import { user } from "@lib/supabase/get-user";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
@@ -6,7 +7,6 @@ import { v4 } from "uuid";
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
-
   const limit = parseInt(searchParams.get("limit") ?? "10");
   const offset = parseInt(searchParams.get("offset") ?? "0");
   const searchText = searchParams.get("query");
