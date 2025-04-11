@@ -64,6 +64,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import Link from "next/link";
+import { format } from "date-fns";
 
 declare global {
   type Invoice = Database["public"]["Tables"]["Invoices"]["Row"] & {
@@ -153,57 +154,286 @@ export default function InvoicePage() {
   const downloadAsPdf = async () => {
     setIsExporting(true);
     try {
-      const invoiceElement = document.getElementById("invoice-container");
-      if (!invoiceElement) {
-        toast.error("Could not find invoice content to export");
+      if (!invoice) {
+        toast.error("No invoice data available");
         return;
       }
 
-      // Hide the buttons during capture
-      const buttonsContainer = document.getElementById("buttons-container");
-      const originalDisplay = buttonsContainer
-        ? buttonsContainer.style.display
-        : "";
-      if (buttonsContainer) {
-        buttonsContainer.style.display = "none";
-      }
+      // Generate HTML content for the PDF
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Invoice #${invoice.number}</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+              margin: 0;
+              padding: 30px;
+              color: #0f172a;
+            }
+            .container {
+              max-width: 800px;
+              margin: 0 auto;
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 40px;
+            }
+            .company-name {
+              font-size: 28px;
+              font-weight: bold;
+              color: #0a7ea4;
+              margin: 0;
+            }
+            .company-tagline {
+              font-size: 14px;
+              color: #64748b;
+              margin-top: 5px;
+            }
+            .invoice-info {
+              text-align: right;
+            }
+            .invoice-title {
+              font-size: 20px;
+              font-weight: bold;
+              margin: 0;
+            }
+            .status-badge {
+              display: inline-block;
+              padding: 4px 12px;
+              border-radius: 4px;
+              background-color: #eff6ff;
+              color: #0a7ea4;
+              font-size: 12px;
+              font-weight: bold;
+              margin-top: 8px;
+            }
+            .date-info {
+              margin-top: 16px;
+              font-size: 14px;
+              color: #334155;
+            }
+            .date-info p {
+              margin: 3px 0;
+            }
+            .section-title {
+              font-size: 14px;
+              font-weight: bold;
+              margin-bottom: 8px;
+            }
+            .client-info {
+              margin-bottom: 30px;
+            }
+            .client-name {
+              font-size: 16px;
+              font-weight: bold;
+              margin: 0 0 4px 0;
+            }
+            .project-info {
+              margin-top: 8px;
+              font-size: 14px;
+              color: #334155;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 30px;
+            }
+            th {
+              border-bottom: 1px solid #e2e8f0;
+              text-align: left;
+              padding: 10px 0;
+              font-size: 14px;
+              font-weight: 600;
+              color: #334155;
+            }
+            td {
+              padding: 12px 0;
+              border-bottom: 1px solid #e2e8f0;
+              font-size: 14px;
+            }
+            .amount-column {
+              text-align: right;
+            }
+            .total-section {
+              width: 300px;
+              margin-left: auto;
+            }
+            .total-row {
+              display: flex;
+              justify-content: space-between;
+              padding: 8px 0;
+            }
+            .total-row.final {
+              border-top: 1px solid #e2e8f0;
+              margin-top: 8px;
+              padding-top: 12px;
+              font-weight: bold;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="company-info">
+                <h1 class="company-name">ServiceGeek</h1>
+                <p class="company-tagline">Professional Service Management</p>
+              </div>
+              <div class="invoice-info">
+                <h2 class="invoice-title">Invoice #${invoice.number}</h2>
+                <div class="status-badge">${invoice.status.toUpperCase()}</div>
+                <div class="date-info">
+                  <p>Date: ${format(new Date(invoice.createdAt || new Date()), "MMM d, yyyy")}</p>
+                  <p>Due: ${format(new Date(invoice.dueDate || new Date()), "MMM d, yyyy")}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="client-info">
+              <p class="section-title">For:</p>
+              <p class="client-name">${invoice.clientName}</p>
+              ${invoice.clientEmail ? `<p>${invoice.clientEmail}</p>` : ""}
+              ${invoice.projectName ? `<p class="project-info">Project: ${invoice.projectName}</p>` : ""}
+            </div>
+            
+            <table>
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th>Quantity</th>
+                  <th>Rate</th>
+                  <th class="amount-column">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${invoice.InvoiceItems.map(
+                  (item) => `
+                  <tr>
+                    <td>${item.description}</td>
+                    <td>${item.quantity}</td>
+                    <td>$${item.rate.toFixed(2)}</td>
+                    <td class="amount-column">$${item.amount.toFixed(2)}</td>
+                  </tr>
+                `
+                ).join("")}
+              </tbody>
+            </table>
+            
+            <div class="total-section">
+              <div class="total-row">
+                <span>Subtotal</span>
+                <span>$${invoice.subtotal.toFixed(2)}</span>
+              </div>
+              
+              ${
+                invoice.taxRate && invoice.taxRate > 0
+                  ? `
+                <div class="total-row">
+                  <span>Tax (${invoice.taxRate}%)</span>
+                  <span>$${(invoice.taxAmount || 0).toFixed(2)}</span>
+                </div>
+              `
+                  : ""
+              }
+              
+              ${
+                invoice.discountAmount && invoice.discountAmount > 0
+                  ? `
+                <div class="total-row">
+                  <span>Discount</span>
+                  <span>-$${invoice.discountAmount.toFixed(2)}</span>
+                </div>
+              `
+                  : ""
+              }
+              
+              <div class="total-row final">
+                <span>Total</span>
+                <span>$${invoice.amount.toFixed(2)}</span>
+              </div>
+              
+              ${
+                invoice.depositAmount && invoice.depositAmount > 0
+                  ? `
+                <div class="total-row">
+                  <span>Deposit Paid</span>
+                  <span>$${invoice.depositAmount.toFixed(2)}</span>
+                </div>
+                <div class="total-row">
+                  <span>Balance Due</span>
+                  <span>$${(invoice.amount - invoice.depositAmount).toFixed(2)}</span>
+                </div>
+              `
+                  : ""
+              }
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
 
-      const canvas = await html2canvas(invoiceElement, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      });
-
-      // Restore buttons display
-      if (buttonsContainer) {
-        buttonsContainer.style.display = originalDisplay;
-      }
-
+      // Create PDF from HTML
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: "a4",
       });
 
-      // Calculate scaling to fit content on page
-      const imgWidth = 210; // A4 width in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      // First render the HTML to a canvas using html2canvas
+      const iframe = document.createElement("iframe");
+      iframe.style.visibility = "hidden";
+      iframe.style.position = "fixed";
+      iframe.style.right = "0";
+      iframe.style.bottom = "0";
+      iframe.width = "800";
+      document.body.appendChild(iframe);
 
-      pdf.addImage(
-        canvas.toDataURL("image/png"),
-        "PNG",
-        0,
-        0,
-        imgWidth,
-        imgHeight
-      );
-      pdf.save(`Invoice-${invoice?.number || params.publicId}.pdf`);
+      const iframeDocument =
+        iframe.contentDocument || iframe.contentWindow?.document;
+      if (iframeDocument) {
+        iframeDocument.open();
+        iframeDocument.write(htmlContent);
+        iframeDocument.close();
 
-      toast.success("PDF downloaded successfully");
+        // Wait a moment for the content to render
+        setTimeout(async () => {
+          try {
+            const contentElement = iframeDocument.body;
+            const canvas = await html2canvas(contentElement, {
+              scale: 2,
+              useCORS: true,
+              logging: false,
+              windowWidth: 800,
+            });
+
+            // Remove the iframe
+            document.body.removeChild(iframe);
+
+            // Add the canvas to the PDF
+            const imgData = canvas.toDataURL("image/png");
+            const imgWidth = 210; // A4 width in mm
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+            pdf.save(`Invoice-${invoice.number}.pdf`);
+
+            toast.success("PDF downloaded successfully");
+            setIsExporting(false);
+          } catch (error) {
+            console.error("Error rendering HTML to canvas:", error);
+            document.body.removeChild(iframe);
+            throw error;
+          }
+        }, 1000);
+      } else {
+        throw new Error("Could not access iframe document");
+      }
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.error("Failed to generate PDF");
-    } finally {
       setIsExporting(false);
     }
   };
@@ -216,7 +446,7 @@ export default function InvoicePage() {
     setEmailMessage("");
     setIsEmailDialogOpen(true);
   };
-  
+
   const emailInvoiceHandler = async () => {
     setIsEmailDialogOpen(false);
     setIsEmailing(true);
@@ -384,13 +614,13 @@ export default function InvoicePage() {
             <Mail className='mr-2 size-4' />
             {isEmailing ? "Sending..." : "Email to Client"}
           </Button>
-          
+
           <Link href={`/invoices/${params.publicId}/edit`} passHref>
             <Button variant='outline'>
               <Edit className='mr-2 size-4' /> Edit
             </Button>
           </Link>
-          
+
           <Button
             variant='destructive'
             onClick={handleDeleteClick}

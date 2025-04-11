@@ -26,11 +26,9 @@ import { Textarea } from "@components/ui/textarea";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -118,12 +116,12 @@ const EditInvoice = () => {
           setProjectName(result.data.projectName || "");
           setProjectId(result.data.projectPublicId || "");
           setPoNumber(result.data.poNumber || "");
-          
+
           // Handle dates safely
           if (result.data.invoiceDate) {
             setInvoiceDate(new Date(result.data.invoiceDate));
           }
-          
+
           if (result.data.dueDate) {
             setDueDate(new Date(result.data.dueDate));
           }
@@ -278,12 +276,12 @@ const EditInvoice = () => {
   };
 
   const handleSelectProject = (projectId: string) => {
-    if (projectId === 'none') {
+    if (projectId === "none") {
       setProjectId("");
       setProjectName("");
       return;
     }
-    
+
     const project = projects.find((p) => p.publicId === projectId);
     if (project) {
       setProjectId(project.publicId);
@@ -363,475 +361,489 @@ const EditInvoice = () => {
   }
 
   return (
-    <div className='container mx-auto py-8'>
-      <div className='mb-6 flex items-center justify-between'>
-        <div className='flex items-center'>
+    <div className='container mx-auto space-y-6 py-6'>
+      <div className='flex items-center justify-between'>
+        <Button variant='outline' onClick={() => router.back()}>
+          <ArrowLeft className='mr-2 h-4 w-4' /> Back
+        </Button>
+
+        <div className='flex gap-2'>
           <Button
             variant='outline'
             onClick={() => router.push(`/invoices/${invoiceId}`)}
-            className='mr-4'
           >
-            <ArrowLeft className='mr-2 size-4' /> Back
+            Cancel
           </Button>
-          <h1 className='text-2xl font-bold'>Edit Invoice</h1>
+          <Button onClick={saveInvoice} disabled={isSaving}>
+            {isSaving ? "Saving..." : "Save Changes"}
+          </Button>
         </div>
-        <Button onClick={saveInvoice} disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save Changes"}
-        </Button>
       </div>
 
-      <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-        <Card>
-          <CardHeader>
-            <CardTitle>Invoice Details</CardTitle>
-          </CardHeader>
-          <CardContent className='space-y-4'>
-            <div>
-              <Label htmlFor='invoiceNumber'>Invoice Number</Label>
-              <Input
-                id='invoiceNumber'
-                value={invoiceNumber}
-                onChange={(e) => setInvoiceNumber(e.target.value)}
-                placeholder='INV-0001'
-              />
-            </div>
-
-            <div>
-              <Label htmlFor='invoiceDate'>Invoice Date</Label>
-              <DateTimePicker
-                date={invoiceDate}
-                setDate={(date: Date) => setInvoiceDate(date)}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor='daysUntilDue'>Days Until Due</Label>
-              <Input
-                id='daysUntilDue'
-                type='number'
-                value={daysUntilDue}
-                onChange={(e) => setDaysUntilDue(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor='dueDate'>Due Date</Label>
-              <DateTimePicker
-                date={dueDate}
-                setDate={(date: Date) => setDueDate(date)}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor='poNumber'>PO Number (Optional)</Label>
-              <Input
-                id='poNumber'
-                value={poNumber}
-                onChange={(e) => setPoNumber(e.target.value)}
-                placeholder='PO-12345'
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Client Information</CardTitle>
-          </CardHeader>
-          <CardContent className='space-y-4'>
-            <div>
-              <Label htmlFor='clientName'>Client Name</Label>
-              <Input
-                id='clientName'
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                placeholder='Client Name'
-              />
-            </div>
-
-            <div>
-              <Label htmlFor='clientEmail'>Client Email (Optional)</Label>
-              <Input
-                id='clientEmail'
-                type='email'
-                value={clientEmail}
-                onChange={(e) => setClientEmail(e.target.value)}
-                placeholder='client@example.com'
-              />
-            </div>
-
-            <div>
-              <Label htmlFor='project'>Project</Label>
-              <Select
-                value={projectId || 'none'}
-                onValueChange={handleSelectProject}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Select a project' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='none'>None</SelectItem>
-                  {projects.map((project) => (
-                    <SelectItem key={project.publicId} value={project.publicId}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor='projectName'>Project Name</Label>
-              <Input
-                id='projectName'
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                placeholder='Project Name'
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Invoice Options</CardTitle>
-          </CardHeader>
-          <CardContent className='space-y-4'>
-            <div className='flex items-center space-x-2'>
-              <Switch
-                id='showMarkup'
-                checked={showMarkup}
-                onCheckedChange={setShowMarkup}
-              />
-              <Label htmlFor='showMarkup'>Add Markup</Label>
-            </div>
-
-            {showMarkup && (
-              <div>
-                <Label htmlFor='markupPercentage'>Markup (%)</Label>
-                <Input
-                  id='markupPercentage'
-                  type='number'
-                  value={markupPercentage}
-                  onChange={(e) =>
-                    setMarkupPercentage(parseFloat(e.target.value))
-                  }
-                />
-              </div>
-            )}
-
-            <div className='flex items-center space-x-2'>
-              <Switch
-                id='showDiscount'
-                checked={showDiscount}
-                onCheckedChange={setShowDiscount}
-              />
-              <Label htmlFor='showDiscount'>Add Discount</Label>
-            </div>
-
-            {showDiscount && (
-              <div>
-                <Label htmlFor='discountAmount'>Discount Amount</Label>
-                <Input
-                  id='discountAmount'
-                  type='number'
-                  value={discountAmount}
-                  onChange={(e) => setDiscountAmount(parseFloat(e.target.value))}
-                />
-              </div>
-            )}
-
-            <div className='flex items-center space-x-2'>
-              <Switch
-                id='applyTax'
-                checked={applyTax}
-                onCheckedChange={setApplyTax}
-              />
-              <Label htmlFor='applyTax'>Apply Tax</Label>
-            </div>
-
-            {applyTax && (
-              <div>
-                <Label htmlFor='taxRate'>Tax Rate (%)</Label>
-                <Input
-                  id='taxRate'
-                  type='number'
-                  value={taxRate}
-                  onChange={(e) => setTaxRate(parseFloat(e.target.value))}
-                />
-              </div>
-            )}
-
-            <div className='flex items-center space-x-2'>
-              <Switch
-                id='showDeposit'
-                checked={showDeposit}
-                onCheckedChange={setShowDeposit}
-              />
-              <Label htmlFor='showDeposit'>Add Deposit</Label>
-            </div>
-
-            {showDeposit && (
-              <div>
-                <Label htmlFor='depositAmount'>Deposit Amount</Label>
-                <Input
-                  id='depositAmount'
-                  type='number'
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(parseFloat(e.target.value))}
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className='mt-6'>
-        <CardHeader className='flex flex-row items-center justify-between'>
-          <CardTitle>Line Items</CardTitle>
-          <div className='flex space-x-2'>
-            <Dialog
-              open={showSavedItemsDialog}
-              onOpenChange={setShowSavedItemsDialog}
-            >
-              <DialogTrigger asChild>
-                <Button variant='outline'>
-                  <Plus className='mr-2 size-4' />
-                  Add Saved Items
-                </Button>
-              </DialogTrigger>
-              <DialogContent className='sm:max-w-md md:max-w-2xl'>
-                <DialogHeader>
-                  <DialogTitle>Add Saved Items</DialogTitle>
-                  <DialogDescription>
-                    Select items to add to your invoice
-                  </DialogDescription>
-                </DialogHeader>
-                
-                <Tabs defaultValue="all" className="w-full">
-                  <TabsList className="w-full justify-start mb-4 overflow-x-auto">
-                    <TabsTrigger 
-                      value="all" 
-                      onClick={() => setSelectedCategory("all")}
-                    >
-                      All Items
-                    </TabsTrigger>
-                    {getCategories().map(category => (
-                      <TabsTrigger 
-                        key={category} 
-                        value={category}
-                        onClick={() => setSelectedCategory(category)}
-                      >
-                        {category}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                
-                  <ScrollArea className="h-[400px] pr-4">
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                      {filteredSavedItems().map((item) => (
-                        <Button
-                          key={item.publicId}
-                          variant='outline'
-                          className='flex h-auto justify-between p-4'
-                          onClick={() => {
-                            handleAddSavedLineItem(item);
-                            setShowSavedItemsDialog(false);
-                          }}
-                        >
-                          <div className='truncate text-left'>
-                            <div className='font-medium'>{item.description}</div>
-                            <div className='text-sm text-muted-foreground'>
-                              ${item.rate.toFixed(2)}
-                              {item.category && (
-                                <span className="ml-2 text-xs bg-muted px-1.5 py-0.5 rounded-sm">
-                                  {item.category}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <Plus className='ml-2 size-4 shrink-0' />
-                        </Button>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </Tabs>
-                
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant='outline'>Close</Button>
-                  </DialogClose>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            
-            <Button onClick={addLineItem}>
-              <Plus className='mr-2 size-4' /> Add Item
-            </Button>
-          </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit Invoice</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className='space-y-4'>
-            {invoiceItems.map((item) => (
-              <div
-                key={item.id}
-                className='grid grid-cols-12 gap-4 rounded-md border p-4'
-              >
-                <div className='col-span-6'>
-                  <Label htmlFor={`description-${item.id}`}>Description</Label>
-                  <Input
-                    id={`description-${item.id}`}
-                    value={item.description}
-                    onChange={(e) =>
-                      updateLineItem(item.id, "description", e.target.value)
-                    }
-                    placeholder='Item description'
-                  />
-                </div>
-                <div className='col-span-2'>
-                  <Label htmlFor={`quantity-${item.id}`}>Quantity</Label>
-                  <Input
-                    id={`quantity-${item.id}`}
-                    type='number'
-                    min='1'
-                    value={item.quantity}
-                    onChange={(e) =>
-                      updateLineItem(
-                        item.id,
-                        "quantity",
-                        parseFloat(e.target.value)
-                      )
-                    }
-                  />
-                </div>
-                <div className='col-span-2'>
-                  <Label htmlFor={`rate-${item.id}`}>Rate</Label>
-                  <Input
-                    id={`rate-${item.id}`}
-                    type='number'
-                    min='0'
-                    step='0.01'
-                    value={item.rate}
-                    onChange={(e) =>
-                      updateLineItem(item.id, "rate", parseFloat(e.target.value))
-                    }
-                  />
-                </div>
-                <div className='col-span-1'>
-                  <Label htmlFor={`amount-${item.id}`}>Amount</Label>
-                  <div className='rounded-md border p-2'>
-                    ${item.amount.toFixed(2)}
-                  </div>
-                </div>
-                <div className='col-span-1 flex items-end justify-end'>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    onClick={() => removeLineItem(item.id)}
-                    disabled={invoiceItems.length === 1}
-                  >
-                    <X className='size-4' />
-                  </Button>
+          <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+            <div className='space-y-4'>
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='invoice-number' className='text-right'>
+                  Invoice #
+                </Label>
+                <Input
+                  id='invoice-number'
+                  value={invoiceNumber}
+                  onChange={(e) => setInvoiceNumber(e.target.value)}
+                  className='col-span-3'
+                  required
+                />
+              </div>
+
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='client-name' className='text-right'>
+                  Client Name
+                </Label>
+                <Input
+                  id='client-name'
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                  className='col-span-3'
+                  required
+                />
+              </div>
+
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='client-email' className='text-right'>
+                  Client Email
+                </Label>
+                <Input
+                  id='client-email'
+                  type='email'
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  className='col-span-3'
+                />
+              </div>
+
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='project-name' className='text-right'>
+                  Project Name
+                </Label>
+                <div className='col-span-3'>
+                  {projects.length > 0 ? (
+                    <Select
+                      value={projectId || "none"}
+                      onValueChange={handleSelectProject}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            projectName || "Select a project or type manually"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='none'>None</SelectItem>
+                        {projects.map((project) => (
+                          <SelectItem
+                            key={project.publicId}
+                            value={project.publicId}
+                          >
+                            {project.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id='project-name'
+                      value={projectName}
+                      onChange={(e) => setProjectName(e.target.value)}
+                      required
+                    />
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
-      <Card className='mt-6'>
-        <CardHeader>
-          <CardTitle>Additional Information</CardTitle>
-        </CardHeader>
-        <CardContent className='space-y-4'>
-          <div>
-            <Label htmlFor='notes'>Notes (Optional)</Label>
-            <Textarea
-              id='notes'
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder='Add any additional notes here...'
-              className='min-h-[100px]'
-            />
-          </div>
-          <div>
-            <Label htmlFor='terms'>Terms (Optional)</Label>
-            <Textarea
-              id='terms'
-              value={terms}
-              onChange={(e) => setTerms(e.target.value)}
-              placeholder='Add payment terms here...'
-              className='min-h-[100px]'
-            />
-          </div>
-        </CardContent>
-      </Card>
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='invoice-date' className='text-right'>
+                  Invoice Date
+                </Label>
+                <div className='col-span-3'>
+                  <DateTimePicker date={invoiceDate} setDate={setInvoiceDate} />
+                </div>
+              </div>
 
-      <div className='mt-6 flex justify-end'>
-        <Card className='w-1/3'>
-          <CardContent className='p-4'>
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='due-date' className='text-right'>
+                  Due Date
+                </Label>
+                <div className='col-span-3'>
+                  <DateTimePicker date={dueDate} setDate={setDueDate} />
+                </div>
+              </div>
+            </div>
+
+            <div className='space-y-4'>
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='po-number' className='text-right'>
+                  PO Number
+                </Label>
+                <Input
+                  id='po-number'
+                  value={poNumber}
+                  onChange={(e) => setPoNumber(e.target.value)}
+                  className='col-span-3'
+                />
+              </div>
+
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='days-until-due' className='text-right'>
+                  Days Until Due
+                </Label>
+                <Input
+                  id='days-until-due'
+                  type='number'
+                  value={daysUntilDue}
+                  onChange={(e) => setDaysUntilDue(e.target.value)}
+                  className='col-span-3'
+                />
+              </div>
+
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='tax-rate' className='text-right'>
+                  Tax Rate (%)
+                </Label>
+                <div className='col-span-2'>
+                  <Input
+                    id='tax-rate'
+                    type='number'
+                    value={taxRate}
+                    onChange={(e) => setTaxRate(parseFloat(e.target.value))}
+                    disabled={!applyTax}
+                  />
+                </div>
+                <div className='flex items-center space-x-2'>
+                  <Switch
+                    id='apply-tax'
+                    checked={applyTax}
+                    onCheckedChange={setApplyTax}
+                  />
+                  <Label htmlFor='apply-tax'>Apply</Label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className='mt-6 space-y-4 rounded-md border p-4'>
+            <h3 className='text-lg font-medium'>Additional Information</h3>
+            <div className='grid grid-cols-1 gap-4'>
+              <div>
+                <Label htmlFor='notes'>Notes (Optional)</Label>
+                <Textarea
+                  id='notes'
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder='Add any additional notes here...'
+                  className='min-h-[100px]'
+                />
+              </div>
+              <div>
+                <Label htmlFor='terms'>Terms (Optional)</Label>
+                <Textarea
+                  id='terms'
+                  value={terms}
+                  onChange={(e) => setTerms(e.target.value)}
+                  placeholder='Add payment terms here...'
+                  className='min-h-[100px]'
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className='mt-4'>
+            <div className='mb-2 flex justify-between'>
+              <h3 className='text-lg font-semibold'>Line Items</h3>
+              <div className='flex space-x-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  type='button'
+                  onClick={() => setShowSavedItemsDialog(true)}
+                >
+                  Add from Saved Items
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  type='button'
+                  onClick={addLineItem}
+                >
+                  <Plus className='mr-1 h-4 w-4' /> Add Line Item
+                </Button>
+              </div>
+            </div>
+
+            <div className='rounded-md border p-4'>
+              <div className='mb-2 grid grid-cols-12 gap-2 text-sm font-semibold'>
+                <div className='col-span-6'>Description</div>
+                <div className='col-span-2'>Rate</div>
+                <div className='col-span-1 text-center'>Quantity</div>
+                <div className='col-span-2 text-right'>Amount</div>
+                <div className='col-span-1'></div>
+              </div>
+
+              {invoiceItems.map((item) => (
+                <div
+                  key={item.id}
+                  className='mb-2 grid grid-cols-12 items-center gap-2'
+                >
+                  <div className='col-span-6'>
+                    <Input
+                      value={item.description}
+                      onChange={(e) =>
+                        updateLineItem(item.id, "description", e.target.value)
+                      }
+                      placeholder='Description'
+                    />
+                  </div>
+                  <div className='col-span-2'>
+                    <Input
+                      type='number'
+                      value={item.rate || ""}
+                      onChange={(e) =>
+                        updateLineItem(
+                          item.id,
+                          "rate",
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
+                      placeholder='0.00'
+                    />
+                  </div>
+                  <div className='col-span-1'>
+                    <Input
+                      type='number'
+                      value={item.quantity || ""}
+                      onChange={(e) =>
+                        updateLineItem(
+                          item.id,
+                          "quantity",
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
+                      placeholder='1'
+                      className='text-center'
+                    />
+                  </div>
+                  <div className='col-span-2 text-right'>
+                    ${item.amount.toFixed(2)}
+                  </div>
+                  <div className='col-span-1 text-right'>
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      onClick={() => removeLineItem(item.id)}
+                    >
+                      <X className='h-4 w-4' />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className='mt-4 grid grid-cols-2 gap-4'>
+            <div></div>
             <div className='space-y-2'>
               <div className='flex justify-between'>
-                <span>Subtotal:</span>
+                <span>Subtotal</span>
                 <span>${calculateSubtotal().toFixed(2)}</span>
               </div>
 
               {showMarkup && (
-                <div className='flex justify-between'>
-                  <span>Markup ({markupPercentage}%):</span>
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <span>Markup</span>
+                    <Input
+                      type='number'
+                      value={markupPercentage}
+                      onChange={(e) =>
+                        setMarkupPercentage(parseFloat(e.target.value) || 0)
+                      }
+                      className='h-8 w-16'
+                    />
+                    <span>%</span>
+                  </div>
                   <span>${calculateMarkup().toFixed(2)}</span>
                 </div>
               )}
+              <div className='flex justify-between'>
+                <Button
+                  type='button'
+                  variant='link'
+                  onClick={() => setShowMarkup(!showMarkup)}
+                  className='h-auto p-0 text-blue-500'
+                >
+                  {showMarkup ? "Remove Markup" : "Add Markup"}
+                </Button>
+              </div>
 
               {showDiscount && (
-                <div className='flex justify-between'>
-                  <span>Discount:</span>
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <span>Discount</span>
+                    <Input
+                      type='number'
+                      value={discountAmount}
+                      onChange={(e) =>
+                        setDiscountAmount(parseFloat(e.target.value) || 0)
+                      }
+                      className='h-8 w-20'
+                    />
+                  </div>
                   <span>-${calculateDiscount().toFixed(2)}</span>
                 </div>
               )}
+              <div className='flex justify-between'>
+                <Button
+                  type='button'
+                  variant='link'
+                  onClick={() => setShowDiscount(!showDiscount)}
+                  className='h-auto p-0 text-blue-500'
+                >
+                  {showDiscount ? "Remove Discount" : "Add Discount"}
+                </Button>
+              </div>
 
               {applyTax && (
                 <div className='flex justify-between'>
-                  <span>Tax ({taxRate}%):</span>
+                  <span>Tax ({taxRate}%)</span>
                   <span>${calculateTax().toFixed(2)}</span>
                 </div>
               )}
 
-              <div className='flex justify-between border-t pt-2 font-bold'>
-                <span>Total:</span>
-                <span>${calculateTotal().toFixed(2)}</span>
+              {showDeposit && (
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <span>Deposit</span>
+                    <Input
+                      type='number'
+                      value={depositAmount}
+                      onChange={(e) =>
+                        setDepositAmount(parseFloat(e.target.value) || 0)
+                      }
+                      className='h-8 w-20'
+                    />
+                  </div>
+                  <span>${calculateDeposit().toFixed(2)}</span>
+                </div>
+              )}
+              <div className='flex justify-between'>
+                <Button
+                  type='button'
+                  variant='link'
+                  onClick={() => setShowDeposit(!showDeposit)}
+                  className='h-auto p-0 text-blue-500'
+                >
+                  {showDeposit ? "Remove Deposit" : "Add Deposit"}
+                </Button>
               </div>
 
-              {showDeposit && (
-                <>
-                  <div className='flex justify-between'>
-                    <span>Deposit:</span>
-                    <span>${calculateDeposit().toFixed(2)}</span>
-                  </div>
-                  <div className='flex justify-between'>
-                    <span>Balance Due:</span>
+              <div className='border-t pt-2'>
+                <div className='flex justify-between font-bold'>
+                  <span>Total</span>
+                  <span>${calculateTotal().toFixed(2)}</span>
+                </div>
+
+                {showDeposit && (
+                  <div className='mt-1 flex justify-between'>
+                    <span>Balance Due</span>
                     <span>
                       ${(calculateTotal() - calculateDeposit()).toFixed(2)}
                     </span>
                   </div>
-                </>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Saved Items Dialog */}
+      <Dialog
+        open={showSavedItemsDialog}
+        onOpenChange={setShowSavedItemsDialog}
+      >
+        <DialogContent className='max-w-3xl'>
+          <DialogHeader>
+            <DialogTitle>Add from Saved Items</DialogTitle>
+          </DialogHeader>
+          <Tabs
+            defaultValue='all'
+            className='w-full'
+            onValueChange={setSelectedCategory}
+          >
+            <TabsList className='mb-4 grid grid-cols-4'>
+              <TabsTrigger value='all'>All</TabsTrigger>
+              {getCategories()
+                .slice(0, 3)
+                .map((category) => (
+                  <TabsTrigger key={category} value={category}>
+                    {category}
+                  </TabsTrigger>
+                ))}
+            </TabsList>
+          </Tabs>
+          <ScrollArea className='max-h-[400px]'>
+            <div className='space-y-2 p-1'>
+              {filteredSavedItems().map((item) => (
+                <Card key={item.publicId} className='hover:bg-gray-50'>
+                  <CardContent className='flex items-center justify-between p-4'>
+                    <div>
+                      <h4 className='font-medium'>
+                        {item.name || item.description}
+                      </h4>
+                      {item.name && (
+                        <p className='text-sm text-gray-500'>
+                          {item.description}
+                        </p>
+                      )}
+                      {item.category && (
+                        <div className='mt-1 inline-block rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800'>
+                          {item.category}
+                        </div>
+                      )}
+                    </div>
+                    <div className='text-right'>
+                      <div className='font-medium'>${item.rate.toFixed(2)}</div>
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        onClick={() => handleAddSavedLineItem(item)}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {filteredSavedItems().length === 0 && (
+                <div className='py-4 text-center text-gray-500'>
+                  No saved items found in this category.
+                </div>
               )}
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className='mt-6 flex justify-between'>
-        <Button
-          variant='outline'
-          onClick={() => router.push(`/invoices/${invoiceId}`)}
-        >
-          Cancel
-        </Button>
-        <Button onClick={saveInvoice} disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save Changes"}
-        </Button>
-      </div>
+          </ScrollArea>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant='outline'>Close</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -35,6 +35,7 @@ import { formatCurrency } from "@lib/utils";
 interface EstimateItem {
   id: string;
   description: string;
+  detailedDescription?: string;
   quantity: number;
   rate: number;
   amount: number;
@@ -47,16 +48,16 @@ const CreateNewEstimate = ({
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-  const [estimateNumber, setEstimateNumber] = useState(
-    `EST-${Math.floor(Math.random() * 1000)
-      .toString()
-      .padStart(3, "0")}`
-  );
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
+  const [clientAddress, setClientAddress] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [showAdjuster, setShowAdjuster] = useState(false);
+  const [adjusterName, setAdjusterName] = useState("");
+  const [adjusterEmail, setAdjusterEmail] = useState("");
+  const [adjusterPhone, setAdjusterPhone] = useState("");
   const [projectName, setProjectName] = useState("");
   const [projectId, setProjectId] = useState("");
-  const [poNumber, setPoNumber] = useState("");
   const [daysValid, setDaysValid] = useState("30");
   const [isCreating, setIsCreating] = useState(false);
   const [estimateDate, setEstimateDate] = useState<Date>(new Date());
@@ -74,11 +75,24 @@ const CreateNewEstimate = ({
   const [applyTax, setApplyTax] = useState(false);
   const [showSavedItems, setShowSavedItems] = useState(false);
   const [notes, setNotes] = useState("");
+  const [projectSearchQuery, setProjectSearchQuery] = useState("");
 
   const router = useRouter();
   const { addEstimate } = estimatesStore((state) => state);
   const { projects } = projectsStore((state) => state);
   const { savedLineItems } = invoicesStore((state) => state);
+
+  const filteredProjects = projects.filter((project) => {
+    if (!projectSearchQuery.trim()) return true;
+
+    const searchLower = projectSearchQuery.toLowerCase();
+    return (
+      project.name?.toLowerCase().includes(searchLower) ||
+      project.clientName?.toLowerCase().includes(searchLower) ||
+      project.location?.toLowerCase().includes(searchLower) ||
+      project.clientPhoneNumber?.includes(searchLower)
+    );
+  });
 
   useEffect(() => {
     // Calculate expiry date based on days valid
@@ -101,7 +115,14 @@ const CreateNewEstimate = ({
   const addLineItem = () => {
     setEstimateItems([
       ...estimateItems,
-      { id: uuidv4(), description: "", quantity: 1, rate: 0, amount: 0 },
+      {
+        id: uuidv4(),
+        description: "",
+        detailedDescription: "",
+        quantity: 1,
+        rate: 0,
+        amount: 0,
+      },
     ]);
   };
 
@@ -109,6 +130,7 @@ const CreateNewEstimate = ({
     const newItem: EstimateItem = {
       id: uuidv4(),
       description: item.description,
+      detailedDescription: "",
       quantity: 1,
       rate: item.rate,
       amount: item.rate,
@@ -126,7 +148,7 @@ const CreateNewEstimate = ({
   const updateLineItem = (
     id: string,
     field: keyof EstimateItem,
-    value: any
+    value: string | number
   ) => {
     setEstimateItems(
       estimateItems.map((item) =>
@@ -136,9 +158,9 @@ const CreateNewEstimate = ({
               [field]: value,
               amount:
                 field === "rate"
-                  ? value * item.quantity
+                  ? (value as number) * item.quantity
                   : field === "quantity"
-                    ? item.rate * value
+                    ? item.rate * (value as number)
                     : item.amount,
             }
           : item
@@ -184,6 +206,8 @@ const CreateNewEstimate = ({
       setProjectName(selectedProject.name);
       setClientName(selectedProject.clientName || "");
       setClientEmail(selectedProject.clientEmail || "");
+      setClientAddress(selectedProject.location || "");
+      setClientPhone(selectedProject.clientPhoneNumber || "");
     }
   };
 
@@ -202,12 +226,11 @@ const CreateNewEstimate = ({
       // Prepare the estimate data for API
       const estimateData = {
         estimate: {
-          number: estimateNumber,
+          number: `EST-${Math.floor(Math.random() * 10000)}`,
           clientName,
           clientEmail,
           projectName,
           projectPublicId: projectId,
-          poNumber,
           estimateDate: estimateDate.toISOString(),
           expiryDate: expiryDate?.toISOString() || new Date().toISOString(),
           subtotal: calculateSubtotal(),
@@ -218,12 +241,16 @@ const CreateNewEstimate = ({
           deposit: showDeposit ? depositPercentage : undefined,
           status: "draft" as const,
           notes,
+          adjusterName: showAdjuster ? adjusterName : undefined,
+          adjusterEmail: showAdjuster ? adjusterEmail : undefined,
+          adjusterPhone: showAdjuster ? adjusterPhone : undefined,
         },
         estimateItems: estimateItems.map((item) => ({
           description: item.description,
           quantity: item.quantity,
           rate: item.rate,
           amount: item.amount,
+          notes: item.detailedDescription,
         })),
       };
 
@@ -254,6 +281,7 @@ const CreateNewEstimate = ({
     const newItem: EstimateItem = {
       id: uuidv4(),
       description: item.description,
+      detailedDescription: "",
       quantity: 1,
       rate: item.rate,
       amount: item.rate,
@@ -270,6 +298,7 @@ const CreateNewEstimate = ({
         return {
           id: uuidv4(),
           description: savedItem.description,
+          detailedDescription: "",
           quantity: 1,
           rate: savedItem.rate,
           amount: savedItem.rate,
@@ -302,19 +331,6 @@ const CreateNewEstimate = ({
               <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
                 <div className='space-y-4'>
                   <div className='grid grid-cols-4 items-center gap-4'>
-                    <Label htmlFor='estimate-number' className='text-right'>
-                      Estimate #
-                    </Label>
-                    <Input
-                      id='estimate-number'
-                      value={estimateNumber}
-                      onChange={(e) => setEstimateNumber(e.target.value)}
-                      className='col-span-3'
-                      required
-                    />
-                  </div>
-
-                  <div className='grid grid-cols-4 items-center gap-4'>
                     <Label htmlFor='client-name' className='text-right'>
                       Client Name
                     </Label>
@@ -341,31 +357,140 @@ const CreateNewEstimate = ({
                   </div>
 
                   <div className='grid grid-cols-4 items-center gap-4'>
+                    <Label htmlFor='client-address' className='text-right'>
+                      Client Address
+                    </Label>
+                    <Input
+                      id='client-address'
+                      value={clientAddress}
+                      onChange={(e) => setClientAddress(e.target.value)}
+                      className='col-span-3'
+                    />
+                  </div>
+
+                  <div className='grid grid-cols-4 items-center gap-4'>
+                    <Label htmlFor='client-phone' className='text-right'>
+                      Client Phone
+                    </Label>
+                    <Input
+                      id='client-phone'
+                      value={clientPhone}
+                      onChange={(e) => setClientPhone(e.target.value)}
+                      className='col-span-3'
+                    />
+                  </div>
+
+                  <div className='grid grid-cols-4 items-center gap-4'>
+                    <Label htmlFor='toggle-adjuster' className='text-right'>
+                      Insurance Adjuster
+                    </Label>
+                    <div className='col-span-3 flex items-center'>
+                      <Switch
+                        id='toggle-adjuster'
+                        checked={showAdjuster}
+                        onCheckedChange={setShowAdjuster}
+                      />
+                      <Label htmlFor='toggle-adjuster' className='ml-2'>
+                        {showAdjuster ? "Shown" : "Hidden"}
+                      </Label>
+                    </div>
+                  </div>
+
+                  {showAdjuster && (
+                    <>
+                      <div className='grid grid-cols-4 items-center gap-4'>
+                        <Label htmlFor='adjuster-name' className='text-right'>
+                          Adjuster Name
+                        </Label>
+                        <Input
+                          id='adjuster-name'
+                          value={adjusterName}
+                          onChange={(e) => setAdjusterName(e.target.value)}
+                          className='col-span-3'
+                        />
+                      </div>
+
+                      <div className='grid grid-cols-4 items-center gap-4'>
+                        <Label htmlFor='adjuster-email' className='text-right'>
+                          Adjuster Email
+                        </Label>
+                        <Input
+                          id='adjuster-email'
+                          type='email'
+                          value={adjusterEmail}
+                          onChange={(e) => setAdjusterEmail(e.target.value)}
+                          className='col-span-3'
+                        />
+                      </div>
+
+                      <div className='grid grid-cols-4 items-center gap-4'>
+                        <Label htmlFor='adjuster-phone' className='text-right'>
+                          Adjuster Phone
+                        </Label>
+                        <Input
+                          id='adjuster-phone'
+                          value={adjusterPhone}
+                          onChange={(e) => setAdjusterPhone(e.target.value)}
+                          className='col-span-3'
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <div className='grid grid-cols-4 items-center gap-4'>
                     <Label htmlFor='project-name' className='text-right'>
                       Project Name
                     </Label>
                     <div className='col-span-3'>
                       {projects.length > 0 ? (
-                        <Select onValueChange={handleSelectProject}>
-                          <SelectTrigger>
-                            <SelectValue
-                              placeholder={
-                                projectName ||
-                                "Select a project or type manually"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {projects.map((project) => (
-                              <SelectItem
-                                key={project.publicId}
-                                value={project.publicId}
-                              >
-                                {project.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className='space-y-2'>
+                          <Input
+                            placeholder='Search projects...'
+                            value={projectSearchQuery}
+                            onChange={(e) =>
+                              setProjectSearchQuery(e.target.value)
+                            }
+                            className='mb-2'
+                          />
+                          <Select onValueChange={handleSelectProject}>
+                            <SelectTrigger>
+                              <SelectValue
+                                placeholder={
+                                  projectName ||
+                                  "Select a project or type manually"
+                                }
+                              />
+                            </SelectTrigger>
+                            <SelectContent className='max-h-80'>
+                              {filteredProjects.length === 0 ? (
+                                <div className='px-2 py-1 text-sm text-muted-foreground'>
+                                  No projects match your search
+                                </div>
+                              ) : (
+                                filteredProjects.map((project) => (
+                                  <SelectItem
+                                    key={project.publicId}
+                                    value={project.publicId}
+                                  >
+                                    <div>
+                                      <div>{project.name}</div>
+                                      {project.location && (
+                                        <div className='text-xs text-muted-foreground'>
+                                          {project.location}
+                                        </div>
+                                      )}
+                                      {project.clientName && (
+                                        <div className='text-xs text-muted-foreground'>
+                                          {project.clientName}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       ) : (
                         <Input
                           id='project-name'
@@ -385,7 +510,6 @@ const CreateNewEstimate = ({
                       <DateTimePicker
                         date={estimateDate}
                         setDate={setEstimateDate}
-                        format='PPP'
                       />
                     </div>
                   </div>
@@ -396,27 +520,14 @@ const CreateNewEstimate = ({
                     </Label>
                     <div className='col-span-3'>
                       <DateTimePicker
-                        date={expiryDate}
+                        date={expiryDate || new Date()}
                         setDate={setExpiryDate}
-                        format='PPP'
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className='space-y-4'>
-                  <div className='grid grid-cols-4 items-center gap-4'>
-                    <Label htmlFor='po-number' className='text-right'>
-                      PO Number
-                    </Label>
-                    <Input
-                      id='po-number'
-                      value={poNumber}
-                      onChange={(e) => setPoNumber(e.target.value)}
-                      className='col-span-3'
-                    />
-                  </div>
-
                   <div className='grid grid-cols-4 items-center gap-4'>
                     <Label htmlFor='days-valid' className='text-right'>
                       Days Valid
@@ -502,9 +613,9 @@ const CreateNewEstimate = ({
                   {estimateItems.map((item) => (
                     <div
                       key={item.id}
-                      className='mb-2 grid grid-cols-12 items-center gap-2'
+                      className='mb-6 grid grid-cols-12 items-start gap-2'
                     >
-                      <div className='col-span-6'>
+                      <div className='col-span-6 space-y-2'>
                         <Input
                           value={item.description}
                           onChange={(e) =>
@@ -515,6 +626,18 @@ const CreateNewEstimate = ({
                             )
                           }
                           placeholder='Description'
+                        />
+                        <textarea
+                          value={item.detailedDescription || ""}
+                          onChange={(e) =>
+                            updateLineItem(
+                              item.id,
+                              "detailedDescription",
+                              e.target.value
+                            )
+                          }
+                          className='min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+                          placeholder='Additional details or notes for this item...'
                         />
                       </div>
                       <div className='col-span-2'>
@@ -564,120 +687,216 @@ const CreateNewEstimate = ({
                 </div>
               </div>
 
-              <div className='mt-4 grid grid-cols-2 gap-4'>
-                <div></div>
-                <div className='space-y-2'>
-                  <div className='flex justify-between'>
-                    <span>Subtotal</span>
-                    <span>${calculateSubtotal().toFixed(2)}</span>
+              {/* Summary Section */}
+              <div className='mt-6 space-y-4'>
+                <h3 className='text-lg font-semibold'>Summary</h3>
+
+                <div className='space-y-4 rounded-md border p-4'>
+                  <div className='flex items-center justify-between'>
+                    <div className='font-medium'>Subtotal</div>
+                    <div>{formatCurrency(calculateSubtotal())}</div>
                   </div>
 
-                  {showMarkup && (
+                  {/* Markup Section */}
+                  <div className='border-t pt-3'>
                     <div className='flex items-center justify-between'>
-                      <div className='flex items-center gap-2'>
-                        <span>Markup</span>
-                        <Input
-                          type='number'
-                          value={markupPercentage}
-                          onChange={(e) =>
-                            setMarkupPercentage(parseFloat(e.target.value) || 0)
-                          }
-                          className='h-8 w-16'
-                        />
-                        <span>%</span>
-                      </div>
-                      <span>${calculateMarkup().toFixed(2)}</span>
+                      <div className='font-medium'>Markup</div>
+                      {!showMarkup ? (
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => setShowMarkup(true)}
+                        >
+                          Add Markup
+                        </Button>
+                      ) : (
+                        <div className='flex items-center gap-2'>
+                          <div>{formatCurrency(calculateMarkup())}</div>
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            onClick={() => setShowMarkup(false)}
+                          >
+                            <X className='size-4' />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <div className='flex justify-between'>
-                    <Button
-                      type='button'
-                      variant='link'
-                      onClick={() => setShowMarkup(!showMarkup)}
-                      className='h-auto p-0 text-blue-500'
-                    >
-                      {showMarkup ? "Remove Markup" : "Add Markup"}
-                    </Button>
+
+                    {showMarkup && (
+                      <div className='mt-2 grid grid-cols-2 items-center gap-4'>
+                        <div className='flex items-center gap-2'>
+                          <Input
+                            type='number'
+                            value={markupPercentage}
+                            onChange={(e) =>
+                              setMarkupPercentage(
+                                parseFloat(e.target.value) || 0
+                              )
+                            }
+                            className='w-24'
+                          />
+                          <span>%</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {showDiscount && (
+                  {/* Discount Section */}
+                  <div className='border-t pt-3'>
                     <div className='flex items-center justify-between'>
-                      <div className='flex items-center gap-2'>
-                        <span>Discount</span>
-                        <Input
-                          type='number'
-                          value={discountAmount}
-                          onChange={(e) =>
-                            setDiscountAmount(parseFloat(e.target.value) || 0)
-                          }
-                          className='h-8 w-20'
-                        />
-                      </div>
-                      <span>-${calculateDiscount().toFixed(2)}</span>
+                      <div className='font-medium'>Discount</div>
+                      {!showDiscount ? (
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => setShowDiscount(true)}
+                        >
+                          Add Discount
+                        </Button>
+                      ) : (
+                        <div className='flex items-center gap-2'>
+                          <div>-{formatCurrency(calculateDiscount())}</div>
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            onClick={() => setShowDiscount(false)}
+                          >
+                            <X className='size-4' />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <div className='flex justify-between'>
-                    <Button
-                      type='button'
-                      variant='link'
-                      onClick={() => setShowDiscount(!showDiscount)}
-                      className='h-auto p-0 text-blue-500'
-                    >
-                      {showDiscount ? "Remove Discount" : "Add Discount"}
-                    </Button>
+
+                    {showDiscount && (
+                      <div className='mt-2 grid grid-cols-2 items-center gap-4'>
+                        <div className='flex items-center gap-2'>
+                          <span>$</span>
+                          <Input
+                            type='number'
+                            value={discountAmount}
+                            onChange={(e) =>
+                              setDiscountAmount(parseFloat(e.target.value) || 0)
+                            }
+                            className='w-24'
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {applyTax && (
-                    <div className='flex justify-between'>
-                      <span>Tax ({taxRate}%)</span>
-                      <span>${calculateTax().toFixed(2)}</span>
-                    </div>
-                  )}
-
-                  {showDeposit && (
+                  {/* Tax Section */}
+                  <div className='border-t pt-3'>
                     <div className='flex items-center justify-between'>
-                      <div className='flex items-center gap-2'>
-                        <span>Deposit</span>
-                        <Input
-                          type='number'
-                          value={depositPercentage}
-                          onChange={(e) =>
-                            setDepositPercentage(
-                              parseFloat(e.target.value) || 0
-                            )
-                          }
-                          className='h-8 w-16'
-                        />
-                        <span>%</span>
-                      </div>
-                      <span>${calculateDeposit().toFixed(2)}</span>
+                      <div className='font-medium'>Tax</div>
+                      {!applyTax ? (
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => setApplyTax(true)}
+                        >
+                          Add Tax
+                        </Button>
+                      ) : (
+                        <div className='flex items-center gap-2'>
+                          <div>{formatCurrency(calculateTax())}</div>
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            onClick={() => setApplyTax(false)}
+                          >
+                            <X className='size-4' />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <div className='flex justify-between'>
-                    <Button
-                      type='button'
-                      variant='link'
-                      onClick={() => setShowDeposit(!showDeposit)}
-                      className='h-auto p-0 text-blue-500'
-                    >
-                      {showDeposit ? "Remove Deposit" : "Add Deposit"}
-                    </Button>
+
+                    {applyTax && (
+                      <div className='mt-2 grid grid-cols-2 items-center gap-4'>
+                        <div className='flex items-center gap-2'>
+                          <Input
+                            type='number'
+                            value={taxRate}
+                            onChange={(e) =>
+                              setTaxRate(parseFloat(e.target.value) || 0)
+                            }
+                            className='w-24'
+                          />
+                          <span>%</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div className='border-t pt-2'>
-                    <div className='flex justify-between font-bold'>
-                      <span>Total</span>
-                      <span>${calculateTotal().toFixed(2)}</span>
+                  {/* Deposit Section */}
+                  <div className='border-t pt-3'>
+                    <div className='flex items-center justify-between'>
+                      <div className='font-medium'>Request a Deposit</div>
+                      {!showDeposit ? (
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => setShowDeposit(true)}
+                        >
+                          Add Deposit
+                        </Button>
+                      ) : (
+                        <div className='flex items-center gap-2'>
+                          <div>{formatCurrency(calculateDeposit())}</div>
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            onClick={() => setShowDeposit(false)}
+                          >
+                            <X className='size-4' />
+                          </Button>
+                        </div>
+                      )}
                     </div>
 
                     {showDeposit && (
-                      <div className='mt-1 flex justify-between'>
-                        <span>Balance Due (if approved)</span>
-                        <span>
-                          ${(calculateTotal() - calculateDeposit()).toFixed(2)}
-                        </span>
+                      <div className='mt-2 grid grid-cols-2 items-center gap-4'>
+                        <div className='flex items-center gap-2'>
+                          <Input
+                            type='number'
+                            value={depositPercentage}
+                            onChange={(e) =>
+                              setDepositPercentage(
+                                parseFloat(e.target.value) || 0
+                              )
+                            }
+                            className='w-24'
+                          />
+                          <span>%</span>
+                        </div>
                       </div>
                     )}
+                  </div>
+
+                  {/* Payment Schedule Section */}
+                  <div className='border-t pt-3'>
+                    <div className='flex items-center justify-between'>
+                      <div className='font-medium'>Payment Schedule</div>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() =>
+                          toast.info("Payment schedule feature coming soon")
+                        }
+                      >
+                        Add Schedule
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Total Section */}
+                  <div className='border-t pt-3'>
+                    <div className='flex items-center justify-between'>
+                      <div className='text-lg font-semibold'>Total (USD)</div>
+                      <div className='text-lg font-semibold'>
+                        {formatCurrency(calculateTotal())}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -700,7 +919,7 @@ const CreateNewEstimate = ({
       </Dialog>
 
       <Dialog open={showSavedItems} onOpenChange={setShowSavedItems}>
-        <DialogContent>
+        <DialogContent className='max-h-[80vh] max-w-3xl'>
           <DialogHeader>
             <DialogTitle>Select from Saved Line Items</DialogTitle>
             <DialogDescription>
@@ -709,7 +928,7 @@ const CreateNewEstimate = ({
           </DialogHeader>
 
           {savedLineItems && savedLineItems.length > 0 ? (
-            <div className='overflow-y-auto' style={{ maxHeight: "400px" }}>
+            <div className='overflow-y-auto' style={{ maxHeight: "600px" }}>
               <div className='mb-4 border-b pb-4'>
                 <h3 className='mb-2 text-sm font-medium'>Add by Category</h3>
                 <div className='grid grid-cols-2 gap-2'>
