@@ -180,9 +180,10 @@ export function LidarRooms() {
         [{ text: 'OK' }]
       );
     } catch (err) {
+      console.log("🚀 ~ handleSendEmail ~ err:",  err?.response)
       Alert.alert(
         'Error',
-        'Failed to request ESX version. Please try again later.',
+        err?.response?.data?.error || 'Failed to request ESX version. Please try again later.',
         [{ text: 'OK' }]
       );
     } finally {
