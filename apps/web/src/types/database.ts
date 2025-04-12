@@ -455,26 +455,35 @@ export type Database = {
       Document: {
         Row: {
           created_at: string
+          createdAt: string | null
           id: number
           json: Json | null
           name: string | null
           orgId: number | null
+          projectId: number | null
+          publicId: string | null
           url: string | null
         }
         Insert: {
           created_at?: string
+          createdAt?: string | null
           id?: number
           json?: Json | null
           name?: string | null
           orgId?: number | null
+          projectId?: number | null
+          publicId?: string | null
           url?: string | null
         }
         Update: {
           created_at?: string
+          createdAt?: string | null
           id?: number
           json?: Json | null
           name?: string | null
           orgId?: number | null
+          projectId?: number | null
+          publicId?: string | null
           url?: string | null
         }
         Relationships: [
@@ -483,6 +492,13 @@ export type Database = {
             columns: ["orgId"]
             isOneToOne: false
             referencedRelation: "Organization"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Document_projectId_fkey"
+            columns: ["projectId"]
+            isOneToOne: false
+            referencedRelation: "Project"
             referencedColumns: ["id"]
           },
         ]
@@ -533,6 +549,7 @@ export type Database = {
           estimatePublicId: string
           id: string
           isDeleted: boolean | null
+          notes: string | null
           publicId: string
           quantity: number
           rate: number
@@ -546,6 +563,7 @@ export type Database = {
           estimatePublicId: string
           id?: string
           isDeleted?: boolean | null
+          notes?: string | null
           publicId?: string
           quantity: number
           rate: number
@@ -559,6 +577,7 @@ export type Database = {
           estimatePublicId?: string
           id?: string
           isDeleted?: boolean | null
+          notes?: string | null
           publicId?: string
           quantity?: number
           rate?: number
@@ -577,6 +596,9 @@ export type Database = {
       }
       Estimates: {
         Row: {
+          adjusterEmail: string | null
+          adjusterName: string | null
+          adjusterPhone: string | null
           amount: number
           clientEmail: string | null
           clientName: string
@@ -603,10 +625,14 @@ export type Database = {
           subtotal: number
           taxAmount: number | null
           taxRate: number | null
+          terms: string | null
           updatedAt: string | null
           userId: string
         }
         Insert: {
+          adjusterEmail?: string | null
+          adjusterName?: string | null
+          adjusterPhone?: string | null
           amount: number
           clientEmail?: string | null
           clientName: string
@@ -633,10 +659,14 @@ export type Database = {
           subtotal: number
           taxAmount?: number | null
           taxRate?: number | null
+          terms?: string | null
           updatedAt?: string | null
           userId: string
         }
         Update: {
+          adjusterEmail?: string | null
+          adjusterName?: string | null
+          adjusterPhone?: string | null
           amount?: number
           clientEmail?: string | null
           clientName?: string
@@ -663,6 +693,7 @@ export type Database = {
           subtotal?: number
           taxAmount?: number | null
           taxRate?: number | null
+          terms?: string | null
           updatedAt?: string | null
           userId?: string
         }
@@ -1172,6 +1203,7 @@ export type Database = {
           id: string
           invoicePublicId: string
           isDeleted: boolean | null
+          notes: string | null
           publicId: string
           quantity: number
           rate: number
@@ -1185,6 +1217,7 @@ export type Database = {
           id?: string
           invoicePublicId: string
           isDeleted?: boolean | null
+          notes?: string | null
           publicId?: string
           quantity: number
           rate: number
@@ -1198,6 +1231,7 @@ export type Database = {
           id?: string
           invoicePublicId?: string
           isDeleted?: boolean | null
+          notes?: string | null
           publicId?: string
           quantity?: number
           rate?: number
@@ -1216,6 +1250,9 @@ export type Database = {
       }
       Invoices: {
         Row: {
+          adjusterEmail: string | null
+          adjusterName: string | null
+          adjusterPhone: string | null
           amount: number
           clientEmail: string | null
           clientName: string
@@ -1247,6 +1284,9 @@ export type Database = {
           userId: string
         }
         Insert: {
+          adjusterEmail?: string | null
+          adjusterName?: string | null
+          adjusterPhone?: string | null
           amount: number
           clientEmail?: string | null
           clientName: string
@@ -1278,6 +1318,9 @@ export type Database = {
           userId: string
         }
         Update: {
+          adjusterEmail?: string | null
+          adjusterName?: string | null
+          adjusterPhone?: string | null
           amount?: number
           clientEmail?: string | null
           clientName?: string
@@ -2494,6 +2537,7 @@ export type Database = {
           description: string
           id: string
           isDeleted: boolean | null
+          name: string | null
           organizationId: string
           publicId: string
           rate: number
@@ -2506,6 +2550,7 @@ export type Database = {
           description: string
           id?: string
           isDeleted?: boolean | null
+          name?: string | null
           organizationId: string
           publicId?: string
           rate?: number
@@ -2518,6 +2563,7 @@ export type Database = {
           description?: string
           id?: string
           isDeleted?: boolean | null
+          name?: string | null
           organizationId?: string
           publicId?: string
           rate?: number

@@ -108,6 +108,10 @@ const data = {
           url: "/settings/organization",
         },
         {
+          title: "Documents",
+          url: "/documents",
+        },
+        {
           title: "Forms",
           url: "/forms",
         },

@@ -24,6 +24,10 @@ const deleteDocumentSchema = z.object({
 export async function GET(req: NextRequest) {
   try {
     const [, user] = await getUser(req);
+  
+      const searchParams = req.nextUrl.searchParams;
+      const projectId = searchParams.get("projectId");
+      console.log("🚀 ~ GET ~ projectId:", projectId)
 
     const organizationId: string = user?.user_metadata.organizationId;
 
@@ -39,13 +43,22 @@ export async function GET(req: NextRequest) {
     if (org.error) throw org.error;
 
     // Get documents for the organization
-    const { data: documents, error } = await supabaseServiceRole
+    const { data: documents, error } = await (projectId ? supabaseServiceRole
       .from("Document")
       .select(`
         *
       `).order("created_at", { ascending: false })
-      .eq("orgId", org.data.id);
-
+      
+      .eq("projectId", projectId)
+      : supabaseServiceRole
+      .from("Document")
+      .select(`
+        *
+      `).order("created_at", { ascending: false })
+      .eq("orgId", org.data.id)
+      .is("projectId", null)
+    
+    )
     if (error) throw error;
 
     return NextResponse.json(documents);

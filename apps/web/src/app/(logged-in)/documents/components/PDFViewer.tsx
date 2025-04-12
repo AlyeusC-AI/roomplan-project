@@ -1,3 +1,4 @@
+'use client'
 import { Button } from '@components/ui/button';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Rnd } from 'react-rnd';
@@ -19,6 +20,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@components/ui/dialog';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface PDFViewerProps {
   currentDocument: DocumentType | null;
@@ -27,21 +31,21 @@ interface PDFViewerProps {
   setPageNumber: (page: number) => void;
   setNumPages: (pages: number | null) => void;
   isLoading: boolean;
-  setShowSignatureList: (show: boolean) => void;
-  setShowTextInput: (show: boolean) => void;
-  handleSaveDocument: () => void;
-  handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  setShowDeleteConfirm: (state: any) => void;
+  setShowSignatureList?: (show: boolean) => void;
+  setShowTextInput?: (show: boolean) => void;
+  handleSaveDocument?: () => void;
+  handleImageUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  setShowDeleteConfirm?: (state: any) => void;
   pdfContainerRef: React.RefObject<HTMLDivElement>;
   annotations: Record<number, Annotation[]>;
   setAnnotations: (annotations: Record<number, Annotation[]>) => void;
-  selectedAnnotation: number | null;
-  setSelectedAnnotation: (index: number | null) => void;
-  handleAnnotationUpdate: (index: number, updates: Partial<Annotation>) => void;
-  handleAnnotationDelete: (index: number) => void;
-  handleEditAnnotation: (index: number) => void;
+  selectedAnnotation?: number | null;
+  handleAnnotationUpdate?: (index: number, updates: Partial<Annotation>) => void;
+  handleEditAnnotation?: (index: number) => void;
   pdfError: string | null;
   setPdfError: (error: string | null) => void;
+  isViewing?: boolean;
+  setShowSignaturePad?: ( annotation: Annotation) => void;
 }
 
 export default function PDFViewer({
@@ -60,16 +64,15 @@ export default function PDFViewer({
   annotations,
   setAnnotations,
   selectedAnnotation,
-  setSelectedAnnotation,
   handleAnnotationUpdate,
-  handleAnnotationDelete,
   handleEditAnnotation,
   pdfError,
   setPdfError,
+  isViewing,
+  setShowSignaturePad,
 }: PDFViewerProps) {
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
-  const [showToolbar, setShowToolbar] = useState(true);
   const [showNameInput, setShowNameInput] = useState(false);
   const [placeholderName, setPlaceholderName] = useState('');
 
@@ -139,7 +142,7 @@ export default function PDFViewer({
                 </h3>
                 <p className="text-sm text-gray-500">Page {pageNumber} of {numPages}</p>
               </div>
-              <div className="flex items-center gap-2">
+              {!isViewing && <div className="flex items-center gap-2">
                 <input
                   type="file"
                   accept="image/*"
@@ -222,42 +225,36 @@ export default function PDFViewer({
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
-              </div>
+              </div>}
             </div>
 
             <div ref={pdfContainerRef} className="relative bg-gray-50 rounded-lg p-4">
-              <div className="absolute top-4 right-4 flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg z-50">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    const newScale = Math.min(scale + 0.1, 2);
-                    setScale(newScale);
-                  }}
-                  disabled={scale >= 2}
-                >
-                  <ZoomIn className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    const newScale = Math.max(scale - 0.1, 0.5);
-                    setScale(newScale);
-                  }}
-                  disabled={scale <= 0.5}
-                >
-                  <ZoomOut className="w-4 h-4" />
-                </Button>
-                <div className="h-6 w-px bg-gray-200" />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setRotation(prev => (prev + 90) % 360)}
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </Button>
-              </div>
+              {isViewing && (
+                <div className="absolute top-4 right-4 flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg z-50">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // Find the next client signature placeholder
+                      const allPages = Object.entries(annotations);
+                      for (const [pageNum, pageAnnotations] of allPages) {
+                        const placeholder = pageAnnotations.find(
+                          (a) => a.type === 'clientSignature' && a.isPlaceholder
+                        );
+                        if (placeholder) {
+                          setPageNumber(Number(pageNum));
+                          setShowSignaturePad && setShowSignaturePad(placeholder);
+                          break;
+                        }
+                      }
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <PenLine className="w-4 h-4" />
+                    Sign Now
+                  </Button>
+                </div>
+              )}
 
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg z-50">
                 <Button
@@ -322,18 +319,20 @@ export default function PDFViewer({
                       width: annotation.width || 200,
                       height: annotation.height || 100,
                     }}
-                    bounds="parent"
+                    bounds="parent" 
+                    disableDragging={isViewing}
                     onDragStop={(e, d) => {
-                      handleAnnotationUpdate(index, { x: d.x, y: d.y });
+                      handleAnnotationUpdate && handleAnnotationUpdate(index, { x: d.x, y: d.y });
                     }}
                     onResizeStop={(e, direction, ref, delta, position) => {
-                      handleAnnotationUpdate(index, {
+                      handleAnnotationUpdate && handleAnnotationUpdate(index, {
                         x: position.x,
                         y: position.y,
                         width: parseInt(ref.style.width),
                         height: parseInt(ref.style.height),
                       });
                     }}
+                    enableResizing={!isViewing}
                     className={`border-2 transition-all duration-200 ${
                       selectedAnnotation === index
                         ? 'border-primary shadow-lg'
@@ -342,31 +341,35 @@ export default function PDFViewer({
                     style={{ zIndex: 50 }}
                   >
                     <div className="w-full h-full relative group">
-                      <div className="absolute top-1 left-1 cursor-move text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                     
+                     {!isViewing && <div className="absolute top-1 left-1 cursor-move text-gray-400 hover:text-gray-600 transition-colors duration-200">
                         <GripVertical className="w-4 h-4" />
-                      </div>
+                      </div>}
+
                       <div className="absolute top-1 right-1 flex gap-1">
-                        {annotation.type === 'text' && (
+                        {annotation.type === 'text' && handleEditAnnotation && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleEditAnnotation(index)}
+                            onClick={() =>   handleEditAnnotation(index)}
                             className="h-6 w-6 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                           >
                             <Pencil className="w-3 h-3" />
                           </Button>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowDeleteConfirm({
-                            type: 'annotation',
-                            id: index
-                          })}
-                          className="h-6 w-6 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
+                        {setShowDeleteConfirm && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowDeleteConfirm({
+                              type: 'annotation',
+                              id: index
+                            })}
+                            className="h-6 w-6 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        )}
                       </div>
                       {annotation.type === 'signature' ? (
                         <img
@@ -381,11 +384,27 @@ export default function PDFViewer({
                           className="w-full h-full object-contain"
                         />
                       ) : annotation.type === 'clientSignature' ? (
-                        <div className="w-full h-full flex items-center justify-center p-2 border-2 border-dashed border-gray-300 rounded-lg">
-                          <div className="text-center">
-                            <PenLine className="w-6 h-6 mx-auto text-gray-400" />
-                            <p className="text-sm text-gray-500 mt-2">{annotation.name || 'Client Signature Placeholder'}</p>
-                          </div>
+                        <div 
+                          className="w-full h-full flex items-center justify-center p-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary/50 transition-colors duration-200"
+                          onClick={() => setShowSignaturePad && setShowSignaturePad(annotation)}
+                        >
+                          {annotation.isPlaceholder ? (
+                            <div className="text-center">
+                              <PenLine className="w-6 h-6 mx-auto text-gray-400" />
+                              <p className="text-sm text-gray-500 mt-2">{annotation.name || 'Client Signature Placeholder'}</p>
+                            </div>
+                          ) : (
+                            <div className="relative w-full h-full">
+                              <img
+                                src={annotation.data}
+                                alt="Signature"
+                                className="w-full h-full object-contain"
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/10 transition-opacity duration-200">
+                                <PenLine className="w-6 h-6 text-white" />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ) : annotation.type === 'text' ? (
                         <div className="w-full h-full flex items-center justify-center p-2">

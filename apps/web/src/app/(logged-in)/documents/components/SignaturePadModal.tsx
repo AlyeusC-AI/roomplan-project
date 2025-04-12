@@ -7,7 +7,7 @@ interface SignaturePadModalProps {
   setShow: (show: boolean) => void;
   signaturePadRef: React.RefObject<SignaturePad>;
   newSignatureName: string;
-  setNewSignatureName: (name: string) => void;
+  setNewSignatureName?: (name: string) => void;
   isDrawing: boolean;
   setIsDrawing: (drawing: boolean) => void;
   handleSaveSignature: () => void;
@@ -37,7 +37,7 @@ export default function SignaturePadModal({
             size="sm"
             onClick={() => {
               setShow(false);
-              setNewSignatureName('');
+              setNewSignatureName && setNewSignatureName('');
               signaturePadRef.current?.clear();
             }}
             className="hover:bg-gray-100"
@@ -46,18 +46,18 @@ export default function SignaturePadModal({
           </Button>
         </div>
         <div className="flex-1 p-6 overflow-y-auto">
-          <div className="mb-4">
+         { setNewSignatureName && <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Signature Name
             </label>
             <input
               type="text"
               value={newSignatureName}
-              onChange={(e) => setNewSignatureName(e.target.value)}
+              onChange={(e) => setNewSignatureName && setNewSignatureName(e.target.value)}
               placeholder="Enter a name for your signature"
               className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200"
             />
-          </div>
+          </div>}
           <div className="relative">
             <div className="absolute inset-0 border-2 border-dashed border-gray-300 rounded-lg pointer-events-none" />
             <SignaturePad
@@ -99,7 +99,7 @@ export default function SignaturePadModal({
             variant="outline"
             onClick={() => {
               setShow(false);
-              setNewSignatureName('');
+              setNewSignatureName && setNewSignatureName('');
               signaturePadRef.current?.clear();
             }}
           >
@@ -107,7 +107,7 @@ export default function SignaturePadModal({
           </Button>
           <Button
             onClick={handleSaveSignature}
-            disabled={!newSignatureName.trim() || signaturePadRef.current?.isEmpty()}
+            disabled={ signaturePadRef.current?.isEmpty()}
             className="bg-primary text-white hover:bg-primary/90 transition-colors duration-200"
           >
             <Save className="w-4 h-4 mr-2" />
