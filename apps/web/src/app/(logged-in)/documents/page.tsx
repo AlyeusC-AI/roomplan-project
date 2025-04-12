@@ -9,8 +9,7 @@ import SignaturePad from 'react-signature-canvas';
 import { Rnd } from 'react-rnd';
 import type { DraggableEvent, DraggableData } from 'react-draggable';
 import { FileText, Image, PenLine, Plus, Trash2, X, Type, Palette, Pencil, Save, RotateCcw, Check, AlertTriangle, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-import 'react-pdf/dist/esm/Page/TextLayer.css';
+
 
 // Components
 import DocumentList from './components/DocumentList';
@@ -21,7 +20,6 @@ import TextInputModal from './components/TextInputModal';
 import DeleteConfirmModal from './components/DeleteConfirmModal';
 import LoadingOverlay from './components/LoadingOverlay';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 interface Document {
   id: number;
   name: string;
@@ -561,13 +559,10 @@ export default function DocumentsPage() {
             annotations={annotations}
             setAnnotations={setAnnotations}
             selectedAnnotation={selectedAnnotation}
-            setSelectedAnnotation={setSelectedAnnotation}
             handleAnnotationUpdate={handleAnnotationUpdate}
-            handleAnnotationDelete={handleAnnotationDelete}
             handleEditAnnotation={handleEditAnnotation}
             pdfError={pdfError}
             setPdfError={setPdfError}
-            handleAddClientSignaturePlaceholder={handleAddClientSignaturePlaceholder}
           />
         </div>
       </div>

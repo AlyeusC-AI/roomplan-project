@@ -3,6 +3,8 @@ export interface Document {
   name: string;
   url: string;
   json: string;
+  publicId: string;
+  created_at: string;
 }
 
 export interface Annotation {
