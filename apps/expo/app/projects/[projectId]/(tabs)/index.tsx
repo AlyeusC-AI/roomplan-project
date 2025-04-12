@@ -34,6 +34,7 @@ import {
   FileText,
   Scissors,
   Ruler,
+  File,
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { projectStore } from "@/lib/state/project";
@@ -139,6 +140,12 @@ export default function ProjectOverview() {
       Icon: FileText,
       title: "Forms",
       description: "Manage project forms",
+    },
+    {
+      path: "./documents",
+      Icon: File,
+      title: "Documents",
+      description: "Manage project documents",
     },
  
     {

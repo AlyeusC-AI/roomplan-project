@@ -8,6 +8,7 @@ import {
   StickyNote,
   ClipboardList,
   Ruler,
+  FileText,
 } from "lucide-react-native";
 import { router, Tabs, useGlobalSearchParams } from "expo-router";
 import {
@@ -111,6 +112,9 @@ export default function Layout() {
           if (route.name === "scope") {
             return <Ruler size={24} color={color} />;
           }
+          if (route.name === "documents") {
+            return <FileText size={24} color={color} />;
+          }
           return null;
         },
       })}
@@ -153,7 +157,13 @@ export default function Layout() {
           title: "Forms",
           href: null,
         }}
-
+      />
+      <Tabs.Screen
+        name="documents"
+        options={{
+          title: "Documents",
+          href: null,
+        }}
       />
     </Tabs>
   );
