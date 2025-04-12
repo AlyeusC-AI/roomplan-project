@@ -22,6 +22,7 @@ import {
 } from '@components/ui/dialog';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
+import './pdfView.css';
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface PDFViewerProps {
@@ -131,7 +132,7 @@ export default function PDFViewer({
   };
 
   return (
-    <div className="col-span-9">
+    <div className="col-span-9 resp-zoom">
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         {currentDocument ? (
           <div className="space-y-6">

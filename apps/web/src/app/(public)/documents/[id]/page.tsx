@@ -139,7 +139,6 @@ export default function PublicDocumentPage() {
         pdfContainerRef={pdfContainerRef}
         annotations={annotations}
         setAnnotations={setAnnotations}
-
         pdfError={pdfError}
         setPdfError={setPdfError}
         setShowSignaturePad={setShowSignaturePad}
