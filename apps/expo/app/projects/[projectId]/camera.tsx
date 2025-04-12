@@ -6,6 +6,7 @@ import {
   StatusBar,
   Dimensions,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { Camera, PhotoFile, useCameraDevice } from "react-native-vision-camera";
 import { getConstants } from "@/utils/constants";
@@ -418,14 +419,21 @@ export default function CameraScreen() {
     setIsProcessing(true); // Show processing indicator briefly
     try {
       console.log("TAKING PICTURE");
-      const photo = await camera.current.takePhoto({
-        flash: flash,
+      const params: {
+        enableShutterSound: boolean,
+        flash?: "off" | "on" | "auto" | undefined
+      } = {
         enableShutterSound: false,
-      });
+      }
+      if (device?.hasFlash) {
+        params.flash = flash
+      }
+      const photo = await camera.current.takePhoto(params);
       processImage(photo);
     } catch (error) {
       console.error("Caught error");
       console.error(error);
+      Alert.alert('photo error! ' + error)
     }
     setIsProcessing(false); // Hide processing indicator immediately after capture
     setDisabled(false);
@@ -475,16 +483,18 @@ export default function CameraScreen() {
               />
             </View>
           )}
-          <Pressable
-            onPress={toggleFlash}
-            className="p-2 bg-black/50 rounded-full"
-          >
-            {flash === "off" ? (
-              <ZapOff size={24} color="white" />
-            ) : (
-              <Zap size={24} color={flash === "on" ? "#FFD700" : "white"} />
-            )}
-          </Pressable>
+          {device.hasFlash && (
+            <Pressable
+              onPress={toggleFlash}
+              className="p-2 bg-black/50 rounded-full"
+            >
+              {flash === "off" ? (
+                <ZapOff size={24} color="white" />
+              ) : (
+                <Zap size={24} color={flash === "on" ? "#FFD700" : "white"} />
+              )}
+            </Pressable>
+          )}
         </View>
 
         <PinchGestureHandler onGestureEvent={onPinchGesture}>
