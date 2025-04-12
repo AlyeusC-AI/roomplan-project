@@ -8,7 +8,7 @@ const config: ExpoConfig = {
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
   scheme: "servicegeek",
-  version: "1.3.2",
+  version: "1.3.3",
   runtimeVersion: "appVersion",
   updates: {
     fallbackToCacheTimeout: 0,
