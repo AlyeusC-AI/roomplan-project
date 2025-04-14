@@ -66,7 +66,7 @@ const Readings = ({
         {roomName}: Readings
       </h2>
       {roomReadings.sort((a, b) => {
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
       }).map((reading) => {
         // Create a type-safe version of the reading with all required properties
         const typedReading = reading as ReadingsWithGenericReadings & {
