@@ -87,7 +87,7 @@ export default function WorkflowPage() {
       .then((res) => res.json())
       .then((data) => {
         console.log(data);
-        setStatuses(data.data);
+        setStatuses(data.data.sort((a: Status, b: Status) => a.order - b.order));
         setFetching(false);
       });
   }, []);

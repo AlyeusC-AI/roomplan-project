@@ -141,12 +141,12 @@ export default function ProjectOverview() {
       title: "Forms",
       description: "Manage project forms",
     },
-    {
-      path: "./documents",
-      Icon: File,
-      title: "Documents",
-      description: "Manage project documents",
-    },
+    // {
+    //   path: "./documents",
+    //   Icon: File,
+    //   title: "Documents",
+    //   description: "Manage project documents",
+    // },
  
     {
       path: "./lidar/rooms",

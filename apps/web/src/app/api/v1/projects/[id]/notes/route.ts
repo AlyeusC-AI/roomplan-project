@@ -70,7 +70,7 @@ export async function POST(
       .eq("publicId", roomId)
       .single();
 
-    const result = await supabaseServiceRole
+    const { data: result, error } = await supabaseServiceRole
       .from("Notes")
       .insert({
         projectId: project.data!.id,
@@ -80,6 +80,12 @@ export async function POST(
       })
       .select("*")
       .single();
+
+    if (error) {
+      console.error(error);
+      return NextResponse.json({ status: "failed" }, { status: 500 });
+    }
+
     const { data: userData } = await supabaseServiceRole
       .from("User")
       .select("*")
@@ -87,7 +93,7 @@ export async function POST(
       .single();
 
     await supabaseServiceRole.from("NotesAuditTrail").insert({
-      notesId: result.data!.id,
+      notesId: result!.id,
       action: "created",
       body: body,
       userId: authUser.id,

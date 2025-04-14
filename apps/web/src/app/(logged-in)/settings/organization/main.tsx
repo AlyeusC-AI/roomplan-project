@@ -75,9 +75,13 @@ export default function Organization() {
     if (!selectedImage || !organization?.publicId) return;
 
     try {
-      const { error } = await client.storage
+      const { error, data } = await client.storage
         .from("org-pictures")
-        .upload(`${organization.publicId}/avatar.png`, selectedImage);
+        .upload(`${organization.publicId}/avatar.png`, selectedImage, {
+          upsert: true,
+
+        });
+        console.log("🚀 ~ uploadImageIfNecessary ~ error, data:", error, data)
 
       if (error) {
         toast.error("Error uploading image");
@@ -110,7 +114,7 @@ export default function Organization() {
         },
         body: JSON.stringify({
           name: data.name,
-          address: newAddress.address === "" ? null : newAddress,
+          address: newAddress.address === "" ? undefined : newAddress,
           phoneNumber: data.phoneNumber,
         }),
       });

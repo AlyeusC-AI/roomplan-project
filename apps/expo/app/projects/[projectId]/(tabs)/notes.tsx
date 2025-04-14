@@ -10,6 +10,9 @@ import {
   TouchableOpacity,
   Platform,
   Animated,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import {
   Building,
@@ -1211,7 +1214,7 @@ function NoteCard({
               {note.NotesAuditTrail?.[0]?.userName || "User"}
             </Text>
             <Text style={{ color: "#6B7280", fontSize: 13 }}>
-              {format(new Date(note.date), "PPp")}
+              {format(new Date(note.date), "LLLL	d, yyyy hh:mm a")}
             </Text>
           </View>
         </View>
@@ -1619,71 +1622,81 @@ export default function RoomNotes() {
     );
   }
   return (
-    <ScrollView
-      className="flex-1"
-      contentContainerStyle={{ padding: 16 }}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
     >
-      {loading ? (
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 20,
-          }}
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ padding: 16 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         >
-          <ActivityIndicator size="large" color="#1e40af" />
-          <Text style={{ marginTop: 16, color: "#6B7280" }}>
-            Loading notes...
-          </Text>
-        </View>
-      ) : notes.notes?.length === 0 ? (
-        <Empty
-          icon={<Building size={36} color="#1e40af" />}
-          secondaryIcon={<Building size={36} color="#1e40af" />}
-          title="No notes added yet"
-          description="Add a note to get started"
-          buttonText="Add Note"
-          onPress={() => router.push(`/projects/${projectId}/add-room`)}
-        />
-      ) : (
-        <>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <Text
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+
+          {loading ? (
+            <View
               style={{
-                fontSize: 24,
-                fontWeight: "bold",
-                color: "#1e293b",
-                paddingTop: 8,
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                padding: 20,
               }}
             >
-              Notes
-            </Text>
-            <AddRoomButton showText={false} size="sm" />
-          </View>
+              <ActivityIndicator size="large" color="#1e40af" />
+              <Text style={{ marginTop: 16, color: "#6B7280" }}>
+                Loading notes...
+              </Text>
+            </View>
+          ) : notes.notes?.length === 0 ? (
+            <Empty
+              icon={<Building size={36} color="#1e40af" />}
+              secondaryIcon={<Building size={36} color="#1e40af" />}
+              title="No notes added yet"
+              description="Add a note to get started"
+              buttonText="Add Note"
+              onPress={() => router.push(`/projects/${projectId}/add-room`)}
+            />
+          ) : (
+            <>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 24,
+                    fontWeight: "bold",
+                    color: "#1e293b",
+                    paddingTop: 8,
+                  }}
+                >
+                  Notes
+                </Text>
+                <AddRoomButton showText={false} size="sm" />
+              </View>
 
-          {/* Add animation wrapper for smooth transitions */}
-          <View style={{ gap: 12 }}>
-            {notes.notes?.map((room) => (
-              <RoomNoteListItem
-                key={room.publicId}
-                room={room}
-                addNote={addNote}
-              />
-            ))}
-          </View>
-        </>
-      )}
-    </ScrollView>
+              {/* Add animation wrapper for smooth transitions */}
+              <View style={{ gap: 12 }}>
+                {notes.notes?.map((room) => (
+                  <RoomNoteListItem
+                    key={room.publicId}
+                    room={room}
+                    addNote={addNote}
+                  />
+                ))}
+              </View>
+            </>
+          )}
+                </TouchableWithoutFeedback>
+
+        </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
