@@ -11,7 +11,7 @@ interface Actions {
 }
 
 export const statusStore = create<State & Actions>()(
-  persist(
+  
     (set, get) => ({
       statuses: [],
       setStatuses: (statuses) => set(() => ({ statuses })),
@@ -22,13 +22,11 @@ export const statusStore = create<State & Actions>()(
         const res = await fetch("/api/v1/projects/statuses");
         const json: Status[] = await res.json();
 
-        set(() => ({ statuses: json }));
+        set(() => ({
+          statuses: json.sort((a: Status, b: Status) => (a.order || 0) - (b.order || 0)),
+        }));
 
         return json;
       },
-    }),
-    {
-      name: "statuses",
-    }
-  )
+  })
 );

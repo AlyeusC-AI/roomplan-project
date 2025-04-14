@@ -363,7 +363,7 @@ export const KanBan = () => {
   }, []);
   const router = useRouter();
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (!over) {
@@ -380,6 +380,12 @@ export const KanBan = () => {
       router.push(`/projects/${project.publicId}/overview`);
       return;
     } else {
+      await fetch(`/api/v1/projects/${project?.publicId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          status: over.id.toString().toLowerCase(),
+        }),
+      });
       updateProject({ ...project!, status: over.id.toString().toLowerCase() });
     }
 
