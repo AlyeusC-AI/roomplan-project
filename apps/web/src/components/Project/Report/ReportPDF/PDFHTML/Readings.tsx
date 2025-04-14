@@ -65,7 +65,9 @@ const Readings = ({
       <h2 className='pdf room-section-subtitle major-break title-spacing'>
         {roomName}: Readings
       </h2>
-      {roomReadings.map((reading) => {
+      {roomReadings.sort((a, b) => {
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      }).map((reading) => {
         // Create a type-safe version of the reading with all required properties
         const typedReading = reading as ReadingsWithGenericReadings & {
           wallName: string | null;
