@@ -203,6 +203,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const [supabase,user] = await getUser(req); 
+    console.log("🚀 ~ POST ~ user:", user)
 
     if (!user) {
       return NextResponse.json(
@@ -220,12 +221,19 @@ export async function POST(req: NextRequest) {
 
     const body = SavedOptionApiPostBodySchema.parse(await req.json());
 
-    const { data: organization } = await supabase
+    const { data: organization, error: organizationError } = await supabase
       .from("Organization")
       .select("id")
       .eq("publicId", user.user_metadata.organizationId)
       .single();
-
+      console.log("🚀 ~ POST ~ organization:", organization)
+    if (organizationError) {
+      return NextResponse.json(
+        { status: "failed", reason: "Failed to get organization", error: organizationError },
+        { status: 500 }
+      );
+    }
+    
     const { data, error } = await supabase
       .from("OrganizationSavedOption")
       .insert({
