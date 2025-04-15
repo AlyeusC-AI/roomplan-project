@@ -109,8 +109,8 @@ const GenericRoomReadings = ({
       <div className='mt-4 flex flex-col gap-6'>
         <div className='mt-4 flex items-center justify-between'>
           <div>
-            <h3 className='text-lg font-medium'>Dehumidier Readings</h3>
-            <p className='text-sm text-muted-foreground'>
+            <h3 className='text-lg font-medium dark:text-white'>Dehumidier Readings</h3>
+            <p className='text-sm text-muted-foreground dark:text-gray-400'>
               Add and manage your dehumidifier readings.
             </p>
           </div>
@@ -141,6 +141,7 @@ const GenericRoomReadings = ({
         </div>
         {reading.GenericRoomReading.map((g) => (
           <GenericReadingCell
+            key={g.publicId}
             g={g}
             room={room}
             onDelete={onDelete}

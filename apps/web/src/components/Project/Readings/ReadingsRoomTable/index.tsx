@@ -111,8 +111,8 @@ const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md">
-      <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
+    <div className="rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+      <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
         <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
@@ -133,7 +133,7 @@ const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
                   value={internalRoomName}
                   onChange={(e) => setInternalRoomName(e.target.value)}
                   disabled={isSaving}
-                  className="h-8 w-48"
+                  className="h-8 w-48 dark:bg-gray-800 dark:text-white dark:border-gray-700"
                 />
                 <Button
                   onClick={() => setIsEditingTitle(false)}
@@ -153,7 +153,7 @@ const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
               </>
             ) : (
               <>
-                <h1 className="text-lg font-semibold">{room.name}</h1>
+                <h1 className="text-lg font-semibold dark:text-white">{room.name}</h1>
                 <Button
                   variant="ghost"
                   onClick={() => setIsEditingTitle(true)}
@@ -192,9 +192,9 @@ const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
         </div>
       </div>
       <Dialog open={isConfirmingDelete} onOpenChange={setIsConfirmingDelete}>
-        <DialogContent>
-          <DialogHeader>Delete Room</DialogHeader>
-          <DialogDescription>
+        <DialogContent className="dark:bg-gray-800">
+          <DialogHeader className="dark:text-white">Delete Room</DialogHeader>
+          <DialogDescription className="dark:text-gray-400">
             Permanently delete this room and everything associated within it
           </DialogDescription>
           <div className="flex items-center justify-end space-x-4">

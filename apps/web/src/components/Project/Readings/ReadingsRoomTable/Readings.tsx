@@ -67,19 +67,19 @@ const Readings = ({ room }: { room: RoomWithReadings }) => {
         return (
           <div
             key={r.publicId}
-            className="rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md"
+            className="rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
           >
             <button
               onClick={() => toggleReading(r.publicId)}
-              className="flex w-full items-center justify-between p-3 hover:bg-gray-50"
+              className="flex w-full items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
-              <span className="font-medium">
+              <span className="font-medium dark:text-white">
                 {new Date(r.date).toLocaleDateString()}
               </span>
               {isExpanded ? (
-                <ChevronDown className="h-4 w-4" />
+                <ChevronDown className="h-4 w-4 dark:text-gray-400" />
               ) : (
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 dark:text-gray-400" />
               )}
             </button>
             <div
@@ -95,10 +95,10 @@ const Readings = ({ room }: { room: RoomWithReadings }) => {
         );
       })}
       {room.RoomReading.length === 0 && (
-        <div className="flex items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8">
+        <div className="flex items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 dark:border-gray-700 dark:bg-gray-900">
           <div className="text-center">
-            <h3 className="text-lg font-medium text-gray-900">No reading data</h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">No reading data</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Click "Add Reading" to record temperature, humidity, and dehumidifer readings.
             </p>
           </div>
