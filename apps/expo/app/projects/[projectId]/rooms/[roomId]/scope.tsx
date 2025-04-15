@@ -892,6 +892,7 @@ export default function RoomScopeScreen() {
                                   toast.error("Failed to add new material");
                                 }
                               } catch (error) {
+                                console.log("🚀 ~ onAddNewOption={ ~ error:", error.response.data)
                                 console.error("Error adding new material:", error);
                                 toast.error("Failed to add new material");
                               }
