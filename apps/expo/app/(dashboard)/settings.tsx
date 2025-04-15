@@ -139,7 +139,7 @@ export default function Settings() {
           <Text style={styles.sectionTitle}>Preferences</Text>
 
           <View style={styles.sectionBody}>
-            <View style={[styles.rowWrapper, styles.rowFirst]}>
+            {/* <View style={[styles.rowWrapper, styles.rowFirst]}>
               <TouchableOpacity
                 onPress={() => {
                   // handle onPress
@@ -154,9 +154,9 @@ export default function Settings() {
 
                 <ChevronRight color="#bcbcbc" size={19} />
               </TouchableOpacity>
-            </View>
+            </View> */}
 
-            <View style={styles.rowWrapper}>
+            {/* <View style={styles.rowWrapper}>
               <TouchableOpacity
                 onPress={() => {
                   // handle onPress
@@ -171,7 +171,7 @@ export default function Settings() {
 
                 <ChevronRight color="#bcbcbc" size={19} />
               </TouchableOpacity>
-            </View>
+            </View> */}
 
             <View style={styles.rowWrapper}>
               <View style={styles.row}>

@@ -101,7 +101,7 @@ export async function POST(
     });
 
     return NextResponse.json(
-      { status: "ok", note: result.data },
+      { status: "ok", note: result },
       { status: 200 }
     );
   } catch (err) {
