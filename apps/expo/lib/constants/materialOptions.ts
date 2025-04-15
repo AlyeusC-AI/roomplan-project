@@ -13,7 +13,6 @@ export const floorOptions = [
   { label: "Carpet", value: "carpet" },
   { label: "Engineered Hardwood", value: "engineeredhardwood" },
 ];
-
 export type MaterialOption = {
   label: string;
   value: string;
