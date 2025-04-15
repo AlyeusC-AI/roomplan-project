@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { user as getUser } from "@lib/supabase/get-user";
 import { SupabaseClient, User } from "@supabase/supabase-js";
+import { supabaseServiceRole as supabase } from "@lib/supabase/admin";
+
 // Types
 export const SavedOptionType = z.enum([
   "carrier",
@@ -161,7 +163,7 @@ export async function PATCH(req: NextRequest) {
 
   try {
    
-    const [supabase,user] = await getUser(req); 
+    const [_,user] = await getUser(req); 
     if (!user) {
       return NextResponse.json(
         { status: "failed", reason: "Unauthorized" },
@@ -202,8 +204,7 @@ export async function PATCH(req: NextRequest) {
 export async function POST(req: NextRequest) {
 
   try {
-    const [supabase,user] = await getUser(req); 
-    console.log("🚀 ~ POST ~ user:", user)
+    const [_,user] = await getUser(req); 
 
     if (!user) {
       return NextResponse.json(
@@ -264,7 +265,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
 
   try {
-    const [supabase,user] = await getUser(req); 
+    const [_,user] = await getUser(req); 
 
     if (!user) {
       return NextResponse.json(
@@ -296,7 +297,7 @@ export async function DELETE(req: NextRequest) {
 export async function GET(req: NextRequest) {
 
   try {
-    const [supabase,user] = await getUser(req); 
+    const [_,user] = await getUser(req); 
 
     if (!user) {
       return NextResponse.json(
