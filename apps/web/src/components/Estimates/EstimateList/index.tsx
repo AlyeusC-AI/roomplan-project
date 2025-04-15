@@ -14,10 +14,21 @@ import {
   Trash2,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
-import { Estimate, estimatesStore } from "@atoms/estimates";
-import { getEstimates, convertEstimateToInvoice, updateEstimateStatus, deleteEstimate } from "@/services/api/estimates";
+import { estimatesStore } from "@atoms/estimates";
+import {
+  getEstimates,
+  convertEstimateToInvoice,
+  updateEstimateStatus,
+  deleteEstimate,
+} from "@/services/api/estimates";
 import { Button } from "@components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,15 +56,15 @@ import {
   AlertDialogTitle,
 } from "@components/ui/alert-dialog";
 import { Input } from "@components/ui/input";
-import CreateNewEstimate from "./new";
 import { Badge } from "@components/ui/badge";
-import { fetchEstimates } from "@/lib/estimates";
 
 const statusDisplay = {
   draft: { label: "Draft", color: "bg-gray-400" },
   sent: { label: "Sent", color: "bg-blue-400" },
   approved: { label: "Approved", color: "bg-green-400" },
   rejected: { label: "Rejected", color: "bg-red-400" },
+  cancelled: { label: "Cancelled", color: "bg-gray-600" },
+  expired: { label: "Expired", color: "bg-orange-400" },
 };
 
 const EstimateList = () => {
@@ -61,16 +72,15 @@ const EstimateList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [estimateToDelete, setEstimateToDelete] = useState<string | null>(null);
-  const [showNewEstimateDialog, setShowNewEstimateDialog] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
-  
-  const { 
-    estimates, 
-    setEstimates, 
+
+  const {
+    estimates,
+    setEstimates,
     deleteEstimate: removeEstimateFromStore,
     updateEstimate: updateEstimateInStore,
-    setLoadingEstimates
+    setLoadingEstimates,
   } = estimatesStore((state) => state);
 
   // Filtered estimates
@@ -80,7 +90,8 @@ const EstimateList = () => {
     return (
       estimate.number.toLowerCase().includes(search) ||
       estimate.clientName.toLowerCase().includes(search) ||
-      (estimate.projectName && estimate.projectName.toLowerCase().includes(search))
+      (estimate.projectName &&
+        estimate.projectName.toLowerCase().includes(search))
     );
   });
 
@@ -93,7 +104,7 @@ const EstimateList = () => {
         if (result.error) {
           toast.error(result.error);
         } else if (result.data) {
-          setEstimates(result.data);
+          setEstimates(result.data, 0);
         }
       } catch (error) {
         console.error("Error loading estimates:", error);
@@ -112,7 +123,7 @@ const EstimateList = () => {
 
     try {
       const result = await deleteEstimate(estimateToDelete);
-      
+
       if (result.error) {
         toast.error(result.error);
       } else {
@@ -129,11 +140,14 @@ const EstimateList = () => {
   };
 
   // Handle updating estimate status
-  const handleUpdateStatus = async (estimateId: string, newStatus: Estimate["status"]) => {
+  const handleUpdateStatus = async (
+    estimateId: string,
+    newStatus: Estimate["status"]
+  ) => {
     setIsUpdatingStatus(true);
     try {
       const result = await updateEstimateStatus(estimateId, newStatus);
-      
+
       if (result.error) {
         toast.error(result.error);
       } else if (result.data) {
@@ -153,7 +167,7 @@ const EstimateList = () => {
     setIsConverting(true);
     try {
       const result = await convertEstimateToInvoice(estimateId);
-      
+
       if (result.error) {
         toast.error(result.error);
       } else if (result.data) {
@@ -182,64 +196,66 @@ const EstimateList = () => {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardHeader className='flex flex-row items-center justify-between pb-2'>
           <div>
             <CardTitle>Estimates</CardTitle>
             <CardDescription>
               Manage your estimates and convert them to invoices.
             </CardDescription>
           </div>
-          <Button onClick={() => setShowNewEstimateDialog(true)}>
+          <Button onClick={() => router.push('/estimates/new')}>
             New Estimate
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
+          <div className='mb-4'>
             <Input
-              placeholder="Search estimates..."
+              placeholder='Search estimates...'
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
+              className='max-w-sm'
             />
           </div>
 
-          <div className="rounded-md border">
+          <div className='rounded-md border'>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Number</TableHead>
                   <TableHead>Client</TableHead>
                   <TableHead>Project</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className='text-right'>Amount</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className='text-right'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredEstimates.length === 0 ? (
                   <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="h-24 text-center"
-                    >
+                    <TableCell colSpan={7} className='h-24 text-center'>
                       No estimates found.
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredEstimates.map((estimate) => (
-                    <TableRow key={estimate.publicId}>
-                      <TableCell className="font-medium">
+                    <TableRow
+                      key={estimate.publicId}
+                      className='cursor-pointer'
+                      onClick={() => viewEstimate(estimate.publicId)}
+                    >
+                      <TableCell className='font-medium'>
                         <Link
                           href={`/estimates/${estimate.publicId}`}
-                          className="text-blue-600 hover:underline"
+                          className='text-blue-600 hover:underline'
+                          onClick={(e) => e.stopPropagation()}
                         >
                           {estimate.number}
                         </Link>
                       </TableCell>
                       <TableCell>{estimate.clientName}</TableCell>
                       <TableCell>{estimate.projectName || "-"}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className='text-right'>
                         ${estimate.amount.toFixed(2)}
                       </TableCell>
                       <TableCell>
@@ -252,77 +268,117 @@ const EstimateList = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <span title={format(new Date(estimate.estimateDate), "PPP")}>
-                          {formatDistanceToNow(new Date(estimate.estimateDate), {
-                            addSuffix: true,
-                          })}
+                        <span
+                          title={format(
+                            new Date(estimate.estimateDate ?? new Date()),
+                            "PPP"
+                          )}
+                        >
+                          {formatDistanceToNow(
+                            new Date(estimate.estimateDate ?? new Date()),
+                            {
+                              addSuffix: true,
+                            }
+                          )}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className='text-right'>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
-                              variant="ghost"
-                              className="h-8 w-8 p-0"
+                              variant='ghost'
+                              className='size-8 p-0'
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              <span className="sr-only">Open menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
+                              <span className='sr-only'>Open menu</span>
+                              <MoreHorizontal className='size-4' />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align='end'>
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => viewEstimate(estimate.publicId)}>
-                              <Eye className="mr-2 h-4 w-4" />
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                viewEstimate(estimate.publicId);
+                              }}
+                            >
+                              <Eye className='mr-2 size-4' />
                               View
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => editEstimate(estimate.publicId)}>
-                              <Edit className="mr-2 h-4 w-4" />
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                editEstimate(estimate.publicId);
+                              }}
+                            >
+                              <Edit className='mr-2 size-4' />
                               Edit
                             </DropdownMenuItem>
                             {estimate.status === "draft" && (
-                              <DropdownMenuItem 
-                                onClick={() => handleUpdateStatus(estimate.publicId, "sent")}
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateStatus(estimate.publicId, "sent");
+                                }}
                                 disabled={isUpdatingStatus}
                               >
-                                <SendHorizontal className="mr-2 h-4 w-4" />
+                                <SendHorizontal className='mr-2 size-4' />
                                 Mark as Sent
                               </DropdownMenuItem>
                             )}
-                            {(estimate.status === "draft" || estimate.status === "sent") && (
-                              <DropdownMenuItem 
-                                onClick={() => handleUpdateStatus(estimate.publicId, "approved")}
+                            {(estimate.status === "draft" ||
+                              estimate.status === "sent") && (
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateStatus(
+                                    estimate.publicId,
+                                    "approved"
+                                  );
+                                }}
                                 disabled={isUpdatingStatus}
                               >
-                                <CheckCircle2 className="mr-2 h-4 w-4" />
+                                <CheckCircle2 className='mr-2 size-4' />
                                 Mark as Approved
                               </DropdownMenuItem>
                             )}
-                            {(estimate.status === "draft" || estimate.status === "sent") && (
-                              <DropdownMenuItem 
-                                onClick={() => handleUpdateStatus(estimate.publicId, "rejected")}
+                            {(estimate.status === "draft" ||
+                              estimate.status === "sent") && (
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateStatus(
+                                    estimate.publicId,
+                                    "rejected"
+                                  );
+                                }}
                                 disabled={isUpdatingStatus}
                               >
-                                <CircleDashed className="mr-2 h-4 w-4" />
+                                <CircleDashed className='mr-2 size-4' />
                                 Mark as Rejected
                               </DropdownMenuItem>
                             )}
                             {estimate.status === "approved" && (
-                              <DropdownMenuItem 
-                                onClick={() => handleConvertToInvoice(estimate.publicId)}
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleConvertToInvoice(estimate.publicId);
+                                }}
                                 disabled={isConverting}
                               >
-                                <Copy className="mr-2 h-4 w-4" />
+                                <Copy className='mr-2 size-4' />
                                 Convert to Invoice
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem 
-                              onClick={() => {
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setEstimateToDelete(estimate.publicId);
                                 setShowDeleteAlert(true);
                               }}
-                              className="text-red-600"
+                              className='text-red-600'
                             >
-                              <Trash2 className="mr-2 h-4 w-4" />
+                              <Trash2 className='mr-2 size-4' />
                               Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -351,21 +407,15 @@ const EstimateList = () => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteEstimate}
-              className="bg-red-600 hover:bg-red-700"
+              className='bg-red-600 hover:bg-red-700'
             >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* New Estimate Dialog */}
-      <CreateNewEstimate
-        open={showNewEstimateDialog}
-        setOpen={setShowNewEstimateDialog}
-      />
     </>
   );
 };
 
-export default EstimateList; 
+export default EstimateList;

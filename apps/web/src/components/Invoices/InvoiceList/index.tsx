@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@components/ui/tabs";
 
-import CreateNewInvoice from "./new";
-
 import { useDebouncedCallback } from "use-debounce";
 import { userInfoStore } from "@atoms/user-info";
 import { invoicesStore } from "@atoms/invoices";
@@ -54,7 +52,6 @@ import {
 export default function InvoiceList() {
   const { totalInvoices, setInvoices } = invoicesStore((state) => state);
   const { user } = userInfoStore((state) => state);
-  const [isCreatingNewInvoice, setIsCreatingNewInvoice] = useState(false);
   const [loading, setLoading] = useState(true);
   const search = useSearchParams();
   const router = useRouter();
@@ -115,7 +112,7 @@ export default function InvoiceList() {
             </p>
           </div>
           <div className='ml-auto flex min-w-[100px] flex-col space-y-4'>
-            <Button onClick={() => setIsCreatingNewInvoice((i) => !i)}>
+            <Button onClick={() => router.push('/invoices/new')}>
               New Invoice
             </Button>
           </div>
@@ -177,10 +174,6 @@ export default function InvoiceList() {
           </div>
         )}
       </div>
-      <CreateNewInvoice
-        open={isCreatingNewInvoice}
-        setOpen={setIsCreatingNewInvoice}
-      />
     </>
   );
 }

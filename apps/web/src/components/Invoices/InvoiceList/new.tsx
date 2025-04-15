@@ -70,6 +70,10 @@ const CreateNewInvoice = ({
   const [taxRate, setTaxRate] = useState(0);
   const [applyTax, setApplyTax] = useState(false);
   const [showSavedItems, setShowSavedItems] = useState(false);
+  const [showAdjuster, setShowAdjuster] = useState(false);
+  const [adjusterName, setAdjusterName] = useState("");
+  const [adjusterEmail, setAdjusterEmail] = useState("");
+  const [adjusterPhone, setAdjusterPhone] = useState("");
 
   const router = useRouter();
   const { addInvoice } = invoicesStore((state) => state);
@@ -193,6 +197,20 @@ const CreateNewInvoice = ({
         setClientEmail(selectedProject.clientEmail);
       }
 
+      // Auto-fill adjuster information if available
+      if (selectedProject.adjusterName) {
+        setAdjusterName(selectedProject.adjusterName);
+        setShowAdjuster(true);
+      }
+
+      if (selectedProject.adjusterEmail) {
+        setAdjusterEmail(selectedProject.adjusterEmail);
+      }
+
+      if (selectedProject.adjusterPhone) {
+        setAdjusterPhone(selectedProject.adjusterPhone);
+      }
+
       // Attempt to auto-fill line items if this is a new invoice with empty descriptions
       if (lineItems.length === 1 && !lineItems[0].description) {
         // Check if the project has any default services or rates we can use
@@ -241,6 +259,9 @@ const CreateNewInvoice = ({
           tax: applyTax ? taxRate : undefined,
           amount: calculateTotal(),
           deposit: showDeposit ? depositPercentage : undefined,
+          adjusterName: showAdjuster ? adjusterName : undefined,
+          adjusterEmail: showAdjuster ? adjusterEmail : undefined,
+          adjusterPhone: showAdjuster ? adjusterPhone : undefined,
           status: "draft" as const,
         },
         invoiceItems: lineItems.map((item) => ({
@@ -530,10 +551,89 @@ const CreateNewInvoice = ({
                       <Label htmlFor='apply-tax'>Apply</Label>
                     </div>
                   </div>
+
+                  <div className='grid grid-cols-4 items-center gap-4'>
+                    <Label htmlFor='toggle-adjuster' className='text-right'>
+                      Insurance Adjuster
+                    </Label>
+                    <div className='col-span-3 flex items-center'>
+                      <Switch
+                        id='toggle-adjuster'
+                        checked={showAdjuster}
+                        onCheckedChange={setShowAdjuster}
+                      />
+                      <Label htmlFor='toggle-adjuster' className='ml-2'>
+                        {showAdjuster ? "Shown" : "Hidden"}
+                      </Label>
+                    </div>
+                  </div>
+
+                  {showAdjuster && (
+                    <>
+                      <div className='grid grid-cols-4 items-center gap-4'>
+                        <Label htmlFor='adjuster-name' className='text-right'>
+                          Adjuster Name
+                        </Label>
+                        <Input
+                          id='adjuster-name'
+                          value={adjusterName}
+                          onChange={(e) => setAdjusterName(e.target.value)}
+                          className='col-span-3'
+                        />
+                      </div>
+
+                      <div className='grid grid-cols-4 items-center gap-4'>
+                        <Label htmlFor='adjuster-email' className='text-right'>
+                          Adjuster Email
+                        </Label>
+                        <Input
+                          id='adjuster-email'
+                          type='email'
+                          value={adjusterEmail}
+                          onChange={(e) => setAdjusterEmail(e.target.value)}
+                          className='col-span-3'
+                        />
+                      </div>
+
+                      <div className='grid grid-cols-4 items-center gap-4'>
+                        <Label htmlFor='adjuster-phone' className='text-right'>
+                          Adjuster Phone
+                        </Label>
+                        <Input
+                          id='adjuster-phone'
+                          value={adjusterPhone}
+                          onChange={(e) => setAdjusterPhone(e.target.value)}
+                          className='col-span-3'
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
               <div className='mt-4'>
+                <div className='mb-2 flex justify-between'>
+                  <h3 className='text-lg font-semibold'>Line Items</h3>
+                  <div className='flex space-x-2'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      type='button'
+                      onClick={() => setShowSavedItems(true)}
+                    >
+                      Add from Saved Items
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      type='button'
+                      onClick={addLineItem}
+                    >
+                      <Plus className='mr-1 size-4' /> Add Line Item
+                    </Button>
+                  </div>
+                </div>
+
                 <div className='rounded-md border p-4'>
                   <div className='mb-2 grid grid-cols-12 gap-2 text-sm font-semibold'>
                     <div className='col-span-6'>Description</div>
@@ -581,7 +681,7 @@ const CreateNewInvoice = ({
                           value={item.quantity || ""}
                           onChange={(e) =>
                             updateLineItem(
-                              item.id,
+                              item.id!,
                               "quantity",
                               parseFloat(e.target.value) || 0
                             )
@@ -605,24 +705,6 @@ const CreateNewInvoice = ({
                       </div>
                     </div>
                   ))}
-
-                  <Button
-                    type='button'
-                    variant='outline'
-                    onClick={addLineItem}
-                    className='mt-2 w-full'
-                  >
-                    <Plus className='mr-2 size-4' /> Add Line Item
-                  </Button>
-
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    onClick={() => setShowSavedItems(true)}
-                    className='mt-2 w-full'
-                  >
-                    Add from Saved Items
-                  </Button>
                 </div>
               </div>
 
