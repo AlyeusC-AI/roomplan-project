@@ -469,17 +469,6 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
           </TouchableOpacity>
         </View>
       )}
-      {showROomTypeSelect && (
-        <LidarRoomTypeSelect
-          onSelect={(roomType) => {
-            setRoomNames(roomNames.concat(roomType))
-            setShowScanner(true)
-            setFinish(-1)
-            setShowRoomTypeSelect(false)
-          }}
-          onCancel={() => { setShowRoomTypeSelect(false) }}
-        />
-      )}
 
       <View className="flex-row justify-around w-full mt-10">
         <TouchableOpacity 
@@ -508,6 +497,17 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
           </Text>
         </TouchableOpacity>
       </View>
+      {showROomTypeSelect && (
+        <LidarRoomTypeSelect
+          onSelect={(roomType) => {
+            setRoomNames(roomNames.concat(roomType))
+            setShowScanner(true)
+            setFinish(-1)
+            setShowRoomTypeSelect(false)
+          }}
+          onCancel={() => { setShowRoomTypeSelect(false) }}
+        />
+      )}
     </SafeAreaView>
   );
 };
