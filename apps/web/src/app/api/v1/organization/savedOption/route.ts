@@ -2,7 +2,8 @@ import { z } from "zod";
 import { createClient } from "@lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
-
+import { user as getUser } from "@lib/supabase/get-user";
+import { User } from "@supabase/supabase-js";
 // Types
 export const SavedOptionType = z.enum([
   "carrier",
@@ -53,17 +54,18 @@ async function updateSavedOption(
   userId: string,
   publicId: string,
   label: string,
-  value?: string
+  value?: string,
+  user?: User
 ) {
   const supabase = await createClient();
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user?.user_metadata?.organizationId) {
+
+  if (!user?.user_metadata?.organizationId) {
     return { failed: true, error: "No organization ID found" };
   }
   const { data: organization } = await supabase
     .from("Organization")
     .select("id")
-    .eq("publicId", user.user.user_metadata.organizationId)
+    .eq("publicId", user.user_metadata.organizationId)
     .single();
 
   const { data, error } = await supabase
@@ -155,12 +157,10 @@ function handleApiError(error: unknown) {
 
 // API Routes
 export async function PATCH(req: NextRequest) {
-  const supabase = await createClient();
 
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+   
+    const [_,user] = await getUser(req); 
     if (!user) {
       return NextResponse.json(
         { status: "failed", reason: "Unauthorized" },
@@ -173,7 +173,8 @@ export async function PATCH(req: NextRequest) {
       user.id,
       body.publicId,
       body.label,
-      body.value
+      body.value,
+      user
     );
 
     if (result.failed) {
@@ -200,9 +201,8 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient();
 
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const [_,user] = await getUser(req); 
+
     if (!user) {
       return NextResponse.json(
         { status: "failed", reason: "Unauthorized" },
@@ -252,12 +252,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const supabase = await createClient();
 
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const [_,user] = await getUser(req); 
+
     if (!user) {
       return NextResponse.json(
         { status: "failed", reason: "Unauthorized" },
@@ -286,12 +284,10 @@ export async function DELETE(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const supabase = await createClient();
 
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const [_,user] = await getUser(req); 
+
     if (!user) {
       return NextResponse.json(
         { status: "failed", reason: "Unauthorized" },

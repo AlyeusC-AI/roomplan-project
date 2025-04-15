@@ -30,6 +30,8 @@ import { StatusBar } from "expo-status-bar";
 import { BlurView } from "expo-blur";
 import { api } from "@/lib/api";
 import { useDebounce } from "@/utils/debounce";
+import { MaterialSelect } from "@/components/ui/material-select";
+import { wallOptions, floorOptions } from "@/lib/constants/materialOptions";
 
 // Constants for area types and equipment
 const areaAffectedTitle = {
@@ -864,14 +866,36 @@ export default function RoomScopeScreen() {
                               ? "Floor Material"
                               : "Material"}
                           </Text>
-                          <TextInput
-                            style={styles.input}
-                            placeholder="Enter material type"
+                          <MaterialSelect
                             value={getRoomFieldValue(area, "material")}
-                            onChangeText={(text) =>
-                              handleInputChange("material", text, area.type, area.id)
+                            onValueChange={(value) =>
+                              handleInputChange("material", value, area.type, area.id)
                             }
-                            placeholderTextColor="#94a3b8"
+                            options={area.type === "wall" ? wallOptions : floorOptions}
+                            title={area.type === "wall" ? "Wall Material" : "Floor Material"}
+                            onAddNewOption={async (label) => {
+                              const value = label.toLowerCase().replace(/\W/g, "");
+                              const newOption = { label, value };
+                              
+                              // Save the new option to the server
+                              try {
+                                const res = await api.post("/api/v1/organization/savedOption", {
+                                  label,
+                                  type: area.type === "wall" ? "wallMaterial" : "floorMaterial",
+                                });
+                                
+                                if (res.status === 200) {
+                                  // Update the local state with the new value
+                                  handleInputChange("material", value, area.type, area.id);
+                                  toast.success("New material added");
+                                } else {
+                                  toast.error("Failed to add new material");
+                                }
+                              } catch (error) {
+                                console.error("Error adding new material:", error);
+                                toast.error("Failed to add new material");
+                              }
+                            }}
                           />
                         </View>
 
