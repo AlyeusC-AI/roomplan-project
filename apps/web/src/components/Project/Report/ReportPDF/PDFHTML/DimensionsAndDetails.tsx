@@ -50,7 +50,8 @@ const DimensionsAndDetails = ({
         </tr>
         <tr>
           <PDFTableTd>Total Sqft</PDFTableTd>
-          <PDFTableTd>{room.totalSqft || "--"}</PDFTableTd>
+          {/* <PDFTableTd>{room.totalSqft || "--"}</PDFTableTd> */}
+          <PDFTableTd>{room.width * room.length || "--"}</PDFTableTd>
           <PDFTableTd>sqft</PDFTableTd>
         </tr>
         <tr>
