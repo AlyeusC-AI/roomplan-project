@@ -87,9 +87,11 @@ export type Database = {
           cause: string | null
           createdAt: string
           date: string
+          extraFields: Json | null
           id: number
           isDeleted: boolean
           material: string | null
+          measurementType: string | null
           projectId: number
           publicId: string
           roomId: number
@@ -103,9 +105,11 @@ export type Database = {
           cause?: string | null
           createdAt?: string
           date?: string
+          extraFields?: Json | null
           id?: number
           isDeleted?: boolean
           material?: string | null
+          measurementType?: string | null
           projectId: number
           publicId: string
           roomId: number
@@ -119,9 +123,11 @@ export type Database = {
           cause?: string | null
           createdAt?: string
           date?: string
+          extraFields?: Json | null
           id?: number
           isDeleted?: boolean
           material?: string | null
+          measurementType?: string | null
           projectId?: number
           publicId?: string
           roomId?: number
@@ -2343,6 +2349,7 @@ export type Database = {
           dehuReading: string | null
           doors: number | null
           equipmentUsed: string[] | null
+          equipmentUsedQuantity: Json | null
           extendedWalls: Json | null
           floorName: string | null
           gpp: string | null
@@ -2370,6 +2377,7 @@ export type Database = {
           dehuReading?: string | null
           doors?: number | null
           equipmentUsed?: string[] | null
+          equipmentUsedQuantity?: Json | null
           extendedWalls?: Json | null
           floorName?: string | null
           gpp?: string | null
@@ -2397,6 +2405,7 @@ export type Database = {
           dehuReading?: string | null
           doors?: number | null
           equipmentUsed?: string[] | null
+          equipmentUsedQuantity?: Json | null
           extendedWalls?: Json | null
           floorName?: string | null
           gpp?: string | null
