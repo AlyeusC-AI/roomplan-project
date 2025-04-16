@@ -2017,6 +2017,7 @@ export type Database = {
           lng: string
           location: string
           lossType: string
+          mainImage: string | null
           managerName: string
           name: string
           organizationId: number
@@ -2055,6 +2056,7 @@ export type Database = {
           lng?: string
           location?: string
           lossType?: string
+          mainImage?: string | null
           managerName?: string
           name: string
           organizationId: number
@@ -2093,6 +2095,7 @@ export type Database = {
           lng?: string
           location?: string
           lossType?: string
+          mainImage?: string | null
           managerName?: string
           name?: string
           organizationId?: number
