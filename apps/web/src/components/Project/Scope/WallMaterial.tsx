@@ -9,6 +9,7 @@ export default function WallMaterial({
   defaultValue: string;
   onChange: (s: string) => void;
 }) {
+  console.log("🚀 ~ defaultValue:", defaultValue)
   const savedOptions = savedOptionsStore((state) => state);
   return (
     <div className='col-span-1'>
@@ -22,10 +23,10 @@ export default function WallMaterial({
         }}
         defaultValue={
           defaultValue
-            ? wallOptions.find(
+            ? savedOptions.wallMaterial.find(
                 (material) =>
-                  material.value === defaultValue ||
-                  material.label === defaultValue
+                  material.value == defaultValue ||
+                  material.label == defaultValue
               )
             : undefined
         }

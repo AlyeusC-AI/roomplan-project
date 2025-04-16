@@ -1,4 +1,4 @@
-import React, { useId, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import { OptionProps } from "react-select/dist/declarations/src";
 import { XIcon } from "lucide-react";
 import clsx from "clsx";
@@ -84,6 +84,9 @@ const CreationSelect = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [value, setValue] = useState<Option | undefined>(defaultValue);
+  useEffect(() => {
+    setValue(defaultValue);
+  }, [defaultValue]);
   const reactSelectId = useId();
   const handleCreate = async (inputValue: string) => {
     setIsLoading(true);

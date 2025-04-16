@@ -224,7 +224,32 @@ export default function Scope() {
                               <div className='grid gap-3'>
                                 <div className='rounded-md border border-border/10 bg-muted/5 p-2.5'>
                                   <div className='w-full'>
-                                    {areaType === "wall" ? (
+                                    {areaType === "wall"
+                                      ? "Wall Material"
+                                      : areaType === "floor"
+                                      ? "Floor Material"
+                                      : "Material"}
+                                    <Input
+                                        className='w-full pr-12 text-sm'
+                                        defaultValue={
+                                          areaAffected.material || ""
+                                        }
+                                        placeholder='Enter value'
+                                        type='text'
+                                        onChange={(e) => {
+                                          setHasChanges(true);
+                                          saveAffectedArea(
+                                            {
+                                              material: e.target.value,
+                                              id: areaAffected.id,
+                                            },
+                                            areaType,
+                                            room.publicId
+                                          );
+                                        }}
+                                        name='material'
+                                      />
+                                    {/* {areaType === "wall" ? (
                                       <WallMaterial
                                         defaultValue={
                                           areaAffected.material || ""
@@ -250,7 +275,7 @@ export default function Scope() {
                                           )
                                         }
                                       />
-                                    ) : null}
+                                    ) : null} */}
                                   </div>
                                 </div>
 

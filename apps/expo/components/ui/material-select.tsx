@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { View, TouchableOpacity, Modal, TextInput, FlatList, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, TouchableOpacity, Modal, TextInput, FlatList, StyleSheet, Alert } from 'react-native';
 import { Text } from './text';
-import { ChevronDown, Plus, Search } from 'lucide-react-native';
+import { ChevronDown, Plus, Search, Pencil, Trash2 } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import type { MaterialOption } from '@/lib/constants/materialOptions';
+import { savedOptionsStore } from '@/lib/state/saved-options';
+import { api } from '@/lib/api';
 
 interface MaterialSelectProps {
   value: string;
@@ -11,7 +13,7 @@ interface MaterialSelectProps {
   placeholder?: string;
   options: MaterialOption[];
   title: string;
-  onAddNewOption?: (label: string) => void;
+  type: 'wallMaterial' | 'floorMaterial';
 }
 
 export function MaterialSelect({ 
@@ -20,26 +22,132 @@ export function MaterialSelect({
   placeholder = "Select material", 
   options,
   title,
-  onAddNewOption
+  type
 }: MaterialSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddNew, setShowAddNew] = useState(false);
   const [newOptionLabel, setNewOptionLabel] = useState('');
+  const [editingOption, setEditingOption] = useState<MaterialOption | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { createOption, deleteOption, updateOption, setSavedOptions, wallMaterial, floorMaterial } = savedOptionsStore();
   
-  const selectedOption = options.find(opt => opt.value === value);
+  const selectedOption = type == "wallMaterial" ? wallMaterial.find(opt => opt.value === value) : floorMaterial.find(opt => opt.value === value);
   
-  const filteredOptions = options.filter(option =>
-    option.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+//   const filteredOptions = options.filter(option =>
+//     option.label.toLowerCase().includes(searchQuery.toLowerCase())
+//   );
 
-  const handleAddNewOption = () => {
-    if (newOptionLabel.trim() && onAddNewOption) {
-      onAddNewOption(newOptionLabel.trim());
-      setNewOptionLabel('');
-      setShowAddNew(false);
-      setIsOpen(false);
+  useEffect(() => {
+    fetchSavedOptions();
+  }, []);
+
+  const fetchSavedOptions = async () => {
+    try {
+      const {data } = await api.get(`/api/v1/organization/savedOption?type=${type}`);
+
+        console.log("🚀 ~ fetchSavedOptions ~ data:", data)
+        if (data?.status == "ok" && Array.isArray(data.options)) {
+          setSavedOptions({
+            [type]: [...options, ...data.options],
+          });
+        }
+      
+    } catch (error) {
+      console.error("Error fetching saved options:", error);
     }
+  };
+
+  const handleAddNewOption = async () => {
+    if (!newOptionLabel.trim()) return;
+    
+    setIsLoading(true);
+    try {
+      const value = newOptionLabel.trim().toLowerCase().replace(/\W/g, "");
+      const newOption = { label: newOptionLabel.trim(), value };
+      
+      const {data } = await api.post("/api/v1/organization/savedOption", {
+        label: newOptionLabel.trim(),
+        type,
+      });
+
+     
+        if (data.status == "ok" && data.option) {
+          createOption(data.option, type);
+          onValueChange(value);
+          setNewOptionLabel('');
+          setShowAddNew(false);
+          setIsOpen(false);
+        }
+      
+    } catch (error) {
+      console.error("Error adding new option:", error);
+      Alert.alert("Error", "Failed to add new material");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEditOption = async (option: MaterialOption) => {
+    setIsLoading(true);
+    try {
+      const {data } = await api.patch("/api/v1/organization/savedOption", {
+      
+          publicId: option.publicId,
+          label: option.label,
+          type,
+        
+      });
+
+      if (data?.status == "ok") {
+        updateOption(option, type);
+        setEditingOption(null);
+      }
+    } catch (error) {
+      console.error("Error updating option:", error);
+      Alert.alert("Error", "Failed to update material");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteOption = async (option: MaterialOption) => {
+    if (!option.publicId) return;
+    
+    Alert.alert(
+      "Delete Material",
+      "Are you sure you want to delete this material?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            setIsLoading(true);
+            try {
+              const {data } = await api.delete(`/api/v1/organization/savedOption`, {
+                data: {
+                  publicId: option.publicId,
+                },
+              });
+
+              if (data?.status == "ok") {
+                deleteOption(option, type);
+                  if (value === option.value) {
+                    onValueChange("");
+                  }
+                
+              }
+            } catch (error) {
+              console.error("Error deleting option:", error);
+              Alert.alert("Error", "Failed to delete material");
+            } finally {
+              setIsLoading(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -88,31 +196,80 @@ export function MaterialSelect({
             </View>
 
             <FlatList
-              data={filteredOptions}
+              data={type == "wallMaterial" ? wallMaterial : floorMaterial}
               keyExtractor={(item) => item.value}
               renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.optionItem,
-                    value === item.value && styles.selectedOption
-                  ]}
-                  onPress={() => {
-                    onValueChange(item.value);
-                    setIsOpen(false);
-                  }}
-                >
-                  <Text style={[
-                    styles.optionText,
-                    value === item.value && styles.selectedOptionText
-                  ]}>
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
+                <View style={styles.optionItemContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.optionItem,
+                      value === item.value && styles.selectedOption
+                    ]}
+                    onPress={() => {
+                      onValueChange(item.value);
+                      setIsOpen(false);
+                    }}
+                  >
+                    <Text style={[
+                      styles.optionText,
+                      value === item.value && styles.selectedOptionText
+                    ]}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                  {item.publicId && (
+                    <View style={styles.optionActions}>
+                      <TouchableOpacity
+                        onPress={() => setEditingOption(item)}
+                        style={styles.actionButton}
+                      >
+                        <Pencil size={16} color="#64748b" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => handleDeleteOption(item)}
+                        style={styles.actionButton}
+                      >
+                        <Trash2 size={16} color="#ef4444" />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
               )}
               style={styles.optionsList}
             />
 
-            {onAddNewOption && (
+            {editingOption ? (
+              <View style={styles.addNewForm}>
+                <TextInput
+                  style={styles.addNewInput}
+                  placeholder="Edit material name"
+                  value={editingOption.label}
+                  onChangeText={(text) => setEditingOption({ ...editingOption, label: text })}
+                  placeholderTextColor="#94a3b8"
+                  autoFocus
+                />
+                <View style={styles.addNewButtons}>
+                  <TouchableOpacity 
+                    onPress={() => setEditingOption(null)}
+                    style={styles.cancelButton}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={() => handleEditOption(editingOption)}
+                    style={[
+                      styles.addButton,
+                      !editingOption.label.trim() && styles.addButtonDisabled
+                    ]}
+                    disabled={!editingOption.label.trim() || isLoading}
+                  >
+                    <Text style={styles.addButtonText}>
+                      {isLoading ? "Saving..." : "Save"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
               <View style={styles.addNewSection}>
                 {showAddNew ? (
                   <View style={styles.addNewForm}>
@@ -137,9 +294,11 @@ export function MaterialSelect({
                           styles.addButton,
                           !newOptionLabel.trim() && styles.addButtonDisabled
                         ]}
-                        disabled={!newOptionLabel.trim()}
+                        disabled={!newOptionLabel.trim() || isLoading}
                       >
-                        <Text style={styles.addButtonText}>Add</Text>
+                        <Text style={styles.addButtonText}>
+                          {isLoading ? "Adding..." : "Add"}
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -204,7 +363,14 @@ const styles = StyleSheet.create({
   optionsList: {
     maxHeight: 300,
   },
+  optionItemContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+  },
   optionItem: {
+    flex: 1,
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.05)',
@@ -219,6 +385,14 @@ const styles = StyleSheet.create({
   selectedOptionText: {
     color: '#1e88e5',
     fontWeight: '600',
+  },
+  optionActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionButton: {
+    padding: 8,
+    borderRadius: 6,
   },
   addNewSection: {
     padding: 16,
@@ -241,6 +415,9 @@ const styles = StyleSheet.create({
   },
   addNewForm: {
     gap: 12,
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
   },
   addNewInput: {
     padding: 12,
