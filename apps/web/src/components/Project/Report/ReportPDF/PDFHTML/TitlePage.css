@@ -18,13 +18,14 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 40px;
+  /* margin-bottom: 40px; */
+  margin: 20px;
   padding: 20px;
   background-color: #f8f9fa;
   border-radius: 8px;
 }
 
-.pdf.header-section::after {
+/* .pdf.header-section::after {
   content: '';
   position: absolute;
   top: -20px;
@@ -34,6 +35,11 @@
   border: 2px solid #1a3d6c;
   clip-path: polygon(0 0, 100% 0, 100% 100%, 85% 100%, 85% 15%, 0 15%);
   pointer-events: none;
+} */
+.pdf.header-section-border {
+ border: 2px solid #1a3d6c;
+ border-radius: 8px;
+ /* padding: 20px; */
 }
 
 /* Left side of header */
@@ -62,7 +68,7 @@
 
 /* Report Title Section */
 .pdf.report-title-section {
-  margin: 20px 0;
+  /* margin: 20px 0; */
 }
 
 .pdf.report-title-section h1 {
@@ -90,11 +96,14 @@
 /* Property Image */
 .pdf.property-image {
   width: 200px;
-  height: 150px;
+  height: 200px;
   overflow: hidden;
   border-radius: 4px;
   z-index: 1;
 }
+.pdf.property-image a {
+   height: 200px;
+  }
 
 .pdf.property-image img {
   width: 100%;
@@ -328,19 +337,3 @@
   white-space: pre-line;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .details-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .header-section {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .logo-container {
-    margin-right: 0;
-    margin-bottom: 1rem;
-  }
-} 

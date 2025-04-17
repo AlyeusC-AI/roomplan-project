@@ -40,7 +40,9 @@ const TitlePage = () => {
               </div>
               </div>
       <div className="pdf report-container">
-       
+       <div className="pdf header-section-border">
+
+   
         {/* Top Section with diagonal line */}
         <div className="pdf header-section">
           {/* Left side with logo and company name */}
@@ -49,7 +51,7 @@ const TitlePage = () => {
 
             {/* Report Title */}
             <div className="pdf report-title-section">
-              <h1 className="pdf">Moisture Report</h1>
+              <h1 className="pdf">{orgInfo?.name}</h1>
               
               {/* <h2 className="pdf report-number">{projectInfo?.publicId || "N/A"}</h2> */}
             </div>
@@ -82,6 +84,7 @@ const TitlePage = () => {
             </div>
           )}
         </div>
+        </div>
 
         {/* Three Columns Section */}
         <div className="pdf columns-section">
@@ -101,9 +104,9 @@ const TitlePage = () => {
             <InfoRow label="Adjuster" value={projectInfo?.adjusterName} />
           </div>
 
-          {/* Column 3 - Contact Information */}
+          {/* Column 3 - Customer Information */}
           <div className="pdf info-column">
-            <h3 className="pdf column-title">Contact Information</h3>
+            <h3 className="pdf column-title">Customer Information</h3>
             <InfoRow label="Client Phone" value={projectInfo?.clientPhoneNumber} />
             <InfoRow label="Client Email" value={projectInfo?.clientEmail} />
             <InfoRow label="Adjuster Email" value={projectInfo?.adjusterEmail} />
