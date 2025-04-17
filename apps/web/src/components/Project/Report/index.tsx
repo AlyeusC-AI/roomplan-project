@@ -72,14 +72,14 @@ export default function Report() {
           </p>
         </div>
         <div className='flex items-center gap-8'>
-          <div className='flex items-center space-x-2'>
+          {/* <div className='flex items-center space-x-2'>
             <Switch
               id="dimensions-details"
               checked={showDimensionsAndDetails}
               onCheckedChange={toggleDimensionsAndDetails}
             />
             <Label htmlFor="dimensions-details">Show Dimensions & Details</Label>
-          </div>
+          </div> */}
           <Button onClick={generatePDF} disabled={isGeneratingPdf}>
             {isGeneratingPdf ? <LoadingPlaceholder /> : "Generate PDF"}
           </Button>

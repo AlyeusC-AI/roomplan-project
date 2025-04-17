@@ -12,13 +12,22 @@ import PageCount from "./PageCount";
 import Readings from "./Readings";
 import TitlePage from "./TitlePage";
 import WeatherReporting from "./WeatherReporting";
+import ReportSettingsPanel from "./ReportSettingsPanel";
 
 import "@/styles/shared-pdf-styles.css";
 import "@/styles/unshared-pdf-styles.css";
 
 const PDFHTML = () => {
   const rooms = roomStore((state) => state.rooms);
-  const { showDimensionsAndDetails } = reportSettingsStore();
+  const {
+    showTitlePage,
+    showWeatherReporting,
+    showDimensionsAndDetails,
+    showOverviewPhotos,
+    showReadings,
+    showNotes,
+    showAffectedAreas,
+  } = reportSettingsStore();
 
   return (
     <div className='flex'>
@@ -28,33 +37,36 @@ const PDFHTML = () => {
         crossOrigin='anonymous'
         referrerPolicy='no-referrer'
       />
+      <ReportSettingsPanel />
       <div className='pdf-root w-[800px]'>
         <div id='pdf-root'>
           <div className='pdf pdf-reset'>
             <PageCount />
 
             {/* <LogoContainer publicId={orgInfo!.publicId} /> */}
-            <TitlePage />
-            <WeatherReporting />
+            {showTitlePage && <TitlePage />}
+            {showWeatherReporting && <WeatherReporting />}
 
             {rooms.map((room) => (
               <div key={room.publicId} className='pdf'>
                 <div className='pdf new-page'>
                   <h2 className='pdf room-section-title'>{room.name}</h2>
-                  <OverviewPhotos room={room} />
+                  {showOverviewPhotos && <OverviewPhotos room={room} />}
                 </div>
                 {showDimensionsAndDetails && (
                   <>
                     <DimensionsAndDetails roomName={room.name} room={room} />
-                    <AffectedAreas
-                      roomName={room.name}
-                      areasAffected={room.AreaAffected}
-                    />
+                    {showAffectedAreas && (
+                      <AffectedAreas
+                        roomName={room.name}
+                        areasAffected={room.AreaAffected}
+                      />
+                    )}
                   </>
                 )}
             
-                <Readings room={room} roomReadings={room.RoomReading} />
-                <Notes roomName={room.name} notes={room.Notes} />
+                {showReadings && <Readings room={room} roomReadings={room.RoomReading} />}
+                {showNotes && <Notes roomName={room.name} notes={room.Notes} />}
               </div>
             ))}
           </div>

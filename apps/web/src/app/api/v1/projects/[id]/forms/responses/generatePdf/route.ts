@@ -62,51 +62,86 @@ const createFieldContainer = (content: any[]) => ({
           x: 0,
           y: 0,
           w: 515,
-          h: 2,
-          lineColor: '#e2e8f0'
+          h: 40,
+          color: '#2563eb'
         }
       ]
     },
     {
-      stack: content,
-      margin: [0, 15, 0, 15]
+      margin: [15, -30, 15, 15],
+      stack: content
     }
-  ]
+  ],
+  margin: [0, 0, 0, 35]
 });
 
 // PDF styles definition
 const pdfStyles = {
   header: {
-    fontSize: 28,
-    bold: true
-  },
-  subheader: {
-    fontSize: 22,
-    bold: true,
-    color: '#1e293b',
-    margin: [0, 0, 0, 5] as [number, number, number, number]
-  },
-  sectionHeader: {
     fontSize: 18,
     bold: true,
-    color: '#1e293b',
-    fillColor: '#f8fafc',
-    margin: [0, 0, 0, 15] as [number, number, number, number]
+    color: '#1e293b'
   },
-  responseId: {
-    fontSize: 14,
-    color: '#64748b'
+  formTitle: {
+    fontSize: 28,
+    bold: true,
+    color: '#4666f9',
+    margin: [0, 10, 0, 20]
   },
-  meta: {
+  formId: {
+    fontSize: 20,
+    color: '#475569',
+    margin: [0, 0, 0, 8]
+  },
+  address: {
     fontSize: 13,
     color: '#64748b',
+    margin: [0, 0, 0, 20]
+  },
+  submitterLabel: {
+    fontSize: 13,
+    color: '#64748b',
+    alignment: 'right'
+  },
+  submitterInfo: {
+    fontSize: 13,
+    color: '#64748b',
+    alignment: 'right',
+    margin: [0, 0, 0, 4]
+  },
+  formName: {
+    fontSize: 20,
+    bold: true,
+    color: '#1e293b',
+    margin: [0, 0, 0, 5]
+  },
+  responseId: {
+    fontSize: 15,
+    color: '#64748b',
     italics: true
+  },
+  submissionMeta: {
+    fontSize: 13,
+    color: '#64748b',
+    italics: true,
+    alignment: 'right'
+  },
+  divider: {
+    fontSize: 1,
+    color: '#e2e8f0'
+  },
+  sectionHeader: {
+    fontSize: 16,
+    bold: true,
+    color: '#1e293b',
+    fillColor: '#f1f5f9',
+    margin: [0, 0, 0, 15]
   },
   label: {
     fontSize: 14,
     bold: true,
-    color: '#334155',
-    margin: [0, 0, 0, 4] as [number, number, number, number]
+    color: '#ffffff',
+    margin: [0, 0, 0, 4]
   },
   typeBadge: {
     fontSize: 10,
@@ -117,12 +152,14 @@ const pdfStyles = {
   value: {
     fontSize: 15,
     color: '#0f172a',
-    lineHeight: 1.4
+    lineHeight: 1.4,
+    margin: [0, 20, 0, 0]
   },
   emptyValue: {
     fontSize: 14,
     color: '#94a3b8',
-    italics: true
+    italics: true,
+    margin: [0, 20, 0, 0]
   },
   error: {
     fontSize: 14,
@@ -169,72 +206,159 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-
-
-    // const pdfMake = require('pdfmake');
     const [, user] = await getUser(req);
     const { id: projectId } = await params;
     const { responses, title } = await req.json();
-  
-    console.log("🚀 ~ responses:", responses)
+
     if (!user) {
       return NextResponse.json({ error: "Not authorized" }, { status: 401 });
     }
 
-    const content: any[] = [
-      {
-        canvas: [
-          {
-            type: 'rect',
-            x: -40,
-            y: -40,
-            w: 595,
-            h: 80,
-            color: '#2563eb'
-          }
-        ],
-        margin: [0, 0, 0, 20]
-      },
-      {
-        text: title,
-        style: 'header',
-        alignment: 'center',
-        margin: [0, -70, 0, 20],
-        color: '#ffffff'
-      }
-    ];
+    const {data: project, error: projectError} = await supabaseServiceRole.from('Project').select('*').eq('publicId', projectId).single();
+    const {data: org, error: orgError} = await supabaseServiceRole.from('Organization').select('*').eq('id', project?.organizationId!).single();
+
+    if (projectError || orgError) {
+      return NextResponse.json({ error: "Failed to fetch project or organization" }, { status: 500 });
+    }
+
+    // Get organization logo
+    const logoUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/org-pictures/${org.publicId}/${org.logoId}.png`;
+    let logoBase64;
+    try {
+      logoBase64 = await getImageAsBase64(logoUrl);
+    } catch (error) {
+      console.error('Error loading organization logo:', error);
+    }
 
     // Generate content for each response
+    const content: any[] = [];
+
     for (const [index, response] of responses.entries()) {
       if (index > 0) {
         content.push({ text: '', pageBreak: 'before' });
       }
 
-      // Response header
+      // Header with logo and organization name
       content.push({
         stack: [
+          // Top section with logo and org name
+          {
+            columns: [
+              logoBase64 ? {
+                image: logoBase64,
+                width: 35,
+                height: 35,
+                margin: [0, 0, 0, 0]
+              } : {},
+              {
+                text: org.name,
+                style: 'header',
+                margin: [10, 0, 0, 0]
+              }
+            ],
+            margin: [0, 0, 0, 5]
+          },
+          // Title
           {
             text: response.form.name,
-            style: 'subheader',
-            margin: [0, 0, 0, 10]
+            style: 'formTitle'
           },
+          // Separator line
+          {
+            canvas: [
+              {
+                type: 'line',
+                x1: 0,
+                y1: 0,
+                x2: 515,
+                y2: 0,
+                lineWidth: 0.5,
+                lineColor: '#e2e8f0'
+              }
+            ],
+            margin: [0, 0, 0, 15]
+          },
+          // Form details section
           {
             columns: [
               {
-                text: `Response #${response.id}`,
-                style: 'responseId',
-                width: 'auto'
+                width: '50%',
+                stack: [
+                  {
+                    text: `Form #${response.id.toString().padStart(8, '0')}`,
+                    style: 'formId'
+                  },
+                  {
+                    text: project.location || '',
+                    style: 'address'
+                  }
+                ]
               },
               {
-                text: `Submitted on ${format(new Date(response.date), 'MMMM d, yyyy')} at ${format(new Date(response.date), 'h:mm a')}`,
-                style: 'meta',
-                alignment: 'right'
+                width: '50%',
+                stack: [
+                  {
+                    text: 'Submitter:',
+                    style: 'submitterLabel'
+                  },
+                  {
+                    text: user.email,
+                    style: 'submitterInfo'
+                  },
+                  {
+                    text: `Submission Date: ${format(new Date(response.date), 'MMMM d, yyyy')}`,
+                    style: 'submitterInfo'
+                  },
+                  {
+                    text: `Time: ${format(new Date(response.date), 'h:mm a')}`,
+                    style: 'submitterInfo'
+                  }
+                ]
+              }
+            ]
+          },
+          // Bottom separator line
+          {
+            canvas: [
+              {
+                type: 'line',
+                x1: 0,
+                y1: 0,
+                x2: 515,
+                y2: 0,
+                lineWidth: 0.5,
+                lineColor: '#e2e8f0'
               }
             ],
-            margin: [0, 0, 0, 20]
+            margin: [0, 15, 0, 20]
           }
         ]
       });
+
+      // Form name and response section
+      // content.push({
+      //   stack: [
+      //     {
+      //       text: response.form.name,
+      //       style: 'formName'
+      //     },
+      //     {
+      //       columns: [
+      //         {
+      //           text: `Response #${response.id}`,
+      //           style: 'responseId',
+      //           width: '50%'
+      //         },
+      //         {
+      //           text: `Submitted on ${format(new Date(response.date), 'MMMM d, yyyy')} at ${format(new Date(response.date), 'h:mm a')}`,
+      //           style: 'submissionMeta',
+      //           width: '50%'
+      //         }
+      //       ],
+      //       margin: [0, 0, 0, 25]
+      //     }
+      //   ]
+      // });
 
       const fields = [];
       for (const field of response.fields) {

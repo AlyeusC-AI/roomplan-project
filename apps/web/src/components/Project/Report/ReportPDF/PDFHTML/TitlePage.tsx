@@ -66,7 +66,7 @@ const TitlePage = () => {
               />
               <InfoRow 
                 label="Date of Loss" 
-                value={projectInfo?.createdAt ? format(new Date(projectInfo.createdAt), "MM/dd/yyyy") : "N/A"} 
+                value={projectInfo?.dateOfLoss ? format(new Date(projectInfo.dateOfLoss), "MM/dd/yyyy") : "N/A"} 
               />
               <InfoRow label="Insurance Company" value={projectInfo?.insuranceCompanyName} />
             
@@ -115,7 +115,7 @@ const TitlePage = () => {
 
         {/* Damage Description */}
         <div className="pdf damage-section">
-          <h3 className="pdf section-title">Damage Description</h3>
+          <h3 className="pdf section-title">Loss Summary</h3>
           <p className="pdf description-text">{projectInfo?.claimSummary || "N/A"}</p>
         </div>
       </div>

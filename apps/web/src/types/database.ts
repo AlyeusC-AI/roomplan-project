@@ -2006,6 +2006,7 @@ export type Database = {
           companyName: string
           createdAt: string
           damageType: string | null
+          dateOfLoss: string | null
           forecast: string
           humidity: string
           id: number
@@ -2046,6 +2047,7 @@ export type Database = {
           companyName?: string
           createdAt?: string
           damageType?: string | null
+          dateOfLoss?: string | null
           forecast?: string
           humidity?: string
           id?: number
@@ -2086,6 +2088,7 @@ export type Database = {
           companyName?: string
           createdAt?: string
           damageType?: string | null
+          dateOfLoss?: string | null
           forecast?: string
           humidity?: string
           id?: number
