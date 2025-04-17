@@ -2,113 +2,119 @@ import { format } from "date-fns";
 import { orgStore } from "@atoms/organization";
 import { projectStore } from "@atoms/project";
 import React from "react";
+import "./TitlePage.css";
+import PDFSafeImage from "./PDFSaveImage";
 
-const SummaryDetail = ({ title, value }: { title: string; value: string }) => (
-  <td style={{ textAlign: "left", width: "50%" }}>
-    <h3>{title}</h3>
-    <p>{value}</p>
-  </td>
-);
-
-const SummarySection = ({ children }: { children: React.ReactNode }) => (
-  <table className='title-page-summary-section'>
-    <tbody>
-      <tr>{children}</tr>
-    </tbody>
-  </table>
+const InfoRow = ({ label, value }: { label: string; value?: string }) => (
+  <div className="pdf info-row">
+    <span className="pdf label">{label}</span>
+    <span className="pdf value">{value || "N/A"}</span>
+  </div>
 );
 
 const TitlePage = () => {
   const projectInfo = projectStore((state) => state.project);
   const orgInfo = orgStore((state) => state.organization);
-  const [address, setAddress] = React.useState<GeocodingResponse | null>(null);
-
-  React.useEffect(() => {
-    console.log("FETCHING ADDRESS");
-    if (projectInfo?.lat && projectInfo.lng) {
-      getAddressFromCoordinates(
-        Number(projectInfo?.lat),
-        Number(projectInfo.lng)
-      )
-        .then((address) => {
-          setAddress(address);
-          console.log(address);
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    }
-  }, []);
+  const logoUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/org-pictures/${orgInfo?.publicId ?? ""}/${orgInfo?.logoId ?? ""}.png`
 
   return (
-    <div className='pdf first-page'>
-      <div>
-        <table className='pdf invoice-info-container'>
-          <tbody>
-            <tr>
-              <td rowSpan={2} className='pdf client-name'>
-                {orgInfo?.name}
-              </td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>{projectInfo?.location}</td>
-            </tr>
-            <tr>
-              <td>
-                Report Date:{" "}
-                <strong>{format(Date.now(), "LLLL	d, yyyy")}</strong>
-              </td>
-              {/* <td>{`${parsedAddress.city || ""} ${parsedAddress.state || ""}${
-                parsedAddress.zip ? `, ${parsedAddress.zip}` : ""
-              }`}</td> */}
-            </tr>
-            <tr>
-              <td></td>
-              <td>{projectInfo?.adjusterEmail}</td>
-            </tr>
-          </tbody>
-        </table>
+    <div className="pdf first-page">
+       <div className="pdf " style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
+       <div className="pdf logo-section  header-left">
+              <PDFSafeImage
+                style={{ width: "50px", height: "50px" }}
+                url={logoUrl}
+                alt="Organization Logo"
+                className="pdf org-logo"
+              />
+                <span className="pdf org-name">{orgInfo?.name}</span>
+              
+           
+            </div>
+            <div className="pdf  header-right">
+              <InfoRow 
+                label="Date Reported" 
+                value={format(new Date(), "MM/dd/yyyy")} 
 
-        <SummarySection>
-          <SummaryDetail
-            title='Client Name'
-            value={projectInfo?.clientName ?? ""}
-          />
-          <SummaryDetail title='Address' value={projectInfo?.location ?? ""} />
-        </SummarySection>
-        <SummarySection>
-          <SummaryDetail
-            title='Type of Loss'
-            value={projectInfo?.lossType ?? ""}
-          />
-          {projectInfo?.lossType === "Water" && (
-            <SummaryDetail
-              title='Category of Loss'
-              value={`${projectInfo?.catCode || ""}`}
-            />
+              />
+              </div>
+              </div>
+      <div className="pdf report-container">
+       
+        {/* Top Section with diagonal line */}
+        <div className="pdf header-section">
+          {/* Left side with logo and company name */}
+          <div className="pdf header-left">
+           
+
+            {/* Report Title */}
+            <div className="pdf report-title-section">
+              <h1 className="pdf">Moisture Report</h1>
+              
+              {/* <h2 className="pdf report-number">{projectInfo?.publicId || "N/A"}</h2> */}
+            </div>
+              <InfoRow label="Address" value={projectInfo?.location} />
+
+            {/* Key Information */}
+            <div className="pdf key-info">
+              <InfoRow label="Type of Loss" value={projectInfo?.lossType} />
+              <InfoRow 
+                label="Category" 
+                value={projectInfo?.lossType === "Water" ? `Category ${projectInfo?.catCode}` : "N/A"} 
+              />
+              <InfoRow 
+                label="Date of Loss" 
+                value={projectInfo?.createdAt ? format(new Date(projectInfo.createdAt), "MM/dd/yyyy") : "N/A"} 
+              />
+              <InfoRow label="Insurance Company" value={projectInfo?.insuranceCompanyName} />
+            
+            </div>
+          </div>
+
+          {/* Right side with property image */}
+          {projectInfo?.mainImage && (
+            <div className="pdf property-image">
+              <PDFSafeImage
+                url={projectInfo.mainImage}
+                alt="Property"
+                className="pdf"
+              />
+            </div>
           )}
-        </SummarySection>
-        <SummarySection>
-          <SummaryDetail
-            title='Insurance Carrier'
-            value={projectInfo?.insuranceCompanyName ?? ""}
-          />
-          <SummaryDetail
-            title='Claim ID'
-            value={projectInfo?.insuranceClaimId ?? ""}
-          />
-        </SummarySection>
-        <SummarySection>
-          <SummaryDetail
-            title='Adjuster Name'
-            value={projectInfo?.adjusterName ?? ""}
-          />
-          <SummaryDetail
-            title='Adjuster Email'
-            value={projectInfo?.adjusterEmail ?? ""}
-          />
-        </SummarySection>
+        </div>
+
+        {/* Three Columns Section */}
+        <div className="pdf columns-section">
+          {/* Column 1 - Project Details */}
+          <div className="pdf info-column">
+            <h3 className="pdf column-title">Project Details</h3>
+            <InfoRow label="Project Manager" value={projectInfo?.managerName} />
+            <InfoRow label="Project Status" value={projectInfo?.status} />
+            <InfoRow label="Assignment #" value={projectInfo?.assignmentNumber} />
+          </div>
+
+          {/* Column 2 - Insurance Details */}
+          <div className="pdf info-column">
+            <h3 className="pdf column-title">Insurance Details</h3>
+            <InfoRow label="Policy Number" value={projectInfo?.insuranceClaimId} />
+            <InfoRow label="Claim #" value={projectInfo?.assignmentNumber} />
+            <InfoRow label="Adjuster" value={projectInfo?.adjusterName} />
+          </div>
+
+          {/* Column 3 - Contact Information */}
+          <div className="pdf info-column">
+            <h3 className="pdf column-title">Contact Information</h3>
+            <InfoRow label="Client Phone" value={projectInfo?.clientPhoneNumber} />
+            <InfoRow label="Client Email" value={projectInfo?.clientEmail} />
+            <InfoRow label="Adjuster Email" value={projectInfo?.adjusterEmail} />
+          </div>
+        </div>
+
+        {/* Damage Description */}
+        <div className="pdf damage-section">
+          <h3 className="pdf section-title">Damage Description</h3>
+          <p className="pdf description-text">{projectInfo?.claimSummary || "N/A"}</p>
+        </div>
       </div>
     </div>
   );

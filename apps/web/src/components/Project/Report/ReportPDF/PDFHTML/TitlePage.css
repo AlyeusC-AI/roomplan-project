@@ -1,0 +1,346 @@
+.pdf.first-page {
+  padding: 2rem;
+  background-color: #ffffff;
+  min-height: 100vh;
+  width: 800px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.pdf.report-container {
+  position: relative;
+  padding: 20px;
+}
+
+/* Header Section with Diagonal Line */
+.pdf.header-section {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.pdf.header-section::after {
+  content: '';
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  border: 2px solid #1a3d6c;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 85% 100%, 85% 15%, 0 15%);
+  pointer-events: none;
+}
+
+/* Left side of header */
+.pdf.header-left {
+  flex: 1;
+  margin-right: 30px;
+}
+
+.pdf.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  z-index: 1;
+}
+
+.pdf.org-logo {
+  object-fit: contain;
+}
+
+.pdf.org-name {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: #1a3d6c;
+}
+
+/* Report Title Section */
+.pdf.report-title-section {
+  margin: 20px 0;
+}
+
+.pdf.report-title-section h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a3d6c;
+  margin: 0;
+}
+
+.pdf.report-title-section h2 {
+  font-size: 20px;
+  font-weight: 500;
+  color: #1a3d6c;
+  margin: 8px 0 0 0;
+}
+
+/* Key Information in Header */
+.pdf.key-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* Property Image */
+.pdf.property-image {
+  width: 200px;
+  height: 150px;
+  overflow: hidden;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+.pdf.property-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Three Columns Section */
+.pdf.columns-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  margin: 40px 0;
+}
+
+.pdf.info-column {
+  background-color: #f8f9fa;
+  padding: 16px;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.pdf.column-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a3d6c;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #1a3d6c;
+}
+
+/* Info Row Styling */
+.pdf.info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.pdf.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.pdf.info-row .label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.pdf.info-row .value {
+  font-size: 14px;
+  color: #000;
+  font-weight: 400;
+}
+
+/* Damage Section */
+.pdf.damage-section {
+  background-color: #f8f9fa;
+  padding: 16px;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.pdf.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a3d6c;
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #1a3d6c;
+}
+
+.pdf.description-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+  margin: 0;
+  white-space: pre-line;
+}
+
+.pdf.title-page-header {
+  margin-bottom: 62px;
+}
+
+.pdf.invoice-info-container {
+  font-size: 0.875em;
+  margin-bottom: 64px;
+}
+
+.pdf.client-name {
+  font-size: 2em;
+  vertical-align: top;
+  padding-right: 32px;
+}
+
+.pdf.image-section {
+  margin: 32px 0;
+  text-align: center;
+}
+
+.pdf.image-container {
+  display: inline-block;
+  max-width: 100%;
+}
+
+.pdf.company-title-header {
+  text-align: center;
+  font-size: 40px;
+  margin: 32px 0;
+}
+
+.pdf.title-page-summary-section {
+  margin: 16px 0;
+  width: 100%;
+}
+
+.pdf.title-page-summary-section h3 {
+  margin-bottom: 8px;
+  font-weight: bold;
+  font-size: 1em;
+}
+
+.pdf.title-page-summary-section p {
+  font-size: 0.875em;
+  margin: 0;
+  white-space: pre-line;
+}
+
+.title-page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Header Section */
+.header-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.logo-container {
+  width: 150px;
+  height: 150px;
+  margin-right: 2rem;
+}
+
+.org-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.header-info {
+  flex: 1;
+}
+
+.org-name {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.report-date {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Main Image Section */
+.main-image-section {
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.project-main-image {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Project Details Section */
+.project-details-section {
+  margin-top: 2rem;
+}
+
+.project-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+.summary-section {
+  background-color: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.summary-detail {
+  margin-bottom: 1.5rem;
+}
+
+.summary-detail:last-child {
+  margin-bottom: 0;
+}
+
+.summary-detail h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin: 0 0 0.5rem 0;
+}
+
+.summary-detail p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+  white-space: pre-line;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .header-section {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .logo-container {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+} 

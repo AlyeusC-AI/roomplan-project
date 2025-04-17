@@ -4,10 +4,12 @@ const PDFSafeImage = ({
   url,
   alt,
   className,
+  style,
 }: {
   url: string;
   alt: string;
   className: string;
+  style?: React.CSSProperties;
 }) => {
   const [dataUri, setDataUri] = useState("");
 
@@ -27,7 +29,7 @@ const PDFSafeImage = ({
   /* eslint-disable-next-line */
   return (
     <a href={url} target='_blank' rel='noopener noreferrer' className='block'>
-      <img src={dataUri} alt={alt} className={`${className} cursor-pointer`} />
+      <img src={dataUri} alt={alt} className={`${className} cursor-pointer`} style={style}  />
     </a>
   );
 };

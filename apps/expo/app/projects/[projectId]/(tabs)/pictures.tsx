@@ -20,6 +20,7 @@ import {
   ArrowDownToLine,
   Star,
   Loader,
+  Home,
 } from "lucide-react-native";
 import { userStore } from "@/lib/state/user";
 import { useGlobalSearchParams, useRouter } from "expo-router";
@@ -43,11 +44,11 @@ import {
   getStorageUrl,
 } from "@/lib/utils/imageModule";
 import safelyGetImageUrl from "@/utils/safelyGetImageKey";
-import * as FileSystem from "expo-file-system";
-import { v4 as uuidv4 } from "uuid";
-import { supabase } from "@/lib/supabase";
+
 import AddRoomButton from "@/components/project/AddRoomButton";
 import { projectStore } from "@/lib/state/project";
+import { uploadImage } from "@/lib/imagekit";
+import { launchImageLibraryAsync } from 'expo-image-picker';
 
 interface PhotoResult {
   uri: string;
@@ -95,6 +96,10 @@ export default function ProjectPhotos() {
   console.log("🚀 ~ ProjectPhotos ~ rooms:",JSON.stringify(rooms, null, 2))
   const urlMap = urlMapStore();
   const router = useRouter();
+  const [isUploadingMainImage, setIsUploadingMainImage] = useState(false);
+  const [mainImage, setMainImage] = useState<string | null>(null);
+  const [showCoverModal, setShowCoverModal] = useState(false);
+
   useEffect(() => {
     if (selectedRoom) {
       if (shouldOpenCamera) {
@@ -107,6 +112,12 @@ export default function ProjectPhotos() {
   useEffect(() => {
     refreshData();
   }, []);
+
+  useEffect(() => {
+    if (project?.mainImage) {
+      setMainImage(project.mainImage);
+    }
+  }, [project]);
 
   const refreshData = async () => {
     setLoading(true);
@@ -410,6 +421,61 @@ export default function ProjectPhotos() {
     );
   };
 
+  const handleSetMainImage = async () => {
+    try {
+      setIsUploadingMainImage(true);
+      
+      const result = await launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const file = result.assets[0];
+        
+        const uploadResult = await uploadImage({
+          uri: file.uri,
+          type: 'image/jpeg',
+          name: `${Date.now()}.jpg`
+        }, {
+          folder: `projects/${projectId}/main`,
+        });
+
+        if (uploadResult.url) {
+          const response = await fetch(
+            `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                "auth-token": supabaseSession?.access_token || "",
+              },
+              body: JSON.stringify({
+                mainImage: uploadResult.url,
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("Failed to update project main image");
+          }
+
+          setMainImage(uploadResult.url);
+          toast.success("Cover image updated successfully");
+        }
+      }
+    } catch (error) {
+      console.error("Error setting main image:", error);
+      toast.error("Failed to set cover image");
+    } finally {
+      setIsUploadingMainImage(false);
+      // setShowCoverModal(false);
+
+    }
+  };
+
   if (loading && !rooms?.rooms?.length) {
     return (
       <View style={styles.loadingContainer}>
@@ -496,7 +562,20 @@ export default function ProjectPhotos() {
       >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Project Photos</Text>
-          <View style={styles.actionButtons}>
+          <View className="flex-row gap-2 justify-between" >
+          <TouchableOpacity 
+              style={[styles.actionButton, isUploadingMainImage && styles.actionButtonDisabled]}
+              onPress={() => setShowCoverModal(true)}
+              disabled={isUploadingMainImage}
+              className="ml-2"
+            >
+              {isUploadingMainImage ? (
+                <Loader size={20} color="#1e40af" />
+              ) : (
+                <Home size={20} color="#1e40af" />
+              )}
+            </TouchableOpacity>
+            <View style={styles.actionButtons} >
             <TouchableOpacity 
               style={[styles.actionButton, isUpdatingAll && styles.actionButtonDisabled]}
               onPress={includeAllInReport}
@@ -516,6 +595,7 @@ export default function ProjectPhotos() {
               <ImagePlus size={20} color="#1e40af" />
             </TouchableOpacity>
             <AddRoomButton variant="outline" />
+            </View>
           </View>
         </View>
 
@@ -658,6 +738,51 @@ export default function ProjectPhotos() {
           </View>
         </View>
       </Modal>
+
+      <Modal
+        visible={showCoverModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCoverModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Home size={24} color="#1e40af" />
+              <Text style={styles.modalTitle}>Project Cover</Text>
+            </View>
+            
+            {mainImage && (
+              <View style={styles.coverPreview}>
+                <Image
+                  source={{ uri: mainImage }}
+                  style={styles.coverImage}
+                  resizeMode="cover"
+                />
+              </View>
+            )}
+
+            <View style={styles.modalActions}>
+              <Button
+                variant="outline"
+                onPress={() => setShowCoverModal(false)}
+              >
+                <Text>Cancel</Text>
+              </Button>
+              <Button
+                onPress={handleSetMainImage}
+                disabled={isUploadingMainImage}
+              >
+                {isUploadingMainImage ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={{ color: '#fff' }}>Change Cover</Text>
+                )}
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -791,7 +916,7 @@ const styles = StyleSheet.create({
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 16,
   },
   modalTitle: {
     fontSize: 20,
@@ -848,5 +973,81 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "500",
+  },
+  mainImageContainer: {
+    width: '100%',
+    aspectRatio: 16/9,
+    backgroundColor: '#f1f5f9',
+    marginBottom: 16,
+  },
+  mainImageWrapper: {
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+  },
+  mainImage: {
+    width: '100%',
+    height: '100%',
+  },
+  mainImageOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mainImageEditButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  mainImageEditText: {
+    color: '#fff',
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  mainImagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    borderStyle: 'dashed',
+    borderRadius: 12,
+  },
+  mainImagePlaceholderContent: {
+    alignItems: 'center',
+  },
+  mainImagePlaceholderText: {
+    marginTop: 8,
+    fontSize: 16,
+    color: '#1e40af',
+    fontWeight: '500',
+  },
+  coverPreview: {
+    width: '100%',
+    aspectRatio: 16/9,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  coverImage: {
+    width: '100%',
+    height: '100%',
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 8,
   },
 });
