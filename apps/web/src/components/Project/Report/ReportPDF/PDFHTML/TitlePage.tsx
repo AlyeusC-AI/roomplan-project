@@ -27,7 +27,7 @@ const TitlePage = () => {
                 alt="Organization Logo"
                 className="pdf org-logo"
               />
-                <span className="pdf org-name">{orgInfo?.name}</span>
+                {/* <span className="pdf org-name">{orgInfo?.name}</span> */}
               
            
             </div>
