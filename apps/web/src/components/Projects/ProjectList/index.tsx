@@ -275,11 +275,11 @@ export const Table = () => {
             />
           </div>
           <div>
-            <span className='font-medium'>{row.original.name}</span>
+            <span className='font-medium'>{row.original?.name}</span>
             <div className='hidden items-center gap-1 text-xs text-muted-foreground lg:flex'>
-              <span>{row.original.location}</span>
+              <span>{row.original?.location}</span>
               <ChevronRightIcon size={12} />
-              <span>{row.original.clientName}</span>
+              <span>{row.original?.clientName}</span>
             </div>
           </div>
         </div>

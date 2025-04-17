@@ -156,11 +156,11 @@ const OrgMembersSection = ({ children }: OrgMembersSectionProps) => {
             />
           </div>
           <div>
-            <span className='font-medium'>{row.original.name}</span>
+            <span className='font-medium'>{row.original?.name}</span>
             <div className='flex items-center gap-1 text-xs text-muted-foreground'>
-              <span>{row.original.product.name}</span>
+              <span>{row.original?.product?.name}</span>
               <ChevronRightIcon size={12} />
-              <span>{row.original.group.name}</span>
+              <span>{row.original?.group?.name}</span>
             </div>
           </div>
         </div>

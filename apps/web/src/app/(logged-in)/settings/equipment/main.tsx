@@ -126,7 +126,7 @@ export function EquipmentPage() {
         <TableColumnHeader column={column} title='Name' />
       ),
       cell: ({ row }) => (
-        <span className='font-medium'>{row.original.name}</span>
+        <span className='font-medium'>{row.original?.name}</span>
       ),
     },
     {
@@ -137,7 +137,7 @@ export function EquipmentPage() {
       cell: ({ row }) =>
         new Intl.DateTimeFormat("en-US", {
           dateStyle: "medium",
-        }).format(new Date(row.original.createdAt ?? new Date())),
+        }).format(new Date(row.original?.createdAt ?? new Date())),
     },
     {
       id: "release",
@@ -187,7 +187,8 @@ export function EquipmentPage() {
     try {
       setIsAdding(true);
       if (!data.name || data.name.length < 3) {
-        toast.error("Name must be at least 3 characters.");
+        setIsAdding(false);
+        return toast.error("Name must be at least 3 characters.");
       }
 
       const res = await fetch("/api/v1/organization/equipment", {

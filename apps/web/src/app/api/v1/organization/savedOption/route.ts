@@ -1,7 +1,9 @@
 import { z } from "zod";
-import { createClient } from "@lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
+import { user as getUser } from "@lib/supabase/get-user";
+import { SupabaseClient, User } from "@supabase/supabase-js";
+import { supabaseServiceRole as supabase } from "@lib/supabase/admin";
 
 // Types
 export const SavedOptionType = z.enum([
@@ -50,20 +52,22 @@ export type SavedOptionApiDeleteBody = z.infer<
 
 // Helper functions
 async function updateSavedOption(
+  supabase: SupabaseClient,
   userId: string,
   publicId: string,
   label: string,
-  value?: string
+  value?: string,
+  user?: User,
+  
 ) {
-  const supabase = await createClient();
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user?.user_metadata?.organizationId) {
+
+  if (!user?.user_metadata?.organizationId) {
     return { failed: true, error: "No organization ID found" };
   }
   const { data: organization } = await supabase
     .from("Organization")
     .select("id")
-    .eq("publicId", user.user.user_metadata.organizationId)
+    .eq("publicId", user.user_metadata.organizationId)
     .single();
 
   const { data, error } = await supabase
@@ -81,16 +85,18 @@ async function updateSavedOption(
   return { failed: false, result: data };
 }
 
-async function deleteSavedOption(userId: string, publicId: string) {
-  const supabase = await createClient();
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user?.user_metadata?.organizationId) {
+async function deleteSavedOption(
+  supabase: SupabaseClient,
+  user: User,
+  publicId: string) {
+
+  if (!user?.user_metadata?.organizationId) {
     return { failed: true, error: "No organization ID found" };
   }
   const { data: organization } = await supabase
     .from("Organization")
     .select("id")
-    .eq("publicId", user.user.user_metadata.organizationId)
+    .eq("publicId", user.user_metadata.organizationId)
     .single();
 
   const { error } = await supabase
@@ -106,16 +112,15 @@ async function deleteSavedOption(userId: string, publicId: string) {
   return { failed: false };
 }
 
-async function getSavedOptions(userId: string, type: SavedOptionType) {
-  const supabase = await createClient();
-  const { data: user } = await supabase.auth.getUser();
-  if (!user.user?.user_metadata?.organizationId) {
+async function getSavedOptions(supabase: SupabaseClient, user: User, type: SavedOptionType) {
+
+  if (!user?.user_metadata?.organizationId) {
     return { failed: true, error: "No organization ID found" };
   }
   const { data: organization } = await supabase
     .from("Organization")
     .select("id")
-    .eq("publicId", user.user.user_metadata.organizationId)
+    .eq("publicId", user.user_metadata.organizationId)
     .single();
 
   const { data, error } = await supabase
@@ -155,12 +160,10 @@ function handleApiError(error: unknown) {
 
 // API Routes
 export async function PATCH(req: NextRequest) {
-  const supabase = await createClient();
 
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+   
+    const [_,user] = await getUser(req); 
     if (!user) {
       return NextResponse.json(
         { status: "failed", reason: "Unauthorized" },
@@ -170,10 +173,12 @@ export async function PATCH(req: NextRequest) {
 
     const body = SavedOptionApiPatchBodySchema.parse(await req.json());
     const result = await updateSavedOption(
+      supabase,
       user.id,
       body.publicId,
       body.label,
-      body.value
+      body.value,
+      user
     );
 
     if (result.failed) {
@@ -197,12 +202,10 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient();
 
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const [_,user] = await getUser(req); 
+
     if (!user) {
       return NextResponse.json(
         { status: "failed", reason: "Unauthorized" },
@@ -219,12 +222,19 @@ export async function POST(req: NextRequest) {
 
     const body = SavedOptionApiPostBodySchema.parse(await req.json());
 
-    const { data: organization } = await supabase
+    const { data: organization, error: organizationError } = await supabase
       .from("Organization")
       .select("id")
       .eq("publicId", user.user_metadata.organizationId)
       .single();
-
+      console.log("🚀 ~ POST ~ organization:", organization)
+    if (organizationError) {
+      return NextResponse.json(
+        { status: "failed", reason: "Failed to get organization", error: organizationError },
+        { status: 500 }
+      );
+    }
+    
     const { data, error } = await supabase
       .from("OrganizationSavedOption")
       .insert({
@@ -247,17 +257,16 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ status: "ok", option: data }, { status: 201 });
   } catch (error) {
+    console.log("🚀 ~ POST ~ error:", error)
     return handleApiError(error);
   }
 }
 
 export async function DELETE(req: NextRequest) {
-  const supabase = await createClient();
 
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const [_,user] = await getUser(req); 
+
     if (!user) {
       return NextResponse.json(
         { status: "failed", reason: "Unauthorized" },
@@ -266,7 +275,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     const body = SavedOptionApiDeleteBodySchema.parse(await req.json());
-    const result = await deleteSavedOption(user.id, body.publicId);
+    const result = await deleteSavedOption(supabase,user, body.publicId);
 
     if (result.failed) {
       return NextResponse.json(
@@ -286,12 +295,10 @@ export async function DELETE(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const supabase = await createClient();
 
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const [_,user] = await getUser(req); 
+
     if (!user) {
       return NextResponse.json(
         { status: "failed", reason: "Unauthorized" },
@@ -308,7 +315,7 @@ export async function GET(req: NextRequest) {
     }
 
     const validatedType = SavedOptionType.parse(type);
-    const result = await getSavedOptions(user.id, validatedType);
+    const result = await getSavedOptions(supabase,user, validatedType);
     console.log("🚀 ~ GET ~ result:", result);
 
     if (result.failed) {

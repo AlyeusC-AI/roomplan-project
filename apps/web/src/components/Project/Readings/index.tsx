@@ -73,21 +73,21 @@ const Readings = () => {
       <div className='space-y-6'>
         <div className='flex justify-between'>
           <div>
-            <h3 className='text-lg font-medium'>Readings</h3>
-            <p className='text-sm text-muted-foreground'>
+            <h3 className='text-lg font-medium dark:text-white'>Readings</h3>
+            <p className='text-sm text-muted-foreground dark:text-gray-400'>
               Record humidity, gpp, and temperature readings from each room
               within the job site.
             </p>
           </div>
           <Button onClick={() => setShowModal(true)}>Add Room</Button>
         </div>
-        <Separator />
+        <Separator className="dark:bg-gray-700" />
         {loading ? <LoadingPlaceholder /> : <ReadingsTable />}
       </div>
-      <DialogContent className='sm:max-w-[425px]'>
+      <DialogContent className='sm:max-w-[425px] dark:bg-gray-900'>
         <DialogHeader>
-          <DialogTitle>Create A Room</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="dark:text-white">Create A Room</DialogTitle>
+          <DialogDescription className="dark:text-gray-400">
             Add a new room to your project to start recording readings.
           </DialogDescription>
         </DialogHeader>
@@ -97,14 +97,14 @@ const Readings = () => {
           <>
             <div className='grid gap-4 py-4'>
               <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='name' className='text-right'>
+                <Label htmlFor='name' className='text-right dark:text-white'>
                   Name
                 </Label>
                 <Input
                   id='name'
                   value={roomName}
                   onChange={(e) => setRoomName(e.target.value)}
-                  className='col-span-3'
+                  className='col-span-3 dark:bg-gray-800 dark:text-white dark:border-gray-700'
                 />
               </div>
             </div>

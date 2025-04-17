@@ -68,9 +68,9 @@ export default function GenericReadingCell({
                 placeholder='Temperature'
               /> */}
       <div className='flex flex-col items-start space-y-2'>
-        <Label>Temperature (F)</Label>
+        <Label className="dark:text-white">Temperature (F)</Label>
         <Input
-          className='col-span-1'
+          className='col-span-1 dark:bg-gray-800 dark:text-white dark:border-gray-700'
           defaultValue={g.temperature || ""}
           onChange={(e) =>
             setTempGenericReading({ ...g, temperature: e.target.value })
@@ -79,9 +79,9 @@ export default function GenericReadingCell({
         />
       </div>
       <div className='flex flex-col items-start space-y-2'>
-        <Label>Humidity (RH)</Label>
+        <Label className="dark:text-white">Humidity (RH)</Label>
         <Input
-          className='col-span-1'
+          className='col-span-1 dark:bg-gray-800 dark:text-white dark:border-gray-700'
           defaultValue={g.humidity || ""}
           onChange={(e) =>
             setTempGenericReading({ ...g, humidity: e.target.value })

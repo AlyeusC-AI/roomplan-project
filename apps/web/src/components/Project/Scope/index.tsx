@@ -9,6 +9,7 @@ import { Separator } from "@components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@components/ui/tabs";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Plus, Pencil, Trash2, X } from "lucide-react";
 
 import Dimensions from "./Dimensions";
 import FloorMaterial from "./FloorMaterial";
@@ -21,6 +22,17 @@ const areaAffectedTitle = {
 };
 
 const areaAffectedOrder = ["wall", "floor", "ceiling"] as const;
+
+// Update the type definitions
+type ExtraField = {
+  label: string;
+  unit: string;
+  value: string;
+};
+
+type ExtraFields = {
+  [key: string]: ExtraField;
+};
 
 function AreasAffected({
   affectedAreas,
@@ -88,6 +100,17 @@ export default function Scope() {
   const { id } = useParams<{ id: string }>();
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [showExtraFieldModal, setShowExtraFieldModal] = useState(false);
+  const [editingExtraField, setEditingExtraField] = useState<{id: string, label: string, unit: string} | null>(null);
+  const [newExtraField, setNewExtraField] = useState({ label: '', unit: '' });
+  const [currentArea, setCurrentArea] = useState<{type: AreaAffectedType, id: number} | null>(null);
+  const [extraFieldValues, setExtraFieldValues] = useState<Record<string, string>>({});
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    fieldId: string;
+    areaType: AreaAffectedType;
+    areaId: number;
+  } | null>(null);
 
   const saveAffectedArea = async (
     data: Partial<AreaAffected>,
@@ -125,6 +148,130 @@ export default function Scope() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Add a refetch function
+  const refetchRoom = async () => {
+    try {
+      const res = await fetch(`/api/v1/projects/${id}/room`);
+      const data = await res.json();
+      roomStore.getState().updateAllRooms(data.rooms);
+    } catch (error) {
+      console.error('Error refetching room:', error);
+      toast.error('Failed to refresh room data');
+    }
+  };
+
+  // Update handleAddExtraField
+  const handleAddExtraField = async (areaType: AreaAffectedType, areaId: number) => {
+    if (!newExtraField.label) return;
+    
+    const room = rooms.find((r) => r.AreaAffected.find((a) => a.id === areaId));
+    if (!room) return;
+
+    const area = room.AreaAffected.find((a) => a.id === areaId);
+    if (!area) return;
+
+    const fieldId = `extra_${Date.now()}`;
+    const updatedArea = {
+      ...area,
+      extraFields: {
+        ...(area.extraFields || {}),
+        [fieldId]: {
+          label: newExtraField.label,
+          unit: newExtraField.unit,
+          value: ''
+        }
+      }
+    };
+
+    // Update local state
+    setExtraFieldValues(prev => ({
+      ...prev,
+      [fieldId]: ''
+    }));
+
+    // Save to backend
+    await saveAffectedArea(updatedArea, areaType, id);
+    
+    // Reset form
+    setNewExtraField({ label: '', unit: '' });
+    setShowExtraFieldModal(false);
+
+    // Refetch room data
+    await refetchRoom();
+  };
+
+  // Update handleUpdateExtraField
+  const handleUpdateExtraField = async (areaType: AreaAffectedType, areaId: number, fieldId: string) => {
+    if (!editingExtraField) return;
+    
+    const room = rooms.find((r) => r.AreaAffected.find((a) => a.id === areaId));
+    if (!room) return;
+
+    const area = room.AreaAffected.find((a) => a.id === areaId);
+    if (!area) return;
+
+    const updatedArea = {
+      ...area,
+      extraFields: {
+        ...(area.extraFields || {}),
+        [fieldId]: {
+          ...(area.extraFields?.[fieldId] || {}),
+          label: editingExtraField.label,
+          unit: editingExtraField.unit
+        }
+      }
+    };
+
+    await saveAffectedArea(updatedArea, areaType, id);
+    setEditingExtraField(null);
+
+    // Refetch room data
+    await refetchRoom();
+  };
+
+  // Update handleRemoveExtraField
+  const handleRemoveExtraField = async (areaType: AreaAffectedType, areaId: number, fieldId: string) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      fieldId,
+      areaType,
+      areaId
+    });
+  };
+
+  // Add confirmDelete function
+  const confirmDelete = async () => {
+    if (!deleteConfirmation) return;
+
+    const { fieldId, areaType, areaId } = deleteConfirmation;
+    const room = rooms.find((r) => r.AreaAffected.find((a) => a.id === areaId));
+    if (!room) return;
+
+    const area = room.AreaAffected.find((a) => a.id === areaId);
+    if (!area) return;
+
+    const updatedArea = {
+      ...area,
+      extraFields: {
+        ...(area.extraFields || {})
+      }
+    };
+    
+    // Remove the field from extraFields
+    delete updatedArea.extraFields[fieldId];
+    
+    // Remove from local state
+    setExtraFieldValues(prev => {
+      const newValues = { ...prev };
+      delete newValues[fieldId];
+      return newValues;
+    });
+
+    await saveAffectedArea(updatedArea, areaType, id);
+    await refetchRoom();
+    setDeleteConfirmation(null);
   };
 
   return (
@@ -224,7 +371,32 @@ export default function Scope() {
                               <div className='grid gap-3'>
                                 <div className='rounded-md border border-border/10 bg-muted/5 p-2.5'>
                                   <div className='w-full'>
-                                    {areaType === "wall" ? (
+                                    {areaType === "wall"
+                                      ? "Wall Material"
+                                      : areaType === "floor"
+                                      ? "Floor Material"
+                                      : "Material"}
+                                    <Input
+                                        className='w-full pr-12 text-sm'
+                                        defaultValue={
+                                          areaAffected.material || ""
+                                        }
+                                        placeholder='Enter value'
+                                        type='text'
+                                        onChange={(e) => {
+                                          setHasChanges(true);
+                                          saveAffectedArea(
+                                            {
+                                              material: e.target.value,
+                                              id: areaAffected.id,
+                                            },
+                                            areaType,
+                                            room.publicId
+                                          );
+                                        }}
+                                        name='material'
+                                      />
+                                    {/* {areaType === "wall" ? (
                                       <WallMaterial
                                         defaultValue={
                                           areaAffected.material || ""
@@ -250,7 +422,7 @@ export default function Scope() {
                                           )
                                         }
                                       />
-                                    ) : null}
+                                    ) : null} */}
                                   </div>
                                 </div>
 
@@ -353,6 +525,80 @@ export default function Scope() {
                                     </div>
                                   )}
                                 </div>
+
+                                {/* Extra Fields Section */}
+                                <div className='rounded-lg border border-border/10 bg-gradient-to-br from-background/80 via-background/50 to-background/80 p-4'>
+                                  <div className='mb-3 flex items-center gap-2'>
+                                    <div className='h-4 w-1 rounded-full bg-gradient-to-b from-primary/60 to-primary/30' />
+                                    <h2 className='text-sm font-medium text-foreground/90'>Additional Fields</h2>
+                                    <div className='flex-1 border-t border-border/20'></div>
+                                    <button
+                                      onClick={() => {
+                                        setCurrentArea({ type: areaType, id: areaAffected.id });
+                                        setShowExtraFieldModal(true);
+                                      }}
+                                      className='flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary bg-primary/10 rounded-md hover:bg-primary/20 transition-colors'
+                                    >
+                                      <Plus className='w-4 h-4' />
+                                      Add Field
+                                    </button>
+                                  </div>
+
+                                  <div className='grid gap-4'>
+                                    {areaAffected.extraFields && Object.entries(areaAffected.extraFields as ExtraFields).map(([fieldId, field]) => (
+                                      <div key={fieldId} className='group relative rounded-md border border-border/10 bg-muted/5 p-3 hover:border-border/20 transition-colors'>
+                                        <div className='flex items-center justify-between mb-2'>
+                                          <h3 className='text-sm font-medium text-foreground/90'>{field.label}</h3>
+                                          <div className='flex items-center gap-2 '>
+                                            <button
+                                              onClick={() => {
+                                                setCurrentArea({ type: areaType, id: areaAffected.id });
+                                                setEditingExtraField({ id: fieldId, label: field.label, unit: field.unit });
+                                              }}
+                                              className='p-1.5 text-xs text-primary hover:text-primary/80 transition-colors'
+                                            >
+                                              <Pencil className='w-4 h-4' />
+                                            </button>
+                                            <button
+                                              onClick={() => handleRemoveExtraField(areaType, areaAffected.id, fieldId)}
+                                              className='p-1.5 text-xs text-red-500 hover:text-red-600 transition-colors'
+                                            >
+                                              <Trash2 className='w-4 h-4' />
+                                            </button>
+                                          </div>
+                                        </div>
+                                        <div className='relative flex items-center'>
+                                          <Input
+                                            className='w-full pr-12 text-sm'
+                                            value={extraFieldValues[fieldId] ?? field.value}
+                                            placeholder='Enter value'
+                                            type='number'
+                                            onChange={(e) => {
+                                              setExtraFieldValues(prev => ({
+                                                ...prev,
+                                                [fieldId]: e.target.value
+                                              }));
+                                              const updatedArea = {
+                                                ...areaAffected,
+                                                extraFields: {
+                                                  ...(areaAffected.extraFields as ExtraFields || {}),
+                                                  [fieldId]: {
+                                                    ...field,
+                                                    value: e.target.value
+                                                  }
+                                                }
+                                              };
+                                              saveAffectedArea(updatedArea, areaType, room.publicId);
+                                            }}
+                                          />
+                                          <span className='absolute right-3 text-xs text-muted-foreground'>
+                                            {field.unit}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </TabsContent>
@@ -389,6 +635,135 @@ export default function Scope() {
               >
                 {isSaving ? "Saving..." : "Save Changes"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Extra Field Modal */}
+      {showExtraFieldModal || editingExtraField ? (
+        <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
+          <div className='w-full max-w-md bg-background rounded-xl shadow-xl'>
+            <div className='p-4 border-b border-border/10'>
+              <div className='flex items-center justify-between'>
+                <h2 className='text-lg font-semibold text-foreground'>
+                  {editingExtraField ? 'Edit Field' : 'Add New Field'}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowExtraFieldModal(false);
+                    setEditingExtraField(null);
+                    setCurrentArea(null);
+                  }}
+                  className='text-primary hover:text-primary/80 transition-colors'
+                >
+                  <X className='w-5 h-5' />
+                </button>
+              </div>
+            </div>
+
+            <div className='p-6 space-y-4'>
+              <div>
+                <label className='text-sm font-medium text-muted-foreground mb-2 block'>
+                  Field Label
+                </label>
+                <Input
+                  placeholder='Enter field label'
+                  value={editingExtraField ? editingExtraField.label : newExtraField.label}
+                  onChange={(e) => {
+                    if (editingExtraField) {
+                      setEditingExtraField({ ...editingExtraField, label: e.target.value });
+                    } else {
+                      setNewExtraField({ ...newExtraField, label: e.target.value });
+                    }
+                  }}
+                />
+              </div>
+
+              <div>
+                <label className='text-sm font-medium text-muted-foreground mb-2 block'>
+                  Unit
+                </label>
+                <Input
+                  placeholder='Enter unit (e.g., sqft, ft, etc.)'
+                  value={editingExtraField ? editingExtraField.unit : newExtraField.unit}
+                  onChange={(e) => {
+                    if (editingExtraField) {
+                      setEditingExtraField({ ...editingExtraField, unit: e.target.value });
+                    } else {
+                      setNewExtraField({ ...newExtraField, unit: e.target.value });
+                    }
+                  }}
+                />
+              </div>
+
+              <div className='flex gap-3 pt-4'>
+                <button
+                  onClick={() => {
+                    setShowExtraFieldModal(false);
+                    setEditingExtraField(null);
+                    setCurrentArea(null);
+                  }}
+                  className='flex-1 px-4 py-2 text-sm font-medium text-foreground/70 border border-border/20 rounded-md hover:bg-muted/50 transition-colors'
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (editingExtraField && currentArea) {
+                      handleUpdateExtraField(currentArea.type, currentArea.id, editingExtraField.id);
+                    } else if (currentArea) {
+                      handleAddExtraField(currentArea.type, currentArea.id);
+                    }
+                  }}
+                  className='flex-1 px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 transition-colors'
+                  disabled={!newExtraField.label || (editingExtraField ? !editingExtraField.label : false)}
+                >
+                  {editingExtraField ? 'Update Field' : 'Add Field'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmation && (
+        <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
+          <div className='w-full max-w-md bg-background rounded-xl shadow-xl'>
+            <div className='p-4 border-b border-border/10'>
+              <div className='flex items-center justify-between'>
+                <h2 className='text-lg font-semibold text-foreground'>
+                  Delete Field
+                </h2>
+                <button
+                  onClick={() => setDeleteConfirmation(null)}
+                  className='text-primary hover:text-primary/80 transition-colors'
+                >
+                  <X className='w-5 h-5' />
+                </button>
+              </div>
+            </div>
+
+            <div className='p-6 space-y-4'>
+              <p className='text-foreground/80'>
+                Are you sure you want to delete this field? This action cannot be undone.
+              </p>
+
+              <div className='flex gap-3 pt-4'>
+                <button
+                  onClick={() => setDeleteConfirmation(null)}
+                  className='flex-1 px-4 py-2 text-sm font-medium text-foreground/70 border border-border/20 rounded-md hover:bg-muted/50 transition-colors'
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className='flex-1 px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600 transition-colors'
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>

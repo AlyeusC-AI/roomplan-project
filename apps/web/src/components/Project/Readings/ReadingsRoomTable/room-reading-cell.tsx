@@ -260,361 +260,319 @@ export default function RoomReadingCell({
   };
 
   return (
-    <div key={r.publicId} className='mt-6 border-l-2 border-gray-500 pl-4'>
-      <div className='flex flex-col items-start space-y-2'>
-        <Label>Date</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-[280px] justify-start text-left font-normal",
-                !tempReading.date && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className='mr-2 size-4' />
-              {tempReading.date ? (
-                format(new Date(tempReading.date), "PPP")
-              ) : (
-                <span>Pick a date</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className='w-auto p-0'>
-            <Calendar
-              mode='single'
-              selected={
-                tempReading.date ? new Date(tempReading.date) : new Date()
-              }
-              onSelect={(date) =>
-                setTempReading({ ...tempReading, date: date!.toISOString() })
-              }
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-      <div className='mt-3 grid grid-cols-2 gap-6'>
-        <div className='flex flex-col items-start space-y-2'>
-          <Label>Temperature (F)</Label>
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label className="dark:text-white">Temperature</Label>
           <Input
-            className='col-span-1'
-            defaultValue={tempReading.temperature || ""}
-            placeholder='Temperature'
-            onChange={(e) => {
-              const newTemp = e.target.value;
-              setTempReading({
-                ...tempReading,
-                temperature: newTemp,
-                gpp: calculateGPP(
-                  Number(newTemp),
-                  Number(tempReading.humidity)
-                )?.toString() || null,
-              });
-            }}
-            name='temperature'
-            title='Temperature'
+            type="number"
+            value={tempReading.temperature || ""}
+            onChange={(e) =>
+              setTempReading((prev) => ({
+                ...prev,
+                temperature: e.target.value,
+              }))
+            }
+            className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
+            placeholder="Enter temperature"
           />
         </div>
-        <div className='flex flex-col items-start space-y-2'>
-          <Label>Relative Humidity (RH)</Label>
+        <div>
+          <Label className="dark:text-white">Humidity</Label>
           <Input
-            className='col-span-1'
-            defaultValue={tempReading.humidity || ""}
-            placeholder='Humidity'
-            onChange={(e) => {
-              const newHumidity = e.target.value;
-              setTempReading({
-                ...tempReading,
-                humidity: newHumidity,
-                gpp: calculateGPP(
-                  Number(tempReading.temperature),
-                  Number(newHumidity)
-                )?.toString() || null,
-              });
-            }}
-            name='relative-humidity'
-            title='Relative Humidity'
+            type="number"
+            value={tempReading.humidity || ""}
+            onChange={(e) =>
+              setTempReading((prev) => ({
+                ...prev,
+                humidity: e.target.value,
+              }))
+            }
+            className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
+            placeholder="Enter humidity"
           />
         </div>
-        <div className='flex flex-col items-start space-y-2'>
-          <Label>Grains Per Pound (gpp)</Label>
+        <div>
+          <Label className="dark:text-white">GPP</Label>
           <Input
-            className='col-span-1'
-            value={tempReading.gpp ? Number(tempReading.gpp).toFixed(2) : "--"}
+            type="number"
+            value={tempReading.gpp || ""}
             disabled
-            placeholder='Grains Per Pound'
+            className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
           />
         </div>
-
-        {/* Wall Moisture Content Section */}
-        <div className='col-span-2'>
-          <div className='flex items-center justify-between mb-2'>
-            <div className='flex items-center gap-2'>
-              {showWallNameEdit ? (
-                <div className='flex items-center gap-2'>
-                  <Input
-                    value={wallName}
-                    onChange={(e) => setWallName(e.target.value)}
-                    className='w-48'
-                  />
-                  <Button
-                    onClick={handleUpdateWallName}
-                    disabled={isUpdatingWallName}
-                  >
-                    {isUpdatingWallName ? <LoadingSpinner /> : "Save"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setWallName(originalWallName);
-                      setShowWallNameEdit(false);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <Label className='text-base'>{wallName || "Moisture Content (Wall)"}</Label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowWallNameEdit(true)}
-                  >
-                    <Pencil className='h-4 w-4' />
-                  </Button>
-                </>
-              )}
+        <div>
+          <Label className="dark:text-white">Date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
               <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleAddExtendedWall("wall")}
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal dark:bg-gray-800 dark:text-white dark:border-gray-700",
+                  !tempReading.date && "text-muted-foreground"
+                )}
               >
-                <Plus className='h-4 w-4' />
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {tempReading.date ? format(new Date(tempReading.date), "PPP") : <span>Pick a date</span>}
               </Button>
-            </div>
-          </div>
-          <Input
-            className='col-span-1'
-            defaultValue={r.moistureContentWall || ""}
-            onChange={(e) =>
-              setTempReading({
-                ...tempReading,
-                moistureContentWall: e.target.value,
-              })
-            }
-            name='moisture-wall'
-            title='Moisture Content (Wall)'
-            placeholder='Moisture Content Percentage'
-          />
-          {/* Extended Walls */}
-          {extendedWallsStructure
-            .filter(w => w.type === "wall")
-            .map((wall) => {
-              const wallReading = extendedWalls.find(w => w.id === wall.id);
-              if(!wallReading) {
-                setExtendedWalls(extendedWalls.concat({id: wall.id, name: wall.name, value: wall.value, type: wall.type}))
-              }
-              return (
-                <div key={wall.id} className='mt-2 flex items-center gap-2'>
-                  <div className='flex flex-col items-start space-y-2'>
-                    <div className='mt-2 flex items-center gap-0'>
-                      <Label className='text-base'>{wall.name}</Label>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setCurrentEditingWall(wall);
-                          setShowExtendedWallEdit(true);
-                        }}
-                      >
-                        <Pencil className='h-4 w-4' />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteExtendedWall(wall.id)}
-                      >
-                        <Trash2 className='h-4 w-4' />
-                      </Button>
-                    </div>
-                    <Input
-                      className='col-span-1'
-                      value={wallReading?.value || ""}
-                      onChange={(e) => {
-                        const updatedWalls = extendedWalls.map(w =>
-                          w.id === wall.id ? { ...w, value: e.target.value } : w
-                        );
-                        setExtendedWalls(updatedWalls);
-                        setTempReading(prev => ({
-                          ...prev,
-                          extendedWalls: updatedWalls
-                        }));
-                      }}
-                      placeholder={`${wall.name} Moisture Content`}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-        </div>
-
-        {/* Floor Moisture Content Section */}
-        <div className='col-span-2'>
-          <div className='flex items-center justify-between mb-2'>
-            <div className='flex items-center gap-2'>
-              {showFloorNameEdit ? (
-                <div className='flex items-center gap-2'>
-                  <Input
-                    value={floorName}
-                    onChange={(e) => setFloorName(e.target.value)}
-                    className='w-48'
-                  />
-                  <Button
-                    onClick={handleUpdateFloorName}
-                    disabled={isUpdatingFloorName}
-                  >
-                    {isUpdatingFloorName ? <LoadingSpinner /> : "Save"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setFloorName(originalFloorName);
-                      setShowFloorNameEdit(false);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <Label className='text-base'>{floorName || "Moisture Content (Floor)"}</Label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowFloorNameEdit(true)}
-                  >
-                    <Pencil className='h-4 w-4' />
-                  </Button>
-                </>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleAddExtendedWall("floor")}
-              >
-                <Plus className='h-4 w-4' />
-              </Button>
-            </div>
-          </div>
-          <Input
-            className='col-span-1'
-            defaultValue={r.moistureContentFloor || ""}
-            onChange={(e) =>
-              setTempReading({
-                ...tempReading,
-                moistureContentFloor: e.target.value,
-              })
-            }
-            name='moisture-floor'
-            title='Moisture Content (Floor)'
-            placeholder='Moisture Content Percentage'
-          />
-          {/* Extended Floors */}
-          {extendedWallsStructure
-            .filter(w => w.type === "floor")
-            .map((floor) => {
-              const floorReading = extendedWalls.find(w => w.id === floor.id);
-              if(!floorReading) {
-                setExtendedWalls(extendedWalls.concat({id: floor.id, name: floor.name, value: floor.value, type: floor.type}))
-              }
-              return (
-                <div key={floor.id} className='mt-2 flex items-center gap-2'>
-                  <div className='flex flex-col items-start space-y-2'>
-                    <div className='mt-2 flex items-center gap-0'>
-                      <Label className='text-base'>{floor.name}</Label>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setCurrentEditingWall(floor);
-                          setShowExtendedWallEdit(true);
-                        }}
-                      >
-                        <Pencil className='h-4 w-4' />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteExtendedWall(floor.id)}
-                      >
-                        <Trash2 className='h-4 w-4' />
-                      </Button>
-                    </div>
-                    <Input
-                      className='col-span-1'
-                      value={floorReading?.value || ""}
-                      onChange={(e) => {
-                        const updatedWalls = extendedWalls.map(w =>
-                          w.id === floor.id ? { ...w, value: e.target.value } : w
-                        );
-                        setExtendedWalls(updatedWalls);
-                        setTempReading(prev => ({
-                          ...prev,
-                          extendedWalls: updatedWalls
-                        }));
-                      }}
-                      placeholder={`${floor.name} Moisture Content`}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 dark:bg-gray-800" align="start">
+              <Calendar
+                mode="single"
+                selected={tempReading.date ? new Date(tempReading.date) : undefined}
+                onSelect={(date) =>
+                  setTempReading((prev) => ({
+                    ...prev,
+                    date: date ? date.toISOString() : prev.date,
+                  }))
+                }
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
-      {/* Extended Wall Edit Dialog */}
-      <Dialog open={showExtendedWallEdit} onOpenChange={setShowExtendedWallEdit}>
-        <DialogContent>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <h3 className="text-lg font-medium dark:text-white">
+              {originalWallName || "Wall"} Moisture Content
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowWallNameEdit(true)}
+              className="h-8 w-8 p-0"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleAddExtendedWall("wall")}
+            className="h-8"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Wall
+          </Button>
+        </div>
+        <div>
+          <Input
+            type="number"
+            value={tempReading.moistureContentWall || ""}
+            onChange={(e) =>
+              setTempReading((prev) => ({
+                ...prev,
+                moistureContentWall: e.target.value,
+              }))
+            }
+            className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
+            placeholder="Enter moisture content"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <h3 className="text-lg font-medium dark:text-white">
+              {originalFloorName || "Floor"} Moisture Content
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFloorNameEdit(true)}
+              className="h-8 w-8 p-0"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleAddExtendedWall("floor")}
+            className="h-8"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Floor
+          </Button>
+        </div>
+        <div>
+          <Input
+            type="number"
+            value={tempReading.moistureContentFloor || ""}
+            onChange={(e) =>
+              setTempReading((prev) => ({
+                ...prev,
+                moistureContentFloor: e.target.value,
+              }))
+            }
+            className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
+            placeholder="Enter moisture content"
+          />
+        </div>
+      </div>
+
+      <Dialog open={showWallNameEdit} onOpenChange={setShowWallNameEdit}>
+        <DialogContent className="dark:bg-gray-800">
           <DialogHeader>
-            <DialogTitle>
-              {currentEditingWall?.type === "wall" ? "Edit Wall" : "Edit Floor"}
-            </DialogTitle>
-            <DialogDescription>
-              Enter the name and moisture content for this {currentEditingWall?.type}.
+            <DialogTitle className="dark:text-white">Edit Wall Name</DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              Change the name of the wall for this room.
             </DialogDescription>
           </DialogHeader>
-          <div className='grid gap-4 py-4'>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='name' className='text-right'>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right dark:text-white">
                 Name
               </Label>
               <Input
-                id='name'
+                id="name"
+                value={wallName}
+                onChange={(e) => setWallName(e.target.value)}
+                className="col-span-3 dark:bg-gray-800 dark:text-white dark:border-gray-700"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowWallNameEdit(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateWallName} disabled={isUpdatingWallName}>
+              {isUpdatingWallName ? <LoadingSpinner /> : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showFloorNameEdit} onOpenChange={setShowFloorNameEdit}>
+        <DialogContent className="dark:bg-gray-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Edit Floor Name</DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              Change the name of the floor for this room.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right dark:text-white">
+                Name
+              </Label>
+              <Input
+                id="name"
+                value={floorName}
+                onChange={(e) => setFloorName(e.target.value)}
+                className="col-span-3 dark:bg-gray-800 dark:text-white dark:border-gray-700"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowFloorNameEdit(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateFloorName} disabled={isUpdatingFloorName}>
+              {isUpdatingFloorName ? <LoadingSpinner /> : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showExtendedWallEdit} onOpenChange={setShowExtendedWallEdit}>
+        <DialogContent className="dark:bg-gray-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">
+              {currentEditingWall?.id ? "Edit" : "Add"} {currentEditingWall?.type === "wall" ? "Wall" : "Floor"}
+            </DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              {currentEditingWall?.id ? "Edit" : "Add"} a new {currentEditingWall?.type === "wall" ? "wall" : "floor"} measurement point.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right dark:text-white">
+                Name
+              </Label>
+              <Input
+                id="name"
                 value={currentEditingWall?.name || ""}
                 onChange={(e) =>
                   setCurrentEditingWall((prev) =>
                     prev ? { ...prev, name: e.target.value } : null
                   )
                 }
-                className='col-span-3'
+                className="col-span-3 dark:bg-gray-800 dark:text-white dark:border-gray-700"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => setShowExtendedWallEdit(false)}
-            >
+            <Button variant="outline" onClick={() => setShowExtendedWallEdit(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveExtendedWall}>
+            <Button onClick={handleSaveExtendedWall} disabled={isUpdatingExtendedWall}>
               {isUpdatingExtendedWall ? <LoadingSpinner /> : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {extendedWallsStructure.length > 0 && (
+        <div className="space-y-4">
+          {extendedWallsStructure.map((wall) => (
+            <div key={wall.id} className="flex items-center space-x-4">
+              <div className="flex-1">
+                <Label className="dark:text-white">{wall.name}</Label>
+                <Input
+                  type="number"
+                  value={
+                    extendedWalls.find((w) => w.id === wall.id)?.value || ""
+                  }
+                  onChange={(e) => {
+                    const updatedWalls = extendedWalls.map((w) =>
+                      w.id === wall.id ? { ...w, value: e.target.value } : w
+                    );
+                    if (!updatedWalls.some((w) => w.id === wall.id)) {
+                      updatedWalls.push({
+                        id: wall.id,
+                        name: wall.name,
+                        value: e.target.value,
+                        type: wall.type,
+                      });
+                    }
+                    setExtendedWalls(updatedWalls);
+                    setTempReading((prev) => ({
+                      ...prev,
+                      extendedWalls: updatedWalls,
+                    }));
+                  }}
+                  className="dark:bg-gray-800 dark:text-white dark:border-gray-700"
+                  placeholder="Enter moisture content"
+                />
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setCurrentEditingWall(wall);
+                  setShowExtendedWallEdit(true);
+                }}
+                className="h-8 w-8 p-0"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDeleteExtendedWall(wall.id)}
+                className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <GenericRoomReadings room={room} reading={r} />
     </div>

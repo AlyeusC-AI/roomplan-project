@@ -7,7 +7,7 @@ export default function ReadingsTable() {
   const rooms = roomStore((state) => state.rooms);
 
   return (
-    <div className='space-y-6 divide-y-2'>
+    <div className='space-y-6 divide-y-2 dark:divide-gray-700'>
       {rooms.length === 0 ? (
         <EmptyState
           imagePath={"/images/empty.svg"}

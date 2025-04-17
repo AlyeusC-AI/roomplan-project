@@ -6,6 +6,7 @@ import { toast } from "sonner";
 export interface SavedLineItem {
   id: string;
   publicId: string;
+  name: string;
   description: string;
   rate: number;
   category?: string;

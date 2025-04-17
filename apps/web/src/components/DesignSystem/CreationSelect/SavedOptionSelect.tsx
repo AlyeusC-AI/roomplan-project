@@ -39,6 +39,7 @@ const SavedOptionSelect = ({
   title: string;
   className: string;
 }) => {
+  console.log("🚀 ~ defaultssssValue:", defaultValue)
   const { setSavedOptions } = savedOptionsStore();
   const savedOptions = savedOptionsStore((state) => state[optionType]);
   const allOptions = savedOptionsStore();

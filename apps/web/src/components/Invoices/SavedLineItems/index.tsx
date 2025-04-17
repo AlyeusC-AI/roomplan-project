@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,8 +28,10 @@ import {
   createSavedLineItem,
   updateSavedLineItem,
   deleteSavedLineItem,
+  getExportCsvUrl,
+  importSavedLineItemsFromCsv,
 } from "@/lib/savedLineItems";
-import { Edit2, Plus, Trash2 } from "lucide-react";
+import { Edit2, Plus, Trash2, Download, Upload } from "lucide-react";
 import { LoadingPlaceholder } from "@/components/ui/spinner";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -43,6 +45,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 export default function SavedLineItems() {
   const [isLoading, setIsLoading] = useState(true);
+  const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [rate, setRate] = useState("");
   const [category, setCategory] = useState("");
@@ -53,6 +56,10 @@ export default function SavedLineItems() {
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [isNewCategory, setIsNewCategory] = useState(false);
   const [newCategory, setNewCategory] = useState("");
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { savedLineItems, setSavedLineItems } = invoicesStore();
 
@@ -91,6 +98,11 @@ export default function SavedLineItems() {
   }, [setSavedLineItems]);
 
   const handleSave = async () => {
+    if (!name) {
+      toast.error("Name is required");
+      return;
+    }
+
     if (!description) {
       toast.error("Description is required");
       return;
@@ -109,6 +121,7 @@ export default function SavedLineItems() {
       }
 
       const newItem = await createSavedLineItem({
+        name,
         description,
         rate: parseFloat(rate),
         category: categoryToUse,
@@ -126,6 +139,11 @@ export default function SavedLineItems() {
 
   const handleUpdate = async () => {
     if (!editingItem) return;
+
+    if (!name) {
+      toast.error("Name is required");
+      return;
+    }
 
     if (!description) {
       toast.error("Description is required");
@@ -145,6 +163,7 @@ export default function SavedLineItems() {
       }
 
       const updatedItem = await updateSavedLineItem(editingItem.publicId, {
+        name,
         description,
         rate: parseFloat(rate),
         category: categoryToUse,
@@ -191,6 +210,7 @@ export default function SavedLineItems() {
 
   const handleEdit = (item: SavedLineItem) => {
     setEditingItem(item);
+    setName(item.name || "");
     setDescription(item.description);
     setRate(item.rate.toString());
     setCategory(item.category || "");
@@ -198,6 +218,7 @@ export default function SavedLineItems() {
   };
 
   const resetForm = () => {
+    setName("");
     setDescription("");
     setRate("");
     setCategory("");
@@ -251,6 +272,51 @@ export default function SavedLineItems() {
     setShowBulkActions(false);
   };
 
+  const handleExportCsv = () => {
+    // Get the download URL with optional category filter
+    const downloadUrl = getExportCsvUrl(selectedCategory);
+    
+    // Create a link and trigger the download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.setAttribute('download', 'saved-line-items.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success('Export started');
+  };
+
+  const handleImportCsv = async () => {
+    if (!importFile) {
+      toast.error('Please select a file to import');
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const result = await importSavedLineItemsFromCsv(importFile);
+      
+      // Refresh the list after import
+      const items = await fetchSavedLineItems();
+      setSavedLineItems(items);
+      
+      toast.success(`Successfully imported ${result.imported} of ${result.total} items`);
+      setShowImportDialog(false);
+      setImportFile(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to import items');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setImportFile(e.target.files[0]);
+    }
+  };
+
   return (
     <div className='container mx-auto py-6'>
       <div className='mb-6 flex items-center justify-between'>
@@ -261,6 +327,18 @@ export default function SavedLineItems() {
               Add {selectedItems.length} Items to Invoice
             </Button>
           )}
+          <Button 
+            variant='outline'
+            onClick={handleExportCsv}
+          >
+            <Download className='mr-2 h-4 w-4' /> Export to CSV
+          </Button>
+          <Button 
+            variant='outline'
+            onClick={() => setShowImportDialog(true)}
+          >
+            <Upload className='mr-2 h-4 w-4' /> Import from CSV
+          </Button>
           <Button onClick={() => setShowForm(true)}>
             <Plus className='mr-2 h-4 w-4' /> Add New Line Item
           </Button>
@@ -283,12 +361,23 @@ export default function SavedLineItems() {
           <form onSubmit={handleSubmit}>
             <div className='grid gap-4 py-4'>
               <div className='grid gap-2'>
+                <Label htmlFor='name'>Name</Label>
+                <Input
+                  id='name'
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder='e.g., Basic Web Development'
+                  required
+                />
+              </div>
+
+              <div className='grid gap-2'>
                 <Label htmlFor='description'>Description</Label>
                 <Input
                   id='description'
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder='e.g., Web Development - Hourly'
+                  placeholder='e.g., Hourly rate for standard web development services'
                   required
                 />
               </div>
@@ -427,9 +516,10 @@ export default function SavedLineItems() {
             <TableHeader>
               <TableRow>
                 <TableHead style={{ width: "50px" }}></TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Category</TableHead>
                 <TableHead>Rate</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead style={{ width: "100px" }}>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -451,17 +541,10 @@ export default function SavedLineItems() {
                         }
                       />
                     </TableCell>
+                    <TableCell>{item.name || item.description}</TableCell>
                     <TableCell>{item.description}</TableCell>
-                    <TableCell>
-                      {item.category ? (
-                        <span className='rounded-md bg-foreground/10 px-2 py-1 text-xs font-medium text-foreground'>
-                          {item.category}
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </TableCell>
                     <TableCell>{formatCurrency(item.rate)}</TableCell>
+                    <TableCell>{item.category || "-"}</TableCell>
                     <TableCell>
                       <div className='flex gap-1'>
                         <Button
@@ -488,6 +571,59 @@ export default function SavedLineItems() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Import CSV Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Line Items from CSV</DialogTitle>
+            <DialogDescription>
+              Upload a CSV file with your line items. The file must have columns for Name, Description, Rate, and Category.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className='my-4 flex flex-col gap-2'>
+            <Label htmlFor='csv-file'>CSV File</Label>
+            <Input
+              id='csv-file'
+              type='file'
+              accept='.csv'
+              ref={fileInputRef}
+              onChange={handleFileChange}
+            />
+            <p className='text-xs text-gray-500'>
+              Maximum file size: 5MB
+            </p>
+          </div>
+
+          <div className='rounded-md bg-blue-50 p-3 text-sm text-blue-700'>
+            <h4 className='font-medium'>CSV Format</h4>
+            <p className='mt-1'>
+              Your CSV file should have the following columns: <code>Name</code>, <code>Description</code>, <code>Rate</code>, and <code>Category</code> (optional).
+            </p>
+          </div>
+
+          <a
+            href='/templates/saved-line-items-template.csv'
+            download
+            className='mt-2 inline-flex items-center text-sm text-blue-600 hover:underline'
+          >
+            <Download className='mr-1 h-3 w-3' /> Download template
+          </a>
+
+          <DialogFooter>
+            <Button variant='outline' onClick={() => setShowImportDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleImportCsv}
+              disabled={!importFile || isImporting}
+            >
+              {isImporting ? 'Importing...' : 'Import'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

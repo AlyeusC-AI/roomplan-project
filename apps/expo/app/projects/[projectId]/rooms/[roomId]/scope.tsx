@@ -20,7 +20,7 @@ import { Text } from "@/components/ui/text";
 import { router, useGlobalSearchParams, useRouter } from "expo-router";
 import { userStore } from "@/lib/state/user";
 import { roomsStore } from "@/lib/state/rooms";
-import { ArrowLeft, Save, Search, ChevronDown, Ruler, DoorClosed, Wind } from "lucide-react-native";
+import { ArrowLeft, Save, Search, ChevronDown, Ruler, DoorClosed, Wind, X } from "lucide-react-native";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -280,10 +280,57 @@ export default function RoomScopeScreen() {
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
   const [equipmentSearch, setEquipmentSearch] = useState("");
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
+  const [equipmentQuantities, setEquipmentQuantities] = useState<Record<string, number>>({});
   const { top, bottom } = useSafeAreaInsets();
   const [saveBarOpacity] = useState(new Animated.Value(0));
   const [saveBarHeight] = useState(new Animated.Value(0));
   const debouncedChanges = useDebounce(localChanges, 1000);
+  const [showExtraFieldModal, setShowExtraFieldModal] = useState(false);
+  const [editingExtraField, setEditingExtraField] = useState<{id: string, label: string, unit: string} | null>(null);
+  const [newExtraField, setNewExtraField] = useState({ label: '', unit: '' });
+  const [extraFieldValues, setExtraFieldValues] = useState<Record<string, string>>({});
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    fieldId: string;
+    areaType: string;
+    areaId: number;
+  } | null>(null);
+  useEffect(() => {
+    setEquipmentQuantities(room?.equipmentUsedQuantity || {});
+    setSelectedEquipment(room?.equipmentUsed || []);
+  }, [room?.equipmentUsedQuantity]);
+
+  // Modify handleInputChange to be simpler
+  const handleInputChange = (
+    field: string,
+    value: string,
+    areaType: string,
+    areaId: number
+  ) => {
+    setLocalChanges(prev => ({
+      ...prev,
+      [`${areaType}_${areaId}_${field}`]: value
+    }));
+    setHasChanges(true);
+  };
+
+  const handleExtraFieldChange = useCallback((areaType: string, areaId: number, fieldId: string, value: string) => {
+    const updatedArea = {
+      ...room?.AreaAffected.find((a: any) => a.id === areaId),
+      extraFields: {
+        ...(room?.AreaAffected.find((a: any) => a.id === areaId)?.extraFields || {}),
+        [fieldId]: {
+          ...(room?.AreaAffected.find((a: any) => a.id === areaId)?.extraFields?.[fieldId] || {}),
+          value
+        }
+      }
+    };
+
+    handleInputChange('extraFields', updatedArea.extraFields, areaType, areaId);
+  }, [room, handleInputChange]);
+
+  // Use the debounced value for the input
+  const debouncedValue = useDebounce(extraFieldValues, 300);
 
   useEffect(() => {
     // Find the room in the rooms store
@@ -461,19 +508,6 @@ export default function RoomScopeScreen() {
     saveChanges();
   }, [debouncedChanges, saveChanges]);
 
-  // Modify handleInputChange to be simpler
-  const handleInputChange = (
-    field: string,
-    value: string,
-    areaType: string,
-    areaId: number
-  ) => {
-    setLocalChanges(prev => ({
-      ...prev,
-      [`${areaType}_${areaId}_${field}`]: value
-    }));
-    setHasChanges(true);
-  };
 
   // Modify handleRoomDetailChange to be simpler
   const handleRoomDetailChange = (field: string, value: string | string[]) => {
@@ -601,7 +635,7 @@ export default function RoomScopeScreen() {
     return localChanges[key] !== undefined ? localChanges[key] : obj[field] || "";
   };
 
-  // Modify toggleEquipment to handle string[] type
+  // Update toggleEquipment to handle quantities
   const toggleEquipment = (equipment: string) => {
     setSelectedEquipment((prev) => {
       const isSelected = prev.includes(equipment);
@@ -609,15 +643,119 @@ export default function RoomScopeScreen() {
         ? prev.filter((e) => e !== equipment)
         : [...prev, equipment];
 
+      // Update quantities
+      setEquipmentQuantities(prevQuantities => {
+        const newQuantities = { ...prevQuantities };
+        if (isSelected) {
+          delete newQuantities[equipment];
+        } else {
+          newQuantities[equipment] = 1; // Default quantity
+        }
+        return newQuantities;
+      });
+
       // Update the room equipment field
       handleRoomDetailChange("equipmentUsed", newSelection);
+      handleRoomDetailChange("equipmentUsedQuantity", {
+        ...equipmentQuantities,
+        ...(isSelected ? {} : { [equipment]: 1 })
+      });
       return newSelection;
+    });
+  };
+
+  // Add handleQuantityChange function
+  const handleQuantityChange = (equipment: string, quantity: number) => {
+    setEquipmentQuantities(prev => {
+      const newQuantities = { ...prev, [equipment]: quantity };
+      handleRoomDetailChange("equipmentUsedQuantity", newQuantities);
+      return newQuantities;
     });
   };
 
   const filteredEquipment = equipmentOptions.filter(equipment =>
     equipment.toLowerCase().includes(equipmentSearch.toLowerCase())
   );
+
+  const handleAddExtraField = (areaType: string, areaId: number) => {
+    if (!newExtraField.label) return;
+    
+    const fieldId = `extra_${Date.now()}`;
+    const updatedArea = {
+      ...room.AreaAffected.find((a: any) => a.id === areaId),
+      extraFields: {
+        ...(room.AreaAffected.find((a: any) => a.id === areaId)?.extraFields || {}),
+        [fieldId]: {
+          label: newExtraField.label,
+          unit: newExtraField.unit,
+          value: ''
+        }
+      }
+    };
+
+    handleInputChange('extraFields', updatedArea.extraFields, areaType, areaId);
+    setNewExtraField({ label: '', unit: '' });
+    setShowExtraFieldModal(false);
+    setExtraFieldValues(prev => ({
+      ...prev,
+      [fieldId]: ''
+    }));
+  };
+
+  const handleUpdateExtraField = (areaType: string, areaId: number, fieldId: string) => {
+    if (!editingExtraField) return;
+    
+    const updatedArea = {
+      ...room.AreaAffected.find((a: any) => a.id === areaId),
+      extraFields: {
+        ...(room.AreaAffected.find((a: any) => a.id === areaId)?.extraFields || {}),
+        [fieldId]: {
+          ...(room.AreaAffected.find((a: any) => a.id === areaId)?.extraFields?.[fieldId] || {}),
+          label: editingExtraField.label,
+          unit: editingExtraField.unit
+        }
+      }
+    };
+
+    handleInputChange('extraFields', updatedArea.extraFields, areaType, areaId);
+    setEditingExtraField(null);
+  };
+
+  // Update handleRemoveExtraField to use confirmation
+  const handleRemoveExtraField = (areaType: string, areaId: number, fieldId: string) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      fieldId,
+      areaType,
+      areaId
+    });
+  };
+
+  // Add confirmDelete function
+  const confirmDelete = async () => {
+    if (!deleteConfirmation) return;
+
+    const { fieldId, areaType, areaId } = deleteConfirmation;
+    const updatedArea = {
+      ...room?.AreaAffected.find((a: any) => a.id === areaId),
+      extraFields: {
+        ...(room?.AreaAffected.find((a: any) => a.id === areaId)?.extraFields || {})
+      }
+    };
+    
+    // Remove the field from extraFields
+    delete updatedArea.extraFields[fieldId];
+    
+    // Remove from local state
+    setExtraFieldValues(prev => {
+      const newValues = { ...prev };
+      delete newValues[fieldId];
+      return newValues;
+    });
+
+    handleInputChange('extraFields', updatedArea.extraFields, areaType, areaId);
+    setDeleteConfirmation(null);
+  };
 
   if (loading && !room) {
     return (
@@ -758,11 +896,15 @@ export default function RoomScopeScreen() {
                   onPress={() => setShowEquipmentModal(true)}
                   style={styles.equipmentSelector}
                 >
-                  <Text className="text-slate-700 text-base">
-                    {selectedEquipment.length > 0
-                      ? selectedEquipment.join(", ")
-                      : "Select equipment..."}
-                  </Text>
+                  <View style={{ flex: 1 }}>
+                    <Text className="text-slate-700 text-base">
+                      {selectedEquipment.length > 0
+                        ? selectedEquipment.map(equipment => 
+                            `${equipment} (${equipmentQuantities[equipment] || 1})`
+                          ).join(", ")
+                        : "Select equipment..."}
+                    </Text>
+                  </View>
                   <ChevronDown size={20} color="#64748b" />
                 </TouchableOpacity>
               </View>
@@ -853,9 +995,7 @@ export default function RoomScopeScreen() {
                     if (area.type !== activeTab) return null;
                     
                     return (
-                      
                       <View key={area.publicId} className="space-y-6">
-                       
                         <View style={styles.detailCard}>
                           <Text style={styles.inputLabel}>
                             {area.type === "wall"
@@ -873,6 +1013,15 @@ export default function RoomScopeScreen() {
                             }
                             placeholderTextColor="#94a3b8"
                           />
+                           {/* <MaterialSelect
+                            value={getRoomFieldValue(area, "material")}
+                            onValueChange={(value) =>
+                              handleInputChange("material", value, area.type, area.id)
+                            }
+                            options={area.type === "wall" ? wallOptions : floorOptions}
+                            title={area.type === "wall" ? "Wall Material" : "Floor Material"}
+                            type={area.type === "wall" ? "wallMaterial" : "floorMaterial"}
+                          /> */}
                         </View>
 
                         <View style={styles.detailCard}>
@@ -944,6 +1093,58 @@ export default function RoomScopeScreen() {
                             </View>
                           </View>
                         )}
+
+                        {/* Extra Fields Section */}
+                        <View style={styles.detailCard}>
+                          <View className="flex-row items-center justify-between mb-4">
+                            <Text style={styles.inputLabel}>Additional Fields</Text>
+                            <TouchableOpacity
+                              onPress={() => setShowExtraFieldModal(true)}
+                              className="p-2 bg-primary/10 rounded-lg"
+                            >
+                              <Text className="text-primary font-medium">Add Field</Text>
+                            </TouchableOpacity>
+                          </View>
+                          
+                          {area.extraFields && Object.entries(area.extraFields).map(([fieldId, field]: [string, any]) => (
+                            <View key={fieldId} className="mb-4">
+                              <View className="flex-row items-center justify-between mb-2">
+                                <Text className="text-slate-700 font-medium">{field.label}</Text>
+                                <View className="flex-row items-center">
+                                  <TouchableOpacity
+                                    onPress={() => setEditingExtraField({ id: fieldId, label: field.label, unit: field.unit })}
+                                    className="p-1 mr-2"
+                                  >
+                                    <Text className="text-primary text-sm">Edit</Text>
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    onPress={() => handleRemoveExtraField(area.type, area.id, fieldId)}
+                                    className="p-1"
+                                  >
+                                    <Text className="text-red-500 text-sm">Delete</Text>
+                                  </TouchableOpacity>
+                                </View>
+                              </View>
+                              <View className="relative">
+                                <TextInput
+                                  style={[styles.input, { paddingRight: 55 }]}
+                                  placeholder="0"
+                                  keyboardType="numeric"
+                                  value={extraFieldValues[fieldId] ?? field.value}
+                                  onChangeText={(text) => {
+                                    setExtraFieldValues(prev => ({
+                                      ...prev,
+                                      [fieldId]: text
+                                    }));
+                                    handleExtraFieldChange(area.type, area.id, fieldId, text);
+                                  }}
+                                  placeholderTextColor="#94a3b8"
+                                />
+                                <Text style={styles.unitLabel}>{field.unit}</Text>
+                              </View>
+                            </View>
+                          ))}
+                        </View>
                       </View>
                     );
                   }
@@ -1003,7 +1204,23 @@ export default function RoomScopeScreen() {
                     style={styles.equipmentItem}
                     activeOpacity={0.7}
                   >
-                    <Text className="text-slate-700 text-base">{item}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text className="text-slate-700 text-base">{item}</Text>
+                      {selectedEquipment.includes(item) && (
+                        <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center' }}>
+                          <Text className="text-sm text-slate-500 mr-2">Quantity:</Text>
+                          <TextInput
+                            style={[styles.input, { width: 80, padding: 8 }]}
+                            keyboardType="numeric"
+                            value={equipmentQuantities[item]?.toString() || "1"}
+                            onChangeText={(text) => {
+                              const quantity = parseInt(text) || 1;
+                              handleQuantityChange(item, quantity);
+                            }}
+                          />
+                        </View>
+                      )}
+                    </View>
                     <View
                       style={[
                         styles.checkbox,
@@ -1025,6 +1242,138 @@ export default function RoomScopeScreen() {
                 )}
                 style={{ maxHeight: 400 }}
               />
+            </SafeAreaView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showExtraFieldModal || !!editingExtraField}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          setShowExtraFieldModal(false);
+          setEditingExtraField(null);
+        }}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <SafeAreaView edges={["bottom"]}>
+              <View className="p-5 border-b border-slate-100">
+                <View className="flex-row items-center justify-between mb-4">
+                  <Text className="text-xl font-semibold text-slate-800">
+                    {editingExtraField ? 'Edit Field' : 'Add New Field'}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowExtraFieldModal(false);
+                      setEditingExtraField(null);
+                    }}
+                    className="p-2"
+                  >
+                    <Text className="text-primary font-medium">Done</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View className="p-5 space-y-4">
+                <View>
+                  <Text className="text-sm font-medium text-slate-700 mb-2">Field Label</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter field label"
+                    value={editingExtraField ? editingExtraField.label : newExtraField.label}
+                    onChangeText={(text) => {
+                      if (editingExtraField) {
+                        setEditingExtraField({ ...editingExtraField, label: text });
+                      } else {
+                        setNewExtraField({ ...newExtraField, label: text });
+                      }
+                    }}
+                    placeholderTextColor="#94a3b8"
+                  />
+                </View>
+
+                <View>
+                  <Text className="text-sm font-medium text-slate-700 mb-2">Unit</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter unit (e.g., sqft, ft, etc.)"
+                    value={editingExtraField ? editingExtraField.unit : newExtraField.unit}
+                    onChangeText={(text) => {
+                      if (editingExtraField) {
+                        setEditingExtraField({ ...editingExtraField, unit: text });
+                      } else {
+                        setNewExtraField({ ...newExtraField, unit: text });
+                      }
+                    }}
+                    placeholderTextColor="#94a3b8"
+                  />
+                </View>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    if (editingExtraField) {
+                      handleUpdateExtraField(activeTab, room.AreaAffected.find((a: any) => a.type === activeTab)?.id, editingExtraField.id);
+                    } else {
+                      handleAddExtraField(activeTab, room.AreaAffected.find((a: any) => a.type === activeTab)?.id);
+                    }
+                  }}
+                  className="bg-primary p-3 rounded-lg items-center"
+                >
+                  <Text className="text-white font-medium">
+                    {editingExtraField ? 'Update Field' : 'Add Field'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </SafeAreaView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={!!deleteConfirmation}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setDeleteConfirmation(null)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <SafeAreaView edges={["bottom"]}>
+              <View className="p-5 border-b border-slate-100">
+                <View className="flex-row items-center justify-between mb-4">
+                  <Text className="text-xl font-semibold text-slate-800">
+                    Delete Field
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setDeleteConfirmation(null)}
+                    className="p-2"
+                  >
+                    <X size={20} color="#64748b" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View className="p-5 space-y-4">
+                <Text className="text-slate-700">
+                  Are you sure you want to delete this field? This action cannot be undone.
+                </Text>
+
+                <View className="flex-row gap-3 pt-4">
+                  <TouchableOpacity
+                    onPress={() => setDeleteConfirmation(null)}
+                    className="flex-1 px-4 py-2 border border-slate-200 rounded-lg"
+                  >
+                    <Text className="text-center text-slate-700">Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={confirmDelete}
+                    className="flex-1 px-4 py-2 bg-red-500 rounded-lg"
+                  >
+                    <Text className="text-center text-white">Delete</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </SafeAreaView>
           </View>
         </View>

@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
 import { Label } from "@components/ui/label";
-import { LoadingPlaceholder } from "@components/ui/spinner";
 import { Switch } from "@components/ui/switch";
 import { DateTimePicker } from "@components/ui/date-time-picker";
 import { projectsStore } from "@atoms/projects";
@@ -19,40 +18,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getEstimateById, updateEstimate } from "@/services/api/estimates";
-import { Estimate, estimatesStore } from "@atoms/estimates";
-import { invoicesStore, SavedLineItem } from "@atoms/invoices";
+import { createInvoice } from "@/services/api/invoices";
+import { invoicesStore } from "@atoms/invoices";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Textarea } from "@components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const EditEstimate = () => {
-  const router = useRouter();
-  const params = useParams();
-  const estimateId = params.id as string;
-
-  const [estimate, setEstimate] = useState<Estimate | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-
-  const [estimateNumber, setEstimateNumber] = useState("");
+const CreateInvoicePage = () => {
+  const [invoiceNumber, setInvoiceNumber] = useState(
+    `INV-${Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, "0")}`
+  );
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [projectName, setProjectName] = useState("");
   const [projectId, setProjectId] = useState("");
   const [poNumber, setPoNumber] = useState("");
-  const [daysValid, setDaysValid] = useState("30");
-  const [estimateDate, setEstimateDate] = useState<Date>(new Date());
-  const [expiryDate, setExpiryDate] = useState<Date | undefined>(undefined);
-  const [estimateItems, setEstimateItems] = useState<
-    {
-      id: string;
-      description: string;
-      quantity: number;
-      rate: number;
-      amount: number;
-      publicId?: string;
-    }[]
-  >([]);
+  const [daysToPay, setDaysToPay] = useState("30");
+  const [isCreating, setIsCreating] = useState(false);
+  const [invoiceDate, setInvoiceDate] = useState<Date>(new Date());
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [lineItems, setLineItems] = useState<any[]>([
+    { id: uuidv4(), description: "", quantity: 1, rate: 0, amount: 0 },
+  ]);
   const [showMarkup, setShowMarkup] = useState(false);
   const [markupPercentage, setMarkupPercentage] = useState(0);
   const [showDiscount, setShowDiscount] = useState(false);
@@ -61,125 +59,81 @@ const EditEstimate = () => {
   const [depositPercentage, setDepositPercentage] = useState(50);
   const [taxRate, setTaxRate] = useState(0);
   const [applyTax, setApplyTax] = useState(false);
-  const [showSavedItems, setShowSavedItems] = useState(false);
+  const [showSavedItems, setShowSavedItemsDialog] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [showAdjuster, setShowAdjuster] = useState(false);
+  const [adjusterName, setAdjusterName] = useState("");
+  const [adjusterEmail, setAdjusterEmail] = useState("");
+  const [adjusterPhone, setAdjusterPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("");
 
-  const { updateEstimate: updateEstimateInStore } = estimatesStore(
-    (state) => state
-  );
+  const router = useRouter();
+  const { addInvoice } = invoicesStore((state) => state);
   const { projects } = projectsStore((state) => state);
   const { savedLineItems } = invoicesStore((state) => state);
 
-  // Load estimate data
-  useEffect(() => {
-    const fetchEstimate = async () => {
-      try {
-        const result = await getEstimateById(estimateId);
-        if (result.error) {
-          console.error(result.error);
-          toast.error(result.error);
-        } else if (result.data) {
-          setEstimate(result.data);
-
-          // Populate form fields
-          setEstimateNumber(result.data.number);
-          setClientName(result.data.clientName);
-          setClientEmail(result.data.clientEmail || "");
-          setProjectName(result.data.projectName || "");
-          setProjectId(result.data.projectPublicId || "");
-          setPoNumber(result.data.poNumber || "");
-          setEstimateDate(new Date(result.data.estimateDate));
-          setExpiryDate(new Date(result.data.expiryDate));
-
-          // Calculate days valid
-          const estimateDateObj = new Date(result.data.estimateDate);
-          const expiryDateObj = new Date(result.data.expiryDate);
-          const diffTime = Math.abs(
-            expiryDateObj.getTime() - estimateDateObj.getTime()
-          );
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          setDaysValid(diffDays.toString());
-
-          // Set markup if available
-          if (result.data.markup) {
-            setShowMarkup(true);
-            setMarkupPercentage(result.data.markup);
-          }
-
-          // Set discount if available
-          if (result.data.discount) {
-            setShowDiscount(true);
-            setDiscountAmount(result.data.discount);
-          }
-
-          // Set tax if available
-          if (result.data.tax) {
-            setApplyTax(true);
-            setTaxRate(result.data.tax);
-          }
-
-          // Set deposit if available
-          if (result.data.deposit) {
-            setShowDeposit(true);
-            setDepositPercentage(result.data.deposit);
-          }
-
-          // Set notes and terms
-          setNotes(result.data.notes || "");
-          setTerms(result.data.terms || "");
-
-          // Set line items
-          setEstimateItems(
-            result.data.EstimateItems.map((item) => ({
-              id: uuidv4(),
-              publicId: item.publicId,
-              description: item.description,
-              quantity: item.quantity,
-              rate: item.rate,
-              amount: item.amount,
-            }))
-          );
-        }
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to load estimate details");
-      } finally {
-        setLoading(false);
+  // Get unique categories from saved items
+  const getCategories = () => {
+    const categoriesSet = new Set<string>();
+    savedLineItems.forEach((item) => {
+      if (item.category) {
+        categoriesSet.add(item.category);
       }
-    };
+    });
+    return Array.from(categoriesSet);
+  };
 
-    fetchEstimate();
-  }, [estimateId, router]);
-
-  // Calculate expiry date based on days valid
-  useEffect(() => {
-    if (estimateDate && daysValid) {
-      const expire = new Date(estimateDate);
-      expire.setDate(expire.getDate() + parseInt(daysValid || "0"));
-      setExpiryDate(expire);
+  // Filter saved items by category
+  const filteredSavedItems = () => {
+    if (selectedCategory === "all") {
+      return savedLineItems;
     }
-  }, [estimateDate, daysValid]);
+    return savedLineItems.filter((item) => item.category === selectedCategory);
+  };
 
-  // Update line item amounts when rate or quantity changes
   useEffect(() => {
-    const updated = estimateItems.map((item) => ({
+    // Calculate due date based on days to pay
+    if (invoiceDate && daysToPay) {
+      const due = new Date(invoiceDate);
+      due.setDate(due.getDate() + parseInt(daysToPay || "0"));
+      setDueDate(due);
+    }
+  }, [invoiceDate, daysToPay]);
+
+  useEffect(() => {
+    // Update line item amounts when rate or quantity changes
+    const updated = lineItems.map((item) => ({
       ...item,
       amount: item.rate * item.quantity,
     }));
-    setEstimateItems(updated);
-  }, [estimateItems.map((item) => item.rate + item.quantity).join(",")]);
+    setLineItems(updated);
+  }, [lineItems.map((item) => item.rate + item.quantity).join(",")]);
 
   const addLineItem = () => {
-    setEstimateItems([
-      ...estimateItems,
+    setLineItems([
+      ...lineItems,
       { id: uuidv4(), description: "", quantity: 1, rate: 0, amount: 0 },
     ]);
   };
 
+  const handleAddSavedLineItem = (item: any) => {
+    setLineItems([
+      ...lineItems,
+      {
+        id: uuidv4(),
+        description: item.description,
+        quantity: 1,
+        rate: item.rate,
+        amount: item.rate,
+      },
+    ]);
+    setShowSavedItemsDialog(false);
+  };
+
   const removeLineItem = (id: string) => {
-    if (estimateItems.length > 1) {
-      setEstimateItems(estimateItems.filter((item) => item.id !== id));
+    if (lineItems.length > 1) {
+      setLineItems(lineItems.filter((item) => item.id !== id));
     }
   };
 
@@ -188,8 +142,8 @@ const EditEstimate = () => {
     field: string,
     value: string | number
   ) => {
-    setEstimateItems(
-      estimateItems.map((item) =>
+    setLineItems(
+      lineItems.map((item) =>
         item.id === id
           ? {
               ...item,
@@ -207,7 +161,7 @@ const EditEstimate = () => {
   };
 
   const calculateSubtotal = () => {
-    return estimateItems.reduce((sum, item) => sum + item.amount, 0);
+    return lineItems.reduce((sum, item) => sum + item.amount, 0);
   };
 
   const calculateMarkup = () => {
@@ -224,10 +178,6 @@ const EditEstimate = () => {
     return applyTax ? taxableAmount * (taxRate / 100) : 0;
   };
 
-  const calculateDeposit = () => {
-    return showDeposit ? calculateTotal() * (depositPercentage / 100) : 0;
-  };
-
   const calculateTotal = () => {
     return (
       calculateSubtotal() +
@@ -237,86 +187,104 @@ const EditEstimate = () => {
     );
   };
 
-  const handleSelectProject = (projectId: string) => {
-    const selectedProject = projects.find((p) => p.publicId === projectId);
+  const calculateDeposit = () => {
+    return showDeposit ? calculateTotal() * (depositPercentage / 100) : 0;
+  };
+
+  const handleProjectSelect = (selectedProjectId: string) => {
+    if (selectedProjectId === "none") {
+      setProjectId("");
+      setProjectName("");
+      return;
+    }
+
+    const selectedProject = projects.find(
+      (p) => p.publicId === selectedProjectId
+    );
     if (selectedProject) {
+      // Auto-fill project information
       setProjectId(selectedProject.publicId);
       setProjectName(selectedProject.name);
-      setClientName(selectedProject.clientName || "");
-      setClientEmail(selectedProject.clientEmail || "");
+
+      // Auto-fill client information
+      if (selectedProject.clientName) {
+        setClientName(selectedProject.clientName);
+      }
+
+      if (selectedProject.clientEmail) {
+        setClientEmail(selectedProject.clientEmail);
+      }
+
+      // Auto-fill adjuster information if available
+      if (selectedProject.adjusterName) {
+        setAdjusterName(selectedProject.adjusterName);
+        setShowAdjuster(true);
+      }
+
+      if (selectedProject.adjusterEmail) {
+        setAdjusterEmail(selectedProject.adjusterEmail);
+      }
+
+      if (selectedProject.adjusterPhoneNumber) {
+        setAdjusterPhone(selectedProject.adjusterPhoneNumber);
+      }
+
+      // Attempt to auto-fill line items if this is a new invoice with empty descriptions
+      if (lineItems.length === 1 && !lineItems[0].description) {
+        // Check if the project has any default services or rates we can use
+        // For now, we'll add a default item with the project name
+        setLineItems([
+          {
+            id: lineItems[0].id,
+            description: `${selectedProject.name} - Professional Services`,
+            quantity: 1,
+            rate: 0,
+            amount: 0,
+          },
+        ]);
+      }
+
+      toast.success("Project details auto-filled successfully");
     }
   };
 
-  const handleAddSavedLineItem = (item: SavedLineItem) => {
-    const newItem = {
-      id: uuidv4(),
-      description: item.description,
-      quantity: 1,
-      rate: item.rate,
-      amount: item.rate,
-    };
-    setEstimateItems([...estimateItems, newItem]);
-    setShowSavedItems(false);
-  };
-
-  const handleAddBulkSavedLineItems = (itemIds: string[]) => {
-    const newItems = itemIds
-      .map((id) => {
-        const savedItem = savedLineItems.find((item) => item.publicId === id);
-        if (!savedItem) return null;
-        return {
-          id: uuidv4(),
-          description: savedItem.description,
-          quantity: 1,
-          rate: savedItem.rate,
-          amount: savedItem.rate,
-        };
-      })
-      .filter(Boolean) as {
-      id: string;
-      description: string;
-      quantity: number;
-      rate: number;
-      amount: number;
-    }[];
-
-    setEstimateItems([...estimateItems, ...newItems]);
-    setShowSavedItems(false);
-  };
-
-  const saveEstimate = async () => {
+  const createNewInvoice = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (
       !clientName ||
       !projectName ||
-      estimateItems.some((item) => !item.description)
+      lineItems.some((item) => !item.description)
     ) {
       return toast.error("Please fill in all required fields.");
     }
 
-    setIsSaving(true);
+    setIsCreating(true);
     try {
-      // Prepare the estimate data for API
-      const estimateData = {
-        estimate: {
-          number: estimateNumber,
+      // Prepare the invoice data for API
+      const invoiceData = {
+        invoice: {
+          number: invoiceNumber,
           clientName,
           clientEmail,
-          projectName,
           projectPublicId: projectId,
+          projectName,
           poNumber,
-          estimateDate: estimateDate.toISOString(),
-          expiryDate: expiryDate?.toISOString() || new Date().toISOString(),
+          invoiceDate: invoiceDate.toISOString(),
+          dueDate: dueDate?.toISOString() || new Date().toISOString(),
           subtotal: calculateSubtotal(),
           markup: showMarkup ? markupPercentage : undefined,
           discount: showDiscount ? discountAmount : undefined,
           tax: applyTax ? taxRate : undefined,
           amount: calculateTotal(),
           deposit: showDeposit ? depositPercentage : undefined,
+          adjusterName: showAdjuster ? adjusterName : undefined,
+          adjusterEmail: showAdjuster ? adjusterEmail : undefined,
+          adjusterPhone: showAdjuster ? adjusterPhone : undefined,
           notes,
           terms,
+          status: "draft" as const,
         },
-        estimateItems: estimateItems.map((item) => ({
-          publicId: item.publicId,
+        invoiceItems: lineItems.map((item) => ({
           description: item.description,
           quantity: item.quantity,
           rate: item.rate,
@@ -325,30 +293,25 @@ const EditEstimate = () => {
       };
 
       // Call the API service
-      const result = await updateEstimate(estimateId, estimateData);
+      const result = await createInvoice(invoiceData);
 
       if (result.error) {
         throw new Error(result.error);
       }
 
       if (result.data) {
-        // Update in local store
-        updateEstimateInStore(estimateId, result.data);
-        toast.success("Estimate updated successfully!");
-        router.push(`/estimates/${estimateId}`);
+        // Add to local store
+        addInvoice(result.data);
+        toast.success("Invoice created successfully!");
+        router.push("/invoices");
       }
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Could not update estimate"
-      );
-      console.error(error);
+      console.error("Error creating invoice:", error);
+      toast.error("Failed to create invoice. Please try again.");
+    } finally {
+      setIsCreating(false);
     }
-    setIsSaving(false);
   };
-
-  if (loading) {
-    return <LoadingPlaceholder />;
-  }
 
   return (
     <div className='container mx-auto space-y-6 py-6'>
@@ -358,38 +321,22 @@ const EditEstimate = () => {
         </Button>
 
         <div className='flex gap-2'>
-          <Button
-            variant='outline'
-            onClick={() => router.push(`/estimates/${estimateId}`)}
-          >
+          <Button variant='outline' onClick={() => router.push("/invoices")}>
             Cancel
           </Button>
-          <Button onClick={saveEstimate} disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save Changes"}
+          <Button onClick={createNewInvoice} disabled={isCreating}>
+            {isCreating ? "Creating..." : "Create Invoice"}
           </Button>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Edit Estimate</CardTitle>
+          <CardTitle>New Invoice</CardTitle>
         </CardHeader>
         <CardContent>
           <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
             <div className='space-y-4'>
-              <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='estimate-number' className='text-right'>
-                  Estimate #
-                </Label>
-                <Input
-                  id='estimate-number'
-                  value={estimateNumber}
-                  onChange={(e) => setEstimateNumber(e.target.value)}
-                  className='col-span-3'
-                  required
-                />
-              </div>
-
               <div className='grid grid-cols-4 items-center gap-4'>
                 <Label htmlFor='client-name' className='text-right'>
                   Client Name
@@ -423,8 +370,8 @@ const EditEstimate = () => {
                 <div className='col-span-3'>
                   {projects.length > 0 ? (
                     <Select
-                      value={projectId}
-                      onValueChange={handleSelectProject}
+                      value={projectId || "none"}
+                      onValueChange={handleProjectSelect}
                     >
                       <SelectTrigger>
                         <SelectValue
@@ -434,6 +381,7 @@ const EditEstimate = () => {
                         />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value='none'>None</SelectItem>
                         {projects.map((project) => (
                           <SelectItem
                             key={project.publicId}
@@ -456,25 +404,64 @@ const EditEstimate = () => {
               </div>
 
               <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='estimate-date' className='text-right'>
-                  Estimate Date
+                <Label htmlFor='invoice-date' className='text-right'>
+                  Invoice Date
                 </Label>
                 <div className='col-span-3'>
-                  <DateTimePicker
-                    date={estimateDate}
-                    setDate={setEstimateDate}
-                  />
+                  <DateTimePicker date={invoiceDate} setDate={setInvoiceDate} />
                 </div>
               </div>
 
               <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='expiry-date' className='text-right'>
-                  Expiry Date
+                <Label htmlFor='due-date' className='text-right'>
+                  Due Date
                 </Label>
                 <div className='col-span-3'>
-                  <DateTimePicker date={expiryDate} setDate={setExpiryDate} />
+                  <DateTimePicker
+                    date={dueDate ?? new Date()}
+                    setDate={setDueDate}
+                  />
                 </div>
               </div>
+
+              {showAdjuster && (
+                <>
+                  <div className='grid grid-cols-4 items-center gap-4'>
+                    <Label htmlFor='adjuster-name' className='text-right'>
+                      Adjuster Name
+                    </Label>
+                    <Input
+                      id='adjuster-name'
+                      value={adjusterName}
+                      onChange={(e) => setAdjusterName(e.target.value)}
+                      className='col-span-3'
+                    />
+                  </div>
+                  <div className='grid grid-cols-4 items-center gap-4'>
+                    <Label htmlFor='adjuster-email' className='text-right'>
+                      Adjuster Email
+                    </Label>
+                    <Input
+                      id='adjuster-email'
+                      type='email'
+                      value={adjusterEmail}
+                      onChange={(e) => setAdjusterEmail(e.target.value)}
+                      className='col-span-3'
+                    />
+                  </div>
+                  <div className='grid grid-cols-4 items-center gap-4'>
+                    <Label htmlFor='adjuster-phone' className='text-right'>
+                      Adjuster Phone
+                    </Label>
+                    <Input
+                      id='adjuster-phone'
+                      value={adjusterPhone}
+                      onChange={(e) => setAdjusterPhone(e.target.value)}
+                      className='col-span-3'
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             <div className='space-y-4'>
@@ -491,14 +478,14 @@ const EditEstimate = () => {
               </div>
 
               <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='days-valid' className='text-right'>
-                  Days Valid
+                <Label htmlFor='days-until-due' className='text-right'>
+                  Days Until Due
                 </Label>
                 <Input
-                  id='days-valid'
+                  id='days-until-due'
                   type='number'
-                  value={daysValid}
-                  onChange={(e) => setDaysValid(e.target.value)}
+                  value={daysToPay}
+                  onChange={(e) => setDaysToPay(e.target.value)}
                   className='col-span-3'
                 />
               </div>
@@ -525,10 +512,26 @@ const EditEstimate = () => {
                   <Label htmlFor='apply-tax'>Apply</Label>
                 </div>
               </div>
+
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='toggle-adjuster' className='text-right'>
+                  Insurance Adjuster
+                </Label>
+                <div className='col-span-3 flex items-center'>
+                  <Switch
+                    id='toggle-adjuster'
+                    checked={showAdjuster}
+                    onCheckedChange={setShowAdjuster}
+                  />
+                  <Label htmlFor='toggle-adjuster' className='ml-2'>
+                    {showAdjuster ? "Shown" : "Hidden"}
+                  </Label>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className='space-y-4 rounded-md border p-4'>
+          <div className='mt-6 space-y-4 rounded-md border p-4'>
             <h3 className='text-lg font-medium'>Additional Information</h3>
             <div className='grid grid-cols-1 gap-4'>
               <div>
@@ -562,7 +565,7 @@ const EditEstimate = () => {
                   variant='outline'
                   size='sm'
                   type='button'
-                  onClick={() => setShowSavedItems(true)}
+                  onClick={() => setShowSavedItemsDialog(true)}
                 >
                   Add from Saved Items
                 </Button>
@@ -586,7 +589,7 @@ const EditEstimate = () => {
                 <div className='col-span-1'></div>
               </div>
 
-              {estimateItems.map((item) => (
+              {lineItems.map((item) => (
                 <div
                   key={item.id}
                   className='mb-2 grid grid-cols-12 items-center gap-2'
@@ -753,7 +756,7 @@ const EditEstimate = () => {
 
                 {showDeposit && (
                   <div className='mt-1 flex justify-between'>
-                    <span>Balance Due (if approved)</span>
+                    <span>Balance Due</span>
                     <span>
                       ${(calculateTotal() - calculateDeposit()).toFixed(2)}
                     </span>
@@ -765,9 +768,77 @@ const EditEstimate = () => {
         </CardContent>
       </Card>
 
-      {/* We need to handle the saved items dialog separately in a real implementation */}
+      {/* Saved Items Dialog */}
+      <Dialog open={showSavedItems} onOpenChange={setShowSavedItemsDialog}>
+        <DialogContent className='max-w-3xl'>
+          <DialogHeader>
+            <DialogTitle>Add from Saved Items</DialogTitle>
+          </DialogHeader>
+          <Tabs
+            defaultValue='all'
+            className='w-full'
+            onValueChange={setSelectedCategory}
+          >
+            <TabsList className='mb-4 grid grid-cols-4'>
+              <TabsTrigger value='all'>All</TabsTrigger>
+              {getCategories()
+                .slice(0, 3)
+                .map((category) => (
+                  <TabsTrigger key={category} value={category}>
+                    {category}
+                  </TabsTrigger>
+                ))}
+            </TabsList>
+          </Tabs>
+          <ScrollArea className='max-h-[400px]'>
+            <div className='space-y-2 p-1'>
+              {filteredSavedItems().map((item) => (
+                <Card key={item.publicId} className='hover:bg-gray-50'>
+                  <CardContent className='flex items-center justify-between p-4'>
+                    <div>
+                      <h4 className='font-medium'>
+                        {item.name || item.description}
+                      </h4>
+                      {item.name && (
+                        <p className='text-sm text-gray-500'>
+                          {item.description}
+                        </p>
+                      )}
+                      {item.category && (
+                        <div className='mt-1 inline-block rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800'>
+                          {item.category}
+                        </div>
+                      )}
+                    </div>
+                    <div className='text-right'>
+                      <div className='font-medium'>${item.rate.toFixed(2)}</div>
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        onClick={() => handleAddSavedLineItem(item)}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {filteredSavedItems().length === 0 && (
+                <div className='py-4 text-center text-gray-500'>
+                  No saved items found in this category.
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant='outline'>Close</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-export default EditEstimate;
+export default CreateInvoicePage;

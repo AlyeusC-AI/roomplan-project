@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
       publicId: crypto.randomUUID(),
       userId: authenticatedUser.id,
       organizationId: authenticatedUser.user_metadata.organizationId,
+      name: body.name || body.description, // Support name or fallback to description
       description: body.description,
       rate: body.rate,
       category: body.category || null,

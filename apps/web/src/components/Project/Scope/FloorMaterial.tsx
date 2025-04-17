@@ -24,10 +24,10 @@ export default function FloorMaterial({
         }}
         defaultValue={
           defaultValue
-            ? floorOptions.find(
+            ? savedOptions.floorMaterial.find(
                 (material) =>
-                  material.value === defaultValue ||
-                  material.label === defaultValue
+                  material.value == defaultValue ||
+                  material.label == defaultValue
               )
             : undefined
         }

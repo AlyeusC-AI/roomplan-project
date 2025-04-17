@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { roomStore } from "@atoms/room";
 import { Input } from "@components/ui/input";
@@ -22,13 +22,25 @@ import { cn } from "@lib/utils";
 import { LoadingSpinner } from "@components/ui/spinner";
 import { toast } from "sonner";
 
-const defaultEquipmentType = ["Fan", "Dehumidifier", "Air Scrubber"];
-
+const defaultEquipmentType = [
+  "Fan",
+  "Dehumidifier",
+  "Air Scrubber",
+  "Air Mover",
+  "HEPA Vacuum",
+  "Drying System",
+];
 export default function Dimensions({ room }: { room: RoomWithReadings }) {
   const [tempRoom, setTempRoom] = useState<RoomWithReadings>(room);
   const { id } = useParams<{ id: string }>();
   const [open, setOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
+
+  // Add new state for equipment quantities
+  const [equipmentQuantities, setEquipmentQuantities] = useState<Record<string, number>>({});
+  useEffect(() => {
+    setEquipmentQuantities(room.equipmentUsedQuantity || {});
+  }, [room?.equipmentUsedQuantity]);
 
   const save = async () => {
     try {
@@ -82,6 +94,40 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
       })) as { label: string; value: string }[],
     []
   );
+
+  // Update the equipment selection handler
+  const handleEquipmentSelect = (currentValue: string) => {
+    const isSelected = tempRoom.equipmentUsed?.includes(currentValue);
+    const newEquipment = isSelected
+      ? tempRoom.equipmentUsed?.filter((e) => e !== currentValue)
+      : [...(tempRoom.equipmentUsed ?? []), currentValue];
+
+    // Update quantities
+    const newQuantities = { ...equipmentQuantities };
+    if (isSelected) {
+      delete newQuantities[currentValue];
+    } else {
+      newQuantities[currentValue] = 1; // Default quantity
+    }
+
+    setEquipmentQuantities(newQuantities);
+    setTempRoom({
+      ...tempRoom,
+      equipmentUsed: newEquipment,
+      equipmentUsedQuantity: newQuantities
+    });
+    setOpen(false);
+  };
+
+  // Add quantity change handler
+  const handleQuantityChange = (equipment: string, quantity: number) => {
+    const newQuantities = { ...equipmentQuantities, [equipment]: quantity };
+    setEquipmentQuantities(newQuantities);
+    setTempRoom({
+      ...tempRoom,
+      equipmentUsedQuantity: newQuantities
+    });
+  };
 
   return (
     <div className='mt-4 space-y-5'>
@@ -186,7 +232,9 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
                   className='w-full justify-between'
                 >
                   {tempRoom.equipmentUsed && tempRoom.equipmentUsed?.length > 0
-                    ? tempRoom.equipmentUsed.join(", ")
+                    ? tempRoom.equipmentUsed.map(equipment => 
+                        `${equipment} (${equipmentQuantities[equipment] || 1})`
+                      ).join(", ")
                     : "Select equipment..."}
                   <ChevronsUpDown className='opacity-50' />
                 </Button>
@@ -201,24 +249,28 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
                         <CommandItem
                           key={framework.value}
                           value={framework.value}
-                          onSelect={(currentValue) => {
-                            setTempRoom({
-                              ...tempRoom,
-                              equipmentUsed: tempRoom.equipmentUsed?.includes(
-                                currentValue
-                              )
-                                ? tempRoom.equipmentUsed?.filter(
-                                    (e) => e !== currentValue
-                                  )
-                                : [
-                                    ...(tempRoom.equipmentUsed ?? []),
-                                    currentValue,
-                                  ],
-                            });
-                            setOpen(false);
-                          }}
+                          onSelect={() => handleEquipmentSelect(framework.value)}
+                          className="flex items-center justify-between"
                         >
-                          {framework.label}
+                          <div className="flex items-center">
+                            <span>{framework.label}</span>
+                            {tempRoom.equipmentUsed?.includes(framework.value) && (
+                              <div className="ml-4 flex items-center">
+                                <span className="text-sm text-muted-foreground mr-2">Qty:</span>
+                                <Input
+                                  className="w-16 h-8 text-sm"
+                                  type="number"
+                                  min="1"
+                                  value={equipmentQuantities[framework.value]?.toString() || "1"}
+                                  onChange={(e) => {
+                                    const quantity = parseInt(e.target.value) || 1;
+                                    handleQuantityChange(framework.value, quantity);
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                            )}
+                          </div>
                           <Check
                             className={cn(
                               "ml-auto",
