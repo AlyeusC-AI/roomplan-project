@@ -77,7 +77,7 @@ export default function InsuranceCompanyInformation() {
         setProject({
           ...projectInfo!,
           ...data,
-          catCode: data.catCode ? parseInt(data.catCode) : null,
+          catCode: data.catCode ? (data.catCode) : null,
         });
 
         toast.success("Project updated successfully!");
@@ -263,7 +263,7 @@ export default function InsuranceCompanyInformation() {
               <FormItem className='lg:col-span-2'>
                 <FormLabel>Category Code</FormLabel>
                 <FormControl>
-                  <Input placeholder='Category Code' type='number' {...field} />
+                  <Input placeholder='Category Code'  {...field} />
                 </FormControl>
                 <FormDescription>
                   The category code of the loss for the project.

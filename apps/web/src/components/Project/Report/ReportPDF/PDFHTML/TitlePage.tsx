@@ -59,10 +59,10 @@ const TitlePage = () => {
 
             {/* Key Information */}
             <div className="pdf key-info">
-              <InfoRow label="Type of Loss" value={projectInfo?.lossType} />
+              <InfoRow label="Type of Loss" value={projectInfo?.damageType || "N/A"} />
               <InfoRow 
                 label="Category" 
-                value={projectInfo?.lossType === "Water" ? `Category ${projectInfo?.catCode}` : "N/A"} 
+                value={ `${projectInfo?.catCode}` || "N/A"} 
               />
               <InfoRow 
                 label="Date of Loss" 
@@ -92,15 +92,15 @@ const TitlePage = () => {
           <div className="pdf info-column">
             <h3 className="pdf column-title">Project Details</h3>
             <InfoRow label="Project Manager" value={projectInfo?.managerName} />
-            <InfoRow label="Project Status" value={projectInfo?.status} />
+            <InfoRow label="Project Status" value={projectInfo?.status || "N/A"} />
             <InfoRow label="Assignment #" value={projectInfo?.assignmentNumber} />
           </div>
 
           {/* Column 2 - Insurance Details */}
           <div className="pdf info-column">
             <h3 className="pdf column-title">Insurance Details</h3>
-            <InfoRow label="Policy Number" value={projectInfo?.insuranceClaimId} />
-            <InfoRow label="Claim #" value={projectInfo?.assignmentNumber} />
+            <InfoRow label="Policy Number" value={projectInfo?.policyNumber || "N/A"} />
+            <InfoRow label="Claim #" value={projectInfo?.insuranceClaimId} />
             <InfoRow label="Adjuster" value={projectInfo?.adjusterName} />
           </div>
 

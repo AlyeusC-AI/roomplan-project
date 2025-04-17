@@ -74,7 +74,8 @@ export default function ProjectDetails() {
   const [adjusterEmail, setAdjusterEmail] = useState(project.project?.adjusterEmail || "");
   const [adjusterPhoneNumber, setAdjusterPhoneNumber] = useState(project.project?.adjusterPhoneNumber || "");
   const [insuranceClaimId, setInsuranceClaimId] = useState(project.project?.insuranceClaimId || "");
-  const [catCode, setCatCode] = useState(Number(project.project?.catCode) || "");
+  const [policyNumber, setPolicyNumber] = useState(project.project?.policyNumber || "");
+  const [catCode, setCatCode] = useState((project.project?.catCode) || "");
   const [claimSummary, setClaimSummary] = useState(project.project?.claimSummary || "");
   console.log("🚀 ~ ProjectDetails ~ project:", currentAddress)
 
@@ -101,7 +102,8 @@ export default function ProjectDetails() {
         adjusterEmail,
         adjusterPhoneNumber,
         insuranceClaimId,
-        catCode: Number(catCode),
+        policyNumber,
+        catCode: (catCode),
         claimSummary,
       };
 
@@ -265,7 +267,7 @@ export default function ProjectDetails() {
           placeholder="Enter category code"
           value={catCode.toString()}
           onChangeText={setCatCode}
-          keyboardType="numeric"
+          // keyboardType="numeric"
           containerStyle={styles.inputContainer}
           leftElement={<Hash size={20} color="#94a3b8" style={styles.inputIcon} />}
         />
@@ -374,6 +376,14 @@ export default function ProjectDetails() {
             placeholder="Enter insurance claim ID"
             value={insuranceClaimId}
             onChangeText={setInsuranceClaimId}
+            containerStyle={styles.inputContainer}
+            leftElement={<FileText size={20} color="#94a3b8" style={styles.inputIcon} />}
+          />
+          <FormInput
+            label="Policy Number"
+            placeholder="Enter policy number"
+            value={policyNumber}
+            onChangeText={setPolicyNumber}
             containerStyle={styles.inputContainer}
             leftElement={<FileText size={20} color="#94a3b8" style={styles.inputIcon} />}
           />

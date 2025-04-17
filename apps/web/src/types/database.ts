@@ -1997,7 +1997,7 @@ export type Database = {
           adjusterName: string
           adjusterPhoneNumber: string
           assignmentNumber: string
-          catCode: number | null
+          catCode: string | null
           claimSummary: string
           clientEmail: string
           clientName: string
@@ -2021,6 +2021,7 @@ export type Database = {
           managerName: string
           name: string
           organizationId: number
+          policyNumber: string | null
           projectStatusValueId: number | null
           publicId: string
           rcvValue: number | null
@@ -2036,7 +2037,7 @@ export type Database = {
           adjusterName?: string
           adjusterPhoneNumber?: string
           assignmentNumber?: string
-          catCode?: number | null
+          catCode?: string | null
           claimSummary?: string
           clientEmail?: string
           clientName?: string
@@ -2060,6 +2061,7 @@ export type Database = {
           managerName?: string
           name: string
           organizationId: number
+          policyNumber?: string | null
           projectStatusValueId?: number | null
           publicId: string
           rcvValue?: number | null
@@ -2075,7 +2077,7 @@ export type Database = {
           adjusterName?: string
           adjusterPhoneNumber?: string
           assignmentNumber?: string
-          catCode?: number | null
+          catCode?: string | null
           claimSummary?: string
           clientEmail?: string
           clientName?: string
@@ -2099,6 +2101,7 @@ export type Database = {
           managerName?: string
           name?: string
           organizationId?: number
+          policyNumber?: string | null
           projectStatusValueId?: number | null
           publicId?: string
           rcvValue?: number | null
@@ -3020,7 +3023,7 @@ export type Database = {
         Returns: boolean
       }
       urlencode: {
-        Args: { string: string } | { string: string } | { data: Json }
+        Args: { data: Json } | { string: string } | { string: string }
         Returns: string
       }
     }
