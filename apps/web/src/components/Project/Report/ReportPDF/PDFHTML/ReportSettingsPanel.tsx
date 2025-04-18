@@ -33,7 +33,7 @@ const ReportSettingsPanel = () => {
   ];
 
   return (
-    <div className="fixed right-4 top-4 z-50">
+    <div className="">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="bg-blue-600 text-white p-2 rounded-lg shadow-lg hover:bg-blue-700 transition-colors"

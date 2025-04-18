@@ -11,6 +11,7 @@ import { roomStore } from "@atoms/room";
 import { reportSettingsStore } from "@atoms/report-settings";
 import { useParams } from "next/navigation";
 import { LoadingPlaceholder } from "@components/ui/spinner";
+import ReportSettingsPanel from "./ReportPDF/PDFHTML/ReportSettingsPanel";
 
 const ReportPDF = dynamic(() => import("./ReportPDF"), {
   ssr: false,
@@ -80,6 +81,8 @@ export default function Report() {
             />
             <Label htmlFor="dimensions-details">Show Dimensions & Details</Label>
           </div> */}
+                <ReportSettingsPanel />
+
           <Button onClick={generatePDF} disabled={isGeneratingPdf}>
             {isGeneratingPdf ? <LoadingPlaceholder /> : "Generate PDF"}
           </Button>

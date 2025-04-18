@@ -12,7 +12,7 @@ import PageCount from "./PageCount";
 import Readings from "./Readings";
 import TitlePage from "./TitlePage";
 import WeatherReporting from "./WeatherReporting";
-import ReportSettingsPanel from "./ReportSettingsPanel";
+// import ReportSettingsPanel from "./ReportSettingsPanel";
 
 import "@/styles/shared-pdf-styles.css";
 import "@/styles/unshared-pdf-styles.css";
@@ -37,7 +37,6 @@ const PDFHTML = () => {
         crossOrigin='anonymous'
         referrerPolicy='no-referrer'
       />
-      <ReportSettingsPanel />
       <div className='pdf-root w-[800px]'>
         <div id='pdf-root'>
           <div className='pdf pdf-reset'>
