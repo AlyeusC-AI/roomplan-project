@@ -185,6 +185,7 @@ export default function RoomReadings() {
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 120 : 0}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <Box flex={1} bg="gray.50">

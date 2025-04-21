@@ -21,6 +21,7 @@ import {
   Star,
   Loader,
   Home,
+  XCircle,
 } from "lucide-react-native";
 import { userStore } from "@/lib/state/user";
 import { useGlobalSearchParams, useRouter } from "expo-router";
@@ -49,6 +50,7 @@ import AddRoomButton from "@/components/project/AddRoomButton";
 import { projectStore } from "@/lib/state/project";
 import { uploadImage } from "@/lib/imagekit";
 import { launchImageLibraryAsync } from 'expo-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 
 interface PhotoResult {
   uri: string;
@@ -421,16 +423,34 @@ export default function ProjectPhotos() {
     );
   };
 
-  const handleSetMainImage = async () => {
+  const handleSetMainImage = async (useCamera: boolean = false) => {
     try {
       setIsUploadingMainImage(true);
       
-      const result = await launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        aspect: [16, 9],
-        quality: 0.8,
-      });
+      let result;
+      if (useCamera) {
+        // Request camera permissions
+        const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+        
+        if (cameraPermission.status !== 'granted') {
+          toast.error("Camera permission is required to take photos");
+          return;
+        }
+        
+        result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ['images'],
+          allowsEditing: true,
+          aspect: [16, 9],
+          quality: 0.8,
+        });
+      } else {
+        result = await launchImageLibraryAsync({
+          mediaTypes: ['images'],
+          allowsEditing: true,
+          aspect: [16, 9],
+          quality: 0.8,
+        });
+      }
 
       if (!result.canceled && result.assets[0]) {
         const file = result.assets[0];
@@ -748,37 +768,68 @@ export default function ProjectPhotos() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Home size={24} color="#1e40af" />
-              <Text style={styles.modalTitle}>Project Cover</Text>
-            </View>
-            
-            {mainImage && (
-              <View style={styles.coverPreview}>
-                <Image
-                  source={{ uri: mainImage }}
-                  style={styles.coverImage}
-                  resizeMode="cover"
-                />
+              <View style={styles.modalHeaderContent}>
+                <Home size={24} color="#1e40af" />
+                <Text style={styles.modalTitle}>Project Cover</Text>
               </View>
-            )}
-
-            <View style={styles.modalActions}>
-              <Button
-                variant="outline"
+              <TouchableOpacity 
+                style={styles.closeButton}
                 onPress={() => setShowCoverModal(false)}
               >
-                <Text>Cancel</Text>
-              </Button>
-              <Button
-                onPress={handleSetMainImage}
-                disabled={isUploadingMainImage}
-              >
-                {isUploadingMainImage ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={{ color: '#fff' }}>Change Cover</Text>
-                )}
-              </Button>
+                <XCircle size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalBody}>
+              {mainImage ? (
+                <View style={styles.coverPreview}>
+                  <Image
+                    source={{ uri: mainImage }}
+                    style={styles.coverImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.coverOverlay}>
+                    <Text style={styles.coverOverlayText}>Current Cover</Text>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.coverPlaceholder}>
+                  <Home size={48} color="#94a3b8" />
+                  <Text style={styles.coverPlaceholderText}>No cover image set</Text>
+                </View>
+              )}
+
+              <View style={styles.actionButtonsContainer}>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.cameraButton]}
+                  onPress={() => handleSetMainImage(true)}
+                  disabled={isUploadingMainImage}
+                >
+                  {isUploadingMainImage ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <View style={styles.actionButtonContent}>
+                      <CameraIcon size={24} color="#fff" />
+                      <Text style={styles.actionButtonText}>Take Photo</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.libraryButton]}
+                  onPress={() => handleSetMainImage(false)}
+                  disabled={isUploadingMainImage}
+                >
+                  {isUploadingMainImage ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <View style={styles.actionButtonContent}>
+                      <ImageIcon size={24} color="#fff" />
+                      <Text style={styles.actionButtonText}>Choose from Library</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>
@@ -902,26 +953,127 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-    width: "90%",
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    width: '90%',
     maxWidth: 400,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   modalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  modalHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: "600",
-    color: "#1e293b",
+    fontWeight: '600',
+    color: '#1e293b',
+    marginLeft: 8,
+  },
+  closeButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#f1f5f9',
+  },
+  modalBody: {
+    padding: 16,
+  },
+  coverPreview: {
+    width: '100%',
+    aspectRatio: 16/9,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 16,
+    position: 'relative',
+  },
+  coverImage: {
+    width: '100%',
+    height: '100%',
+  },
+  coverOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  coverOverlayText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  coverPlaceholder: {
+    width: '100%',
+    aspectRatio: 16/9,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    borderStyle: 'dashed',
+  },
+  coverPlaceholderText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  actionButtonsContainer: {
+    gap: 12,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  cameraButton: {
+    backgroundColor: '#1e40af',
+  },
+  libraryButton: {
+    backgroundColor: '#3b82f6',
+  },
+  actionButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
     marginLeft: 8,
   },
   modalDescription: {
@@ -1032,22 +1184,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1e40af',
     fontWeight: '500',
-  },
-  coverPreview: {
-    width: '100%',
-    aspectRatio: 16/9,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 8,
-    overflow: 'hidden',
-    marginBottom: 16,
-  },
-  coverImage: {
-    width: '100%',
-    height: '100%',
-  },
-  modalActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 8,
   },
 });

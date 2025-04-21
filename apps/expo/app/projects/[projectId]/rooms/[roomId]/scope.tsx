@@ -1165,86 +1165,96 @@ export default function RoomScopeScreen() {
         visible={showEquipmentModal}
         transparent
         animationType="slide"
+
         onRequestClose={() => setShowEquipmentModal(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <SafeAreaView edges={["bottom"]}>
-              <View className="p-5 border-b border-slate-100">
-                <View className="flex-row items-center justify-between mb-4">
-                  <Text className="text-xl font-semibold text-slate-800">
-                    Select Equipment
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => setShowEquipmentModal(false)}
-                    className="p-2"
-                  >
-                    <Text className="text-primary font-medium">Done</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              <View style={styles.searchContainer}>
-                <Search size={20} color="#64748b" />
-                <TextInput
-                  className="flex-1 ml-3 text-base"
-                  placeholder="Search equipment..."
-                  value={equipmentSearch}
-                  onChangeText={setEquipmentSearch}
-                  placeholderTextColor="#94a3b8"
-                />
-              </View>
-
-              <FlatList
-                data={filteredEquipment}
-                keyExtractor={(item) => item}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    onPress={() => toggleEquipment(item)}
-                    style={styles.equipmentItem}
-                    activeOpacity={0.7}
-                  >
-                    <View style={{ flex: 1 }}>
-                      <Text className="text-slate-700 text-base">{item}</Text>
-                      {selectedEquipment.includes(item) && (
-                        <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center' }}>
-                          <Text className="text-sm text-slate-500 mr-2">Quantity:</Text>
-                          <TextInput
-                            style={[styles.input, { width: 80, padding: 8 }]}
-                            keyboardType="numeric"
-                            value={equipmentQuantities[item]?.toString() || "1"}
-                            onChangeText={(text) => {
-                              const quantity = parseInt(text) || 1;
-                              handleQuantityChange(item, quantity);
-                            }}
-                          />
-                        </View>
-                      )}
-                    </View>
-                    <View
-                      style={[
-                        styles.checkbox,
-                        {
-                          borderColor: selectedEquipment.includes(item)
-                            ? "#1e88e5"
-                            : "#e2e8f0",
-                          backgroundColor: selectedEquipment.includes(item)
-                            ? "#1e88e5"
-                            : "transparent",
-                        },
-                      ]}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+          // keyboardVerticalOffset={Platform.OS === "ios" ? 50 : 0}
+        >
+          <View style={styles.modalContainer} >
+            <View style={styles.modalContent} >
+              <SafeAreaView edges={["bottom"]} >
+                <View className="p-5 border-b border-slate-100">
+                  <View className="flex-row items-center justify-between mb-4">
+                    <Text className="text-xl font-semibold text-slate-800">
+                      Select Equipment
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => setShowEquipmentModal(false)}
+                      className="p-2"
                     >
-                      {selectedEquipment.includes(item) && (
-                        <Text className="text-white text-sm">✓</Text>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                )}
-                style={{ maxHeight: 400 }}
-              />
-            </SafeAreaView>
+                      <Text className="text-primary font-medium">Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={styles.searchContainer} >
+                  <Search size={20} color="#64748b" />
+                  <TextInput
+                    className="flex-1 ml-3 text-base"
+                    placeholder="Search equipment..."
+                    value={equipmentSearch}
+                    onChangeText={setEquipmentSearch}
+                    placeholderTextColor="#94a3b8"
+                  />
+                </View>
+
+                <FlatList
+                  data={filteredEquipment}
+                  keyExtractor={(item) => item}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      onPress={() => toggleEquipment(item)}
+                      style={styles.equipmentItem}
+                      activeOpacity={0.7}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text className="text-slate-700 text-base">{item}</Text>
+                        {selectedEquipment.includes(item) && (
+                          <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center' }}>
+                            <Text className="text-sm text-slate-500 mr-2">Quantity:</Text>
+                            <TextInput
+                              style={[styles.input, { width: 80, padding: 8 }]}
+                              keyboardType="numeric"
+                              value={equipmentQuantities[item]?.toString() || "1"}
+                              onChangeText={(text) => {
+                                const quantity = parseInt(text) || 1;
+                                handleQuantityChange(item, quantity);
+                              }}
+                              placeholderTextColor="#94a3b8"
+                            />
+                          </View>
+                        )}
+                      </View>
+                      <View
+                        style={[
+                          styles.checkbox,
+                          {
+                            borderColor: selectedEquipment.includes(item)
+                              ? "#1e88e5"
+                              : "#e2e8f0",
+                            backgroundColor: selectedEquipment.includes(item)
+                              ? "#1e88e5"
+                              : "transparent",
+                          },
+                        ]}
+                      >
+                        {selectedEquipment.includes(item) && (
+                          <Text className="text-white text-sm">✓</Text>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                  style={{ maxHeight: 400 }}
+                  contentContainerStyle={{ paddingBottom: 120 }}
+                  showsVerticalScrollIndicator={false}
+                />
+              </SafeAreaView>
+            </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal
@@ -1256,79 +1266,84 @@ export default function RoomScopeScreen() {
           setEditingExtraField(null);
         }}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <SafeAreaView edges={["bottom"]}>
-              <View className="p-5 border-b border-slate-100">
-                <View className="flex-row items-center justify-between mb-4">
-                  <Text className="text-xl font-semibold text-slate-800">
-                    {editingExtraField ? 'Edit Field' : 'Add New Field'}
-                  </Text>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <SafeAreaView edges={["bottom"]}>
+                <View className="p-5 border-b border-slate-100">
+                  <View className="flex-row items-center justify-between mb-4">
+                    <Text className="text-xl font-semibold text-slate-800">
+                      {editingExtraField ? 'Edit Field' : 'Add New Field'}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowExtraFieldModal(false);
+                        setEditingExtraField(null);
+                      }}
+                      className="p-2"
+                    >
+                      <Text className="text-primary font-medium">Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View className="p-5 space-y-4">
+                  <View>
+                    <Text className="text-sm font-medium text-slate-700 mb-2">Field Label</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter field label"
+                      value={editingExtraField ? editingExtraField.label : newExtraField.label}
+                      onChangeText={(text) => {
+                        if (editingExtraField) {
+                          setEditingExtraField({ ...editingExtraField, label: text });
+                        } else {
+                          setNewExtraField({ ...newExtraField, label: text });
+                        }
+                      }}
+                      placeholderTextColor="#94a3b8"
+                    />
+                  </View>
+
+                  <View>
+                    <Text className="text-sm font-medium text-slate-700 mb-2">Unit</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter unit (e.g., sqft, ft, etc.)"
+                      value={editingExtraField ? editingExtraField.unit : newExtraField.unit}
+                      onChangeText={(text) => {
+                        if (editingExtraField) {
+                          setEditingExtraField({ ...editingExtraField, unit: text });
+                        } else {
+                          setNewExtraField({ ...newExtraField, unit: text });
+                        }
+                      }}
+                      placeholderTextColor="#94a3b8"
+                    />
+                  </View>
+
                   <TouchableOpacity
                     onPress={() => {
-                      setShowExtraFieldModal(false);
-                      setEditingExtraField(null);
+                      if (editingExtraField) {
+                        handleUpdateExtraField(activeTab, room.AreaAffected.find((a: any) => a.type === activeTab)?.id, editingExtraField.id);
+                      } else {
+                        handleAddExtraField(activeTab, room.AreaAffected.find((a: any) => a.type === activeTab)?.id);
+                      }
                     }}
-                    className="p-2"
+                    className="bg-primary p-3 rounded-lg items-center"
                   >
-                    <Text className="text-primary font-medium">Done</Text>
+                    <Text className="text-white font-medium">
+                      {editingExtraField ? 'Update Field' : 'Add Field'}
+                    </Text>
                   </TouchableOpacity>
                 </View>
-              </View>
-
-              <View className="p-5 space-y-4">
-                <View>
-                  <Text className="text-sm font-medium text-slate-700 mb-2">Field Label</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter field label"
-                    value={editingExtraField ? editingExtraField.label : newExtraField.label}
-                    onChangeText={(text) => {
-                      if (editingExtraField) {
-                        setEditingExtraField({ ...editingExtraField, label: text });
-                      } else {
-                        setNewExtraField({ ...newExtraField, label: text });
-                      }
-                    }}
-                    placeholderTextColor="#94a3b8"
-                  />
-                </View>
-
-                <View>
-                  <Text className="text-sm font-medium text-slate-700 mb-2">Unit</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter unit (e.g., sqft, ft, etc.)"
-                    value={editingExtraField ? editingExtraField.unit : newExtraField.unit}
-                    onChangeText={(text) => {
-                      if (editingExtraField) {
-                        setEditingExtraField({ ...editingExtraField, unit: text });
-                      } else {
-                        setNewExtraField({ ...newExtraField, unit: text });
-                      }
-                    }}
-                    placeholderTextColor="#94a3b8"
-                  />
-                </View>
-
-                <TouchableOpacity
-                  onPress={() => {
-                    if (editingExtraField) {
-                      handleUpdateExtraField(activeTab, room.AreaAffected.find((a: any) => a.type === activeTab)?.id, editingExtraField.id);
-                    } else {
-                      handleAddExtraField(activeTab, room.AreaAffected.find((a: any) => a.type === activeTab)?.id);
-                    }
-                  }}
-                  className="bg-primary p-3 rounded-lg items-center"
-                >
-                  <Text className="text-white font-medium">
-                    {editingExtraField ? 'Update Field' : 'Add Field'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </SafeAreaView>
+              </SafeAreaView>
+            </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal
