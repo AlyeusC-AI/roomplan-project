@@ -18,7 +18,7 @@ const DimensionsAndDetails = ({
         <ul className='ml-6 list-disc'>
           {room.equipmentUsed.map((e) => (
             <li className='list-item' key={e}>
-              {e}
+              {e} ({room.equipmentUsedQuantity?.[e] || 1})
             </li>
           ))}
         </ul>
@@ -50,8 +50,7 @@ const DimensionsAndDetails = ({
         </tr>
         <tr>
           <PDFTableTd>Total Sqft</PDFTableTd>
-          {/* <PDFTableTd>{room.totalSqft || "--"}</PDFTableTd> */}
-          <PDFTableTd>{room.width * room.length || "--"}</PDFTableTd>
+          <PDFTableTd>{room.width && room.length ? (parseFloat(room.width) * parseFloat(room.length)).toFixed(2) : "--"}</PDFTableTd>
           <PDFTableTd>sqft</PDFTableTd>
         </tr>
         <tr>

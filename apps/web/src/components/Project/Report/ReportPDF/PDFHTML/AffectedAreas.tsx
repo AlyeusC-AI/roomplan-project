@@ -56,6 +56,14 @@ const AffectedAreas = ({
                   <PDFTableTd>--</PDFTableTd>
                 </tr>
               )}
+              {/* Extra Fields */}
+              {affectedArea.extraFields && Object.entries(affectedArea.extraFields).map(([fieldId, field]: [string, any]) => (
+                <tr key={fieldId}>
+                  <PDFTableTd>{field.label}</PDFTableTd>
+                  <PDFTableTd>{field.value || "--"}</PDFTableTd>
+                  <PDFTableTd>{field.unit || "--"}</PDFTableTd>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

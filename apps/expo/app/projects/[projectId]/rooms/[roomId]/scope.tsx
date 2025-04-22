@@ -30,6 +30,7 @@ import { StatusBar } from "expo-status-bar";
 import { BlurView } from "expo-blur";
 import { api } from "@/lib/api";
 import { useDebounce } from "@/utils/debounce";
+import { supabase } from "@/lib/supabase";
 
 // Constants for area types and equipment
 const areaAffectedTitle = {
@@ -281,6 +282,10 @@ export default function RoomScopeScreen() {
   const [equipmentSearch, setEquipmentSearch] = useState("");
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
   const [equipmentQuantities, setEquipmentQuantities] = useState<Record<string, number>>({});
+  const [customEquipment, setCustomEquipment] = useState<string[]>([]);
+  const [showAddCustomModal, setShowAddCustomModal] = useState(false);
+  const [newCustomEquipment, setNewCustomEquipment] = useState("");
+  const { session: supabaseSession } = userStore((state) => state);
   const { top, bottom } = useSafeAreaInsets();
   const [saveBarOpacity] = useState(new Animated.Value(0));
   const [saveBarHeight] = useState(new Animated.Value(0));
@@ -295,11 +300,29 @@ export default function RoomScopeScreen() {
     areaType: string;
     areaId: number;
   } | null>(null);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState<{isOpen: boolean, equipment: string}>({isOpen: false, equipment: ""});
   useEffect(() => {
     setEquipmentQuantities(room?.equipmentUsedQuantity || {});
     setSelectedEquipment(room?.equipmentUsed || []);
   }, [room?.equipmentUsedQuantity]);
+  useEffect(() => {
+    const fetchOrg = async () => {
+      const { data, error } = await supabase
+        .from("Organization")
+        .select("*")
+        .eq("publicId", supabaseSession?.user.user_metadata.organizationId)
+        .single();
 
+      if (error) {
+        console.error("Error fetching organization:", error);
+      } else {
+        // setOrg(data);
+        console.log("🚀 ~ fetchOrg ~ data:", data);
+        setCustomEquipment(data.extraEquipemnts||[]);   
+      }
+    };
+    fetchOrg();
+  }, []);
   // Modify handleInputChange to be simpler
   const handleInputChange = (
     field: string,
@@ -673,9 +696,78 @@ export default function RoomScopeScreen() {
     });
   };
 
-  const filteredEquipment = equipmentOptions.filter(equipment =>
-    equipment.toLowerCase().includes(equipmentSearch.toLowerCase())
-  );
+  // Add handleAddCustomEquipment function
+  const handleAddCustomEquipment = async () => {
+    if (!newCustomEquipment.trim()) return;
+    
+    try {
+      // const response = await api.patch("/api/v1/organization", {
+      //   extraEquipemnts: [...customEquipment, newCustomEquipment.trim()]
+      // });
+      const { data, error } = await supabase.from("Organization").update({
+        extraEquipemnts: [...customEquipment, newCustomEquipment.trim()]
+      }).eq("publicId", supabaseSession?.user.user_metadata.organizationId);
+
+      if (error) {
+        toast.error("Failed to add custom equipment");
+      } else {
+        setCustomEquipment(prev => [...prev, newCustomEquipment.trim()]);
+        setNewCustomEquipment("");
+        setShowAddCustomModal(false);
+        toast.success("Custom equipment added successfully");
+      }
+    } catch (error) {
+      console.error("Error adding custom equipment:", error);
+      toast.error("Failed to add custom equipment");
+    }
+  };
+
+  // Update handleDeleteCustomEquipment to use confirmation
+  const handleDeleteCustomEquipment = (equipment: string) => {
+    setShowDeleteConfirmation({isOpen: true, equipment});
+  };
+
+  // Add confirmDelete function
+  const confirmDelete = async () => {
+    const { equipment } = showDeleteConfirmation;
+    try {
+      const { error } = await supabase
+        .from("Organization")
+        .update({
+          extraEquipemnts: customEquipment.filter(e => e !== equipment)
+        })
+        .eq("publicId", supabaseSession?.user.user_metadata.organizationId);
+
+      if (error) {
+        toast.error("Failed to delete custom equipment");
+      } else {
+        setCustomEquipment(prev => prev.filter(e => e !== equipment));
+        // Also remove from selected equipment if it's selected
+        if (selectedEquipment.includes(equipment)) {
+          setSelectedEquipment(prev => prev.filter(e => e !== equipment));
+          setEquipmentQuantities(prev => {
+            const newQuantities = { ...prev };
+            delete newQuantities[equipment];
+            return newQuantities;
+          });
+        }
+        toast.success("Custom equipment deleted successfully");
+      }
+    } catch (error) {
+      console.error("Error deleting custom equipment:", error);
+      toast.error("Failed to delete custom equipment");
+    } finally {
+      setShowDeleteConfirmation({isOpen: false, equipment: ""});
+    }
+  };
+
+  // Update filteredEquipment to include custom equipment
+  const filteredEquipment = useMemo(() => {
+    const allEquipment = [...equipmentOptions, ...customEquipment];
+    return allEquipment.filter(equipment =>
+      equipment.toLowerCase().includes(equipmentSearch.toLowerCase())
+    );
+  }, [equipmentSearch, customEquipment]);
 
   const handleAddExtraField = (areaType: string, areaId: number) => {
     if (!newExtraField.label) return;
@@ -732,7 +824,7 @@ export default function RoomScopeScreen() {
   };
 
   // Add confirmDelete function
-  const confirmDelete = async () => {
+  const confirmDeleteExtraField = async () => {
     if (!deleteConfirmation) return;
 
     const { fieldId, areaType, areaId } = deleteConfirmation;
@@ -1181,12 +1273,20 @@ export default function RoomScopeScreen() {
                     <Text className="text-xl font-semibold text-slate-800">
                       Select Equipment
                     </Text>
-                    <TouchableOpacity
-                      onPress={() => setShowEquipmentModal(false)}
-                      className="p-2"
-                    >
-                      <Text className="text-primary font-medium">Done</Text>
-                    </TouchableOpacity>
+                    <View className="flex-row items-center">
+                      <TouchableOpacity
+                        onPress={() => setShowAddCustomModal(true)}
+                        className="p-2 mr-4 bg-primary/10 rounded-lg"
+                      >
+                        <Text className="text-primary font-medium">Add Custom</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setShowEquipmentModal(false)}
+                        className="p-2"
+                      >
+                        <Text className="text-primary font-medium">Done</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
 
@@ -1211,7 +1311,17 @@ export default function RoomScopeScreen() {
                       activeOpacity={0.7}
                     >
                       <View style={{ flex: 1 }}>
-                        <Text className="text-slate-700 text-base">{item}</Text>
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-slate-700 text-base">{item}</Text>
+                          {customEquipment.includes(item) && (
+                            <TouchableOpacity
+                              onPress={() => handleDeleteCustomEquipment(item)}
+                              className="p-2"
+                            >
+                              <X size={16} color="#ef4444" />
+                            </TouchableOpacity>
+                          )}
+                        </View>
                         {selectedEquipment.includes(item) && (
                           <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center' }}>
                             <Text className="text-sm text-slate-500 mr-2">Quantity:</Text>
@@ -1308,7 +1418,7 @@ export default function RoomScopeScreen() {
                     />
                   </View>
 
-                  <View>
+                  <View className="mb-2">
                     <Text className="text-sm font-medium text-slate-700 mb-2">Unit</Text>
                     <TextInput
                       style={styles.input}
@@ -1377,6 +1487,106 @@ export default function RoomScopeScreen() {
                 <View className="flex-row gap-3 pt-4">
                   <TouchableOpacity
                     onPress={() => setDeleteConfirmation(null)}
+                    className="flex-1 px-4 py-2 border border-slate-200 rounded-lg"
+                  >
+                    <Text className="text-center text-slate-700">Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={confirmDeleteExtraField}
+                    className="flex-1 px-4 py-2 bg-red-500 rounded-lg"
+                  >
+                    <Text className="text-center text-white">Delete</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </SafeAreaView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showAddCustomModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAddCustomModal(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <SafeAreaView edges={["bottom"]}>
+                <View className="p-5 border-b border-slate-100">
+                  <View className="flex-row items-center justify-between mb-4">
+                    <Text className="text-xl font-semibold text-slate-800">
+                      Add Custom Equipment
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => setShowAddCustomModal(false)}
+                      className="p-2"
+                    >
+                      <X size={20} color="#64748b" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View className="p-5 space-y-4 ">
+                  <View className="mb-2">
+                    <Text className="text-sm font-medium text-slate-700 mb-2">Equipment Name</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter equipment name"
+                      value={newCustomEquipment}
+                      onChangeText={setNewCustomEquipment}
+                      placeholderTextColor="#94a3b8"
+                    />
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={handleAddCustomEquipment}
+                    className="bg-primary p-3 rounded-lg items-center"
+                  >
+                    <Text className="text-white font-medium">Add Equipment</Text>
+                  </TouchableOpacity>
+                </View>
+              </SafeAreaView>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={showDeleteConfirmation.isOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowDeleteConfirmation({isOpen: false, equipment: ""})}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <SafeAreaView edges={["bottom"]}>
+              <View className="p-5 border-b border-slate-100">
+                <View className="flex-row items-center justify-between mb-4">
+                  <Text className="text-xl font-semibold text-slate-800">
+                    Delete Equipment
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setShowDeleteConfirmation({isOpen: false, equipment: ""})}
+                    className="p-2"
+                  >
+                    <X size={20} color="#64748b" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View className="p-5 space-y-4">
+                <Text className="text-slate-700">
+                  Are you sure you want to delete "{showDeleteConfirmation.equipment}"? This action cannot be undone.
+                </Text>
+
+                <View className="flex-row gap-3 pt-4">
+                  <TouchableOpacity
+                    onPress={() => setShowDeleteConfirmation({isOpen: false, equipment: ""})}
                     className="flex-1 px-4 py-2 border border-slate-200 rounded-lg"
                   >
                     <Text className="text-center text-slate-700">Cancel</Text>

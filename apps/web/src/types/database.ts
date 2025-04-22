@@ -1600,6 +1600,7 @@ export type Database = {
           address: string
           createdAt: string
           customerId: string | null
+          extraEquipemnts: string[] | null
           faxNumber: string
           freeTrialEndsAt: string | null
           id: number
@@ -1624,6 +1625,7 @@ export type Database = {
           address?: string
           createdAt?: string
           customerId?: string | null
+          extraEquipemnts?: string[] | null
           faxNumber?: string
           freeTrialEndsAt?: string | null
           id?: number
@@ -1648,6 +1650,7 @@ export type Database = {
           address?: string
           createdAt?: string
           customerId?: string | null
+          extraEquipemnts?: string[] | null
           faxNumber?: string
           freeTrialEndsAt?: string | null
           id?: number
