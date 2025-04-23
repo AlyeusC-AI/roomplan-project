@@ -1381,7 +1381,7 @@ export default function RoomScopeScreen() {
           style={{ flex: 1 }}
         >
           <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
+            <View style={styles.modalContent} className="pb-4">
               <SafeAreaView edges={["bottom"]}>
                 <View className="p-5 border-b border-slate-100">
                   <View className="flex-row items-center justify-between mb-4">
@@ -1514,8 +1514,8 @@ export default function RoomScopeScreen() {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
         >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
+          <View style={styles.modalContainer} className="">
+            <View style={styles.modalContent} className="pb-4">
               <SafeAreaView edges={["bottom"]}>
                 <View className="p-5 border-b border-slate-100">
                   <View className="flex-row items-center justify-between mb-4">
