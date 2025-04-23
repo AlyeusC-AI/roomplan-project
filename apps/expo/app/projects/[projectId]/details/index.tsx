@@ -10,10 +10,11 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   TouchableWithoutFeedback,
+  Pressable,
 } from "react-native";
 import { projectStore } from "@/lib/state/project";
 import { FormInput } from "@/components/ui/form";
-import { Box, VStack, HStack, Button, Spinner } from "native-base";
+import { Box, VStack, HStack, Button, Spinner, FormControl } from "native-base";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { DamageTypeSelector } from "@/components/project/damageSelector";
 import { 
@@ -35,7 +36,11 @@ import {
   Building,
   FileCheck,
   AlertCircle,
-  Save
+  Save,
+  Calendar as CalendarIcon,
+  X,
+  ChevronRight,
+  ChevronLeft as ChevronLeftIcon
 } from "lucide-react-native";
 import { Linking } from "react-native";
 import { router, useGlobalSearchParams } from "expo-router";
@@ -44,8 +49,104 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { userStore } from "@/lib/state/user";
 import { toast } from "sonner-native";
 import { api } from "@/lib/api";
+import DateTimePicker, { DateType, useDefaultStyles } from "react-native-ui-datepicker";
+import dayjs from "dayjs";
+import { Modal } from "@/components/ui/modal";
 
 type TabType = "customer" | "loss" | "insurance";
+
+const DateInput: React.FC<{
+  label: string;
+  value: DateType;
+  onChange: (date: DateType) => void;
+}> = ({ label, value, onChange }) => {
+  const [showPicker, setShowPicker] = useState(false);
+  const [tempDate, setTempDate] = useState<DateType>(value);
+  const defaultStyles = useDefaultStyles();
+
+  useEffect(() => {
+    setTempDate(value);
+  }, [value]);
+
+  const handleConfirm = () => {
+    onChange(tempDate);
+    setShowPicker(false);
+  };
+
+  return (
+    <Box>
+      <FormControl.Label>{label}</FormControl.Label>
+      <Pressable
+        onPress={() => setShowPicker(true)}
+        style={styles.dateInput}
+      >
+        <Text style={styles.dateInputText}>
+          {dayjs(value).format("MMM D, YYYY")}
+        </Text>
+        <CalendarIcon color="#64748b" size={20} />
+      </Pressable>
+
+      <Modal isOpen={showPicker} onClose={() => setShowPicker(false)}>
+        <Box style={styles.calendarContainer}>
+          <HStack justifyContent="space-between" alignItems="center" mb={4}>
+            <Text style={styles.modalTitle}>{label}</Text>
+            <Pressable onPress={() => setShowPicker(false)}>
+              <X color="#64748b" size={20} />
+            </Pressable>
+          </HStack>
+          <Box style={styles.datePickerContainer}>
+            <DateTimePicker
+              mode="single"
+              minDate={dayjs().subtract(1, 'year').toDate()}
+              maxDate={dayjs().toDate()}
+              components={{
+                IconNext: <ChevronRight color="#1d4ed8" size={28} />,
+                IconPrev: <ChevronLeftIcon color="#1d4ed8" size={28} />,
+              }}
+              onChange={(params: { date: DateType }) => {
+                setTempDate(params.date);
+              }}
+              styles={{
+                ...defaultStyles,
+                selected: {
+                  ...defaultStyles.selected,
+                  color: "#1d4ed8",
+                  backgroundColor: "#1d4ed8",
+                },
+                selected_month: {
+                  ...defaultStyles.selected_month,
+                  color: "#1d4ed8",
+                  backgroundColor: "#1d4ed8",
+                },
+                selected_year: {
+                  ...defaultStyles.selected_year,
+                  color: "#1d4ed8",
+                  backgroundColor: "#1d4ed8",
+                },
+              }}
+              date={tempDate}
+            />
+          </Box>
+          <HStack space={2} mt={4}>
+            <Button
+              variant="outline"
+              onPress={() => setShowPicker(false)}
+              style={styles.modalButton}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </Button>
+            <Button
+              onPress={handleConfirm}
+              style={[styles.modalButton, styles.confirmButton]}
+            >
+              <Text style={styles.confirmButtonText}>Confirm</Text>
+            </Button>
+          </HStack>
+        </Box>
+      </Modal>
+    </Box>
+  );
+};
 
 export default function ProjectDetails() {
   const [activeTab, setActiveTab] = useState<TabType>("customer");
@@ -74,8 +175,10 @@ export default function ProjectDetails() {
   const [adjusterEmail, setAdjusterEmail] = useState(project.project?.adjusterEmail || "");
   const [adjusterPhoneNumber, setAdjusterPhoneNumber] = useState(project.project?.adjusterPhoneNumber || "");
   const [insuranceClaimId, setInsuranceClaimId] = useState(project.project?.insuranceClaimId || "");
-  const [catCode, setCatCode] = useState(Number(project.project?.catCode) || "");
+  const [policyNumber, setPolicyNumber] = useState(project.project?.policyNumber || "");
+  const [catCode, setCatCode] = useState((project.project?.catCode) || "");
   const [claimSummary, setClaimSummary] = useState(project.project?.claimSummary || "");
+  const [dateOfLoss, setDateOfLoss] = useState<DateType>(project.project?.dateOfLoss ? dayjs(project.project.dateOfLoss).toDate() : dayjs().toDate());
   console.log("🚀 ~ ProjectDetails ~ project:", currentAddress)
 
   const handleCallPress = (phoneNumber: string) => {
@@ -101,7 +204,9 @@ export default function ProjectDetails() {
         adjusterEmail,
         adjusterPhoneNumber,
         insuranceClaimId,
-        catCode: Number(catCode),
+        policyNumber,
+        dateOfLoss,
+        catCode: (catCode),
         claimSummary,
       };
 
@@ -260,12 +365,17 @@ export default function ProjectDetails() {
             style={styles.sectionInput}
           />
         </Box>
+        <DateInput
+          label="Date of Loss"
+          value={dateOfLoss}
+          onChange={setDateOfLoss}
+        />
         <FormInput
           label="Category Code"
           placeholder="Enter category code"
           value={catCode.toString()}
           onChangeText={setCatCode}
-          keyboardType="numeric"
+          // keyboardType="numeric"
           containerStyle={styles.inputContainer}
           leftElement={<Hash size={20} color="#94a3b8" style={styles.inputIcon} />}
         />
@@ -374,6 +484,14 @@ export default function ProjectDetails() {
             placeholder="Enter insurance claim ID"
             value={insuranceClaimId}
             onChangeText={setInsuranceClaimId}
+            containerStyle={styles.inputContainer}
+            leftElement={<FileText size={20} color="#94a3b8" style={styles.inputIcon} />}
+          />
+          <FormInput
+            label="Policy Number"
+            placeholder="Enter policy number"
+            value={policyNumber}
+            onChangeText={setPolicyNumber}
             containerStyle={styles.inputContainer}
             leftElement={<FileText size={20} color="#94a3b8" style={styles.inputIcon} />}
           />
@@ -636,5 +754,58 @@ const styles = StyleSheet.create({
   },
   damageTypeContainer: {
     marginBottom: 16,
+  },
+  calendarContainer: {
+    padding: 16,
+    backgroundColor: "white",
+    borderRadius: 12,
+  },
+  datePickerContainer: {
+    backgroundColor: "white",
+    borderRadius: 8,
+    height: 350,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1d1d1d",
+  },
+  dateInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "white",
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    marginBottom: 16,
+  },
+  dateInputText: {
+    fontSize: 16,
+    color: "#1d1d1d",
+  },
+  modalButton: {
+    flex: 1,
+    height: 45,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#1d4ed8",
+  },
+  confirmButton: {
+    backgroundColor: "#1d4ed8",
+    borderWidth: 0,
+  },
+  confirmButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  cancelButtonText: {
+    color: "#1d4ed8",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

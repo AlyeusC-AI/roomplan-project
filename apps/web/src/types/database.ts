@@ -1600,6 +1600,7 @@ export type Database = {
           address: string
           createdAt: string
           customerId: string | null
+          extraEquipemnts: string[] | null
           faxNumber: string
           freeTrialEndsAt: string | null
           id: number
@@ -1624,6 +1625,7 @@ export type Database = {
           address?: string
           createdAt?: string
           customerId?: string | null
+          extraEquipemnts?: string[] | null
           faxNumber?: string
           freeTrialEndsAt?: string | null
           id?: number
@@ -1648,6 +1650,7 @@ export type Database = {
           address?: string
           createdAt?: string
           customerId?: string | null
+          extraEquipemnts?: string[] | null
           faxNumber?: string
           freeTrialEndsAt?: string | null
           id?: number
@@ -1997,7 +2000,7 @@ export type Database = {
           adjusterName: string
           adjusterPhoneNumber: string
           assignmentNumber: string
-          catCode: number | null
+          catCode: string | null
           claimSummary: string
           clientEmail: string
           clientName: string
@@ -2006,6 +2009,7 @@ export type Database = {
           companyName: string
           createdAt: string
           damageType: string | null
+          dateOfLoss: string | null
           forecast: string
           humidity: string
           id: number
@@ -2017,9 +2021,11 @@ export type Database = {
           lng: string
           location: string
           lossType: string
+          mainImage: string | null
           managerName: string
           name: string
           organizationId: number
+          policyNumber: string | null
           projectStatusValueId: number | null
           publicId: string
           rcvValue: number | null
@@ -2035,7 +2041,7 @@ export type Database = {
           adjusterName?: string
           adjusterPhoneNumber?: string
           assignmentNumber?: string
-          catCode?: number | null
+          catCode?: string | null
           claimSummary?: string
           clientEmail?: string
           clientName?: string
@@ -2044,6 +2050,7 @@ export type Database = {
           companyName?: string
           createdAt?: string
           damageType?: string | null
+          dateOfLoss?: string | null
           forecast?: string
           humidity?: string
           id?: number
@@ -2055,9 +2062,11 @@ export type Database = {
           lng?: string
           location?: string
           lossType?: string
+          mainImage?: string | null
           managerName?: string
           name: string
           organizationId: number
+          policyNumber?: string | null
           projectStatusValueId?: number | null
           publicId: string
           rcvValue?: number | null
@@ -2073,7 +2082,7 @@ export type Database = {
           adjusterName?: string
           adjusterPhoneNumber?: string
           assignmentNumber?: string
-          catCode?: number | null
+          catCode?: string | null
           claimSummary?: string
           clientEmail?: string
           clientName?: string
@@ -2082,6 +2091,7 @@ export type Database = {
           companyName?: string
           createdAt?: string
           damageType?: string | null
+          dateOfLoss?: string | null
           forecast?: string
           humidity?: string
           id?: number
@@ -2093,9 +2103,11 @@ export type Database = {
           lng?: string
           location?: string
           lossType?: string
+          mainImage?: string | null
           managerName?: string
           name?: string
           organizationId?: number
+          policyNumber?: string | null
           projectStatusValueId?: number | null
           publicId?: string
           rcvValue?: number | null
@@ -3017,7 +3029,7 @@ export type Database = {
         Returns: boolean
       }
       urlencode: {
-        Args: { string: string } | { string: string } | { data: Json }
+        Args: { data: Json } | { string: string } | { string: string }
         Returns: string
       }
     }

@@ -94,7 +94,7 @@ const Readings = ({ room }: { room: RoomWithReadings }) => {
           </div>
         );
       })}
-      {room.RoomReading.length === 0 && (
+      {(!room.RoomReading || room.RoomReading?.length === 0) && (
         <div className="flex items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 dark:border-gray-700 dark:bg-gray-900">
           <div className="text-center">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">No reading data</h3>

@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       //     { status: 400 }
       //   );
       // }
-
+      
       // Update organization subscription details
       const { data: org, error } = await supabaseServiceRole
         .from("Organization")
@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
           freeTrialEndsAt: subscription.trial_end
             ? new Date(subscription.trial_end * 1000).toISOString()
             : null,
+          subscriptionStatus: subscription.status,
         })
         .eq(
           organizationId ? "publicId" : "subscriptionId",

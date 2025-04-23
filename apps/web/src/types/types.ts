@@ -86,7 +86,9 @@ declare global {
   type Inference = Database["public"]["Tables"]["Inference"]["Row"];
 
   type InferenceWithImages = Inference & {
-    Image: Database["public"]["Tables"]["Image"]["Row"] | null;
+    Image: Database["public"]["Tables"]["Image"]["Row"] & {
+      ImageNote: ImageNote [] | null;
+    } | null;
   };
 
   interface RoomWithReadings extends Room {

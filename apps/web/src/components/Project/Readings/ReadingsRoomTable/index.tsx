@@ -65,7 +65,7 @@ const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
     setIsDeleting(true);
     track("Delete Room");
     try {
-      const res = await fetch(`/api/v1/projects/${id}/room`, {
+      const res = await fetch(`/api/v1/projects/${id}/room/${room.publicId}`, {
         method: "DELETE",
         body: JSON.stringify({
           roomId: room.publicId,
