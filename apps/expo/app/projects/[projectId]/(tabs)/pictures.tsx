@@ -599,9 +599,13 @@ export default function ProjectPhotos() {
               className="ml-2"
             >
               {isUploadingMainImage ? (
-                <Loader size={20} color="#1e40af" />
+                <View style={styles.iconContainer}>
+                  <Loader size={20} color="#1e40af" />
+                </View>
               ) : (
-                <Home size={20} color="#1e40af" />
+                <View style={styles.iconContainer}>
+                  <Home size={20} color="#1e40af" />
+                </View>
               )}
             </TouchableOpacity>
             <View style={styles.actionButtons}>
@@ -614,20 +618,26 @@ export default function ProjectPhotos() {
                 disabled={isUpdatingAll || !rooms.rooms.length}
               >
                 {isUpdatingAll ? (
-                  <Loader size={20} color="#1e40af" />
+                  <View style={styles.iconContainer}>
+                    <Loader size={20} color="#1e40af" />
+                  </View>
                 ) : (
-                  <Star
-                    size={20}
-                    color={areAllImagesIncluded() ? "#FBBF24" : "#1e40af"}
-                    fill={areAllImagesIncluded() ? "#FBBF24" : "transparent"}
-                  />
+                  <View style={styles.iconContainer}>
+                    <Star
+                      size={20}
+                      color={areAllImagesIncluded() ? "#FBBF24" : "#1e40af"}
+                      fill={areAllImagesIncluded() ? "#FBBF24" : "transparent"}
+                    />
+                  </View>
                 )}
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={handlePickImages}
               >
-                <ImagePlus size={20} color="#1e40af" />
+                <View style={styles.iconContainer}>
+                  <ImagePlus size={20} color="#1e40af" />
+                </View>
               </TouchableOpacity>
               <AddRoomButton variant="outline" />
             </View>
@@ -885,18 +895,34 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: "row",
-    gap: 12,
+    gap: 8,
     justifyContent: "flex-end",
   },
   actionButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#f1f5f9",
+    justifyContent: "center",
+    alignItems: "center",
+    margin: 0,
+  },
+  iconContainer: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#f8fafc",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: "#e2e8f0",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   actionButtonDisabled: {
     opacity: 0.5,

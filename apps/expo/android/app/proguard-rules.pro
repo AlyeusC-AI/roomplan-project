@@ -12,3 +12,4 @@
 -keep class com.facebook.react.turbomodule.** { *; }
 
 # Add any project specific keep options here:
+-dontwarn org.slf4j.impl.StaticLoggerBinder

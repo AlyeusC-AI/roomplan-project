@@ -437,15 +437,6 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
       )}
 
       <TouchableOpacity 
-        className={`bg-[#007AFF] py-4 px-8 rounded-lg mx-10 mb-5 items-center ${(!roomId && !newRoomName) ? 'bg-[#A0C8FF] opacity-70' : ''}`}
-        onPress={handleStartScan}
-        disabled={!roomId && !newRoomName}
-      >
-        <Text className="text-white text-lg font-semibold">
-          {roomId || processedRoomId.current ? 'Rescan Room' : 'Start Room Scan'}
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity 
         className="flex-row items-center justify-center mt-5 py-2.5 px-5"
         onPress={onClose}
       >
@@ -478,6 +469,34 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
           </TouchableOpacity>
         </View>
       )}
+
+      <View className="flex-row justify-around w-full mt-10">
+        <TouchableOpacity 
+          className={`bg-[#007AFF] py-4 px-8 rounded-lg mb-5 items-center ${(!roomId && !newRoomName) ? 'bg-[#A0C8FF] opacity-70' : ''}`}
+          disabled={!roomId && !newRoomName}
+        >
+          <Text className="text-white text-lg font-semibold">
+            Save
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          className={`bg-[#007AFF] py-4 px-8 rounded-lg mb-5 items-center ${(!roomId && !newRoomName) ? 'bg-[#A0C8FF] opacity-70' : ''}`}
+          onPress={handleStartScan}
+          disabled={!roomId && !newRoomName}
+        >
+          <Text className="text-white text-lg font-semibold">
+            {roomId || processedRoomId.current ? 'Rescan Room' : 'Start Room Scan'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          className={`bg-[#007AFF] py-4 px-8 rounded-lg mb-5 items-center ${(!roomId && !newRoomName) ? 'bg-[#A0C8FF] opacity-70' : ''}`}
+          disabled={!roomId && !newRoomName}
+        >
+          <Text className="text-white text-lg font-semibold">
+            ESX
+          </Text>
+        </TouchableOpacity>
+      </View>
       {showROomTypeSelect && (
         <LidarRoomTypeSelect
           onSelect={(roomType) => {
