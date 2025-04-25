@@ -154,7 +154,12 @@ export async function GET(
     return NextResponse.json(
       {
         status: "ok",
-        rooms: rooms.data,
+        rooms: rooms.data.map((room) => ({
+          ...room,
+          Inference: room.Inference.sort(
+            (a, b) => (a.Image?.order || 0) - (b.Image?.order || 0)
+          ),
+        })),
       },
       { status: 200 }
     );

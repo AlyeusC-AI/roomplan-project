@@ -99,15 +99,20 @@ export async function PATCH(req: NextRequest) {
 
     // Handle bulk update with order
     if (order && Array.isArray(order)) {
-      const updates = order.map(({ publicId, order: orderValue }) =>
-        supabaseServiceRole
+      const updates = order.map(async ({ publicId, order: orderValue }) => {
+        const { data, error } = await supabaseServiceRole
           .from("Image")
           .update({ order: orderValue })
-          .eq("publicId", publicId)
-      );
+          .eq("publicId", publicId);
+        if (error) {
+          console.error(error);
+          throw error;
+        }
+        return data;
+      });
 
       await Promise.all(updates);
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, data: updates });
     }
 
     // Handle bulk update

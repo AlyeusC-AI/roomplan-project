@@ -42,7 +42,8 @@ import Animated, {
   useAnimatedGestureHandler,
 } from "react-native-reanimated";
 import ModalImagesWithNotes from "../pictures/modalImagesWithNotes";
-
+import { api } from "@/lib/api";
+import { toast } from "sonner-native";
 // Get screen dimensions for responsive sizing
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -64,6 +65,7 @@ export interface Inference {
     ImageNote?: ImageNote[];
     includeInReport?: boolean;
     key?: string;
+    order?: number;
   };
 }
 
@@ -116,7 +118,11 @@ export default function ImageGallery({
 
   const [images, setImages] = useState<Inference[]>(inferences);
   useEffect(() => {
-    setImages(inferences);
+    console.log("🚀 ~ inferences:", JSON.stringify(inferences, null, 2));
+
+    setImages(
+      inferences.sort((a, b) => (a.Image?.order || 0) - (b.Image?.order || 0))
+    );
   }, [inferences]);
 
   // Calculate grid layout
@@ -201,22 +207,26 @@ export default function ImageGallery({
 
       // Update order in backend
       const orderUpdates = newOrder.map((inference, idx) => ({
-        publicId: inference.publicId,
+        publicId: inference.Image?.publicId,
         order: idx,
       }));
 
-      fetch(`/api/v1/projects/${inferences[0]?.projectId}/images`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ids: orderUpdates.map((update) => update.publicId),
+      console.log("🚀 ~ orderUpdates:", JSON.stringify(orderUpdates, null, 2));
+
+      api
+        .patch(`/api/v1/projects/${inferences[0]?.projectId}/images`, {
           order: orderUpdates,
-        }),
-      }).catch((error) => {
-        console.error("Failed to update image order:", error);
-      });
+        })
+        .then((res) => {
+          toast.success("Image order updated");
+
+          console.log("🚀 ~ rsasdadsadasdes:", res.data);
+          // onRefresh?.();
+        })
+        .catch((error) => {
+          console.error("Failed to update image order:", error);
+          toast.error("Failed to update image order");
+        });
     }
   };
 

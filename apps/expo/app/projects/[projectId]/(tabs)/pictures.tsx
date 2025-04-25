@@ -282,11 +282,15 @@ export default function ProjectPhotos() {
 
   // Get a preview image for a room
   const getRoomPreviewImage = (
-    roomInferences: Array<{ imageKey: string | null }> | undefined
+    roomInferences:
+      | Array<{ imageKey: string | null; Image?: { order: number } }>
+      | undefined
   ): string | null => {
     if (!roomInferences || roomInferences.length === 0) return null;
 
-    for (const inference of roomInferences) {
+    for (const inference of roomInferences.sort(
+      (a, b) => (a.Image?.order || 0) - (b.Image?.order || 0)
+    )) {
       if (inference.imageKey) {
         const imageUrl = safelyGetImageUrl(
           urlMap.urlMap,
