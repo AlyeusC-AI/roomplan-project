@@ -49,8 +49,8 @@ import safelyGetImageUrl from "@/utils/safelyGetImageKey";
 import AddRoomButton from "@/components/project/AddRoomButton";
 import { projectStore } from "@/lib/state/project";
 import { uploadImage } from "@/lib/imagekit";
-import { launchImageLibraryAsync } from 'expo-image-picker';
-import * as ImagePicker from 'expo-image-picker';
+import { launchImageLibraryAsync } from "expo-image-picker";
+import * as ImagePicker from "expo-image-picker";
 
 interface PhotoResult {
   uri: string;
@@ -87,7 +87,7 @@ export default function ProjectPhotos() {
   const [expandedValue, setExpandedValue] = useState<string | undefined>(
     undefined
   );
-  const {project} = projectStore();
+  const { project } = projectStore();
   const [showRoomSelection, setShowRoomSelection] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
   const [shouldOpenCamera, setShouldOpenCamera] = useState(false);
@@ -95,7 +95,7 @@ export default function ProjectPhotos() {
   const [isUploading, setIsUploading] = useState(false);
   const [isUpdatingAll, setIsUpdatingAll] = useState(false);
   const rooms = roomInferenceStore();
-  console.log("🚀 ~ ProjectPhotos ~ rooms:",JSON.stringify(rooms, null, 2))
+  console.log("🚀 ~ ProjectPhotos ~ rooms:", JSON.stringify(rooms, null, 2));
   const urlMap = urlMapStore();
   const router = useRouter();
   const [isUploadingMainImage, setIsUploadingMainImage] = useState(false);
@@ -344,7 +344,10 @@ export default function ProjectPhotos() {
     }
   };
 
-  const handleToggleIncludeInReport = async (publicId: string, includeInReport: boolean) => {
+  const handleToggleIncludeInReport = async (
+    publicId: string,
+    includeInReport: boolean
+  ) => {
     try {
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/images`,
@@ -386,10 +389,10 @@ export default function ProjectPhotos() {
             "auth-token": supabaseSession?.access_token || "",
           },
           body: JSON.stringify({
-            ids: rooms.rooms.flatMap(room => 
-              room.Inference
-                .filter((i: Inference) => !i.isDeleted && !i.Image?.isDeleted)
-                .map((i: Inference) => i.Image?.publicId || i.publicId)
+            ids: rooms.rooms.flatMap((room) =>
+              room.Inference.filter(
+                (i: Inference) => !i.isDeleted && !i.Image?.isDeleted
+              ).map((i: Inference) => i.Image?.publicId || i.publicId)
             ),
             includeInReport: true,
           }),
@@ -413,12 +416,13 @@ export default function ProjectPhotos() {
   // Add function to check if all images are included in report
   const areAllImagesIncluded = () => {
     if (!rooms.rooms?.length) return false;
-    
-    return rooms.rooms.every(room => 
-      room.Inference?.every((inference: Inference) => 
-        !inference.isDeleted && 
-        !inference.Image?.isDeleted && 
-        inference.Image?.includeInReport
+
+    return rooms.rooms.every((room) =>
+      room.Inference?.every(
+        (inference: Inference) =>
+          !inference.isDeleted &&
+          !inference.Image?.isDeleted &&
+          inference.Image?.includeInReport
       )
     );
   };
@@ -426,26 +430,27 @@ export default function ProjectPhotos() {
   const handleSetMainImage = async (useCamera: boolean = false) => {
     try {
       setIsUploadingMainImage(true);
-      
+
       let result;
       if (useCamera) {
         // Request camera permissions
-        const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-        
-        if (cameraPermission.status !== 'granted') {
+        const cameraPermission =
+          await ImagePicker.requestCameraPermissionsAsync();
+
+        if (cameraPermission.status !== "granted") {
           toast.error("Camera permission is required to take photos");
           return;
         }
-        
+
         result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ['images'],
+          mediaTypes: ["images"],
           allowsEditing: true,
           aspect: [16, 9],
           quality: 0.8,
         });
       } else {
         result = await launchImageLibraryAsync({
-          mediaTypes: ['images'],
+          mediaTypes: ["images"],
           allowsEditing: true,
           aspect: [16, 9],
           quality: 0.8,
@@ -454,14 +459,17 @@ export default function ProjectPhotos() {
 
       if (!result.canceled && result.assets[0]) {
         const file = result.assets[0];
-        
-        const uploadResult = await uploadImage({
-          uri: file.uri,
-          type: 'image/jpeg',
-          name: `${Date.now()}.jpg`
-        }, {
-          folder: `projects/${projectId}/main`,
-        });
+
+        const uploadResult = await uploadImage(
+          {
+            uri: file.uri,
+            type: "image/jpeg",
+            name: `${Date.now()}.jpg`,
+          },
+          {
+            folder: `projects/${projectId}/main`,
+          }
+        );
 
         if (uploadResult.url) {
           const response = await fetch(
@@ -492,7 +500,6 @@ export default function ProjectPhotos() {
     } finally {
       setIsUploadingMainImage(false);
       // setShowCoverModal(false);
-
     }
   };
 
@@ -511,7 +518,6 @@ export default function ProjectPhotos() {
         description="Upload images to associate with this project. Images of rooms can be automatically assigned a room"
         // buttonText="Start Taking Pictures"
         buttonText="Create a room"
-
         icon={<CameraIcon height={50} width={50} />}
         secondaryIcon={
           <CameraIcon height={20} width={20} color="#fff" className="ml-4" />
@@ -582,9 +588,12 @@ export default function ProjectPhotos() {
       >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Project Photos</Text>
-          <View className="flex-row gap-2 justify-between" >
-          <TouchableOpacity 
-              style={[styles.actionButton, isUploadingMainImage && styles.actionButtonDisabled]}
+          <View className="flex-row gap-2 justify-between">
+            <TouchableOpacity
+              style={[
+                styles.actionButton,
+                isUploadingMainImage && styles.actionButtonDisabled,
+              ]}
               onPress={() => setShowCoverModal(true)}
               disabled={isUploadingMainImage}
               className="ml-2"
@@ -595,26 +604,32 @@ export default function ProjectPhotos() {
                 <Home size={20} color="#1e40af" />
               )}
             </TouchableOpacity>
-            <View style={styles.actionButtons} >
-            <TouchableOpacity 
-              style={[styles.actionButton, isUpdatingAll && styles.actionButtonDisabled]}
-              onPress={includeAllInReport}
-              disabled={isUpdatingAll || !rooms.rooms.length}
-            >
-              {isUpdatingAll ? (
-                <Loader size={20} color="#1e40af" />
-              ) : (
-                <Star 
-                  size={20} 
-                  color={areAllImagesIncluded() ? "#FBBF24" : "#1e40af"} 
-                  fill={areAllImagesIncluded() ? "#FBBF24" : "transparent"}
-                />
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton} onPress={handlePickImages}>
-              <ImagePlus size={20} color="#1e40af" />
-            </TouchableOpacity>
-            <AddRoomButton variant="outline" />
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                style={[
+                  styles.actionButton,
+                  isUpdatingAll && styles.actionButtonDisabled,
+                ]}
+                onPress={includeAllInReport}
+                disabled={isUpdatingAll || !rooms.rooms.length}
+              >
+                {isUpdatingAll ? (
+                  <Loader size={20} color="#1e40af" />
+                ) : (
+                  <Star
+                    size={20}
+                    color={areAllImagesIncluded() ? "#FBBF24" : "#1e40af"}
+                    fill={areAllImagesIncluded() ? "#FBBF24" : "transparent"}
+                  />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={handlePickImages}
+              >
+                <ImagePlus size={20} color="#1e40af" />
+              </TouchableOpacity>
+              <AddRoomButton variant="outline" />
             </View>
           </View>
         </View>
@@ -625,7 +640,7 @@ export default function ProjectPhotos() {
             ?.map((room) => {
               const previewImageUrl = getRoomPreviewImage(room.Inference);
               const imageCount = room.Inference?.length || 0;
-              console.log("🚀 ~ ?.map ~ imageCount:", imageCount)
+              console.log("🚀 ~ ?.map ~ imageCount:", imageCount);
 
               return (
                 <TouchableOpacity
@@ -772,14 +787,14 @@ export default function ProjectPhotos() {
                 <Home size={24} color="#1e40af" />
                 <Text style={styles.modalTitle}>Project Cover</Text>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setShowCoverModal(false)}
               >
                 <XCircle size={24} color="#64748b" />
               </TouchableOpacity>
             </View>
-            
+
             <View style={styles.modalBody}>
               {mainImage ? (
                 <View style={styles.coverPreview}>
@@ -795,7 +810,9 @@ export default function ProjectPhotos() {
               ) : (
                 <View style={styles.coverPlaceholder}>
                   <Home size={48} color="#94a3b8" />
-                  <Text style={styles.coverPlaceholderText}>No cover image set</Text>
+                  <Text style={styles.coverPlaceholderText}>
+                    No cover image set
+                  </Text>
                 </View>
               )}
 
@@ -825,7 +842,9 @@ export default function ProjectPhotos() {
                   ) : (
                     <View style={styles.actionButtonContent}>
                       <ImageIcon size={24} color="#fff" />
-                      <Text style={styles.actionButtonText}>Choose from Library</Text>
+                      <Text style={styles.actionButtonText}>
+                        Choose from Library
+                      </Text>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -953,17 +972,17 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
-    width: '90%',
+    width: "90%",
     maxWidth: 400,
-    overflow: 'hidden',
-    shadowColor: '#000',
+    overflow: "hidden",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -973,84 +992,84 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: "#e5e7eb",
   },
   modalHeaderContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: '600',
-    color: '#1e293b',
+    fontWeight: "600",
+    color: "#1e293b",
     marginLeft: 8,
   },
   closeButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: "#f1f5f9",
   },
   modalBody: {
     padding: 16,
   },
   coverPreview: {
-    width: '100%',
-    aspectRatio: 16/9,
+    width: "100%",
+    aspectRatio: 16 / 9,
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 16,
-    position: 'relative',
+    position: "relative",
   },
   coverImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   coverOverlay: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     padding: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   coverOverlayText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   coverPlaceholder: {
-    width: '100%',
-    aspectRatio: 16/9,
+    width: "100%",
+    aspectRatio: 16 / 9,
     borderRadius: 12,
-    backgroundColor: '#f1f5f9',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#f1f5f9",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 16,
     borderWidth: 2,
-    borderColor: '#e5e7eb',
-    borderStyle: 'dashed',
+    borderColor: "#e5e7eb",
+    borderStyle: "dashed",
   },
   coverPlaceholderText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#64748b',
-    fontWeight: '500',
+    color: "#64748b",
+    fontWeight: "500",
   },
   actionButtonsContainer: {
     gap: 12,
   },
   actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 16,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -1060,20 +1079,20 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cameraButton: {
-    backgroundColor: '#1e40af',
+    backgroundColor: "#1e40af",
   },
   libraryButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: "#3b82f6",
   },
   actionButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   actionButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 8,
   },
   modalDescription: {
@@ -1127,62 +1146,62 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   mainImageContainer: {
-    width: '100%',
-    aspectRatio: 16/9,
-    backgroundColor: '#f1f5f9',
+    width: "100%",
+    aspectRatio: 16 / 9,
+    backgroundColor: "#f1f5f9",
     marginBottom: 16,
   },
   mainImageWrapper: {
-    width: '100%',
-    height: '100%',
-    position: 'relative',
+    width: "100%",
+    height: "100%",
+    position: "relative",
   },
   mainImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   mainImageOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   mainImageEditButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
   },
   mainImageEditText: {
-    color: '#fff',
+    color: "#fff",
     marginLeft: 8,
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   mainImagePlaceholder: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f1f5f9',
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f1f5f9",
     borderWidth: 2,
-    borderColor: '#e5e7eb',
-    borderStyle: 'dashed',
+    borderColor: "#e5e7eb",
+    borderStyle: "dashed",
     borderRadius: 12,
   },
   mainImagePlaceholderContent: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   mainImagePlaceholderText: {
     marginTop: 8,
     fontSize: 16,
-    color: '#1e40af',
-    fontWeight: '500',
+    color: "#1e40af",
+    fontWeight: "500",
   },
 });

@@ -7,7 +7,7 @@ import {
   Modal,
   Dimensions,
   FlatList,
-  Animated,
+  Animated as RNAnimated,
   SafeAreaView,
   StatusBar,
   Platform,
@@ -30,6 +30,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { deleteImage, getStorageUrl } from "@/lib/utils/imageModule";
 import safelyGetImageUrl from "@/utils/safelyGetImageKey";
+import {
+  GestureHandlerRootView,
+  PanGestureHandler,
+} from "react-native-gesture-handler";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  runOnJS,
+  useAnimatedGestureHandler,
+} from "react-native-reanimated";
 
 // Get screen dimensions for responsive sizing
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -51,6 +62,7 @@ interface Inference {
     isDeleted?: boolean;
     ImageNote?: ImageNote[];
     includeInReport?: boolean;
+    key?: string;
   };
 }
 
@@ -77,7 +89,11 @@ interface ImageGalleryProps {
   initialSelectedKeys?: string[];
   onDelete?: (imageKey: string) => Promise<void>;
   onAddNote?: (imageId: number, note: string) => Promise<void>;
-  onToggleIncludeInReport?: (publicId: string, includeInReport: boolean) => Promise<void>;
+  onToggleIncludeInReport?: (
+    publicId: string,
+    includeInReport: boolean
+  ) => Promise<void>;
+  onReorder?: (newOrder: Inference[]) => void;
 }
 
 export default function ImageGallery({
@@ -98,7 +114,7 @@ export default function ImageGallery({
   const [selectedKeys, setSelectedKeys] =
     useState<string[]>(initialSelectedKeys);
   const [showNotes, setShowNotes] = useState(false);
-  const notesSheetAnim = useRef(new Animated.Value(0)).current;
+  const notesSheetAnim = useSharedValue(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [isUpdatingReport, setIsUpdatingReport] = useState(false);
@@ -108,24 +124,24 @@ export default function ImageGallery({
   const thumbnailScrollRef = useRef<ScrollView>(null);
   const currentNoteText = useRef("");
   const noteInputRef = useRef<TextInput>(null);
+  const [images, setImages] = useState<Inference[]>(inferences);
 
   // Animation values
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useSharedValue(0);
 
   // Calculate grid layout
   const itemsPerRow = 3;
 
   // Filter out inferences without imageKey or with undefined urlMap entries
-  const validInferences = inferences.filter(
+  const validInferences = images.filter(
     (inference): inference is Inference & { imageKey: string } =>
       // !!inference.imageKey &&
       // typeof inference.imageKey === "string" &&
-      !inference.isDeleted &&
-      !inference.Image?.isDeleted
-      //  &&
-      // !!inference.imageKey
+      !inference.isDeleted && !inference.Image?.isDeleted
+    //  &&
+    // !!inference.imageKey
   );
-  console.log("🚀 ~ validInferences:", validInferences)
+  console.log("🚀 ~ validInferences:", validInferences);
 
   // Organize inferences into rows for grid display
   const rows = Array.from({
@@ -144,28 +160,109 @@ export default function ImageGallery({
     return paddedItems;
   });
 
+  // Add state for drag and drop
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const positions = useSharedValue(
+    validInferences.map((_, index) => ({ x: 0, y: 0 }))
+  );
+
+  // Handle drag start
+  const handleDragStart = (index: number) => {
+    setIsDragging(true);
+    setDraggedIndex(index);
+  };
+
+  // Handle drag move
+  const handleDragMove = (
+    index: number,
+    translation: { x: number; y: number }
+  ) => {
+    positions.value = positions.value.map((pos, i) => {
+      if (i === index) {
+        return {
+          x: translation.x,
+          y: translation.y,
+        };
+      }
+      return pos;
+    });
+  };
+
+  // Handle drag end
+  const handleDragEnd = (index: number) => {
+    setIsDragging(false);
+    setDraggedIndex(null);
+
+    // Reset positions with spring animation
+    positions.value = positions.value.map((_, i) => ({
+      x: 0,
+      y: 0,
+    }));
+
+    // Calculate the new position based on the drag distance
+    const dragDistance = positions.value[index];
+    const itemWidth = (SCREEN_WIDTH - 40) / 3;
+    const itemHeight = itemWidth; // Since it's square
+
+    // Calculate row and column changes
+    const colChange = Math.round(dragDistance.x / itemWidth);
+    const rowChange = Math.round(dragDistance.y / itemHeight);
+
+    // Calculate the new index based on row and column changes
+    const currentRow = Math.floor(index / 3);
+    const currentCol = index % 3;
+    const newRow = Math.max(
+      0,
+      Math.min(currentRow + rowChange, Math.floor(validInferences.length / 3))
+    );
+    const newCol = Math.max(0, Math.min(currentCol + colChange, 2));
+    const newIndex = newRow * 3 + newCol;
+
+    // Only reorder if the position has changed
+    if (newIndex !== index) {
+      const newOrder = [...validInferences];
+      const [movedItem] = newOrder.splice(index, 1);
+      newOrder.splice(newIndex, 0, movedItem);
+      setImages(newOrder);
+    }
+  };
+
+  // Animated style for dragged item
+  const animatedStyle = (index: number) =>
+    useAnimatedStyle(() => {
+      const { x, y } = positions.value[index];
+      const scale = isDragging && draggedIndex === index ? 1.1 : 1;
+      return {
+        transform: [{ translateX: x }, { translateY: y }, { scale }],
+        zIndex: isDragging && draggedIndex === index ? 1 : 0,
+      } as const;
+    });
+
   // Handle image press to open modal
   const handleImagePress = (index: number) => {
     setActiveImageIndex(index);
     setModalVisible(true);
 
     // Animate fade in
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
+    fadeAnim.value = withSpring(1, {
+      damping: 20,
+      stiffness: 90,
+    });
   };
 
   // Handle modal close
   const handleCloseModal = () => {
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
-      setModalVisible(false);
-    });
+    fadeAnim.value = withSpring(
+      0,
+      {
+        damping: 20,
+        stiffness: 90,
+      },
+      () => {
+        setModalVisible(false);
+      }
+    );
   };
 
   // Navigate to previous image in modal
@@ -246,18 +343,20 @@ export default function ImageGallery({
   // Add function to toggle notes
   const toggleNotes = () => {
     if (showNotes) {
-      Animated.timing(notesSheetAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start(() => setShowNotes(false));
+      notesSheetAnim.value = withSpring(
+        0,
+        {
+          damping: 20,
+          stiffness: 90,
+        },
+        () => setShowNotes(false)
+      );
     } else {
       setShowNotes(true);
-      Animated.timing(notesSheetAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
+      notesSheetAnim.value = withSpring(1, {
+        damping: 20,
+        stiffness: 90,
+      });
     }
   };
 
@@ -277,7 +376,7 @@ export default function ImageGallery({
   // Add toggleIncludeInReport function
   const handleToggleIncludeInReport = async (inference: Inference) => {
     if (!onToggleIncludeInReport || isUpdatingReport) return;
-    
+
     try {
       setIsUpdatingReport(true);
       await onToggleIncludeInReport(
@@ -295,6 +394,14 @@ export default function ImageGallery({
     }
   };
 
+  // Add this near the top of the file
+  const notesSheetStyle = useAnimatedStyle(() => {
+    const translateY = notesSheetAnim.value * 600;
+    return {
+      transform: [{ translateY }],
+    } as const;
+  });
+
   // Render image item in the grid
   const renderGridItem = (inference: Inference | null, index: number) => {
     if (!inference || (!inference.imageKey && !inference.Image?.key)) {
@@ -302,41 +409,76 @@ export default function ImageGallery({
     }
 
     const imageKey = inference.imageKey || inference.Image?.key || "";
-
-
-    // Try to get the URL from the map first, then fall back to direct construction
     let imageUrl = safelyGetImageUrl(urlMap, imageKey, "");
-
-    // If URL is still empty, try to construct it directly
     if (!imageUrl) {
       imageUrl = getStorageUrl(imageKey);
     }
 
     const isSelected = selectedKeys.includes(imageKey);
 
-    return (
-      <View key={imageKey} style={styles.galleryItem}>
-        <OptimizedImage
-          uri={imageUrl}
-          style={{ width: "100%", height: "100%" }}
-          resizeMode="cover"
-          onPress={
-            selectable
-              ? () => toggleImageSelection(imageKey)
-              : () => {
-                  // Find the index in validInferences array
-                  const validIndex = validInferences.findIndex(
-                    (item) => item.id === inference.id
-                  );
-                  if (validIndex >= 0) {
-                    handleImagePress(validIndex);
-                  }
-                }
+    const gestureHandler = useAnimatedStyle(() => {
+      const { x, y } = positions.value[index];
+      const scale = isDragging && draggedIndex === index ? 1.1 : 1;
+      return {
+        transform: [{ translateX: x }, { translateY: y }, { scale }],
+        zIndex: isDragging && draggedIndex === index ? 1 : 0,
+      } as const;
+    });
+
+    const onGestureEvent = useAnimatedGestureHandler({
+      onStart: () => {
+        runOnJS(handleDragStart)(index);
+      },
+      onActive: (event) => {
+        positions.value = positions.value.map((pos, i) => {
+          if (i === index) {
+            return {
+              x: event.translationX,
+              y: event.translationY,
+            };
           }
-          isSelected={isSelected}
-          imageKey={imageKey}
-        />
-      </View>
+          return pos;
+        });
+      },
+      onEnd: () => {
+        runOnJS(handleDragEnd)(index);
+      },
+    });
+
+    return (
+      <Animated.View
+        key={imageKey}
+        style={[styles.galleryItem, gestureHandler]}
+      >
+        <PanGestureHandler
+          onGestureEvent={onGestureEvent}
+          activeOffsetX={[-5, 5]}
+          activeOffsetY={[-5, 5]}
+        >
+          <Animated.View style={styles.gestureContainer}>
+            <OptimizedImage
+              uri={imageUrl}
+              style={{ width: "100%", height: "100%" }}
+              resizeMode="cover"
+              isSelected={isSelected}
+              imageKey={imageKey}
+              onLongPress={() => handleDragStart(index)}
+              onPress={
+                selectable
+                  ? () => toggleImageSelection(imageKey)
+                  : () => {
+                      const validIndex = validInferences.findIndex(
+                        (item) => item.id === inference.id
+                      );
+                      if (validIndex >= 0) {
+                        handleImagePress(validIndex);
+                      }
+                    }
+              }
+            />
+          </Animated.View>
+        </PanGestureHandler>
+      </Animated.View>
     );
   };
 
@@ -380,7 +522,10 @@ export default function ImageGallery({
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionButton, isUpdatingReport && styles.disabledButton]}
+            style={[
+              styles.actionButton,
+              isUpdatingReport && styles.disabledButton,
+            ]}
             onPress={() => handleToggleIncludeInReport(item)}
             disabled={isUpdatingReport}
           >
@@ -407,21 +552,7 @@ export default function ImageGallery({
 
         {/* Notes Bottom Sheet */}
         {showNotes && (
-          <Animated.View
-            style={[
-              styles.notesSheet,
-              {
-                transform: [
-                  {
-                    translateY: notesSheetAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [600, 0],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
+          <Animated.View style={[styles.notesSheet, notesSheetStyle]}>
             <View style={styles.notesHeader}>
               <Text style={styles.notesHeaderText}>Notes</Text>
               <TouchableOpacity
@@ -439,7 +570,7 @@ export default function ImageGallery({
                     <View style={styles.noteAvatar}>
                       <Text style={styles.noteAvatarText}>
                         {note.User?.firstName?.charAt(0) || "N"} +
-                       {   note.User?.lastName?.charAt(0) || "N"}
+                        {note.User?.lastName?.charAt(0) || "N"}
                       </Text>
                     </View>
                     <View style={styles.noteMetadata}>
@@ -531,7 +662,7 @@ export default function ImageGallery({
   }
 
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       {/* Grid Gallery */}
       <View style={styles.galleryGrid}>
         {rows.map((row, rowIndex) => (
@@ -635,17 +766,17 @@ export default function ImageGallery({
                 snapToAlignment="start"
               >
                 {validInferences.map((inference, index) => {
-                  const imageKey = inference.imageKey || inference.Image?.key || "";
-                  let imageUrl = safelyGetImageUrl(
-                    urlMap,
-                    imageKey,
-                    ""
-                  );
+                  const imageKey =
+                    inference.imageKey || inference.Image?.key || "";
+                  let imageUrl = safelyGetImageUrl(urlMap, imageKey, "");
 
                   if (!imageUrl) {
                     imageUrl = getStorageUrl(imageKey);
                   }
-                  console.log("🚀 ~ {validInferences.map ~ imageUrl:", imageUrl)
+                  console.log(
+                    "🚀 ~ {validInferences.map ~ imageUrl:",
+                    imageUrl
+                  );
 
                   return (
                     <TouchableOpacity
@@ -686,7 +817,7 @@ export default function ImageGallery({
           </SafeAreaView>
         </Animated.View>
       </Modal>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
@@ -960,5 +1091,9 @@ const styles = StyleSheet.create({
   },
   disabledButtonText: {
     opacity: 0.7,
+  },
+  gestureContainer: {
+    width: "100%",
+    height: "100%",
   },
 });
