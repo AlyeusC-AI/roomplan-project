@@ -1055,6 +1055,7 @@ export type Database = {
           includeInReport: boolean
           isDeleted: boolean
           key: string
+          order: number | null
           organizationId: number | null
           projectId: number
           publicId: string
@@ -1066,6 +1067,7 @@ export type Database = {
           includeInReport?: boolean
           isDeleted?: boolean
           key: string
+          order?: number | null
           organizationId?: number | null
           projectId: number
           publicId: string
@@ -1077,6 +1079,7 @@ export type Database = {
           includeInReport?: boolean
           isDeleted?: boolean
           key?: string
+          order?: number | null
           organizationId?: number | null
           projectId?: number
           publicId?: string
@@ -1619,6 +1622,7 @@ export type Database = {
           subscriptionPlan:
             | Database["public"]["Enums"]["SubscriptionLevel"]
             | null
+          subscriptionStatus: string | null
           updatedAt: string
         }
         Insert: {
@@ -1644,6 +1648,7 @@ export type Database = {
           subscriptionPlan?:
             | Database["public"]["Enums"]["SubscriptionLevel"]
             | null
+          subscriptionStatus?: string | null
           updatedAt?: string
         }
         Update: {
@@ -1669,6 +1674,7 @@ export type Database = {
           subscriptionPlan?:
             | Database["public"]["Enums"]["SubscriptionLevel"]
             | null
+          subscriptionStatus?: string | null
           updatedAt?: string
         }
         Relationships: [

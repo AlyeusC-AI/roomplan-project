@@ -107,10 +107,10 @@ const data = {
           title: "Organization",
           url: "/settings/organization",
         },
-        // {
-        //   title: "Documents",
-        //   url: "/documents",
-        // },
+        {
+          title: "Documents",
+          url: "/documents",
+        },
         {
           title: "Forms",
           url: "/forms",
