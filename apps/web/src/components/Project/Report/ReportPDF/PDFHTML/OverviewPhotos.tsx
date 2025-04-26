@@ -8,18 +8,26 @@ const OverviewPhoto = ({ imageKey }: { imageKey: string }) => {
   if (!url) return null;
   return (
     <div className='image-div'>
-      <PDFSafeImage url={url} alt={`Overview photo`} className="w-full h-full" />
+      <PDFSafeImage
+        url={url}
+        alt={`Overview photo`}
+        className='h-full w-full'
+      />
     </div>
   );
 };
 
-const PhotoNote = ({ notes }: { notes: Array<{ id: string; body: string }> }) => {
+const PhotoNote = ({
+  notes,
+}: {
+  notes: Array<{ id: string; body: string }>;
+}) => {
   if (!notes || notes.length === 0) return null;
-  
+
   return (
-    <div className="photo-note">
+    <div className='photo-note'>
       {notes.map((note) => (
-        <div key={note.id} className="note-content">
+        <div key={note.id} className='note-content'>
           {note.body}
         </div>
       ))}
@@ -41,7 +49,7 @@ const OverviewPhotos = ({ room }: { room: RoomWithReadings }) => {
     }
     return rows;
   }, [selectedPhotos]);
-  console.log("🚀 ~ photoRows ~ photoRows:", photoRows)
+  console.log("🚀 ~ photoRows ~ photoRows:", photoRows);
 
   return (
     <>
@@ -51,17 +59,23 @@ const OverviewPhotos = ({ room }: { room: RoomWithReadings }) => {
       <div className='photo-grid'>
         {selectedPhotos.length === 0 && <p>No photos of this room</p>}
         {photoRows.map((row, rowIndex) => (
-          <div key={rowIndex} className="photo-row">
+          <div key={rowIndex} className='photo-row'>
             {row.map((inference) => (
-              <div key={inference.imageKey} className="photo-item">
+              <div key={inference.imageKey} className='photo-item'>
                 <OverviewPhoto imageKey={inference.imageKey!} />
                 <PhotoNote notes={inference.Image?.ImageNote} />
               </div>
             ))}
             {/* Add empty items to maintain grid if row has less than 3 items */}
-            {row.length < 3 && Array(3 - row.length).fill(0).map((_, index) => (
-              <div key={`empty-${index}`} className="photo-item photo-item-empty" />
-            ))}
+            {row.length < 3 &&
+              Array(3 - row.length)
+                .fill(0)
+                .map((_, index) => (
+                  <div
+                    key={`empty-${index}`}
+                    className='photo-item photo-item-empty'
+                  />
+                ))}
           </div>
         ))}
       </div>

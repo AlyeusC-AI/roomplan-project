@@ -37,7 +37,10 @@ export function SidebarSubscriptionStatus() {
   useEffect(() => {
     if (pathname === "/settings/billing") {
       setShowWarningModal(false);
-    } else {
+    } else if (subscriptionInfo&&
+      subscriptionInfo?.status !== "active" &&
+      subscriptionInfo?.status !== "trialing"
+    ) {
       setShowWarningModal(true);
     }
   }, [pathname]);

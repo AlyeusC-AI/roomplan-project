@@ -78,6 +78,14 @@ const PhotoGroup = ({
         order: idx,
       }));
 
+      const newPhotosLocal = photos.map((photo) => {
+        const updatedPhoto = orderUpdates.find(
+          (update) => update.publicId === photo.publicId
+        );
+        return updatedPhoto ? { ...photo, order: updatedPhoto.order } : photo;
+      });
+      // Update local state
+      setPhotos(newPhotosLocal);
       try {
         const response = await fetch(`/api/v1/projects/${id}/images`, {
           method: "PATCH",
@@ -93,14 +101,6 @@ const PhotoGroup = ({
           throw new Error("Failed to update image order");
         }
 
-        const newPhotos = photos.map((photo) => {
-          const updatedPhoto = orderUpdates.find(
-            (update) => update.publicId === photo.publicId
-          );
-          return updatedPhoto ? { ...photo, order: updatedPhoto.order } : photo;
-        });
-        // Update local state
-        setPhotos(newPhotos);
         // setPhotos((prevPhotos) =>
         //   prevPhotos.map((photo) => {
         //     const updatedPhoto = orderUpdates.find(
