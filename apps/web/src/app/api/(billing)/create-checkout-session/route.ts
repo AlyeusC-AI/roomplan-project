@@ -21,6 +21,10 @@ export async function POST(request: NextRequest) {
       payment_method_collection: "if_required",
       submit_type: "subscribe",
       customer_email: user?.email,
+      // billing_address_collection: 'required',
+      phone_number_collection: {
+        enabled: true,
+      },
       metadata: {
         userId: user!.id,
         organizationId: user?.user_metadata.organizationId,
