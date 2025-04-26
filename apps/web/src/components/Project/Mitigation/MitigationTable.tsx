@@ -114,6 +114,7 @@ export default function MitigationTable() {
 
   // Get filtered images
   const filteredImages = useMemo(() => {
+    console.log("issssssmages", images);
     if (!images) return [];
 
     let filtered = [...images];

@@ -101,7 +101,7 @@ const useUploader = ({ imageFolder }: { imageFolder?: string } = {}) => {
 
       const user = await supabase.auth.getUser();
 
-      const fileName = `${v4()}_${file.name}`;
+      const fileName = `${v4()}_${file.name.replace(/\s+/g, "_")}`;
       const { data: uploadData } = await supabase.storage
         .from("media")
         .upload(`/${imageFolder ?? user.data.user?.id}/${fileName}`, file, {
