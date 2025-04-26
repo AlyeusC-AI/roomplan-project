@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { orgStore } from "@atoms/organization";
 import { Loader2 } from "lucide-react";
+import { SubscriptionAlert } from "@/components/subscription-alert";
 
 export default function Layout({ children }: React.PropsWithChildren) {
   const { setOrganization, setOrganizationLocal } = orgStore((state) => state);
@@ -25,25 +26,12 @@ export default function Layout({ children }: React.PropsWithChildren) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
-  useEffect(() => {
-    // async function verifyInvite() {
-    //   console.log("🚀 ~ verifyInvite ~ search.get):", search.get("inviteCode"));
 
-    //   if (search.get("inviteCode")) {
-    //     await client.auth.verifyOtp({
-    //       token_hash: search.get("inviteCode")!,
-    //       type: "invite",
-    //     });
-    //   }
-    // }
-    // verifyInvite().finally(() => {
+  useEffect(() => {
     client.auth
       .getUser()
       .then(async ({ data: { user }, error }) => {
-        console.log("🚀 ~ .then ~ user:", user);
-
         if (pathname.includes("acceptInvite")) {
-          console.log("🚀 ~ .then ~ pathname:", pathname);
           return;
         }
         if (error || !user) {
@@ -52,7 +40,6 @@ export default function Layout({ children }: React.PropsWithChildren) {
         } else if (
           user.user_metadata.inviteId &&
           !user.user_metadata.acceptedInvite
-          // true
         ) {
           router.replace("/acceptInvite?token=" + user.user_metadata.inviteId);
         } else if (user.email_confirmed_at === null) {
@@ -61,7 +48,6 @@ export default function Layout({ children }: React.PropsWithChildren) {
           router.replace("/register?page=3");
         } else {
           setOrganization().then((org) => {
-            console.log("🚀 ~ setOrganization ~ org:", org);
             if (
               !org.subscriptionPlan &&
               !search.has("from_checkout") &&
@@ -93,7 +79,6 @@ export default function Layout({ children }: React.PropsWithChildren) {
           setLoading(false);
         }, 2000);
       });
-    // });
   }, []);
 
   if (loading) {
@@ -111,6 +96,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
         {/* <SidebarHeader /> */}
         <div className='flex flex-1 flex-col gap-4 p-4 pt-0'>{children}</div>
       </SidebarInset>
+      <SubscriptionAlert />
     </SidebarProvider>
   );
 }

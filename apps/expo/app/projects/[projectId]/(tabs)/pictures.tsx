@@ -51,6 +51,7 @@ import { projectStore } from "@/lib/state/project";
 import { uploadImage } from "@/lib/imagekit";
 import { launchImageLibraryAsync } from "expo-image-picker";
 import * as ImagePicker from "expo-image-picker";
+import { api } from "@/lib/api";
 
 interface PhotoResult {
   uri: string;
@@ -95,7 +96,6 @@ export default function ProjectPhotos() {
   const [isUploading, setIsUploading] = useState(false);
   const [isUpdatingAll, setIsUpdatingAll] = useState(false);
   const rooms = roomInferenceStore();
-  console.log("🚀 ~ ProjectPhotos ~ rooms:", JSON.stringify(rooms, null, 2));
   const urlMap = urlMapStore();
   const router = useRouter();
   const [isUploadingMainImage, setIsUploadingMainImage] = useState(false);
@@ -137,7 +137,6 @@ export default function ProjectPhotos() {
       );
 
       const roomsData = await roomsRes.json();
-      console.log("🚀 ~ refreshData ~ roomsData:", roomsData);
       rooms.setRooms(roomsData.rooms);
 
       // Fetch images
@@ -167,7 +166,6 @@ export default function ProjectPhotos() {
   };
 
   const uploadToSupabase = async (imagePath: string, roomId: number) => {
-    console.log("🚀 ~ uploadToSupabase ~ imagePath:", imagePath, roomId);
     try {
       // const fileInfo = await FileSystem.getInfoAsync(fileUri);
       // if (!fileInfo.exists) {
@@ -206,7 +204,6 @@ export default function ProjectPhotos() {
       );
 
       const data = await response.json();
-      console.log("🚀 ~ uploadToSupabase ~ response:", data);
 
       if (data.status !== "ok") {
         throw new Error("Failed to process image");
@@ -235,7 +232,6 @@ export default function ProjectPhotos() {
         // onRefresh: refreshData,
         compression: "high",
         onSuccess: async (file) => {
-          console.log("🚀 ~ onSuccess: ~ file:", file, selectedRoom);
           await uploadToSupabase(file.path, selectedRoom);
           await refreshData();
         },
@@ -286,11 +282,15 @@ export default function ProjectPhotos() {
 
   // Get a preview image for a room
   const getRoomPreviewImage = (
-    roomInferences: Array<{ imageKey: string | null }> | undefined
+    roomInferences:
+      | Array<{ imageKey: string | null; Image?: { order: number } }>
+      | undefined
   ): string | null => {
     if (!roomInferences || roomInferences.length === 0) return null;
 
-    for (const inference of roomInferences) {
+    for (const inference of roomInferences.sort(
+      (a, b) => (a.Image?.order || 0) - (b.Image?.order || 0)
+    )) {
       if (inference.imageKey) {
         const imageUrl = safelyGetImageUrl(
           urlMap.urlMap,
@@ -315,24 +315,14 @@ export default function ProjectPhotos() {
 
   const handleAddNote = async (imageId: number, note: string) => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/images`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": supabaseSession?.access_token || "",
-          },
-          body: JSON.stringify({
-            imageId,
-            body: note,
-          }),
-        }
-      );
+      const response = await api.post(`/api/v1/projects/${projectId}/images`, {
+        imageId,
+        body: note,
+      });
+      console.log("🚀 ~ handleAddNote ~ response:", response.data);
 
-      const data = await response.json();
-      console.log("🚀 ~ handleAddNote ~ data:", data);
-      if (data.data) {
+      const data = response.data;
+      if (data) {
         toast.success("Note added successfully");
         await refreshData();
       } else {
@@ -533,7 +523,6 @@ export default function ProjectPhotos() {
     );
   }
   const onDelete = async (imagePublicId: string) => {
-    console.log("🚀 ~ onDelete ~ imagePublicId:", imagePublicId);
     try {
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/images`,
@@ -546,9 +535,7 @@ export default function ProjectPhotos() {
           body: JSON.stringify({ photoIds: [imagePublicId] }),
         }
       );
-      console.log("🚀 ~ onDelete ~ response:", response);
       const data = await response.json();
-      console.log("🚀 ~ onDelete ~ data:", data);
 
       if (!data.success) {
         throw new Error("Failed to delete images");
@@ -650,7 +637,6 @@ export default function ProjectPhotos() {
             ?.map((room) => {
               const previewImageUrl = getRoomPreviewImage(room.Inference);
               const imageCount = room.Inference?.length || 0;
-              console.log("🚀 ~ ?.map ~ imageCount:", imageCount);
 
               return (
                 <TouchableOpacity

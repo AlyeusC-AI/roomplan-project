@@ -61,7 +61,7 @@ const PhotoList = ({
 
   const includeAllInReport = async () => {
     if (!photos) return;
-    
+
     try {
       setIsUpdatingAll(true);
       const response = await fetch(`/api/v1/projects/${id}/images`, {

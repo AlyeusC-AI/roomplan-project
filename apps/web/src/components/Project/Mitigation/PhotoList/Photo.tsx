@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { imagesStore } from "@atoms/images";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Check, Star, Loader2 } from "lucide-react";
+import { Check, Star, Loader2, GripVertical } from "lucide-react";
 import { Button } from "@components/ui/button";
 import {
   Tooltip,
@@ -15,23 +15,44 @@ import {
 } from "@components/ui/tooltip";
 import { Card } from "@components/ui/card";
 import { userInfoStore } from "@atoms/user-info";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const Photo = ({
   photo,
   onPhotoClick,
   onSelectPhoto,
   isSelected,
+  id,
+  isDraggable = false,
 }: {
   photo: ImageQuery_Image;
   onPhotoClick: (key: string) => void;
   onSelectPhoto: (photo: ImageQuery_Image) => void;
   isSelected: boolean;
+  id: string;
+  isDraggable?: boolean;
 }) => {
   const supabaseUrl = useSupabaseImage(photo.key);
   const user = userInfoStore();
   const { id: projectId } = useParams<{ id: string }>();
   const { images, setImages } = imagesStore();
   const [isUpdating, setIsUpdating] = useState(false);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, disabled: !isDraggable });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   const toggleIncludeInReport = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -110,11 +131,19 @@ const Photo = ({
 
   if (!supabaseUrl) return null;
 
-  return (
-    <div className='group relative'>
-      {user.user?.photoView === "photoGridView" ? (
-                  <Card className="border group p-2 relative border-gray-200 shadow-sm hover:border-gray-300 transition-colors">
-
+  if (user.user?.photoView === "photoGridView") {
+    return (
+      <div ref={setNodeRef} style={style}>
+        <div className='relative'>
+          {isDraggable && (
+            <button
+              {...attributes}
+              {...listeners}
+              className='absolute left-2 top-2 z-20'
+            >
+              <GripVertical className='h-5 w-5 text-white' />
+            </button>
+          )}
           <div
             className='group relative block size-56 cursor-pointer overflow-hidden rounded-lg'
             onClick={(e) => {
@@ -190,59 +219,69 @@ const Photo = ({
               </TooltipProvider>
             </div>
           </div>
-        </Card>
-      ) : (
-        <Card className="border border-gray-200 shadow-sm mb-2 hover:border-gray-300 transition-colors">
-          <div className='flex cursor-pointer p-2' onClick={handleSelect}>
-            <div className='mr-2 flex items-center justify-center'>
-              <div
-                className={clsx(
-                  "flex size-6 items-center justify-center rounded-full border",
-                  isSelected
-                    ? "border-primary bg-primary"
-                    : "border-gray-300 bg-white"
-                )}
-              >
-                {isSelected && <Check className='size-4 text-white' />}
-              </div>
-            </div>
+        </div>
+      </div>
+    );
+  }
+
+  // List view
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className='mb-2 border border-gray-200 shadow-sm transition-colors hover:border-gray-300'>
+        <div className='flex cursor-pointer p-2'>
+          {isDraggable && (
+            <button {...attributes} {...listeners} className='mr-2'>
+              <GripVertical className='h-5 w-5 text-gray-400' />
+            </button>
+          )}
+          <div className='mr-2 flex items-center justify-center'>
             <div
-              className='group relative block size-24 cursor-pointer overflow-hidden rounded-lg'
-              onClick={(e) => {
-                e.stopPropagation();
-                onPhotoClick(photo.key);
-              }}
+              className={clsx(
+                "flex size-6 items-center justify-center rounded-full border",
+                isSelected
+                  ? "border-primary bg-primary"
+                  : "border-gray-300 bg-white"
+              )}
             >
-              <img src={supabaseUrl} alt='' className='h-full w-auto' />
-            </div>
-            <div className='flex w-full flex-1 items-center justify-between'>
-              <div className='flex flex-col justify-start pl-8'>
-                <div className='text-sm font-semibold text-foreground'>
-                  {format(
-                    new Date(photo.createdAt),
-                    "eee, MMM d, yyyy 'at' h:mm a"
-                  )}
-                </div>
-                <div className='text-sm text-muted-foreground'>
-                  {formatDistance(new Date(photo.createdAt), Date.now(), {
-                    addSuffix: true,
-                  })}
-                </div>
-              </div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <StarButton className='group flex size-10 cursor-pointer' />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Toggle to show image in final report.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              {isSelected && <Check className='size-4 text-white' />}
             </div>
           </div>
-        </Card>
-      )}
+          <div
+            className='group relative block size-24 cursor-pointer overflow-hidden rounded-lg'
+            onClick={(e) => {
+              e.stopPropagation();
+              onPhotoClick(photo.key);
+            }}
+          >
+            <img src={supabaseUrl} alt='' className='h-full w-auto' />
+          </div>
+          <div className='flex w-full flex-1 items-center justify-between'>
+            <div className='flex flex-col justify-start pl-8'>
+              <div className='text-sm font-semibold text-foreground'>
+                {format(
+                  new Date(photo.createdAt),
+                  "eee, MMM d, yyyy 'at' h:mm a"
+                )}
+              </div>
+              <div className='text-sm text-muted-foreground'>
+                {formatDistance(new Date(photo.createdAt), Date.now(), {
+                  addSuffix: true,
+                })}
+              </div>
+            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <StarButton className='group flex size-10 cursor-pointer' />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Toggle to show image in final report.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 };

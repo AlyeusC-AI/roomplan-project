@@ -41,12 +41,14 @@ import Animated, {
   runOnJS,
   useAnimatedGestureHandler,
 } from "react-native-reanimated";
-
+import ModalImagesWithNotes from "../pictures/modalImagesWithNotes";
+import { api } from "@/lib/api";
+import { toast } from "sonner-native";
 // Get screen dimensions for responsive sizing
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 // Type for inference objects
-interface Inference {
+export interface Inference {
   id: number;
   imageKey: string | null;
   publicId: string;
@@ -63,6 +65,7 @@ interface Inference {
     ImageNote?: ImageNote[];
     includeInReport?: boolean;
     key?: string;
+    order?: number;
   };
 }
 
@@ -108,26 +111,19 @@ export default function ImageGallery({
   onAddNote,
   onToggleIncludeInReport,
 }: ImageGalleryProps) {
-  // State for modal visibility and active image
-  const [modalVisible, setModalVisible] = useState(false);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [selectedKeys, setSelectedKeys] =
     useState<string[]>(initialSelectedKeys);
-  const [showNotes, setShowNotes] = useState(false);
-  const notesSheetAnim = useSharedValue(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isAddingNote, setIsAddingNote] = useState(false);
-  const [isUpdatingReport, setIsUpdatingReport] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
 
-  // Refs for scrolling and input
-  const modalScrollRef = useRef<FlatList>(null);
-  const thumbnailScrollRef = useRef<ScrollView>(null);
-  const currentNoteText = useRef("");
-  const noteInputRef = useRef<TextInput>(null);
   const [images, setImages] = useState<Inference[]>(inferences);
+  useEffect(() => {
+    console.log("🚀 ~ inferences:", JSON.stringify(inferences, null, 2));
 
-  // Animation values
-  const fadeAnim = useSharedValue(0);
+    setImages(
+      inferences.sort((a, b) => (a.Image?.order || 0) - (b.Image?.order || 0))
+    );
+  }, [inferences]);
 
   // Calculate grid layout
   const itemsPerRow = 3;
@@ -141,7 +137,6 @@ export default function ImageGallery({
     //  &&
     // !!inference.imageKey
   );
-  console.log("🚀 ~ validInferences:", validInferences);
 
   // Organize inferences into rows for grid display
   const rows = Array.from({
@@ -171,22 +166,6 @@ export default function ImageGallery({
   const handleDragStart = (index: number) => {
     setIsDragging(true);
     setDraggedIndex(index);
-  };
-
-  // Handle drag move
-  const handleDragMove = (
-    index: number,
-    translation: { x: number; y: number }
-  ) => {
-    positions.value = positions.value.map((pos, i) => {
-      if (i === index) {
-        return {
-          x: translation.x,
-          y: translation.y,
-        };
-      }
-      return pos;
-    });
   };
 
   // Handle drag end
@@ -225,68 +204,36 @@ export default function ImageGallery({
       const [movedItem] = newOrder.splice(index, 1);
       newOrder.splice(newIndex, 0, movedItem);
       setImages(newOrder);
+
+      // Update order in backend
+      const orderUpdates = newOrder.map((inference, idx) => ({
+        publicId: inference.Image?.publicId,
+        order: idx,
+      }));
+
+      console.log("🚀 ~ orderUpdates:", JSON.stringify(orderUpdates, null, 2));
+
+      api
+        .patch(`/api/v1/projects/${inferences[0]?.projectId}/images`, {
+          order: orderUpdates,
+        })
+        .then((res) => {
+          toast.success("Image order updated");
+
+          console.log("🚀 ~ rsasdadsadasdes:", res.data);
+          // onRefresh?.();
+        })
+        .catch((error) => {
+          console.error("Failed to update image order:", error);
+          toast.error("Failed to update image order");
+        });
     }
   };
-
-  // Animated style for dragged item
-  const animatedStyle = (index: number) =>
-    useAnimatedStyle(() => {
-      const { x, y } = positions.value[index];
-      const scale = isDragging && draggedIndex === index ? 1.1 : 1;
-      return {
-        transform: [{ translateX: x }, { translateY: y }, { scale }],
-        zIndex: isDragging && draggedIndex === index ? 1 : 0,
-      } as const;
-    });
 
   // Handle image press to open modal
   const handleImagePress = (index: number) => {
     setActiveImageIndex(index);
     setModalVisible(true);
-
-    // Animate fade in
-    fadeAnim.value = withSpring(1, {
-      damping: 20,
-      stiffness: 90,
-    });
-  };
-
-  // Handle modal close
-  const handleCloseModal = () => {
-    fadeAnim.value = withSpring(
-      0,
-      {
-        damping: 20,
-        stiffness: 90,
-      },
-      () => {
-        setModalVisible(false);
-      }
-    );
-  };
-
-  // Navigate to previous image in modal
-  const goToPreviousImage = () => {
-    if (activeImageIndex > 0) {
-      const newIndex = activeImageIndex - 1;
-      setActiveImageIndex(newIndex);
-      modalScrollRef.current?.scrollToIndex({
-        index: newIndex,
-        animated: true,
-      });
-    }
-  };
-
-  // Navigate to next image in modal
-  const goToNextImage = () => {
-    if (activeImageIndex < validInferences.length - 1) {
-      const newIndex = activeImageIndex + 1;
-      setActiveImageIndex(newIndex);
-      modalScrollRef.current?.scrollToIndex({
-        index: newIndex,
-        animated: true,
-      });
-    }
   };
 
   // Handle image selection toggle
@@ -304,103 +251,6 @@ export default function ImageGallery({
       onSelectionChange(newSelectedKeys);
     }
   };
-
-  // Handle image deletion
-  const handleDeleteImage = async (imageKey: string, publicId: string) => {
-    Alert.alert("Delete Image", "Are you sure you want to delete this image?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            setIsDeleting(true);
-            if (onDelete) {
-              await onDelete(publicId);
-              handleCloseModal();
-              return;
-            }
-            if (onRefresh) {
-              await deleteImage(imageKey, { onRefresh });
-              if (
-                modalVisible &&
-                validInferences[activeImageIndex]?.imageKey === imageKey
-              ) {
-                handleCloseModal();
-              }
-            }
-          } finally {
-            setIsDeleting(false);
-          }
-        },
-      },
-    ]);
-  };
-
-  // Add function to toggle notes
-  const toggleNotes = () => {
-    if (showNotes) {
-      notesSheetAnim.value = withSpring(
-        0,
-        {
-          damping: 20,
-          stiffness: 90,
-        },
-        () => setShowNotes(false)
-      );
-    } else {
-      setShowNotes(true);
-      notesSheetAnim.value = withSpring(1, {
-        damping: 20,
-        stiffness: 90,
-      });
-    }
-  };
-
-  const handleAddNote = async (imageId: number, note: string) => {
-    if (onAddNote && note.trim()) {
-      try {
-        setIsAddingNote(true);
-        await onAddNote(imageId, note.trim());
-        currentNoteText.current = "";
-        noteInputRef.current?.clear();
-      } finally {
-        setIsAddingNote(false);
-      }
-    }
-  };
-
-  // Add toggleIncludeInReport function
-  const handleToggleIncludeInReport = async (inference: Inference) => {
-    if (!onToggleIncludeInReport || isUpdatingReport) return;
-
-    try {
-      setIsUpdatingReport(true);
-      await onToggleIncludeInReport(
-        inference.Image?.publicId || inference.publicId,
-        !inference.Image?.includeInReport
-      );
-      if (onRefresh) {
-        await onRefresh();
-      }
-    } catch (error) {
-      console.error("Error updating image:", error);
-      Alert.alert("Error", "Failed to update image");
-    } finally {
-      setIsUpdatingReport(false);
-    }
-  };
-
-  // Add this near the top of the file
-  const notesSheetStyle = useAnimatedStyle(() => {
-    const translateY = notesSheetAnim.value * 600;
-    return {
-      transform: [{ translateY }],
-    } as const;
-  });
 
   // Render image item in the grid
   const renderGridItem = (inference: Inference | null, index: number) => {
@@ -482,175 +332,6 @@ export default function ImageGallery({
     );
   };
 
-  // Render image in the modal
-  const renderModalItem = ({
-    item,
-    index,
-  }: {
-    item: Inference & { imageKey: string };
-    index: number;
-  }) => {
-    const imageKey = item.imageKey || item.Image?.key || "";
-    let imageUrl = safelyGetImageUrl(urlMap, imageKey, "");
-    if (!imageUrl) {
-      imageUrl = getStorageUrl(imageKey);
-    }
-
-    const noteCount = item.notes?.length || 0;
-
-    return (
-      <View style={styles.modalImageContainer}>
-        <OptimizedImage
-          uri={imageUrl}
-          style={styles.modalImage}
-          resizeMode="contain"
-          imageKey={imageKey}
-          showInfo={true}
-          backgroundColor="#000000"
-        />
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={[styles.actionButton, isDeleting && styles.disabledButton]}
-            onPress={() =>
-              handleDeleteImage(item.imageKey, item.Image?.publicId || "")
-            }
-            disabled={isDeleting}
-          >
-            <Trash2 size={24} color="#fff" opacity={isDeleting ? 0.5 : 1} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.actionButton,
-              isUpdatingReport && styles.disabledButton,
-            ]}
-            onPress={() => handleToggleIncludeInReport(item)}
-            disabled={isUpdatingReport}
-          >
-            {isUpdatingReport ? (
-              <Loader size={24} color="#fff" />
-            ) : (
-              <Star
-                size={24}
-                color="#fff"
-                fill={item.Image?.includeInReport ? "#FBBF24" : "transparent"}
-              />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionButton} onPress={toggleNotes}>
-            <MessageCircle size={24} color="#fff" />
-            {noteCount > 0 && (
-              <View style={styles.noteBadge}>
-                <Text style={styles.noteBadgeText}>{noteCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Notes Bottom Sheet */}
-        {showNotes && (
-          <Animated.View style={[styles.notesSheet, notesSheetStyle]}>
-            <View style={styles.notesHeader}>
-              <Text style={styles.notesHeaderText}>Notes</Text>
-              <TouchableOpacity
-                onPress={toggleNotes}
-                style={styles.closeNotesButton}
-              >
-                <X size={24} color="#fff" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.notesList}>
-              {item.Image?.ImageNote?.reverse().map((note) => (
-                <View key={note.id} style={styles.noteItem}>
-                  <View style={styles.noteHeader}>
-                    <View style={styles.noteAvatar}>
-                      <Text style={styles.noteAvatarText}>
-                        {note.User?.firstName?.charAt(0) || "N"} +
-                        {note.User?.lastName?.charAt(0) || "N"}
-                      </Text>
-                    </View>
-                    <View style={styles.noteMetadata}>
-                      <Text style={styles.noteAuthor}>
-                        {note.User?.firstName} {note.User?.lastName}
-                      </Text>
-                      <Text style={styles.noteDate}>
-                        {new Date(note.createdAt).toLocaleDateString()}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={styles.noteText}>{note.body}</Text>
-                </View>
-              ))}
-            </ScrollView>
-
-            <KeyboardAvoidingView
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
-              keyboardVerticalOffset={Platform.OS === "ios" ? 240 : 20}
-              style={styles.addNoteContainer}
-            >
-              <TextInput
-                ref={noteInputRef}
-                style={styles.noteInput}
-                placeholder="Add a note..."
-                placeholderTextColor="#999"
-                multiline
-                numberOfLines={3}
-                returnKeyType="done"
-                blurOnSubmit={true}
-                onChangeText={(text) => {
-                  currentNoteText.current = text;
-                }}
-                onSubmitEditing={async (e) => {
-                  if (item.Image?.id) {
-                    await handleAddNote(
-                      item.Image?.id,
-                      currentNoteText.current
-                    );
-                  }
-                }}
-              />
-              <TouchableOpacity
-                style={[
-                  styles.submitNoteButton,
-                  isAddingNote && styles.disabledButton,
-                ]}
-                onPress={async () => {
-                  if (item.Image?.id) {
-                    await handleAddNote(
-                      item.Image?.id,
-                      currentNoteText.current
-                    );
-                  }
-                }}
-                disabled={isAddingNote}
-              >
-                <Text
-                  style={[
-                    styles.submitNoteButtonText,
-                    isAddingNote && styles.disabledButtonText,
-                  ]}
-                >
-                  {isAddingNote ? "Posting..." : "Post"}
-                </Text>
-              </TouchableOpacity>
-            </KeyboardAvoidingView>
-          </Animated.View>
-        )}
-      </View>
-    );
-  };
-
-  // Handle scroll end in modal
-  const handleScrollEnd = (e: any) => {
-    const contentOffset = e.nativeEvent.contentOffset;
-    const index = Math.round(contentOffset.x / SCREEN_WIDTH);
-    setActiveImageIndex(index);
-  };
-
   // If there are no valid images, show an empty state
   if (validInferences.length === 0) {
     return (
@@ -675,148 +356,19 @@ export default function ImageGallery({
       </View>
 
       {/* Full Screen Modal */}
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType="none"
-        onRequestClose={handleCloseModal}
-      >
-        <Animated.View style={[styles.modalContainer, { opacity: fadeAnim }]}>
-          <SafeAreaView style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <TouchableOpacity
-                onPress={handleCloseModal}
-                style={styles.closeButton}
-              >
-                <X size={24} color="#fff" />
-              </TouchableOpacity>
-              <Text style={styles.modalTitle}>
-                {roomName || "Image Gallery"}
-              </Text>
-              <View style={{ width: 40 }} />
-            </View>
-
-            <FlatList
-              ref={modalScrollRef}
-              data={validInferences}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              initialScrollIndex={activeImageIndex}
-              getItemLayout={(_, index) => ({
-                length: SCREEN_WIDTH,
-                offset: SCREEN_WIDTH * index,
-                index,
-              })}
-              renderItem={renderModalItem}
-              keyExtractor={(item) => item.imageKey || item.Image?.key || ""}
-              onMomentumScrollEnd={handleScrollEnd}
-            />
-
-            <View style={styles.navigationContainer}>
-              <TouchableOpacity
-                onPress={goToPreviousImage}
-                style={[
-                  styles.navButton,
-                  activeImageIndex === 0 && styles.navButtonDisabled,
-                ]}
-                disabled={activeImageIndex === 0}
-              >
-                <ChevronLeft
-                  size={30}
-                  color={activeImageIndex === 0 ? "#666" : "#fff"}
-                />
-              </TouchableOpacity>
-
-              <Text style={styles.pageIndicator}>
-                {activeImageIndex + 1} / {validInferences.length}
-              </Text>
-
-              <TouchableOpacity
-                onPress={goToNextImage}
-                style={[
-                  styles.navButton,
-                  activeImageIndex === validInferences.length - 1 &&
-                    styles.navButtonDisabled,
-                ]}
-                disabled={activeImageIndex === validInferences.length - 1}
-              >
-                <ChevronRight
-                  size={30}
-                  color={
-                    activeImageIndex === validInferences.length - 1
-                      ? "#666"
-                      : "#fff"
-                  }
-                />
-              </TouchableOpacity>
-            </View>
-
-            {/* Thumbnails */}
-            <View style={styles.thumbnailContainer}>
-              <ScrollView
-                ref={thumbnailScrollRef}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.thumbnailScroll}
-                scrollEventThrottle={16}
-                bounces={false}
-                decelerationRate="fast"
-                snapToInterval={70}
-                snapToAlignment="start"
-              >
-                {validInferences.map((inference, index) => {
-                  const imageKey =
-                    inference.imageKey || inference.Image?.key || "";
-                  let imageUrl = safelyGetImageUrl(urlMap, imageKey, "");
-
-                  if (!imageUrl) {
-                    imageUrl = getStorageUrl(imageKey);
-                  }
-                  console.log(
-                    "🚀 ~ {validInferences.map ~ imageUrl:",
-                    imageUrl
-                  );
-
-                  return (
-                    <TouchableOpacity
-                      key={imageKey}
-                      activeOpacity={0.7}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      onPress={() => {
-                        const newIndex = index;
-                        setActiveImageIndex(newIndex);
-                        modalScrollRef.current?.scrollToIndex({
-                          index: newIndex,
-                          animated: true,
-                          viewPosition: 0.5,
-                        });
-                        thumbnailScrollRef.current?.scrollTo({
-                          x: newIndex * 70,
-                          animated: true,
-                        });
-                      }}
-                      style={[
-                        styles.thumbnail,
-                        index === activeImageIndex && styles.activeThumbnail,
-                      ]}
-                    >
-                      <OptimizedImage
-                        uri={imageUrl}
-                        style={styles.thumbnailImage}
-                        size="small"
-                        imageKey={imageKey}
-                        disabled={true}
-                        backgroundColor="#000000"
-                      />
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
-          </SafeAreaView>
-        </Animated.View>
-      </Modal>
+      <ModalImagesWithNotes
+        images={images}
+        urlMap={urlMap}
+        onRefresh={onRefresh}
+        roomName={roomName}
+        onAddNote={onAddNote}
+        onToggleIncludeInReport={onToggleIncludeInReport}
+        onDelete={onDelete}
+        setModalVisible={setModalVisible}
+        modalVisible={modalVisible}
+        activeImageIndex={activeImageIndex}
+        setActiveImageIndex={setActiveImageIndex}
+      />
     </GestureHandlerRootView>
   );
 }

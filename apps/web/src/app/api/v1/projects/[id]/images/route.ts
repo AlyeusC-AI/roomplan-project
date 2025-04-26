@@ -95,7 +95,25 @@ export async function PATCH(req: NextRequest) {
   try {
     await user(req);
 
-    const { id, ids, ...props } = await req.json();
+    const { id, ids, order, ...props } = await req.json();
+
+    // Handle bulk update with order
+    if (order && Array.isArray(order)) {
+      const updates = order.map(async ({ publicId, order: orderValue }) => {
+        const { data, error } = await supabaseServiceRole
+          .from("Image")
+          .update({ order: orderValue })
+          .eq("publicId", publicId);
+        if (error) {
+          console.error(error);
+          throw error;
+        }
+        return data;
+      });
+
+      await Promise.all(updates);
+      return NextResponse.json({ success: true, data: updates });
+    }
 
     // Handle bulk update
     if (ids && Array.isArray(ids)) {
@@ -183,12 +201,12 @@ export async function DELETE(
     }
 
     // Soft delete the images
-    const { error,data } = await supabaseServiceRole
+    const { error, data } = await supabaseServiceRole
       .from("Image")
       .update({ isDeleted: true })
       .eq("projectId", project.id)
       .in("publicId", photoIds);
-      console.log("🚀 ~ data:", data)
+    console.log("🚀 ~ data:", data);
 
     if (error) {
       console.error("Error deleting images:", error);
