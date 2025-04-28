@@ -181,12 +181,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarContent>
             <NavMain items={data.navMain} />
           </SidebarContent>
-          <SidebarFooter>
-            <NavUser />
-          </SidebarFooter>
+        
           <SidebarRail />
+       
         </div>
         <SidebarSubscriptionStatus />
+        <SidebarFooter>
+            <NavUser />
+          </SidebarFooter>
       </div>
     </Sidebar>
   );

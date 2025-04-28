@@ -583,14 +583,14 @@ export default function ProjectPhotos() {
               ]}
               onPress={() => setShowCoverModal(true)}
               disabled={isUploadingMainImage}
-              className="ml-2"
+              className="ml-2 bg-accent rounded-full border border-gray-200"
             >
               {isUploadingMainImage ? (
-                <View style={styles.iconContainer}>
+                <View>
                   <Loader size={20} color="#1e40af" />
                 </View>
               ) : (
-                <View style={styles.iconContainer}>
+                <View>
                   <Home size={20} color="#1e40af" />
                 </View>
               )}
@@ -603,13 +603,14 @@ export default function ProjectPhotos() {
                 ]}
                 onPress={includeAllInReport}
                 disabled={isUpdatingAll || !rooms.rooms.length}
+                className="ml-2 bg-accent rounded-full border border-gray-200"
               >
                 {isUpdatingAll ? (
-                  <View style={styles.iconContainer}>
+                  <View>
                     <Loader size={20} color="#1e40af" />
                   </View>
                 ) : (
-                  <View style={styles.iconContainer}>
+                  <View>
                     <Star
                       size={20}
                       color={areAllImagesIncluded() ? "#FBBF24" : "#1e40af"}
@@ -621,8 +622,9 @@ export default function ProjectPhotos() {
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={handlePickImages}
+                className="mx-2 bg-accent rounded-full border border-gray-200"
               >
-                <View style={styles.iconContainer}>
+                <View>
                   <ImagePlus size={20} color="#1e40af" />
                 </View>
               </TouchableOpacity>
@@ -881,22 +883,22 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: "row",
-    gap: 8,
+    gap: 2,
     justifyContent: "flex-end",
   },
-  actionButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-    margin: 0,
-  },
+  // actionButton: {
+  //   // width: 44,
+  //   // height: 44,
+  //   borderRadius: 22,
+  //   justifyContent: "center",
+  //   alignItems: "center",
+  //   margin: 0,
+  // },
   iconContainer: {
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: "#f8fafc",
+    // backgroundColor: "#f8fafc",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
@@ -1079,16 +1081,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    padding: 8,
+    borderRadius: 24,
+    // borderColor: "#e2e8f0",
+
+    // backgroundColor: "hsl(var(--destructive))",
+    // shadowColor: "#000",
+    // shadowOffset: {
+    //   width: 0,
+    //   height: 2,
+    // },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 3,
+    // elevation: 2,
   },
   cameraButton: {
     backgroundColor: "#1e40af",

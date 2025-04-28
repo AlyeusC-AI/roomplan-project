@@ -50,6 +50,7 @@ export function SidebarSubscriptionStatus() {
       const response = await fetch("/api/subscription-info");
       if (!response.ok) throw new Error("Failed to fetch subscription info");
       const data = await response.json();
+      console.log("🚀 ~ fetchSubscriptionInfo ~ data:", data)
       setSubscriptionInfo(data);
 
       if (
@@ -128,6 +129,7 @@ export function SidebarSubscriptionStatus() {
   const isInactive = !["active", "trialing"].includes(subscriptionInfo.status);
   const showWarning = isTrial || isExpiring || isInactive;
 
+  if(!showWarning) return null;
   return (
     <>
       <Card className='mx-2 mt-2'>
