@@ -2,6 +2,7 @@ import DashboardHeader from "@/unused/Header";
 import NoProjects from "@/components/dashboard/no-projects";
 import ProjectCell from "@/components/project/cell";
 import { userStore } from "@/lib/state/user";
+import { SubscriptionStatus } from "@/components/subscription-status";
 import {
   Redirect,
   useNavigation,
@@ -47,7 +48,7 @@ export default function Dashboard() {
   const { session, setSession } = userStore((state) => state);
   const { projects, setProjects } = projectsStore((state) => state);
   const [loading, setLoading] = useState(false);
-  console.log("🚀 ~ Dashboard ~ loading:", loading)
+  console.log("🚀 ~ Dashboard ~ loading:", loading);
   const [loadingMore, setLoadingMore] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
@@ -55,14 +56,14 @@ export default function Dashboard() {
   const [page, setPage] = useState(0);
   const limit = 20;
   const hasMore = projects?.length < total;
-  
+
   // // Refs to avoid stale closures
   // const sessionRef = useRef(session);
   // const searchTermRef = useRef(searchTerm);
   // const selectedUserRef = useRef(selectedUser);
   // const pageRef = useRef(page);
   // const projectsRef = useRef(projects);
-  
+
   // // Update refs when values change
   // useEffect(() => {
   //   sessionRef.current = session;
@@ -81,69 +82,75 @@ export default function Dashboard() {
   }, [navigation]);
 
   // Fetch projects function that doesn't depend on state variables directly
-  const fetchProjects = useCallback(async (isLoadingMore: boolean|number) => {
-    // Use refs instead of state directly to avoid dependency cycles
-    // const currentSession = sessionRef.current;
-    // const currentSearchTerm = searchTermRef.current;
-    // const currentPage = isLoadingMore ? pageRef.current : 0;
-    // const currentProjects = projectsRef.current || [];
-    const currentSession = session;
-    const currentSearchTerm = searchTerm;
-    const currentPage = isLoadingMore || 0;
-    const currentProjects = projects || [];
-    console.log("🚀 ~ fetchProjects ~ currentPage:", currentPage)
+  const fetchProjects = useCallback(
+    async (isLoadingMore: boolean | number) => {
+      // Use refs instead of state directly to avoid dependency cycles
+      // const currentSession = sessionRef.current;
+      // const currentSearchTerm = searchTermRef.current;
+      // const currentPage = isLoadingMore ? pageRef.current : 0;
+      // const currentProjects = projectsRef.current || [];
+      const currentSession = session;
+      const currentSearchTerm = searchTerm;
+      const currentPage = isLoadingMore || 0;
+      const currentProjects = projects || [];
+      console.log("🚀 ~ fetchProjects ~ currentPage:", currentPage);
 
-    if (loadingMore || loading) return;
-    if (!currentSession) {
-      console.log("No session available, skipping fetch");
-      return;
-    }
-
-    if (isLoadingMore) {
-      setLoadingMore(true);
-    } else {
-      setLoading(true);
-    }
-
-    const offset = currentPage * limit;
-
-    try {
-      const res = await api.get(
-        `/api/v1/projects?${
-          currentSearchTerm.length > 0 ? `query=${currentSearchTerm}&` : ""
-        }limit=${limit}&offset=${offset}`
-      );
-      
-      if (res.status !== 200) {
-        throw new Error(`HTTP error! Status: ${res.status}`);
+      if (loadingMore || loading) return;
+      if (!currentSession) {
+        console.log("No session available, skipping fetch");
+        return;
       }
-      
-      const data: ProjectsResponse = res.data;
 
       if (isLoadingMore) {
-        setProjects(
-          [...currentProjects, ...data.projects].reduce((acc: Project[], curr) => {
-            const existingIndex = acc.findIndex((p) => p.id === curr.id);
-            if (existingIndex !== -1) {
-              acc[existingIndex] = curr;
-            } else {
-              acc.push(curr);
-            }
-            return acc;
-          }, [] as Project[])
-        );
+        setLoadingMore(true);
       } else {
-        setProjects(data.projects);
+        setLoading(true);
       }
 
-      setTotal(data.total);
-    } catch (err) {
-      console.error("Error fetching projects:", err);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [loading, loadingMore, limit]);
+      const offset = currentPage * limit;
+
+      try {
+        const res = await api.get(
+          `/api/v1/projects?${
+            currentSearchTerm.length > 0 ? `query=${currentSearchTerm}&` : ""
+          }limit=${limit}&offset=${offset}`
+        );
+
+        if (res.status !== 200) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+
+        const data: ProjectsResponse = res.data;
+
+        if (isLoadingMore) {
+          setProjects(
+            [...currentProjects, ...data.projects].reduce(
+              (acc: Project[], curr) => {
+                const existingIndex = acc.findIndex((p) => p.id === curr.id);
+                if (existingIndex !== -1) {
+                  acc[existingIndex] = curr;
+                } else {
+                  acc.push(curr);
+                }
+                return acc;
+              },
+              [] as Project[]
+            )
+          );
+        } else {
+          setProjects(data.projects);
+        }
+
+        setTotal(data.total);
+      } catch (err) {
+        console.error("Error fetching projects:", err);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [loading, loadingMore, limit]
+  );
 
   // Initialize Supabase and load initial data
   useEffect(() => {
@@ -179,7 +186,7 @@ export default function Dashboard() {
         setPage(0);
         fetchProjects(false);
       }, 300);
-      
+
       return () => clearTimeout(timer);
     }
   }, [searchTerm, selectedUser, session]);
@@ -200,11 +207,11 @@ export default function Dashboard() {
   }, []);
 
   const loadMore = () => {
-    console.log("🚀 ~ loadMore ~ hasMore:", hasMore,loadingMore)
+    console.log("🚀 ~ loadMore ~ hasMore:", hasMore, loadingMore);
 
     if (!loadingMore && hasMore) {
       setPage((prev) => prev + 1);
-      fetchProjects(page+1);
+      fetchProjects(page + 1);
     }
   };
 
@@ -267,6 +274,8 @@ export default function Dashboard() {
             <ChevronRight color="#2563eb" />
           </View>
         </View>
+
+        <SubscriptionStatus />
 
         <FlatList
           data={projects}
