@@ -26,14 +26,12 @@ import { userStore } from "@/lib/state/user";
 export default function Layout() {
   const { projectId } = useGlobalSearchParams();
   const [loading, setLoading] = React.useState(true);
-  const { fetchProject,project } = projectStore();
+  const { fetchProject, project } = projectStore();
 
   useEffect(() => {
-
     fetchProject(projectId as string).finally(() => {
       setLoading(false);
     });
-   
   }, []);
 
   if (loading) {
@@ -76,14 +74,20 @@ export default function Layout() {
                     <ArrowLeft color="white" size={20} />
                   </TouchableOpacity>
                   <Text className="text-white text-lg font-semibold">
-                    { route.name === "scope" ? "Scope": project?.clientName || "Project"}
+                    {route.name === "scope"
+                      ? "Scope"
+                      : project?.clientName || "Project"}
                   </Text>
                 </View>
                 {route.name === "index" && (
                   <TouchableOpacity
                     // onPress={() => router.push({ pathname: "./edit" })}
-                    onPress={() => router.push({ pathname: "./details", params: { activeTab: "loss" } })}
-
+                    onPress={() =>
+                      router.push({
+                        pathname: "./details",
+                        params: { activeTab: "loss" },
+                      })
+                    }
                     className="bg-white/10 px-4 py-2 rounded-full"
                   >
                     <Text className="text-white font-medium">Edit</Text>
@@ -129,6 +133,7 @@ export default function Layout() {
         name="pictures"
         options={{
           title: "Photos",
+          // freezeOnBlur: true,
         }}
       />
       <Tabs.Screen

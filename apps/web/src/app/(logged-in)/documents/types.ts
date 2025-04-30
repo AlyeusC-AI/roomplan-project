@@ -1,14 +1,13 @@
 export interface Document {
   id: number;
+  publicId: string;
   name: string;
   url: string;
   json: string;
-  publicId: string;
-  created_at: string;
 }
 
 export interface Annotation {
-  type: 'signature' | 'image' | 'text' | 'clientSignature';
+  type: "signature" | "image" | "text" | "clientInput";
   x: number;
   y: number;
   data: string;
@@ -20,6 +19,7 @@ export interface Annotation {
   pageNumber: number;
   isPlaceholder?: boolean;
   name?: string;
+  inputType?: "signature" | "text";
 }
 
 export interface Signature {
@@ -30,7 +30,7 @@ export interface Signature {
 }
 
 export interface DeleteConfirmState {
-  type: 'document' | 'signature' | 'annotation';
+  type: "document" | "annotation";
   id: number;
   name?: string;
-} 
+}

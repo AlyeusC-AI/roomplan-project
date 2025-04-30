@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -24,7 +24,7 @@ import {
   XCircle,
 } from "lucide-react-native";
 import { userStore } from "@/lib/state/user";
-import { useGlobalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useGlobalSearchParams, useRouter } from "expo-router";
 import { toast } from "sonner-native";
 import Empty from "@/components/project/empty";
 import {
@@ -101,7 +101,11 @@ export default function ProjectPhotos() {
   const [isUploadingMainImage, setIsUploadingMainImage] = useState(false);
   const [mainImage, setMainImage] = useState<string | null>(null);
   const [showCoverModal, setShowCoverModal] = useState(false);
-
+  useFocusEffect(
+    useCallback(() => {
+      refreshData();
+    }, [])
+  );
   useEffect(() => {
     if (selectedRoom) {
       if (shouldOpenCamera) {
@@ -1083,6 +1087,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 8,
     borderRadius: 24,
+    width: 40,
+    height: 40,
     // borderColor: "#e2e8f0",
 
     // backgroundColor: "hsl(var(--destructive))",

@@ -5,29 +5,30 @@ import { z } from "zod";
 
 const createDocumentSchema = z.object({
   name: z.string(),
-  url: z.string(),
+  projectId: z.string(),
+  // url: z.string(),
   json: z.string(),
 });
 
 const updateDocumentSchema = z.object({
   id: z.number(),
   name: z.string().optional(),
-  url: z.string().optional(),
+  // url: z.string().optional(),
   json: z.string().optional(),
 });
 
 const deleteDocumentSchema = z.object({
-  id: z.number()
+  id: z.number(),
 });
 
 // GET /api/v1/organization/documents
 export async function GET(req: NextRequest) {
   try {
     const [, user] = await getUser(req);
-  
-      const searchParams = req.nextUrl.searchParams;
-      const projectId = searchParams.get("projectId");
-      console.log("🚀 ~ GET ~ projectId:", projectId)
+
+    const searchParams = req.nextUrl.searchParams;
+    const projectId = searchParams.get("projectId");
+    console.log("🚀 ~ GET ~ projectId:", projectId);
 
     const organizationId: string = user?.user_metadata.organizationId;
 
@@ -38,27 +39,36 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const org = await supabaseServiceRole.from("Organization").select("id").eq("publicId", organizationId).single();
+    const org = await supabaseServiceRole
+      .from("Organization")
+      .select("id")
+      .eq("publicId", organizationId)
+      .single();
 
     if (org.error) throw org.error;
 
     // Get documents for the organization
-    const { data: documents, error } = await (projectId ? supabaseServiceRole
-      .from("Document")
-      .select(`
+    const { data: documents, error } = await (projectId
+      ? supabaseServiceRole
+          .from("Document")
+          .select(
+            `
         *
-      `).order("created_at", { ascending: false })
-      
-      .eq("projectId", projectId)
+      `
+          )
+          .order("created_at", { ascending: false })
+
+          .eq("projectId", projectId)
       : supabaseServiceRole
-      .from("Document")
-      .select(`
+          .from("Document")
+          .select(
+            `
         *
-      `).order("created_at", { ascending: false })
-      .eq("orgId", org.data.id)
-      .is("projectId", null)
-    
-    )
+      `
+          )
+          .order("created_at", { ascending: false })
+          .eq("orgId", org.data.id)
+          .is("projectId", null));
     if (error) throw error;
 
     return NextResponse.json(documents);
@@ -76,10 +86,10 @@ export async function POST(req: NextRequest) {
   try {
     const [, user] = await getUser(req);
     const body = await req.json();
-    
+
     // Validate request body
     const validatedData = createDocumentSchema.parse(body);
-    
+
     const organizationId: string = user?.user_metadata.organizationId;
 
     if (!organizationId) {
@@ -89,16 +99,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const org = await supabaseServiceRole.from("Organization").select("id").eq("publicId", organizationId).single();
+    const org = await supabaseServiceRole
+      .from("Organization")
+      .select("id")
+      .eq("publicId", organizationId)
+      .single();
 
     if (org.error) throw org.error;
+
+    const project = await supabaseServiceRole
+      .from("Project")
+      .select("id")
+      .eq("publicId", validatedData.projectId)
+      .single();
+
+    if (project.error) throw project.error;
 
     // Start a transaction
     const { data: document, error: documentError } = await supabaseServiceRole
       .from("Document")
       .insert({
         name: validatedData.name,
-        url: validatedData.url,
+        url: "",
+        projectId: project.data.id,
         json: validatedData.json,
         orgId: org.data.id,
       })
@@ -122,21 +145,22 @@ export async function PUT(req: NextRequest) {
   try {
     const [, user] = await getUser(req);
     const body = await req.json();
-    
+
     // Validate request body
     const validatedData = updateDocumentSchema.parse(body);
 
     // Update form
-    const { data: updatedDocument, error: updateError } = await supabaseServiceRole
-      .from("Document")
-      .update({
-        name: validatedData.name,
-        url: validatedData.url,
-        json: validatedData.json
-      })
-      .eq("id", validatedData.id)
-      .select()
-      .single();
+    const { data: updatedDocument, error: updateError } =
+      await supabaseServiceRole
+        .from("Document")
+        .update({
+          name: validatedData.name,
+          url: "",
+          json: validatedData.json,
+        })
+        .eq("id", validatedData.id)
+        .select()
+        .single();
 
     if (updateError) throw updateError;
 
@@ -155,7 +179,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const [, user] = await getUser(req);
     const body = await req.json();
-    
+
     // Validate request body
     const validatedData = deleteDocumentSchema.parse(body);
 
@@ -175,4 +199,4 @@ export async function DELETE(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

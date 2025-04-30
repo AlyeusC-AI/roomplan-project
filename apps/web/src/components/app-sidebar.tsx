@@ -108,10 +108,10 @@ const data = {
           title: "Organization",
           url: "/settings/organization",
         },
-        {
-          title: "Documents",
-          url: "/documents",
-        },
+        // {
+        //   title: "Documents",
+        //   url: "/documents",
+        // },
         {
           title: "Forms",
           url: "/forms",
@@ -181,14 +181,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarContent>
             <NavMain items={data.navMain} />
           </SidebarContent>
-        
+
           <SidebarRail />
-       
         </div>
-        <SidebarSubscriptionStatus />
+        {/* <SidebarSubscriptionStatus /> */}
         <SidebarFooter>
-            <NavUser />
-          </SidebarFooter>
+          <NavUser />
+        </SidebarFooter>
       </div>
     </Sidebar>
   );

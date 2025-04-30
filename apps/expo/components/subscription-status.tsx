@@ -102,7 +102,7 @@ export function SubscriptionStatus() {
     Linking.openURL(`${process.env.EXPO_PUBLIC_BASE_URL}/settings/billing`);
   };
 
-  //   if (loading || !subscriptionInfo) return null;
+  if (loading || !subscriptionInfo) return null;
 
   const isTrial = subscriptionInfo?.status === "trialing";
   const isExpiring = subscriptionInfo?.cancelAtPeriodEnd;

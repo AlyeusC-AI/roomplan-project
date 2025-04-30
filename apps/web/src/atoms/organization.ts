@@ -14,7 +14,11 @@ export const orgStore = create<State & Actions>()(
   persist(
     (set) => ({
       organization: null,
-      setOrganization: async () => {
+      setOrganization: async (org?: Organization) => {
+        if (org) {
+          set(() => ({ organization: org }));
+          return org;
+        }
         const res = await fetch("/api/v1/organization");
         const json = await res.json();
 

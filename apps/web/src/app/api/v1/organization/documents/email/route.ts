@@ -2,10 +2,10 @@ import { supabaseServiceRole } from "@lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { user as getUser } from "@lib/supabase/get-user";
 import { z } from "zod";
-import { Resend } from 'resend';
+import { Resend } from "resend";
 import { Database } from "@/types/database";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 const sendEmailSchema = z.object({
   documentId: z.number(),
@@ -18,10 +18,10 @@ export async function POST(req: NextRequest) {
   try {
     const [, user] = await getUser(req);
     const body = await req.json();
-    
+
     // Validate request body
     const validatedData = sendEmailSchema.parse(body);
-    
+
     const organizationId: string = user?.user_metadata.organizationId;
 
     if (!organizationId) {
@@ -40,7 +40,10 @@ export async function POST(req: NextRequest) {
 
     if (orgError) {
       console.error("Error fetching organization:", orgError);
-      return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Organization not found" },
+        { status: 404 }
+      );
     }
 
     // Get document details
@@ -71,12 +74,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const previewLink = `https://www.restoregeek.app/documents/${document.publicId}?projectId=${project.publicId}`;
+    // const previewLink = `https://www.restoregeek.app/documents/${document.publicId}?projectId=${project.publicId}`;
+    const previewLink = `https://www.restoregeek.app/certificate?id=${document.publicId}&isCustomer=true&type=${JSON.parse(document.json as string).type}`;
 
+    console.log("🚀 ~ POST ~ previewLink:", previewLink);
     // Send email using Resend
     const { data, error } = await resend.emails.send({
-        from: "RestoreGeek <team@servicegeek.io>",
-        to: project.clientEmail,
+      from: "RestoreGeek <team@servicegeek.io>",
+      to: project.clientEmail,
       subject: `Document: ${document.name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -119,4 +124,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

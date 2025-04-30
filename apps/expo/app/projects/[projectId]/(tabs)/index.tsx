@@ -111,9 +111,7 @@ export default function ProjectOverview() {
   };
 
   const fetchMembers = async () => {
-    const res = await api.get(`/api/v1/organization/members`, {
-    
-    });
+    const res = await api.get(`/api/v1/organization/members`, {});
     members.setMembers(res.data.members);
   };
 
@@ -141,13 +139,13 @@ export default function ProjectOverview() {
       title: "Forms",
       description: "Manage project forms",
     },
-    // {
-    //   path: "./documents",
-    //   Icon: File,
-    //   title: "Documents",
-    //   description: "Manage project documents",
-    // },
- 
+    {
+      path: "./documents",
+      Icon: File,
+      title: "Documents",
+      description: "Manage project documents",
+    },
+
     {
       path: "./lidar/rooms",
       Icon: Video,
@@ -229,7 +227,12 @@ export default function ProjectOverview() {
         <View className="w-full flex-row justify-between items-center">
           <TouchableOpacity
             // onPress={() => setShowClientInfo(true)}
-            onPress={() => router.push({ pathname: "./details", params: { activeTab: "customer" } })}
+            onPress={() =>
+              router.push({
+                pathname: "./details",
+                params: { activeTab: "customer" },
+              })
+            }
             className="flex-row items-center"
           >
             <Text className="text-2xl font-bold text-foreground">
@@ -307,10 +310,16 @@ export default function ProjectOverview() {
               {project.project?.damageType && (
                 <View className="flex flex-row items-center">
                   <View className="bg-primary/10 p-2 rounded-lg">
-                    <AlertTriangle height={20} width={20} className="text-primary" />
+                    <AlertTriangle
+                      height={20}
+                      width={20}
+                      className="text-primary"
+                    />
                   </View>
                   <View className="ml-3">
-                    <Text className="text-sm text-muted-foreground">Damage Type</Text>
+                    <Text className="text-sm text-muted-foreground">
+                      Damage Type
+                    </Text>
                     <Text className="text-base text-foreground capitalize">
                       {project.project.damageType.replace(/_/g, " ")}
                     </Text>
@@ -615,7 +624,7 @@ function GridCell({
   description: string;
   onPress?: () => void;
 }) {
-  console.log("🚀 ~ params:", params)
+  console.log("🚀 ~ params:", params);
   const router = useRouter();
   return (
     <TouchableOpacity

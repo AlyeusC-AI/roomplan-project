@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -44,6 +44,7 @@ import Animated, {
 import ModalImagesWithNotes from "../pictures/modalImagesWithNotes";
 import { api } from "@/lib/api";
 import { toast } from "sonner-native";
+import { useFocusEffect } from "@react-navigation/native";
 // Get screen dimensions for responsive sizing
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -124,6 +125,9 @@ export default function ImageGallery({
       inferences.sort((a, b) => (a.Image?.order || 0) - (b.Image?.order || 0))
     );
   }, [inferences]);
+  // useEffect(() => {
+  //   console.log("🚀 ~ inferences:", JSON.stringify(inferences, null, 2));
+  // }, [inferences]);
 
   // Calculate grid layout
   const itemsPerRow = 3;
@@ -218,7 +222,7 @@ export default function ImageGallery({
           order: orderUpdates,
         })
         .then((res) => {
-          toast.success("Image order updated");
+          // toast.success("Image order updated");
 
           console.log("🚀 ~ rsasdadsadasdes:", res.data);
           // onRefresh?.();
@@ -268,9 +272,9 @@ export default function ImageGallery({
 
     const gestureHandler = useAnimatedStyle(() => {
       const { x, y } = positions.value[index];
-      const scale = isDragging && draggedIndex === index ? 1.1 : 1;
+      // const scale = isDragging && draggedIndex === index ? 1.1 : 1;
       return {
-        transform: [{ translateX: x }, { translateY: y }, { scale }],
+        transform: [{ translateX: x }, { translateY: y }],
         zIndex: isDragging && draggedIndex === index ? 1 : 0,
       } as const;
     });
