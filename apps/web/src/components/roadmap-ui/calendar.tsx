@@ -185,7 +185,12 @@ export type CalendarBodyProps = {
   selectedDate?: Date;
 };
 
-export const CalendarBody = ({ features, children, onDateSelect, selectedDate }: CalendarBodyProps) => {
+export const CalendarBody = ({
+  features,
+  children,
+  onDateSelect,
+  selectedDate,
+}: CalendarBodyProps) => {
   const { month, year } = useCalendar();
   const { startDay } = useContext(CalendarContext);
   const daysInMonth = getDaysInMonth(new Date(year, month, 1));
@@ -218,8 +223,8 @@ export const CalendarBody = ({ features, children, onDateSelect, selectedDate }:
       <div
         key={day}
         className={cn(
-          'relative flex size-full min-h-[100px] flex-col gap-1 p-1 text-xs text-muted-foreground cursor-pointer hover:bg-accent/50',
-          selectedDate && isSameDay(currentDate, selectedDate) && 'bg-accent'
+          "relative flex size-full min-h-[100px] cursor-pointer flex-col gap-1 p-1 text-xs text-muted-foreground hover:bg-accent/50",
+          selectedDate && isSameDay(currentDate, selectedDate) && "bg-accent"
         )}
         onClick={() => onDateSelect?.(currentDate)}
       >
@@ -297,9 +302,9 @@ export const CalendarMonthPicker = ({
   return (
     <Combobox
       className={className}
-      value={month.toString()}
+      value={(month + 1).toString()}
       setValue={(value) =>
-        setMonth(Number.parseInt(value) as CalendarState["month"])
+        setMonth((Number.parseInt(value) as CalendarState["month"]) - 1)
       }
       data={monthsForLocale(locale).map((month, index) => ({
         value: index.toString(),

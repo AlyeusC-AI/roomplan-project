@@ -99,53 +99,58 @@ const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
       });
       if (res.ok) {
         const body = await res.json();
+        console.log("🚀 ~ addReading ~ body:", body);
+        console.log("🚀 ~ addReading ~ room:", room);
+
         toast.success("Reading added successfully");
         roomStore.getState().addReading(room.publicId, body.reading);
       } else {
         toast.error("Failed to add reading");
       }
-      setIsCreating(false);
-    } catch {
+      // setIsCreating(false);
+    } catch (error) {
+      console.log("🚀 ~ addReading ~ error:", error);
       toast.error("Failed to add reading");
     }
+    setIsCreating(false);
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
-      <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-        <div className="flex items-center space-x-2">
+    <div className='rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800'>
+      <div className='flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900'>
+        <div className='flex items-center space-x-2'>
           <Button
-            variant="ghost"
-            size="icon"
+            variant='ghost'
+            size='icon'
             onClick={() => setIsExpanded(!isExpanded)}
-            className="h-8 w-8"
+            className='h-8 w-8'
           >
             {isExpanded ? (
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className='h-4 w-4' />
             ) : (
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className='h-4 w-4' />
             )}
           </Button>
-          <div className="flex items-center">
+          <div className='flex items-center'>
             {isEditingTitle ? (
               <>
                 <Input
                   value={internalRoomName}
                   onChange={(e) => setInternalRoomName(e.target.value)}
                   disabled={isSaving}
-                  className="h-8 w-48 dark:bg-gray-800 dark:text-white dark:border-gray-700"
+                  className='h-8 w-48 dark:border-gray-700 dark:bg-gray-800 dark:text-white'
                 />
                 <Button
                   onClick={() => setIsEditingTitle(false)}
-                  className="ml-2 h-8"
-                  variant="outline"
+                  className='ml-2 h-8'
+                  variant='outline'
                   disabled={isSaving}
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={() => updateRoomName()}
-                  className="ml-2 h-8"
+                  className='ml-2 h-8'
                   disabled={isSaving}
                 >
                   {isSaving ? <LoadingSpinner /> : "Save"}
@@ -153,32 +158,34 @@ const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
               </>
             ) : (
               <>
-                <h1 className="text-lg font-semibold dark:text-white">{room.name}</h1>
+                <h1 className='text-lg font-semibold dark:text-white'>
+                  {room.name}
+                </h1>
                 <Button
-                  variant="ghost"
+                  variant='ghost'
                   onClick={() => setIsEditingTitle(true)}
-                  className="ml-2 h-8 w-8 p-0"
+                  className='ml-2 h-8 w-8 p-0'
                 >
-                  <Pencil className="h-4 w-4" />
+                  <Pencil className='h-4 w-4' />
                 </Button>
               </>
             )}
           </div>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className='flex items-center space-x-2'>
           <Button
             disabled={isCreating}
             onClick={() => addReading()}
-            className="h-8"
+            className='h-8'
           >
             {isCreating ? <LoadingSpinner /> : "Add Reading"}
           </Button>
           <Button
             onClick={() => setIsConfirmingDelete(true)}
-            variant="destructive"
-            className="h-8 w-8 p-0"
+            variant='destructive'
+            className='h-8 w-8 p-0'
           >
-            <Trash className="h-4 w-4" />
+            <Trash className='h-4 w-4' />
           </Button>
         </div>
       </div>
@@ -187,24 +194,24 @@ const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
           isExpanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="p-4">
+        <div className='p-4'>
           <Readings room={room} />
         </div>
       </div>
       <Dialog open={isConfirmingDelete} onOpenChange={setIsConfirmingDelete}>
-        <DialogContent className="dark:bg-gray-800">
-          <DialogHeader className="dark:text-white">Delete Room</DialogHeader>
-          <DialogDescription className="dark:text-gray-400">
+        <DialogContent className='dark:bg-gray-800'>
+          <DialogHeader className='dark:text-white'>Delete Room</DialogHeader>
+          <DialogDescription className='dark:text-gray-400'>
             Permanently delete this room and everything associated within it
           </DialogDescription>
-          <div className="flex items-center justify-end space-x-4">
+          <div className='flex items-center justify-end space-x-4'>
             <Button
-              variant="outline"
+              variant='outline'
               onClick={() => setIsConfirmingDelete(false)}
             >
               Cancel
             </Button>
-            <Button onClick={deleteRoom} variant="destructive">
+            <Button onClick={deleteRoom} variant='destructive'>
               {isDeleting ? <LoadingSpinner /> : "Yes, delete the room."}
             </Button>
           </div>

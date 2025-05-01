@@ -170,6 +170,7 @@ export type Database = {
           start: string | null
           subject: string
           updatedAt: string
+          users: string[] | null
         }
         Insert: {
           createdAt?: string
@@ -188,6 +189,7 @@ export type Database = {
           start?: string | null
           subject: string
           updatedAt?: string
+          users?: string[] | null
         }
         Update: {
           createdAt?: string
@@ -206,6 +208,7 @@ export type Database = {
           start?: string | null
           subject?: string
           updatedAt?: string
+          users?: string[] | null
         }
         Relationships: [
           {
@@ -238,6 +241,7 @@ export type Database = {
           sendText: boolean
           textSentAt: string | null
           updatedAt: string
+          userId: string | null
         }
         Insert: {
           calendarEventId?: number | null
@@ -252,6 +256,7 @@ export type Database = {
           sendText?: boolean
           textSentAt?: string | null
           updatedAt?: string
+          userId?: string | null
         }
         Update: {
           calendarEventId?: number | null
@@ -266,6 +271,7 @@ export type Database = {
           sendText?: boolean
           textSentAt?: string | null
           updatedAt?: string
+          userId?: string | null
         }
         Relationships: [
           {
@@ -273,6 +279,13 @@ export type Database = {
             columns: ["calendarEventId"]
             isOneToOne: false
             referencedRelation: "CalendarEvent"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "CalendarEventReminder_userId_fkey"
+            columns: ["userId"]
+            isOneToOne: false
+            referencedRelation: "User"
             referencedColumns: ["id"]
           },
         ]

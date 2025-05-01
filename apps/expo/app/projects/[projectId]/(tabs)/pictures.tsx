@@ -582,6 +582,10 @@ export default function ProjectPhotos() {
           <View className="flex-row gap-2 justify-between">
             <TouchableOpacity
               style={[
+                {
+                  width: 40,
+                  height: 40,
+                },
                 styles.actionButton,
                 isUploadingMainImage && styles.actionButtonDisabled,
               ]}
@@ -602,6 +606,10 @@ export default function ProjectPhotos() {
             <View style={styles.actionButtons}>
               <TouchableOpacity
                 style={[
+                  {
+                    width: 40,
+                    height: 40,
+                  },
                   styles.actionButton,
                   isUpdatingAll && styles.actionButtonDisabled,
                 ]}
@@ -624,7 +632,13 @@ export default function ProjectPhotos() {
                 )}
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.actionButton}
+                style={[
+                  {
+                    width: 40,
+                    height: 40,
+                  },
+                  styles.actionButton,
+                ]}
                 onPress={handlePickImages}
                 className="mx-2 bg-accent rounded-full border border-gray-200"
               >
@@ -727,50 +741,52 @@ export default function ProjectPhotos() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Building2 size={24} color="#1e40af" />
-              <Text style={styles.modalTitle}>Select Room</Text>
-            </View>
-            <Text style={styles.modalDescription}>
-              Choose a room to upload images to
-            </Text>
-
-            <View style={styles.roomList}>
-              {rooms.rooms
-                .filter((room) => !room.isDeleted)
-                .map((room) => (
-                  <TouchableOpacity
-                    key={room.id}
-                    style={[
-                      styles.roomOption,
-                      selectedRoom === room.id && styles.selectedRoom,
-                    ]}
-                    onPress={() => {
-                      setSelectedRoom(room.id);
-                      setShowRoomSelection(false);
-                    }}
-                  >
-                    <Text
-                      style={[
-                        styles.roomOptionText,
-                        selectedRoom === room.id && styles.selectedRoomText,
-                      ]}
-                    >
-                      {room.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-            </View>
-
-            <View style={styles.modalFooter}>
-              <Button
-                variant="outline"
+              <View style={styles.modalHeaderContent}>
+                <Building2 size={24} color="#1e40af" />
+                <Text style={styles.modalTitle}>Select Room</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.closeButton}
                 onPress={() => {
                   setShowRoomSelection(false);
                   setSelectedRoom(null);
                 }}
               >
-                <Text>Cancel</Text>
-              </Button>
+                <XCircle size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalBody}>
+              <Text style={styles.modalDescription}>
+                Choose a room to upload images to
+              </Text>
+
+              <View style={styles.roomList}>
+                {rooms.rooms
+                  .filter((room) => !room.isDeleted)
+                  .map((room) => (
+                    <TouchableOpacity
+                      key={room.id}
+                      style={[
+                        styles.roomOption,
+                        selectedRoom === room.id && styles.selectedRoom,
+                      ]}
+                      onPress={() => {
+                        setSelectedRoom(room.id);
+                        setShowRoomSelection(false);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.roomOptionText,
+                          selectedRoom === room.id && styles.selectedRoomText,
+                        ]}
+                      >
+                        {room.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+              </View>
             </View>
           </View>
         </View>
@@ -818,9 +834,13 @@ export default function ProjectPhotos() {
                 </View>
               )}
 
-              <View style={styles.actionButtonsContainer}>
+              <View
+                // style={styles.actionButtonsContainer}
+                className="flex-row gap-2"
+              >
                 <TouchableOpacity
                   style={[styles.actionButton, styles.cameraButton]}
+                  className="bg-accent rounded-full border border-gray-200"
                   onPress={() => handleSetMainImage(true)}
                   disabled={isUploadingMainImage}
                 >
@@ -1087,8 +1107,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 8,
     borderRadius: 24,
-    width: 40,
-    height: 40,
+    // width: 40,
+    // height: 40,
     // borderColor: "#e2e8f0",
 
     // backgroundColor: "hsl(var(--destructive))",

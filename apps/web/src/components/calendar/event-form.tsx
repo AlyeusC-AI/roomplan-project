@@ -26,12 +26,13 @@ import {
 } from "@components/ui/command";
 import { DateTimePicker } from "@components/ui/date-time-picker";
 import { LoadingSpinner } from "@components/ui/spinner";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Users, Search, X } from "lucide-react";
 import { cn } from "@lib/utils";
 import { projectsStore } from "@atoms/projects";
+import { teamMembersStore } from "@atoms/team-members";
 import { UseFormReturn } from "react-hook-form";
 import { CreateEventValues } from "./types";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type EventFormProps = {
   form: UseFormReturn<CreateEventValues>;
@@ -55,23 +56,74 @@ export function EventForm({
   setConfirmDelete,
 }: EventFormProps) {
   const { projects } = projectsStore((state) => state);
+  const { teamMembers } = teamMembersStore();
+  console.log("🚀 ~ teamMembers:", teamMembers);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isMemberSelectorOpen, setIsMemberSelectorOpen] = useState(false);
+  const selectedUsers = form.watch("users") || [];
+  useEffect(() => {
+    fetch("/api/v1/organization/members")
+      .then((res) => res.json())
+      .then((data) => {
+        teamMembersStore.getState().setTeamMembers(data.members);
+      });
+  }, []);
+  const filteredMembers = teamMembers.filter((member) => {
+    const fullName =
+      `${member.firstName || ""} ${member.lastName || ""}`.trim();
+    const email = member.email || "";
+    return (
+      fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
+
+  const handleSelect = (userId: string) => {
+    const currentUsers = form.getValues("users") || [];
+    const isSelected = currentUsers.includes(userId);
+    if (isSelected) {
+      form.setValue(
+        "users",
+        currentUsers.filter((id) => id !== userId)
+      );
+    } else {
+      form.setValue("users", [...currentUsers, userId]);
+    }
+  };
 
   useEffect(() => {
     if (editingEvent) {
+      console.log("🚀 ~ useEffect ~ editingEvent:", editingEvent);
       form.setValue("projectId", editingEvent.projectId || 0);
       form.setValue("subject", editingEvent.subject || "");
       form.setValue("payload", editingEvent.payload || "");
-      form.setValue("start", editingEvent.start ? new Date(editingEvent.start) : new Date());
-      form.setValue("end", editingEvent.end ? new Date(editingEvent.end) : new Date());
+      form.setValue(
+        "start",
+        editingEvent.start ? new Date(editingEvent.start) : new Date()
+      );
+      form.setValue(
+        "end",
+        editingEvent.end ? new Date(editingEvent.end) : new Date()
+      );
       form.setValue("remindClient", editingEvent.remindClient || false);
-      form.setValue("remindProjectOwners", editingEvent.remindProjectOwners || false);
-      form.setValue("reminderTime", editingEvent.reminderTime as "24h" | "2h" | "40m" | undefined || undefined);
+      form.setValue(
+        "remindProjectOwners",
+        editingEvent.remindProjectOwners || false
+      );
+      form.setValue(
+        "reminderTime",
+        (editingEvent.reminderTime as "24h" | "2h" | "40m" | undefined) ||
+          undefined
+      );
+      form.setValue("users", editingEvent.users || []);
+    } else {
+      form.reset();
     }
-  }, [editingEvent, form]);
+  }, [editingEvent]);
 
   return (
     <Form {...form}>
-      <form className='space-y-8 pt-3'>
+      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8 pt-3'>
         <FormField
           control={form.control}
           name='projectId'
@@ -92,9 +144,7 @@ export function EventForm({
                       className='w-full justify-between'
                     >
                       {field.value
-                        ? projects.find(
-                            (p) => p.id === field.value
-                          )?.name
+                        ? projects.find((p) => p.id === field.value)?.name
                         : "Select project..."}
                       <ChevronsUpDown className='ml-2 size-4 shrink-0 opacity-50' />
                     </Button>
@@ -111,9 +161,7 @@ export function EventForm({
                               value={project.name}
                               onSelect={() => {
                                 field.onChange(
-                                  project.id === field.value
-                                    ? 0
-                                    : project.id
+                                  project.id === field.value ? 0 : project.id
                                 );
                                 setCreatePopover(false);
                               }}
@@ -165,9 +213,7 @@ export function EventForm({
               <FormControl>
                 <Input placeholder='Event Description' {...field} />
               </FormControl>
-              <FormDescription>
-                The description of your event.
-              </FormDescription>
+              <FormDescription>The description of your event.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -211,9 +257,7 @@ export function EventForm({
                   }}
                 />
               </FormControl>
-              <FormDescription>
-                The end time of your event
-              </FormDescription>
+              <FormDescription>The end time of your event</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -227,7 +271,7 @@ export function EventForm({
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value}
                   className='flex flex-col space-y-1'
                 >
                   <FormItem className='flex items-center space-x-3 space-y-0'>
@@ -272,13 +316,13 @@ export function EventForm({
             render={({ field }) => (
               <div className='mt-3 flex items-center space-x-2'>
                 <Checkbox
-                  id='terms1'
+                  id='remindProjectOwners'
                   checked={field.value}
                   onCheckedChange={field.onChange}
                 />
                 <div className='grid gap-1.5 leading-none'>
                   <label
-                    htmlFor='terms1'
+                    htmlFor='remindProjectOwners'
                     className='text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
                   >
                     Remind Project Owners
@@ -287,19 +331,108 @@ export function EventForm({
               </div>
             )}
           />
+
+          {form.watch("remindProjectOwners") && (
+            <div className='mt-4'>
+              <FormLabel>Select Project Owners to Notify</FormLabel>
+              <Popover
+                open={isMemberSelectorOpen}
+                onOpenChange={setIsMemberSelectorOpen}
+              >
+                <PopoverTrigger asChild>
+                  <Button
+                    variant='outline'
+                    role='combobox'
+                    aria-expanded={isMemberSelectorOpen}
+                    className='w-full justify-between'
+                  >
+                    <div className='flex items-center gap-2'>
+                      <Users className='h-4 w-4' />
+                      <span>
+                        {selectedUsers.length > 0
+                          ? `${selectedUsers.length} member${selectedUsers.length > 1 ? "s" : ""} selected`
+                          : "Select members to notify"}
+                      </span>
+                    </div>
+                    <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className='w-full p-0'>
+                  <Command>
+                    <div className='flex items-center border-b px-3'>
+                      <Search className='mr-2 h-4 w-4 shrink-0 opacity-50' />
+                      <CommandInput
+                        placeholder='Search members...'
+                        value={searchQuery}
+                        onValueChange={setSearchQuery}
+                      />
+                    </div>
+                    <CommandList>
+                      <CommandEmpty>No members found.</CommandEmpty>
+                      <FormField
+                        control={form.control}
+                        name='users'
+                        render={({ field }) => (
+                          <CommandGroup>
+                            {filteredMembers.map((member) => {
+                              const isSelected = selectedUsers.includes(
+                                member.userId
+                              );
+                              return (
+                                <CommandItem
+                                  key={member.id}
+                                  value={member.id}
+                                  onSelect={() => handleSelect(member.userId)}
+                                >
+                                  <div className='flex items-center gap-2'>
+                                    <div className='flex h-8 w-8 items-center justify-center rounded-full bg-primary/10'>
+                                      <span className='text-sm font-medium'>
+                                        {member.firstName?.[0]}
+                                        {member.lastName?.[0] ||
+                                          member.email?.[0]}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <div className='text-sm font-medium'>
+                                        {member.firstName} {member.lastName}
+                                      </div>
+                                      <div className='text-xs text-muted-foreground'>
+                                        {member.email}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <Check
+                                    className={cn(
+                                      "ml-auto h-4 w-4",
+                                      isSelected ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        )}
+                      />
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+
           <FormField
             control={form.control}
             name='remindClient'
             render={({ field }) => (
               <div className='mt-3 flex items-center space-x-2'>
                 <Checkbox
-                  id='terms1'
+                  id='terms2'
                   checked={field.value}
                   onCheckedChange={field.onChange}
                 />
                 <div className='grid gap-1.5 leading-none'>
                   <label
-                    htmlFor='terms1'
+                    htmlFor='terms2'
                     className='text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
                   >
                     Remind Client
@@ -324,10 +457,7 @@ export function EventForm({
               Delete
             </Button>
           )}
-          <Button
-            onClick={form.handleSubmit(onSubmit)}
-            disabled={isCreating}
-          >
+          <Button type='submit' disabled={isCreating}>
             {isCreating ? (
               <LoadingSpinner />
             ) : editingEvent ? (
@@ -340,4 +470,4 @@ export function EventForm({
       </form>
     </Form>
   );
-} 
+}

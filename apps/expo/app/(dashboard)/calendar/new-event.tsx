@@ -37,10 +37,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { projectsStore } from "@/lib/state/projects";
-import { Box, VStack, HStack, FormControl, Radio, Stack, Input, Pressable, ScrollView, Text } from "native-base";
+import { teamMemberStore } from "@/lib/state/team-members";
+import {
+  Box,
+  VStack,
+  HStack,
+  FormControl,
+  Radio,
+  Stack,
+  Input,
+  Pressable,
+  ScrollView,
+  Text,
+} from "native-base";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import MemberSelector from "@/components/calendar/member-selector";
 
 interface EventFormData {
   subject: string;
@@ -51,6 +64,7 @@ interface EventFormData {
   start: DateType;
   end: DateType;
   reminderTime?: "24h" | "2h" | "40m";
+  users: string[];
 }
 
 interface Project {
@@ -87,9 +101,9 @@ const ProjectSelector: React.FC<{
 }> = ({ projectId, projects, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const selectedProject = projects.find(p => p.id === projectId);
+  const selectedProject = projects.find((p) => p.id === projectId);
 
-  const filteredProjects = projects.filter(project =>
+  const filteredProjects = projects.filter((project) =>
     project.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -99,10 +113,12 @@ const ProjectSelector: React.FC<{
         onPress={() => setIsOpen(true)}
         className="flex-row items-center justify-between px-3 py-2 rounded-md bg-background border border-input"
       >
-        <Text className={cn(
-          "text-sm",
-          projectId ? "text-foreground" : "text-muted-foreground"
-        )}>
+        <Text
+          className={cn(
+            "text-sm",
+            projectId ? "text-foreground" : "text-muted-foreground"
+          )}
+        >
           {selectedProject?.name || "Select a project"}
         </Text>
         <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -122,7 +138,9 @@ const ProjectSelector: React.FC<{
               placeholder="Search projects..."
               value={searchQuery}
               onChangeText={setSearchQuery}
-              leftElement={<Search size={20} color="#64748b" style={{ marginLeft: 12 }} />}
+              leftElement={
+                <Search size={20} color="#64748b" style={{ marginLeft: 12 }} />
+              }
               className="bg-background border border-input rounded-md"
             />
           </Box>
@@ -174,10 +192,7 @@ const DateInput: React.FC<{
   return (
     <Box>
       <FormControl.Label>{label}</FormControl.Label>
-      <Pressable
-        onPress={() => setShowPicker(true)}
-        style={styles.dateInput}
-      >
+      <Pressable onPress={() => setShowPicker(true)} style={styles.dateInput}>
         <Text style={styles.dateInputText}>
           {dayjs(value).format("MMM D, YYYY h:mm A")}
         </Text>
@@ -262,13 +277,11 @@ export default function NewEvent() {
     remindClient: false,
     projectId: null,
     reminderTime: "24h",
+    users: [],
   });
-  console.log("🚀 ~ NewEvent ~ formData:", formData);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const { session: supabaseSession } = userStore((state) => state);
-  const session = userStore((state) => state);
-  console.log("🚀 ~ NewEvent ~ session:", JSON.stringify(session, null, 2));
 
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -284,6 +297,8 @@ export default function NewEvent() {
     // If in edit mode, populate form with event data, but only once
     if (isEditMode && params && !initialDataLoaded.current) {
       initialDataLoaded.current = true;
+      console.log("🚀 ~ useEffect ~ params.users:", params.users);
+
       setFormData({
         subject: params.subject as string,
         payload: params.payload as string,
@@ -294,6 +309,7 @@ export default function NewEvent() {
         end: params.end ? dayjs(params.end as string) : dayjs().add(1, "hour"),
         reminderTime:
           (params.reminderTime as "24h" | "2h" | "40m") || undefined,
+        users: params.users ? (params.users as string).split(",") : [],
       });
     }
   }, [isEditMode, params]);
@@ -385,14 +401,13 @@ export default function NewEvent() {
           body: JSON.stringify({
             ...formData,
             organizationId,
-            // organizationId:
-
             subject: subject,
             payload: payload,
             id: isEditMode ? eventId : undefined,
             remindProjectOwners: formData.remindProjectOwners,
             remindClient: formData.remindClient,
             reminderTime: formData.reminderTime,
+            users: formData.users,
           }),
         }
       );
@@ -421,8 +436,8 @@ export default function NewEvent() {
           {isDeleting
             ? "Deleting event..."
             : isEditMode
-            ? "Updating event..."
-            : "Creating event..."}
+              ? "Updating event..."
+              : "Creating event..."}
         </Text>
       </Box>
     );
@@ -441,9 +456,7 @@ export default function NewEvent() {
               updateFormData("start", date);
               const endDate = dayjs(formData.end);
               const startDate = dayjs(date);
-              // if (endDate.isBefore(startDate)) {
               updateFormData("end", startDate.add(1, "hour").toDate());
-              // }
             }}
           />
 
@@ -459,6 +472,14 @@ export default function NewEvent() {
               projectId={formData.projectId}
               projects={projects}
               onSelect={(id) => updateFormData("projectId", id)}
+            />
+          </Box>
+
+          <Box>
+            <FormControl.Label>Team Members to Notify</FormControl.Label>
+            <MemberSelector
+              selectedUserIds={formData.users}
+              onChange={(userIds) => updateFormData("users", userIds)}
             />
           </Box>
 
@@ -497,22 +518,34 @@ export default function NewEvent() {
 
           <HStack space={2} alignItems="center">
             <Checkbox
-              checked={formData.remindClient}
-              onCheckedChange={(checked) =>
-                updateFormData("remindClient", checked)
-              }
-            />
-            <Text style={styles.checkboxLabel}>Remind Client</Text>
-          </HStack>
-
-          <HStack space={2} alignItems="center">
-            <Checkbox
               checked={formData.remindProjectOwners}
               onCheckedChange={(checked) =>
                 updateFormData("remindProjectOwners", checked)
               }
             />
             <Text style={styles.checkboxLabel}>Remind Project Owners</Text>
+          </HStack>
+
+          {formData.remindProjectOwners && (
+            <Box>
+              <FormControl.Label>
+                Select Project Owners to Notify
+              </FormControl.Label>
+              <MemberSelector
+                selectedUserIds={formData.users}
+                onChange={(userIds) => updateFormData("users", userIds)}
+              />
+            </Box>
+          )}
+
+          <HStack space={2} alignItems="center">
+            <Checkbox
+              checked={formData.remindClient}
+              onCheckedChange={(checked) =>
+                updateFormData("remindClient", checked)
+              }
+            />
+            <Text style={styles.checkboxLabel}>Remind Client</Text>
           </HStack>
 
           <HStack space={2} mt={6}>

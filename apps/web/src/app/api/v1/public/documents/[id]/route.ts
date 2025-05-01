@@ -44,7 +44,13 @@ export async function GET(
       .eq("id", documentIsExists?.orgId!)
       .single();
 
-    return NextResponse.json({ ...document, org });
+    const { data: project, error: projectError } = await supabaseServiceRole
+      .from("Project")
+      .select("*")
+      .eq("id", documentIsExists?.projectId!)
+      .single();
+
+    return NextResponse.json({ ...document, org, project });
   } catch (error) {
     console.error("Error fetching document:", error);
     return NextResponse.json(

@@ -54,11 +54,11 @@ const data = {
       url: "/projects",
       icon: FolderKanban,
     },
-    {
-      title: "Map",
-      url: "/map",
-      icon: Map,
-    },
+    // {
+    //   title: "Map",
+    //   url: "/map",
+    //   icon: Map,
+    // },
     {
       title: "Calendar",
       url: "/calendar",
@@ -73,12 +73,12 @@ const data = {
       title: "Estimates",
       url: "/estimates",
       icon: Receipt,
-      items: [
-        {
-          title: "All Estimates",
-          url: "/estimates",
-        },
-      ],
+      // items: [
+      //   {
+      //     title: "All Estimates",
+      //     url: "/estimates",
+      //   },
+      // ],
     },
     {
       title: "Invoices",

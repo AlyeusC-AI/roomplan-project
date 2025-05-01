@@ -29,7 +29,17 @@ export const calendarEventSchema = z.object({
   reminderTime: z.enum(["24h", "2h", "40m"]).optional(),
 });
 
-export type CreateEventValues = z.infer<typeof calendarEventSchema>;
+export type CreateEventValues = {
+  subject: string;
+  payload: string;
+  start: Date;
+  end: Date;
+  projectId?: number;
+  remindProjectOwners?: boolean;
+  remindClient?: boolean;
+  reminderTime?: "24h" | "2h" | "40m";
+  users?: string[];
+};
 
 export type CalendarEvent = {
   id: number;
@@ -48,4 +58,4 @@ export type CalendarEvent = {
   remindClient: boolean;
   remindProjectOwners: boolean;
   reminderTime: string | null;
-}; 
+};

@@ -50,16 +50,18 @@ const formSchema = z.object({
 
 const SignatureDisplay = ({ signatureData }: { signatureData?: string }) => {
   if (!signatureData) {
-    return <div className='h-16 w-48 border-b border-gray-300' />;
+    return <div className='h-12 w-48 border-b border-gray-300' />;
   }
 
   return (
-    <div className='h-16 w-48 border-b border-gray-300'>
+    <div className='w-48 border-b border-gray-300'>
       <img
         src={signatureData}
         alt='Signature'
-        className='h-full object-contain'
-        style={{ maxWidth: "100%" }}
+        className='h-10 w-full object-cover'
+        style={{
+          transform: "scale(1.6)",
+        }}
       />
     </div>
   );
@@ -363,9 +365,38 @@ export default function CertificatePage() {
       if (data.json) {
         const documentData = JSON.parse(data.json);
         console.log("🚀 ~ fetchDocument ~ documentData:", documentData);
+        const projectData = data.project as Project;
         setFormData((prev) => ({
           ...prev,
+          ...(data.project || {}),
           ...documentData,
+          customerName:
+            prev.customerName ||
+            documentData.customerName ||
+            projectData?.clientName,
+          cellPhone:
+            prev.cellPhone ||
+            documentData.cellPhone ||
+            projectData?.clientPhoneNumber,
+          address:
+            prev.address || documentData.address || projectData?.location,
+          insuranceCompany:
+            prev.insuranceCompany ||
+            documentData.insuranceCompany ||
+            projectData?.insuranceCompanyName,
+          claimNumber:
+            prev.claimNumber ||
+            documentData.claimNumber ||
+            projectData?.insuranceClaimId,
+          policyNumber:
+            prev.policyNumber ||
+            documentData.policyNumber ||
+            projectData?.policyNumber,
+          date: prev.date || documentData.date || projectData?.dateOfLoss,
+          representativeName:
+            prev.representativeName ||
+            documentData.representativeName ||
+            projectData?.adjusterName,
         }));
 
         // Set signatures if they exist
@@ -385,7 +416,27 @@ export default function CertificatePage() {
             documentData.representativeSignature
           );
         }
+      } else {
+        // Auto-fill project data if available
+        if (data.project) {
+          const project = data.project;
+          console.log("🚀 ~ fetchDocument ~ project:", project);
+
+          setFormData((prev) => ({
+            ...prev,
+            customerName: project.customerName || prev.customerName,
+            cellPhone: project.customerPhone || prev.cellPhone,
+            address: project.address
+              ? JSON.parse(project.address).address
+              : prev.address,
+            insuranceCompany: project.insuranceCompany || prev.insuranceCompany,
+            claimNumber: project.claimNumber || prev.claimNumber,
+            policyNumber: project.policyNumber || prev.policyNumber,
+            date: project.date || prev.date,
+          }));
+        }
       }
+      console.log("🚀 ~ fetchDocument ~ data.project:", data.project);
     } catch (error) {
       toast.error("Failed to load document");
       console.error(error);
@@ -633,79 +684,6 @@ export default function CertificatePage() {
                   <div className='max-h-[80vh] overflow-y-auto'>
                     <div className='space-y-6 p-4'>
                       <div className='grid gap-4'>
-                        <div className='grid grid-cols-2 gap-4'>
-                          <div>
-                            <Label className='text-sm'>Customer Name:</Label>
-                            <Input
-                              name='customerName'
-                              value={formData.customerName}
-                              onChange={handleInputChange}
-                              className='border-b border-gray-300'
-                            />
-                          </div>
-                          <div>
-                            <Label className='text-sm'>Cell Phone:</Label>
-                            <Input
-                              name='cellPhone'
-                              value={formData.cellPhone}
-                              onChange={handleInputChange}
-                              className='border-b border-gray-300'
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <Label className='text-sm'>Address:</Label>
-                          <Input
-                            name='address'
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            className='border-b border-gray-300'
-                          />
-                        </div>
-
-                        <div>
-                          <Label className='text-sm'>Insurance Company:</Label>
-                          <Input
-                            name='insuranceCompany'
-                            value={formData.insuranceCompany}
-                            onChange={handleInputChange}
-                            className='border-b border-gray-300'
-                          />
-                        </div>
-
-                        <div className='grid grid-cols-2 gap-4'>
-                          <div>
-                            <Label className='text-sm'>Claim Number:</Label>
-                            <Input
-                              name='claimNumber'
-                              value={formData.claimNumber}
-                              onChange={handleInputChange}
-                              className='border-b border-gray-300'
-                            />
-                          </div>
-                          <div>
-                            <Label className='text-sm'>Policy Number:</Label>
-                            <Input
-                              name='policyNumber'
-                              value={formData.policyNumber}
-                              onChange={handleInputChange}
-                              className='border-b border-gray-300'
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <Label className='text-sm'>Date:</Label>
-                          <Input
-                            type='date'
-                            name='date'
-                            value={formData.date}
-                            onChange={handleInputChange}
-                            className='border-b border-gray-300'
-                          />
-                        </div>
-
                         <div>
                           <Label className='text-sm'>
                             Customer's Signature:
@@ -782,6 +760,18 @@ export default function CertificatePage() {
                       </div>
                     </div>
                   </div>
+                  <div className='block'>
+                    <Button
+                      type='button'
+                      className='w-full'
+                      onClick={() => {
+                        setIsCustomerFormOpen(false);
+                        toast.success("Customer details saved");
+                      }}
+                    >
+                      Done
+                    </Button>
+                  </div>
                 </DialogContent>
               </Dialog>
             )}
@@ -794,89 +784,180 @@ export default function CertificatePage() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>H₂NO Representative Signature</DialogTitle>
+                  <DialogHeader className='mb-4'>
+                    <DialogTitle> Representative Signature</DialogTitle>
                   </DialogHeader>
-                  <div className='space-y-4 p-4'>
+                  <div className='max-h-[80vh] overflow-y-auto'>
+                    <div className='grid grid-cols-2 gap-4'>
+                      <div>
+                        <Label className='text-sm'>Customer Name:</Label>
+                        <Input
+                          name='customerName'
+                          value={formData.customerName}
+                          onChange={handleInputChange}
+                          className='border-b border-gray-300'
+                        />
+                      </div>
+                      <div>
+                        <Label className='text-sm'>Cell Phone:</Label>
+                        <Input
+                          name='cellPhone'
+                          value={formData.cellPhone}
+                          onChange={handleInputChange}
+                          className='border-b border-gray-300'
+                        />
+                      </div>
+                    </div>
+
                     <div>
-                      <Label className='text-sm'>Representative Name:</Label>
+                      <Label className='text-sm'>Address:</Label>
                       <Input
-                        name='representativeName'
-                        value={formData.representativeName}
+                        name='address'
+                        value={formData.address}
                         onChange={handleInputChange}
                         className='border-b border-gray-300'
                       />
                     </div>
+
                     <div>
-                      <Label className='text-sm'>
-                        Representative Signature:
-                      </Label>
-                      <div className='mb-2 flex gap-2'>
-                        <Button
-                          type='button'
-                          variant={showCursiveSignature ? "default" : "outline"}
-                          size='sm'
-                          onClick={() => setShowCursiveSignature(true)}
-                          className='flex items-center gap-2'
-                        >
-                          <Type className='h-4 w-4' />
-                          Type Signature
-                        </Button>
-                        <Button
-                          type='button'
-                          variant={
-                            !showCursiveSignature ? "default" : "outline"
-                          }
-                          size='sm'
-                          onClick={() => setShowCursiveSignature(false)}
-                          className='flex items-center gap-2'
-                        >
-                          <PenLine className='h-4 w-4' />
-                          Draw Signature
-                        </Button>
+                      <Label className='text-sm'>Insurance Company:</Label>
+                      <Input
+                        name='insuranceCompany'
+                        value={formData.insuranceCompany}
+                        onChange={handleInputChange}
+                        className='border-b border-gray-300'
+                      />
+                    </div>
+
+                    <div className='grid grid-cols-2 gap-4'>
+                      <div>
+                        <Label className='text-sm'>Claim Number:</Label>
+                        <Input
+                          name='claimNumber'
+                          value={formData.claimNumber}
+                          onChange={handleInputChange}
+                          className='border-b border-gray-300'
+                        />
                       </div>
-                      {showCursiveSignature ? (
-                        <div className='space-y-4'>
-                          <Input
-                            placeholder='Type your name'
-                            value={cursiveName}
-                            onChange={(e) => setCursiveName(e.target.value)}
-                            className='border-b border-gray-300'
-                          />
-                          <CursiveSignature
-                            name={cursiveName}
-                            onSignatureChange={handleCursiveSignatureChange}
-                          />
-                        </div>
-                      ) : (
-                        <div className='relative mt-2 rounded-md border bg-white'>
-                          <SignatureCanvas
-                            ref={(ref) => setRepresentativeSignature(ref)}
-                            canvasProps={{
-                              className: "signature-canvas w-full h-24",
-                            }}
-                            onEnd={() => {
-                              const signatureData =
-                                representativeSignature?.toDataURL();
-                              if (signatureData) {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  representativeSignature: signatureData,
-                                }));
-                              }
-                            }}
-                          />
+                      <div>
+                        <Label className='text-sm'>Policy Number:</Label>
+                        <Input
+                          name='policyNumber'
+                          value={formData.policyNumber}
+                          onChange={handleInputChange}
+                          className='border-b border-gray-300'
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className='text-sm'>Date:</Label>
+                      <Input
+                        type='date'
+                        name='date'
+                        value={formData.date}
+                        onChange={handleInputChange}
+                        className='border-b border-gray-300'
+                      />
+                    </div>
+
+                    <div className='flex flex-col gap-4'>
+                      <div>
+                        <Label className='block pb-2 text-sm'>
+                          Representative Name:
+                        </Label>
+                        <Input
+                          name='representativeName'
+                          value={formData.representativeName}
+                          onChange={handleInputChange}
+                          className='border-b border-gray-300'
+                        />
+                      </div>
+                      <div>
+                        <Label className='block pb-2 text-sm'>
+                          Representative Signature:
+                        </Label>
+                        <div className='flex gap-3 pb-4'>
                           <Button
                             type='button'
-                            variant='outline'
+                            variant={
+                              showCursiveSignature ? "default" : "outline"
+                            }
                             size='sm'
-                            className='absolute right-2 top-2'
-                            onClick={clearRepresentativeSignature}
+                            onClick={() => setShowCursiveSignature(true)}
+                            className='flex items-center gap-2'
                           >
-                            <Undo className='h-4 w-4' />
+                            <Type className='h-4 w-4' />
+                            Type Signature
+                          </Button>
+                          <Button
+                            type='button'
+                            variant={
+                              !showCursiveSignature ? "default" : "outline"
+                            }
+                            size='sm'
+                            onClick={() => setShowCursiveSignature(false)}
+                            className='flex items-center gap-2'
+                          >
+                            <PenLine className='h-4 w-4' />
+                            Draw Signature
                           </Button>
                         </div>
-                      )}
+                        {showCursiveSignature ? (
+                          <div className='space-y-4'>
+                            <Input
+                              placeholder='Type your name'
+                              value={cursiveName}
+                              onChange={(e) => setCursiveName(e.target.value)}
+                              className='border-b border-gray-300'
+                            />
+                            <CursiveSignature
+                              name={cursiveName}
+                              onSignatureChange={handleCursiveSignatureChange}
+                            />
+                          </div>
+                        ) : (
+                          <div className='relative mt-2 rounded-md border bg-white'>
+                            <SignatureCanvas
+                              ref={(ref) => setRepresentativeSignature(ref)}
+                              canvasProps={{
+                                className: "signature-canvas w-full h-24",
+                              }}
+                              onEnd={() => {
+                                const signatureData =
+                                  representativeSignature?.toDataURL();
+                                if (signatureData) {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    representativeSignature: signatureData,
+                                  }));
+                                }
+                              }}
+                            />
+                            <Button
+                              type='button'
+                              variant='outline'
+                              size='sm'
+                              className='absolute right-2 top-2'
+                              onClick={clearRepresentativeSignature}
+                            >
+                              <Undo className='h-4 w-4' />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className='block w-full gap-2 p-4'>
+                      <Button
+                        type='button'
+                        className='w-full'
+                        onClick={() => {
+                          setIsRepFormOpen(false);
+                          toast.success("Representative signature saved");
+                        }}
+                      >
+                        Done
+                      </Button>
                     </div>
                   </div>
                 </DialogContent>

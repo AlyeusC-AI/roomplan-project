@@ -100,7 +100,7 @@ export default function ProjectDocumentsPage() {
 
   const handleCreateDocument = async (type: "cos" | "auth") => {
     try {
-      await api.post(
+      const response = await api.post(
         `/api/v1/organization/documents?projectId=${project?.publicId}`,
         {
           name: type === "cos" ? "COS" : "Work Auth",
@@ -116,6 +116,11 @@ export default function ProjectDocumentsPage() {
       setShowCreateDialog(false);
       setSelectedDocType(null);
       fetchDocuments();
+
+      // Navigate to view the newly created document
+      if (response.data?.publicId) {
+        handleViewDocument(response.data.publicId, type);
+      }
     } catch (error) {
       toast.error("Failed to create document");
       console.error(error);
@@ -304,7 +309,7 @@ export default function ProjectDocumentsPage() {
                 <X className="w-5 h-5 text-gray-500" />
               </TouchableOpacity>
             </View>
-            <View className="space-y-4 gap-4">
+            <View className="space-y-4 gap-4 mb-4">
               <TouchableOpacity
                 onPress={() => handleCreateDocument("cos")}
                 className="bg-blue-50 p-5 rounded-xl border border-blue-100"
@@ -409,7 +414,7 @@ export default function ProjectDocumentsPage() {
               Are you sure you want to send the document "
               {selectedDocument?.name}"?
             </Text>
-            <View className="flex-row space-x-4">
+            <View className="flex-row gap-2 pb-4">
               <TouchableOpacity
                 onPress={() => setShowEmailDialog(false)}
                 className="flex-1 bg-gray-100 py-4 rounded-xl"

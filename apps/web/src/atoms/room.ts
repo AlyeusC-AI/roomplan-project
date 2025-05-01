@@ -1,7 +1,5 @@
 import { create } from "zustand";
 
-
-
 interface State {
   rooms: RoomWithReadings[];
 }
@@ -48,7 +46,10 @@ interface Actions {
 export const roomStore = create<State & Actions>((set) => ({
   rooms: [],
   setRooms: (rooms) => set({ rooms }),
-  addRoom: (room) => set((state) => ({ rooms: [...state.rooms, room] })),
+  addRoom: (room) =>
+    set((state) => ({
+      rooms: [...state.rooms, { ...room, RoomReading: room.RoomReading || [] }],
+    })),
   removeRoom: (room) =>
     set((state) => ({
       rooms: state.rooms.filter((r) => r.publicId !== room.publicId),
@@ -169,6 +170,7 @@ export const roomStore = create<State & Actions>((set) => ({
   addReading: (roomId, reading) =>
     set((state) => {
       const roomIndex = state.rooms.findIndex((r) => r.publicId === roomId);
+      console.log("🚀 ~ set ~ roomIndex:", roomIndex);
       state.rooms[roomIndex].RoomReading.push({
         ...reading,
         GenericRoomReading: [],

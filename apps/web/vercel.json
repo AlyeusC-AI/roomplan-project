@@ -3,8 +3,9 @@
     "enabled": false
   },
   "crons": [
+  
     {
-      "path": "/crons/calendar",
+      "path": "/api/v1/projects/calendar-events/cron/send-reminders",
       "schedule": "*/5 * * * *"
     }
   ]

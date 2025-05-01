@@ -25,15 +25,16 @@ const getStatusColor = (status: string | null): string => {
 };
 
 export default function ProjectCell({ project }: { project: Project }) {
-  console.log("🚀 ~ ProjectCell ~ project:", project)
   const formatProjectName = (name: string): string => {
     return name.split(" ").join("+");
   };
-        const images = project.images?.filter((image: any) =>   !image.isDeleted).map((image: any) => image?.url)
-          const [imageUrl, setImageUrl] = useState(images?.[0]);
-          useEffect(() => {
-            setImageUrl(images?.[0]);
-          }, [images?.[0]]);
+  const images = project.images
+    ?.filter((image: any) => !image.isDeleted)
+    .map((image: any) => image?.url);
+  const [imageUrl, setImageUrl] = useState(images?.[0]);
+  useEffect(() => {
+    setImageUrl(images?.[0]);
+  }, [images?.[0]]);
 
   return (
     <TouchableOpacity
@@ -48,8 +49,7 @@ export default function ProjectCell({ project }: { project: Project }) {
       }
     >
       <View style={styles.card}>
-        { 
-       imageUrl ? (
+        {imageUrl ? (
           <Image
             source={{
               uri: imageUrl,

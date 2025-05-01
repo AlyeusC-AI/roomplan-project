@@ -121,13 +121,13 @@ export default function DetailsInput() {
   return (
     <div className='space-y-7'>
       <PropertyOwnerInformation />
-      <Notes
+      {/* <Notes
         title='Project Notes'
         subTitle='Share notes with your team about this project. You can tag team members by @ to notify them of a note.'
         notesData={[]}
         isLoading={false}
         handleAddProjectNote={handleAddProjectNote}
-      />
+      /> */}
       <AssignStakeholders />
 
       <div className='grid grid-cols-1 gap-6 xl:grid-cols-3'>

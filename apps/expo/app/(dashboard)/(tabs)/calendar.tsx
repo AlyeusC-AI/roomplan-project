@@ -51,6 +51,7 @@ interface CalendarEvent {
   remindClient: boolean;
   remindProjectOwners: boolean;
   reminderTime?: "24h" | "2h" | "40m";
+  users: string[];
 }
 
 const CustomDay = ({
@@ -104,7 +105,6 @@ export default function CalendarScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  console.log("🚀 ~ CalendarScreen ~ events:", JSON.stringify(events, null, 2));
   // const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { projects } = projectsStore();
@@ -193,6 +193,7 @@ export default function CalendarScreen() {
         remindClient: event.remindClient ? "true" : "false",
         remindProjectOwners: event.remindProjectOwners ? "true" : "false",
         reminderTime: event.reminderTime || "",
+        users: event.users || "",
       },
     });
   };
@@ -201,6 +202,7 @@ export default function CalendarScreen() {
     router.push({
       pathname: "calendar/event-details",
       params: {
+        ...event,
         id: event.id.toString(),
         publicId: event.publicId,
         subject: event.subject,
@@ -212,6 +214,7 @@ export default function CalendarScreen() {
         remindClient: event.remindClient ? "true" : "false",
         remindProjectOwners: event.remindProjectOwners ? "true" : "false",
         reminderTime: event.reminderTime || "",
+        users: event.users || [],
       },
     });
   };

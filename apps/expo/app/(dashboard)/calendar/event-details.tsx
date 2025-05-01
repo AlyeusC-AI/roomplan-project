@@ -197,6 +197,7 @@ export default function EventDetailsScreen() {
         remindClient: params.remindClient || "false",
         remindProjectOwners: params.remindProjectOwners || "false",
         reminderTime: params.reminderTime || "",
+        users: params.users || [],
       },
     });
   };

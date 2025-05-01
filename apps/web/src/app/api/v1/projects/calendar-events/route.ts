@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
       reminderTime,
       projectId,
       end,
+      users,
     } = await req.json();
     const [, authUser] = await user(req);
 
@@ -85,11 +86,12 @@ export async function POST(req: NextRequest) {
         projectId,
         organizationId: authUser.user_metadata.organizationId,
         reminderTime: reminderTime || null,
+        users,
       })
       .select("*")
       .single();
 
-    if (remindClient && reminderDate && results.data?.Project) {
+    if (remindClient && reminderDate && projectId) {
       await supabaseServiceRole.from("CalendarEventReminder").insert({
         calendarEventId: results.data!.id,
         date: reminderDate.toISOString(),
@@ -100,7 +102,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (remindProjectOwners && reminderDate && results.data?.Organization) {
+    if (remindProjectOwners && reminderDate) {
       await supabaseServiceRole.from("CalendarEventReminder").insert({
         calendarEventId: results.data!.id,
         date: reminderDate.toISOString(),
@@ -108,6 +110,19 @@ export async function POST(req: NextRequest) {
 
         sendEmail: true,
         sendText: true,
+      });
+    }
+
+    if (users?.length > 0 && reminderDate) {
+      users.forEach(async (userId: string) => {
+        await supabaseServiceRole.from("CalendarEventReminder").insert({
+          date: reminderDate.toISOString(),
+          reminderTarget: "allAssigned",
+          sendEmail: true,
+          sendText: true,
+          calendarEventId: results.data!.id,
+          userId,
+        });
       });
     }
 
@@ -120,7 +135,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ status: "success", data: results.data });
-  } catch {
+  } catch (err) {
+    console.error("err", err);
     return NextResponse.json({ status: "failed" }, { status: 500 });
   }
 }
@@ -133,8 +149,10 @@ export async function PATCH(req: NextRequest) {
       reminderTime,
       remindClient,
       remindProjectOwners,
+      users,
       ...data
     } = await req.json();
+    console.log("🚀 ~ PATCH ~ data:", data);
     const [, authUser] = await user(req);
 
     // Calculate reminder date based on reminderTime
@@ -158,13 +176,26 @@ export async function PATCH(req: NextRequest) {
       .from("CalendarEvent")
       .update({
         ...data,
+        projectId: data.projectId || null,
+        remindClient,
+        remindProjectOwners,
+
         start,
         reminderTime: reminderTime || null,
+        users,
       })
       .eq("id", id)
       .eq("organizationId", authUser.user_metadata.organizationId)
       .select("*")
       .single();
+    console.log("🚀 ~ PATCH ~ results:", results);
+    if (results.error) {
+      console.error("error", results.error);
+      return NextResponse.json(
+        { status: results.error.message },
+        { status: 500 }
+      );
+    }
 
     // Delete existing reminders
     await supabaseServiceRole
@@ -195,6 +226,18 @@ export async function PATCH(req: NextRequest) {
       });
     }
 
+    if (users.length > 0 && reminderDate) {
+      users.forEach(async (userId: string) => {
+        await supabaseServiceRole.from("CalendarEventReminder").insert({
+          date: reminderDate.toISOString(),
+          reminderTarget: "allAssigned",
+          sendEmail: true,
+          sendText: true,
+          calendarEventId: id,
+          userId,
+        });
+      });
+    }
     if (results.error) {
       console.error("error", results.error);
     }
@@ -225,7 +268,7 @@ export async function DELETE(req: NextRequest) {
     await supabaseServiceRole
       .from("CalendarEventReminder")
       .delete()
-      .eq("calendarEventId", results.data?.id);
+      .eq("calendarEventId", results.data?.id || 0);
 
     if (results.error) {
       console.error("error", results.error);

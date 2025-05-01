@@ -88,7 +88,11 @@ import { useRouter } from "next/navigation";
 import { EventDetailsSheet } from "./event-details-sheet";
 import { EventForm } from "./event-form";
 import { EventsList } from "./events-list";
-import { calendarEventSchema, type CalendarEvent, type CreateEventValues } from "./types";
+import {
+  calendarEventSchema,
+  type CalendarEvent,
+  type CreateEventValues,
+} from "./types";
 
 export default function CalendarComponent({
   project = null,
@@ -102,14 +106,18 @@ export default function CalendarComponent({
   const [isCreating, setIsCreating] = useState(false);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
+    null
+  );
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date()
+  );
   const [projectDetails, setProjectDetails] = useState<any>(null);
   const [mapImageUrl, setMapImageUrl] = useState<string | null>(null);
   const [isLoadingMap, setIsLoadingMap] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [projectDetailsLoading, setProjectDetailsLoading] = useState(false);  
+  const [projectDetailsLoading, setProjectDetailsLoading] = useState(false);
 
   const form = useForm<CreateEventValues>({
     resolver: zodResolver(calendarEventSchema),
@@ -117,18 +125,22 @@ export default function CalendarComponent({
   });
 
   const fetchEvents = async () => {
-    const response = await fetch(`/api/v1/projects/calendar-events${project ? `?projectId=${project.id}` : ""}`);
+    const response = await fetch(
+      `/api/v1/projects/calendar-events${project ? `?projectId=${project.id}` : ""}`
+    );
     const data = await response.json();
     setEvents(data.data);
-  }
+  };
 
   useEffect(() => {
-    fetchEvents().then(() => {
-      setLoading(false);
-    }).catch((error) => {
-      console.error("Error fetching events:", error);
-      setLoading(false);
-    });
+    fetchEvents()
+      .then(() => {
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching events:", error);
+        setLoading(false);
+      });
   }, []);
 
   function getEventStatus(eventDate: Date): { status: string; color: string } {
@@ -159,7 +171,9 @@ export default function CalendarComponent({
     return { status, color };
   }
 
-  async function onSubmit(data: CreateEventValues) {
+  async function onSubmit() {
+    const data = form.getValues();
+    console.log("🚀 ~ onSubmit ~ data:", data);
     try {
       setIsCreating(true);
       const response = await fetch("/api/v1/projects/calendar-events", {
@@ -209,7 +223,7 @@ export default function CalendarComponent({
   const onDelete = async () => {
     try {
       setIsDeleting(true);
-      console.log("🚀 ~ onDelete ~ editingEvent:", editingEvent)
+      console.log("🚀 ~ onDelete ~ editingEvent:", editingEvent);
       const event = selectedEvent || editingEvent;
       const response = await fetch("/api/v1/projects/calendar-events", {
         method: "DELETE",
@@ -228,7 +242,7 @@ export default function CalendarComponent({
         setShowProjectsModal(false);
         setSelectedEvent(null);
         setEditingEvent(null);
-        
+
         toast.success("Event deleted successfully.");
       } else {
         toast.error("Failed to delete event.");
@@ -241,7 +255,7 @@ export default function CalendarComponent({
   };
 
   const { projects } = projectsStore((state) => state);
-  console.log("🚀 ~ projects:", projects)
+  console.log("🚀 ~ projects:", projects);
 
   const getStatusColor = (status: string): string => {
     switch (status?.toLowerCase()) {
@@ -260,7 +274,7 @@ export default function CalendarComponent({
 
   const handleEventClick = async (event: CalendarEvent) => {
     setSelectedEvent(event);
-    console.log("🚀 ~ handleEventClick ~ event:", event)
+    console.log("🚀 ~ handleEventClick ~ event:", event);
 
     if (event.projectId) {
       setProjectDetailsLoading(true);
@@ -273,11 +287,10 @@ export default function CalendarComponent({
         //   }
         // }
 
-
         const response = await fetch(`/api/v1/projects/${event.projectId}`);
         if (response.ok) {
           const data = await response.json();
-          console.log("🚀 ~ handleEventClick ~ data:", data)
+          console.log("🚀 ~ handleEventClick ~ data:", data);
           setProjectDetails(data.data);
           if (data.data.location) {
             getGoogleMapsImageUrl(data.data.location);
@@ -287,7 +300,7 @@ export default function CalendarComponent({
         console.error("Error fetching project details:", error);
       } finally {
         setProjectDetailsLoading(false);
-      } 
+      }
     }
   };
 
@@ -312,10 +325,19 @@ export default function CalendarComponent({
     }
   };
 
-  const handleNotificationClick = (type: 'arrival' | 'start' | 'complete') => {
+  const handleNotificationClick = (type: "arrival" | "start" | "complete") => {
     if (selectedEvent) {
-      router.push(`/notifications/${type}?projectId=${selectedEvent.projectId}&eventId=${selectedEvent.publicId}`);
+      router.push(
+        `/notifications/${type}?projectId=${selectedEvent.projectId}&eventId=${selectedEvent.publicId}`
+      );
     }
+  };
+
+  const addEvent = () => {
+    setShowProjectsModal(true);
+    setEditingEvent(null);
+    setSelectedEvent(null);
+    form.reset();
   };
 
   if (loading) {
@@ -342,7 +364,6 @@ export default function CalendarComponent({
           // form.setValue("remindClient", selectedEvent?.remindClient || false);
           // form.setValue("remindProjectOwners", selectedEvent?.remindProjectOwners || false);
           // form.setValue("reminderTime", selectedEvent?.reminderTime || null);
-
         }}
         onDelete={() => setConfirmDelete(true)}
       />
@@ -408,14 +429,12 @@ export default function CalendarComponent({
 
           <div className='flex items-center'>
             <div className='hidden md:ml-4 md:flex md:items-center'>
-              <Button onClick={() => setShowProjectsModal(true)}>
-                Add event
-              </Button>
+              <Button onClick={addEvent}>Add event</Button>
             </div>
           </div>
         </header>
 
-        <div className="flex gap-6 mt-5 ">
+        <div className='mt-5 flex gap-6'>
           <Card className='flex-1'>
             <CalendarProvider>
               <CalendarDate>
@@ -482,7 +501,7 @@ export default function CalendarComponent({
                 setConfirmDelete(true);
               }}
               getEventStatus={getEventStatus}
-              onCreateEvent={() => setShowProjectsModal(true)}
+              onCreateEvent={addEvent}
               selectedDate={selectedDate}
             />
           </Card>
