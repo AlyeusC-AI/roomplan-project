@@ -42,10 +42,10 @@ export default function Layout({ children }: React.PropsWithChildren) {
     //   title: "Roofing",
     //   href: `/projects/${id}/roofing`,
     // },
-    {
-      title: "Documents",
-      href: `/projects/${id}/documents`,
-    },
+    // {
+    //   title: "Documents",
+    //   href: `/projects/${id}/documents`,
+    // },
 
     {
       title: "Forms",

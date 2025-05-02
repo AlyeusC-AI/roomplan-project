@@ -128,6 +128,12 @@ export default function ProjectOverview() {
       description: "Manage insurance details",
     },
     {
+      path: "./documents",
+      Icon: File,
+      title: "Files",
+      description: "Manage project files",
+    },
+    {
       path: "./scope",
       Icon: Ruler,
       title: "Scope of Work",
@@ -138,12 +144,6 @@ export default function ProjectOverview() {
       Icon: FileText,
       title: "Forms",
       description: "Manage project forms",
-    },
-    {
-      path: "./documents",
-      Icon: File,
-      title: "Documents",
-      description: "Manage project documents",
     },
 
     {

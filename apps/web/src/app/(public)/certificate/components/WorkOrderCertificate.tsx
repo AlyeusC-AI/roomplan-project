@@ -19,7 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { CertificateForm } from "./CertificateForm";
-
+import { format } from "date-fns";
 interface WorkOrderCertificateProps {
   formData: WorkOrderFormData;
   onFormDataChange?: (data: Partial<CertificateFormData>) => void;
@@ -487,7 +487,9 @@ export const WorkOrderCertificate = ({
                   <div className='flex gap-1'>
                     <span className='text-sm font-semibold'>Date of Loss:</span>
                     <span className='flex-1 border-b border-gray-300'>
-                      {formData.dateOfLoss || "___________________"}
+                      {formData.dateOfLoss
+                        ? format(new Date(formData.dateOfLoss), "MM/dd/yyyy")
+                        : "___________________"}
                     </span>
                   </div>
                 </div>
