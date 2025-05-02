@@ -277,7 +277,7 @@ export default function ProjectDocumentsPage() {
                         setDocumentToDelete(doc);
                         setShowDeleteDialog(true);
                       }}
-                      className="bg-red-50 p-3 rounded-full"
+                      className="bg-blue-50 p-3 rounded-full"
                     >
                       <Trash2 className="w-5 h-5 text-red-600" />
                     </TouchableOpacity>
@@ -309,7 +309,7 @@ export default function ProjectDocumentsPage() {
                 <X className="w-5 h-5 text-gray-500" />
               </TouchableOpacity>
             </View>
-            <View className="space-y-4 gap-4 mb-4">
+            <View className="space-y-4 gap-4 mb-8">
               <TouchableOpacity
                 onPress={() => handleCreateDocument("cos")}
                 className="bg-blue-50 p-5 rounded-xl border border-blue-100"
@@ -399,7 +399,7 @@ export default function ProjectDocumentsPage() {
       >
         <BlurView intensity={50} className="flex-1 justify-end">
           <View className="bg-white rounded-t-3xl p-6">
-            <View className="flex-row justify-between items-center mb-6">
+            <View className="flex-row justify-between items-center mb-8">
               <Text className="text-xl font-bold text-gray-900">
                 Send Document
               </Text>
@@ -414,7 +414,7 @@ export default function ProjectDocumentsPage() {
               Are you sure you want to send the document "
               {selectedDocument?.name}"?
             </Text>
-            <View className="flex-row gap-2 pb-4">
+            <View className="flex-row gap-2 pb-6">
               <TouchableOpacity
                 onPress={() => setShowEmailDialog(false)}
                 className="flex-1 bg-gray-100 py-4 rounded-xl"

@@ -104,13 +104,13 @@ export const WorkOrderCertificate = ({
   };
 
   return (
-    <div className='p-8'>
+    <div className='p-4 sm:p-6 md:p-8'>
       <div className='relative'>
-        <div className='mx-auto mb-4 flex max-w-4xl items-center justify-between'>
+        <div className='mx-auto mb-4 flex max-w-4xl flex-col items-center justify-between gap-4 sm:flex-row sm:gap-0'>
           <div className='flex items-center gap-2'>
             {/* Add loading indicator if needed */}
           </div>
-          <div className='flex gap-2'>
+          <div className='flex flex-wrap gap-2'>
             {isCustomer && (
               <Dialog
                 open={isCustomerFormOpen}
@@ -119,7 +119,7 @@ export const WorkOrderCertificate = ({
                 <DialogTrigger asChild>
                   <Button className='flex items-center gap-2'>
                     <PenLine className='h-4 w-4' />
-                    Customer Details
+                    <span className='hidden sm:inline'>Customer Details</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className='max-w-4xl'>
@@ -228,11 +228,11 @@ export const WorkOrderCertificate = ({
                     Representative Sign
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className='max-w-4xl'>
                   <DialogHeader className='mb-4'>
                     <DialogTitle>Representative Signature</DialogTitle>
                   </DialogHeader>
-                  <div className='max-h-[80vh] overflow-y-auto'>
+                  <div className='scrollbar-none max-h-[80vh] overflow-y-scroll'>
                     <CertificateForm
                       formData={formData}
                       onFormDataChange={handleFormDataChange}
@@ -240,7 +240,7 @@ export const WorkOrderCertificate = ({
                     />
                     <div className='flex flex-col gap-4'>
                       <div>
-                        <Label className='block pb-2 text-sm'>
+                        <Label className='block py-4 text-sm'>
                           Representative Signature:
                         </Label>
                         <div className='flex gap-3 pb-4'>
@@ -331,23 +331,23 @@ export const WorkOrderCertificate = ({
             <Button
               variant='outline'
               onClick={handlePrint}
-              className='flex items-center gap-2'
+              className='hidden items-center gap-2 sm:flex'
             >
               <Printer className='h-4 w-4' />
-              Print
+              <span className=''>Print</span>
             </Button>
           </div>
         </div>
         <div ref={certificateRef}>
           <div className='mx-auto max-w-4xl rounded-lg border bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 sm:p-6 md:p-8 print:border-none print:p-0 print:shadow-none'>
             {/* Header with Logo */}
-            <div className='mb-6 flex flex-col items-center justify-between gap-4 sm:mb-8 sm:flex-row sm:gap-0 print:mb-12'>
+            <div className='mb-4 flex flex-col items-center justify-between gap-4 sm:mb-6 sm:flex-row sm:gap-0 md:mb-8 print:mb-12'>
               <div className='text-center sm:text-left'>
                 <h1 className='text-lg font-bold sm:text-xl print:text-2xl'>
                   {orgName}
                 </h1>
                 {organization?.address ? (
-                  <div>
+                  <div className='space-y-1'>
                     <p className='text-xs sm:text-sm print:text-base'>
                       {JSON.parse(organization.address).address}
                     </p>
@@ -379,14 +379,14 @@ export const WorkOrderCertificate = ({
               </div>
             </div>
 
-            <h2 className='mb-6 text-center text-lg font-bold uppercase'>
+            <h2 className='mb-4 text-center text-base font-bold uppercase sm:text-lg md:mb-6'>
               WORK ORDER AGREEMENT TO PERFORM EMERGENCY SERVICES AND/OR DIRECT
               PAY AUTHORIZATION
             </h2>
 
             {/* Client Information in a more compact layout */}
-            <div className='mb-6 space-y-2'>
-              <div className='flex'>
+            <div className='mb-4 space-y-2 sm:mb-6'>
+              <div className='flex flex-col gap-2 sm:flex-row'>
                 <div className='flex-1'>
                   <div className='flex gap-1'>
                     <span className='text-sm font-semibold'>Client Name:</span>
@@ -407,7 +407,7 @@ export const WorkOrderCertificate = ({
                 </div>
               </div>
 
-              <div className='flex'>
+              <div className='flex flex-col gap-2 sm:flex-row'>
                 <div className='flex-1'>
                   <div className='flex gap-1'>
                     <span className='text-sm font-semibold'>Address:</span>
@@ -426,7 +426,7 @@ export const WorkOrderCertificate = ({
                 </div>
               </div>
 
-              <div className='flex'>
+              <div className='flex flex-col gap-2 sm:flex-row'>
                 <div className='flex-1'>
                   <div className='flex gap-1'>
                     <span className='text-sm font-semibold'>City:</span>
@@ -447,21 +447,23 @@ export const WorkOrderCertificate = ({
                 </div>
               </div>
 
-              <div className='flex'>
-                <div className='w-1/4'>
-                  <div className='flex gap-1'>
-                    <span className='text-sm font-semibold'>State:</span>
-                    <span className='flex-1 border-b border-gray-300'>
-                      {formData.state || "___"}
-                    </span>
+              <div className='flex flex-col gap-2 sm:flex-row'>
+                <div className='flex gap-2'>
+                  <div className='w-1/2'>
+                    <div className='flex gap-1'>
+                      <span className='text-sm font-semibold'>State:</span>
+                      <span className='flex-1 border-b border-gray-300'>
+                        {formData.state || "___"}
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className='w-1/4'>
-                  <div className='flex gap-1'>
-                    <span className='text-sm font-semibold'>Zip:</span>
-                    <span className='flex-1 border-b border-gray-300'>
-                      {formData.zip || "_____"}
-                    </span>
+                  <div className='w-1/2'>
+                    <div className='flex gap-1'>
+                      <span className='text-sm font-semibold'>Zip:</span>
+                      <span className='flex-1 border-b border-gray-300'>
+                        {formData.zip || "_____"}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <div className='flex-1'>
@@ -474,7 +476,7 @@ export const WorkOrderCertificate = ({
                 </div>
               </div>
 
-              <div className='flex'>
+              <div className='flex flex-col gap-2 sm:flex-row'>
                 <div className='flex-1'>
                   <div className='flex gap-1'>
                     <span className='text-sm font-semibold'>Phone Number:</span>
@@ -495,7 +497,7 @@ export const WorkOrderCertificate = ({
                 </div>
               </div>
 
-              <div className='flex'>
+              <div className='flex flex-col gap-2 sm:flex-row'>
                 <div className='flex-1'>
                   <div className='flex gap-1'>
                     <span className='text-sm font-semibold'>
@@ -510,7 +512,7 @@ export const WorkOrderCertificate = ({
             </div>
 
             {/* Agreement Text */}
-            <div className='mb-6 space-y-4 text-sm'>
+            <div className='mb-4 space-y-4 text-sm sm:mb-6'>
               <p>
                 This agreement is made between the client listed above
                 (hereinafter referred to as the "Client") and {orgName}{" "}
@@ -523,8 +525,7 @@ export const WorkOrderCertificate = ({
                 suitable living condition and/or comfort level: ALL EMERGENCY
                 SERVICES NEEDED FOR WATER DAMAGES, FIRE DAMAGE, SEWAGE CLEAN-UP
                 OR MOLD-REMEDIATION, MATERIAL AND ALL LABOR SERVICES NEEDED TO
-                PERFORM WORK AT YOUR PROPERTY FOR SERVICE CALLS. All pricing
-                will be completed on the Xactimate billing system. The client
+                PERFORM WORK AT YOUR PROPERTY FOR SERVICE CALLS. The client
                 certifies that the damaged property has appropriate insurance
                 coverage to cover this loss and that the client is responsible
                 for payment of any deductibles as well as any charges on the
@@ -557,7 +558,7 @@ export const WorkOrderCertificate = ({
 
             {/* Signatures */}
             <div className='space-y-4'>
-              <div className='flex gap-8'>
+              <div className='flex flex-col gap-4 sm:flex-row sm:gap-8'>
                 <div className='flex-1'>
                   <div className='flex gap-1'>
                     <span className='text-sm font-semibold'>
@@ -580,9 +581,9 @@ export const WorkOrderCertificate = ({
                 </div>
               </div>
 
-              <div className='flex gap-8'>
+              <div className='flex flex-col gap-4 sm:flex-row sm:gap-8'>
                 <div className='flex-1'>
-                  <div className='flex gap-1'>
+                  <div className='flex gap-2'>
                     <span className='text-sm font-semibold'>PRINT NAME:</span>
                     <span className='flex-1 border-b border-gray-300'>
                       {formData.customerName || "___________________"}
@@ -599,7 +600,7 @@ export const WorkOrderCertificate = ({
                 </div>
               </div>
 
-              <div className='flex gap-8'>
+              <div className='flex flex-col gap-4 sm:flex-row sm:gap-8'>
                 <div className='flex-1'>
                   <div className='flex gap-1'>
                     <span className='text-sm font-semibold'>CONTRACTOR:</span>

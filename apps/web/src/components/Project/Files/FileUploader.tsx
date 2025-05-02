@@ -61,7 +61,7 @@ const FileUploader = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState("files");
+  const [activeTab, setActiveTab] = useState("documents");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -395,7 +395,7 @@ const FileUploader = () => {
         </Alert>
       )}
 
-      <Tabs defaultValue='files' onValueChange={setActiveTab}>
+      <Tabs defaultValue='documents' onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value='files'>
             <File className='mr-2 h-4 w-4' />

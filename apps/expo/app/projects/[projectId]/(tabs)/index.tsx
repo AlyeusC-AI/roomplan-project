@@ -120,13 +120,13 @@ export default function ProjectOverview() {
   }, []);
 
   const navigationItems = [
-    {
-      path: "./details",
-      params: { activeTab: "insurance" },
-      Icon: Cog,
-      title: "Insurance Adjuster",
-      description: "Manage insurance details",
-    },
+    // {
+    //   path: "./details",
+    //   params: { activeTab: "insurance" },
+    //   Icon: Cog,
+    //   title: "Insurance Adjuster",
+    //   description: "Manage insurance details",
+    // },
     {
       path: "./documents",
       Icon: File,

@@ -256,7 +256,7 @@ export const Certificate = ({
                           Representative Sign
                         </Button>
                       </DialogTrigger>
-                      <DialogContent>
+                      <DialogContent className='max-w-4xl'>
                         <DialogHeader className='mb-4'>
                           <DialogTitle>Representative Signature</DialogTitle>
                         </DialogHeader>

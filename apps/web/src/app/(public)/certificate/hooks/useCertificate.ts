@@ -6,7 +6,7 @@ import {
   WorkOrderFormData,
 } from "../types/certificate";
 import { toast } from "sonner";
-
+import { orgStore } from "@atoms/organization";
 const baseFormSchema = z.object({
   customerName: z.string().min(1, "Customer name is required"),
   cellPhone: z.string().min(10, "Valid phone number is required"),
@@ -45,7 +45,7 @@ export const useCertificate = (id?: string) => {
   const [isSaving, setIsSaving] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
   const [isLoading, setIsLoading] = useState(false);
-
+  const { setOrganization } = orgStore((state: any) => state);
   useEffect(() => {
     if (id) {
       fetchDocument();
@@ -64,6 +64,11 @@ export const useCertificate = (id?: string) => {
 
       const data = await response.json();
       const projectData = data.project as Project;
+      const orgData = data.org as Organization;
+      if (orgData) {
+        setOrganization(orgData);
+      }
+
       if (data.json) {
         const documentData = JSON.parse(data.json);
         setFormData((prev) => ({
