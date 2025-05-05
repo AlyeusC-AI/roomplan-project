@@ -4,7 +4,6 @@
   "description": "My new module",
   "main": "build/index.js",
   "types": "build/index.d.ts",
-  "packageManager": "yarn@1.22.19",
   "scripts": {
     "clean": "expo-module clean",
     "lint": "expo-module lint",

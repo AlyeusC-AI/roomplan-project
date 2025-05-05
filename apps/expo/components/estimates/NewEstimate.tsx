@@ -38,22 +38,52 @@ interface NewEstimateProps {
   onClose: () => void;
 }
 
+// Add action types data
+const ACTION_TYPES = [
+  { id: '1', name: 'Add Vents' },
+  { id: '2', name: 'Add Shoemolding' },
+  { id: '3', name: 'Additional Landing' },
+  { id: '4', name: 'Repair Drywall' },
+  { id: '5', name: 'Install Flooring' },
+  { id: '6', name: 'Replace Baseboards' },
+  { id: '7', name: 'Paint Walls' },
+  { id: '8', name: 'Replace Ceiling' },
+  { id: '9', name: 'Remove Water Damage' },
+  { id: '10', name: 'Mold Remediation' },
+  { id: '11', name: 'Install Carpet' },
+  { id: '12', name: 'Replace Fixtures' },
+  { id: '13', name: 'Plumbing Repairs' },
+  { id: '14', name: 'Electrical Work' },
+  { id: '15', name: 'HVAC Service' },
+];
+
 export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
   const router = useRouter();
-  const [estimateNumber, setEstimateNumber] = useState(`EST-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`);
   const [projectName, setProjectName] = useState('');
   const [projectId, setProjectId] = useState('');
-  const [poNumber, setPoNumber] = useState('');
   const [daysValid, setDaysValid] = useState('30');
   const [estimateDate, setEstimateDate] = useState(new Date());
-  const [expiryDate, setExpiryDate] = useState<Date | undefined>(undefined);
   const [showEstimateDatePicker, setShowEstimateDatePicker] = useState(false);
   const [notes, setNotes] = useState('');
+
+  // Add state for client and adjuster details
+  const [clientName, setClientName] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+  const [adjusterName, setAdjusterName] = useState('');
+  const [adjusterPhone, setAdjusterPhone] = useState('');
+  const [adjusterEmail, setAdjusterEmail] = useState('');
+  
+  // Add state for confirmation modal
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
+
+  const [projectSearchTerm, setProjectSearchTerm] = useState('');
+  const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
 
   const [items, setItems] = useState<EstimateItem[]>([
     { id: uuidv4(), description: '', quantity: 1, rate: 0, amount: 0 }
   ]);
-  const [groupItemsIntoSections, setGroupItemsIntoSections] = useState(false);
   const [subtotal, setSubtotal] = useState(0);
   const [markup, setMarkup] = useState({ show: false, value: 0 });
   const [discount, setDiscount] = useState({ show: false, value: 0 });
@@ -80,7 +110,6 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
     if (estimateDate && daysValid) {
       const expire = new Date(estimateDate);
       expire.setDate(expire.getDate() + parseInt(daysValid || "0"));
-      setExpiryDate(expire);
     }
   }, [estimateDate, daysValid]);
   
@@ -89,8 +118,68 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
     (discount.show ? discount.value : 0) +
     (tax.show ? subtotal * (tax.value / 100) : 0);
     
+  // Add state for new line item flow
+  const [showActionSelection, setShowActionSelection] = useState(false);
+  const [showItemDetails, setShowItemDetails] = useState(false);
+  const [actionSearchTerm, setActionSearchTerm] = useState('');
+  const [filteredActions, setFilteredActions] = useState(ACTION_TYPES);
+  const [selectedAction, setSelectedAction] = useState<{ id: string, name: string } | null>(null);
+  const [newItemDetails, setNewItemDetails] = useState({
+    description: '',
+    quantity: '1',
+    rate: '0',
+  });
+  // Add state for editing existing line items
+  const [showEditItemModal, setShowEditItemModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<EstimateItem | null>(null);
+
   const handleAddItem = () => {
-    setItems([...items, { id: uuidv4(), description: '', quantity: 1, rate: 0, amount: 0 }]);
+    // Reset all values
+    setActionSearchTerm('');
+    setFilteredActions(ACTION_TYPES);
+    setSelectedAction(null);
+    setNewItemDetails({
+      description: '',
+      quantity: '1',
+      rate: '0',
+    });
+    
+    // Show action selection modal
+    setShowActionSelection(true);
+  };
+  
+  const handleSelectAction = (action: { id: string, name: string }) => {
+    setSelectedAction(action);
+    setNewItemDetails({
+      ...newItemDetails,
+      description: action.name
+    });
+    setShowActionSelection(false);
+    setShowItemDetails(true);
+  };
+  
+  const handleSaveNewItem = () => {
+    // Create new item with entered details
+    const newItem = {
+      id: uuidv4(),
+      description: newItemDetails.description,
+      quantity: parseFloat(newItemDetails.quantity) || 1,
+      rate: parseFloat(newItemDetails.rate) || 0,
+      amount: (parseFloat(newItemDetails.quantity) || 1) * (parseFloat(newItemDetails.rate) || 0)
+    };
+    
+    // Add to items array
+    setItems([...items, newItem]);
+    
+    // Close the modal
+    setShowItemDetails(false);
+    
+    // Show success toast
+    showToast(
+      "success",
+      "Success",
+      "Line item added to estimate"
+    );
   };
   
   const handleRemoveItem = (id: string) => {
@@ -184,22 +273,18 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
   
   // Add saved line item to estimate
   const handleAddSavedLineItem = (item: SavedLineItem) => {
-    const newItem = {
-      id: uuidv4(),
+    // Instead of immediately adding the item, pre-populate the edit screen
+    setNewItemDetails({
       description: item.description,
-      quantity: 1,
-      rate: item.rate,
-      amount: item.rate,
-    };
+      quantity: '1',
+      rate: item.rate.toString(),
+    });
     
-    setItems([...items, newItem]);
+    // Close the saved items modal
     setShowSavedItems(false);
     
-    showToast(
-      "success",
-      "Success",
-      "Line item added to estimate"
-    );
+    // Show the item details confirmation modal
+    setShowItemDetails(true);
   };
   
   // Add all items from a category
@@ -247,6 +332,97 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
   // Add state variables for showing project selection modals
   const [showProjectPicker, setShowProjectPicker] = useState(false);
 
+  // Add project search function
+  useEffect(() => {
+    if (projectSearchTerm.trim() === '') {
+      setFilteredProjects(projects);
+      return;
+    }
+
+    const searchTermLower = projectSearchTerm.toLowerCase();
+    const filtered = projects.filter(project => 
+      // Search by project name
+      project.name?.toLowerCase().includes(searchTermLower) ||
+      // Search by project address
+      project.address?.toLowerCase().includes(searchTermLower) ||
+      // Search by client phone
+      project.clientPhone?.includes(searchTermLower) 
+    );
+    
+    setFilteredProjects(filtered);
+  }, [projectSearchTerm, projects]);
+
+  // Handle project selection with confirmation step
+  const handleProjectSelect = (project: any) => {
+    // Store the selected project
+    setSelectedProject(project);
+    
+    // Pre-fill client and adjuster info from project
+    setClientName(project.clientName || '');
+    setClientPhone(project.clientPhone || '');
+    setClientEmail(project.clientEmail || '');
+    setAdjusterName(project.adjusterName || '');
+    setAdjusterPhone(project.adjusterPhone || '');
+    setAdjusterEmail(project.adjusterEmail || '');
+    
+    // Close project picker and show confirmation modal
+    setShowProjectPicker(false);
+    setShowConfirmationModal(true);
+  };
+  
+  // Handle confirmation of client and adjuster details
+  const handleConfirmDetails = () => {
+    // Set the project details after confirmation
+    setProjectName(selectedProject.name);
+    setProjectId(selectedProject.publicId);
+    
+    // Close the confirmation modal
+    setShowConfirmationModal(false);
+    
+    showToast('success', 'Project Selected', 'Project and client details confirmed');
+  };
+
+  // Add action search filter effect
+  useEffect(() => {
+    if (actionSearchTerm.trim() === '') {
+      setFilteredActions(ACTION_TYPES);
+      return;
+    }
+
+    const searchTermLower = actionSearchTerm.toLowerCase();
+    const filtered = ACTION_TYPES.filter(action => 
+      action.name.toLowerCase().includes(searchTermLower)
+    );
+    
+    setFilteredActions(filtered);
+  }, [actionSearchTerm]);
+
+  // Add function to handle line item click for editing
+  const handleEditItem = (item: EstimateItem) => {
+    setEditingItem(item);
+    setShowEditItemModal(true);
+  };
+  
+  // Add function to save edited item
+  const handleSaveEditedItem = () => {
+    if (!editingItem) return;
+    
+    // Update the item in the items array
+    setItems(items.map(item => 
+      item.id === editingItem.id ? editingItem : item
+    ));
+    
+    // Close the modal
+    setShowEditItemModal(false);
+    
+    // Show success toast
+    showToast(
+      "success",
+      "Success",
+      "Line item updated"
+    );
+  };
+
   return (
     <Modal
       visible={visible}
@@ -278,29 +454,21 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
                 <Text style={styles.sectionLabel}>Basic Information</Text>
                 
                 <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Estimate #</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    value={estimateNumber}
-                    onChangeText={setEstimateNumber}
-                    placeholder="EST-000"
-                  />
-                </View>
-                
-                <TouchableOpacity 
-                  style={styles.dateSelector} 
-                  onPress={() => setShowEstimateDatePicker(true)}
-                >
-                  <View style={styles.inputRow}>
-                    <Text style={styles.inputLabel}>Date</Text>
-                    <View style={styles.dateValueContainer}>
-                      <Text style={styles.dateValue}>
-                        {format(estimateDate, 'MMM d, yyyy')}
-                      </Text>
-                      <Calendar color="#0284c7" size={20} />
+                  <Text style={styles.inputLabel}>Date</Text>
+                  <TouchableOpacity 
+                    style={styles.dateSelector} 
+                    onPress={() => setShowEstimateDatePicker(true)}
+                  >
+                    <View style={styles.inputRow}>
+                      <View style={styles.dateValueContainer}>
+                        <Text style={styles.dateValue}>
+                          {format(estimateDate, 'MMM d, yyyy')}
+                        </Text>
+                        <Calendar color="#0284c7" size={20} />
+                      </View>
                     </View>
-                  </View>
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                </View>
                 
                 {showEstimateDatePicker && (
                   <DateTimePicker
@@ -319,23 +487,6 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
                     onChangeText={setDaysValid}
                     keyboardType="number-pad"
                     placeholder="30"
-                  />
-                </View>
-                
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Expiry Date</Text>
-                  <Text style={styles.dateValue}>
-                    {expiryDate ? format(expiryDate, 'MMM d, yyyy') : 'Not set'}
-                  </Text>
-                </View>
-                
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>PO Number</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    value={poNumber}
-                    onChangeText={setPoNumber}
-                    placeholder="Optional"
                   />
                 </View>
               </View>
@@ -360,96 +511,41 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
               {/* Line Items Section */}
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionLabel}>Line Items</Text>
+                  <Text style={styles.sectionTitle}>Line Items</Text>
                   <View style={styles.itemActionButtons}>
                     <TouchableOpacity onPress={handleOpenSavedItems}>
                       <Text style={styles.savedItemsButton}>Saved Items</Text>
                     </TouchableOpacity>
-                    <Text style={styles.organizeText}>Organize</Text>
                   </View>
                 </View>
-                
-                <View style={styles.toggleContainer}>
-                  <View style={styles.toggleRow}>
-                    <Text style={styles.toggleText}>Group Items into Sections</Text>
-                    <View style={styles.eliteTag}>
-                      <Text style={styles.eliteText}>ELITE</Text>
+
+                {items.map((item) => (
+                  <TouchableOpacity 
+                    key={item.id} 
+                    style={styles.lineItemCompact}
+                    onPress={() => handleEditItem(item)}
+                  >
+                    <View style={styles.lineItemContent}>
+                      <Text style={styles.lineItemDescription}>
+                        {item.description || "No description"}
+                      </Text>
                     </View>
-                    <Switch
-                      value={groupItemsIntoSections}
-                      onValueChange={setGroupItemsIntoSections}
-                      trackColor={{ false: '#d4d4d4', true: '#e4e4e4' }}
-                      thumbColor={groupItemsIntoSections ? '#ffffff' : '#ffffff'}
-                      ios_backgroundColor="#d4d4d4"
-                      style={styles.toggle}
-                    />
-                  </View>
-                </View>
-                
-                {items.map((item, index) => (
-                  <View key={item.id} style={styles.lineItemContainer}>
-                    <View style={styles.lineItemHeader}>
-                      <Text style={styles.lineItemNumber}>Item {index + 1}</Text>
-                      <TouchableOpacity 
-                        onPress={() => handleRemoveItem(item.id)}
-                        style={styles.removeButton}
-                      >
-                        <Trash2 size={18} color="#ef4444" />
-                      </TouchableOpacity>
-                    </View>
-                    
-                    <View style={styles.lineItemRow}>
-                      <Text style={styles.lineItemLabel}>Description</Text>
-                      <TextInput
-                        style={styles.lineItemInput}
-                        value={item.description}
-                        onChangeText={(text) => updateLineItem(item.id, "description", text)}
-                        placeholder="Item description"
-                      />
-                    </View>
-                    
-                    <View style={styles.lineItemInputRow}>
-                      <View style={styles.halfInput}>
-                        <Text style={styles.lineItemLabel}>Rate</Text>
-                        <TextInput
-                          style={styles.lineItemInput}
-                          value={item.rate.toString()}
-                          onChangeText={(text) => updateLineItem(item.id, "rate", parseFloat(text) || 0)}
-                          keyboardType="numeric"
-                          placeholder="0.00"
-                        />
-                      </View>
-                      
-                      <View style={styles.halfInput}>
-                        <Text style={styles.lineItemLabel}>Quantity</Text>
-                        <TextInput
-                          style={styles.lineItemInput}
-                          value={item.quantity.toString()}
-                          onChangeText={(text) => updateLineItem(item.id, "quantity", parseFloat(text) || 0)}
-                          keyboardType="numeric"
-                          placeholder="1"
-                        />
-                      </View>
-                    </View>
-                    
                     <View style={styles.lineItemAmount}>
-                      <Text style={styles.lineItemLabel}>Amount</Text>
-                      <Text style={styles.lineItemAmountText}>{formatCurrency(item.rate * item.quantity)}</Text>
+                      <Text style={styles.lineItemAmountText}>
+                        {formatCurrency(item.amount)}
+                      </Text>
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 ))}
-                
-                <TouchableOpacity 
-                  style={styles.addItemButton} 
-                  onPress={handleAddItem}
-                >
-                  <View style={styles.addItemIcon}>
-                    <Plus color="#fff" size={24} />
+
+                <TouchableOpacity style={styles.addButton} onPress={handleAddItem}>
+                  <View style={styles.addIconContainer}>
+                    <Plus size={20} color="#fff" />
                   </View>
-                  <Text style={styles.addItemText}>Add Line Item</Text>
-                  <ChevronRight color="#888" size={20} />
+                  <Text style={styles.addButtonText}>Add Line Item</Text>
                 </TouchableOpacity>
                 
+                {/* Summary Section */}
                 <View style={styles.summaryContainer}>
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Subtotal</Text>
@@ -458,36 +554,158 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
                   
                   {markup.show && (
                     <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Markup</Text>
+                      <Text style={styles.summaryLabel}>Markup ({markup.value}%)</Text>
                       <Text style={styles.summaryValue}>{formatCurrency(subtotal * markup.value / 100)}</Text>
-                      <ChevronRight color="#888" size={20} />
+                      <TouchableOpacity onPress={() => setMarkup({...markup, show: false})}>
+                        <X size={18} color="#64748b" style={{marginLeft: 10}} />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  
+                  {!markup.show && (
+                    <TouchableOpacity 
+                      style={styles.summaryRow}
+                      onPress={() => setMarkup({...markup, show: true})}
+                    >
+                      <Text style={styles.summaryLabel}>Add Markup</Text>
+                      <Text style={styles.addText}>Add</Text>
+                    </TouchableOpacity>
+                  )}
+                  
+                  {markup.show && (
+                    <View style={styles.valueAdjusterContainer}>
+                      <Text style={styles.valueAdjusterLabel}>Markup Percentage</Text>
+                      <View style={styles.valueAdjuster}>
+                        <TextInput
+                          style={styles.valueAdjusterInput}
+                          value={markup.value.toString()}
+                          onChangeText={(text) => setMarkup({...markup, value: parseFloat(text) || 0})}
+                          keyboardType="numeric"
+                          placeholder="0"
+                        />
+                        <Text style={styles.valueAdjusterUnit}>%</Text>
+                      </View>
                     </View>
                   )}
                   
                   {discount.show && (
                     <View style={styles.summaryRow}>
                       <Text style={styles.summaryLabel}>Discount</Text>
-                      <Text style={styles.summaryValue}>{formatCurrency(discount.value)}</Text>
-                      <ChevronRight color="#888" size={20} />
+                      <Text style={styles.summaryValue}>-{formatCurrency(discount.value)}</Text>
+                      <TouchableOpacity onPress={() => setDiscount({...discount, show: false})}>
+                        <X size={18} color="#64748b" style={{marginLeft: 10}} />
+                      </TouchableOpacity>
                     </View>
                   )}
                   
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Request a Deposit</Text>
-                    <Text style={styles.addText}>Add</Text>
-                  </View>
+                  {!discount.show && (
+                    <TouchableOpacity 
+                      style={styles.summaryRow}
+                      onPress={() => setDiscount({...discount, show: true})}
+                    >
+                      <Text style={styles.summaryLabel}>Add Discount</Text>
+                      <Text style={styles.addText}>Add</Text>
+                    </TouchableOpacity>
+                  )}
                   
-                  <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Payment Schedule</Text>
-                    <Text style={styles.addText}>Add</Text>
-                  </View>
+                  {discount.show && (
+                    <View style={styles.valueAdjusterContainer}>
+                      <Text style={styles.valueAdjusterLabel}>Discount Amount</Text>
+                      <View style={styles.valueAdjuster}>
+                        <Text style={styles.valueAdjusterUnit}>$</Text>
+                        <TextInput
+                          style={styles.valueAdjusterInput}
+                          value={discount.value.toString()}
+                          onChangeText={(text) => setDiscount({...discount, value: parseFloat(text) || 0})}
+                          keyboardType="numeric"
+                          placeholder="0.00"
+                        />
+                      </View>
+                    </View>
+                  )}
                   
                   {tax.show && (
                     <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Tax</Text>
+                      <Text style={styles.summaryLabel}>Tax ({tax.value}%)</Text>
                       <Text style={styles.summaryValue}>{formatCurrency(subtotal * tax.value / 100)}</Text>
+                      <TouchableOpacity onPress={() => setTax({...tax, show: false})}>
+                        <X size={18} color="#64748b" style={{marginLeft: 10}} />
+                      </TouchableOpacity>
                     </View>
                   )}
+                  
+                  {!tax.show && (
+                    <TouchableOpacity 
+                      style={styles.summaryRow}
+                      onPress={() => setTax({...tax, show: true})}
+                    >
+                      <Text style={styles.summaryLabel}>Add Tax</Text>
+                      <Text style={styles.addText}>Add</Text>
+                    </TouchableOpacity>
+                  )}
+                  
+                  {tax.show && (
+                    <View style={styles.valueAdjusterContainer}>
+                      <Text style={styles.valueAdjusterLabel}>Tax Rate</Text>
+                      <View style={styles.valueAdjuster}>
+                        <TextInput
+                          style={styles.valueAdjusterInput}
+                          value={tax.value.toString()}
+                          onChangeText={(text) => setTax({...tax, value: parseFloat(text) || 0})}
+                          keyboardType="numeric"
+                          placeholder="0"
+                        />
+                        <Text style={styles.valueAdjusterUnit}>%</Text>
+                      </View>
+                    </View>
+                  )}
+                  
+                  {deposit.show && (
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Deposit ({deposit.value}%)</Text>
+                      <Text style={styles.summaryValue}>{formatCurrency(total * deposit.value / 100)}</Text>
+                      <TouchableOpacity onPress={() => setDeposit({...deposit, show: false})}>
+                        <X size={18} color="#64748b" style={{marginLeft: 10}} />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  
+                  {!deposit.show && (
+                    <TouchableOpacity 
+                      style={styles.summaryRow}
+                      onPress={() => setDeposit({...deposit, show: true})}
+                    >
+                      <Text style={styles.summaryLabel}>Request a Deposit</Text>
+                      <Text style={styles.addText}>Add</Text>
+                    </TouchableOpacity>
+                  )}
+                  
+                  {deposit.show && (
+                    <View style={styles.valueAdjusterContainer}>
+                      <Text style={styles.valueAdjusterLabel}>Deposit Percentage</Text>
+                      <View style={styles.valueAdjuster}>
+                        <TextInput
+                          style={styles.valueAdjusterInput}
+                          value={deposit.value.toString()}
+                          onChangeText={(text) => setDeposit({...deposit, value: parseFloat(text) || 0})}
+                          keyboardType="numeric"
+                          placeholder="50"
+                        />
+                        <Text style={styles.valueAdjusterUnit}>%</Text>
+                      </View>
+                    </View>
+                  )}
+                  
+                  <TouchableOpacity 
+                    style={styles.summaryRow}
+                    onPress={() => {
+                      // Logic for adding payment schedule would go here
+                      showToast('info', 'Coming Soon', 'Payment schedule feature is coming soon');
+                    }}
+                  >
+                    <Text style={styles.summaryLabel}>Payment Schedule</Text>
+                    <Text style={styles.addText}>Add</Text>
+                  </TouchableOpacity>
                   
                   <View style={styles.totalRow}>
                     <Text style={styles.totalLabel}>Total (USD)</Text>
@@ -682,29 +900,426 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
                 <View style={styles.headerButton} />
               </View>
               
+              {/* Add search input for projects */}
+              <View style={styles.searchContainer}>
+                <TextInput
+                  style={styles.searchInput}
+                  value={projectSearchTerm}
+                  onChangeText={setProjectSearchTerm}
+                  placeholder="Search by name, address, or client phone"
+                  clearButtonMode="while-editing"
+                />
+              </View>
+              
               <FlatList
-                data={projects}
+                data={filteredProjects}
                 keyExtractor={(item) => item.publicId}
                 renderItem={({ item }) => (
                   <TouchableOpacity 
                     style={styles.clientItem}
-                    onPress={() => {
-                      setProjectName(item.name);
-                      setProjectId(item.publicId);
-                      setShowProjectPicker(false);
-                    }}
+                    onPress={() => handleProjectSelect(item)}
                   >
-                    <Text style={styles.clientName}>{item.name}</Text>
+                    <View style={styles.clientItemContent}>
+                      <Text style={styles.clientName}>{item.name}</Text>
+                      {item.address && (
+                        <Text style={styles.clientAddress}>{item.address}</Text>
+                      )}
+                      {item.clientPhone && (
+                        <Text style={styles.clientPhone}>{item.clientPhone}</Text>
+                      )}
+                    </View>
                   </TouchableOpacity>
                 )}
                 ListEmptyComponent={() => (
                   <View style={styles.emptyStateContainer}>
                     <Text style={styles.emptyStateText}>
-                      No projects found.
+                      {projectSearchTerm.length > 0 
+                        ? `No projects found matching "${projectSearchTerm}"`
+                        : "No projects found."}
                     </Text>
                   </View>
                 )}
               />
+            </SafeAreaView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Client & Adjuster Confirmation Modal */}
+      <Modal
+        visible={showConfirmationModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowConfirmationModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.savedItemsModal}>
+            <SafeAreaView style={styles.safeArea}>
+              <View style={styles.savedItemsHeader}>
+                <TouchableOpacity 
+                  onPress={() => setShowConfirmationModal(false)}
+                  style={styles.headerButton}
+                >
+                  <X size={24} color="#64748b" />
+                </TouchableOpacity>
+                
+                <Text style={styles.headerTitle}>Confirm Details</Text>
+                
+                <TouchableOpacity 
+                  onPress={handleConfirmDetails}
+                  style={styles.headerButton}
+                >
+                  <Text style={styles.doneButton}>Confirm</Text>
+                </TouchableOpacity>
+              </View>
+              
+              <ScrollView style={styles.confirmationContainer}>
+                {selectedProject && (
+                  <View>
+                    {/* Project Info Section */}
+                    <View style={styles.confirmationSection}>
+                      <Text style={styles.confirmationSectionTitle}>Project</Text>
+                      <View style={styles.confirmationRow}>
+                        <Text style={styles.confirmationLabel}>Name:</Text>
+                        <Text style={styles.confirmationValue}>{selectedProject.name}</Text>
+                      </View>
+                      {selectedProject.address && (
+                        <View style={styles.confirmationRow}>
+                          <Text style={styles.confirmationLabel}>Address:</Text>
+                          <Text style={styles.confirmationValue}>{selectedProject.address}</Text>
+                        </View>
+                      )}
+                    </View>
+                    
+                    {/* Client Info Section */}
+                    <View style={styles.confirmationSection}>
+                      <Text style={styles.confirmationSectionTitle}>Client Information</Text>
+                      <View style={styles.confirmationRow}>
+                        <Text style={styles.confirmationLabel}>Name:</Text>
+                        <TextInput
+                          style={styles.confirmationTextInput}
+                          value={clientName}
+                          onChangeText={setClientName}
+                          placeholder="Client Name"
+                        />
+                      </View>
+                      <View style={styles.confirmationRow}>
+                        <Text style={styles.confirmationLabel}>Phone:</Text>
+                        <TextInput
+                          style={styles.confirmationTextInput}
+                          value={clientPhone}
+                          onChangeText={setClientPhone}
+                          placeholder="Client Phone"
+                          keyboardType="phone-pad"
+                        />
+                      </View>
+                      <View style={styles.confirmationRow}>
+                        <Text style={styles.confirmationLabel}>Email:</Text>
+                        <TextInput
+                          style={styles.confirmationTextInput}
+                          value={clientEmail}
+                          onChangeText={setClientEmail}
+                          placeholder="Client Email"
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                        />
+                      </View>
+                    </View>
+                    
+                    {/* Adjuster Info Section */}
+                    <View style={styles.confirmationSection}>
+                      <Text style={styles.confirmationSectionTitle}>Adjuster Information</Text>
+                      <View style={styles.confirmationRow}>
+                        <Text style={styles.confirmationLabel}>Name:</Text>
+                        <TextInput
+                          style={styles.confirmationTextInput}
+                          value={adjusterName}
+                          onChangeText={setAdjusterName}
+                          placeholder="Adjuster Name"
+                        />
+                      </View>
+                      <View style={styles.confirmationRow}>
+                        <Text style={styles.confirmationLabel}>Phone:</Text>
+                        <TextInput
+                          style={styles.confirmationTextInput}
+                          value={adjusterPhone}
+                          onChangeText={setAdjusterPhone}
+                          placeholder="Adjuster Phone"
+                          keyboardType="phone-pad"
+                        />
+                      </View>
+                      <View style={styles.confirmationRow}>
+                        <Text style={styles.confirmationLabel}>Email:</Text>
+                        <TextInput
+                          style={styles.confirmationTextInput}
+                          value={adjusterEmail}
+                          onChangeText={setAdjusterEmail}
+                          placeholder="Adjuster Email"
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                        />
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </ScrollView>
+            </SafeAreaView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Action Selection Modal */}
+      <Modal
+        visible={showActionSelection}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowActionSelection(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.savedItemsModal}>
+            <SafeAreaView style={styles.safeArea}>
+              <View style={styles.savedItemsHeader}>
+                <TouchableOpacity 
+                  onPress={() => setShowActionSelection(false)}
+                  style={styles.headerButton}
+                >
+                  <X size={24} color="#64748b" />
+                </TouchableOpacity>
+                
+                <Text style={styles.headerTitle}>Select Action Type</Text>
+                
+                <View style={styles.headerButton} />
+              </View>
+              
+              {/* Search for actions */}
+              <View style={styles.searchContainer}>
+                <TextInput
+                  style={styles.searchInput}
+                  value={actionSearchTerm}
+                  onChangeText={setActionSearchTerm}
+                  placeholder="Search for action type..."
+                  clearButtonMode="while-editing"
+                />
+              </View>
+              
+              <FlatList
+                data={filteredActions}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={styles.actionItem}
+                    onPress={() => handleSelectAction(item)}
+                  >
+                    <Text style={styles.actionName}>{item.name}</Text>
+                    <ChevronRight color="#888" size={20} />
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={() => (
+                  <View style={styles.emptyStateContainer}>
+                    <Text style={styles.emptyStateText}>
+                      {actionSearchTerm.length > 0 
+                        ? `No actions found matching "${actionSearchTerm}"`
+                        : "No actions available."}
+                    </Text>
+                  </View>
+                )}
+              />
+            </SafeAreaView>
+          </View>
+        </View>
+      </Modal>
+      
+      {/* Item Details Modal */}
+      <Modal
+        visible={showItemDetails}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowItemDetails(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.savedItemsModal}>
+            <SafeAreaView style={styles.safeArea}>
+              <View style={styles.savedItemsHeader}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setShowItemDetails(false);
+                    setShowActionSelection(true);
+                  }}
+                  style={styles.headerButton}
+                >
+                  <ChevronLeft size={24} color="#64748b" />
+                </TouchableOpacity>
+                
+                <Text style={styles.headerTitle}>Add Item Details</Text>
+                
+                <TouchableOpacity 
+                  onPress={handleSaveNewItem}
+                  style={styles.headerButton}
+                >
+                  <Text style={styles.doneButton}>Add</Text>
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.itemDetailsContainer}>
+                <View style={styles.itemDetailsSection}>
+                  <Text style={styles.itemDetailsSectionTitle}>Action Type</Text>
+                  <View style={styles.selectedActionContainer}>
+                    <Text style={styles.selectedActionText}>
+                      {selectedAction?.name || 'No action selected'}
+                    </Text>
+                  </View>
+                </View>
+                
+                <View style={styles.itemDetailsSection}>
+                  <Text style={styles.itemDetailsSectionTitle}>Details</Text>
+                  
+                  <View style={styles.detailsInputRow}>
+                    <Text style={styles.detailsInputLabel}>Description</Text>
+                    <TextInput
+                      style={styles.detailsInput}
+                      value={newItemDetails.description}
+                      onChangeText={(text) => setNewItemDetails({...newItemDetails, description: text})}
+                      placeholder="Item description"
+                    />
+                  </View>
+                  
+                  <View style={styles.detailsInputRow}>
+                    <Text style={styles.detailsInputLabel}>Quantity</Text>
+                    <TextInput
+                      style={styles.detailsInput}
+                      value={newItemDetails.quantity}
+                      onChangeText={(text) => setNewItemDetails({...newItemDetails, quantity: text})}
+                      keyboardType="numeric"
+                      placeholder="1"
+                    />
+                  </View>
+                  
+                  <View style={styles.detailsInputRow}>
+                    <Text style={styles.detailsInputLabel}>Rate</Text>
+                    <TextInput
+                      style={styles.detailsInput}
+                      value={newItemDetails.rate}
+                      onChangeText={(text) => setNewItemDetails({...newItemDetails, rate: text})}
+                      keyboardType="numeric"
+                      placeholder="0.00"
+                    />
+                  </View>
+                  
+                  <View style={styles.detailsInputRow}>
+                    <Text style={styles.detailsInputLabel}>Total</Text>
+                    <Text style={styles.detailsTotal}>
+                      {formatCurrency((parseFloat(newItemDetails.quantity) || 0) * (parseFloat(newItemDetails.rate) || 0))}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </SafeAreaView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit Item Modal */}
+      <Modal
+        visible={showEditItemModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowEditItemModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.savedItemsModal}>
+            <SafeAreaView style={styles.safeArea}>
+              <View style={styles.savedItemsHeader}>
+                <TouchableOpacity 
+                  onPress={() => setShowEditItemModal(false)}
+                  style={styles.headerButton}
+                >
+                  <X size={24} color="#64748b" />
+                </TouchableOpacity>
+                
+                <Text style={styles.headerTitle}>Edit Line Item</Text>
+                
+                <TouchableOpacity 
+                  onPress={handleSaveEditedItem}
+                  style={styles.headerButton}
+                >
+                  <Text style={styles.doneButton}>Save</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {editingItem && (
+                <View style={styles.itemDetailsContainer}>
+                  <View style={styles.itemDetailsSection}>
+                    <Text style={styles.itemDetailsSectionTitle}>Item Details</Text>
+                    
+                    <View style={styles.detailsInputRow}>
+                      <Text style={styles.detailsInputLabel}>Description</Text>
+                      <TextInput
+                        style={styles.detailsInput}
+                        value={editingItem.description}
+                        onChangeText={(text) => setEditingItem({
+                          ...editingItem,
+                          description: text
+                        })}
+                        placeholder="Item description"
+                      />
+                    </View>
+                    
+                    <View style={styles.detailsInputRow}>
+                      <Text style={styles.detailsInputLabel}>Quantity</Text>
+                      <TextInput
+                        style={styles.detailsInput}
+                        value={editingItem.quantity.toString()}
+                        onChangeText={(text) => {
+                          const quantity = parseFloat(text) || 0;
+                          setEditingItem({
+                            ...editingItem,
+                            quantity,
+                            amount: quantity * editingItem.rate
+                          });
+                        }}
+                        keyboardType="numeric"
+                        placeholder="1"
+                      />
+                    </View>
+                    
+                    <View style={styles.detailsInputRow}>
+                      <Text style={styles.detailsInputLabel}>Rate</Text>
+                      <TextInput
+                        style={styles.detailsInput}
+                        value={editingItem.rate.toString()}
+                        onChangeText={(text) => {
+                          const rate = parseFloat(text) || 0;
+                          setEditingItem({
+                            ...editingItem,
+                            rate,
+                            amount: editingItem.quantity * rate
+                          });
+                        }}
+                        keyboardType="numeric"
+                        placeholder="0.00"
+                      />
+                    </View>
+                    
+                    <View style={styles.detailsInputRow}>
+                      <Text style={styles.detailsInputLabel}>Total</Text>
+                      <Text style={styles.detailsTotal}>
+                        {formatCurrency(editingItem.amount)}
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity 
+                      style={styles.deleteItemButton}
+                      onPress={() => {
+                        handleRemoveItem(editingItem.id);
+                        setShowEditItemModal(false);
+                      }}
+                    >
+                      <Trash2 size={20} color="#ef4444" />
+                      <Text style={styles.deleteItemText}>Delete Item</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
             </SafeAreaView>
           </View>
         </View>
@@ -774,6 +1389,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    paddingHorizontal: 15,
+  },
+  sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#000',
@@ -861,12 +1482,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
     paddingTop: 15,
+    marginTop: 15,
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 12,
   },
   summaryLabel: {
     fontSize: 16,
@@ -880,6 +1502,7 @@ const styles = StyleSheet.create({
   addText: {
     fontSize: 16,
     color: '#0284c7',
+    fontWeight: '500',
   },
   totalRow: {
     flexDirection: 'row',
@@ -1133,5 +1756,221 @@ const styles = StyleSheet.create({
   clientName: {
     fontSize: 16,
     fontWeight: '500',
+  },
+  searchContainer: {
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e5e5',
+  },
+  searchInput: {
+    backgroundColor: '#f1f5f9',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+  },
+  clientItemContent: {
+    flex: 1,
+  },
+  clientAddress: {
+    fontSize: 14,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  clientPhone: {
+    fontSize: 14,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  // Confirmation modal styles
+  confirmationContainer: {
+    flex: 1,
+    backgroundColor: '#f8f8f8',
+  },
+  confirmationSection: {
+    marginBottom: 20,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#e0e0e0',
+    paddingVertical: 15,
+  },
+  confirmationSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    paddingHorizontal: 15,
+    marginBottom: 10,
+  },
+  confirmationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e5e5',
+  },
+  confirmationLabel: {
+    width: 80,
+    fontSize: 15,
+    color: '#64748b',
+  },
+  confirmationValue: {
+    flex: 1,
+    fontSize: 16,
+    color: '#0f172a',
+  },
+  confirmationTextInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#0f172a',
+    padding: 0,
+  },
+  // Action selection styles
+  actionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  actionName: {
+    fontSize: 16,
+    color: '#0f172a',
+  },
+  
+  // Item details styles
+  itemDetailsContainer: {
+    flex: 1,
+    backgroundColor: '#f8f8f8',
+  },
+  itemDetailsSection: {
+    marginTop: 20,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#e0e0e0',
+    paddingVertical: 15,
+  },
+  itemDetailsSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    paddingHorizontal: 15,
+    marginBottom: 10,
+  },
+  selectedActionContainer: {
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e5e5',
+  },
+  selectedActionText: {
+    fontSize: 16,
+    color: '#0f172a',
+  },
+  detailsInputRow: {
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e5e5',
+  },
+  detailsInputLabel: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 8,
+  },
+  detailsInput: {
+    fontSize: 16,
+    color: '#0f172a',
+  },
+  detailsTotal: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#0f172a',
+  },
+  lineItemCompact: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+  },
+  lineItemContent: {
+    flex: 1,
+  },
+  lineItemDescription: {
+    fontSize: 16,
+    color: '#0f172a',
+  },
+  lineItemDetails: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  addButton: {
+    margin: 15,
+    backgroundColor: '#f1f5f9',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  addIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#0284c7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  addButtonText: {
+    color: '#0f172a',
+    fontWeight: '500',
+  },
+  deleteItemButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fee2e2',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 20,
+    marginHorizontal: 15,
+  },
+  deleteItemText: {
+    color: '#ef4444',
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  valueAdjusterContainer: {
+    backgroundColor: '#f1f5f9',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  valueAdjusterLabel: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 8,
+  },
+  valueAdjuster: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  valueAdjusterInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#0f172a',
+    padding: 8,
+    backgroundColor: '#fff',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  valueAdjusterUnit: {
+    fontSize: 16,
+    color: '#64748b',
+    marginHorizontal: 8,
   },
 });
