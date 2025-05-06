@@ -496,36 +496,6 @@ export default function ProjectPhotos() {
       // setShowCoverModal(false);
     }
   };
-
-  if (loading && !rooms?.rooms?.length) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1e40af" />
-      </View>
-    );
-  }
-
-  if (!loading && !rooms?.rooms?.length) {
-    return (
-      <Empty
-        title="No Images"
-        description="Upload images to associate with this project. Images of rooms can be automatically assigned a room"
-        // buttonText="Start Taking Pictures"
-        buttonText="Create a room"
-        icon={<CameraIcon height={50} width={50} />}
-        secondaryIcon={
-          <CameraIcon height={20} width={20} color="#fff" className="ml-4" />
-        }
-        // onPress={() => router.push("../camera")}
-        onPress={() =>
-          router.push({
-            pathname: "../rooms/create",
-            params: { projectName: project.name },
-          })
-        }
-      />
-    );
-  }
   const onDelete = async (imagePublicId: string) => {
     try {
       const response = await fetch(
@@ -567,6 +537,35 @@ export default function ProjectPhotos() {
       ),
     };
   });
+  if (loading && !rooms?.rooms?.length) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1e40af" />
+      </View>
+    );
+  }
+
+  if (!loading && !rooms?.rooms?.length) {
+    return (
+      <Empty
+        title="No Images"
+        description="Upload images to associate with this project. Images of rooms can be automatically assigned a room"
+        // buttonText="Start Taking Pictures"
+        buttonText="Create a room"
+        icon={<CameraIcon height={50} width={50} />}
+        secondaryIcon={
+          <CameraIcon height={20} width={20} color="#fff" className="ml-4" />
+        }
+        // onPress={() => router.push("../camera")}
+        onPress={() =>
+          router.push({
+            pathname: "../rooms/create",
+            params: { projectName: project.name },
+          })
+        }
+      />
+    );
+  }
 
   return (
     <View style={styles.container}>

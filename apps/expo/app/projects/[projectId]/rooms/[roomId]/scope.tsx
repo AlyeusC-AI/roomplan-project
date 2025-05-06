@@ -292,10 +292,12 @@ export default function RoomScopeScreen() {
   const router = useRouter();
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
   const [equipmentSearch, setEquipmentSearch] = useState("");
-  const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
+  const [selectedEquipment, setSelectedEquipment] = useState<string[]>(
+    room?.equipmentUsed || []
+  );
   const [equipmentQuantities, setEquipmentQuantities] = useState<
     Record<string, number>
-  >({});
+  >(room?.equipmentUsedQuantity);
   const [customEquipment, setCustomEquipment] = useState<string[]>([]);
   const [showAddCustomModal, setShowAddCustomModal] = useState(false);
   const [newCustomEquipment, setNewCustomEquipment] = useState("");
@@ -324,9 +326,16 @@ export default function RoomScopeScreen() {
     isOpen: boolean;
     equipment: string;
   }>({ isOpen: false, equipment: "" });
+
   useEffect(() => {
+    // setEquipmentQuantities(room?.equipmentUsedQuantity || {});
+
+    // if (!Object.keys(equipmentQuantities || {}).length) {
     setEquipmentQuantities(room?.equipmentUsedQuantity || {});
+    // }
+    // if (!selectedEquipment?.length) {
     setSelectedEquipment(room?.equipmentUsed || []);
+    // }
   }, [room?.equipmentUsedQuantity]);
   useEffect(() => {
     const fetchOrg = async () => {
@@ -720,12 +729,12 @@ export default function RoomScopeScreen() {
         return newQuantities;
       });
 
-      // Update the room equipment field
-      handleRoomDetailChange("equipmentUsed", newSelection);
-      handleRoomDetailChange("equipmentUsedQuantity", {
-        ...equipmentQuantities,
-        ...(isSelected ? {} : { [equipment]: 1 }),
-      });
+      // // Update the room equipment field
+      // handleRoomDetailChange("equipmentUsed", newSelection);
+      // handleRoomDetailChange("equipmentUsedQuantity", {
+      //   ...equipmentQuantities,
+      //   ...(isSelected ? {} : { [equipment]: 1 }),
+      // });
       return newSelection;
     });
   };
@@ -734,7 +743,7 @@ export default function RoomScopeScreen() {
   const handleQuantityChange = (equipment: string, quantity: number) => {
     setEquipmentQuantities((prev) => {
       const newQuantities = { ...prev, [equipment]: quantity };
-      handleRoomDetailChange("equipmentUsedQuantity", newQuantities);
+      // handleRoomDetailChange("equipmentUsedQuantity", newQuantities);
       return newQuantities;
     });
   };
@@ -840,7 +849,12 @@ export default function RoomScopeScreen() {
       [fieldId]: "",
     }));
   };
-
+  const onCloseEquipmentModal = () => {
+    // Update the room equipment field
+    handleRoomDetailChange("equipmentUsed", selectedEquipment);
+    handleRoomDetailChange("equipmentUsedQuantity", equipmentQuantities);
+    setShowEquipmentModal(false);
+  };
   const handleUpdateExtraField = (
     areaType: string,
     areaId: number,
@@ -1409,7 +1423,7 @@ export default function RoomScopeScreen() {
           visible={showEquipmentModal}
           transparent
           animationType="slide"
-          onRequestClose={() => setShowEquipmentModal(false)}
+          onRequestClose={onCloseEquipmentModal}
         >
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -1434,7 +1448,7 @@ export default function RoomScopeScreen() {
                           </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                          onPress={() => setShowEquipmentModal(false)}
+                          onPress={onCloseEquipmentModal}
                           className="p-2"
                         >
                           <Text className="text-primary font-medium">Done</Text>

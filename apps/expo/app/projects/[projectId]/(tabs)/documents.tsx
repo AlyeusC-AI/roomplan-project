@@ -95,10 +95,10 @@ export default function ProjectDocumentsPage() {
   };
 
   const handleViewDocument = (documentId: string, type?: "cos" | "auth") => {
-    // router.push(`/certificate?id=${documentId}${type ? `&type=${type}` : ""}`);
-    Linking.openURL(
-      `https://www.restoregeek.app/certificate?id=${documentId}${type ? `&type=${type}` : ""}`
-    );
+    router.push(`/certificate?id=${documentId}${type ? `&type=${type}` : ""}`);
+    // Linking.openURL(
+    //   `https://www.restoregeek.app/certificate?id=${documentId}${type ? `&type=${type}` : ""}`
+    // );
   };
 
   const handleCreateDocument = async (type: "cos" | "auth") => {

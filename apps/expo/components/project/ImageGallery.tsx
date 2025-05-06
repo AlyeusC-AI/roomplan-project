@@ -100,6 +100,100 @@ interface ImageGalleryProps {
   onReorder?: (newOrder: Inference[]) => void;
 }
 
+// Add this new component before the main ImageGallery component
+const GridItem = React.memo(
+  ({
+    inference,
+    index,
+    imageKey,
+    imageUrl,
+    isSelected,
+    positions,
+    isDragging,
+    draggedIndex,
+    handleDragStart,
+    handleDragEnd,
+    handleImagePress,
+    toggleImageSelection,
+    selectable,
+  }: {
+    inference: Inference | null;
+    index: number;
+    imageKey: string;
+    imageUrl: string;
+    isSelected: boolean;
+    positions: any;
+    isDragging: boolean;
+    draggedIndex: number | null;
+    handleDragStart: (index: number) => void;
+    handleDragEnd: (index: number) => void;
+    handleImagePress: (index: number) => void;
+    toggleImageSelection: (imageKey: string) => void;
+    selectable: boolean;
+  }) => {
+    const gestureHandler = useAnimatedStyle(() => {
+      const { x, y } = positions.value[index];
+      return {
+        transform: [{ translateX: x }, { translateY: y }],
+        zIndex: isDragging && draggedIndex === index ? 1 : 0,
+      } as const;
+    });
+
+    const onGestureEvent = useAnimatedGestureHandler({
+      onStart: () => {
+        runOnJS(handleDragStart)(index);
+      },
+      onActive: (event) => {
+        positions.value = positions.value.map((pos, i) => {
+          if (i === index) {
+            return {
+              x: event.translationX,
+              y: event.translationY,
+            };
+          }
+          return pos;
+        });
+      },
+      onEnd: () => {
+        runOnJS(handleDragEnd)(index);
+      },
+    });
+
+    if (!inference) {
+      return <View key={`empty-${index}`} style={styles.galleryItem} />;
+    }
+
+    return (
+      <Animated.View
+        key={imageKey}
+        style={[styles.galleryItem, gestureHandler]}
+      >
+        <PanGestureHandler
+          onGestureEvent={onGestureEvent}
+          activeOffsetX={[-5, 5]}
+          activeOffsetY={[-5, 5]}
+        >
+          <Animated.View style={styles.gestureContainer}>
+            <OptimizedImage
+              uri={imageUrl}
+              style={{ width: "100%", height: "100%" }}
+              resizeMode="cover"
+              isSelected={isSelected}
+              imageKey={imageKey}
+              onLongPress={() => handleDragStart(index)}
+              onPress={
+                selectable
+                  ? () => toggleImageSelection(imageKey)
+                  : () => handleImagePress(index)
+              }
+            />
+          </Animated.View>
+        </PanGestureHandler>
+      </Animated.View>
+    );
+  }
+);
+
 export default function ImageGallery({
   inferences,
   urlMap,
@@ -116,8 +210,24 @@ export default function ImageGallery({
     useState<string[]>(initialSelectedKeys);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
-
+  // Add state for drag and drop
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const itemsPerRow = 3;
   const [images, setImages] = useState<Inference[]>(inferences);
+
+  // Filter out inferences without imageKey or with undefined urlMap entries
+  const validInferences = images.filter(
+    (inference): inference is Inference & { imageKey: string } =>
+      // !!inference.imageKey &&
+      // typeof inference.imageKey === "string" &&
+      !inference.isDeleted && !inference.Image?.isDeleted
+    //  &&
+    // !!inference.imageKey
+  );
+  const positions = useSharedValue(
+    validInferences.map((_, index) => ({ x: 0, y: 0 }))
+  );
   useEffect(() => {
     console.log("🚀 ~ inferences:", JSON.stringify(inferences, null, 2));
 
@@ -130,17 +240,6 @@ export default function ImageGallery({
   // }, [inferences]);
 
   // Calculate grid layout
-  const itemsPerRow = 3;
-
-  // Filter out inferences without imageKey or with undefined urlMap entries
-  const validInferences = images.filter(
-    (inference): inference is Inference & { imageKey: string } =>
-      // !!inference.imageKey &&
-      // typeof inference.imageKey === "string" &&
-      !inference.isDeleted && !inference.Image?.isDeleted
-    //  &&
-    // !!inference.imageKey
-  );
 
   // Organize inferences into rows for grid display
   const rows = Array.from({
@@ -158,13 +257,6 @@ export default function ImageGallery({
     }
     return paddedItems;
   });
-
-  // Add state for drag and drop
-  const [isDragging, setIsDragging] = useState(false);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const positions = useSharedValue(
-    validInferences.map((_, index) => ({ x: 0, y: 0 }))
-  );
 
   // Handle drag start
   const handleDragStart = (index: number) => {
@@ -256,7 +348,7 @@ export default function ImageGallery({
     }
   };
 
-  // Render image item in the grid
+  // Replace the renderGridItem function with this:
   const renderGridItem = (inference: Inference | null, index: number) => {
     if (!inference || (!inference.imageKey && !inference.Image?.key)) {
       return <View key={`empty-${index}`} style={styles.galleryItem} />;
@@ -270,69 +362,23 @@ export default function ImageGallery({
 
     const isSelected = selectedKeys.includes(imageKey);
 
-    const gestureHandler = useAnimatedStyle(() => {
-      const { x, y } = positions.value[index];
-      // const scale = isDragging && draggedIndex === index ? 1.1 : 1;
-      return {
-        transform: [{ translateX: x }, { translateY: y }],
-        zIndex: isDragging && draggedIndex === index ? 1 : 0,
-      } as const;
-    });
-
-    const onGestureEvent = useAnimatedGestureHandler({
-      onStart: () => {
-        runOnJS(handleDragStart)(index);
-      },
-      onActive: (event) => {
-        positions.value = positions.value.map((pos, i) => {
-          if (i === index) {
-            return {
-              x: event.translationX,
-              y: event.translationY,
-            };
-          }
-          return pos;
-        });
-      },
-      onEnd: () => {
-        runOnJS(handleDragEnd)(index);
-      },
-    });
-
     return (
-      <Animated.View
+      <GridItem
         key={imageKey}
-        style={[styles.galleryItem, gestureHandler]}
-      >
-        <PanGestureHandler
-          onGestureEvent={onGestureEvent}
-          activeOffsetX={[-5, 5]}
-          activeOffsetY={[-5, 5]}
-        >
-          <Animated.View style={styles.gestureContainer}>
-            <OptimizedImage
-              uri={imageUrl}
-              style={{ width: "100%", height: "100%" }}
-              resizeMode="cover"
-              isSelected={isSelected}
-              imageKey={imageKey}
-              onLongPress={() => handleDragStart(index)}
-              onPress={
-                selectable
-                  ? () => toggleImageSelection(imageKey)
-                  : () => {
-                      const validIndex = validInferences.findIndex(
-                        (item) => item.id === inference.id
-                      );
-                      if (validIndex >= 0) {
-                        handleImagePress(validIndex);
-                      }
-                    }
-              }
-            />
-          </Animated.View>
-        </PanGestureHandler>
-      </Animated.View>
+        inference={inference}
+        index={index}
+        imageKey={imageKey}
+        imageUrl={imageUrl}
+        isSelected={isSelected}
+        positions={positions}
+        isDragging={isDragging}
+        draggedIndex={draggedIndex}
+        handleDragStart={handleDragStart}
+        handleDragEnd={handleDragEnd}
+        handleImagePress={handleImagePress}
+        toggleImageSelection={toggleImageSelection}
+        selectable={selectable}
+      />
     );
   };
 

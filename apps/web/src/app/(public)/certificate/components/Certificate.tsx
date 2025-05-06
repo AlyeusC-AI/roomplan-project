@@ -29,6 +29,15 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { WorkOrderCertificate } from "./WorkOrderCertificate";
 
+// Add type declaration for ReactNativeWebView
+declare global {
+  interface Window {
+    ReactNativeWebView?: {
+      postMessage: (message: string) => void;
+    };
+  }
+}
+
 interface CertificateProps {
   formData: CertificateFormData;
   onFormDataChange: (data: Partial<CertificateFormData>) => void;
@@ -83,6 +92,39 @@ export const Certificate = ({
           max-width: 100%;
           height: auto;
         }
+        /* Mobile-specific print styles */
+        @media (max-width: 768px) {
+          .certificate-content {
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          .certificate-section {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            margin-bottom: 1rem;
+          }
+          .signature-section {
+            page-break-before: always;
+            break-before: page;
+            margin-top: 2rem;
+          }
+          /* Ensure text is readable on mobile */
+          .text-xs, .text-sm {
+            font-size: 12px !important;
+          }
+          /* Adjust spacing for mobile */
+          .space-y-4 > * + * {
+            margin-top: 1rem !important;
+          }
+          .space-y-6 > * + * {
+            margin-top: 1.5rem !important;
+          }
+          /* Ensure signatures don't break across pages */
+          .signature-display {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+        }
       }
     `,
   });
@@ -107,6 +149,21 @@ export const Certificate = ({
     }
   };
 
+  const handleExport = () => {
+    // Send message to WebView
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(
+        JSON.stringify({
+          type: "EXPORT_PDF",
+          data: {
+            id: id,
+            type: formData.type,
+          },
+        })
+      );
+    }
+  };
+
   const renderCertificate = () => {
     switch (formData.type) {
       case "auth":
@@ -123,7 +180,7 @@ export const Certificate = ({
       case "cos":
       default:
         return (
-          <div className='p-8'>
+          <div className='p-4'>
             <div className='relative'>
               <div className='mx-auto mb-4 flex max-w-4xl items-center justify-between'>
                 <div className='flex items-center gap-2'>
@@ -365,21 +422,33 @@ export const Certificate = ({
                       </DialogContent>
                     </Dialog>
                   )}
-                  <Button
-                    variant='outline'
-                    onClick={handlePrint}
-                    className='flex items-center gap-2'
-                  >
-                    <Printer className='h-4 w-4' />
-                    Print
-                  </Button>
+                  {!isWebView && (
+                    <Button
+                      variant='outline'
+                      onClick={handlePrint}
+                      className='flex items-center gap-2'
+                    >
+                      <Printer className='h-4 w-4' />
+                      Print
+                    </Button>
+                  )}
+                  {isWebView && (
+                    <Button
+                      variant='outline'
+                      onClick={handleExport}
+                      className='flex items-center gap-2'
+                    >
+                      <Printer className='h-4 w-4' />
+                      Export
+                    </Button>
+                  )}
                 </div>
               </div>
               <div ref={certificateRef}>
                 {/* Certificate content */}
-                <div className='mx-auto max-w-4xl rounded-lg border bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 sm:p-6 md:p-8 print:border-none print:p-0 print:shadow-none'>
+                <div className='certificate-content mx-auto max-w-4xl rounded-lg border bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 sm:p-6 md:p-8 print:border-none print:p-0 print:shadow-none'>
                   {/* Header with Logo */}
-                  <div className='mb-6 flex flex-col items-center justify-between gap-4 sm:mb-8 sm:flex-row sm:gap-0 print:mb-12'>
+                  <div className='certificate-section mb-6 flex flex-col items-center justify-between gap-4 sm:mb-8 sm:flex-row sm:gap-0 print:mb-12'>
                     <div className='text-center sm:text-left'>
                       <h1 className='text-lg font-bold sm:text-xl print:text-2xl'>
                         {orgName}
@@ -412,10 +481,9 @@ export const Certificate = ({
                     <div className='flex flex-col items-center'>
                       {orgLogoUrl ? (
                         <div className='relative h-10 w-20 sm:h-12 sm:w-24 print:h-16 print:w-24'>
-                          <Image
+                          <img
                             src={orgLogoUrl}
                             alt='Organization Logo'
-                            fill
                             className='object-contain'
                           />
                         </div>
@@ -513,7 +581,7 @@ export const Certificate = ({
                       </div>
                     </div>
 
-                    <div className='mt-6 space-y-4 sm:mt-8 sm:space-y-6'>
+                    <div className='signature-section mt-6 space-y-4 sm:mt-8 sm:space-y-6'>
                       <div className='grid grid-cols-1 gap-4'>
                         <div className='space-y-4'>
                           <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4'>
@@ -567,6 +635,8 @@ export const Certificate = ({
         );
     }
   };
+
+  const isWebView = typeof window !== "undefined" && window.ReactNativeWebView;
 
   return <div>{renderCertificate()}</div>;
 };

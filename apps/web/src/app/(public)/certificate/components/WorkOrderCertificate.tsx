@@ -20,6 +20,16 @@ import {
 } from "@/components/ui/dialog";
 import { CertificateForm } from "./CertificateForm";
 import { format } from "date-fns";
+
+// Add type declaration for ReactNativeWebView
+declare global {
+  interface Window {
+    ReactNativeWebView?: {
+      postMessage: (message: string) => void;
+    };
+  }
+}
+
 interface WorkOrderCertificateProps {
   formData: WorkOrderFormData;
   onFormDataChange?: (data: Partial<CertificateFormData>) => void;
@@ -67,6 +77,12 @@ export const WorkOrderCertificate = ({
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
+        .page-break {
+          page-break-after: always;
+          break-after: page;
+          margin: 0;
+          padding: 0;
+        }
         img {
           max-width: 100%;
           height: auto;
@@ -74,6 +90,21 @@ export const WorkOrderCertificate = ({
       }
     `,
   });
+
+  const handleExport = () => {
+    // Send message to WebView
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(
+        JSON.stringify({
+          type: "EXPORT_PDF",
+          data: {
+            id: id,
+            type: "work-order",
+          },
+        })
+      );
+    }
+  };
 
   const clearCustomerSignature = () => {
     if (customerSignature) {
@@ -103,6 +134,8 @@ export const WorkOrderCertificate = ({
     }
   };
 
+  const isWebView = typeof window !== "undefined" && window.ReactNativeWebView;
+
   return (
     <div className='p-4 sm:p-6 md:p-8'>
       <div className='relative'>
@@ -119,7 +152,7 @@ export const WorkOrderCertificate = ({
                 <DialogTrigger asChild>
                   <Button className='flex items-center gap-2'>
                     <PenLine className='h-4 w-4' />
-                    <span className=' inline'>Customer Details</span>
+                    <span className='inline'>Customer Details</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className='max-w-4xl'>
@@ -328,14 +361,26 @@ export const WorkOrderCertificate = ({
                 </DialogContent>
               </Dialog>
             )}
-            <Button
-              variant='outline'
-              onClick={handlePrint}
-              className=' items-center gap-2 flex'
-            >
-              <Printer className='h-4 w-4' />
-              <span className=''>Print</span>
-            </Button>
+            {!isWebView && (
+              <Button
+                variant='outline'
+                onClick={handlePrint}
+                className='flex items-center gap-2'
+              >
+                <Printer className='h-4 w-4' />
+                <span className=''>Print</span>
+              </Button>
+            )}
+            {isWebView && (
+              <Button
+                variant='outline'
+                onClick={handleExport}
+                className='flex items-center gap-2'
+              >
+                <Printer className='h-4 w-4' />
+                <span className=''>Export</span>
+              </Button>
+            )}
           </div>
         </div>
         <div ref={certificateRef}>
@@ -368,10 +413,9 @@ export const WorkOrderCertificate = ({
               <div className='flex flex-col items-center'>
                 {orgLogoUrl ? (
                   <div className='relative h-10 w-20 sm:h-12 sm:w-24 print:h-16 print:w-24'>
-                    <Image
+                    <img
                       src={orgLogoUrl}
                       alt='Organization Logo'
-                      fill
                       className='object-contain'
                     />
                   </div>
@@ -519,7 +563,7 @@ export const WorkOrderCertificate = ({
                 (hereinafter referred to as the "Contractor"). The client has
                 suffered a sudden loss to property.
               </p>
-              <p>
+              <p className='page-break'>
                 The client hereby authorizes the contractor to perform the
                 following services to mitigate the loss and/or maintain a
                 suitable living condition and/or comfort level: ALL EMERGENCY
