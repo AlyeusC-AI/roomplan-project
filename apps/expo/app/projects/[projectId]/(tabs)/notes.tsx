@@ -352,12 +352,14 @@ const RoomNoteListItem = ({
           >
             <Building size={20} color="#0369A1" />
           </View>
-          <TouchableOpacity onPress={() => {
-            router.push({
-              pathname: "../rooms/create",
-              params: {  roomName: room.name, roomId: room.publicId },
-            })
-          }}>
+          <TouchableOpacity
+            onPress={() => {
+              router.push({
+                pathname: "../rooms/create",
+                params: { roomName: room.name, roomId: room.publicId },
+              });
+            }}
+          >
             <Text style={{ fontSize: 18, fontWeight: "600" }}>{room.name}</Text>
           </TouchableOpacity>
         </View>
@@ -539,7 +541,7 @@ const ImageGalleryModal = ({
           styles.modalContainer,
           {
             opacity: fadeAnim,
-            backgroundColor: "rgba(0,0,0,0.9)",
+            backgroundColor: "rgba(0,0,0,1)",
           },
         ]}
       >
@@ -1361,8 +1363,8 @@ function NoteCard({
                         note.NoteImage?.length === 2
                           ? "50%"
                           : note.NoteImage?.length === 3 && index === 0
-                          ? "100%"
-                          : "50%",
+                            ? "100%"
+                            : "50%",
                       padding: 4,
                       transform: [
                         { scale: highlightedImageIndex === index ? 1.05 : 1 },
@@ -1475,21 +1477,20 @@ const uploadImageToSupabase = async (
     //     upsert: false,
     //   });
 
-       // Upload to ImageKit
-       const uploadResult = await uploadImage(
-        {
-          uri: photo.uri,
-          type: "image/jpeg",
-          name: photo.fileName || `${v4()}.jpeg`,
-        },
-        {
-          // folder: `projects/${projectId}/notes/${noteId}`,
-          // useUniqueFileName: true,
-          // tags: [`project-${projectId}`, `note-${noteId}`],
-        }
-      );
-       console.log("🚀 ~ uploadResult:", uploadResult)
-
+    // Upload to ImageKit
+    const uploadResult = await uploadImage(
+      {
+        uri: photo.uri,
+        type: "image/jpeg",
+        name: photo.fileName || `${v4()}.jpeg`,
+      },
+      {
+        // folder: `projects/${projectId}/notes/${noteId}`,
+        // useUniqueFileName: true,
+        // tags: [`project-${projectId}`, `note-${noteId}`],
+      }
+    );
+    console.log("🚀 ~ uploadResult:", uploadResult);
 
     if (!uploadResult.url) {
       throw new Error("Failed to upload image");
@@ -1627,15 +1628,14 @@ export default function RoomNotes() {
       style={{ flex: 1 }}
       keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
     >
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ padding: 16 }}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ padding: 16 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           {loading ? (
             <View
               style={{
@@ -1694,9 +1694,8 @@ export default function RoomNotes() {
               </View>
             </>
           )}
-                </TouchableWithoutFeedback>
-
-        </ScrollView>
+        </TouchableWithoutFeedback>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }

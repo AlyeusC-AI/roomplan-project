@@ -119,7 +119,7 @@ export const WorkOrderCertificate = ({
                 <DialogTrigger asChild>
                   <Button className='flex items-center gap-2'>
                     <PenLine className='h-4 w-4' />
-                    <span className='hidden sm:inline'>Customer Details</span>
+                    <span className=' inline'>Customer Details</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className='max-w-4xl'>
@@ -331,7 +331,7 @@ export const WorkOrderCertificate = ({
             <Button
               variant='outline'
               onClick={handlePrint}
-              className='hidden items-center gap-2 sm:flex'
+              className=' items-center gap-2 flex'
             >
               <Printer className='h-4 w-4' />
               <span className=''>Print</span>

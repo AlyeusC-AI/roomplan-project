@@ -1497,13 +1497,14 @@ export default function RoomScopeScreen() {
                                 ]}
                                 keyboardType="numeric"
                                 value={
-                                  equipmentQuantities[item]?.toString() || "1"
+                                  equipmentQuantities[item]?.toString() || ""
                                 }
                                 onChangeText={(text) => {
-                                  const quantity = parseInt(text) || 1;
+                                  const quantity = parseInt(text) || 0;
                                   handleQuantityChange(item, quantity);
                                 }}
                                 placeholderTextColor="#94a3b8"
+                                // editable={!saving}
                               />
                             </View>
                           )}
@@ -1551,7 +1552,7 @@ export default function RoomScopeScreen() {
             style={{ flex: 1 }}
           >
             <View style={styles.modalContainer}>
-              <View style={styles.modalContent} className="pb-8">
+              <View style={styles.modalContent} className="pb-12">
                 <SafeAreaView edges={["bottom"]}>
                   <View className="p-5 border-b border-slate-100">
                     <View className="flex-row items-center justify-between mb-4">
@@ -1570,9 +1571,9 @@ export default function RoomScopeScreen() {
                     </View>
                   </View>
 
-                  <View className="p-5 space-y-4">
+                  <View className="p-5 space-y-4 gap-8">
                     <View>
-                      <Text className="text-sm font-medium text-slate-700 mb-2">
+                      <Text className="text-sm font-medium text-slate-700 mb-4">
                         Field Label
                       </Text>
                       <TextInput
@@ -1598,7 +1599,7 @@ export default function RoomScopeScreen() {
                     </View>
 
                     <View className="mb-2">
-                      <Text className="text-sm font-medium text-slate-700 mb-2">
+                      <Text className="text-sm font-medium text-slate-700 mb-4">
                         Unit
                       </Text>
                       <TextInput
@@ -1715,10 +1716,10 @@ export default function RoomScopeScreen() {
             style={{ flex: 1 }}
           >
             <View style={styles.modalContainer} className="">
-              <View style={styles.modalContent} className="pb-8">
+              <View style={styles.modalContent} className="pb-12">
                 <SafeAreaView edges={["bottom"]}>
                   <View className="p-5 border-b border-slate-100">
-                    <View className="flex-row items-center justify-between mb-4">
+                    <View className="flex-row items-center justify-between mb-2">
                       <Text className="text-xl font-semibold text-slate-800">
                         Add Custom Equipment
                       </Text>
@@ -1732,8 +1733,8 @@ export default function RoomScopeScreen() {
                   </View>
 
                   <View className="p-5 space-y-4 ">
-                    <View className="mb-2">
-                      <Text className="text-sm font-medium text-slate-700 mb-2">
+                    <View className="mb-4">
+                      <Text className="text-sm font-medium text-slate-700 mb-4">
                         Equipment Name
                       </Text>
                       <TextInput
