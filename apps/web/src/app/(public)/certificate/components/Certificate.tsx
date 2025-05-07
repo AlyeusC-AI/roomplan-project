@@ -74,6 +74,19 @@ export const Certificate = ({
   const [cursiveName, setCursiveName] = useState("");
   const certificateRef = useRef<HTMLDivElement>(null);
 
+  // Add safe JSON parse utility
+  function safeParseJSON(jsonString: string) {
+    try {
+      return JSON.parse(jsonString || "{}");
+    } catch {
+      return null;
+    }
+  }
+
+  const orgAddress = organization?.address
+    ? safeParseJSON(organization.address)
+    : null;
+
   const handlePrint = useReactToPrint({
     contentRef: certificateRef,
     pageStyle: `
@@ -453,15 +466,14 @@ export const Certificate = ({
                       <h1 className='text-lg font-bold sm:text-xl print:text-2xl'>
                         {orgName}
                       </h1>
-                      {organization?.address ? (
+                      {orgAddress ? (
                         <div>
                           <p className='text-xs sm:text-sm print:text-base'>
-                            {JSON.parse(organization.address).address}
+                            {orgAddress.address}
                           </p>
                           <p className='text-xs sm:text-sm print:text-base'>
-                            {JSON.parse(organization.address).city},{" "}
-                            {JSON.parse(organization.address).region}{" "}
-                            {JSON.parse(organization.address).postalCode}
+                            {orgAddress.city}, {orgAddress.region}{" "}
+                            {orgAddress.postalCode}
                           </p>
                         </div>
                       ) : (

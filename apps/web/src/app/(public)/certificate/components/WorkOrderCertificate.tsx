@@ -39,6 +39,15 @@ interface WorkOrderCertificateProps {
   errors?: Record<string, string>;
 }
 
+// Add safe JSON parse utility
+function safeParseJSON(jsonString: string) {
+  try {
+    return JSON.parse(jsonString || "{}");
+  } catch {
+    return null;
+  }
+}
+
 export const WorkOrderCertificate = ({
   formData,
   onFormDataChange,
@@ -135,6 +144,10 @@ export const WorkOrderCertificate = ({
   };
 
   const isWebView = typeof window !== "undefined" && window.ReactNativeWebView;
+
+  const orgAddress = organization?.address
+    ? safeParseJSON(organization.address)
+    : null;
 
   return (
     <div className='p-4 sm:p-6 md:p-8'>
@@ -391,15 +404,14 @@ export const WorkOrderCertificate = ({
                 <h1 className='text-lg font-bold sm:text-xl print:text-2xl'>
                   {orgName}
                 </h1>
-                {organization?.address ? (
+                {orgAddress ? (
                   <div className='space-y-1'>
                     <p className='text-xs sm:text-sm print:text-base'>
-                      {JSON.parse(organization.address).address}
+                      {orgAddress.address}
                     </p>
                     <p className='text-xs sm:text-sm print:text-base'>
-                      {JSON.parse(organization.address).city},{" "}
-                      {JSON.parse(organization.address).region}{" "}
-                      {JSON.parse(organization.address).postalCode}
+                      {orgAddress.city}, {orgAddress.region}{" "}
+                      {orgAddress.postalCode}
                     </p>
                   </div>
                 ) : null}
