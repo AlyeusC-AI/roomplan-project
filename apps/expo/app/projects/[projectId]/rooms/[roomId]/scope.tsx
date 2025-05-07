@@ -54,7 +54,7 @@ const areaAffectedTitle = {
 const areaAffectedOrder = ["wall", "floor", "ceiling"] as const;
 
 const equipmentOptions = [
-  "Fan",
+  // "Fan",
   "Dehumidifier",
   "Air Scrubber",
   "Air Mover",

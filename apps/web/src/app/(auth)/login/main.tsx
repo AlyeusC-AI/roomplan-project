@@ -60,7 +60,6 @@ export function LoginForm() {
       } else {
         // router.push(`/register?page=2&email=${email}`);
         router.push(`/register?page=3&email=${email}`);
-
       }
     } catch (error) {
       // Logging The Error To The Console
@@ -77,57 +76,13 @@ export function LoginForm() {
     }
   }
 
-  async function twoFA(type: "totp" | "phone" | string) {
-    
-  }
-
   useEffect(() => {
-    if (searchParams.get("code")) {
-      setLoading(true);
-      supabaseClient.auth
-        .verifyOtp({
-          token_hash: searchParams.get("code")!,
-          type: "magiclink",
-        })
-        .then(() => {
-          setLoading(false);
-          router.push(searchParams.get("redirect") ?? "/projects");
-        });
-    }
-
     supabaseClient.auth.getUser().then((data) => {
       if (data.data.user) {
         router.push("/projects");
       }
     });
   }, []);
-
-  const handleMagicLink = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    const { error } = await supabaseClient.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `/projects`,
-        shouldCreateUser: false,
-      },
-    });
-
-    setLoading(false);
-
-    if (!error) {
-      toast.success("Magic link sent.", {
-        description:
-          "A magic link has been sent to the entered email. If you do not recieve one, try again or continue with your password.",
-      });
-      return;
-    }
-
-    toast.error("An Error Occured", {
-      description:
-        "The credentials you entered are invalid. Please check your email and password and try again.",
-    });
-  };
 
   if (loading) {
     return (

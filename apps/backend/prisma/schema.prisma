@@ -23,6 +23,7 @@ model User {
   verificationToken String?
   resetToken        String?
   resetTokenExpiry  DateTime?
+  supabaseId        String?   @unique
 
   // Organization relationships
   organizationMemberships OrganizationMember[]
@@ -47,6 +48,7 @@ model Organization {
   subscriptionStatus      String?
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
+  supabaseId              String?   @unique
 
   // Relationships
   members OrganizationMember[]

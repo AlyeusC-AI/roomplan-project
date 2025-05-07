@@ -48,6 +48,15 @@ interface CertificateProps {
   errors?: Record<string, string>;
 }
 
+// Add safe JSON parse utility
+function safeParseJSON(jsonString: string) {
+  try {
+    return JSON.parse(jsonString);
+  } catch {
+    return null;
+  }
+}
+
 export const Certificate = ({
   formData,
   onFormDataChange,
@@ -456,12 +465,12 @@ export const Certificate = ({
                       {organization?.address ? (
                         <div>
                           <p className='text-xs sm:text-sm print:text-base'>
-                            {JSON.parse(organization.address).address}
+                            {safeParseJSON(organization.address)?.address}
                           </p>
                           <p className='text-xs sm:text-sm print:text-base'>
-                            {JSON.parse(organization.address).city},{" "}
-                            {JSON.parse(organization.address).region}{" "}
-                            {JSON.parse(organization.address).postalCode}
+                            {safeParseJSON(organization.address)?.city},{" "}
+                            {safeParseJSON(organization.address)?.region}{" "}
+                            {safeParseJSON(organization.address)?.postalCode}
                           </p>
                         </div>
                       ) : (
