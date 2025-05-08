@@ -157,115 +157,6 @@ export const WorkOrderCertificate = ({
             {/* Add loading indicator if needed */}
           </div>
           <div className='flex flex-wrap gap-2'>
-            {isCustomer && (
-              <Dialog
-                open={isCustomerFormOpen}
-                onOpenChange={setIsCustomerFormOpen}
-              >
-                <DialogTrigger asChild>
-                  <Button className='flex items-center gap-2'>
-                    <PenLine className='h-4 w-4' />
-                    <span className='inline'>Customer Details</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className='max-w-4xl'>
-                  <DialogHeader>
-                    <DialogTitle>Fill Customer Details</DialogTitle>
-                  </DialogHeader>
-                  <div className='max-h-[80vh] overflow-y-auto'>
-                    <div className='space-y-6 p-4'>
-                      {/* <CertificateForm
-                        formData={formData}
-                        onFormDataChange={handleFormDataChange}
-                        errors={errors}
-                      /> */}
-                      <div>
-                        <Label className='text-sm'>Customer's Signature:</Label>
-                        <div className='mb-2 flex gap-2'>
-                          <Button
-                            type='button'
-                            variant={
-                              showCursiveSignature ? "default" : "outline"
-                            }
-                            size='sm'
-                            onClick={() => setShowCursiveSignature(true)}
-                            className='flex items-center gap-2'
-                          >
-                            <Type className='h-4 w-4' />
-                            Type Signature
-                          </Button>
-                          <Button
-                            type='button'
-                            variant={
-                              !showCursiveSignature ? "default" : "outline"
-                            }
-                            size='sm'
-                            onClick={() => setShowCursiveSignature(false)}
-                            className='flex items-center gap-2'
-                          >
-                            <PenLine className='h-4 w-4' />
-                            Draw Signature
-                          </Button>
-                        </div>
-                        {showCursiveSignature ? (
-                          <div className='space-y-4'>
-                            <Input
-                              placeholder='Type your name'
-                              value={cursiveName}
-                              onChange={(e) => setCursiveName(e.target.value)}
-                              className='border-b border-gray-300'
-                            />
-                            <CursiveSignature
-                              name={cursiveName}
-                              onSignatureChange={handleCursiveSignatureChange}
-                            />
-                          </div>
-                        ) : (
-                          <div className='relative mt-2 rounded-md border bg-white'>
-                            <SignatureCanvas
-                              ref={(ref) => setCustomerSignature(ref)}
-                              canvasProps={{
-                                className: "signature-canvas w-full h-24",
-                              }}
-                              onEnd={() => {
-                                const signatureData =
-                                  customerSignature?.toDataURL();
-                                if (signatureData && onFormDataChange) {
-                                  onFormDataChange({
-                                    customerSignature: signatureData,
-                                  });
-                                }
-                              }}
-                            />
-                            <Button
-                              type='button'
-                              variant='outline'
-                              size='sm'
-                              className='absolute right-2 top-2'
-                              onClick={clearCustomerSignature}
-                            >
-                              <Undo className='h-4 w-4' />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className='block'>
-                    <Button
-                      type='button'
-                      className='w-full'
-                      onClick={() => {
-                        setIsCustomerFormOpen(false);
-                        toast.success("Customer details saved");
-                      }}
-                    >
-                      Done
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
             {isRep && (
               <Dialog open={isRepFormOpen} onOpenChange={setIsRepFormOpen}>
                 <DialogTrigger asChild>
@@ -374,6 +265,112 @@ export const WorkOrderCertificate = ({
                 </DialogContent>
               </Dialog>
             )}
+            <Dialog
+              open={isCustomerFormOpen}
+              onOpenChange={setIsCustomerFormOpen}
+            >
+              <DialogTrigger asChild>
+                <Button className='flex items-center gap-2'>
+                  <PenLine className='h-4 w-4' />
+                  <span className='inline'>Customer Signature</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className='max-w-4xl'>
+                <DialogHeader>
+                  <DialogTitle>Fill Customer Signature</DialogTitle>
+                </DialogHeader>
+                <div className='max-h-[80vh] overflow-y-auto'>
+                  <div className='space-y-6 p-4'>
+                    {/* <CertificateForm
+                        formData={formData}
+                        onFormDataChange={handleFormDataChange}
+                        errors={errors}
+                      /> */}
+                    <div>
+                      <Label className='text-sm'>Customer's Signature:</Label>
+                      <div className='mb-2 flex gap-2'>
+                        <Button
+                          type='button'
+                          variant={showCursiveSignature ? "default" : "outline"}
+                          size='sm'
+                          onClick={() => setShowCursiveSignature(true)}
+                          className='flex items-center gap-2'
+                        >
+                          <Type className='h-4 w-4' />
+                          Type Signature
+                        </Button>
+                        <Button
+                          type='button'
+                          variant={
+                            !showCursiveSignature ? "default" : "outline"
+                          }
+                          size='sm'
+                          onClick={() => setShowCursiveSignature(false)}
+                          className='flex items-center gap-2'
+                        >
+                          <PenLine className='h-4 w-4' />
+                          Draw Signature
+                        </Button>
+                      </div>
+                      {showCursiveSignature ? (
+                        <div className='space-y-4'>
+                          <Input
+                            placeholder='Type your name'
+                            value={cursiveName}
+                            onChange={(e) => setCursiveName(e.target.value)}
+                            className='border-b border-gray-300'
+                          />
+                          <CursiveSignature
+                            name={cursiveName}
+                            onSignatureChange={handleCursiveSignatureChange}
+                          />
+                        </div>
+                      ) : (
+                        <div className='relative mt-2 rounded-md border bg-white'>
+                          <SignatureCanvas
+                            ref={(ref) => setCustomerSignature(ref)}
+                            canvasProps={{
+                              className: "signature-canvas w-full h-24",
+                            }}
+                            onEnd={() => {
+                              const signatureData =
+                                customerSignature?.toDataURL();
+                              if (signatureData && onFormDataChange) {
+                                onFormDataChange({
+                                  customerSignature: signatureData,
+                                });
+                              }
+                            }}
+                          />
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='sm'
+                            className='absolute right-2 top-2'
+                            onClick={clearCustomerSignature}
+                          >
+                            <Undo className='h-4 w-4' />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className='block'>
+                  <Button
+                    type='button'
+                    className='w-full'
+                    onClick={() => {
+                      setIsCustomerFormOpen(false);
+                      toast.success("Customer signature saved");
+                    }}
+                  >
+                    Done
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
             {!isWebView && (
               <Button
                 variant='outline'
