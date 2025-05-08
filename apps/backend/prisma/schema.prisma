@@ -60,7 +60,6 @@ model OrganizationMember {
   userId         String
   role           String    @default("member") // Can be: owner, admin, member
   status         String    @default("pending") // Can be: pending, active, rejected
-  invitedBy      String
   invitedAt      DateTime  @default(now())
   joinedAt       DateTime?
   createdAt      DateTime  @default(now())

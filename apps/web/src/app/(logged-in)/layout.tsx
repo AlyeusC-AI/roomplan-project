@@ -24,62 +24,62 @@ export default function Layout({ children }: React.PropsWithChildren) {
   const client = createClient();
   const search = useSearchParams();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const pathname = usePathname();
 
-  useEffect(() => {
-    client.auth
-      .getUser()
-      .then(async ({ data: { user }, error }) => {
-        if (pathname.includes("acceptInvite")) {
-          return;
-        }
-        if (error || !user) {
-          router.replace("/login");
-          return;
-        } else if (
-          user.user_metadata.inviteId &&
-          !user.user_metadata.acceptedInvite
-        ) {
-          router.replace("/acceptInvite?token=" + user.user_metadata.inviteId);
-        } else if (user.email_confirmed_at === null) {
-          router.replace("/register?page=2");
-        } else if (!user.user_metadata.organizationId) {
-          router.replace("/register?page=3");
-        } else {
-          setOrganization().then((org) => {
-            if (
-              !org.subscriptionPlan &&
-              !search.has("from_checkout") &&
-              org.subscriptionPlan !== "early_bird"
-            ) {
-              router.replace("/register?page=4");
-            } else if (search.has("from_checkout")) {
-              const plan = search.get("plan");
-              fetch("/api/check-session", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  sessionId: search.get("session_id"),
-                  plan: plan?.toLowerCase(),
-                }),
-              })
-                .then((res) => res.json())
-                .then((data) => {
-                  setOrganizationLocal(data.org);
-                });
-            }
-          });
-        }
-      })
-      .finally(() => {
-        setTimeout(() => {
-          setLoading(false);
-        }, 2000);
-      });
-  }, []);
+  // useEffect(() => {
+  //   client.auth
+  //     .getUser()
+  //     .then(async ({ data: { user }, error }) => {
+  //       if (pathname.includes("acceptInvite")) {
+  //         return;
+  //       }
+  //       if (error || !user) {
+  //         router.replace("/login");
+  //         return;
+  //       } else if (
+  //         user.user_metadata.inviteId &&
+  //         !user.user_metadata.acceptedInvite
+  //       ) {
+  //         router.replace("/acceptInvite?token=" + user.user_metadata.inviteId);
+  //       } else if (user.email_confirmed_at === null) {
+  //         router.replace("/register?page=2");
+  //       } else if (!user.user_metadata.organizationId) {
+  //         router.replace("/register?page=3");
+  //       } else {
+  //         setOrganization().then((org) => {
+  //           if (
+  //             !org.subscriptionPlan &&
+  //             !search.has("from_checkout") &&
+  //             org.subscriptionPlan !== "early_bird"
+  //           ) {
+  //             router.replace("/register?page=4");
+  //           } else if (search.has("from_checkout")) {
+  //             const plan = search.get("plan");
+  //             fetch("/api/check-session", {
+  //               method: "POST",
+  //               headers: {
+  //                 "Content-Type": "application/json",
+  //               },
+  //               body: JSON.stringify({
+  //                 sessionId: search.get("session_id"),
+  //                 plan: plan?.toLowerCase(),
+  //               }),
+  //             })
+  //               .then((res) => res.json())
+  //               .then((data) => {
+  //                 setOrganizationLocal(data.org);
+  //               });
+  //           }
+  //         });
+  //       }
+  //     })
+  //     .finally(() => {
+  //       setTimeout(() => {
+  //         setLoading(false);
+  //       }, 2000);
+  //     });
+  // }, []);
 
   if (loading) {
     return (

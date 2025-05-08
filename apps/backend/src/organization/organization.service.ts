@@ -26,7 +26,6 @@ export class OrganizationService {
             userId: ownerId,
             role: 'owner',
             status: 'active',
-            invitedBy: ownerId,
             joinedAt: new Date(),
           },
         },
@@ -243,7 +242,6 @@ export class OrganizationService {
         organizationId,
         userId: inviteMemberDto.userId,
         role: inviteMemberDto.role || 'member',
-        invitedBy: inviterId,
       },
       include: {
         user: true,

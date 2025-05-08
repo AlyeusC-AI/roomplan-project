@@ -123,8 +123,8 @@ async function migrateOrganizations() {
   // Fetch all organizations from Supabase
   const { data: organizations, error } = await supabase
     .from('Organization')
-    .select('*');
-  // .eq('isDeleted', false);
+    .select('*')
+    .eq('isDeleted', false);
 
   if (error) {
     throw new Error(`Error fetching organizations: ${error.message}`);
@@ -139,6 +139,7 @@ async function migrateOrganizations() {
       await prisma.organization.upsert({
         where: { supabaseId: org.publicId },
         update: {
+          supabaseId: org.publicId,
           name: org.name,
           phoneNumber: org.phoneNumber || null,
           address: org.address || null,
@@ -160,6 +161,7 @@ async function migrateOrganizations() {
           updatedAt: new Date(org.updatedAt),
         },
         create: {
+          supabaseId: org.publicId,
           name: org.name,
           phoneNumber: org.phoneNumber || null,
           address: org.address || null,
@@ -194,7 +196,7 @@ async function migrateOrganizationMemberships() {
   // Fetch all organization memberships from Supabase
   const { data: memberships, error } = await supabase
     .from('UserToOrganization')
-    .select('*')
+    .select('*, User(*), Organization(*)')
     .eq('isDeleted', false);
   console.log(
     '🚀 ~ migrateOrganizationMemberships ~ memberships:',
@@ -207,46 +209,61 @@ async function migrateOrganizationMemberships() {
 
   console.log(`Found ${memberships.length} memberships to migrate`);
 
-  // Migrate each membership
-  //   for (const membership of memberships) {
-  //     try {
-  //       // Get the new user ID from the supabaseId
-  //       const user = await prisma.user.findFirst({
-  //         where: { supabaseId: membership.userId },
-  //       });
+  //   Migrate each membership
+  for (const membership of memberships) {
+    try {
+      // Get the new user ID from the supabaseId
+      const user = await prisma.user.findFirst({
+        where: { supabaseId: membership.User.id },
+      });
 
-  //       // Get the new organization ID
-  //       const org = await prisma.organization.findFirst({
-  //         where: { name: membership.organizationId.toString() },
-  //       });
+      // Get the new organization ID
+      const org = await prisma.organization.findFirst({
+        where: { supabaseId: membership.Organization.publicId },
+      });
 
-  //       if (!user || !org) {
-  //         console.error(
-  //           `Could not find user or organization for membership: ${membership.id}`,
-  //         );
-  //         continue;
-  //       }
+      if (!user || !org) {
+        console.error(
+          `Could not find user or organization for membership: ${membership.id}`,
+        );
+        continue;
+      }
 
-  //       await prisma.organizationMember.create({
-  //         data: {
-  //           organizationId: org.id,
-  //           userId: user.id,
-  //           role: membership.role || 'member',
-  //           status: 'active', // Assuming active members in Supabase
-  //           invitedBy: membership.userId, // You might need to adjust this
-  //           invitedAt: new Date(membership.createdAt),
-  //           joinedAt: new Date(membership.createdAt),
-  //           createdAt: new Date(membership.createdAt),
-  //           updatedAt: new Date(membership.updatedAt),
-  //         },
-  //       });
-  //       console.log(
-  //         `Migrated membership for user ${user.email} in organization ${org.name}`,
-  //       );
-  //     } catch (error) {
-  //       console.error(`Error migrating membership ${membership.id}:`, error);
-  //     }
-  //   }
+      await prisma.organizationMember.upsert({
+        where: {
+          organizationId_userId: {
+            organizationId: org.id,
+            userId: user.id,
+          },
+        },
+        create: {
+          organization: {
+            connect: { supabaseId: membership.Organization.publicId },
+          },
+          user: { connect: { supabaseId: membership.User.id } },
+          role: membership.role || 'member',
+          status: 'active', // Assuming active members in Supabase
+          invitedAt: new Date(membership.createdAt),
+          joinedAt: new Date(membership.createdAt),
+          createdAt: new Date(membership.createdAt),
+          updatedAt: new Date(membership.createdAt),
+        },
+        update: {
+          organization: {
+            connect: { supabaseId: membership.Organization.publicId },
+          },
+          user: { connect: { supabaseId: membership.User.id } },
+          role: membership.role || 'member',
+          status: 'active', // Assuming active members in Supabase
+        },
+      });
+      console.log(
+        `Migrated membership for user ${membership.userId} in organization ${membership.organizationId}`,
+      );
+    } catch (error) {
+      console.error(`Error migrating membership ${membership.id}:`, error);
+    }
+  }
 }
 
 async function main() {
@@ -254,9 +271,9 @@ async function main() {
     console.log('Starting migration from Supabase...');
 
     // Run migrations in sequence
-    // await migrateUsers();
+    await migrateUsers();
     await migrateOrganizations();
-    // await migrateOrganizationMemberships();
+    await migrateOrganizationMemberships();
 
     console.log('Migration completed successfully!');
   } catch (error) {

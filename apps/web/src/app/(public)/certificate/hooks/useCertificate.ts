@@ -27,6 +27,15 @@ const workOrderFormSchema = baseFormSchema.extend({
   phoneNumber: z.string().min(10, "Valid phone number is required"),
 });
 
+// Add safe JSON parse utility
+function safeParseJSON(jsonString: string) {
+  try {
+    return JSON.parse(jsonString || "{}");
+  } catch {
+    return null;
+  }
+}
+
 export const useCertificate = (id?: string) => {
   const [formData, setFormData] = useState<CertificateFormData>({
     customerName: "",
@@ -70,7 +79,7 @@ export const useCertificate = (id?: string) => {
       }
 
       if (data.json) {
-        const documentData = JSON.parse(data.json);
+        const documentData = safeParseJSON(data.json) || {};
         setFormData((prev) => ({
           ...prev,
           ...(data.project || {}),

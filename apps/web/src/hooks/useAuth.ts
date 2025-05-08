@@ -3,6 +3,8 @@ import {
   authService,
   type LoginCredentials,
   type RegisterCredentials,
+  type RequestPasswordResetCredentials,
+  type ResetPasswordCredentials,
 } from "@/services/auth";
 import { useRouter } from "next/navigation";
 
@@ -13,7 +15,7 @@ export function useLogin() {
     mutationFn: (credentials: LoginCredentials) =>
       authService.login(credentials),
     onSuccess: () => {
-      router.push("/dashboard"); // or wherever you want to redirect after login
+      router.push("/projects"); // or wherever you want to redirect after login
     },
   });
 }
@@ -25,7 +27,7 @@ export function useRegister() {
     mutationFn: (credentials: RegisterCredentials) =>
       authService.register(credentials),
     onSuccess: () => {
-      router.push("/dashboard"); // or wherever you want to redirect after registration
+      router.push("/projects"); // or wherever you want to redirect after registration
     },
   });
 }
@@ -55,4 +57,28 @@ export function useLogout() {
   });
 
   return mutation;
+}
+
+export function useRequestPasswordReset() {
+  return useMutation({
+    mutationFn: (credentials: RequestPasswordResetCredentials) =>
+      authService.requestPasswordReset(credentials),
+  });
+}
+
+export function useResetPassword() {
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: ({
+      token,
+      credentials,
+    }: {
+      token: string;
+      credentials: ResetPasswordCredentials;
+    }) => authService.resetPassword(token, credentials),
+    onSuccess: () => {
+      router.push("/login");
+    },
+  });
 }

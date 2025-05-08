@@ -26,8 +26,8 @@ export class AuthService {
     referralSource?: string;
     acceptReminders: boolean;
   }) {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: userData.email },
+    const existingUser = await this.prisma.user.findFirst({
+      where: { email: { equals: userData.email, mode: 'insensitive' } },
     });
 
     if (existingUser) {
@@ -52,13 +52,23 @@ export class AuthService {
     // Send welcome email
     await this.emailService.sendWelcomeEmail(user.email, user.firstName);
 
-    const token = this.generateToken(user);
-    return { token, user: { ...user, password: undefined } };
+    const payload = { sub: user.id, email: user.email };
+    const access_token = this.jwtService.sign(payload);
+
+    return {
+      access_token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+    };
   }
 
   async login(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
+    const user = await this.prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
     });
 
     if (!user) {
@@ -75,8 +85,11 @@ export class AuthService {
     }
 
     const payload = { sub: user.id, email: user.email };
+    const access_token = this.jwtService.sign(payload);
+    console.log('🚀 ~ AuthService ~ login ~ access_token:', access_token);
+
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token,
       user: {
         id: user.id,
         email: user.email,
@@ -112,9 +125,10 @@ export class AuthService {
   }
 
   async requestPasswordReset(email: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
+    const user = await this.prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
     });
+    console.log('🚀 ~ AuthService ~ requestPasswordReset ~ user:', user);
 
     if (!user) {
       // Don't reveal that the email doesn't exist
@@ -137,6 +151,10 @@ export class AuthService {
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
     await this.emailService.sendPasswordResetEmail(user.email, resetLink);
+    console.log(
+      '🚀 ~ AuthService ~ requestPasswordReset ~ resetLink:',
+      resetLink,
+    );
 
     return {
       message:
@@ -170,5 +188,18 @@ export class AuthService {
     });
 
     return { message: 'Password reset successful' };
+  }
+
+  async getCurrentUser(user: any) {
+    return await this.prisma.user.findUnique({
+      where: { id: user.userId },
+      include: {
+        organizationMemberships: {
+          include: {
+            organization: true,
+          },
+        },
+      },
+    });
   }
 }

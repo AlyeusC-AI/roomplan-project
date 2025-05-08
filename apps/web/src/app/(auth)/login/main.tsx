@@ -1,177 +1,81 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useLogin } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@lib/supabase/client";
-import { LoadingSpinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@components/ui/dialog";
-import { Mail, Phone } from "lucide-react";
-import { Factor } from "@supabase/supabase-js";
 
 export function LoginForm() {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState(
-    (searchParams?.get("email") as string) ?? ""
-  );
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const supabaseClient = createClient();
-  const [showMFAModal, setShowMFAModal] = useState(false);
-  const [mfaTypes, setMFATypes] = useState<Factor[]>([]);
+  const login = useLogin();
 
-  // Logging In The User With Supabase
-  async function handleLogin(e: React.FormEvent) {
-    // Preventing Reloading The Page
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      // Setting Loading
-      setLoading(true);
-
-      // Logging In The User With Supabase
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      // If There Is An Error, Throw It
-      if (error) throw error;
-
-      // Otherwise, Route The User To "/projects"
-      if (
-        data.user.email_confirmed_at &&
-        data.user.user_metadata.organizationId
-      ) {
-        router.push("/projects");
-      } else if (data.user.email_confirmed_at) {
-        router.push("/register?page=3");
-      } else {
-        // router.push(`/register?page=2&email=${email}`);
-        router.push(`/register?page=3&email=${email}`);
-      }
+      await login.mutateAsync({ email, password });
+      // The redirect is handled in the useLogin hook
     } catch (error) {
-      // Logging The Error To The Console
-      console.error(error);
-
-      // Setting The Error Text
-      toast.error("An Error Occured", {
-        description:
-          "The credentials you entered are invalid. Please check your email and password and try again.",
+      toast.error("Login Failed", {
+        description: "Invalid email or password. Please try again.",
       });
-
-      // Toggling Loading
-      setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    supabaseClient.auth.getUser().then((data) => {
-      if (data.data.user) {
-        router.push("/projects");
-      }
-    });
-  }, []);
-
-  if (loading) {
-    return (
-      <div className='flex h-full items-center justify-center'>
-        <LoadingSpinner className='w-full' />
-      </div>
-    );
-  }
+  };
 
   return (
-    <Suspense>
-      <form className='p-6 md:p-8' onSubmit={handleLogin}>
-        <div className='flex flex-col gap-6'>
-          <div className='flex flex-col items-center text-center'>
-            <h1 className='text-2xl font-bold'>Welcome back</h1>
-            <p className='text-balance text-muted-foreground'>
-              Login to your RestoreGeek account
-            </p>
-          </div>
-          <div className='grid gap-2'>
-            <Label htmlFor='email'>Email</Label>
-            <Input
-              id='email'
-              type='email'
-              placeholder='johndoe@company.com'
-              required
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className='grid gap-2'>
-            <div className='flex items-center'>
-              <Label htmlFor='password'>Password</Label>
-              <a
-                href='/reset-password'
-                className='ml-auto text-sm underline-offset-2 hover:underline'
-              >
-                Forgot your password?
-              </a>
-            </div>
-            <Input
-              id='password'
-              type='password'
-              required
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <Button type='submit' className='w-full'>
-            Login
-          </Button>
-          <div className='text-center text-sm'>
-            Don&apos;t have an account?{" "}
-            <a href='/register' className='underline underline-offset-4'>
-              Sign up
-            </a>
-          </div>
-          <div className='relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border'>
-            <span className='relative z-10 bg-background px-2 text-muted-foreground'>
-              Or continue with
-            </span>
-          </div>
-          <Button
-            onClick={handleMagicLink}
-            variant='outline'
-            className='w-full'
-          >
-            Magic Link
-          </Button>
+    <form className='p-6 md:p-8' onSubmit={handleSubmit}>
+      <div className='flex flex-col gap-6'>
+        <div className='flex flex-col items-center text-center'>
+          <h1 className='text-2xl font-bold'>Welcome back</h1>
+          <p className='text-balance text-muted-foreground'>
+            Login to your RestoreGeek account
+          </p>
         </div>
-      </form>
-      <Dialog open={showMFAModal} onOpenChange={() => {}}>
-        <DialogContent className='sm:max-w-[425px]'>
-          <DialogHeader>
-            <DialogTitle>2 Factor Authentication</DialogTitle>
-            <DialogDescription>
-              Verify your account using one of the following methods.
-            </DialogDescription>
-          </DialogHeader>
-          <div className='grid gap-4 py-4'>
-            {mfaTypes.map((factor) => (
-              <Button key={factor.id} onClick={() => twoFA(factor.factor_type)}>
-                <Phone /> {factor.friendly_name ?? "Verify Via SMS"}
-              </Button>
-            ))}
-            <Button onClick={() => twoFA("email")}>
-              <Mail /> Verify Via Email
-            </Button>
+        <div className='grid gap-2'>
+          <Label htmlFor='email'>Email</Label>
+          <Input
+            id='email'
+            type='email'
+            placeholder='johndoe@company.com'
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <div className='grid gap-2'>
+          <div className='flex items-center justify-between'>
+            <Label htmlFor='password'>Password</Label>
+            <Link
+              href='/forgot-password'
+              className='text-sm text-primary hover:underline'
+            >
+              Forgot password?
+            </Link>
           </div>
-        </DialogContent>
-      </Dialog>
-    </Suspense>
+          <Input
+            id='password'
+            type='password'
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+        <Button type='submit' className='w-full' disabled={login.isLoading}>
+          {login.isLoading ? "Logging in..." : "Login"}
+        </Button>
+        <div className='text-center text-sm'>
+          Don&apos;t have an account?{" "}
+          <Link href='/register' className='text-primary hover:underline'>
+            Sign up
+          </Link>
+        </div>
+      </div>
+    </form>
   );
 }

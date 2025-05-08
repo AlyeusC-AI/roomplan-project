@@ -1,46 +1,46 @@
-import { createClient } from "@lib/supabase/server";
-import { redirect } from "next/navigation";
+"use client";
 
-// Exporting
-export default async function Component({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ inviteCode: string }>;
-  searchParams: Promise<{ inviteCode: string }>;
-}) {
-  const client = await createClient();
-  const search = await searchParams;
-  const inviteCode = search.inviteCode;
-  if (inviteCode) {
-    return redirect("/acceptInvite?inviteCode=" + inviteCode);
-  }
+import { motion } from "framer-motion";
 
-  const user = await client.auth.getUser();
-  if (
-    user.data.user &&
-    user.data.user.email_confirmed_at &&
-    user.data.user.user_metadata.organizationId
-  ) {
-    return redirect("/projects");
-  } else if (
-    user.data.user &&
-    user.data.user.user_metadata.inviteId &&
-    !user.data.user.user_metadata.acceptedInvite
-    // true
-  ) {
-    return redirect(
-      "/acceptInvite?token=" + user.data.user.user_metadata.inviteId
-    );
-  } else if (
-    user.data.user &&
-    user.data.user.email_confirmed_at &&
-    !user.data.user.user_metadata.organizationId
-  ) {
-    return redirect("/register?page=3");
-  } else if (user.data.user && !user.data.user.email_confirmed_at) {
-    return redirect("/register?page=2");
-  }
-
-  return redirect("/login");
+export default function Page() {
+  return (
+    <div className='flex h-screen w-full items-center justify-center bg-background'>
+      <div className='flex flex-col items-center space-y-4'>
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{
+            duration: 0.5,
+            ease: "easeOut",
+          }}
+          className='relative'
+        >
+          <div className='h-16 w-16 rounded-full border-4 border-primary/20'>
+            <motion.div
+              className='absolute inset-0 rounded-full border-4 border-primary'
+              animate={{
+                rotate: 360,
+              }}
+              transition={{
+                duration: 1.5,
+                ease: "linear",
+                repeat: Infinity,
+              }}
+            />
+          </div>
+        </motion.div>
+        <motion.h1
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{
+            delay: 0.2,
+            duration: 0.5,
+          }}
+          className='text-xl font-semibold text-foreground'
+        >
+          RestoreGeek
+        </motion.h1>
+      </div>
+    </div>
+  );
 }

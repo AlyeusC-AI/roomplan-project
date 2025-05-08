@@ -4,6 +4,7 @@ import { Metadata, Viewport } from "next";
 import clsx from "clsx";
 import Providers from "@components/providers";
 import { Suspense } from "react";
+import AuthRedirect from "@/components/auth-redirect";
 
 export const metadata: Metadata = {
   title: {
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: React.PropsWithChildren) {
     <html lang='en' dir='ltr' suppressHydrationWarning>
       <body className={clsx("h-screen bg-background")}>
         <Providers>
+          <AuthRedirect />
           <Suspense>{children}</Suspense>
         </Providers>
       </body>

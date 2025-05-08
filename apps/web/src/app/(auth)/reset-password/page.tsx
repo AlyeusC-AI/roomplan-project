@@ -1,15 +1,15 @@
 import { Metadata } from "next";
-import { ResetPassword } from "./main";
+import { ResetPasswordForm } from "./main";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Reset Password",
 };
 
-export default function Component() {
-  return (
-    <Suspense>
-      <ResetPassword />
-    </Suspense>
-  );
+export default function ResetPasswordPage({
+  searchParams,
+}: {
+  searchParams: { token?: string };
+}) {
+  return <ResetPasswordForm token={searchParams.token} />;
 }
