@@ -40,7 +40,10 @@ export class OrganizationController {
   @ApiResponse({ status: 400, description: 'Bad request.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   create(@Body() createOrganizationDto: CreateOrganizationDto, @Request() req) {
-    return this.organizationService.create(createOrganizationDto, req.user.id);
+    return this.organizationService.create(
+      createOrganizationDto,
+      req.user.userId,
+    );
   }
 
   @Get()
@@ -50,8 +53,8 @@ export class OrganizationController {
     description: 'Return all organizations.',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  findAll() {
-    return this.organizationService.findAll();
+  findAll(@Request() req) {
+    return this.organizationService.findAll(req.user);
   }
 
   @Get(':id')

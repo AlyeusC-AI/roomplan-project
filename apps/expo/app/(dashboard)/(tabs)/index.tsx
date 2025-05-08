@@ -24,8 +24,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { projectsStore } from "@/lib/state/projects";
-import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
+import { useCurrentUser } from "@service-geek/api-client";
 // import { Platform } from "react-native";
 // import Constants from "expo-constants";
 
@@ -54,6 +54,7 @@ export default function Dashboard() {
   const [selectedUser, setSelectedUser] = useState("");
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
+  const { data: user, isLoading } = useCurrentUser();
   const limit = 20;
   const hasMore = projects?.length < total;
 
@@ -115,6 +116,7 @@ export default function Dashboard() {
             currentSearchTerm.length > 0 ? `query=${currentSearchTerm}&` : ""
           }limit=${limit}&offset=${offset}`
         );
+        console.log("🚀 ~ reaasadasdsads:", res);
 
         if (res.status !== 200) {
           throw new Error(`HTTP error! Status: ${res.status}`);
@@ -144,6 +146,7 @@ export default function Dashboard() {
         setTotal(data.total);
       } catch (err) {
         console.error("Error fetching projects:", err);
+        console.log("🚀 ~ ersssssr:", JSON.stringify(err, null, 2));
       } finally {
         setLoading(false);
         setLoadingMore(false);
@@ -157,7 +160,7 @@ export default function Dashboard() {
     const initializeData = async () => {
       if (session) {
         try {
-          await supabase.auth.setSession(session);
+          // await supabase.auth.setSession(session);
           fetchProjects(false);
         } catch (error) {
           console.error("Error initializing:", error);
@@ -165,18 +168,7 @@ export default function Dashboard() {
       }
     };
 
-    const { data } = supabase.auth.onAuthStateChange((event, newSession) => {
-      setSession(newSession);
-      if (newSession) {
-        fetchProjects(false);
-      }
-    });
-
     initializeData();
-
-    return () => {
-      data?.subscription.unsubscribe();
-    };
   }, []);
 
   // Handle search and filter changes
@@ -228,8 +220,15 @@ export default function Dashboard() {
   const renderItem = ({ item: project }: { item: Project }) => (
     <ProjectCell project={project} />
   );
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#2563eb" />
+      </View>
+    );
+  }
 
-  if (!session) {
+  if (!user) {
     return <Redirect href="/login" />;
   }
 

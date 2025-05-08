@@ -23,7 +23,11 @@ export class OrganizationService {
         ...createOrganizationDto,
         members: {
           create: {
-            userId: ownerId,
+            user: {
+              connect: {
+                id: ownerId,
+              },
+            },
             role: 'owner',
             status: 'active',
             joinedAt: new Date(),
@@ -42,10 +46,16 @@ export class OrganizationService {
     return organization;
   }
 
-  async findAll() {
+  async findAll(user: any) {
+    console.log('🚀 ~ OrganizationService ~ findAll ~ user:', user);
     return this.prisma.organization.findMany({
       where: {
         isDeleted: false,
+        members: {
+          some: {
+            userId: user.userId,
+          },
+        },
       },
       include: {
         members: {

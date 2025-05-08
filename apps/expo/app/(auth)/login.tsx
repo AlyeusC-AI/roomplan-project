@@ -1,12 +1,6 @@
-import React, { useEffect, useState } from "react";
-
-// Supabase
-import { supabase } from "@/lib/supabase";
-
-import { router, useNavigation } from "expo-router";
-
-// UI
-import { toast } from "sonner-native";
+import React, { useState } from "react";
+import { router } from "expo-router";
+import { useLogin } from "@service-geek/api-client";
 import {
   ActivityIndicator,
   Image,
@@ -19,190 +13,52 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";
-// import RoomPlan from "@servicegeek/room-plan"
-
-// export default function LoginScreen() {
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [loading, setLoading] = useState(false);
-
-//   const navigation = useNavigation();
-
-//   useEffect(() => {
-//     navigation.setOptions({ headerTitle: "Log In" });
-//   }, [navigation]);
-
-//   async function signInWithEmail() {
-//     setLoading(true);
-//     const { error } = await supabase.auth.signInWithPassword({
-//       email: email,
-//       password: password,
-//     });
-
-//     if (error) {
-//       toast.show({
-//         placement: "top",
-//         render: ({ id }) => {
-//           return (
-//             <Toast nativeID={id} variant="outline" action="error">
-//               <ToastTitle>{error.message}</ToastTitle>
-//             </Toast>
-//           );
-//         },
-//       });
-//     }
-//     setLoading(false);
-//   }
-
-//   const {
-//     control,
-//     formState: { errors },
-//     handleSubmit,
-//     reset,
-//   } = useForm<SignInSchemaType>({
-//     resolver: zodResolver(signInSchema),
-//   });
-//   const [isEmailFocused, setIsEmailFocused] = useState(false);
-
-//   const toast = useToast();
-
-//   const onSubmit = (_data: SignInSchemaType) => {
-//     toast.show({
-//       placement: "bottom right",
-//       render: ({ id }) => {
-//         return (
-//           <Toast nativeID={id} variant="outline" action="success">
-//             <ToastTitle>Signed in successfully</ToastTitle>
-//           </Toast>
-//         );
-//       },
-//     });
-//     reset();
-//     // Implement your own onSubmit and navigation logic here.
-//   };
-
-//   const [showPassword, setShowPassword] = useState(false);
-
-//   return (
-//     <KeyboardAvoidingView
-//       className=" flex bg-white items-center justify-center p-4 w-screen h-screen"
-//       behavior={Platform.OS === "ios" ? "padding" : "height"}
-//     >
-//       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-//         <View className="w-full flex items-center justify-center">
-//           <View className="w-[300px] h-[100px]">
-//             <Image
-//               className="w-full h-full flex m-2"
-//               source={{
-//                 uri: "https://restoregeek.app/images/brand/servicegeek.png",
-//               }}
-//               alt="ServiceGeek Logo"
-//               style={{
-//                 flex: 1,
-//                 width: "100%",
-//                 height: "100%",
-//                 resizeMode: "contain",
-//               }}
-//             />
-//           </View>
-//           <Heading size="xl" className=" my-8">
-//             Log in into your account
-//           </Heading>
-//           <VStack>
-//             <VStack className=" mx-4">
-//               <FormControl isRequired>
-//                 <FormControlLabel>
-//                   <FormControlLabelText>Email</FormControlLabelText>
-//                 </FormControlLabel>
-//                 <Input size="lg" className="w-96">
-//                   <InputField
-//                     type="text"
-//                     autoCapitalize="none"
-//                     size="6xl"
-//                     value={email}
-//                     onChangeText={(text) => setEmail(text)}
-//                     placeholder="Email"
-//                   />
-//                 </Input>
-//               </FormControl>
-
-//               <FormControl isRequired className="my-4">
-//                 <FormControlLabel>
-//                   <FormControlLabelText>Password</FormControlLabelText>
-//                 </FormControlLabel>
-//                 <Input size="lg" className="w-96">
-//                   <InputField
-//                     type={showPassword ? "text" : "password"}
-//                     autoCapitalize="none"
-//                     size="lg"
-//                     value={password}
-//                     onChangeText={(text) => setPassword(text)}
-//                     placeholder="Password"
-//                   />
-//                   <InputSlot
-//                     className="pr-3"
-//                     onPress={() => setShowPassword(!showPassword)}
-//                   >
-//                     <InputIcon as={showPassword ? Eye : EyeClosed} />
-//                   </InputSlot>
-//                 </Input>
-//               </FormControl>
-//               <Button
-//                 className="mt-4"
-//                 disabled={loading}
-//                 onPress={() => signInWithEmail()}
-//               >
-//                 {loading ? (
-//                   <Spinner color="white" />
-//                 ) : (
-//                   <ButtonText>Sign In</ButtonText>
-//                 )}
-//               </Button>
-//               <HStack
-//                 space="sm"
-//                 className=" mt-56 flex items-center justify-center"
-//               >
-//                 <Text className="text-black">Don't have an account yet?</Text>
-//                 <Link className="text-primary-800 font-bold" href="/register">
-//                   Register
-//                 </Link>
-//               </HStack>
-//             </VStack>
-//           </VStack>
-//         </View>
-//       </TouchableWithoutFeedback>
-//     </KeyboardAvoidingView>
-//   );
-// }
+import { toast } from "sonner-native";
+import { userStore } from "@/lib/state/user";
+import { supabase } from "@/lib/supabase";
 
 export default function Login() {
   const [form, setForm] = useState({
-    email: "",
-    password: "",
+    email: "thermalhunting1@gmail.com",
+    password: "12345678",
   });
+  const { session: supabaseSession, setSession } = userStore((state) => state);
 
-  const [loading, setLoading] = useState(false);
+  const login = useLogin();
 
-  const navigation = useNavigation();
+  async function handleSubmit() {
+    try {
+      const response = await login.mutateAsync({
+        email: form.email,
+        password: form.password,
+      });
 
-  useEffect(() => {
-    navigation.setOptions({ headerTitle: "Log In" });
-  }, [navigation]);
+      setSession({
+        true_token: response.access_token,
+        // refresh_token: response.refresh_token,
+        // expires_in: response.expires_in,
+        // token_type: response.token_type,
+        user: response.user,
+      });
+      // setLoading(true);
+      // const { error } = await supabase.auth.signInWithPassword({
+      //   email: form.email,
+      //   password: form.password,
+      // });
 
-  async function signInWithEmail() {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: form.email,
-      password: form.password,
-    });
+      // setLoading(false);
 
-    setLoading(false);
-
-    if (error) {
-      toast.error(error.message);
-      return;
+      // if (error) {
+      //   toast.error(error.message);
+      //   return;
+      // }
+      router.replace({ pathname: "/" });
+      // The redirect is handled in the useLogin hook
+    } catch (error) {
+      toast.error("Login Failed", {
+        description: "Invalid email or password. Please try again.",
+      });
     }
-    router.replace({ pathname: "/" });
   }
 
   return (
@@ -222,7 +78,6 @@ export default function Login() {
           />
           <View style={styles.header}>
             <Text style={styles.title}>Welcome back!</Text>
-
             <Text style={styles.subtitle}>Log in to your account</Text>
           </View>
 
@@ -244,7 +99,16 @@ export default function Login() {
             </View>
 
             <View style={styles.input}>
-              <Text style={styles.inputLabel}>Password</Text>
+              <View style={styles.inputLabelContainer}>
+                <Text style={styles.inputLabel}>Password</Text>
+                <TouchableOpacity
+                  onPress={() => router.push("/forgot-password")}
+                >
+                  <Text style={styles.forgotPasswordText}>
+                    Forgot password?
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
               <TextInput
                 autoCorrect={false}
@@ -259,9 +123,12 @@ export default function Login() {
             </View>
 
             <View style={styles.formAction}>
-              <TouchableOpacity disabled={loading} onPress={signInWithEmail}>
+              <TouchableOpacity
+                disabled={login.isPending}
+                onPress={handleSubmit}
+              >
                 <View style={styles.btn}>
-                  {loading ? (
+                  {login.isPending ? (
                     <ActivityIndicator color="white" />
                   ) : (
                     <Text style={styles.btnText}>Sign in</Text>
@@ -269,15 +136,15 @@ export default function Login() {
                 </View>
               </TouchableOpacity>
             </View>
-            {/* 
-            <Link href="/register">
-              <Text style={styles.formFooter}>
+
+            <View style={styles.formFooter}>
+              <Text style={styles.formFooterText}>
                 Don't have an account?{" "}
-                <Text style={{ textDecorationLine: "underline" }}>
-                  Create one.
-                </Text>
+                <TouchableOpacity onPress={() => router.push("/register")}>
+                  <Text style={styles.formFooterLink}>Sign up</Text>
+                </TouchableOpacity>
               </Text>
-            </Link> */}
+            </View>
           </View>
         </View>
       </SafeAreaView>
@@ -316,20 +183,36 @@ const styles = StyleSheet.create({
     marginVertical: 24,
   },
   formFooter: {
+    marginTop: 24,
+  },
+  formFooterText: {
     fontSize: 15,
     fontWeight: "500",
     color: "#222",
     textAlign: "center",
   },
+  formFooterLink: {
+    color: "#075eec",
+    textDecorationLine: "underline",
+  },
   /** Input */
   input: {
     marginBottom: 16,
+  },
+  inputLabelContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
   },
   inputLabel: {
     fontSize: 17,
     fontWeight: "600",
     color: "#222",
-    marginBottom: 8,
+  },
+  forgotPasswordText: {
+    fontSize: 15,
+    color: "#075eec",
   },
   inputControl: {
     height: 44,

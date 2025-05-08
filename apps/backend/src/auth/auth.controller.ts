@@ -166,4 +166,23 @@ export class AuthController {
   async getCurrentUser(@Request() req) {
     return this.authService.getCurrentUser(req.user);
   }
+
+  @Post('resend-verification')
+  @ApiOperation({ summary: 'Resend verification email' })
+  @ApiResponse({
+    status: 200,
+    description: 'Verification email sent if email exists and is not verified',
+    schema: {
+      properties: {
+        message: {
+          type: 'string',
+          example:
+            'If your email is registered, you will receive a verification link',
+        },
+      },
+    },
+  })
+  async resendVerificationEmail(@Body('email') email: string) {
+    return this.authService.resendVerificationEmail(email);
+  }
 }

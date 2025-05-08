@@ -76,7 +76,7 @@ export default function AddressAutoComplete(props: AddressAutoCompleteProps) {
     if (data?.data) {
       setAddress(data.data as AddressType);
     }
-  }, [data, setAddress]);
+  }, [data]);
 
   return (
     <>
@@ -168,7 +168,7 @@ function AddressAutoCompleteInput(props: CommonProps) {
     placeholder,
     address,
   } = props;
-    console.log("🚀 ~ AddressAutoCompleteInput ~ searchInput:", searchInput)
+  console.log("🚀 ~ AddressAutoCompleteInput ~ searchInput:", searchInput);
 
   const [isOpen, setIsOpen] = useState(false);
 

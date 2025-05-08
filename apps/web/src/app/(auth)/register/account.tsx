@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@lib/supabase/client";
 import { LoadingSpinner } from "@/components/ui/spinner";
 import {
   DropdownMenu,
@@ -20,8 +19,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { PhoneInput } from "@components/ui/phone-input";
-import { AuthApiError } from "@supabase/supabase-js";
 import { useStepper } from "@components/ui/nyxbui/stepper";
+import { useRegister, useCurrentUser } from "@service-geek/api-client";
 
 const leadOptions = [
   "Search Engine",
@@ -39,136 +38,112 @@ export function AccountForm() {
   const [phoneNumber, setPhoneNumber] = useState("+1");
   const [lastName, setLastName] = useState("");
   const [lead, setLead] = useState("Search Engine");
+  const [acceptReminders, setAcceptReminders] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const stepper = useStepper();
+  const { mutate: register } = useRegister();
+  const { data: user } = useCurrentUser();
 
   const [refferal, setRefferal] = useState(searchParams?.get("referral") ?? "");
-  const supabase = createClient();
-
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     stepper.setStep(0);
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN") {
-        router.replace("/projects");
-      }
-    });
-    supabase.auth.getUser().then(({ data: { user }, error }) => {
-      console.log(error);
-      console.log(user);
-      if (
-        user &&
-        user.email_confirmed_at &&
-        user.user_metadata.organizationId
-      ) {
-        router.replace("/register?page=4");
-      } else if (user && user.email_confirmed_at) {
-        router.replace("/register?page=3");
-      }
-    });
-  }, []);
+    if (user?.isEmailVerified && user?.organizationMemberships?.length > 0) {
+      router.replace("/register?page=4");
+    } else if (user?.isEmailVerified) {
+      router.replace("/register?page=3");
+    }
+  }, [user, router, stepper]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setLoading(true);
-      if (!firstName || !lastName || !lead) {
-        alert("Please complete the form");
+      if (!firstName || !lastName) {
+        toast.error("Please complete the form");
         setLoading(false);
         return;
       }
 
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        phone: phoneNumber,
-        options: {
-          data: {
-            email_confirmed_at: null,
-            isSupportUser: false,
-            firstName,
-            lastName,
-            lead,
-            phone: phoneNumber,
-          },
+      register(
+        {
+          email,
+          password,
+          firstName,
+          lastName,
+          phone: phoneNumber,
+          // lead,
+          referralSource: refferal,
+          acceptReminders,
         },
-      });
+        {
+          onSuccess: () => {
+            if (process.env.NODE_ENV === "production") {
+              fetch(
+                "https://hooks.slack.com/services/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",
+                {
+                  method: "POST",
+                  body: JSON.stringify({
+                    blocks: [
+                      {
+                        type: "header",
+                        text: {
+                          type: "plain_text",
+                          text: "New User Signup :wave:",
+                          emoji: true,
+                        },
+                      },
+                      {
+                        type: "section",
+                        fields: [
+                          {
+                            type: "mrkdwn",
+                            text: `*Email:*\n${email}`,
+                          },
+                          {
+                            type: "mrkdwn",
+                            text: `*Phone Number:*\n${phoneNumber}`,
+                          },
+                          {
+                            type: "mrkdwn",
+                            text: `*First name:*\n${firstName}`,
+                          },
+                          {
+                            type: "mrkdwn",
+                            text: `*Last name:*\n${lastName}`,
+                          },
+                          {
+                            type: "mrkdwn",
+                            text: `*Lead:*\n${lead}`,
+                          },
+                          {
+                            type: "mrkdwn",
+                            text: `*Refferal code:*\n${refferal}`,
+                          },
+                        ],
+                      },
+                    ],
+                  }),
+                }
+              );
+            }
+            router.replace(`/register?page=3&email=${email}`);
+            stepper.nextStep();
+          },
 
-      if (error) {
-        if (error.message === "User already registered") {
-          toast.error("An account with this email address already exists.");
-        } else {
-          toast.error(
-            "An unexpected error occured. Please refresh your browser and try again."
-          );
+          onSettled: () => {
+            setLoading(false);
+          },
         }
-        setLoading(false);
-        return;
-      }
-      if (process.env.NODE_ENV === "production") {
-        fetch(
-          "https://hooks.slack.com/services/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",
-          {
-            method: "POST",
-            body: JSON.stringify({
-              blocks: [
-                {
-                  type: "header",
-                  text: {
-                    type: "plain_text",
-                    text: "New User Signup :wave:",
-                    emoji: true,
-                  },
-                },
-                {
-                  type: "section",
-                  fields: [
-                    {
-                      type: "mrkdwn",
-                      text: `*Email:*\n${email}`,
-                    },
-                    {
-                      type: "mrkdwn",
-                      text: `*Phone Number:*\n${phoneNumber}`,
-                    },
-                    {
-                      type: "mrkdwn",
-                      text: `*First name:*\n${firstName}`,
-                    },
-                    {
-                      type: "mrkdwn",
-                      text: `*Last name:*\n${lastName}`,
-                    },
-                    {
-                      type: "mrkdwn",
-                      text: `*Lead:*\n${lead}`,
-                    },
-                    {
-                      type: "mrkdwn",
-                      text: `*Refferal code:*\n${refferal}`,
-                    },
-                  ],
-                },
-              ],
-            }),
-          }
-        );
-      }
-      // router.replace(`/register?page=2&email=${email}`);
-      router.replace(`/register?page=3&email=${email}`);
-      stepper.nextStep();
-    } catch (error) {
-      if (error instanceof AuthApiError && error.code === "email_exists") {
-        toast.error("An account with this email address already exists.");
-        return;
-      }
-      toast.error(
-        "An unexpected error occured. Please refresh your browser and try again."
       );
+    } catch (error) {
+      toast.error(
+        "An unexpected error occurred. Please refresh your browser and try again."
+      );
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   if (loading) {
@@ -289,7 +264,13 @@ export function AccountForm() {
             </div>
           </div>
           <div className='mt-3 flex items-center space-x-2'>
-            <Checkbox id='twillio1' />
+            <Checkbox
+              id='twillio1'
+              checked={acceptReminders}
+              onCheckedChange={(checked) =>
+                setAcceptReminders(checked === true)
+              }
+            />
             <div className='grid gap-1.5 leading-none'>
               <label
                 htmlFor='twillio1'

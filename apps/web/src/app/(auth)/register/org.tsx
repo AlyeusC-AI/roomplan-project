@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@lib/supabase/client";
 import { LoadingSpinner } from "@/components/ui/spinner";
 import {
   DropdownMenu,
@@ -20,84 +19,125 @@ import {
 import { toast } from "sonner";
 import AddressAutoComplete from "@components/ui/address-automplete";
 import { useStepper } from "@components/ui/nyxbui/stepper";
+import {
+  useCreateOrganization,
+  useCurrentUser,
+} from "@service-geek/api-client";
+import type { CreateOrganizationDto } from "@service-geek/api-client";
+import type { AddressType } from "@/types/address";
 
-const sizeOptions = ["1-10", "11-50", "50-100", "101+"];
+const sizeOptions = [
+  { label: "1-10", value: 10 },
+  { label: "11-50", value: 50 },
+  { label: "51-100", value: 100 },
+  { label: "101+", value: 101 },
+];
 
 export function OrganizationForm() {
+  const [formData, setFormData] = useState<Partial<CreateOrganizationDto>>({
+    name: "",
+    phoneNumber: "",
+    address: "",
+    size: sizeOptions[0].value,
+  });
   const [address, setAddress] = useState<AddressType | null>(null);
   const [addressSearch, setAddressSearch] = useState("");
-  const [name, setName] = useState("");
-  const [size, setSize] = useState(sizeOptions[0]);
   const router = useRouter();
-
-  const supabase = createClient();
   const stepper = useStepper();
+  const { mutate: createOrganization } = useCreateOrganization();
+  const { data: user, isLoading: isUserLoading } = useCurrentUser();
 
+  // Handle navigation based on user state
   useEffect(() => {
-    stepper.setStep(2);
-    supabase.auth.getUser().then(({ data: { user }, error }) => {
-      console.log(user?.user_metadata.organizationId);
-      if (
-        user &&
-        user.email_confirmed_at &&
-        user.user_metadata.organizationId
-      ) {
-        router.replace("/projects");
-      } else if (!user?.email_confirmed_at) {
-        router.replace("/login");
-      }
-    });
-  });
+    if (isUserLoading) {
+      return;
+    }
+
+    if (!user) {
+      router.replace("/register?page=1");
+      return;
+    }
+
+    if (!user.isEmailVerified) {
+      router.replace("/register?page=2");
+      return;
+    }
+
+    if (
+      user.organizationMemberships &&
+      user.organizationMemberships.length > 0
+    ) {
+      router.replace("/projects");
+    }
+  }, [user]);
 
   const [loading, setLoading] = useState(false);
+
+  const handleInputChange = (
+    field: keyof CreateOrganizationDto,
+    value: string | number
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleAddressChange = (newAddress: AddressType | null) => {
+    setAddress(newAddress);
+    if (newAddress) {
+      setFormData((prev) => ({
+        ...prev,
+        address: newAddress.formattedAddress,
+        lat: newAddress.lat,
+        lng: newAddress.lng,
+      }));
+    }
+  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setLoading(true);
-      if (!name || !size || !address) {
-        toast.error("Please complete the form");
+
+      // Validate required fields
+      if (!formData.name || !formData.address || !formData.size) {
+        toast.error("Please complete all required fields");
         setLoading(false);
         return;
       }
 
-      const result = await fetch("/api/v1/organization", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      createOrganization(formData as CreateOrganizationDto, {
+        onSuccess: () => {
+          toast.success("Organization created successfully");
+          router.replace("/register?page=4");
+          stepper.nextStep();
         },
-        body: JSON.stringify({
-          name,
-          size,
-          address: address?.formattedAddress,
-          lat: address?.lat,
-          lng: address?.lng,
-        }),
+        // onError: (error) => {
+        //   toast.error(error.message || "Failed to create organization");
+        // },
+        onSettled: () => {
+          setLoading(false);
+        },
       });
-
-      if (!result.ok) {
-        toast.error("An unexpected error occured. Please try again.");
-        setLoading(false);
-        return
-      }
-
-      setLoading(false);
-      router.replace("/register?page=4");
-      stepper.nextStep();
-    } catch {
+    } catch (error) {
       toast.error(
-        "An unexpected error occured. Please refresh your browser and try again."
+        "An unexpected error occurred. Please refresh your browser and try again."
       );
       setLoading(false);
     }
   };
 
-  if (loading) {
+  if (isUserLoading || loading) {
     return (
       <div className='flex h-full items-center justify-center'>
         <LoadingSpinner className='w-full' />
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
@@ -111,55 +151,74 @@ export function OrganizationForm() {
         </div>
 
         <div className='grid gap-2'>
-          <Label htmlFor='name'>Organization Name</Label>
+          <Label htmlFor='name'>Organization Name *</Label>
           <Input
             id='name'
             type='text'
             placeholder='My Organization'
             required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={formData.name}
+            onChange={(e) => handleInputChange("name", e.target.value)}
           />
         </div>
+
         <div className='grid gap-2'>
-          <Label htmlFor='address'>Organization Address</Label>
+          <Label htmlFor='phoneNumber'>Phone Number</Label>
+          <Input
+            id='phoneNumber'
+            type='tel'
+            placeholder='+1 (555) 000-0000'
+            value={formData.phoneNumber}
+            onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+          />
+        </div>
+
+        <div className='grid gap-2'>
+          <Label htmlFor='address'>Organization Address *</Label>
           <AddressAutoComplete
             placeholder='Enter your address'
             address={address}
-            setAddress={setAddress}
+            setAddress={handleAddressChange}
             searchInput={addressSearch}
             setSearchInput={setAddressSearch}
             dialogTitle='Organization Address'
           />
         </div>
+
         <div className='grid gap-2'>
-          <Label htmlFor='referral'>Organization Size</Label>
+          <Label>Organization Size *</Label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant='outline'>{size}</Button>
+              <Button variant='outline' type='button'>
+                {sizeOptions.find((opt) => opt.value === formData.size)
+                  ?.label || "Select size"}
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className='w-56'>
               <DropdownMenuLabel>Organization Size</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup value={size} onValueChange={setSize}>
+              <DropdownMenuRadioGroup
+                value={formData.size?.toString()}
+                onValueChange={(value) =>
+                  handleInputChange("size", parseInt(value))
+                }
+              >
                 {sizeOptions.map((option) => (
-                  <DropdownMenuRadioItem value={option} key={option}>
-                    {option}
+                  <DropdownMenuRadioItem
+                    value={option.value.toString()}
+                    key={option.value}
+                  >
+                    {option.label}
                   </DropdownMenuRadioItem>
                 ))}
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
         <Button type='submit' className='w-full'>
           Create Organization
         </Button>
-        <div className='text-center text-sm'>
-          Don&apos;t have an account?{" "}
-          <a href='/register' className='underline underline-offset-4'>
-            Sign up
-          </a>
-        </div>
       </div>
     </form>
   );

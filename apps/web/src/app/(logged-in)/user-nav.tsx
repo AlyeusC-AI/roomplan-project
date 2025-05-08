@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { userInfoStore } from "@atoms/user-info";
 import { LoadingSpinner } from "@components/ui/spinner";
-
+import { useCurrentUser } from "@service-geek/api-client";
 export function UserNav() {
-  const { user } = userInfoStore((state) => state);
+  // const { user } = userInfoStore((state) => state);
+  const { data: user } = useCurrentUser();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -24,7 +25,7 @@ export function UserNav() {
           {user ? (
             <Avatar className='size-8 rounded-lg'>
               <AvatarImage
-                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profile-pictures/${user.id}/avatar.png`}
+                src={user?.avatar || ""}
                 alt={`${user?.firstName} ${user?.lastName}`}
               />
               <AvatarFallback className='rounded-lg'>

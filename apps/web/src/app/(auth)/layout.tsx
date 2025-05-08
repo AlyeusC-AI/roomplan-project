@@ -4,46 +4,25 @@ import { Card, CardContent } from "@components/ui/card";
 import { Step, Stepper, type StepItem } from "@/components/ui/nyxbui/stepper";
 import { Building, CircleUser, CreditCard, IdCard, LogOut } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
-import { createClient } from "@lib/supabase/client";
+import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
-import type { User } from "@supabase/supabase-js";
+import { useCurrentUser, useLogout } from "@service-geek/api-client";
 
 export default function Layout({ children }: React.PropsWithChildren) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { data: user } = useCurrentUser();
+  const { mutate: logout } = useLogout();
   const steps = [
     { label: "Account", icon: CircleUser },
-    // { label: "Verify", icon: IdCard },
+    { label: "Verify", icon: IdCard },
     { label: "Organization", icon: Building },
     { label: "Get Started", icon: CreditCard },
   ] satisfies StepItem[];
 
-  useEffect(() => {
-    const supabase = createClient();
-
-    // Get initial user state
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-    });
-
-    // Listen for auth state changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    logout();
     router.push("/login");
   };
 

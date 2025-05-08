@@ -24,6 +24,7 @@ model User {
   resetToken        String?
   resetTokenExpiry  DateTime?
   supabaseId        String?   @unique
+  avatar            String?
 
   // Organization relationships
   organizationMemberships OrganizationMember[]

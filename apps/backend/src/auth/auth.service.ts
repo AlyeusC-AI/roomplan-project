@@ -46,7 +46,7 @@ export class AuthService {
     });
 
     // Send verification email
-    const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    const verificationLink = `${process.env.FRONTEND_URL}/register?page=2&token=${verificationToken}`;
     await this.emailService.sendVerificationEmail(user.email, verificationLink);
 
     // Send welcome email
@@ -201,5 +201,40 @@ export class AuthService {
         },
       },
     });
+  }
+
+  async resendVerificationEmail(email: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+    });
+
+    if (!user) {
+      // Don't reveal that the email doesn't exist
+      return {
+        message:
+          'If your email is registered, you will receive a verification link',
+      };
+    }
+
+    if (user.isEmailVerified) {
+      throw new BadRequestException('Email is already verified');
+    }
+
+    const verificationToken = Math.random().toString(36).substring(2, 15);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        verificationToken,
+      },
+    });
+
+    const verificationLink = `${process.env.FRONTEND_URL}/register?page=2&token=${verificationToken}`;
+    await this.emailService.sendVerificationEmail(user.email, verificationLink);
+
+    return {
+      message:
+        'If your email is registered, you will receive a verification link',
+    };
   }
 }

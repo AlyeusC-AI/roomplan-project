@@ -33,10 +33,6 @@ export class CreateOrganizationDto {
   @IsOptional()
   size?: number;
 
-  @IsBoolean()
-  @IsOptional()
-  isDeleted?: boolean;
-
   @ApiProperty({ description: 'Organization logo URL', required: false })
   @IsString()
   @IsOptional()
@@ -51,28 +47,4 @@ export class CreateOrganizationDto {
   @IsLongitude()
   @IsOptional()
   lng?: number;
-
-  @IsString()
-  @IsOptional()
-  subscriptionId?: string;
-
-  @IsString()
-  @IsOptional()
-  subscriptionPlan?: string;
-
-  @IsString()
-  @IsOptional()
-  customerId?: string;
-
-  @IsNumber()
-  @IsOptional()
-  maxUsersForSubscription?: number;
-
-  @IsString()
-  @IsOptional()
-  freeTrialEndsAt?: string;
-
-  @IsString()
-  @IsOptional()
-  subscriptionStatus?: string;
 }

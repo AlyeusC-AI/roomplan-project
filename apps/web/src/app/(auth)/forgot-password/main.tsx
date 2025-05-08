@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useRequestPasswordReset } from "@/hooks/useAuth";
+import { useRequestPasswordReset } from "@service-geek/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -68,9 +68,9 @@ export function ForgotPasswordForm() {
           <Button
             type='submit'
             className='w-full'
-            disabled={requestPasswordReset.isLoading}
+            disabled={requestPasswordReset.isPending}
           >
-            {requestPasswordReset.isLoading ? "Sending..." : "Send reset link"}
+            {requestPasswordReset.isPending ? "Sending..." : "Send reset link"}
           </Button>
           <Button variant='link' asChild className='w-full'>
             <Link href='/login'>Back to login</Link>

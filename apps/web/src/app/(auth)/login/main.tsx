@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useLogin } from "@/hooks/useAuth";
+import { useLogin } from "@service-geek/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,8 +66,8 @@ export function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-        <Button type='submit' className='w-full' disabled={login.isLoading}>
-          {login.isLoading ? "Logging in..." : "Login"}
+        <Button type='submit' className='w-full' disabled={login.isPending}>
+          {login.isPending ? "Logging in..." : "Login"}
         </Button>
         <div className='text-center text-sm'>
           Don&apos;t have an account?{" "}

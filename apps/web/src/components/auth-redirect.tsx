@@ -2,12 +2,13 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCurrentUser } from "@/hooks/useAuth";
+import { useCurrentUser } from "@service-geek/api-client";
 
 export default function AuthRedirect() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: user } = useCurrentUser();
+  console.log("🚀 ~ AuthRedirect ~ user:", user);
 
   useEffect(() => {
     const inviteCode = searchParams.get("inviteCode");
@@ -38,19 +39,17 @@ export default function AuthRedirect() {
     //   );
     //   return;
     // }
-
+    // If user is not verified
+    if (!user.isEmailVerified) {
+      router.push("/register?page=2");
+      return;
+    }
     // If user is verified but has no organization
     if (
       !user.organizationMemberships.length ||
       user.organizationMemberships.length === 0
     ) {
       router.push("/register?page=3");
-      return;
-    }
-
-    // If user is not verified
-    if (!user.isEmailVerified) {
-      router.push("/register?page=2");
       return;
     }
 

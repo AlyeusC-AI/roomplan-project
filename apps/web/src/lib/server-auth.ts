@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { User as UserType } from "@/services/auth";
+import { User as UserType } from "@service-geek/api-client";
 import { SupabaseClient, User } from "@supabase/supabase-js";
 
 export const serverAuth = {

@@ -40,28 +40,30 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { LoadingPlaceholder } from "./ui/spinner";
 import { userInfoStore } from "@atoms/user-info";
+import { useCurrentUser, useLogout } from "@service-geek/api-client";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
   const client = createClient();
   const navigate = useRouter();
 
-  const { user, setUser } = userInfoStore();
+  const { data: user, isLoading } = useCurrentUser();
+  const { mutate: logout } = useLogout();
 
-  const logout = () => {
-    client.auth.signOut();
-    navigate.push("/login");
-  };
+  // const logout = () => {
+  //   client.auth.signOut();
+  //   navigate.push("/login");
+  // };
 
   useEffect(() => {
     console.log("FETCHING USER FROM SIDEBAR");
-    fetch("/api/v1/user")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("FETCHED USER FROM SIDEBAR");
-        console.log(data);
-        setUser(data);
-      });
+    // fetch("/api/v1/user")
+    //   .then((res) => res.json())
+    //   .then((data) => {
+    //     console.log("FETCHED USER FROM SIDEBAR");
+    //     console.log(data);
+    //     setUser(data);
+    //   });
   }, []);
 
   return (
@@ -78,8 +80,8 @@ export function NavUser() {
                   >
                     <Avatar className='size-8 rounded-lg'>
                       <AvatarImage
-                        src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profile-pictures/${user.id}/avatar.png`}
-                        alt={`${user.firstName} ${user.lastName}`}
+                        src={user?.avatar || ""}
+                        alt={`${user?.firstName} ${user?.lastName}`}
                       />
                       <AvatarFallback className='rounded-lg'>
                         {`${user.firstName} ${user.lastName}`
@@ -171,7 +173,7 @@ export function NavUser() {
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                  <Button variant='destructive' onClick={logout}>
+                  <Button variant='destructive' onClick={() => logout()}>
                     Log out
                   </Button>
                 </DialogFooter>

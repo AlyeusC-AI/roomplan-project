@@ -28,6 +28,8 @@
     "gen:types": "npx supabase gen types typescript --project-id \"zmvdimcemmhesgabixlf\" --schema public > types/database.ts"
   },
   "dependencies": {
+    "@service-geek/api-client": "*",
+    "@tanstack/react-query": "^5.75.5",
     "@expo/config-plugins": "^9.0.17",
     "@expo/vector-icons": "^14.0.2",
     "@react-native-async-storage/async-storage": "1.23.1",

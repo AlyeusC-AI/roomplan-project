@@ -97,6 +97,7 @@ async function migrateUsers() {
           isEmailVerified: true, // Assuming verified users in Supabase
           createdAt: new Date(user.createdAt),
           updatedAt: new Date(user.updatedAt),
+          avatar: `https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/profile-pictures/${user.id}/avatar.png`,
         },
         create: {
           email: user.email,
@@ -108,6 +109,7 @@ async function migrateUsers() {
           isEmailVerified: true, // Assuming verified users in Supabase
           createdAt: new Date(user.createdAt),
           updatedAt: new Date(user.updatedAt),
+          avatar: `https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/profile-pictures/${user.id}/avatar.png`,
         },
       });
       console.log(`Migrated user: ${user.email}`);
