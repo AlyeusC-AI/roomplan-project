@@ -1,17 +1,38 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { organizationService } from "../services/organization";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  UseQueryOptions,
+} from "@tanstack/react-query";
+import {
+  organizationService,
+  useOrganizationStore,
+} from "../services/organization";
 import type {
   CreateOrganizationDto,
   UpdateOrganizationDto,
+  Organization,
 } from "../types/organization";
-import { useAuthStore } from "../services/auth";
+import { useAuthStore } from "../services/storage";
+
+export function useActiveOrganization() {
+  return useOrganizationStore((state) => state.activeOrganization);
+}
+
+export function useSetActiveOrganization() {
+  return useOrganizationStore((state) => state.setActiveOrganization);
+}
+
 export function useCreateOrganization() {
   const queryClient = useQueryClient();
+  const setActiveOrganization = useSetActiveOrganization();
+
   return useMutation({
     mutationFn: (data: CreateOrganizationDto) =>
       organizationService.create(data),
-    onSuccess: () => {
+    onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
+      setActiveOrganization(response.data);
     },
   });
 }
@@ -28,11 +49,26 @@ export function useUpdateOrganization() {
 }
 
 export function useGetOrganizations() {
-  return useQuery({
+  const setActiveOrganization = useSetActiveOrganization();
+  const activeOrg = useActiveOrganization();
+
+  const options: UseQueryOptions<Organization[], Error> = {
     queryKey: ["organizations"],
-    queryFn: () => organizationService.findAll(),
+    queryFn: async () => {
+      const response = await organizationService.findAll();
+      return response.data;
+    },
     enabled: !!useAuthStore.getState().token,
-  });
+  };
+
+  const query = useQuery(options);
+
+  // Handle setting active organization after query completes
+  if (query.data && !activeOrg && query.data.length > 0 && query.data[0]) {
+    setActiveOrganization(query.data[0]);
+  }
+
+  return query;
 }
 
 export function useGetOrganization(id: string) {
@@ -45,8 +81,19 @@ export function useGetOrganization(id: string) {
 
 export function useDeleteOrganization() {
   const queryClient = useQueryClient();
+  const setActiveOrganization = useSetActiveOrganization();
+  const activeOrganization = useActiveOrganization();
+  const orgs = useGetOrganizations();
   return useMutation({
-    mutationFn: (id: string) => organizationService.remove(id),
+    mutationFn: (id: string) => {
+      const response = organizationService.remove(id);
+      if (id === activeOrganization?.id) {
+        setActiveOrganization(
+          orgs.data?.filter((org) => org.id !== id)[0] || null
+        );
+      }
+      return response;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
     },

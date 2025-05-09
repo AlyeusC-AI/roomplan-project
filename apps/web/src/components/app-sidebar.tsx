@@ -15,7 +15,6 @@ import {
   PanelLeftOpen,
   Receipt,
 } from "lucide-react";
-
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import {
@@ -28,6 +27,7 @@ import {
 } from "@/components/ui/sidebar";
 import Image from "next/image";
 import { SidebarSubscriptionStatus } from "./sidebar-subscription-status";
+import { OrganizationSelector } from "./organization-selector";
 
 // This is sample data.
 const data = {
@@ -54,11 +54,6 @@ const data = {
       url: "/projects",
       icon: FolderKanban,
     },
-    // {
-    //   title: "Map",
-    //   url: "/map",
-    //   icon: Map,
-    // },
     {
       title: "Calendar",
       url: "/calendar",
@@ -73,12 +68,6 @@ const data = {
       title: "Estimates",
       url: "/estimates",
       icon: Receipt,
-      // items: [
-      //   {
-      //     title: "All Estimates",
-      //     url: "/estimates",
-      //   },
-      // ],
     },
     {
       title: "Invoices",
@@ -108,10 +97,6 @@ const data = {
           title: "Organization",
           url: "/settings/organization",
         },
-        // {
-        //   title: "Documents",
-        //   url: "/documents",
-        // },
         {
           title: "Forms",
           url: "/forms",
@@ -139,13 +124,9 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { toggleSidebar, state } = useSidebar();
+
   return (
-    <Sidebar
-      collapsible='icon'
-      // variant='floating'
-      className='overflow-y-auto border-r'
-      {...props}
-    >
+    <Sidebar collapsible='icon' className='overflow-y-auto border-r' {...props}>
       <div className='flex h-full flex-col'>
         <div className='flex-1'>
           <SidebarHeader className='flex items-center'>
@@ -178,13 +159,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </button>
             </div>
           </SidebarHeader>
+
+          {state === "expanded" && (
+            <div className='px-4 py-2'>
+              <OrganizationSelector
+                showLabel={false}
+                buttonClassName='w-full'
+                dropdownClassName='w-56'
+              />
+            </div>
+          )}
+
           <SidebarContent>
             <NavMain items={data.navMain} />
           </SidebarContent>
 
           <SidebarRail />
         </div>
-        {/* <SidebarSubscriptionStatus /> */}
         <SidebarFooter>
           <NavUser />
         </SidebarFooter>

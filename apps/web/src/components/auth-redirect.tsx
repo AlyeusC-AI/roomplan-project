@@ -1,16 +1,29 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCurrentUser } from "@service-geek/api-client";
-
-export default function AuthRedirect() {
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import {
+  useActiveOrganization,
+  useCurrentUser,
+} from "@service-geek/api-client";
+import { LoadingPlaceholder } from "./ui/spinner";
+export default function AuthRedirect({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: user } = useCurrentUser();
+  const { data: user, isLoading: userLoading } = useCurrentUser();
+  const activeOrg = useActiveOrganization();
+  const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
   console.log("🚀 ~ AuthRedirect ~ user:", user);
 
   useEffect(() => {
+    if (userLoading) {
+      return;
+    }
     const inviteCode = searchParams.get("inviteCode");
 
     if (inviteCode) {
@@ -24,10 +37,10 @@ export default function AuthRedirect() {
     }
 
     // If user has an organization, redirect to projects
-    if (user.organizationMemberships.length > 0) {
-      router.push("/projects");
-      return;
-    }
+    // if (user.organizationMemberships.length > 0) {
+    //   router.push("/projects");
+    //   return;
+    // }
 
     // If user has an invite but hasn't accepted it
     // if (
@@ -53,8 +66,22 @@ export default function AuthRedirect() {
       return;
     }
 
-    router.push("/login");
-  }, [user]);
+    // if (!activeOrg?.subscriptionPlan) {
+    //   router.push("/register?page=4");
+    //   return;
+    // }
+    if (pathname === "/register" || pathname === "/login" || pathname === "/") {
+      router.push("/projects");
+    }
 
-  return null;
+    setLoading(false);
+
+    // router.push("/projects");
+  }, [user, activeOrg]);
+
+  if (loading) {
+    return <LoadingPlaceholder />;
+  }
+
+  return children;
 }

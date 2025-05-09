@@ -38,8 +38,9 @@ export default function RootLayout({ children }: React.PropsWithChildren) {
     <html lang='en' dir='ltr' suppressHydrationWarning>
       <body className={clsx("h-screen bg-background")}>
         <Providers>
-          <AuthRedirect />
-          <Suspense>{children}</Suspense>
+          <AuthRedirect>
+            <Suspense>{children}</Suspense>
+          </AuthRedirect>
         </Providers>
       </body>
     </html>

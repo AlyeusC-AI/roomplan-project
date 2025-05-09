@@ -6,7 +6,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { OrganizationService } from '../organization/organization.service';
 import Stripe from 'stripe';
-
+import { CreateCheckoutSessionParams } from '@service-geek/api-client';
 @Injectable()
 export class BillingService {
   private stripe: Stripe;
@@ -23,7 +23,8 @@ export class BillingService {
     );
   }
 
-  async createCheckoutSession(organizationId: string, priceId: string) {
+  async createCheckoutSession(params: CreateCheckoutSessionParams, user: any) {
+    const { organizationId, priceId, type, plan, noTrial } = params;
     const organization = await this.organizationService.findOne(organizationId);
     if (!organization) {
       throw new NotFoundException('Organization not found');
@@ -32,21 +33,38 @@ export class BillingService {
     const session = await this.stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
+      payment_method_collection: 'if_required',
+      submit_type: 'subscribe',
+      customer_email: user?.email,
+      // billing_address_collection: 'required',
+      phone_number_collection: {
+        enabled: true,
+      },
+      metadata: {
+        userId: user!.userId,
+        organizationId: organizationId,
+      },
       line_items: [
         {
           price: priceId,
           quantity: 1,
         },
       ],
-      success_url: `${this.configService.get('FRONTEND_URL')}/organizations/${organizationId}/billing?success=true`,
-      cancel_url: `${this.configService.get('FRONTEND_URL')}/organizations/${organizationId}/billing?canceled=true`,
-      customer_email: organization.members[0]?.user.email,
-      metadata: {
-        organizationId,
-      },
+      subscription_data: noTrial
+        ? undefined
+        : {
+            trial_period_days: 14,
+            trial_settings: {
+              end_behavior: {
+                missing_payment_method: 'pause',
+              },
+            },
+          },
+      success_url: `${this.configService.get('FRONTEND_URL')}/projects?session_id={CHECKOUT_SESSION_ID}&from_checkout=true&userId=${user?.userId}&organizationId=${organizationId}&plan=${plan}`,
+      cancel_url: `${this.configService.get('FRONTEND_URL')}/${type === 'register' ? 'register?page=4' : '/settings/billing'}`,
     });
 
-    return { sessionId: session.id };
+    return session;
   }
 
   async createPortalSession(organizationId: string) {
@@ -69,8 +87,14 @@ export class BillingService {
 
   async getSubscriptionPlans() {
     const prices = await this.stripe.prices.list({
-      active: true,
       expand: ['data.product'],
+      active: true,
+      type: 'recurring',
+      recurring: {
+        interval: 'month',
+        usage_type: 'licensed',
+      },
+      lookup_keys: ['enterprise', 'team', 'startup'],
     });
 
     return prices.data.map((price) => ({
@@ -104,9 +128,10 @@ export class BillingService {
         await this.handleCheckoutSessionCompleted(session);
         break;
       }
+      case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
-        await this.handleSubscriptionUpdated(subscription);
+        await this.handleSubscriptionCreatedOrUpdated(subscription);
         break;
       }
       case 'customer.subscription.deleted': {
@@ -145,28 +170,70 @@ export class BillingService {
     });
   }
 
-  private async handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-    const organization = await this.organizationService.findBySubscriptionId(
-      subscription.id,
+  private async handleSubscriptionCreatedOrUpdated(
+    subscription: Stripe.Subscription,
+  ) {
+    // Get the price to determine the plan
+    const price = await this.stripe.prices.retrieve(
+      subscription.items.data[0].price.id,
+      { expand: ['product'] },
     );
-    if (!organization) return;
 
-    await this.organizationService.updateSubscription(organization.id, {
-      subscriptionPlan: subscription.items.data[0].price.id,
-      maxUsersForSubscription: this.getMaxUsersForPlan(
-        subscription.items.data[0].price.id,
-      ),
-      subscriptionStatus: subscription.status,
+    // Use lookup_key to determine plan type
+    const plan = price.lookup_key as 'startup' | 'team' | 'enterprise';
+
+    if (!plan || !['startup', 'team', 'enterprise'].includes(plan)) {
+      throw new BadRequestException('Invalid subscription plan');
+    }
+
+    // Calculate total users including additional seats
+    let additionalUsers = 0;
+    const additionalUserPriceId =
+      plan === 'enterprise'
+        ? this.configService.get('ADDITIONAL_USER_PRICE_ID_ENTERPRISE')
+        : this.configService.get('ADDITIONAL_USER_PRICE_ID');
+
+    // Find additional user subscription items
+    const additionalUserItem = subscription.items.data.find(
+      (item) => item.price.id === additionalUserPriceId,
+    );
+
+    if (additionalUserItem) {
+      additionalUsers = additionalUserItem.quantity || 0;
+    }
+
+    // Base users per plan
+    const baseUsers = plan === 'startup' ? 2 : plan === 'team' ? 5 : 10;
+    const totalMaxUsers = baseUsers + additionalUsers;
+
+    // Get organization ID from metadata
+    const organizationId = subscription.metadata.organizationId;
+
+    if (!organizationId) {
+      throw new BadRequestException('No organization ID in metadata');
+    }
+
+    // Update organization subscription details
+    await this.organizationService.updateSubscription(organizationId, {
+      subscriptionId: subscription.id,
+      subscriptionPlan: plan,
+      customerId: subscription.customer as string,
+      maxUsersForSubscription: totalMaxUsers,
+      freeTrialEndsAt: subscription.trial_end
+        ? new Date(subscription.trial_end * 1000)
+        : null,
     });
   }
 
   private async handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-    const organization = await this.organizationService.findBySubscriptionId(
-      subscription.id,
-    );
-    if (!organization) return;
+    const organizationId = subscription.metadata.organizationId;
 
-    await this.organizationService.updateSubscription(organization.id, {
+    if (!organizationId) {
+      throw new BadRequestException('No organization ID in metadata');
+    }
+
+    // Update organization to remove subscription
+    await this.organizationService.updateSubscription(organizationId, {
       subscriptionId: null,
       subscriptionPlan: null,
       maxUsersForSubscription: 0,

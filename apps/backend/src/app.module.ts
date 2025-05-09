@@ -8,6 +8,7 @@ import { AuthController } from './auth/auth.controller';
 import { OrganizationModule } from './organization/organization.module';
 import { EmailModule } from './email/email.module';
 import { BillingModule } from './billing/billing.module';
+import { ImageKitModule } from './imagekit/imagekit.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { BillingModule } from './billing/billing.module';
     OrganizationModule,
     EmailModule,
     BillingModule,
+    ImageKitModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

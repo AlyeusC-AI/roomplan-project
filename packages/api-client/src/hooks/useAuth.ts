@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { authService, useAuthStore } from "../services/auth";
+import { authService } from "../services/auth";
+import { useAuthStore } from "../services/storage";
 import type {
   LoginCredentials,
   RegisterCredentials,
@@ -85,5 +86,20 @@ export function useResetPassword() {
 export function useResendVerificationEmail() {
   return useMutation({
     mutationFn: (email: string) => authService.resendVerificationEmail(email),
+  });
+}
+
+export function useUpdateProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      avatar?: string;
+    }) => authService.updateProfile(data),
+    onSuccess(data, variables, context) {
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    },
   });
 }

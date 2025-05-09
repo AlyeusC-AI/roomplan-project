@@ -237,4 +237,31 @@ export class AuthService {
         'If your email is registered, you will receive a verification link',
     };
   }
+
+  async updateProfile(
+    userId: string,
+    updateData: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      avatar?: string;
+    },
+  ) {
+    // Remove email from updateData if it exists to prevent email changes
+    const { email, ...safeUpdateData } = updateData as any;
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: safeUpdateData,
+    });
+
+    return {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      phone: updatedUser.phone,
+      avatar: updatedUser.avatar,
+    };
+  }
 }

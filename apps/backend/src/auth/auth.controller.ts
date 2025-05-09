@@ -7,6 +7,7 @@ import {
   UseGuards,
   Request,
   Res,
+  Put,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -15,6 +16,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -184,5 +186,31 @@ export class AuthController {
   })
   async resendVerificationEmail(@Body('email') email: string) {
     return this.authService.resendVerificationEmail(email);
+  }
+
+  @Put('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update user profile' })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile successfully updated',
+    schema: {
+      properties: {
+        id: { type: 'string', example: '1' },
+        // email: { type: 'string', example: 'john.doe@example.com' },
+        firstName: { type: 'string', example: 'John' },
+        lastName: { type: 'string', example: 'Doe' },
+        phone: { type: 'string', example: '+1234567890' },
+        avatar: { type: 'string', example: 'https://example.com/avatar.jpg' },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async updateProfile(
+    @Request() req,
+    @Body() updateProfileDto: UpdateProfileDto,
+  ) {
+    return this.authService.updateProfile(req.user.userId, updateProfileDto);
   }
 }

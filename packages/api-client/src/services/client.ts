@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useAuthStore } from "./storage";
 
 interface ClientConfig {
   getToken: () => Promise<string | null>;
@@ -23,3 +24,7 @@ export const createClient = (config: ClientConfig) => {
 
   return instance;
 };
+
+export const apiClient = createClient({
+  getToken: async () => useAuthStore.getState().token,
+});

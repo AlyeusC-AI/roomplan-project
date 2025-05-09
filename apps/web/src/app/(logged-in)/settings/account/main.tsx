@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,10 +18,14 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
 import { useState } from "react";
 import { Label } from "@components/ui/label";
-import { createClient } from "@lib/supabase/client";
 import { userInfoStore } from "@atoms/user-info";
 import { LoadingSpinner } from "@components/ui/spinner";
 import { PhoneInput } from "@components/ui/phone-input";
+import {
+  useUpdateProfile,
+  useCurrentUser,
+  uploadImage,
+} from "@service-geek/api-client";
 
 const profileFormSchema = z.object({
   firstName: z
@@ -50,7 +53,8 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function AccountSettings() {
-  const { user, setUser } = userInfoStore();
+  // const { user, setUser } = userInfoStore();
+  const { data: user } = useCurrentUser();
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     mode: "onChange",
@@ -67,41 +71,41 @@ export default function AccountSettings() {
   const [uploadedImagePath, setUploadedImagePath] = useState<string | null>(
     null
   );
-  const client = createClient();
+  const updateProfile = useUpdateProfile();
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (event.target.files?.length) {
       const image = event.target.files[0];
       setSelectedImage(image);
       setUploadedImagePath(URL.createObjectURL(image));
-    }
-  };
+      setLoading(true);
 
-  const uploadImageIfNecessary = async () => {
-    if (!selectedImage || !user?.id) return;
+      try {
+        const result = await uploadImage(image, {
+          folder: "avatars",
+          useUniqueFileName: true,
+        });
 
-    try {
-      const { error } = await client.storage
-        .from("profile-pictures")
-        .upload(`${user.id}/avatar.png`, selectedImage);
+        const { email, ...rest } = form.getValues();
+        const updatedUser = await updateProfile.mutateAsync({
+          ...rest,
+          avatar: result.url ?? undefined,
+        });
 
-      console.log(user.id);
-
-      if (error) {
-        toast.error("Error uploading image");
-        console.error(error);
+        removeSelectedImage();
+        toast.success("Profile picture updated successfully");
+      } catch (error) {
+        console.error("Error updating profile picture:", error);
+        toast.error("Failed to update profile picture");
+      } finally {
         setLoading(false);
-        return;
       }
-      removeSelectedImage();
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      throw error;
     }
   };
 
   const removeSelectedImage = () => {
-    setLoading(false);
     setUploadedImagePath(null);
     setSelectedImage(null);
   };
@@ -111,26 +115,44 @@ export default function AccountSettings() {
     setLoading(true);
 
     try {
-      await fetch("/api/v1/user", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+      let avatarUrl = user.avatar;
+      if (selectedImage) {
+        avatarUrl = (await uploadImageIfNecessary()) ?? null;
+      }
+
+      const { email, ...rest } = data;
+      const updatedUser = await updateProfile.mutateAsync({
+        ...rest,
+        avatar: avatarUrl ?? undefined,
       });
 
-      await uploadImageIfNecessary();
-
-      setLoading(false);
-
-      setUser({ ...user, ...data });
-
+      // setUser(updatedUser);
+      removeSelectedImage();
       toast.success("Profile updated successfully");
     } catch (error) {
-      toast.error("Error updating profile");
+      // toast.error("Error updating profile");
       console.error("Error updating profile:", error);
+    } finally {
+      setLoading(false);
     }
   }
+
+  const uploadImageIfNecessary = async () => {
+    if (!selectedImage || !user?.id) return;
+
+    try {
+      const result = await uploadImage(selectedImage, {
+        folder: "avatars",
+        useUniqueFileName: true,
+      });
+
+      return result.url;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast.error("Failed to upload image");
+      throw error;
+    }
+  };
 
   return (
     <Form {...form}>
@@ -139,6 +161,7 @@ export default function AccountSettings() {
           <AvatarImage
             src={
               uploadedImagePath ??
+              user?.avatar ??
               `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profile-pictures/${user?.id}/avatar.png`
             }
             alt={`${user?.firstName ?? ""} ${user?.lastName ?? ""}`}
@@ -157,7 +180,9 @@ export default function AccountSettings() {
             id='picture'
             type='file'
             onChange={handleImageChange}
+            disabled={loading}
           />
+          {loading && <LoadingSpinner className='mt-2' />}
         </div>
         <FormField
           control={form.control}
@@ -236,8 +261,7 @@ export default function AccountSettings() {
                 />
               </FormControl>
               <FormDescription>
-                This is the email address that is associated with your account.
-                You cannot change it.
+                Enter your phone number for contact purposes.
               </FormDescription>
               <FormMessage />
             </FormItem>

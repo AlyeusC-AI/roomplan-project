@@ -10,6 +10,12 @@ export interface Organization {
   lng?: number;
   createdAt: Date;
   updatedAt: Date;
+  subscriptionId?: string;
+  subscriptionPlan?: string;
+  customerId?: string;
+  maxUsersForSubscription?: number;
+  freeTrialEndsAt?: Date;
+  subscriptionStatus?: string;
 }
 
 export interface OrganizationMembership {

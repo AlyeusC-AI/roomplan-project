@@ -8,6 +8,7 @@ import {
   RawBodyRequest,
   Req,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { BillingService } from './billing.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -51,8 +52,22 @@ export class BillingController {
   async createCheckoutSession(
     @Param('organizationId') organizationId: string,
     @Body('priceId') priceId: string,
+    @Body('type') type: string,
+    @Body('plan') plan: string,
+    @Body('noTrial') noTrial: boolean,
+    @Req() request,
   ) {
-    return this.billingService.createCheckoutSession(organizationId, priceId);
+    const user = request.user;
+    return this.billingService.createCheckoutSession(
+      {
+        organizationId,
+        priceId,
+        type,
+        plan,
+        noTrial,
+      },
+      user,
+    );
   }
 
   @Post('organizations/:organizationId/portal')
@@ -81,6 +96,7 @@ export class BillingController {
   }
 
   @Post('webhook')
+  @UseGuards()
   @ApiOperation({ summary: 'Handle Stripe webhook events' })
   @ApiResponse({
     status: 200,
@@ -91,6 +107,9 @@ export class BillingController {
     @Headers('stripe-signature') signature: string,
     @Req() request: RawBodyRequest<any>,
   ) {
+    if (!request.rawBody) {
+      throw new BadRequestException('No raw body found');
+    }
     return this.billingService.handleWebhook(signature, request.rawBody);
   }
 }
