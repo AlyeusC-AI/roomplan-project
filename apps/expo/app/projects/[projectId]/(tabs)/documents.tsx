@@ -369,7 +369,7 @@ export default function ProjectDocumentsPage() {
               Are you sure you want to delete the document "
               {documentToDelete?.name}"? This action cannot be undone.
             </Text>
-            <View className="flex-row space-x-4">
+            <View className="flex-row space-x-4 gap-2 pb-6">
               <TouchableOpacity
                 onPress={() => setShowDeleteDialog(false)}
                 className="flex-1 bg-gray-100 py-4 rounded-xl"
