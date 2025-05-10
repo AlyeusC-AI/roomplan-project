@@ -79,9 +79,8 @@ export default function Organization() {
         .from("org-pictures")
         .upload(`${organization.publicId}/avatar.png`, selectedImage, {
           upsert: true,
-
         });
-        console.log("🚀 ~ uploadImageIfNecessary ~ error, data:", error, data)
+      console.log("🚀 ~ uploadImageIfNecessary ~ error, data:", error, data);
 
       if (error) {
         toast.error("Error uploading image");
@@ -162,11 +161,12 @@ export default function Organization() {
         setOrganization(data);
         form.setValue("name", data.name ?? "");
         form.setValue("phoneNumber", data.phoneNumber ?? "");
-        const address =  data.address ? JSON.parse(data.address) : null;
+        const address = data.address ? JSON.parse(data.address) : null;
         setAddress(address);
         // setSearchInput(address?.formattedAddress ?? "");
       });
   }, []);
+  const [date, setDate] = useState(new Date());
 
   return (
     <div className='flex flex-col'>
@@ -175,7 +175,7 @@ export default function Organization() {
           <AvatarImage
             src={
               uploadedImagePath ??
-              `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/org-pictures/${organization?.publicId ?? ""}/avatar.png`
+              `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/org-pictures/${organization?.publicId ?? ""}/avatar.png?t=${date.getTime()}`
             }
             alt={organization?.name ?? ""}
           />
@@ -238,7 +238,9 @@ export default function Organization() {
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
-                  <FormDescription>Your organization phone number.</FormDescription>
+                  <FormDescription>
+                    Your organization phone number.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
