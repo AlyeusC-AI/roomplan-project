@@ -1,65 +1,50 @@
-import { Dispatch, SetStateAction, useState } from "react";
-import { TertiaryButton } from "@components/components/button";
+import { useState } from "react";
+import { Button } from "@components/ui/button";
 import { TrashIcon } from "lucide-react";
-import useAmplitudeTrack from "@utils/hooks/useAmplitudeTrack";
+import { useRemoveMember } from "@service-geek/api-client";
+import { toast } from "sonner";
 
 const RemoveTeamMember = ({
   isAdmin,
   id,
   email,
-  removeTeamMember,
-  setEmailStatus,
+  orgId,
 }: {
   isAdmin: boolean;
   id: string;
   email: string;
-  removeTeamMember: (id: string) => void;
-  setEmailStatus: Dispatch<
-    SetStateAction<{
-      ok: boolean;
-      message: string;
-    } | null>
-  >;
+  orgId: string;
 }) => {
   const [loadingDelete, setLoadingDelete] = useState(false);
-  const { track } = useAmplitudeTrack();
-  const removeMember = async (id: string, memberEmail: string) => {
+  const removeMember = useRemoveMember();
+
+  const handleRemove = async () => {
     setLoadingDelete(true);
     try {
-      const res = await fetch(`/api/v1/organization/member/${id}`, {
-        method: "DELETE",
+      await removeMember.mutateAsync({
+        orgId,
+        memberId: id,
       });
-      if (res.ok) {
-        track("Remove Organization Team Member");
-        removeTeamMember(memberEmail);
-        setEmailStatus({
-          ok: true,
-          message: `Removed ${memberEmail} from the organization.`,
-        });
-      } else {
-        setEmailStatus({
-          ok: false,
-          message: `Could not remove ${memberEmail}. Please try again.`,
-        });
-      }
+      toast.success(`Removed ${email} from the organization.`);
     } catch (error) {
-      setEmailStatus({
-        ok: false,
-        message: `Could not remove ${memberEmail}. Please try again.`,
-      });
+      console.error(error);
+      toast.error(`Could not remove ${email}. Please try again.`);
+    } finally {
+      setLoadingDelete(false);
     }
-    setLoadingDelete(false);
   };
 
   if (isAdmin) return null;
   return (
-    <TertiaryButton
-      loading={loadingDelete}
-      variant='danger'
-      onClick={() => removeMember(id, email)}
+    <Button
+      variant='ghost'
+      size='icon'
+      onClick={handleRemove}
+      disabled={loadingDelete}
+      className='text-destructive hover:text-destructive/90'
     >
-      <TrashIcon className='h-6' />
-    </TertiaryButton>
+      <TrashIcon className='h-4 w-4' />
+    </Button>
   );
 };
 

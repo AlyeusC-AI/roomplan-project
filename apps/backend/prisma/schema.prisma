@@ -35,6 +35,11 @@ model Organization {
   name                    String
   phoneNumber             String?
   address                 String?
+  formattedAddress        String?
+  city                    String?
+  region                  String?
+  postalCode              String?
+  country                 String?
   faxNumber               String?
   size                    Int?
   isDeleted               Boolean   @default(false)
@@ -55,16 +60,31 @@ model Organization {
   members OrganizationMember[]
 }
 
+enum MemberStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+  PROJECT_MANAGER
+  ACCOUNT_MANAGER
+  CONTRACTOR
+}
+
 model OrganizationMember {
-  id             String    @id @default(uuid())
+  id             String       @id @default(uuid())
   organizationId String
   userId         String
-  role           String    @default("member") // Can be: owner, admin, member
-  status         String    @default("pending") // Can be: pending, active, rejected
-  invitedAt      DateTime  @default(now())
+  role           Role         @default(MEMBER) // Can be: owner, admin, member
+  status         MemberStatus @default(PENDING) // Can be: pending, active, rejected
+  invitedAt      DateTime     @default(now())
   joinedAt       DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   // Relationships
   organization Organization @relation(fields: [organizationId], references: [id])

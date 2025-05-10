@@ -24,15 +24,20 @@ export default function AuthRedirect({
     if (userLoading) {
       return;
     }
-    const inviteCode = searchParams.get("inviteCode");
-
-    if (inviteCode) {
-      router.push(`/acceptInvite?inviteCode=${inviteCode}`);
-      return;
-    }
 
     if (!user) {
-      router.push("/login");
+      setLoading(false);
+
+      if (
+        !(
+          pathname === "/register" ||
+          pathname === "/login" ||
+          pathname === "/acceptInvite"
+        )
+      ) {
+        router.push("/login");
+      }
+
       return;
     }
 
@@ -52,9 +57,26 @@ export default function AuthRedirect({
     //   );
     //   return;
     // }
+    if (pathname === "/acceptInvite") {
+      setLoading(false);
+      return;
+    }
+    const member = user.organizationMemberships.find(
+      (org) => org.organization.id === activeOrg?.id
+    );
+    console.log("🚀 ~ useEffect ~ member:", member);
+
+    if (member?.status === "PENDING") {
+      setLoading(false);
+      router.push(`/acceptInvite?orgId=${activeOrg?.id}&memberId=${member.id}`);
+      return;
+    }
+
     // If user is not verified
     if (!user.isEmailVerified) {
       router.push("/register?page=2");
+      setLoading(false);
+
       return;
     }
     // If user is verified but has no organization
@@ -63,6 +85,8 @@ export default function AuthRedirect({
       user.organizationMemberships.length === 0
     ) {
       router.push("/register?page=3");
+      setLoading(false);
+
       return;
     }
 

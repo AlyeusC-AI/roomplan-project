@@ -37,7 +37,13 @@ export function OrganizationForm() {
   const [formData, setFormData] = useState<Partial<CreateOrganizationDto>>({
     name: "",
     phoneNumber: "",
-    address: "",
+    formattedAddress: "",
+    lat: 0,
+    lng: 0,
+    city: "",
+    region: "",
+    postalCode: "",
+    country: "",
     size: sizeOptions[0].value,
   });
   const [address, setAddress] = useState<AddressType | null>(null);
@@ -88,9 +94,13 @@ export function OrganizationForm() {
     if (newAddress) {
       setFormData((prev) => ({
         ...prev,
-        address: newAddress.formattedAddress,
+        formattedAddress: newAddress.formattedAddress,
         lat: newAddress.lat,
         lng: newAddress.lng,
+        city: newAddress.city,
+        region: newAddress.region,
+        postalCode: newAddress.postalCode,
+        country: newAddress.country,
       }));
     }
   };
@@ -101,7 +111,7 @@ export function OrganizationForm() {
       setLoading(true);
 
       // Validate required fields
-      if (!formData.name || !formData.address || !formData.size) {
+      if (!formData.name || !formData.formattedAddress || !formData.size) {
         toast.error("Please complete all required fields");
         setLoading(false);
         return;

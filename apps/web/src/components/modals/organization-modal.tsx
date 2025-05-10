@@ -77,7 +77,13 @@ export function OrganizationModal({
   const [formData, setFormData] = useState<Partial<CreateOrganizationDto>>({
     name: "",
     phoneNumber: "",
-    address: "",
+    formattedAddress: "",
+    lat: 0,
+    lng: 0,
+    city: "",
+    region: "",
+    postalCode: "",
+    country: "",
     size: sizeOptions[0].value,
   });
   const [address, setAddress] = useState<AddressType | null>(null);
@@ -94,19 +100,24 @@ export function OrganizationModal({
       setFormData({
         name: organization.name,
         phoneNumber: organization.phoneNumber || "",
-        address: organization.address || "",
+        formattedAddress: organization.formattedAddress || "",
+        lat: organization.lat || 0,
+        lng: organization.lng || 0,
+        city: organization.city || "",
+        region: organization.region || "",
+        postalCode: organization.postalCode || "",
+        country: organization.country || "",
         size: organization.size || sizeOptions[0].value,
       });
-      if (organization.address) {
+      if (organization.formattedAddress) {
         setAddress({
-          address: organization.address,
-          formattedAddress: organization.address,
+          formattedAddress: organization.formattedAddress,
           lat: organization.lat || 0,
           lng: organization.lng || 0,
-          city: "",
-          region: "",
-          postalCode: "",
-          country: "",
+          city: organization.city || "",
+          region: organization.region || "",
+          postalCode: organization.postalCode || "",
+          country: organization.country || "",
         });
       }
     } else {
@@ -114,7 +125,13 @@ export function OrganizationModal({
       setFormData({
         name: "",
         phoneNumber: "",
-        address: "",
+        formattedAddress: "",
+        lat: 0,
+        lng: 0,
+        city: "",
+        region: "",
+        postalCode: "",
+        country: "",
         size: sizeOptions[0].value,
       });
       setAddress(null);
@@ -137,9 +154,13 @@ export function OrganizationModal({
     if (newAddress) {
       setFormData((prev) => ({
         ...prev,
-        address: newAddress.formattedAddress,
+        formattedAddress: newAddress.formattedAddress,
         lat: newAddress.lat,
         lng: newAddress.lng,
+        city: newAddress.city,
+        region: newAddress.region,
+        postalCode: newAddress.postalCode,
+        country: newAddress.country,
       }));
     }
   };
@@ -150,7 +171,7 @@ export function OrganizationModal({
       setLoading(true);
 
       // Validate required fields
-      if (!formData.name || !formData.address || !formData.size) {
+      if (!formData.name || !formData.formattedAddress || !formData.size) {
         toast.error("Please complete all required fields");
         setLoading(false);
         return;
@@ -257,12 +278,15 @@ export function OrganizationModal({
                 <div className='relative'>
                   <MapPin className='absolute left-3 top-2.5 h-4 w-4 text-muted-foreground' />
                   <AddressAutoComplete
-                    placeholder='Enter your address'
                     address={address}
                     setAddress={handleAddressChange}
                     searchInput={addressSearch}
                     setSearchInput={setAddressSearch}
                     dialogTitle='Organization Address'
+                    placeholder={
+                      address?.formattedAddress ??
+                      "Enter your organization address"
+                    }
                   />
                 </div>
               </div>

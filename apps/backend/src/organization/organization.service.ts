@@ -4,17 +4,26 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Organization, Prisma, OrganizationMember, User } from '@prisma/client';
+import {
+  Organization,
+  Prisma,
+  OrganizationMember,
+  User,
+  Role,
+  MemberStatus,
+} from '@prisma/client';
 import { InviteMemberDto } from './dto/invite-member.dto';
 import { EmailService } from '../email/email.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
-
+import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class OrganizationService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
+    private jwtService: JwtService,
   ) {}
 
   async create(createOrganizationDto: CreateOrganizationDto, ownerId: string) {
@@ -28,8 +37,8 @@ export class OrganizationService {
                 id: ownerId,
               },
             },
-            role: 'owner',
-            status: 'active',
+            role: Role.OWNER,
+            status: MemberStatus.ACTIVE,
             joinedAt: new Date(),
           },
         },
@@ -96,8 +105,8 @@ export class OrganizationService {
       where: {
         organizationId: id,
         userId: userId,
-        role: { in: ['owner', 'admin'] },
-        status: 'active',
+        // role: { in: ['owner', 'admin'] },
+        status: MemberStatus.ACTIVE,
       },
     });
 
@@ -126,8 +135,8 @@ export class OrganizationService {
       where: {
         organizationId: id,
         userId: userId,
-        role: 'owner',
-        status: 'active',
+        role: Role.OWNER,
+        status: MemberStatus.ACTIVE,
       },
     });
 
@@ -201,8 +210,8 @@ export class OrganizationService {
       where: {
         organizationId,
         userId: inviterId,
-        role: { in: ['owner', 'admin'] },
-        status: 'active',
+        role: { in: [Role.OWNER, Role.ADMIN] },
+        status: MemberStatus.ACTIVE,
       },
     });
 
@@ -212,30 +221,16 @@ export class OrganizationService {
       );
     }
 
-    // Check if user is already a member
-    const existingMember = await this.prisma.organizationMember.findFirst({
-      where: {
-        organizationId,
-        userId: inviteMemberDto.userId,
-      },
-    });
-
-    if (existingMember) {
-      throw new BadRequestException(
-        'User is already a member of this organization',
-      );
-    }
-
     // Check organization's user limit
     const activeMembers = organization.members.filter(
-      (m) => m.status === 'active',
+      (m) => m.status === MemberStatus.ACTIVE,
     ).length;
-    if (
-      organization.maxUsersForSubscription &&
-      activeMembers >= organization.maxUsersForSubscription
-    ) {
-      throw new BadRequestException('Organization has reached its user limit');
-    }
+    // if (
+    //   organization.maxUsersForSubscription &&
+    //   activeMembers >= organization.maxUsersForSubscription
+    // ) {
+    //   throw new BadRequestException('Organization has reached its user limit');
+    // }
 
     // Get inviter's name
     const inviterUser = await this.prisma.user.findUnique({
@@ -246,21 +241,69 @@ export class OrganizationService {
       throw new NotFoundException('Inviter not found');
     }
 
+    // Check if user already exists
+    let user = await this.prisma.user.findUnique({
+      where: { email: inviteMemberDto.email },
+    });
+
+    // If user doesn't exist, create a temporary user
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email: inviteMemberDto.email,
+          firstName: inviteMemberDto.firstName || '',
+          lastName: inviteMemberDto.lastName || '',
+          password: '', // Temporary password, user will need to set a real password during registration
+          isEmailVerified: true,
+        },
+      });
+    }
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    // Check if user is already a member
+    const existingMember = await this.prisma.organizationMember.findFirst({
+      where: {
+        organizationId,
+        userId: user.id,
+      },
+    });
+
+    if (existingMember) {
+      throw new BadRequestException(
+        'User is already a member of this organization',
+      );
+    }
+
     // Create member invitation
     const member = await this.prisma.organizationMember.create({
       data: {
-        organizationId,
-        userId: inviteMemberDto.userId,
-        role: inviteMemberDto.role || 'member',
+        organization: {
+          connect: {
+            id: organizationId,
+          },
+        },
+        role: inviteMemberDto.role || Role.MEMBER,
+        status: MemberStatus.PENDING,
+        user: {
+          connect: {
+            id: user.id,
+          },
+        },
       },
       include: {
         user: true,
         organization: true,
       },
     });
+    const token = this.jwtService.sign({
+      sub: member.user.id,
+      email: member.user.email,
+    });
 
     // Send invitation email
-    const invitationLink = `${process.env.FRONTEND_URL}/organizations/${organizationId}/invitations/${member.id}`;
+    const invitationLink = `${process.env.FRONTEND_URL}/acceptInvite?token=${token}&orgId=${organizationId}`;
     await this.emailService.sendOrganizationInvitation(
       member.user.email,
       organization.name,
@@ -275,13 +318,22 @@ export class OrganizationService {
     organizationId: string,
     memberId: string,
     userId: string,
+    userData?: {
+      firstName?: string;
+      lastName?: string;
+      password?: string;
+      phone?: string;
+    },
   ) {
     const member = await this.prisma.organizationMember.findFirst({
       where: {
         id: memberId,
         organizationId,
         userId,
-        status: 'pending',
+        status: MemberStatus.PENDING,
+      },
+      include: {
+        user: true,
       },
     });
 
@@ -289,17 +341,38 @@ export class OrganizationService {
       throw new NotFoundException('Invitation not found');
     }
 
-    return this.prisma.organizationMember.update({
+    // If user data is provided, update the user
+    if (userData) {
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          password: hashedPassword,
+          phone: userData.phone,
+          isEmailVerified: true,
+        },
+      });
+    }
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+    });
+    await this.prisma.organizationMember.update({
       where: { id: memberId },
       data: {
-        status: 'active',
+        status: MemberStatus.ACTIVE,
         joinedAt: new Date(),
       },
-      include: {
-        user: true,
-        organization: true,
-      },
     });
+    const payload = { sub: user.id, email: user.email };
+    const access_token = this.jwtService.sign(payload);
+
+    return {
+      access_token,
+      user,
+    };
   }
 
   async rejectInvitation(
@@ -312,7 +385,7 @@ export class OrganizationService {
         id: memberId,
         organizationId,
         userId,
-        status: 'pending',
+        status: MemberStatus.PENDING,
       },
     });
 
@@ -323,9 +396,71 @@ export class OrganizationService {
     return this.prisma.organizationMember.update({
       where: { id: memberId },
       data: {
-        status: 'rejected',
+        status: MemberStatus.REJECTED,
       },
     });
+  }
+
+  async resendInvitation(
+    organizationId: string,
+    memberId: string,
+    inviterId: string,
+  ) {
+    // Check if inviter is owner or admin
+    const inviter = await this.prisma.organizationMember.findFirst({
+      where: {
+        organizationId,
+        userId: inviterId,
+        role: { in: [Role.OWNER, Role.ADMIN] },
+        status: MemberStatus.ACTIVE,
+      },
+    });
+
+    if (!inviter) {
+      throw new BadRequestException(
+        'You do not have permission to resend invitations',
+      );
+    }
+
+    const member = await this.prisma.organizationMember.findFirst({
+      where: {
+        id: memberId,
+        organizationId,
+        status: MemberStatus.PENDING,
+      },
+      include: {
+        user: true,
+        organization: true,
+      },
+    });
+
+    if (!member) {
+      throw new NotFoundException('Invitation not found');
+    }
+
+    // Get inviter's name
+    const inviterUser = await this.prisma.user.findUnique({
+      where: { id: inviterId },
+    });
+
+    if (!inviterUser) {
+      throw new NotFoundException('Inviter not found');
+    }
+    const token = this.jwtService.sign({
+      sub: member.user.id,
+      email: member.user.email,
+    });
+
+    // Send invitation email
+    const invitationLink = `${process.env.FRONTEND_URL}/acceptInvite?token=${token}&orgId=${organizationId}`;
+    await this.emailService.sendOrganizationInvitation(
+      member.user.email,
+      member.organization.name,
+      `${inviterUser.firstName} ${inviterUser.lastName}`,
+      invitationLink,
+    );
+
+    return member;
   }
 
   async removeMember(organizationId: string, memberId: string, userId: string) {
@@ -334,8 +469,8 @@ export class OrganizationService {
       where: {
         organizationId,
         userId,
-        role: { in: ['owner', 'admin'] },
-        status: 'active',
+        role: { in: [Role.OWNER, Role.ADMIN] },
+        status: MemberStatus.ACTIVE,
       },
     });
 
@@ -353,7 +488,7 @@ export class OrganizationService {
       },
     });
 
-    if (targetMember?.role === 'owner') {
+    if (targetMember?.role === Role.OWNER) {
       throw new BadRequestException('Cannot remove the organization owner');
     }
 
@@ -369,6 +504,51 @@ export class OrganizationService {
       where: {
         organizationId,
       },
+      include: {
+        user: true,
+      },
+    });
+  }
+
+  async updateMember(
+    organizationId: string,
+    memberId: string,
+    data: { role: string },
+    userId: string,
+  ) {
+    // Check if user is owner or admin
+    const currentUser = await this.prisma.organizationMember.findFirst({
+      where: {
+        organizationId,
+        userId,
+        role: { in: [Role.OWNER, Role.ADMIN] },
+        status: MemberStatus.ACTIVE,
+      },
+    });
+
+    if (!currentUser) {
+      throw new BadRequestException(
+        'You do not have permission to update member roles',
+      );
+    }
+
+    // Check if trying to update owner
+    const targetMember = await this.prisma.organizationMember.findFirst({
+      where: {
+        id: memberId,
+        organizationId,
+      },
+    });
+
+    if (targetMember?.role === Role.OWNER) {
+      throw new BadRequestException(
+        'Cannot update the organization owner role',
+      );
+    }
+
+    return this.prisma.organizationMember.update({
+      where: { id: memberId },
+      data: { role: data.role as Role },
       include: {
         user: true,
       },

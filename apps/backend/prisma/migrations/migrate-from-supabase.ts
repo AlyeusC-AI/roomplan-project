@@ -1,5 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import { createClient, PostgrestSingleResponse } from '@supabase/supabase-js';
+import { MemberStatus, PrismaClient, Role } from '@prisma/client';
+import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import { Database } from '../../src/types/database';
 
@@ -243,8 +243,8 @@ async function migrateOrganizationMemberships() {
             connect: { supabaseId: membership.Organization.publicId },
           },
           user: { connect: { supabaseId: membership.User.id } },
-          role: membership.role || 'member',
-          status: 'active', // Assuming active members in Supabase
+          role: membership.role || Role.MEMBER,
+          status: MemberStatus.ACTIVE, // Assuming active members in Supabase
           invitedAt: new Date(membership.createdAt),
           joinedAt: new Date(membership.createdAt),
           createdAt: new Date(membership.createdAt),
@@ -255,8 +255,8 @@ async function migrateOrganizationMemberships() {
             connect: { supabaseId: membership.Organization.publicId },
           },
           user: { connect: { supabaseId: membership.User.id } },
-          role: membership.role || 'member',
-          status: 'active', // Assuming active members in Supabase
+          role: membership.role || Role.MEMBER,
+          status: MemberStatus.ACTIVE, // Assuming active members in Supabase
         },
       });
       console.log(

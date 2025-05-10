@@ -3,17 +3,18 @@ import type {
   CreateOrganizationDto,
   UpdateOrganizationDto,
   Organization,
+  OrganizationMembership,
 } from "../types/organization";
 import { useAuthStore } from "./storage";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-
+import { User } from "../types/auth";
 const client = createClient({
   getToken: async () => useAuthStore.getState().token,
 });
 
 interface OrganizationState {
-  activeOrganization: Organization | null;
+  activeOrganization: string | null;
   setActiveOrganization: (org: Organization | null) => void;
   clearActiveOrganization: () => void;
 }
@@ -22,7 +23,7 @@ export const useOrganizationStore = create<OrganizationState>()(
   persist(
     (set) => ({
       activeOrganization: null,
-      setActiveOrganization: (org) => set({ activeOrganization: org }),
+      setActiveOrganization: (org) => set({ activeOrganization: org?.id }),
       clearActiveOrganization: () => set({ activeOrganization: null }),
     }),
     {
@@ -56,15 +57,36 @@ export const organizationService = {
   inviteMember: (orgId: string, data: { email: string }) =>
     client.post(`/organizations/${orgId}/invite`, data),
 
-  acceptInvitation: (orgId: string, memberId: string) =>
-    client.post(`/organizations/${orgId}/invitations/${memberId}/accept`),
+  acceptInvitation: (
+    orgId: string,
+    memberId: string,
+    userData?: {
+      firstName?: string;
+      lastName?: string;
+      password?: string;
+      phone?: string;
+    }
+  ): Promise<{
+    access_token: string;
+    user: User;
+  }> =>
+    client.post(
+      `/organizations/${orgId}/invitations/${memberId}/accept`,
+      userData
+    ),
 
   rejectInvitation: (orgId: string, memberId: string) =>
     client.post(`/organizations/${orgId}/invitations/${memberId}/reject`),
+
+  resendInvitation: (orgId: string, memberId: string) =>
+    client.post(`/organizations/${orgId}/invitations/${memberId}/resend`),
 
   removeMember: (orgId: string, memberId: string) =>
     client.delete(`/organizations/${orgId}/members/${memberId}`),
 
   getOrganizationMembers: (orgId: string) =>
-    client.get(`/organizations/${orgId}/members`),
+    client.get<OrganizationMembership[]>(`/organizations/${orgId}/members`),
+
+  updateMember: (orgId: string, memberId: string, data: { role: string }) =>
+    client.patch(`/organizations/${orgId}/members/${memberId}`, data),
 };

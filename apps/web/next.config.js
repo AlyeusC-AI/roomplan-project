@@ -19,7 +19,7 @@ const nextConfig = {
   },
   productionBrowserSourceMaps: true,
   images: {
-    domains: ["zmvdimcemmhesgabixlf.supabase.co", "bit.ly"],
+    domains: ["zmvdimcemmhesgabixlf.supabase.co", "bit.ly", "ik.imagekit.io"],
   },
 };
 

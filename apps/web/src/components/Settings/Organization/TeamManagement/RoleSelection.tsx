@@ -3,105 +3,100 @@ import { toast } from "sonner";
 import { Spinner } from "@components/components";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronDownIcon } from "lucide-react";
-import useAmplitudeTrack from "@utils/hooks/useAmplitudeTrack";
+import {
+  OrganizationMembership,
+  useUpdateMember,
+} from "@service-geek/api-client";
 import clsx from "clsx";
-import { teamMembersStore } from "@atoms/team-members";
-import { Database } from "@/types/database";
 
-type AccessLevel = Database["public"]["Enums"]["AccessLevel"];
-
-const RoleToDescription: Record<AccessLevel, string> = {
-  admin: "Account Administrator",
-  accountManager: "Account Manager",
-  projectManager: "Project Manager",
-  contractor: "Contractor",
-  viewer: "Viewer",
-  owner: "Owner",
+const RoleToDescription: Record<string, string> = {
+  ADMIN: "Account Administrator",
+  ACCOUNT_MANAGER: "Account Manager",
+  PROJECT_MANAGER: "Project Manager",
+  CONTRACTOR: "Contractor",
+  MEMBER: "Member",
+  OWNER: "Owner",
 };
 
 interface PublishingOption {
   title: string;
   description: string;
   current: boolean;
-  accessLevel: AccessLevel;
+  role: string;
 }
+
 const publishingOptions: PublishingOption[] = [
   {
-    title: RoleToDescription["admin"],
-    description: "Full access.",
+    title: RoleToDescription["ADMIN"],
+    description: "Full access to all organization features.",
     current: true,
-    accessLevel: "admin",
+    role: "ADMIN",
   },
   {
-    title: RoleToDescription["accountManager"],
+    title: RoleToDescription["ACCOUNT_MANAGER"],
     description: "Access to everything except billing.",
     current: false,
-    accessLevel: "accountManager",
+    role: "ACCOUNT_MANAGER",
   },
   {
-    title: "projectManager",
+    title: RoleToDescription["PROJECT_MANAGER"],
     description:
-      "Access to everything except billing, and organization settings",
+      "Access to everything except billing and organization settings.",
     current: false,
-    accessLevel: "projectManager",
+    role: "PROJECT_MANAGER",
   },
   {
-    title: "contractor",
-    description: "Only able to access projects that they are assigned to",
+    title: RoleToDescription["CONTRACTOR"],
+    description: "Only able to access projects that they are assigned to.",
     current: false,
-    accessLevel: "contractor",
+    role: "CONTRACTOR",
   },
   {
-    title: "viewer",
-    description: "Only able to view projects that they are assigned to",
+    title: RoleToDescription["MEMBER"],
+    description: "Basic access to assigned projects.",
     current: false,
-    accessLevel: "viewer",
+    role: "MEMBER",
+  },
+  {
+    title: RoleToDescription["OWNER"],
+    description: "Full access to all organization features.",
+    current: false,
+    role: "OWNER",
   },
 ];
 
-export default function RollSelection({ member }: { member: Assignee }) {
+interface RoleSelectionProps {
+  member: OrganizationMembership;
+  orgId: string;
+  onRoleChange?: () => void;
+}
+
+export default function RoleSelection({
+  member,
+  orgId,
+  onRoleChange,
+}: RoleSelectionProps) {
   const [loading, setIsLoading] = useState(false);
-  const { track } = useAmplitudeTrack();
-  const selected = publishingOptions.find(
-    (o) => o.accessLevel === member.User?.accessLevel
-  );
+  const updateMember = useUpdateMember();
+  const selected = publishingOptions.find((o) => o.role === member.role);
+
   const onSelect = async (option: PublishingOption) => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/v1/organization/member`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          accessLevel: option.accessLevel,
-          userId: member.userId,
-        }),
+      await updateMember.mutateAsync({
+        orgId,
+        memberId: member.id,
+        data: { role: option.role },
       });
-      if (res.ok) {
-        track("Update Organization Team Member Role");
-        teamMembersStore
-          .getState()
-          .changeAccessLevel(member.userId, option.accessLevel);
-        // setTeamMembers((prevTeamMembers) => {
-        //   const nextState = produce(prevTeamMembers, (draft) => {
-        //     const memberIndex = prevTeamMembers.findIndex(
-        //       (m) => m.user.id === member.user.id
-        //     )
-        //     draft[memberIndex] = {
-        //       ...member,
-        //       accessLevel: option.accessLevel,
-        //     }
-        //   })
-        //   return nextState
-        // })
-        toast.success("Successfully updated user role");
-      } else {
-        toast.error("Could not update user role.");
-      }
+      toast.success("Successfully updated user role");
+      onRoleChange?.();
     } catch (error) {
       console.error(error);
       toast.error("Could not update user role.");
     }
     setIsLoading(false);
   };
+
   return (
     <Listbox value={selected} onChange={onSelect} disabled={loading}>
       {({ open }) => (

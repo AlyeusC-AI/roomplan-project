@@ -2,7 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
+import { MemberStatus, Role } from '@prisma/client';
+import { PrismaService } from './prisma/prisma.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -49,5 +51,13 @@ async function bootstrap() {
   console.log(
     `Swagger is running on http://localhost:${process.env.PORT ?? 3000}/api`,
   );
+
+  // const prisma = app.get(PrismaService);
+  // await prisma.user.updateMany({
+  //   // where: {
+  //   //   status: MemberStatus.PENDING,
+  //   // },
+  //   data: { acceptReminders: true, isEmailVerified: true },
+  // });
 }
 bootstrap();

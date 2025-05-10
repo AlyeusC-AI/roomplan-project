@@ -195,6 +195,9 @@ export class AuthService {
       where: { id: user.userId },
       include: {
         organizationMemberships: {
+          // where: {
+          //   status: 'ACTIVE',
+          // },
           include: {
             organization: true,
           },

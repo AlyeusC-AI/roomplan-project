@@ -44,7 +44,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
           <aside className=''>
             <SidebarNav items={sidebarNavItems} />
           </aside>
-          <div className='flex-1 lg:max-w-2xl'>{children}</div>
+          <div className=''>{children}</div>
         </div>
       </div>
     </>

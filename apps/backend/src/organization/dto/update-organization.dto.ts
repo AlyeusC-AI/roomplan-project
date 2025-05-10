@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNumber, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsNumber } from 'class-validator';
 
 export class UpdateOrganizationDto {
   @ApiProperty({ description: 'Organization name', required: false })
@@ -12,10 +12,33 @@ export class UpdateOrganizationDto {
   @IsOptional()
   phoneNumber?: string;
 
-  @ApiProperty({ description: 'Organization address', required: false })
+  @ApiProperty({
+    description: 'Organization formatted address',
+    required: false,
+  })
   @IsString()
   @IsOptional()
-  address?: string;
+  formattedAddress?: string;
+
+  @ApiProperty({ description: 'Organization city', required: false })
+  @IsString()
+  @IsOptional()
+  city?: string;
+
+  @ApiProperty({ description: 'Organization region', required: false })
+  @IsString()
+  @IsOptional()
+  region?: string;
+
+  @ApiProperty({ description: 'Organization postal code', required: false })
+  @IsString()
+  @IsOptional()
+  postalCode?: string;
+
+  @ApiProperty({ description: 'Organization country', required: false })
+  @IsString()
+  @IsOptional()
+  country?: string;
 
   @ApiProperty({ description: 'Organization fax number', required: false })
   @IsString()

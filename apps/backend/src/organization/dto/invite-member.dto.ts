@@ -1,19 +1,29 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsEmail } from 'class-validator';
+import { Role } from '@prisma/client';
 
 export class InviteMemberDto {
-  @ApiProperty({ description: 'User ID to invite' })
+  @ApiProperty({ description: 'Email address to invite' })
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({ description: 'First name of the invitee', required: false })
   @IsString()
-  userId: string;
+  @IsOptional()
+  firstName?: string;
+
+  @ApiProperty({ description: 'Last name of the invitee', required: false })
+  @IsString()
+  @IsOptional()
+  lastName?: string;
 
   @ApiProperty({
     description: 'Member role',
-    enum: ['member', 'admin'],
+    enum: Role,
     required: false,
-    default: 'member',
+    default: Role.MEMBER,
   })
-  @IsString()
+  @IsEnum(Role)
   @IsOptional()
-  @IsEnum(['member', 'admin'])
-  role?: string;
+  role?: Role;
 }

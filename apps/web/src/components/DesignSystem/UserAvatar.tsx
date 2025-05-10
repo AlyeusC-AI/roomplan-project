@@ -5,24 +5,24 @@ import { colorHash } from "@utils/color-hash";
 export const defaultAvatarClassSizes =
   "min-h-[2rem] min-w-[2rem] sm:h-12 sm:w-12 sm:min-h-[3rem] sm:min-w-[3rem]";
 const UserAvatar = ({
-  userId,
   firstName,
   lastName,
   className = defaultAvatarClassSizes,
   style = {},
   textSize = "text-lg",
   email,
+  avatar,
 }: {
-  userId?: string;
   firstName?: string;
   lastName?: string;
   className?: string;
   style?: any;
   textSize?: string;
   email?: string;
+  avatar?: string;
 }) => {
   const [noImage, setNoImage] = useState(false);
-  if (!userId || noImage) {
+  if (!avatar || noImage) {
     if (firstName && lastName) {
       return (
         <div
@@ -55,7 +55,7 @@ const UserAvatar = ({
       style={style}
     >
       <Image
-        src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profile-pictures/${userId}/avatar.png`}
+        src={avatar || ""}
         className={`size-5 rounded-full text-gray-700`}
         onError={() => setNoImage(true)}
         fill

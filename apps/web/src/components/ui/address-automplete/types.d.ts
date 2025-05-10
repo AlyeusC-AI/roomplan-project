@@ -51,7 +51,7 @@ interface ContextDetail {
 }
 
 interface AddressType {
-  address: string;
+  // address: string;
   formattedAddress: string;
   city: string;
   region: string;

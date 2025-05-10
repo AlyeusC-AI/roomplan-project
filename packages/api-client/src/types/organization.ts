@@ -1,8 +1,14 @@
+import { User } from "./auth";
+
 export interface Organization {
   id: string;
   name: string;
   phoneNumber?: string;
-  address?: string;
+  formattedAddress?: string;
+  city?: string;
+  region?: string;
+  postalCode?: string;
+  country?: string;
   faxNumber?: string;
   size?: number;
   logo?: string;
@@ -20,15 +26,16 @@ export interface Organization {
 
 export interface OrganizationMembership {
   id: string;
-  role: "ADMIN" | "MEMBER";
+  role:
+    | "ADMIN"
+    | "MEMBER"
+    | "PROJECT_MANAGER"
+    | "ACCOUNT_MANAGER"
+    | "CONTRACTOR"
+    | "OWNER";
   status: "PENDING" | "ACTIVE" | "REJECTED";
   organization: Organization;
-  user: {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-  };
+  user?: User;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,7 +43,12 @@ export interface OrganizationMembership {
 export interface CreateOrganizationDto {
   name: string;
   phoneNumber?: string;
-  address?: string;
+  formattedAddress?: string;
+  city?: string;
+  region?: string;
+  postalCode?: string;
+  country?: string;
+
   faxNumber?: string;
   size?: number;
   logo?: string;

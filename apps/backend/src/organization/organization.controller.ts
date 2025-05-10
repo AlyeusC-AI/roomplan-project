@@ -22,7 +22,7 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
-
+import { RequestWithUser } from '../auth/interfaces/request-with-user';
 @ApiTags('organizations')
 @ApiBearerAuth()
 @Controller('organizations')
@@ -39,7 +39,10 @@ export class OrganizationController {
   })
   @ApiResponse({ status: 400, description: 'Bad request.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  create(@Body() createOrganizationDto: CreateOrganizationDto, @Request() req) {
+  create(
+    @Body() createOrganizationDto: CreateOrganizationDto,
+    @Request() req: RequestWithUser,
+  ) {
     return this.organizationService.create(
       createOrganizationDto,
       req.user.userId,
@@ -53,7 +56,7 @@ export class OrganizationController {
     description: 'Return all organizations.',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  findAll(@Request() req) {
+  findAll(@Request() req: RequestWithUser) {
     return this.organizationService.findAll(req.user);
   }
 
@@ -104,8 +107,8 @@ export class OrganizationController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   @ApiResponse({ status: 404, description: 'Organization not found.' })
-  remove(@Param('id') id: string, @Request() req) {
-    return this.organizationService.remove(id, req.user.id);
+  remove(@Param('id') id: string, @Request() req: RequestWithUser) {
+    return this.organizationService.remove(id, req.user.userId);
   }
 
   @Post(':id/invite')
@@ -123,12 +126,12 @@ export class OrganizationController {
   inviteMember(
     @Param('id') id: string,
     @Body() inviteMemberDto: InviteMemberDto,
-    @Request() req,
+    @Request() req: RequestWithUser,
   ) {
     return this.organizationService.inviteMember(
       id,
       inviteMemberDto,
-      req.user.id,
+      req.user.userId,
     );
   }
 
@@ -145,9 +148,13 @@ export class OrganizationController {
   acceptInvitation(
     @Param('id') id: string,
     @Param('memberId') memberId: string,
-    @Request() req,
+    @Request() req: RequestWithUser,
   ) {
-    return this.organizationService.acceptInvitation(id, memberId, req.user.id);
+    return this.organizationService.acceptInvitation(
+      id,
+      memberId,
+      req.user.userId,
+    );
   }
 
   @Post(':id/invitations/:memberId/reject')
@@ -163,9 +170,36 @@ export class OrganizationController {
   rejectInvitation(
     @Param('id') id: string,
     @Param('memberId') memberId: string,
-    @Request() req,
+    @Request() req: RequestWithUser,
   ) {
-    return this.organizationService.rejectInvitation(id, memberId, req.user.id);
+    return this.organizationService.rejectInvitation(
+      id,
+      memberId,
+      req.user.userId,
+    );
+  }
+
+  @Post(':id/invitations/:memberId/resend')
+  @ApiOperation({ summary: 'Resend organization invitation' })
+  @ApiParam({ name: 'id', description: 'Organization ID' })
+  @ApiParam({ name: 'memberId', description: 'Member invitation ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'The invitation has been successfully resent.',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Invitation not found.' })
+  resendInvitation(
+    @Param('id') id: string,
+    @Param('memberId') memberId: string,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.organizationService.resendInvitation(
+      id,
+      memberId,
+      req.user.userId,
+    );
   }
 
   @Delete(':id/members/:memberId')
@@ -185,9 +219,9 @@ export class OrganizationController {
   removeMember(
     @Param('id') id: string,
     @Param('memberId') memberId: string,
-    @Request() req,
+    @Request() req: RequestWithUser,
   ) {
-    return this.organizationService.removeMember(id, memberId, req.user.id);
+    return this.organizationService.removeMember(id, memberId, req.user.userId);
   }
 
   @Get(':id/members')
@@ -201,5 +235,33 @@ export class OrganizationController {
   @ApiResponse({ status: 404, description: 'Organization not found.' })
   getOrganizationMembers(@Param('id') id: string) {
     return this.organizationService.getOrganizationMembers(id);
+  }
+
+  @Patch(':id/members/:memberId')
+  @ApiOperation({ summary: 'Update member role' })
+  @ApiParam({ name: 'id', description: 'Organization ID' })
+  @ApiParam({ name: 'memberId', description: 'Member ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'The member role has been successfully updated.',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({
+    status: 404,
+    description: 'Organization or member not found.',
+  })
+  updateMember(
+    @Param('id') id: string,
+    @Param('memberId') memberId: string,
+    @Body() data: { role: string },
+    @Request() req: RequestWithUser,
+  ) {
+    return this.organizationService.updateMember(
+      id,
+      memberId,
+      data,
+      req.user.userId,
+    );
   }
 }

@@ -10,22 +10,29 @@ import type {
 
 export function useLogin() {
   const queryClient = useQueryClient();
+  const { refetch: refetchCurrentUser } = useCurrentUser();
+  const setToken = useAuthStore((state) => state.setToken);
   return useMutation({
     mutationFn: (credentials: LoginCredentials) =>
       authService.login(credentials),
     onSuccess(data, variables, context) {
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      setToken(data.access_token);
+      refetchCurrentUser();
     },
   });
 }
 
 export function useRegister() {
   const queryClient = useQueryClient();
+  const setToken = useAuthStore((state) => state.setToken);
   return useMutation({
     mutationFn: (credentials: RegisterCredentials) =>
       authService.register(credentials),
     onSuccess(data, variables, context) {
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      setToken(data.access_token);
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      }, 1000);
     },
   });
 }
