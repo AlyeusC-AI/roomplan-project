@@ -1,122 +1,154 @@
 import { format } from "date-fns";
 import { orgStore } from "@atoms/organization";
 import { projectStore } from "@atoms/project";
-import React from "react";
+import React, { useState } from "react";
 import "./TitlePage.css";
 import PDFSafeImage from "./PDFSaveImage";
 
 const InfoRow = ({ label, value }: { label: string; value?: string }) => (
-  <div className="pdf info-row">
-    <span className="pdf label">{label}</span>
-    <span className="pdf value">{value || "N/A"}</span>
+  <div className='pdf info-row'>
+    <span className='pdf label'>{label}</span>
+    <span className='pdf value'>{value || "N/A"}</span>
   </div>
 );
 
 const TitlePage = () => {
   const projectInfo = projectStore((state) => state.project);
   const orgInfo = orgStore((state) => state.organization);
-  const logoUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/org-pictures/${orgInfo?.publicId ?? ""}/${orgInfo?.logoId ?? ""}.png`
+  const [date, setDate] = useState(new Date());
+  const logoUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/org-pictures/${orgInfo?.publicId ?? ""}/avatar.png?t=${date.getTime()}`;
 
   return (
-    <div className="pdf first-page">
-       <div className="pdf " style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
-       <div className="pdf logo-section  header-left">
-              <PDFSafeImage
-                style={{ width: "50px", height: "50px" }}
-                url={logoUrl}
-                alt="Organization Logo"
-                className="pdf org-logo"
-              />
-                {/* <span className="pdf org-name">{orgInfo?.name}</span> */}
-              
-           
-            </div>
-            <div className="pdf  header-right">
-              <InfoRow 
-                label="Date Reported" 
-                value={format(new Date(), "MM/dd/yyyy")} 
-
-              />
-              </div>
-              </div>
-      <div className="pdf report-container">
-       <div className="pdf header-section-border">
-
-   
-        {/* Top Section with diagonal line */}
-        <div className="pdf header-section">
-          {/* Left side with logo and company name */}
-          <div className="pdf header-left">
-           
-
-            {/* Report Title */}
-            <div className="pdf report-title-section">
-              <h1 className="pdf">{orgInfo?.name}</h1>
-              
-              {/* <h2 className="pdf report-number">{projectInfo?.publicId || "N/A"}</h2> */}
-            </div>
-              <InfoRow label="Address" value={projectInfo?.location} />
-
-            {/* Key Information */}
-            <div className="pdf key-info">
-              <InfoRow label="Type of Loss" value={projectInfo?.damageType || "N/A"} />
-              <InfoRow 
-                label="Category" 
-                value={ `${projectInfo?.catCode}` || "N/A"} 
-              />
-              <InfoRow 
-                label="Date of Loss" 
-                value={projectInfo?.dateOfLoss ? format(new Date(projectInfo.dateOfLoss), "MM/dd/yyyy") : "N/A"} 
-              />
-              <InfoRow label="Insurance Company" value={projectInfo?.insuranceCompanyName} />
-            
-            </div>
-          </div>
-
-          {/* Right side with property image */}
-          {projectInfo?.mainImage && (
-            <div className="pdf property-image">
-              <PDFSafeImage
-                url={projectInfo.mainImage}
-                alt="Property"
-                className="pdf"
-              />
-            </div>
-          )}
+    <div className='pdf first-page'>
+      <div
+        className='pdf'
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+        }}
+      >
+        <div className='pdf logo-section header-left'>
+          <PDFSafeImage
+            style={{ width: "50px", height: "50px" }}
+            url={logoUrl}
+            alt='Organization Logo'
+            className='pdf org-logo'
+          />
+          {/* <span className="pdf org-name">{orgInfo?.name}</span> */}
         </div>
+        <div className='pdf header-right'>
+          <InfoRow
+            label='Date Reported'
+            value={format(new Date(), "MM/dd/yyyy")}
+          />
+        </div>
+      </div>
+      <div className='pdf report-container'>
+        <div className='pdf header-section-border'>
+          {/* Top Section with diagonal line */}
+          <div className='pdf header-section'>
+            {/* Left side with logo and company name */}
+            <div className='pdf header-left'>
+              {/* Report Title */}
+              <div className='pdf report-title-section'>
+                <h1 className='pdf'>{orgInfo?.name}</h1>
+
+                {/* <h2 className="pdf report-number">{projectInfo?.publicId || "N/A"}</h2> */}
+              </div>
+              <InfoRow label='Address' value={projectInfo?.location} />
+
+              {/* Key Information */}
+              <div className='pdf key-info'>
+                <InfoRow
+                  label='Type of Loss'
+                  value={
+                    projectInfo?.damageType
+                      ? projectInfo?.damageType.charAt(0).toUpperCase() +
+                        projectInfo?.damageType.slice(1)
+                      : "N/A"
+                  }
+                />
+                <InfoRow
+                  label='Category'
+                  value={`${projectInfo?.catCode}` || "N/A"}
+                />
+                <InfoRow
+                  label='Date of Loss'
+                  value={
+                    projectInfo?.dateOfLoss
+                      ? format(new Date(projectInfo.dateOfLoss), "MM/dd/yyyy")
+                      : "N/A"
+                  }
+                />
+                <InfoRow
+                  label='Insurance Company'
+                  value={projectInfo?.insuranceCompanyName}
+                />
+              </div>
+            </div>
+
+            {/* Right side with property image */}
+            {projectInfo?.mainImage && (
+              <div className='pdf property-image'>
+                <PDFSafeImage
+                  url={projectInfo.mainImage}
+                  alt='Property'
+                  className='pdf'
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Three Columns Section */}
-        <div className="pdf columns-section">
+        <div className='pdf columns-section'>
           {/* Column 1 - Project Details */}
-          <div className="pdf info-column">
-            <h3 className="pdf column-title">Project Details</h3>
-            <InfoRow label="Project Manager" value={projectInfo?.managerName} />
-            <InfoRow label="Project Status" value={projectInfo?.status || "N/A"} />
-            <InfoRow label="Assignment #" value={projectInfo?.assignmentNumber} />
+          <div className='pdf info-column'>
+            <h3 className='pdf column-title'>Project Details</h3>
+            <InfoRow label='Project Manager' value={projectInfo?.managerName} />
+            <InfoRow
+              label='Project Status'
+              value={projectInfo?.status || "N/A"}
+            />
+            <InfoRow
+              label='Assignment #'
+              value={projectInfo?.assignmentNumber}
+            />
           </div>
 
           {/* Column 2 - Insurance Details */}
-          <div className="pdf info-column">
-            <h3 className="pdf column-title">Insurance Details</h3>
-            <InfoRow label="Policy Number" value={projectInfo?.policyNumber || "N/A"} />
-            <InfoRow label="Claim #" value={projectInfo?.insuranceClaimId} />
-            <InfoRow label="Adjuster" value={projectInfo?.adjusterName} />
+          <div className='pdf info-column'>
+            <h3 className='pdf column-title'>Insurance Details</h3>
+            <InfoRow
+              label='Policy Number'
+              value={projectInfo?.policyNumber || "N/A"}
+            />
+            <InfoRow label='Claim #' value={projectInfo?.insuranceClaimId} />
+            <InfoRow label='Adjuster' value={projectInfo?.adjusterName} />
           </div>
 
           {/* Column 3 - Customer Information */}
-          <div className="pdf info-column">
-            <h3 className="pdf column-title">Customer Information</h3>
-            <InfoRow label="Client Phone" value={projectInfo?.clientPhoneNumber} />
-            <InfoRow label="Client Email" value={projectInfo?.clientEmail} />
-            <InfoRow label="Adjuster Email" value={projectInfo?.adjusterEmail} />
+          <div className='pdf info-column'>
+            <h3 className='pdf column-title'>Customer Information</h3>
+            <InfoRow
+              label='Client Phone'
+              value={projectInfo?.clientPhoneNumber}
+            />
+            <InfoRow label='Client Email' value={projectInfo?.clientEmail} />
+            <InfoRow
+              label='Adjuster Email'
+              value={projectInfo?.adjusterEmail}
+            />
           </div>
         </div>
 
         {/* Damage Description */}
-        <div className="pdf damage-section">
-          <h3 className="pdf section-title">Loss Summary</h3>
-          <p className="pdf description-text">{projectInfo?.claimSummary || "N/A"}</p>
+        <div className='pdf damage-section'>
+          <h3 className='pdf section-title'>Loss Summary</h3>
+          <p className='pdf description-text'>
+            {projectInfo?.claimSummary || "N/A"}
+          </p>
         </div>
       </div>
     </div>
