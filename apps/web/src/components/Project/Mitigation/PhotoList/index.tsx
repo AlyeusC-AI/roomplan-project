@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@components/ui/dialog";
 import { userInfoStore } from "@atoms/user-info";
-import { teamMembersStore } from "@atoms/team-members";
+// import { teamMembersStore } from "@atoms/team-members";
 import { Trash2, FolderInput, X, Loader2, Star } from "lucide-react";
 
 const PhotoList = ({
@@ -110,7 +110,7 @@ const PhotoList = ({
       .then((res) => res.json())
       .then((data) => {
         console.log("team members", data);
-        teamMembersStore.getState().setTeamMembers(data.members);
+        // teamMembersStore.getState().setTeamMembers(data.members);
         console.log(data);
       });
   }, []);

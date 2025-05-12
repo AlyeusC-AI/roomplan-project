@@ -51,8 +51,14 @@ import {
   SelectValue,
 } from "@components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DamageType, DAMAGE_TYPES } from "@/types/damage";
+export declare type DamageType = "fire" | "water" | "mold" | "other";
 
+export const DAMAGE_TYPES = [
+  { label: "Fire Damage", value: "fire" },
+  { label: "Water Damage", value: "water" },
+  { label: "Mold Damage", value: "mold" },
+  { label: "Other", value: "other" },
+] as const;
 interface FormBuilderProps {
   form: Form | null;
   onSave: (form: Form) => void;

@@ -29,7 +29,7 @@ import { LoadingSpinner } from "@components/ui/spinner";
 import { Check, ChevronsUpDown, Users, Search, X } from "lucide-react";
 import { cn } from "@lib/utils";
 import { projectsStore } from "@atoms/projects";
-import { teamMembersStore } from "@atoms/team-members";
+// import { teamMembersStore } from "@atoms/team-members";
 import { UseFormReturn } from "react-hook-form";
 import { CreateEventValues } from "./types";
 import { useEffect, useState } from "react";
@@ -56,27 +56,27 @@ export function EventForm({
   setConfirmDelete,
 }: EventFormProps) {
   const { projects } = projectsStore((state) => state);
-  const { teamMembers } = teamMembersStore();
-  console.log("🚀 ~ teamMembers:", teamMembers);
+  // const { teamMembers } = teamMembersStore();
+  // console.log("🚀 ~ teamMembers:", teamMembers);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMemberSelectorOpen, setIsMemberSelectorOpen] = useState(false);
   const selectedUsers = form.watch("users") || [];
-  useEffect(() => {
-    fetch("/api/v1/organization/members")
-      .then((res) => res.json())
-      .then((data) => {
-        teamMembersStore.getState().setTeamMembers(data.members);
-      });
-  }, []);
-  const filteredMembers = teamMembers.filter((member) => {
-    const fullName =
-      `${member.firstName || ""} ${member.lastName || ""}`.trim();
-    const email = member.email || "";
-    return (
-      fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
+  // useEffect(() => {
+  //   fetch("/api/v1/organization/members")
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       teamMembersStore.getState().setTeamMembers(data.members);
+  //     });
+  // }, []);
+  // const filteredMembers = teamMembers.filter((member) => {
+  //   const fullName =
+  //     `${member.firstName || ""} ${member.lastName || ""}`.trim();
+  //   const email = member.email || "";
+  //   return (
+  //     fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     email.toLowerCase().includes(searchQuery.toLowerCase())
+  //   );
+  // });
 
   const handleSelect = (userId: string) => {
     const currentUsers = form.getValues("users") || [];
@@ -374,7 +374,7 @@ export function EventForm({
                         name='users'
                         render={({ field }) => (
                           <CommandGroup>
-                            {filteredMembers.map((member) => {
+                            {/* {filteredMembers.map((member) => {
                               const isSelected = selectedUsers.includes(
                                 member.userId
                               );
@@ -409,7 +409,7 @@ export function EventForm({
                                   />
                                 </CommandItem>
                               );
-                            })}
+                            })} */}
                           </CommandGroup>
                         )}
                       />
