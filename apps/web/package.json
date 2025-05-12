@@ -67,7 +67,6 @@
     "@supabase/supabase-js": "2.46.2",
     "@tanstack/react-query-devtools": "^5.75.4",
     "@tanstack/react-table": "^8.20.6",
-
     "@types/nodemailer": "^6.4.17",
     "@types/pdfmake": "^0.2.11",
     "@types/react-beautiful-dnd": "^13.1.8",
