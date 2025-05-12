@@ -1,6 +1,7 @@
 [phases.setup]
 nixPkgs = [
-  "bzip2"
+  "bzip2",
+  "yarn"
 ]
 
 [phases.install]
