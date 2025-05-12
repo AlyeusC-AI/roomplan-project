@@ -6,7 +6,9 @@ nixPkgs = [
   "zlib",
   "openssl",
   "yarn",
-  "nodejs_20"
+  "nodejs_20",
+  "vips",
+  "vips-dev"
 ]
 
 [phases.install]
@@ -24,6 +26,7 @@ packageManager = "yarn"
 [variables]
 NODE_VERSION = "20"
 NEXT_TELEMETRY_DISABLED = "1"
+SHARP_IGNORE_GLOBAL_LIBVIPS = "1"
 
 [build]
 cache = [
