@@ -9,6 +9,8 @@ import { OrganizationModule } from './organization/organization.module';
 import { EmailModule } from './email/email.module';
 import { BillingModule } from './billing/billing.module';
 import { ImageKitModule } from './imagekit/imagekit.module';
+import { ProjectStatusModule } from './project-status/project-status.module';
+import { EquipmentModule } from './equipment/equipment.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { ImageKitModule } from './imagekit/imagekit.module';
     EmailModule,
     BillingModule,
     ImageKitModule,
+    ProjectStatusModule,
+    EquipmentModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

@@ -9,7 +9,6 @@ import PropertyOwnerInformation from "./PropertyOwnerInformation";
 import Notes from "./Notes";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { teamMembersStore } from "@atoms/team-members";
 
 import { projectStore } from "@atoms/project";
 import { MentionMetadata } from "@components/DesignSystem/Mentions/useMentionsMetadata";

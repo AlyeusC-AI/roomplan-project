@@ -3,7 +3,7 @@ import UserAvatar from "@components/DesignSystem/UserAvatar";
 import { ChevronUpIcon, CheckIcon } from "lucide-react";
 import clsx from "clsx";
 import { useParams } from "next/navigation";
-import { teamMembersStore } from "@atoms/team-members";
+// import { teamMembersStore } from "@atoms/team-members";
 import { LoadingSpinner } from "@components/ui/spinner";
 
 interface ProjectMember {
@@ -19,7 +19,8 @@ interface ProjectMember {
 }
 
 export default function AssignStakeholders() {
-  const { teamMembers } = teamMembersStore();
+  // const { teamMembers } = teamMembersStore();
+  const [teamMembers, setTeamMembers] = useState([]);
   const [loadingId, setLoadingId] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [projectMembers, setProjectMembers] = useState<ProjectMember[]>([]);

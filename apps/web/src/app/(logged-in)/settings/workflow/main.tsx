@@ -17,7 +17,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { BadgeInfo } from "lucide-react";
+import { BadgeInfo, Plus } from "lucide-react";
 import WorkflowStatus from "./components/status";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -35,17 +35,41 @@ import {
 import { Input } from "@components/ui/input";
 import { Button } from "@components/ui/button";
 import { LoadingPlaceholder, LoadingSpinner } from "@components/ui/spinner";
+import {
+  useCreateProjectStatus,
+  useGetProjectStatuses,
+  useReorderProjectStatus,
+  ProjectStatus,
+} from "@service-geek/api-client";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@components/ui/dialog";
 
 const workflowSchema = z.object({
-  name: z.string().optional(),
+  name: z.string().min(2, "Label name must be at least 2 characters"),
+  description: z.string().optional(),
 });
 
 type WorkflowLabelValues = z.infer<typeof workflowSchema>;
 
 export default function WorkflowPage() {
   const [isAdding, setIsAdding] = useState(false);
-  const [statuses, setStatuses] = useState<Status[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { data: statuses = [], isLoading: fetching } = useGetProjectStatuses();
+  const createStatus = useCreateProjectStatus();
+  const reorderStatus = useReorderProjectStatus();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -54,96 +78,56 @@ export default function WorkflowPage() {
     })
   );
 
-  // const reorderStatuses = trpc.projectStatus.reorderProjectStatuses.useMutation(
-  //   {
-  //     async onMutate({ oldIndex, newIndex }) {
-  //       await utils.projectStatus.getAllProjectStatuses.cancel();
-  //       const prevData = utils.projectStatus.getAllProjectStatuses.getData();
-
-  //       utils.projectStatus.getAllProjectStatuses.setData({}, (old) => {
-  //         if (!old || !old.statuses) {
-  //           return { statuses: [] };
-  //         }
-  //         const oldStatuses = [...old?.statuses];
-  //         const newArr = arrayMove(oldStatuses, oldIndex, newIndex);
-
-  //         return { statuses: newArr };
-  //       });
-  //       return { prevData };
-  //     },
-  //     onError(err, data, ctx) {
-  //       if (ctx?.prevData)
-  //         utils.projectStatus.getAllProjectStatuses.setData({}, ctx.prevData);
-  //     },
-  //     onSettled() {
-  //       utils.projectStatus.getAllProjectStatuses.invalidate();
-  //     },
-  //   }
-  // );
-
-  useEffect(() => {
-    setFetching(true);
-    fetch("/api/v1/organization/status")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-        setStatuses(data.data.sort((a: Status, b: Status) => a.order - b.order));
-        setFetching(false);
-      });
-  }, []);
-
   async function handleDragEnd(event: DragEndEvent) {
     try {
       const { active, over } = event;
+      if (!over) return;
 
-      const copiedStatuses = statuses;
-      const oldIndex = copiedStatuses.findIndex((o) => o.id === active.id);
-      const newIndex = copiedStatuses.findIndex((o) => o.id === over?.id);
+      const oldIndex = statuses.findIndex(
+        (s: ProjectStatus) => s.id === active.id
+      );
+      const newIndex = statuses.findIndex(
+        (s: ProjectStatus) => s.id === over.id
+      );
 
-      const newArr = arrayMove(copiedStatuses, oldIndex, newIndex);
-      const ordering = newArr.map((d, index) => ({
-        publicId: d.publicId,
-        index: index,
-      }));
+      const newArr = arrayMove(statuses, oldIndex, newIndex);
+      const statusIds = newArr.map((status: ProjectStatus) => status.id);
 
-      await fetch("/api/v1/organization/status", {
-        method: "PATCH",
-        body: JSON.stringify({ order: ordering }),
-      });
-
-      setStatuses(newArr);
+      await reorderStatus.mutateAsync({ statusIds });
       toast.success("Reordered statuses successfully");
-    } catch {
+    } catch (error) {
       toast.error("Failed to reorder statuses");
     }
   }
 
-  const form = useForm<z.infer<typeof workflowSchema>>({
+  const form = useForm<WorkflowLabelValues>({
     resolver: zodResolver(workflowSchema),
     mode: "onChange",
+    defaultValues: {
+      name: "",
+      description: "",
+    },
   });
 
   async function onSubmit(data: WorkflowLabelValues) {
     try {
-      if (!data.name || data.name.length < 2) {
-        toast.error("Workflow label must be at least 2 characters.");
-        return;
-      }
       setIsAdding(true);
-      const res = await fetch("/api/v1/organization/status", {
-        method: "POST",
-        body: JSON.stringify({
-          label: data.name,
-          color: colorHash(data.name).rgb,
-        }),
+
+      await createStatus.mutateAsync({
+        label: data.name,
+        description: data.description,
+        color: colorHash(data.name).rgb,
+        order: statuses.length,
       });
-      const json = await res.json();
+
       setIsAdding(false);
-      form.setValue("name", "");
-      setStatuses([...statuses, json.data]);
+      form.reset();
+      setIsDialogOpen(false);
       toast.success("Added label successfully");
-    } catch {
+    } catch (error) {
       toast.error("Failed to add label");
+    } finally {
+      setIsAdding(false);
     }
   }
 
@@ -152,52 +136,105 @@ export default function WorkflowPage() {
   }
 
   return (
-    <div className=''>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-          <FormField
-            control={form.control}
-            name='name'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Add Workflow Label</FormLabel>
-                <FormControl>
-                  <Input placeholder='New label' {...field} />
-                </FormControl>
-                <FormDescription>
-                  Add a new workflow label for you projects. Please provide a
-                  name for the label.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type='submit'>
-            {isAdding ? <LoadingSpinner /> : "Add label"}
-          </Button>
-        </form>
-      </Form>
-      <div className='my-6 flex'>
-        <BadgeInfo className='mr-4 h-6 text-muted' /> Drag statuses to change
-        their order. The order here is the order that will be displayed on your
-        Projects page while using the "board" view.
-      </div>
-      <div className='flex flex-col gap-6'>
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={statuses}
-            strategy={verticalListSortingStrategy}
-          >
-            {statuses.map((s) => (
-              <WorkflowStatus key={s.label} label={s} />
-            ))}
-          </SortableContext>
-        </DndContext>
-      </div>
+    <div className='space-y-6'>
+      <Card>
+        <CardHeader>
+          <CardTitle>Workflow Statuses</CardTitle>
+          <CardDescription>
+            Manage your project workflow statuses. Drag and drop to reorder
+            them.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className='mb-6 flex items-center justify-between'>
+            <div className='flex items-center space-x-2 text-muted-foreground'>
+              <BadgeInfo className='h-5 w-5' />
+              <p className='text-sm'>
+                Drag statuses to change their order. The order here is the order
+                that will be displayed on your Projects page while using the
+                "board" view.
+              </p>
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className='mr-2 h-4 w-4' />
+                  Add Status
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Status</DialogTitle>
+                  <DialogDescription>
+                    Create a new status for your project workflow.
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className='space-y-4'
+                  >
+                    <FormField
+                      control={form.control}
+                      name='name'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Label Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder='New label' {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name='description'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description (Optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder='Label description' {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className='flex justify-end space-x-2'>
+                      <Button
+                        type='button'
+                        variant='outline'
+                        onClick={() => setIsDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type='submit' disabled={isAdding}>
+                        {isAdding ? <LoadingSpinner /> : "Add Status"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <div className='flex flex-col gap-6'>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={statuses}
+                strategy={verticalListSortingStrategy}
+              >
+                {statuses.map((status: ProjectStatus) => (
+                  <WorkflowStatus key={status.id} label={status} />
+                ))}
+              </SortableContext>
+            </DndContext>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

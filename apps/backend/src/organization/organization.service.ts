@@ -30,6 +30,30 @@ export class OrganizationService {
     const organization = await this.prisma.organization.create({
       data: {
         ...createOrganizationDto,
+        projectStatuses: {
+          create: [
+            {
+              label: 'Active',
+              color: '#000000',
+              isDefault: true,
+            },
+            {
+              label: 'Completed',
+              color: '#000000',
+              isDefault: false,
+            },
+            {
+              label: 'On Hold',
+              color: '#000000',
+              isDefault: false,
+            },
+            {
+              label: 'Cancelled',
+              color: '#000000',
+              isDefault: false,
+            },
+          ],
+        },
         members: {
           create: {
             user: {

@@ -4,8 +4,27 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import { useDebounce } from "@hooks/use-debounce";
+import {
+  useUpdateProjectStatus,
+  useDeleteProjectStatus,
+} from "@service-geek/api-client";
+import type { ProjectStatus } from "@service-geek/api-client";
+import { Button } from "@components/ui/button";
+import { Trash2, GripVertical } from "lucide-react";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@components/ui/alert-dialog";
 
-const WorkflowStatus = ({ label }: { label: Status }) => {
+const WorkflowStatus = ({ label }: { label: ProjectStatus }) => {
   const {
     attributes,
     listeners,
@@ -14,30 +33,60 @@ const WorkflowStatus = ({ label }: { label: Status }) => {
     transition,
     setActivatorNodeRef,
   } = useSortable({ id: label.id });
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
+
   const [newLabel, setNewLabel] = useState<string>(label.label);
-  const [newColor, setNewColor] = useState<string>(label.color);
+  const [newColor, setNewColor] = useState<string>(label.color || "");
   const [newDescription, setNewDescription] = useState<string>(
-    label.description
+    label.description || ""
   );
 
   const debouncedLabel = useDebounce(newLabel, 1000);
   const debouncedDescription = useDebounce(newDescription, 1000);
-
-  // const editProjectStatusMutation =
-  //   trpc.projectStatus.editProjectStatus.useMutation();
+  const updateStatus = useUpdateProjectStatus();
+  const deleteStatus = useDeleteProjectStatus();
 
   useEffect(() => {
-    // editProjectStatusMutation.mutate({
-    //   label: newLabel,
-    //   description: newDescription,
-    //   color: newColor,
-    //   publicId: label.publicId,
-    // });
-  }, [debouncedLabel, debouncedDescription, newColor]);
+    if (
+      debouncedLabel !== label.label ||
+      debouncedDescription !== label.description ||
+      newColor !== label.color
+    ) {
+      updateStatus.mutate(
+        {
+          id: label.id,
+          data: {
+            label: debouncedLabel,
+            description: debouncedDescription,
+            color: newColor,
+          },
+        },
+        {
+          onSuccess: () => {
+            toast.success("Status updated successfully");
+          },
+          onError: () => {
+            toast.error("Failed to update status");
+          },
+        }
+      );
+    }
+  }, [debouncedLabel, debouncedDescription, newColor, label.id]);
+
+  const handleDelete = () => {
+    deleteStatus.mutate(label.id, {
+      onSuccess: () => {
+        toast.success("Status deleted successfully");
+      },
+      onError: () => {
+        toast.error("Failed to delete status");
+      },
+    });
+  };
 
   const selectedColor = STATUS_COLORS.find((s) => s.name === newColor);
 
@@ -46,22 +95,14 @@ const WorkflowStatus = ({ label }: { label: Status }) => {
       <div className='isolate flex -space-y-px rounded-md shadow-sm'>
         <div
           className={clsx(
-            "flex",
-            "overflow-hidden rounded-l-md ring-1 ring-gray-300 hover:bg-gray-100"
+            "flex items-center justify-center",
+            "overflow-hidden rounded-l-md ring-1 ring-gray-300 hover:bg-gray-100",
+            "cursor-grab active:cursor-grabbing"
           )}
           ref={setActivatorNodeRef}
           {...listeners}
         >
-          <button
-            className={clsx(
-              selectedColor?.bgColor &&
-                `bg-${selectedColor.bgColor}/40 hover:bg-${selectedColor.bgColor}/80`
-            )}
-          >
-            <svg viewBox='0 0 20 20' width='12'>
-              <path d='M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z'></path>
-            </svg>
-          </button>
+          <GripVertical className='h-5 w-5 text-gray-400' />
         </div>
         <div className='flex w-full flex-col'>
           <div className='relative rounded-md rounded-b-none rounded-tl-none px-3 pb-1.5 pt-2.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-blue-600'>
@@ -95,11 +136,43 @@ const WorkflowStatus = ({ label }: { label: Status }) => {
             />
           </div>
           <div className='relative rounded-md rounded-t-none rounded-bl-none px-3 pb-4 pt-2.5 ring-1 ring-inset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-blue-600'>
-            <ColorPicker newColor={newColor} setNewColor={setNewColor} />
+            <div className='flex items-center justify-between'>
+              <ColorPicker newColor={newColor} setNewColor={setNewColor} />
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='h-8 w-8 text-destructive hover:text-destructive/90'
+                  >
+                    <Trash2 className='h-4 w-4' />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Status</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this status? This action
+                      cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 };
+
 export default WorkflowStatus;

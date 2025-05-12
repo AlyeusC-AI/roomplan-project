@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Ellipsis } from "lucide-react";
-import { teamMembersStore } from "@atoms/team-members";
 import MentionsDisplay from "@components/DesignSystem/Mentions/MentionsDisplay";
 import useMentionsMetadata, {
   MentionMetadata,

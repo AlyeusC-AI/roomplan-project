@@ -16,7 +16,7 @@ model User {
   phone             String?
   referralCode      String?   @unique
   referralSource    String?
-  acceptReminders   Boolean   @default(false)
+  acceptReminders   Boolean   @default(true)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   isEmailVerified   Boolean   @default(false)
@@ -57,7 +57,9 @@ model Organization {
   supabaseId              String?   @unique
 
   // Relationships
-  members OrganizationMember[]
+  members         OrganizationMember[]
+  projectStatuses ProjectStatus[]
+  equipments      Equipment[]
 }
 
 enum MemberStatus {
@@ -91,4 +93,58 @@ model OrganizationMember {
   user         User         @relation(fields: [userId], references: [id])
 
   @@unique([organizationId, userId])
+}
+
+model ProjectStatus {
+  id             String       @id @default(uuid())
+  label          String
+  description    String?
+  color          String?
+  isDefault      Boolean      @default(false)
+  isDeleted      Boolean      @default(false)
+  order          Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+}
+
+model Equipment {
+  id               String             @id @default(uuid())
+  name             String
+  description      String?
+  quantity         Int
+  image            String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  organizationId   String
+  organization     Organization       @relation(fields: [organizationId], references: [id])
+  EquipmentProject EquipmentProject[]
+
+  @@index([organizationId])
+}
+
+model Project {
+  id               String             @id @default(uuid())
+  name             String
+  description      String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  equipmentProject EquipmentProject[]
+}
+
+model EquipmentProject {
+  id          String    @id @default(uuid())
+  equipmentId String
+  equipment   Equipment @relation(fields: [equipmentId], references: [id])
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id])
+  quantity    Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([equipmentId])
+  @@index([projectId])
 }

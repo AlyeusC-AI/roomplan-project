@@ -53,6 +53,28 @@ interface Organization_Supabase {
   subscriptionStatus: string | null;
 }
 
+interface Equipment_Supabase {
+  id: number;
+  publicId: string;
+  createdAt: string;
+  isDeleted: boolean;
+  name: string;
+  quantity: number;
+  organizationId: number;
+}
+
+interface ProjectStatus_Supabase {
+  id: number;
+  createdAt: string;
+  isDeleted: boolean;
+  publicId: string;
+  label: string;
+  description: string;
+  color: string;
+  order: number;
+  organizationId: number;
+}
+
 const prisma = new PrismaClient();
 
 // Initialize Supabase client
@@ -98,6 +120,7 @@ async function migrateUsers() {
           createdAt: new Date(user.createdAt),
           updatedAt: new Date(user.updatedAt),
           avatar: `https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/profile-pictures/${user.id}/avatar.png`,
+          acceptReminders: true,
         },
         create: {
           email: user.email,
@@ -110,6 +133,7 @@ async function migrateUsers() {
           createdAt: new Date(user.createdAt),
           updatedAt: new Date(user.updatedAt),
           avatar: `https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/profile-pictures/${user.id}/avatar.png`,
+          acceptReminders: true,
         },
       });
       console.log(`Migrated user: ${user.email}`);
@@ -136,6 +160,26 @@ async function migrateOrganizations() {
 
   // Migrate each organization
   for (const org of organizations as Organization_Supabase[]) {
+    const { data: projectStatuses, error: projectStatusesError } =
+      await supabase
+        .from('ProjectStatusValue')
+        .select('*')
+        .eq('organizationId', org.id);
+
+    if (projectStatusesError) {
+      throw new Error(
+        `Error fetching project statuses: ${projectStatusesError.message}`,
+      );
+    }
+    console.log(
+      '🚀 ~ migrateOrganizations ~ projectStatuses:',
+      projectStatuses,
+    );
+    const { data: equipment, error: equipmentError } = await supabase
+      .from('Equipment')
+      .select('*')
+      .eq('isDeleted', false);
+
     console.log('🚀 ~ migrateOrganizations ~ org:', org);
     try {
       await prisma.organization.upsert({
@@ -145,6 +189,7 @@ async function migrateOrganizations() {
           name: org.name,
           phoneNumber: org.phoneNumber || null,
           address: org.address || null,
+
           faxNumber: org.faxNumber || null,
           size: org.size ? parseInt(org.size) : null,
           isDeleted: org.isDeleted || false,
@@ -161,8 +206,40 @@ async function migrateOrganizations() {
           subscriptionStatus: org.subscriptionStatus || null,
           createdAt: new Date(org.createdAt),
           updatedAt: new Date(org.updatedAt),
+          projectStatuses: {
+            deleteMany: {},
+            create: projectStatuses.map((status: ProjectStatus_Supabase) => ({
+              label: status.label,
+              color: status.color,
+              order: status.order,
+              description: status.description,
+            })),
+          },
+          equipments: {
+            deleteMany: {},
+            create:
+              equipment?.map((equipment: Equipment_Supabase) => ({
+                name: equipment.name,
+                quantity: equipment.quantity,
+              })) || [],
+          },
         },
         create: {
+          projectStatuses: {
+            create: projectStatuses.map((status: ProjectStatus_Supabase) => ({
+              label: status.label,
+              color: status.color,
+              order: status.order,
+              description: status.description,
+            })),
+          },
+          equipments: {
+            create:
+              equipment?.map((equipment: Equipment_Supabase) => ({
+                name: equipment.name,
+                quantity: equipment.quantity,
+              })) || [],
+          },
           supabaseId: org.publicId,
           name: org.name,
           phoneNumber: org.phoneNumber || null,
@@ -200,10 +277,6 @@ async function migrateOrganizationMemberships() {
     .from('UserToOrganization')
     .select('*, User(*), Organization(*)')
     .eq('isDeleted', false);
-  console.log(
-    '🚀 ~ migrateOrganizationMemberships ~ memberships:',
-    memberships,
-  );
 
   if (error) {
     throw new Error(`Error fetching memberships: ${error.message}`);
@@ -273,9 +346,9 @@ async function main() {
     console.log('Starting migration from Supabase...');
 
     // Run migrations in sequence
-    await migrateUsers();
+    // await migrateUsers();
     await migrateOrganizations();
-    await migrateOrganizationMemberships();
+    // await migrateOrganizationMemberships();
 
     console.log('Migration completed successfully!');
   } catch (error) {

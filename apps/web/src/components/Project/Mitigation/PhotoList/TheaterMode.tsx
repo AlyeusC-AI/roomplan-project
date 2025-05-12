@@ -7,7 +7,6 @@ import Image from "next/image";
 import { projectStore } from "@atoms/project";
 import Notes from "@components/Project/overview/DetailsInput/Notes";
 import { MentionMetadata } from "@components/DesignSystem/Mentions/useMentionsMetadata";
-import { teamMembersStore } from "@atoms/team-members";
 
 // const TheaterModeSlideImage = ({
 //   photo,
