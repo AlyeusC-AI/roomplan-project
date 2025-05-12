@@ -4,11 +4,15 @@ nixPkgs = [
   "gcc",
   "glibc",
   "zlib",
-  "openssl"
+  "openssl",
+  "yarn"
 ]
 
 [phases.install]
 cmds = ["yarn install"]
 
 [start]
-cmd = "yarn start" 
+cmd = "yarn start"
+
+[pack]
+packageManager = "yarn" 
