@@ -1,4 +1,4 @@
-import placeHolderImage from "@images/placeholders/upload.jpeg";
+// import placeHolderImage from "@images/placeholders/upload.jpeg";
 import { uploadInProgressImagesStore } from "@atoms/upload-in-progress-image";
 import { LoadingSpinner } from "@components/ui/spinner";
 
@@ -24,7 +24,7 @@ const OptimisticUploadUI = () => {
                   <div>
                     <div className='relative w-[150px]'>
                       <img
-                        src={image.path ? image.path : placeHolderImage.src}
+                        src={image.path ? image.path : ""}
                         className={
                           image.path
                             ? "w-full animate-pulse rounded-md opacity-75"
