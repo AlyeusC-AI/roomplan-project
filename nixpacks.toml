@@ -1,2 +1,14 @@
 [phases.setup]
-nixPkgs = ["bzip2"] 
+nixPkgs = [
+  "bzip2",
+  "gcc",
+  "glibc",
+  "zlib",
+  "openssl"
+]
+
+[phases.install]
+cmds = ["yarn install"]
+
+[start]
+cmd = "yarn start" 
