@@ -17,6 +17,7 @@ describe('AppController (e2e)', () => {
   });
 
   it('/ (GET)', () => {
+    //@ts-ignore
     return request(app.getHttpServer())
       .get('/')
       .expect(200)

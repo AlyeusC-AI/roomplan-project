@@ -11,6 +11,8 @@ import { BillingModule } from './billing/billing.module';
 import { ImageKitModule } from './imagekit/imagekit.module';
 import { ProjectStatusModule } from './project-status/project-status.module';
 import { EquipmentModule } from './equipment/equipment.module';
+import { CronModule } from './cron/cron.module';
+import { CalendarEventsModule } from './calendar-events/calendar-events.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { EquipmentModule } from './equipment/equipment.module';
     ImageKitModule,
     ProjectStatusModule,
     EquipmentModule,
+    CalendarEventsModule,
+    CronModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

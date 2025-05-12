@@ -6,7 +6,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { OrganizationService } from '../organization/organization.service';
 import Stripe from 'stripe';
-import { CreateCheckoutSessionParams } from '@service-geek/api-client';
+// import { CreateCheckoutSessionParams } from '@service-geek/api-client';
 @Injectable()
 export class BillingService {
   private stripe: Stripe;
@@ -18,12 +18,12 @@ export class BillingService {
     this.stripe = new Stripe(
       this.configService.get('STRIPE_SECRET_KEY') || '',
       {
-        apiVersion: '2025-01-27.acacia',
+        apiVersion: '2025-04-30.basil',
       },
     );
   }
 
-  async createCheckoutSession(params: CreateCheckoutSessionParams, user: any) {
+  async createCheckoutSession(params: any, user: any) {
     const { organizationId, priceId, type, plan, noTrial } = params;
     const organization = await this.organizationService.findOne(organizationId);
     if (!organization) {
