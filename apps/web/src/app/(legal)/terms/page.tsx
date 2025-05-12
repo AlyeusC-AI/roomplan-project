@@ -1,6 +1,6 @@
-import { Footer } from "@/components/layouts/footer";
+import { Footer } from "@components/layouts/footer";
 import { Metadata } from "next";
-
+import { Suspense } from "react";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description: "A job management platform built for restoration",
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default async function TermsPage() {
   return (
-    <>
+    <Suspense>
       <div className='flex w-full items-center justify-center bg-background'>
         <div className='prose mt-10 px-6'>
           <h1>Terms and Conditions</h1>
@@ -678,6 +678,6 @@ export default async function TermsPage() {
         </div>
       </div>
       <Footer />
-    </>
+    </Suspense>
   );
 }

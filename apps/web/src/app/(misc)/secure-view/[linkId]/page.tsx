@@ -1,7 +1,11 @@
 import SecureView from "@components/SecureView";
-
+import { Suspense } from "react";
 const SecureViewPage = () => {
-  return <SecureView noAccess={false} />;
+  return (
+    <Suspense>
+      <SecureView noAccess={false} />
+    </Suspense>
+  );
 };
 
 export default SecureViewPage;

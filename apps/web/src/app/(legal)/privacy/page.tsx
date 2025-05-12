@@ -1,6 +1,6 @@
 import { Footer } from "@/components/layouts/footer";
 import { Metadata } from "next";
-
+import { Suspense } from "react";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "A job management platform built for restoration",
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default async function PrivacyPage() {
   return (
-    <>
+    <Suspense>
       <div className='flex w-full items-center justify-center bg-background'>
         <div className='prose mt-10 px-6'>
           <h1>Privacy Policy</h1>
@@ -1762,6 +1762,6 @@ export default async function PrivacyPage() {
         </div>
       </div>
       <Footer />
-    </>
+    </Suspense>
   );
 }

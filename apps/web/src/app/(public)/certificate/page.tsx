@@ -5,8 +5,8 @@ import { Certificate } from "./components/Certificate";
 import { useCertificate } from "./hooks/useCertificate";
 import { CertificateType } from "./types/certificate";
 import { useEffect } from "react";
-
-export default function CertificatesPage() {
+import { Suspense } from "react";
+function CertificatePage() {
   const searchParams = useSearchParams();
   const isCustomer = searchParams.get("isCustomer");
   const isRep = searchParams.get("isRep");
@@ -43,5 +43,13 @@ export default function CertificatesPage() {
       type={formData.type || undefined}
       errors={errors}
     />
+  );
+}
+
+export default function CertificatesPage() {
+  return (
+    <Suspense>
+      <CertificatePage />
+    </Suspense>
   );
 }

@@ -6,9 +6,9 @@ export const metadata: Metadata = {
   title: "Sign In",
 };
 
-export default async function LoginPage() {
+export default function LoginPage() {
   return (
-    <Suspense>
+    <Suspense fallback={null}>
       <LoginForm />
     </Suspense>
   );

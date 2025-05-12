@@ -7,5 +7,9 @@ export const metadata: Metadata = {
 };
 
 export default function AcceptInvitePage() {
-  return <AcceptInvite />;
+  return (
+    <Suspense>
+      <AcceptInvite />
+    </Suspense>
+  );
 }

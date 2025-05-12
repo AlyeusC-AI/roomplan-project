@@ -7,8 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { useCurrentUser, useLogout } from "@service-geek/api-client";
-
-export default function Layout({ children }: React.PropsWithChildren) {
+function AuthLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -82,6 +81,14 @@ export default function Layout({ children }: React.PropsWithChildren) {
           </div>
         </div>
       </div>
+    </Suspense>
+  );
+}
+
+export default function Layout({ children }: React.PropsWithChildren) {
+  return (
+    <Suspense>
+      <AuthLayout>{children}</AuthLayout>
     </Suspense>
   );
 }

@@ -13,12 +13,11 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
-interface ResetPasswordFormProps {
-  token?: string;
-}
-
-export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
+export function ResetPasswordForm() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");

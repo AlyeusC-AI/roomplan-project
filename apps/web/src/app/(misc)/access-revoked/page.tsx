@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import AccessRevokedPage from "./main";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Access Denied",
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function Component() {
-  return <AccessRevokedPage />;
+  return (
+    <Suspense>
+      <AccessRevokedPage />
+    </Suspense>
+  );
 }
