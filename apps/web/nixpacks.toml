@@ -1,7 +1,8 @@
 [phases.setup]
 nixPkgs = [
   "bzip2",
-  "yarn"
+  "yarn",
+  "nodejs_20"
 ]
 
 [phases.install]
@@ -11,4 +12,7 @@ cmds = ["yarn install"]
 cmd = "yarn start"
 
 [pack]
-packageManager = "yarn" 
+packageManager = "yarn"
+
+[variables]
+NODE_VERSION = "20" 
