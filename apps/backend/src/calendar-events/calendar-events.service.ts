@@ -12,8 +12,11 @@ import {
 } from '@prisma/client';
 import { CreateCalendarEventDto } from './dto/create-calendar-event.dto';
 import { UpdateCalendarEventDto } from './dto/update-calendar-event.dto';
-import { subDays, formatDistanceToNow } from 'date-fns';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import { ConfigService } from '@nestjs/config';
+
+dayjs.extend(relativeTime);
 
 @Injectable()
 export class CalendarEventsService {
@@ -23,19 +26,16 @@ export class CalendarEventsService {
   ) {}
 
   private calculateReminderDate(start: Date, reminderTime: string): Date {
-    const reminderDate = new Date(start);
+    const reminderDate = dayjs(start);
     switch (reminderTime) {
       case '24h':
-        reminderDate.setHours(reminderDate.getHours() - 24);
-        break;
+        return reminderDate.subtract(24, 'hour').toDate();
       case '2h':
-        reminderDate.setHours(reminderDate.getHours() - 2);
-        break;
+        return reminderDate.subtract(2, 'hour').toDate();
       case '40m':
-        reminderDate.setMinutes(reminderDate.getMinutes() - 40);
-        break;
+        return reminderDate.subtract(40, 'minute').toDate();
     }
-    return reminderDate;
+    return reminderDate.toDate();
   }
 
   async create(
@@ -347,7 +347,7 @@ export class CalendarEventsService {
   async sendReminders() {
     try {
       // Get current date and time
-      const now = new Date();
+      const now = dayjs();
       const currentDateTime = now.toISOString();
 
       // Fetch reminders that are due and not sent yet
@@ -355,7 +355,7 @@ export class CalendarEventsService {
         where: {
           date: {
             lte: currentDateTime,
-            gte: subDays(new Date(), 1).toISOString(),
+            gte: now.subtract(1, 'day').toISOString(),
           },
           OR: [{ textSentAt: null }, { emailSentAt: null }],
         },
@@ -426,7 +426,7 @@ export class CalendarEventsService {
               reminder.calendarEvent?.subject || 'Calendar Event'
             }\n${reminder.calendarEvent?.description || ''} ${
               project?.location ? `\n\nLocation: ${project.location}` : ''
-            }\n\nTime: ${reminder.calendarEvent?.start ? formatDistanceToNow(new Date(reminder.calendarEvent.start), { addSuffix: true }) : 'Time not specified'}\n\nBest regards,\n${
+            }\n\nTime: ${reminder.calendarEvent?.start ? dayjs().to(dayjs(reminder.calendarEvent.start)) : 'Time not specified'}\n\nBest regards,\n${
               organization?.name || 'RestoreGeek Team'
             }`;
 

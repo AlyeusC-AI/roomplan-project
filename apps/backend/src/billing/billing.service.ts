@@ -18,7 +18,7 @@ export class BillingService {
     this.stripe = new Stripe(
       this.configService.get('STRIPE_SECRET_KEY') || '',
       {
-        apiVersion: '2025-04-30.basil',
+        apiVersion: '2025-01-27.acacia',
       },
     );
   }
