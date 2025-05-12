@@ -1,11 +1,6 @@
 [phases.setup]
 nixPkgs = [
-  "bzip2",
-  "gcc",
-  "glibc",
-  "zlib",
-  "openssl",
-  "yarn"
+  "bzip2"
 ]
 
 [phases.install]
