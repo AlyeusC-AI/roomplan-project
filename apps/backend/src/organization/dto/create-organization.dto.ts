@@ -23,6 +23,34 @@ export class CreateOrganizationDto {
   @IsOptional()
   address?: string;
 
+  @ApiProperty({
+    description: 'Organization formatted address',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  formattedAddress?: string;
+
+  @ApiProperty({ description: 'Organization city', required: false })
+  @IsString()
+  @IsOptional()
+  city?: string;
+
+  @ApiProperty({ description: 'Organization region', required: false })
+  @IsString()
+  @IsOptional()
+  region?: string;
+
+  @ApiProperty({ description: 'Organization postal code', required: false })
+  @IsString()
+  @IsOptional()
+  postalCode?: string;
+
+  @ApiProperty({ description: 'Organization country', required: false })
+  @IsString()
+  @IsOptional()
+  country?: string;
+
   @ApiProperty({ description: 'Organization fax number', required: false })
   @IsString()
   @IsOptional()

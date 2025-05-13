@@ -5,12 +5,14 @@ export * from "./types/auth";
 export * from "./types/imagekit";
 export * from "./types/projectStatus";
 export * from "./types/equipment";
+export * from "./types/calendar-event";
 // Hooks
 export * from "./hooks/useBilling";
 export * from "./hooks/useOrganization";
 export * from "./hooks/useAuth";
 export * from "./hooks/useProjectStatus";
 export * from "./hooks/useEquipment";
+export * from "./hooks/useCalendarEvent";
 // Services
 export * from "./services/auth";
 export * from "./services/organization";
@@ -19,3 +21,4 @@ export * from "./services/imagekit";
 export * from "./services/storage";
 export * from "./services/projectStatus";
 export * from "./services/equipment";
+export * from "./services/calendar-event";

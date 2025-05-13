@@ -20,28 +20,22 @@ export class CreateCalendarEventDto {
   description?: string;
 
   @ApiProperty()
-  @IsDate()
-  date: Date;
-
-  @ApiProperty()
-  @IsDate()
+  @IsString()
   start: Date;
 
   @ApiProperty()
-  @IsDate()
+  @IsString()
   end: Date;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ default: false })
+  @IsBoolean()
   @IsOptional()
-  payload?: any;
+  remindClient?: boolean;
 
   @ApiProperty({ default: false })
   @IsBoolean()
-  remindClient: boolean;
-
-  @ApiProperty({ default: false })
-  @IsBoolean()
-  remindProjectOwners: boolean;
+  @IsOptional()
+  remindProjectOwners?: boolean;
 
   @ApiProperty({ required: false })
   @IsString()
@@ -60,5 +54,6 @@ export class CreateCalendarEventDto {
   @ApiProperty({ type: [String] })
   @IsArray()
   @IsString({ each: true })
-  users: string[];
+  @IsOptional()
+  users?: string[];
 }

@@ -54,6 +54,7 @@ import {
   CalendarMonthPicker,
   CalendarProvider,
   CalendarYearPicker,
+  useCalendar,
 } from "@/components/roadmap-ui/calendar";
 import {
   Popover,
@@ -88,24 +89,25 @@ import { useRouter } from "next/navigation";
 import { EventDetailsSheet } from "./event-details-sheet";
 import { EventForm } from "./event-form";
 import { EventsList } from "./events-list";
+import { calendarEventSchema } from "./types";
 import {
-  calendarEventSchema,
+  useCreateCalendarEvent,
+  useDeleteCalendarEvent,
+  useGetCalendarEvents,
+  useUpdateCalendarEvent,
   type CalendarEvent,
-  type CreateEventValues,
-} from "./types";
+  type CreateCalendarEventDto,
+} from "@service-geek/api-client";
 
 export default function CalendarComponent({
   project = null,
 }: {
-  project: Project | null;
+  project: { id: string; organizationId: string } | null;
 }) {
   const router = useRouter();
   const [createPopover, setCreatePopover] = useState(false);
   const [showProjectsModal, setShowProjectsModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     null
   );
@@ -116,32 +118,23 @@ export default function CalendarComponent({
   const [mapImageUrl, setMapImageUrl] = useState<string | null>(null);
   const [isLoadingMap, setIsLoadingMap] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [projectDetailsLoading, setProjectDetailsLoading] = useState(false);
 
-  const form = useForm<CreateEventValues>({
+  const form = useForm<CreateCalendarEventDto>({
     resolver: zodResolver(calendarEventSchema),
     mode: "onChange",
   });
+  const { month, year } = useCalendar();
 
-  const fetchEvents = async () => {
-    const response = await fetch(
-      `/api/v1/projects/calendar-events${project ? `?projectId=${project.id}` : ""}`
-    );
-    const data = await response.json();
-    setEvents(data.data);
-  };
-
-  useEffect(() => {
-    fetchEvents()
-      .then(() => {
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching events:", error);
-        setLoading(false);
-      });
-  }, []);
+  // Use the new hooks with date filtering
+  const { data: events = [], isLoading } = useGetCalendarEvents(
+    project?.id,
+    new Date(year, month, 1),
+    new Date(year, month + 1, 0)
+  );
+  const createEvent = useCreateCalendarEvent();
+  const updateEvent = useUpdateCalendarEvent();
+  const deleteEvent = useDeleteCalendarEvent();
 
   function getEventStatus(eventDate: Date): { status: string; color: string } {
     const now = new Date();
@@ -173,89 +166,51 @@ export default function CalendarComponent({
 
   async function onSubmit() {
     const data = form.getValues();
-    console.log("🚀 ~ onSubmit ~ data:", data);
     try {
-      setIsCreating(true);
-      const response = await fetch("/api/v1/projects/calendar-events", {
-        method: editingEvent ? "PATCH" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...data,
-          id: editingEvent?.id,
-          organizationId: project?.organizationId,
-        }),
-      });
-
-      if (response.ok) {
-        const event = await response.json();
-        if (editingEvent) {
-          fetchEvents();
-          // setEvents(
-          //   events.map((e) =>
-          //     event.publicId === editingEvent.publicId ? event : e
-          //   )
-          // );
-        } else {
-          setEvents([...events, event.data]);
-        }
-        setShowProjectsModal(false);
-        toast.success(
-          editingEvent
-            ? "Event updated successfully."
-            : "Event created successfully."
-        );
+      if (editingEvent) {
+        await updateEvent.mutateAsync({
+          id: editingEvent.id,
+          data: {
+            ...data,
+            // start: data.start.toISOString(),
+            // end: data.end.toISOString(),
+          },
+        });
+        toast.success("Event updated successfully.");
       } else {
-        toast.error(
-          editingEvent ? "Failed to update event." : "Failed to create event."
-        );
+        await createEvent.mutateAsync({
+          ...data,
+          // date: data.start.toISOString(),
+          // start: data.start.toISOString(),
+          // end: data.end.toISOString(),
+          // projectId: data.projectId?.toString(),
+        });
+        toast.success("Event created successfully.");
       }
-    } catch {
-      toast.error(
-        editingEvent ? "Failed to update event." : "Failed to create event."
-      );
+      setShowProjectsModal(false);
+    } catch (error) {
+      // toast.error(
+      //   editingEvent ? "Failed to update event." : "Failed to create event."
+      // );
     }
-
-    setIsCreating(false);
   }
 
   const onDelete = async () => {
     try {
-      setIsDeleting(true);
-      console.log("🚀 ~ onDelete ~ editingEvent:", editingEvent);
       const event = selectedEvent || editingEvent;
-      const response = await fetch("/api/v1/projects/calendar-events", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          publicId: event?.publicId,
-        }),
-      });
+      if (!event) return;
 
-      if (response.ok) {
-        setEvents(
-          events.filter((oldEvent) => oldEvent.publicId !== event?.publicId)
-        );
-        setShowProjectsModal(false);
-        setSelectedEvent(null);
-        setEditingEvent(null);
-
-        toast.success("Event deleted successfully.");
-      } else {
-        toast.error("Failed to delete event.");
-      }
-    } catch {
-      toast.error("Failed to delete event.");
+      await deleteEvent.mutateAsync(event.id);
+      setShowProjectsModal(false);
+      setSelectedEvent(null);
+      setEditingEvent(null);
+      toast.success("Event deleted successfully.");
+    } catch (error) {
+      // toast.error("Failed to delete event.");
     }
-
-    setIsDeleting(false);
   };
 
   const { projects } = projectsStore((state) => state);
-  console.log("🚀 ~ projects:", projects);
 
   const getStatusColor = (status: string): string => {
     switch (status?.toLowerCase()) {
@@ -272,37 +227,27 @@ export default function CalendarComponent({
     }
   };
 
-  const handleEventClick = async (event: CalendarEvent) => {
-    setSelectedEvent(event);
-    console.log("🚀 ~ handleEventClick ~ event:", event);
+  // const handleEventClick = async (event: CalendarEvent) => {
+  //   setSelectedEvent(event);
 
-    if (event.projectId) {
-      setProjectDetailsLoading(true);
-      try {
-        // const project = projects.find((p) => p.id === event.projectId);
-        // if (project) {
-        //   setProjectDetails(project);
-        //   if (project.location) {
-        //     getGoogleMapsImageUrl(project.location);
-        //   }
-        // }
-
-        const response = await fetch(`/api/v1/projects/${event.projectId}`);
-        if (response.ok) {
-          const data = await response.json();
-          console.log("🚀 ~ handleEventClick ~ data:", data);
-          setProjectDetails(data.data);
-          if (data.data.location) {
-            getGoogleMapsImageUrl(data.data.location);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching project details:", error);
-      } finally {
-        setProjectDetailsLoading(false);
-      }
-    }
-  };
+  //   if (event.projectId) {
+  //     setProjectDetailsLoading(true);
+  //     try {
+  //       const response = await fetch(`/api/v1/projects/${event.projectId}`);
+  //       if (response.ok) {
+  //         const data = await response.json();
+  //         setProjectDetails(data.data);
+  //         if (data.data.location) {
+  //           getGoogleMapsImageUrl(data.data.location);
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching project details:", error);
+  //     } finally {
+  //       setProjectDetailsLoading(false);
+  //     }
+  //   }
+  // };
 
   const getGoogleMapsImageUrl = async (address: string) => {
     try {
@@ -328,7 +273,7 @@ export default function CalendarComponent({
   const handleNotificationClick = (type: "arrival" | "start" | "complete") => {
     if (selectedEvent) {
       router.push(
-        `/notifications/${type}?projectId=${selectedEvent.projectId}&eventId=${selectedEvent.publicId}`
+        `/notifications/${type}?projectId=${selectedEvent.projectId}&eventId=${selectedEvent.id}`
       );
     }
   };
@@ -340,7 +285,7 @@ export default function CalendarComponent({
     form.reset();
   };
 
-  if (loading) {
+  if (isLoading) {
     return <LoadingPlaceholder />;
   }
 
@@ -349,7 +294,7 @@ export default function CalendarComponent({
       {/* Event Details Sheet */}
       <EventDetailsSheet
         event={selectedEvent}
-        projectDetails={projectDetails}
+        // projectDetails={projectDetails}
         mapImageUrl={mapImageUrl}
         onClose={() => setSelectedEvent(null)}
         isLoading={projectDetailsLoading}
@@ -357,13 +302,6 @@ export default function CalendarComponent({
           setEditingEvent(selectedEvent);
           setSelectedEvent(null);
           setShowProjectsModal(true);
-          // form.setValue("subject", selectedEvent?.subject || "");
-          // form.setValue("payload", selectedEvent?.payload || "");
-          // form.setValue("start", selectedEvent?.start ? new Date(selectedEvent.start) : new Date());
-          // form.setValue("end", selectedEvent?.end ? new Date(selectedEvent.end) : new Date());
-          // form.setValue("remindClient", selectedEvent?.remindClient || false);
-          // form.setValue("remindProjectOwners", selectedEvent?.remindProjectOwners || false);
-          // form.setValue("reminderTime", selectedEvent?.reminderTime || null);
         }}
         onDelete={() => setConfirmDelete(true)}
       />
@@ -389,7 +327,7 @@ export default function CalendarComponent({
           <EventForm
             form={form}
             onSubmit={onSubmit}
-            isCreating={isCreating}
+            isCreating={createEvent.isPending || updateEvent.isPending}
             editingEvent={editingEvent}
             createPopover={createPopover}
             setCreatePopover={setCreatePopover}
@@ -411,8 +349,11 @@ export default function CalendarComponent({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={onDelete} disabled={isDeleting}>
-              {isDeleting ? <LoadingSpinner /> : "Delete"}
+            <AlertDialogAction
+              onClick={onDelete}
+              disabled={deleteEvent.isPending}
+            >
+              {deleteEvent.isPending ? <LoadingSpinner /> : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -454,7 +395,7 @@ export default function CalendarComponent({
                   const end = new Date(event.end ?? event.date);
                   const status = getEventStatus(start);
                   return {
-                    id: event.publicId,
+                    id: event.id,
                     name: `${event.subject} - ${start.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`,
                     startAt: start,
                     endAt: end,
@@ -465,17 +406,22 @@ export default function CalendarComponent({
                     },
                   };
                 })}
-                onDateSelect={(date) => setSelectedDate(date)}
+                onDateSelect={(date) => {
+                  setSelectedDate(date);
+                  // Update the date range when a new date is selected
+                  const { start, end } = getMonthDateRange(date);
+                  // The query will automatically refetch with new dates
+                }}
                 selectedDate={selectedDate}
               >
                 {({ feature }) => (
                   <CalendarItem
                     onClick={() => {
                       const event = events.find(
-                        (event) => event.publicId === feature.id
+                        (event) => event.id === feature.id
                       );
                       if (event) {
-                        handleEventClick(event);
+                        setSelectedEvent(event);
                       }
                     }}
                     key={feature.id}
@@ -491,7 +437,9 @@ export default function CalendarComponent({
               events={events}
               selectedEvent={selectedEvent}
               projects={projects}
-              onEventClick={handleEventClick}
+              onEventClick={(event) => {
+                setSelectedEvent(event);
+              }}
               onEditEvent={(event) => {
                 setEditingEvent(event);
                 setShowProjectsModal(true);

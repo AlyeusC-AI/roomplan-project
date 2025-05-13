@@ -186,7 +186,9 @@ export function useRemoveMember() {
   });
 }
 
-export function useGetOrganizationMembers(orgId: string) {
+export function useGetOrganizationMembers() {
+  const org = useActiveOrganization();
+  const orgId = org?.id!;
   return useQuery({
     queryKey: ["organizations", orgId, "members"],
     queryFn: () => organizationService.getOrganizationMembers(orgId),

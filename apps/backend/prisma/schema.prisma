@@ -132,6 +132,7 @@ model Equipment {
 model Project {
   id                  String             @id @default(uuid())
   name                String
+  supabaseId          String?            @unique
   description         String?
   adjusterEmail       String?
   adjusterPhoneNumber String?
@@ -163,6 +164,7 @@ model EquipmentProject {
 model CalendarEvent {
   id          String   @id @default(uuid())
   subject     String
+  supabaseId  String?  @unique
   description String?
   date        DateTime
   start       DateTime
@@ -189,6 +191,7 @@ model CalendarEvent {
 
 model CalendarEventReminder {
   id             String         @id @default(uuid())
+  supabaseId     String?        @unique
   date           DateTime
   reminderTarget ReminderTarget // client, projectCreator, allAssigned
   sendEmail      Boolean        @default(false)

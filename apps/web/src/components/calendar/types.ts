@@ -10,7 +10,7 @@ export const calendarEventSchema = z.object({
       message: "Event subject must not be longer than 30 characters.",
     }),
   projectId: z.number().optional(),
-  payload: z
+  description: z
     .string()
     .min(2, {
       message: "Event message must be at least 2 characters.",
@@ -28,34 +28,3 @@ export const calendarEventSchema = z.object({
   }),
   reminderTime: z.enum(["24h", "2h", "40m"]).optional(),
 });
-
-export type CreateEventValues = {
-  subject: string;
-  payload: string;
-  start: Date;
-  end: Date;
-  projectId?: number;
-  remindProjectOwners?: boolean;
-  remindClient?: boolean;
-  reminderTime?: "24h" | "2h" | "40m";
-  users?: string[];
-};
-
-export type CalendarEvent = {
-  id: number;
-  publicId: string;
-  subject: string;
-  payload: string;
-  date: string;
-  start: string | null;
-  end: string | null;
-  dynamicId: string;
-  projectId: number | null;
-  organizationId: string | null;
-  isDeleted: boolean;
-  createdAt: string;
-  updatedAt: string;
-  remindClient: boolean;
-  remindProjectOwners: boolean;
-  reminderTime: string | null;
-};

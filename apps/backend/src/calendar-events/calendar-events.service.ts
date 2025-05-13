@@ -60,9 +60,12 @@ export class CalendarEventsService {
     const calendarEvent = await this.prisma.calendarEvent.create({
       data: {
         ...createCalendarEventDto,
-        usersToRemind: {
-          connect: createCalendarEventDto.users.map((id) => ({ id })),
-        },
+        date: dayjs(createCalendarEventDto.start).toDate(),
+        usersToRemind: createCalendarEventDto.users
+          ? {
+              connect: createCalendarEventDto.users.map((id) => ({ id })),
+            }
+          : undefined,
       },
       include: {
         usersToRemind: true,
@@ -106,7 +109,10 @@ export class CalendarEventsService {
         });
       }
 
-      if (createCalendarEventDto.users.length > 0) {
+      if (
+        createCalendarEventDto.users &&
+        createCalendarEventDto.users.length > 0
+      ) {
         reminders.push(
           ...createCalendarEventDto.users.map((userId) => ({
             date: reminderDate,
@@ -133,6 +139,8 @@ export class CalendarEventsService {
     organizationId: string,
     userId: string,
     projectId?: string,
+    startDate?: string,
+    endDate?: string,
   ): Promise<CalendarEvent[]> {
     // Check if user is a member of the organization
     const member = await this.prisma.organizationMember.findFirst({
@@ -154,10 +162,22 @@ export class CalendarEventsService {
         organizationId,
         projectId: projectId || undefined,
         isDeleted: false,
+        date:
+          startDate || endDate
+            ? {
+                gte: startDate ? dayjs(startDate).toDate() : undefined,
+                lte: endDate ? dayjs(endDate).toDate() : undefined,
+              }
+            : undefined,
+      },
+      take: 100,
+      orderBy: {
+        date: 'desc',
       },
       include: {
         usersToRemind: true,
         reminders: true,
+        project: true,
       },
     });
   }
@@ -234,6 +254,9 @@ export class CalendarEventsService {
       where: { id },
       data: {
         ...updateCalendarEventDto,
+        date: updateCalendarEventDto.start
+          ? dayjs(updateCalendarEventDto.start).toDate()
+          : undefined,
         usersToRemind: updateCalendarEventDto.users
           ? {
               set: updateCalendarEventDto.users.map((id) => ({ id })),

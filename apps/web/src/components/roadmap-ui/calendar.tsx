@@ -291,6 +291,7 @@ export const CalendarDatePicker = ({
 
 export type CalendarMonthPickerProps = {
   className?: string;
+  onMonthChange?: (date: Date) => void;
 };
 
 export const CalendarMonthPicker = ({
@@ -303,9 +304,9 @@ export const CalendarMonthPicker = ({
     <Combobox
       className={className}
       value={(month + 1).toString()}
-      setValue={(value) =>
-        setMonth((Number.parseInt(value) as CalendarState["month"]) - 1)
-      }
+      setValue={(value) => {
+        setMonth((Number.parseInt(value) as CalendarState["month"]) - 1);
+      }}
       data={monthsForLocale(locale).map((month, index) => ({
         value: index.toString(),
         label: month,

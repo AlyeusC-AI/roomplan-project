@@ -33,6 +33,7 @@ import { projectsStore } from "@atoms/projects";
 import { UseFormReturn } from "react-hook-form";
 import { CreateEventValues } from "./types";
 import { useEffect, useState } from "react";
+import { useGetOrganizationMembers } from "@service-geek/api-client";
 
 type EventFormProps = {
   form: UseFormReturn<CreateEventValues>;
@@ -61,6 +62,7 @@ export function EventForm({
   const [searchQuery, setSearchQuery] = useState("");
   const [isMemberSelectorOpen, setIsMemberSelectorOpen] = useState(false);
   const selectedUsers = form.watch("users") || [];
+  const { data: teamMembers } = useGetOrganizationMembers();
   // useEffect(() => {
   //   fetch("/api/v1/organization/members")
   //     .then((res) => res.json())
@@ -96,7 +98,7 @@ export function EventForm({
       console.log("🚀 ~ useEffect ~ editingEvent:", editingEvent);
       form.setValue("projectId", editingEvent.projectId || 0);
       form.setValue("subject", editingEvent.subject || "");
-      form.setValue("payload", editingEvent.payload || "");
+      form.setValue("description", editingEvent.description || "");
       form.setValue(
         "start",
         editingEvent.start ? new Date(editingEvent.start) : new Date()
@@ -206,7 +208,7 @@ export function EventForm({
         />
         <FormField
           control={form.control}
-          name='payload'
+          name='description'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Event Description</FormLabel>
@@ -374,30 +376,33 @@ export function EventForm({
                         name='users'
                         render={({ field }) => (
                           <CommandGroup>
-                            {/* {filteredMembers.map((member) => {
+                            {teamMembers?.data.map((member) => {
                               const isSelected = selectedUsers.includes(
-                                member.userId
+                                member.user?.id
                               );
                               return (
                                 <CommandItem
                                   key={member.id}
                                   value={member.id}
-                                  onSelect={() => handleSelect(member.userId)}
+                                  onSelect={() =>
+                                    handleSelect(member.user?.id ?? "")
+                                  }
                                 >
                                   <div className='flex items-center gap-2'>
                                     <div className='flex h-8 w-8 items-center justify-center rounded-full bg-primary/10'>
                                       <span className='text-sm font-medium'>
-                                        {member.firstName?.[0]}
-                                        {member.lastName?.[0] ||
-                                          member.email?.[0]}
+                                        {member.user?.firstName?.[0]}
+                                        {member.user?.lastName?.[0] ||
+                                          member.user?.email?.[0]}
                                       </span>
                                     </div>
                                     <div>
                                       <div className='text-sm font-medium'>
-                                        {member.firstName} {member.lastName}
+                                        {member.user?.firstName}{" "}
+                                        {member.user?.lastName}
                                       </div>
                                       <div className='text-xs text-muted-foreground'>
-                                        {member.email}
+                                        {member.user?.email}
                                       </div>
                                     </div>
                                   </div>
@@ -409,7 +414,7 @@ export function EventForm({
                                   />
                                 </CommandItem>
                               );
-                            })} */}
+                            })}
                           </CommandGroup>
                         )}
                       />

@@ -1,4 +1,9 @@
-import { MemberStatus, PrismaClient, Role } from '@prisma/client';
+import {
+  MemberStatus,
+  PrismaClient,
+  ReminderTarget,
+  Role,
+} from '@prisma/client';
 import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import { Database } from '../../src/types/database';
@@ -75,6 +80,83 @@ interface ProjectStatus_Supabase {
   organizationId: number;
 }
 
+interface Project_Supabase {
+  id: number;
+  createdAt: string;
+  closedAt: string | null;
+  isDeleted: boolean;
+  organizationId: number;
+  assignmentNumber: string;
+  publicId: string;
+  name: string;
+  location: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhoneNumber: string;
+  companyName: string;
+  managerName: string;
+  adjusterEmail: string;
+  adjusterName: string;
+  adjusterPhoneNumber: string;
+  insuranceCompanyName: string;
+  insuranceClaimId: string;
+  lossType: string;
+  catCode: string | null;
+  humidity: string;
+  lastTimeWeatherFetched: string | null;
+  temperature: string;
+  wind: string;
+  lat: string;
+  lng: string;
+  forecast: string;
+  claimSummary: string;
+  roofSegments: [];
+  roofSpecs: string | null;
+  rcvValue: string | null;
+  actualValue: string | null;
+  status: string;
+  projectStatusValueId: string | null;
+  damageType: string;
+  mainImage: string | null;
+  policyNumber: string | null;
+  dateOfLoss: string;
+}
+
+interface CalendarEvent_Supabase {
+  id: number;
+  publicId: string;
+  createdAt: string;
+  updatedAt: string;
+  subject: string;
+  payload: string;
+  projectId: string | null;
+  date: string;
+  dynamicId: string;
+  isDeleted: boolean;
+  remindClient: boolean;
+  remindProjectOwners: boolean;
+  organizationId: string;
+  start: string;
+  end: string;
+  reminderTime: string;
+  users: string[];
+}
+
+interface CalendarEventReminder_Supabase {
+  id: number;
+  reminderTarget: string;
+  createdAt: string;
+  updatedAt: string;
+  sendText: boolean;
+  sendEmail: boolean;
+  textSentAt: string | null;
+  emailSentAt: string | null;
+  calendarEventId: number;
+  date: string;
+  phone: string | null;
+  email: string | null;
+  userId: string | null;
+}
 const prisma = new PrismaClient();
 
 // Initialize Supabase client
@@ -86,7 +168,60 @@ if (!supabaseUrl || !supabaseServiceKey) {
 }
 
 const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey);
+async function migrateProjects() {
+  console.log('Starting project migration...');
 
+  // Fetch all users from Supabase
+  const { data: projects, error } = await supabase
+    .from('Project')
+    .select('*')
+    .eq('isDeleted', false);
+
+  if (error) {
+    throw new Error(`Error fetching users: ${error.message}`);
+  }
+  console.log('🚀 ~ migrateProjects ~ projects:', projects);
+
+  console.log(`Found ${projects.length} projects to migrate`);
+
+  // Migrate each user
+  for (const project of projects as Project_Supabase[]) {
+    console.log('🚀 ~ migrateProjects ~ project:', project);
+    try {
+      await prisma.project.upsert({
+        where: { supabaseId: project.publicId },
+        update: {
+          supabaseId: project.publicId, // Keep as string since that's what Supabase uses
+          createdAt: new Date(project.createdAt),
+          updatedAt: new Date(project.createdAt),
+          name: project.name,
+          description: project.claimSummary,
+          adjusterEmail: project.adjusterEmail,
+          adjusterName: project.adjusterName,
+          adjusterPhoneNumber: project.adjusterPhoneNumber,
+          clientEmail: project.clientEmail,
+          clientName: project.clientName,
+        },
+        create: {
+          name: project.name,
+          description: project.claimSummary,
+          adjusterEmail: project.adjusterEmail,
+          adjusterName: project.adjusterName,
+          adjusterPhoneNumber: project.adjusterPhoneNumber,
+          clientEmail: project.clientEmail,
+          clientName: project.clientName,
+          clientPhoneNumber: project.clientPhoneNumber,
+          supabaseId: project.publicId, // Keep as string since that's what Supabase uses
+          createdAt: new Date(project.createdAt),
+          updatedAt: new Date(project.createdAt),
+        },
+      });
+      console.log(`Migrated project: ${project.name}`);
+    } catch (error) {
+      console.error(`Error migrating project ${project.name}:`, error);
+    }
+  }
+}
 async function migrateUsers() {
   console.log('Starting user migration...');
 
@@ -341,15 +476,179 @@ async function migrateOrganizationMemberships() {
   }
 }
 
+async function migrateCalendarEvents() {
+  console.log('Starting calendar events migration...');
+  const { data: calendarEvents, error } = await supabase
+    .from('CalendarEvent')
+    .select('*')
+    .eq('isDeleted', false);
+
+  if (error) {
+    throw new Error(`Error fetching calendar events: ${error.message}`);
+  }
+
+  console.log(`Found ${calendarEvents.length} calendar events to migrate`);
+
+  for (const event of calendarEvents as CalendarEvent_Supabase[]) {
+    console.log('🚀 ~ migrateCalendarEvents ~ event:', event);
+    const project = await supabase
+      .from('Project')
+      .select('publicId')
+      .eq('isDeleted', false)
+      .eq('id', event.projectId)
+      .single();
+    console.log('🚀 ~ migrateCalendarEvents ~ project:', project);
+    try {
+      await prisma.calendarEvent.upsert({
+        where: { supabaseId: event.id.toString() },
+        update: {
+          subject: event.subject,
+          description: event.payload,
+          start: new Date(event.start),
+          end: new Date(event.end),
+          organization: {
+            connect: { supabaseId: event.organizationId },
+          },
+          project: project.data?.publicId
+            ? {
+                connect: { supabaseId: project.data?.publicId },
+              }
+            : undefined,
+          usersToRemind: event.users
+            ? {
+                connect: event.users.map((user) => ({
+                  supabaseId: user,
+                })),
+              }
+            : undefined,
+        },
+        create: {
+          supabaseId: event.id.toString(),
+          subject: event.subject,
+          description: event.payload,
+          date: new Date(event.start),
+          start: new Date(event.start),
+          end: new Date(event.end),
+          organization: {
+            connect: { supabaseId: event.organizationId },
+          },
+          project: project.data?.publicId
+            ? {
+                connect: { supabaseId: project.data?.publicId },
+              }
+            : undefined,
+          usersToRemind: event.users
+            ? {
+                connect: event.users.map((user) => ({
+                  supabaseId: user,
+                })),
+              }
+            : undefined,
+        },
+      });
+    } catch (error) {
+      console.error(`Error migrating calendar event ${event.id}:`, error);
+    }
+  }
+}
+
+async function migrateCalendarEventReminders() {
+  console.log('Starting calendar event reminders migration...');
+  const { data: calendarEventReminders, error } = await supabase
+    .from('CalendarEventReminder')
+    .select('*');
+  // .eq('isDeleted', false);
+
+  if (error) {
+    throw new Error(
+      `Error fetching calendar event reminders: ${error.message}`,
+    );
+  }
+
+  console.log(
+    `Found ${calendarEventReminders.length} calendar event reminders to migrate`,
+  );
+
+  for (const reminder of calendarEventReminders as CalendarEventReminder_Supabase[]) {
+    console.log('🚀 ~ migrateCalendarEventReminders ~ reminder:', reminder);
+    try {
+      await prisma.calendarEventReminder.upsert({
+        where: { supabaseId: reminder.id.toString() },
+        update: {
+          reminderTarget:
+            reminder.reminderTarget == 'projectCreator'
+              ? ReminderTarget.PROJECT_CREATOR
+              : reminder.reminderTarget == 'allAssigned'
+                ? ReminderTarget.USERS
+                : ReminderTarget.CLIENT,
+          sendEmail: reminder.sendEmail,
+          sendText: reminder.sendText,
+          date: new Date(reminder.date),
+          calendarEvent: {
+            connect: { supabaseId: reminder.calendarEventId.toString() },
+          },
+          emailSentAt: reminder.emailSentAt
+            ? new Date(reminder.emailSentAt)
+            : null,
+          textSentAt: reminder.textSentAt
+            ? new Date(reminder.textSentAt)
+            : null,
+          user: reminder.userId
+            ? {
+                connect: { supabaseId: reminder.userId },
+              }
+            : undefined,
+          createdAt: new Date(reminder.createdAt),
+          updatedAt: new Date(reminder.updatedAt),
+        },
+        create: {
+          reminderTarget:
+            reminder.reminderTarget == 'projectCreator'
+              ? ReminderTarget.PROJECT_CREATOR
+              : reminder.reminderTarget == 'allAssigned'
+                ? ReminderTarget.USERS
+                : ReminderTarget.CLIENT,
+          sendEmail: reminder.sendEmail,
+          sendText: reminder.sendText,
+          date: new Date(reminder.date),
+          calendarEvent: {
+            connect: { supabaseId: reminder.calendarEventId.toString() },
+          },
+          emailSentAt: reminder.emailSentAt
+            ? new Date(reminder.emailSentAt)
+            : null,
+          textSentAt: reminder.textSentAt
+            ? new Date(reminder.textSentAt)
+            : null,
+          user: reminder.userId
+            ? {
+                connect: { supabaseId: reminder.userId },
+              }
+            : undefined,
+          createdAt: new Date(reminder.createdAt),
+          updatedAt: new Date(reminder.updatedAt),
+        },
+      });
+    } catch (error) {
+      console.error(
+        `Error migrating calendar event reminder ${reminder.id}:`,
+        error,
+      );
+    }
+  }
+}
+
 async function main() {
   try {
     console.log('Starting migration from Supabase...');
 
     // Run migrations in sequence
     // await migrateUsers();
-    await migrateOrganizations();
+    // await migrateOrganizations();
     // await migrateOrganizationMemberships();
-
+    // await migrateProjects();
+    await migrateCalendarEvents();
+    await migrateCalendarEventReminders();
     console.log('Migration completed successfully!');
   } catch (error) {
     console.error('Migration failed:', error);

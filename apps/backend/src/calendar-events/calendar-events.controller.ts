@@ -67,11 +67,15 @@ export class CalendarEventsController {
     @Request() req: RequestWithUser,
     @Query('organizationId') organizationId: string,
     @Query('projectId') projectId?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ): Promise<CalendarEvent[]> {
     return this.calendarEventsService.findAll(
       organizationId,
       req.user.userId,
       projectId,
+      startDate,
+      endDate,
     );
   }
 
