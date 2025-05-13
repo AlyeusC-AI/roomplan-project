@@ -110,8 +110,17 @@ model ProjectStatus {
   updatedAt      DateTime     @updatedAt
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
+  supabaseId     String?      @unique
+  projects       Project[]
 
   @@index([organizationId])
+}
+
+enum LossType {
+  FIRE
+  WATER
+  WIND
+  HAIL
 }
 
 model Equipment {
@@ -145,6 +154,35 @@ model Project {
   updatedAt           DateTime           @updatedAt
   equipmentProject    EquipmentProject[]
   calendarEvents      CalendarEvent[]
+
+  closedAt         DateTime?
+  assignmentNumber String?
+
+  companyName String?
+  managerName String?
+
+  insuranceCompanyName String?
+  insuranceClaimId     String?
+  lossType             LossType?
+  catCode              String?
+  humidity             String?
+
+  temperature  String?
+  wind         String?
+  lat          String?
+  lng          String?
+  forecast     String?
+  claimSummary String?
+
+  roofSegments String[]
+  roofSpecs    String?
+  rcvValue     String?
+  actualValue  String?
+  status       ProjectStatus? @relation(fields: [statusId], references: [id])
+  statusId     String?
+  mainImage    String?
+  policyNumber String?
+  dateOfLoss   DateTime?
 }
 
 model EquipmentProject {
