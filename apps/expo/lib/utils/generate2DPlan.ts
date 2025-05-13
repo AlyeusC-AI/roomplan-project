@@ -691,5 +691,5 @@ export function makeSVG(data: EntireRooms, _roomNames: string[], mainRoomName: s
     if (sqftContent) svgContent += sqftContent;
     if (wallLengthMeasure) svgContent += wallLengthMeasure;
 
-    return `<svg  xmlns="http://www.w3.org/2000/svg" viewBox="${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}">${svgContent}</svg>`;
+    return `<svg viewBox="${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}">${svgContent}</svg>`;
 }
