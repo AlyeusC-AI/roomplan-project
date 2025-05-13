@@ -6,6 +6,7 @@ export * from "./types/imagekit";
 export * from "./types/projectStatus";
 export * from "./types/equipment";
 export * from "./types/calendar-event";
+export * from "./types/project";
 // Hooks
 export * from "./hooks/useBilling";
 export * from "./hooks/useOrganization";
@@ -13,6 +14,7 @@ export * from "./hooks/useAuth";
 export * from "./hooks/useProjectStatus";
 export * from "./hooks/useEquipment";
 export * from "./hooks/useCalendarEvent";
+export * from "./hooks/useProject";
 // Services
 export * from "./services/auth";
 export * from "./services/organization";
@@ -22,3 +24,4 @@ export * from "./services/storage";
 export * from "./services/projectStatus";
 export * from "./services/equipment";
 export * from "./services/calendar-event";
+export * from "./services/project";

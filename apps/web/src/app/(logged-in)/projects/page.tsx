@@ -13,5 +13,9 @@ export default async function Component() {
   const client = await createClient();
   const session = await client.auth.getSession();
   console.log(session.data.session?.access_token);
-  return <Suspense>{/* <ProjectList /> */}</Suspense>;
+  return (
+    <Suspense>
+      <ProjectList />
+    </Suspense>
+  );
 }

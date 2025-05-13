@@ -1,4 +1,5 @@
 import {
+  LossType,
   MemberStatus,
   PrismaClient,
   ReminderTarget,
@@ -183,11 +184,61 @@ async function migrateProjects() {
   console.log('🚀 ~ migrateProjects ~ projects:', projects);
 
   console.log(`Found ${projects.length} projects to migrate`);
-
+  // await prisma.project.deleteMany();
   // Migrate each user
   for (const project of projects as Project_Supabase[]) {
     console.log('🚀 ~ migrateProjects ~ project:', project);
     try {
+      const { data: organization } = await supabase
+        .from('Organization')
+        .select('publicId')
+        .eq('id', project.organizationId)
+        .single();
+
+      let statusId: string | null = null;
+
+      const status = await prisma.projectStatus.findFirst({
+        where: {
+          label: project.status,
+          organization: {
+            supabaseId: organization?.publicId,
+          },
+        },
+      });
+
+      if (status) {
+        statusId = status.id;
+      } else {
+        const newStatus = await prisma.projectStatus.create({
+          data: {
+            label: project.status,
+            organization: {
+              connect: { supabaseId: organization?.publicId },
+            },
+          },
+        });
+        statusId = newStatus.id;
+      }
+
+      const getLossType = (lossType: string) => {
+        switch (lossType) {
+          case 'fire':
+            return LossType.FIRE;
+          case 'water':
+            return LossType.WATER;
+          case 'wind':
+            return LossType.WIND;
+          case 'hail':
+            return LossType.HAIL;
+          case 'mold':
+            return LossType.MOLD;
+          default:
+            return LossType.OTHER;
+        }
+      };
+
+      const lossType = getLossType(project.lossType || project.damageType);
+
       await prisma.project.upsert({
         where: { supabaseId: project.publicId },
         update: {
@@ -201,6 +252,34 @@ async function migrateProjects() {
           adjusterPhoneNumber: project.adjusterPhoneNumber,
           clientEmail: project.clientEmail,
           clientName: project.clientName,
+          clientPhoneNumber: project.clientPhoneNumber,
+          companyName: project.companyName,
+          managerName: project.managerName,
+          insuranceCompanyName: project.insuranceCompanyName,
+          insuranceClaimId: project.insuranceClaimId,
+          lossType,
+          catCode: project.catCode,
+          humidity: project.humidity,
+          temperature: project.temperature,
+          wind: project.wind,
+          lat: project.lat,
+          lng: project.lng,
+          forecast: project.forecast,
+          claimSummary: project.claimSummary,
+          roofSegments: project.roofSegments,
+          roofSpecs: project.roofSpecs,
+          rcvValue: project.rcvValue,
+          actualValue: project.actualValue,
+          status: {
+            connect: { id: statusId },
+          },
+          // damageType: project.damageType,
+          mainImage: project.mainImage,
+          policyNumber: project.policyNumber,
+          dateOfLoss: project.dateOfLoss,
+          closedAt: project.closedAt,
+          assignmentNumber: project.assignmentNumber,
+          location: project.location,
         },
         create: {
           name: project.name,
@@ -214,6 +293,37 @@ async function migrateProjects() {
           supabaseId: project.publicId, // Keep as string since that's what Supabase uses
           createdAt: new Date(project.createdAt),
           updatedAt: new Date(project.createdAt),
+
+          companyName: project.companyName,
+          managerName: project.managerName,
+          insuranceCompanyName: project.insuranceCompanyName,
+          insuranceClaimId: project.insuranceClaimId,
+          lossType,
+          catCode: project.catCode,
+          humidity: project.humidity,
+          temperature: project.temperature,
+          wind: project.wind,
+          lat: project.lat,
+          lng: project.lng,
+          forecast: project.forecast,
+          claimSummary: project.claimSummary,
+          roofSegments: project.roofSegments,
+          roofSpecs: project.roofSpecs,
+          rcvValue: project.rcvValue,
+          actualValue: project.actualValue,
+          status: {
+            connect: { id: statusId },
+          },
+          // damageType: project.damageType,
+          mainImage: project.mainImage,
+          policyNumber: project.policyNumber,
+          dateOfLoss: project.dateOfLoss,
+          closedAt: project.closedAt,
+          assignmentNumber: project.assignmentNumber,
+          location: project.location,
+          organization: {
+            connect: { supabaseId: organization?.publicId },
+          },
         },
       });
       console.log(`Migrated project: ${project.name}`);
@@ -343,12 +453,15 @@ async function migrateOrganizations() {
           updatedAt: new Date(org.updatedAt),
           projectStatuses: {
             deleteMany: {},
-            create: projectStatuses.map((status: ProjectStatus_Supabase) => ({
-              label: status.label,
-              color: status.color,
-              order: status.order,
-              description: status.description,
-            })),
+            create: projectStatuses.map(
+              (status: ProjectStatus_Supabase, index: number) => ({
+                label: status.label,
+                color: status.color,
+                order: status.order,
+                description: status.description,
+                isDefault: index === 0,
+              }),
+            ),
           },
           equipments: {
             deleteMany: {},
@@ -361,12 +474,15 @@ async function migrateOrganizations() {
         },
         create: {
           projectStatuses: {
-            create: projectStatuses.map((status: ProjectStatus_Supabase) => ({
-              label: status.label,
-              color: status.color,
-              order: status.order,
-              description: status.description,
-            })),
+            create: projectStatuses.map(
+              (status: ProjectStatus_Supabase, index: number) => ({
+                label: status.label,
+                color: status.color,
+                order: status.order,
+                description: status.description,
+                isDefault: index === 0,
+              }),
+            ),
           },
           equipments: {
             create:
@@ -646,9 +762,9 @@ async function main() {
     // await migrateUsers();
     // await migrateOrganizations();
     // await migrateOrganizationMemberships();
-    // await migrateProjects();
-    await migrateCalendarEvents();
-    await migrateCalendarEventReminders();
+    await migrateProjects();
+    // await migrateCalendarEvents();
+    // await migrateCalendarEventReminders();
     console.log('Migration completed successfully!');
   } catch (error) {
     console.error('Migration failed:', error);

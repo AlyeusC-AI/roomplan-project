@@ -13,6 +13,7 @@ import { ProjectStatusModule } from './project-status/project-status.module';
 import { EquipmentModule } from './equipment/equipment.module';
 import { CronModule } from './cron/cron.module';
 import { CalendarEventsModule } from './calendar-events/calendar-events.module';
+import { ProjectsModule } from './projects/projects.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CalendarEventsModule } from './calendar-events/calendar-events.module';
     EquipmentModule,
     CalendarEventsModule,
     CronModule,
+    ProjectsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

@@ -63,6 +63,7 @@ model Organization {
   projectStatuses ProjectStatus[]
   equipments      Equipment[]
   calendarEvents  CalendarEvent[]
+  projects        Project[]
 }
 
 enum MemberStatus {
@@ -121,6 +122,8 @@ enum LossType {
   WATER
   WIND
   HAIL
+  MOLD
+  OTHER
 }
 
 model Equipment {
@@ -183,6 +186,9 @@ model Project {
   mainImage    String?
   policyNumber String?
   dateOfLoss   DateTime?
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
 }
 
 model EquipmentProject {

@@ -16,10 +16,28 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import AddressAutoComplete from "@components/ui/address-automplete";
 import { LoadingPlaceholder } from "@components/ui/spinner";
-import { DAMAGE_TYPES, DamageType } from "@types/damage";
 import { Checkbox } from "@components/ui/checkbox";
 import { cn } from "@lib/utils";
+import {
+  useCreateProject,
+  useActiveOrganization,
+} from "@service-geek/api-client";
+import { LossType } from "@service-geek/api-client";
 
+const DAMAGE_TYPES = [
+  { value: LossType.FIRE, label: "Fire" },
+  { value: LossType.WATER, label: "Water" },
+  { value: LossType.WIND, label: "Wind" },
+  { value: LossType.HAIL, label: "Hail" },
+  { value: LossType.MOLD, label: "Mold" },
+  { value: LossType.OTHER, label: "Other" },
+] as const;
+
+interface AddressType {
+  formattedAddress: string;
+  lat: number;
+  lng: number;
+}
 
 const CreateNewProject = ({
   open,
@@ -34,13 +52,13 @@ const CreateNewProject = ({
   );
   const [clientPhoneNumber, setClientPhoneNumber] = useState("");
   const [clientEmail, setClientEmail] = useState("");
-  const [damageType, setDamageType] = useState<DamageType | undefined>();
+  const [damageType, setDamageType] = useState<LossType>();
   const [searchInput, setSearchInput] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
   const { track } = useAmplitudeTrack();
   const router = useRouter();
+  const createProject = useCreateProject();
 
-  const createProject = async (e: React.FormEvent) => {
+  const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!projectLocation || !projectName) {
       return toast.error("Please provide a name and location for the project.");
@@ -49,47 +67,35 @@ const CreateNewProject = ({
       category: "Project List",
     });
 
-    setIsCreating(true);
     try {
-      const res = await fetch("/api/v1/projects", {
-        method: "POST",
-        body: JSON.stringify({
-          name: projectName,
-          location: projectLocation,
-          clientPhoneNumber: clientPhoneNumber,
-          clientEmail: clientEmail,
-          damageType: damageType,
-
-        }),
+      const result = await createProject.mutateAsync({
+        name: projectName,
+        location: projectLocation.formattedAddress,
+        clientPhoneNumber,
+        clientEmail,
+        lossType: damageType,
+        lat: projectLocation.lat.toString(),
+        lng: projectLocation.lng.toString(),
       });
-      if (res.ok) {
-        const json = await res.json();
-        event("create_new_project", {
-          category: "Project List",
-          projectId: json.projectId,
-        });
-        track("Project Created", { projectId: json.projectId });
 
-        router.push(`/projects/${json.projectId}/overview`);
-      } else {
-        toast.error("Could not create project");
-        console.error("Could not create project");
-      }
+      event("create_new_project", {
+        category: "Project List",
+        projectId: result.data.id,
+      });
+      track("Project Created", { projectId: result.data.id });
+
+      router.push(`/projects/${result.data.id}/overview`);
+      setOpen(false);
     } catch (error) {
       toast.error("Could not create project");
       console.error(error);
     }
-    setIsCreating(false);
   };
-
-  if (isCreating) {
-    <LoadingPlaceholder />;
-  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-2xl">
-        {isCreating ? (
+      <DialogContent className='max-w-2xl'>
+        {createProject.isPending ? (
           <DialogDescription>Creating project...</DialogDescription>
         ) : (
           <>
@@ -118,7 +124,6 @@ const CreateNewProject = ({
                 <Label
                   htmlFor='project-location'
                   className='whitespace-nowrap text-right'
-                  
                 >
                   Project Location *
                 </Label>
@@ -133,72 +138,66 @@ const CreateNewProject = ({
                     placeholder='Enter address'
                   />
                 </div>
-                </div>
+              </div>
 
-                <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='project-name' className='text-right' 
-                
-                >
-                  Client Phone Number 
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='client-phone' className='text-right'>
+                  Client Phone Number
                 </Label>
                 <Input
-                  id='project-name'
+                  id='client-phone'
                   value={clientPhoneNumber}
                   onChange={(e) => setClientPhoneNumber(e.target.value)}
                   className='col-span-3'
                   placeholder='Client Phone Number'
-                  required
                 />
               </div>
 
               <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='project-name' className='text-right'>
+                <Label htmlFor='client-email' className='text-right'>
                   Client Email
                 </Label>
                 <Input
-                  id='project-name'
+                  id='client-email'
                   value={clientEmail}
                   onChange={(e) => setClientEmail(e.target.value)}
                   className='col-span-3'
                   placeholder='Client Email'
-                  required
                 />
               </div>
-          
-                <div className="space-y-2"> 
-            <Label htmlFor="formDamageTypes" className="text-base font-medium dark:text-gray-100">Damage Types</Label>
-            <div className="flex flex-wrap gap-2">
-              {DAMAGE_TYPES.map((type) => (
-                <div
-                  key={type.value}
-                  className={cn(
-                    "flex items-center space-x-2 rounded-md border px-3 py-2 cursor-pointer transition-colors",
-                    "hover:bg-gray-100 dark:hover:bg-gray-700",
-                    damageType === type.value
-                      ? "border-primary bg-primary/5 dark:bg-primary/10"
-                      : "border-gray-200 dark:border-gray-700"
-                  )}
-                  onClick={() => setDamageType(type.value as DamageType)}
+
+              <div className='space-y-2'>
+                <Label
+                  htmlFor='formDamageTypes'
+                  className='text-base font-medium dark:text-gray-100'
                 >
-                  <Checkbox
-                    id={`damage-type-${type.value}`}
-                      checked={damageType === type.value}
-                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                  />
-                  <Label
-                    className="text-sm font-medium cursor-pointer"
-                  >
-                    {type.label}
-                  </Label>
+                  Damage Types
+                </Label>
+                <div className='flex flex-wrap gap-2'>
+                  {DAMAGE_TYPES.map((type) => (
+                    <div
+                      key={type.value}
+                      className={cn(
+                        "flex cursor-pointer items-center space-x-2 rounded-md border px-3 py-2 transition-colors",
+                        "hover:bg-gray-100 dark:hover:bg-gray-700",
+                        damageType === type.value
+                          ? "border-primary bg-primary/5 dark:bg-primary/10"
+                          : "border-gray-200 dark:border-gray-700"
+                      )}
+                      onClick={() => setDamageType(type.value)}
+                    >
+                      <Checkbox
+                        id={`damage-type-${type.value}`}
+                        checked={damageType === type.value}
+                        className='data-[state=checked]:border-primary data-[state=checked]:bg-primary'
+                      />
+                      <Label className='cursor-pointer text-sm font-medium'>
+                        {type.label}
+                      </Label>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-
-
-
-
-
+              </div>
             </div>
             <DialogFooter>
               <Button
@@ -208,7 +207,10 @@ const CreateNewProject = ({
               >
                 Cancel
               </Button>
-              <Button onClick={createProject} disabled={isCreating}>
+              <Button
+                onClick={handleCreateProject}
+                disabled={createProject.isPending}
+              >
                 Create
               </Button>
             </DialogFooter>
