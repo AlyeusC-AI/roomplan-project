@@ -40,7 +40,7 @@ export type Room = {
 
 const inchText = (meters: number) => {
     const inches = Math.round(meters * 39.3701); // Convert meters to inches
-    const inchesText = `${Math.floor(inches/12)}'${inches%12}"`;
+    const inchesText = `${Math.floor(inches / 12)}'${inches % 12}"`;
     return inchesText;
 }
 
@@ -67,12 +67,12 @@ function findEdgePointsOfLine(points: Point[]) {
     const maxZ = Math.max(...points.map(p => p[2]));
 
     const p00 = [[minX, 0, minZ], [maxX, 0, maxZ]];
-    const p01 = [[minX, 0, maxZ], [maxX, 0, minZ]];
+    const p01 = [[minX, 0, maxZ], [maxX, 0, minZ]]; 
 
     return points.find(p => p[0] === minX && p[2] === minZ) ? p00 : p01;
 }
 
-function drawWallLength(points: Point[], floors: Point[][], rootFloors: Point[][], color = "black", width = 0.01, fill="none") {
+function drawWallLength(points: Point[], floors: Point[][], rootFloors: Point[][], color = "black", width = 0.01, fill = "none") {
     const w0 = wallWidth * 3, w1 = -wallWidth * 3;
     let mp = [points[0][0] + (points[1][0] - points[0][0]) / 2, points[0][2] + (points[1][2] - points[0][2]) / 2];
 
@@ -117,7 +117,7 @@ function drawWallLength(points: Point[], floors: Point[][], rootFloors: Point[][
 
     if (!measureLine) { return }
 
-    const inchesText = inchText(length / scaleFactor);
+    const inchesText = inchText(length /100 * 1.15);
 
     // Draw measurement line
     const textLength = inchesText.length * (fontSize / 1.5);
@@ -155,7 +155,7 @@ function getSmallestBoundingSquare(points: [number, number][]): { width: number,
             ];
         });
     }
-    
+
     function getBoundingBox(points: [number, number][]) {
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
         for (const [x, y] of points) {
@@ -166,13 +166,13 @@ function getSmallestBoundingSquare(points: [number, number][]): { width: number,
         }
         return { width: maxX - minX, height: maxY - minY };
     }
-    
+
     let minSquareSize = Infinity;
     let bestBoundingBox: { width: number, height: number } = {
         width: 0,
         height: 0
     };
-    
+
     for (let i = 0; i < points.length; i++) {
         let p1 = points[i];
         let p2 = points[(i + 1) % points.length];
@@ -180,13 +180,13 @@ function getSmallestBoundingSquare(points: [number, number][]): { width: number,
         let rotatedPoints = getRotatedPoints(points, -angle);
         let { width, height } = getBoundingBox(rotatedPoints);
         let squareSize = width * height;
-        
+
         if (squareSize < minSquareSize) {
             minSquareSize = squareSize;
             bestBoundingBox = { width, height };
         }
     }
-    
+
     return bestBoundingBox;
 }
 
@@ -202,7 +202,7 @@ function calculatePolygonProperties(inputPoints: Point[]) {
     for (let i = 0; i < n; i++) {
         const j = (i + 1) % n; // Next point (loop back at end)
         const crossProduct = points[i][0] * points[j][1] - points[j][0] * points[i][1];
-        
+
         area += crossProduct;
         cx += (points[i][0] + points[j][0]) * crossProduct;
         cy += (points[i][1] + points[j][1]) * crossProduct;
@@ -237,6 +237,10 @@ function rotatePointXZ(point: Point, angle: number): Point {
 }
 
 function calculateRotationAngleXZ(wall: Point[]) {
+     // Add null/undefined check and ensure wall has at least 2 points
+    if (!wall || wall.length < 2 || !wall[0] || !wall[1]) {
+        return 0; // Default angle if wall is invalid
+    }
     const start = wall[0];
     const end = wall[1];
     const dx = end[0] - start[0]; // Change in x
@@ -244,19 +248,27 @@ function calculateRotationAngleXZ(wall: Point[]) {
     return -Math.atan2(dz, dx);   // Angle to align with x-axis
 }
 
+let maxWall: Point[] = [[0, 0, 0], [0, 0, 0]];
+let maxIndex: number;
+let maxLength = -Infinity
+
 function alignRoomHorizontallyXZ(room: Room, initAngle: number | undefined = undefined) {
     // Choose a wall to align with the x-axis in the xz plane
-    let maxLength = -Infinity
-    let wall = room.walls[0];
-    room.walls.forEach(_wall => {
+    let maxWall = room.walls[0];
+    const [p0, p1] = findEdgePointsOfLine(maxWall)
+    maxLength = Math.sqrt(Math.pow(p0[0] - p1[0], 2) + Math.pow(p0[2] - p1[2], 2));
+    let index = 0;
+    room.walls.forEach((_wall, _index) => {
         const [p0, p1] = findEdgePointsOfLine(_wall)
         const length = Math.sqrt(Math.pow(p0[0] - p1[0], 2) + Math.pow(p0[2] - p1[2], 2));
         if (length > maxLength) {
             maxLength = length;
-            wall = _wall;
+            maxWall = _wall;
+            maxIndex = _index;
         }
     });
-    const angle = initAngle || calculateRotationAngleXZ(wall);
+    
+    const angle = initAngle || calculateRotationAngleXZ(maxWall);
 
     // Function to rotate all points in the room around the y-axis
     function rotateAllPointsXZ(points: Point[]) {
@@ -286,15 +298,60 @@ function alignRoomHorizontallyXZ(room: Room, initAngle: number | undefined = und
         room.openings = room.openings.map(opening => rotateAllPointsXZ(opening));
     }
 
-    return {room, angle};
+    return { room, angle };
+}
+
+// Helper to calculate angle between two segments in XZ plane
+function calculateAngleForSegment(segment: Point[], wall: Point[]): number {
+
+    // Check if segment and wall are valid
+    if (!segment || segment.length < 2 || !wall || wall.length < 2) {
+        return 0; // Default angle if segment or wall is invalid
+    }
+    const [a0, a1] = wall;
+    const [b0, b1] = segment;
+
+    // Vector A (basis wall)
+    const ax = a1[0] - a0[0];
+    const az = a1[2] - a0[2];
+
+    // Vector B (current wall)
+    const bx = b1[0] - b0[0];
+    const bz = b1[2] - b0[2];
+
+    const dot = ax * bx + az * bz;
+    const magA = Math.sqrt(ax * ax + az * az);
+    const magB = Math.sqrt(bx * bx + bz * bz);
+
+    const cosTheta = dot / (magA * magB);
+    const clampedCos = Math.max(-1, Math.min(1, cosTheta));
+    const angleRad = Math.acos(clampedCos);
+
+    return angleRad * (180 / Math.PI); // convert to degrees
+}
+
+// Main function to calculate angles for all walls
+function calculateAllAngles(room: Room): number[] {
+    const angles: number[] = [];
+    room.walls.forEach(wall => {
+        if (wall.length === 2) {
+            angles.push(calculateAngleForSegment(wall, maxWall));
+        }
+    });
+
+    return angles;
 }
 
 export function makeSVG(data: EntireRooms, _roomNames: string[], mainRoomName: string) {
     // const {room, angle} = alignRoomHorizontallyXZ(data.entireRoom);
     // const subRooms = data.rooms.map(room => alignRoomHorizontallyXZ(room, angle).room);
 
-    const originalRoomKeys = data.originalRooms.map(room => `${room.walls.length}-${room.floors.length}-${room.doors.length}-${room.windows.length}-${room.openings.length}-${room.objects.length}`);
-    const newRooMkeys = data.rooms.map(room => `${room.walls.length}-${room.floors.length}-${room.doors.length}-${room.windows.length}-${room.openings.length}-${room.objects.length}`);
+    const originalRoomKeys = (data.originalRooms || []).map(room =>
+        `${(room.walls || []).length}-${(room.floors || []).length}-${(room.doors || []).length}-${(room.windows || []).length}-${(room.openings || []).length}-${(room.objects || []).length}`
+    );
+    const newRooMkeys = (data.rooms || []).map(room =>
+        `${(room.walls || []).length}-${(room.floors || []).length}-${(room.doors || []).length}-${(room.windows || []).length}-${(room.openings || []).length}-${(room.objects || []).length}`
+    );
 
     const roomNames: string[] = []
     newRooMkeys.forEach((key) => {
@@ -307,23 +364,187 @@ export function makeSVG(data: EntireRooms, _roomNames: string[], mainRoomName: s
     })
 
     const _room: Room = JSON.parse(JSON.stringify(data.entireRoom))
-    const _subRooms: Room[] = JSON.parse(JSON.stringify(data.rooms));
+    const _subRooms: Room[] = JSON.parse(JSON.stringify(data.rooms || []));
 
-    const {room, angle} = alignRoomHorizontallyXZ(_room);
+    const { room, angle } = alignRoomHorizontallyXZ(_room);
     const subRooms = _subRooms.map(room => alignRoomHorizontallyXZ(room, angle).room);
 
-    function createPolyline(points: Point[], color = "black", width = 0.05, fill="none") {
+    maxWall = room.walls[maxIndex];
+
+    calculateAllAngles(room);
+    let matchCount: number[] = [];
+    for(let i = 0; i < room.walls.length; i++) {
+        matchCount[i] = 0;
+        for(let j = 0; j < room.walls.length; j++) {
+            if(Math.abs(calculateAngleForSegment(room.walls[j], room.walls[i])) < 0.01) {
+                matchCount[i]++;
+            }
+        }
+    }
+
+    for(let i = 0; i < room.walls.length; i++) {
+        if(matchCount[maxIndex] < matchCount[i]) maxIndex = i;
+    }
+
+    maxWall = room.walls[maxIndex];
+
+    let angles = [];
+    angles= calculateAllAngles(room);
+
+    let errWalls: number[] = [];
+    let errors: number[] = [];
+
+    for(let i = 0; i < room.walls.length; i++) {
+        if(Math.abs(angles[i] - 0) > 0.3 && Math.abs(angles[i] - 90) > 0.3 && Math.abs(angles[i] - 180) > 0.3) {
+            if(Math.min(Math.abs(angles[i] - 0), Math.abs(angles[i] - 90), Math.abs(angles[i] - 180)) > 10.0) {
+                continue;
+            }
+            errWalls.push(i);
+            errors.push(Math.min(Math.abs(angles[i] - 0), Math.abs(angles[i] - 90), Math.abs(angles[i] - 180)));
+        }
+    }
+
+    errWalls.forEach(_wall => {
+        
+    });
+
+    function rotatePointAround(p: Point, center: Point, angleDeg: number): Point {
+        const angleRad = (Math.PI / 180) * angleDeg;
+        const dx = p[0] - center[0];
+        const dz = p[2] - center[2];
+        const xRot = dx * Math.cos(angleRad) - dz * Math.sin(angleRad);
+        const zRot = dx * Math.sin(angleRad) + dz * Math.cos(angleRad);
+        return [xRot + center[0], p[1], zRot + center[2]];
+    }
+
+    //determine the rotation direction and apply rotatation.
+
+    function distance(p1: Point, p2: Point): number {
+        const dx = p1[0] - p2[0];
+        const dz = p1[2] - p2[2];
+        return Math.sqrt(dx * dx + dz * dz);
+    }
+
+    errWalls.forEach((wallIndex, idx) => {
+        const wall = room.walls[wallIndex];
+        const errorAngle = errors[idx];
+
+        const start = wall[0];
+        const end = wall[1];
+        const center: Point = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2, (start[2] + end[2]) / 2];
+
+        const rotateAndCompare = (angle: number): number => {
+            const newStart = rotatePointAround(start, center, angle);
+            const newEnd = rotatePointAround(end, center, angle);
+
+            let minDist = Infinity;
+            for (let otherWall of room.walls) {
+                if (otherWall === wall) continue;
+                minDist = Math.min(minDist,
+                    distance(newStart, otherWall[0]),
+                    distance(newStart, otherWall[1]),
+                    distance(newEnd, otherWall[0]),
+                    distance(newEnd, otherWall[1])
+                );
+            }
+            return minDist;
+        };
+
+        const distPos = rotateAndCompare(errorAngle);
+        const distNeg = rotateAndCompare(-errorAngle);
+
+        const bestAngle = distPos < distNeg ? errorAngle : -errorAngle;
+        wall[0] = rotatePointAround(start, center, bestAngle);
+        wall[1] = rotatePointAround(end, center, bestAngle);
+
+        room.walls[wallIndex] = wall;
+    });
+
+    //Rotate doors
+
+    function segmentsIntersect(p1: Point, p2: Point, q1: Point, q2: Point): boolean {
+    function ccw(a: Point, b: Point, c: Point): boolean {
+        return (c[2] - a[2]) * (b[0] - a[0]) > (b[2] - a[2]) * (c[0] - a[0]);
+    }
+
+        return (ccw(p1, q1, q2) !== ccw(p2, q1, q2)) && (ccw(p1, p2, q1) !== ccw(p1, p2, q2));
+    }
+
+    function calculateLineAngleDeg(start: Point, end: Point): number {
+        return Math.atan2(end[2] - start[2], end[0] - start[0]) * (180 / Math.PI);
+    }
+
+    function rotateLineAroundCenter(start: Point, end: Point, angleDeg: number): [Point, Point] {
+        const center: Point = [
+            (start[0] + end[0]) / 2,
+            (start[1] + end[1]) / 2,
+            (start[2] + end[2]) / 2
+        ];
+        return [
+            rotatePointAround(start, center, angleDeg),
+            rotatePointAround(end, center, angleDeg)
+        ];
+    }
+
+    function isAngleDeviationSignificant(angleDeg: number): boolean {
+        const targets = [0, 90, 180, 270];
+        return Math.min(...targets.map(t => Math.abs(angleDeg - t))) > 0.3;
+    }
+
+    const rotatedDoorIndices = new Set<number>();
+
+    room.walls.forEach((wall, wallIndex) => {
+        const wallStart = wall[0];
+        const wallEnd = wall[1];
+        const wallAngle = calculateLineAngleDeg(wallStart, wallEnd);
+
+        room.doors.forEach((door, doorIndex) => {
+            if (rotatedDoorIndices.has(doorIndex)) return;
+
+            const doorStart = door[0];
+            const doorEnd = door[1];
+
+            // ✅ Only proceed if segments intersect
+            if (!segmentsIntersect(wallStart, wallEnd, doorStart, doorEnd)) return;
+
+            const doorAngle = calculateLineAngleDeg(doorStart, doorEnd);
+            const deviation = Math.abs(doorAngle - wallAngle);
+
+            if (isAngleDeviationSignificant(deviation)) {
+                // Try rotating in both directions
+                const [rotatedStartPos, rotatedEndPos] = rotateLineAroundCenter(doorStart, doorEnd, -deviation);
+                const [rotatedStartNeg, rotatedEndNeg] = rotateLineAroundCenter(doorStart, doorEnd, deviation);
+
+                const anglePos = calculateLineAngleDeg(rotatedStartPos, rotatedEndPos);
+                const angleNeg = calculateLineAngleDeg(rotatedStartNeg, rotatedEndNeg);
+
+                const diffPos = Math.abs(anglePos - wallAngle);
+                const diffNeg = Math.abs(angleNeg - wallAngle);
+
+                if (diffPos < diffNeg) {
+                    room.doors[doorIndex] = [rotatedStartPos, rotatedEndPos];
+                } else {
+                    room.doors[doorIndex] = [rotatedStartNeg, rotatedEndNeg];
+                }
+
+                rotatedDoorIndices.add(doorIndex);
+            }
+        });
+    });
+
+    function createPolyline(points: Point[], color = "black", width = 0.05, fill = "none") {
         const pointsStr = points.map(p => `${p[0]},${p[2]}`).join(" ");
         return `<polyline stroke-linecap="square" points="${pointsStr}" stroke="${color}" stroke-width="${width}" fill="${fill}" />`;
     }
 
-    function createPoylLineOverWall(points: Point[], color = "black", width = 0.05, fill="none") {
+    function createPoylLineOverWall(points: Point[], color = "black", width = 0.05, fill = "none") {
         const pointsStr = points.map(p => `${p[0]},${p[2]}`).join(" ");
         const wallCover = `<polyline stroke-linecap="butt" points="${pointsStr}" stroke="${floorFill}" stroke-width="${wallWidth}" fill="${fill}" />`;
         return wallCover + `<polyline stroke-dasharray="${wallWidth} ${wallWidth / 1.5}" stroke-linecap="butt" points="${pointsStr}" stroke="${color}" stroke-width="${width}" fill="${fill}" />`;
     }
 
-    const keys = ['floors', 'objects', 'walls', 'doors', 'windows', 'openings'];
+    const keys: (keyof Room)[] = ['floors', 'objects', 'walls', 'doors', 'windows', 'openings'];
+
     for (const key of keys) {
         if (room[key]) {
             room[key] = (room[key] || []).map((points: Point[]) => points.map(([x, y, z]) => [x * scaleFactor, 0, z * scaleFactor]));
@@ -385,8 +606,6 @@ export function makeSVG(data: EntireRooms, _roomNames: string[], mainRoomName: s
             if (isMainRoom) { totalArea += area }
             const areaInSqFt = (area * 10.764).toFixed(1); // Convert m² to ft²
             const ftSize = isMainRoom ? 22 : 18;
-            // const widthInFeet = inchText(boundingBox?.width ?? 0);
-            // const heightInFeet = inchText(boundingBox?.height ?? 0);
             if (centroid) {
                 sqftContent += `<text x="${centroid.x}" y="${centroid.y - ftSize * 1.5}" 
                     fill="${ftColor}"
@@ -419,20 +638,22 @@ export function makeSVG(data: EntireRooms, _roomNames: string[], mainRoomName: s
     room.objects.forEach(object => {
         if (object.length) svgContent += createPolyline(object, objectColor, objectWidth, objectFill);
     });
-    if (subRooms.length > 1) {
-        subRooms.forEach((subRoom, sIdx) => {
-            subRoom.walls.forEach(wall => {
-                if (wall.length) {
-                    svgContent += createPolyline(wall, wallColor, wallWidth);
-                    wallLengthMeasure += drawWallLength(wall, subRoom.floors, room.floors, wallColor, wallWidth / 5);
-                }
-            })
-        })
-    } else {
-        room.walls.forEach(wall => {
+    // if (subRooms.length > 1) {
+    //     subRooms.forEach((subRoom, sIdx) => {
+    //         subRoom.walls.forEach((wall, index) => {
+    //             if (wall.length) {
+    //                 // if(sIdx !== 1) return;
+    //                 svgContent += createPolyline(wall, wallColor, wallWidth);
+    //                 wallLengthMeasure += drawWallLength(wall, subRoom.floors, room.floors, wallColor, wallWidth / 5, undefined, index, sIdx, "sub");
+    //             }
+    //         })
+    //     })
+    // } else
+     {
+        room.walls.forEach((wall, index) => {
             if (wall.length) {
                 svgContent += createPolyline(wall, wallColor, wallWidth);
-                wallLengthMeasure += drawWallLength(wall, room.floors, room.floors, wallColor, wallWidth / 5);
+                wallLengthMeasure += drawWallLength(wall, room.floors, room.floors, wallColor, wallWidth / 5, undefined);
             }
         });
     }
@@ -446,7 +667,7 @@ export function makeSVG(data: EntireRooms, _roomNames: string[], mainRoomName: s
             const angle = Math.PI / 6; // 30 degrees in radians
             const rotatedX = start[0] + (end[0] - start[0]) * Math.cos(angle) - (end[2] - start[2]) * Math.sin(angle);
             const rotatedZ = start[2] + (end[0] - start[0]) * Math.sin(angle) + (end[2] - start[2]) * Math.cos(angle);
-            
+
             // Create arc path
             svgContent += `<path d="M ${end[0]} ${end[2]} A ${doorLength} ${doorLength} 0 0 1 ${rotatedX} ${rotatedZ}"
                 stroke="${doorColor}"
