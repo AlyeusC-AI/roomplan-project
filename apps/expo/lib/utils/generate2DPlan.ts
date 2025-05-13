@@ -245,7 +245,6 @@ function calculateRotationAngleXZ(wall: Point[]) {
     const end = wall[1];
     const dx = end[0] - start[0]; // Change in x
     const dz = end[2] - start[2]; // Change in z
-    //console.log("angle: ", -Math.atan2(dz, dx) * 180 / 3.141592);   // Angle to align with x-axis
     return -Math.atan2(dz, dx);   // Angle to align with x-axis
 }
 
@@ -268,8 +267,6 @@ function alignRoomHorizontallyXZ(room: Room, initAngle: number | undefined = und
             maxIndex = _index;
         }
     });
-
-    console.log('maxIndex: ', maxIndex);
     
     const angle = initAngle || calculateRotationAngleXZ(maxWall);
 
@@ -337,13 +334,11 @@ function calculateAngleForSegment(segment: Point[], wall: Point[]): number {
 function calculateAllAngles(room: Room): number[] {
     const angles: number[] = [];
     room.walls.forEach(wall => {
-        //console.log(wall);
         if (wall.length === 2) {
             angles.push(calculateAngleForSegment(wall, maxWall));
         }
     });
 
-    //console.log(angles);
     return angles;
 }
 
@@ -402,16 +397,12 @@ export function makeSVG(data: EntireRooms, _roomNames: string[], mainRoomName: s
     for(let i = 0; i < room.walls.length; i++) {
         if(Math.abs(angles[i] - 0) > 0.3 && Math.abs(angles[i] - 90) > 0.3 && Math.abs(angles[i] - 180) > 0.3) {
             if(Math.min(Math.abs(angles[i] - 0), Math.abs(angles[i] - 90), Math.abs(angles[i] - 180)) > 10.0) {
-                //console.log('index of wall have not be rotated', i);
                 continue;
             }
             errWalls.push(i);
             errors.push(Math.min(Math.abs(angles[i] - 0), Math.abs(angles[i] - 90), Math.abs(angles[i] - 180)));
         }
     }
-
-    //console.log('error walls:', errWalls);
-    //console.log('errors:', errors);
 
     errWalls.forEach(_wall => {
         
