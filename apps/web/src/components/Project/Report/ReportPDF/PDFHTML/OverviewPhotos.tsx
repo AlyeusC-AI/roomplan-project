@@ -1,10 +1,9 @@
 import { useMemo } from "react";
-import useSupabaseImage from "@utils/hooks/useSupabaseImage";
 
 import PDFSafeImage from "./PDFSaveImage";
 
 const OverviewPhoto = ({ imageKey }: { imageKey: string }) => {
-  const url = useSupabaseImage(imageKey);
+  const url = imageKey;
   if (!url) return null;
   return (
     <div className='image-div'>

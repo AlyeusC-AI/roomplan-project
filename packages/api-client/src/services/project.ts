@@ -5,6 +5,7 @@ import type {
   Project,
 } from "../types/project";
 import type { PaginationParams, PaginatedResponse } from "../types/common";
+import type { User } from "../types/auth";
 
 export const projectService = {
   create: (data: CreateProjectDto & { organizationId: string }) =>
@@ -34,6 +35,28 @@ export const projectService = {
       `/projects/organization/${organizationId}/status/${statusId}`,
       { params }
     );
+    return response.data;
+  },
+
+  // Project Members Management
+  getProjectMembers: async (projectId: string): Promise<{ users: User[] }> => {
+    const response = await apiClient.get<{ users: User[] }>(
+      `/projects/${projectId}/member`
+    );
+    return response.data;
+  },
+
+  addProjectMember: async (projectId: string, userId: string) => {
+    const response = await apiClient.post(`/projects/${projectId}/member`, {
+      userId,
+    });
+    return response.data;
+  },
+
+  removeProjectMember: async (projectId: string, userId: string) => {
+    const response = await apiClient.delete(`/projects/${projectId}/member`, {
+      data: { userId },
+    });
     return response.data;
   },
 };

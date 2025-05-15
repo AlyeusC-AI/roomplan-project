@@ -13,16 +13,12 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";
-import { toast } from "sonner-native";
-import { userStore } from "@/lib/state/user";
-import { supabase } from "@/lib/supabase";
 
 export default function Login() {
   const [form, setForm] = useState({
     email: "thermalhunting1@gmail.com",
     password: "12345678",
   });
-  const { session: supabaseSession, setSession } = userStore((state) => state);
 
   const login = useLogin();
 
@@ -33,31 +29,12 @@ export default function Login() {
         password: form.password,
       });
 
-      setSession({
-        true_token: response.access_token,
-        // refresh_token: response.refresh_token,
-        // expires_in: response.expires_in,
-        // token_type: response.token_type,
-        user: response.user,
-      });
-      // setLoading(true);
-      // const { error } = await supabase.auth.signInWithPassword({
-      //   email: form.email,
-      //   password: form.password,
-      // });
-
-      // setLoading(false);
-
-      // if (error) {
-      //   toast.error(error.message);
-      //   return;
-      // }
       router.replace({ pathname: "/" });
       // The redirect is handled in the useLogin hook
     } catch (error) {
-      toast.error("Login Failed", {
-        description: "Invalid email or password. Please try again.",
-      });
+      // toast.error("Login Failed", {
+      //   description: "Invalid email or password. Please try again.",
+      // });
     }
   }
 
@@ -137,14 +114,14 @@ export default function Login() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.formFooter}>
+            {/* <View style={styles.formFooter}>
               <Text style={styles.formFooterText}>
                 Don't have an account?{" "}
                 <TouchableOpacity onPress={() => router.push("/register")}>
                   <Text style={styles.formFooterLink}>Sign up</Text>
                 </TouchableOpacity>
               </Text>
-            </View>
+            </View> */}
           </View>
         </View>
       </SafeAreaView>

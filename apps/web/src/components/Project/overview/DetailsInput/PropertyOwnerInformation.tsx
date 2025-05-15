@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
-import { projectStore } from "@atoms/project";
 
-import LocationData from "./LocationData";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,6 +23,7 @@ import { Card } from "@components/ui/card";
 import { Label } from "@components/ui/label";
 import { PhoneInput } from "@components/ui/phone-input";
 import { LoadingSpinner } from "@components/ui/spinner";
+import { useGetProjectById, useUpdateProject } from "@service-geek/api-client";
 
 const propertyOwnerData = z.object({
   clientName: z.string().optional(),
@@ -45,33 +44,25 @@ type PropertyOwnerValues = z.infer<typeof propertyOwnerData> & {
 
 export default function ProjectOwnerInformation() {
   const { id } = useParams();
-  const { project, setProject } = projectStore((state) => state);
+  const { data: projectData } = useGetProjectById(id as string);
+  const updateProject = useUpdateProject();
   const [loading, setLoading] = useState(false);
+  const project = projectData?.data;
 
   const onSave = async (data: PropertyOwnerValues) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/v1/projects/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
+      await updateProject.mutateAsync({
+        id: id as string,
+        data,
       });
-      if (res.ok) {
-        setProject({ ...project!, ...data });
 
-        toast.success("Project updated successfully!");
-      } else {
-        toast.error(
-          "Updated Failed. If the error persists please contact support@restoregeek.app"
-        );
-      }
+      toast.success("Project updated successfully!");
     } catch (error) {
       console.error(error);
-      toast.error(
-        "Updated Failed. If the error persists please contact support@restoregeek.app"
-      );
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const form = useForm<PropertyOwnerValues>({
@@ -79,7 +70,7 @@ export default function ProjectOwnerInformation() {
     mode: "onChange",
     defaultValues: {
       clientPhoneNumber:
-        project?.clientPhoneNumber.length === 0
+        project?.clientPhoneNumber?.length === 0
           ? "+1"
           : (project?.clientPhoneNumber ?? "+1"),
       clientEmail: project?.clientEmail,

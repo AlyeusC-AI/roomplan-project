@@ -1,6 +1,5 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import Modal from "@components/DesignSystem/Modal";
-import { roomStore } from "@atoms/room";
 import {
   Select,
   SelectContent,
@@ -12,6 +11,8 @@ import {
 } from "@components/ui/select";
 import { Button } from "@components/ui/button";
 import { Building2 } from "lucide-react";
+import { useGetRooms } from "@service-geek/api-client";
+import { useParams } from "next/navigation";
 
 const RoomReassignModal = ({
   open,
@@ -24,7 +25,8 @@ const RoomReassignModal = ({
   onReassign: (roomId: string) => void;
   loading: boolean;
 }) => {
-  const roomList = roomStore((state) => state.rooms);
+  const { id } = useParams<{ id: string }>();
+  const { data: rooms } = useGetRooms(id);
   const [value, setValue] = useState("");
 
   return (
@@ -51,8 +53,8 @@ const RoomReassignModal = ({
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Available Rooms</SelectLabel>
-                  {roomList.map((room) => (
-                    <SelectItem key={room.publicId} value={room.publicId}>
+                  {rooms?.map((room) => (
+                    <SelectItem key={room.id} value={room.id}>
                       {room.name}
                     </SelectItem>
                   ))}

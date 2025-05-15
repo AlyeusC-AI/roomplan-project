@@ -3,11 +3,14 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 // Platform detection
-const isWeb = typeof window !== "undefined";
-const isReactNative = !isWeb;
+const isReactNative =
+  typeof navigator !== "undefined" && navigator.product === "ReactNative";
+const isWeb = !isReactNative;
 
 // Storage implementation
 const getStorage = () => {
+  console.log("🚀 ~ getStorage ~ isReactNative:", isReactNative);
+
   if (isWeb && typeof localStorage !== "undefined") {
     return localStorage;
   }

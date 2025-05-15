@@ -13,11 +13,12 @@ import {
   DialogTitle,
 } from "@components/ui/dialog";
 import { LoadingPlaceholder } from "@components/ui/spinner";
+import { Room, useDeleteRoom } from "@service-geek/api-client";
 
 interface RoomDeleteModalProps {
   setOpen: Dispatch<SetStateAction<boolean>>;
   isOpen: boolean;
-  room: RoomWithReadings;
+  room: Room;
   onSuccess?: () => void;
 }
 
@@ -27,35 +28,18 @@ const RoomDeleteModal = ({
   room,
   onSuccess,
 }: RoomDeleteModalProps) => {
-  const [loading, setLoading] = useState(false);
   const rooms = roomStore();
-  const { id } = useParams();
+  const deleteRoomMutation = useDeleteRoom();
 
   const deleteRoom = async () => {
     try {
-      setLoading(true);
-      const res = await fetch(`/api/v1/projects/${id}/room/${room.publicId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!res.ok) {
-        toast.error("Failed to delete room");
-        return;
-      }
-
-      rooms.removeRoom(room);
+      await deleteRoomMutation.mutateAsync(room.id);
       setOpen(false);
       toast.success("Room deleted successfully");
-
-      // Trigger refetch callback if provided
       onSuccess?.();
-    } catch {
-      toast.error("Failed to delete room");
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.log("🚀 ~ deleteRoom ~ error:", error);
+      // toast.error("Failed to delete room");
     }
   };
 
@@ -69,7 +53,7 @@ const RoomDeleteModal = ({
             undone.
           </DialogDescription>
         </DialogHeader>
-        {loading ? (
+        {deleteRoomMutation.isPending ? (
           <LoadingPlaceholder />
         ) : (
           <DialogFooter className='flex gap-2'>

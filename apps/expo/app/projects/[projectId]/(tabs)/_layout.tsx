@@ -22,19 +22,13 @@ import {
 } from "react-native";
 import { projectStore } from "@/lib/state/project";
 import { userStore } from "@/lib/state/user";
-
+import { useGetProjectById } from "@service-geek/api-client";
 export default function Layout() {
   const { projectId } = useGlobalSearchParams();
-  const [loading, setLoading] = React.useState(true);
-  const { fetchProject, project } = projectStore();
 
-  useEffect(() => {
-    fetchProject(projectId as string).finally(() => {
-      setLoading(false);
-    });
-  }, []);
+  const { data: project, isLoading } = useGetProjectById(projectId as string);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <View className="flex items-center justify-center h-full w-full">
         <ActivityIndicator />
@@ -76,7 +70,7 @@ export default function Layout() {
                   <Text className="text-white text-lg font-semibold">
                     {route.name === "scope"
                       ? "Scope"
-                      : project?.clientName || "Project"}
+                      : project?.data.clientName || "Project"}
                   </Text>
                 </View>
                 {route.name === "index" && (

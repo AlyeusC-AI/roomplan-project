@@ -1,7 +1,5 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import Select from "react-select";
-import { roomStore } from "@atoms/room";
-import { imagesStore } from "@atoms/images";
 import EmptyState from "@components/DesignSystem/EmptyState";
 import useFilterParams from "@utils/hooks/useFilterParams";
 import {
@@ -10,22 +8,24 @@ import {
   useRouter,
   useSearchParams,
 } from "next/navigation";
-
 import OptimisticUploadUI from "../OptimisticUploadUI";
-
-import FilterLabel from "./FilterLabel";
-import GroupByPicker from "./GroupByPicker";
+import FilterLabel from "./filter/FilterLabel";
+import GroupByPicker from "./filter/GroupByPicker";
 import PhotoList from "./PhotoList";
-import ViewPicker from "./ViewPicker";
+import ViewPicker from "./filter/ViewPicker";
 import { ChevronDown, ChevronUp, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@components/ui/button";
 import { Badge } from "@components/ui/badge";
-import { urlMapStore } from "@atoms/url-map";
-import { ScaleLoader } from "react-spinners";
 import { Card } from "@components/ui/card";
 import { Separator } from "@components/ui/separator";
 import { Switch } from "@components/ui/switch";
 import { Label } from "@components/ui/label";
+import { useGetRooms, useSearchImages } from "@service-geek/api-client";
+
+interface RoomOption {
+  label: string;
+  value: string;
+}
 
 export default function MitigationTable() {
   const [isFilterOptionOpen, setIsFilterOptionOpen] = useState(false);
@@ -33,27 +33,24 @@ export default function MitigationTable() {
   const router = useRouter();
   const reactSelectId = useId();
   const { rooms, onlySelected, sortDirection } = useFilterParams();
-  const [loading, setLoading] = useState(false);
-  const urlMap = urlMapStore();
-  const { images, setImages } = imagesStore();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(`/api/v1/projects/${id}/images`)
-      .then((res) => res.json())
-      .then((data) => {
-        setLoading(false);
-        setImages(data.images);
-        urlMap.setUrlMap(data.urlMap);
-      });
-  }, []);
+  // React Query hooks
+  const { data: roomList = [] } = useGetRooms(id);
+  const { data: imagesData, isLoading: isLoadingImages } = useSearchImages(
+    id,
+    {
+      roomIds: rooms,
+      showInReport: onlySelected || undefined,
+    },
+    { field: "createdAt", direction: sortDirection || "desc" },
+    { page: 1, limit: 100 }
+  );
 
   const toggleFilterDrawer = () => {
     setIsFilterOptionOpen((prev) => !prev);
   };
-
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const setRoomFilter = (newRoomsFilter: string[]) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -69,34 +66,27 @@ export default function MitigationTable() {
 
   const setSortDirection = () => {
     const params = new URLSearchParams(searchParams.toString());
-
     const currentSortDirection = params.get("sortDirection") || "asc";
     const newSortDirection = currentSortDirection === "asc" ? "desc" : "asc";
-
     params.set("sortDirection", newSortDirection);
-
     router.push(`${pathname}?${params.toString()}`);
   };
 
   const setOnlySelected = (checked: boolean) => {
     const params = new URLSearchParams(searchParams);
-
     if (!checked) {
       params.delete("onlySelected");
     } else {
       params.set("onlySelected", "true");
     }
-
     router.push(`?${params.toString()}`);
   };
 
-  const roomList = roomStore((state) => state.rooms);
-
-  const roomsOptions = useMemo(
+  const roomsOptions: RoomOption[] = useMemo(
     () =>
       roomList.map((room) => ({
         label: room.name,
-        value: room.publicId,
+        value: room.id,
       })),
     [roomList]
   );
@@ -104,66 +94,13 @@ export default function MitigationTable() {
   const defaultRooms = useMemo(
     () =>
       rooms
-        ? rooms.map((room) => ({
-            label: roomList.find((r) => r.publicId === room)?.name || room,
-            value: room,
+        ? rooms.map((roomId) => ({
+            label: roomList.find((r) => r.id === roomId)?.name || roomId,
+            value: roomId,
           }))
         : [],
     [rooms, roomList]
   );
-
-  // Get filtered images
-  const filteredImages = useMemo(() => {
-    console.log("issssssmages", images);
-    if (!images) return [];
-
-    let filtered = [...images];
-
-    // Apply room filter
-    if (rooms && rooms.length > 0) {
-      console.log("Filtering by rooms:", rooms);
-      filtered = filtered.filter((img) => {
-        if (!img) return false;
-        // Get the room ID from the Inference data
-        const roomId = img?.Inference?.[0]?.Room?.publicId;
-        const matches = roomId && rooms.includes(roomId);
-        if (!matches) {
-          console.log("No match for image:", {
-            imageId: img.id,
-            roomId,
-            availableRooms: rooms,
-          });
-        }
-        return matches;
-      });
-    }
-
-    // Apply selected filter
-    if (onlySelected) {
-      filtered = filtered.filter((img) => {
-        if (!img) return false;
-        return img.includeInReport === true;
-      });
-    }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      if (!a || !b) return 0;
-      const dateA = new Date(a.createdAt).getTime();
-      const dateB = new Date(b.createdAt).getTime();
-      return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
-    });
-
-    return filtered;
-  }, [images, rooms, onlySelected, sortDirection]);
-
-  // Debug logging for room selection
-  useEffect(() => {
-    if (rooms && rooms.length > 0) {
-      console.log("Selected rooms:", rooms);
-      console.log("Room options:", roomsOptions);
-    }
-  }, [rooms, roomsOptions]);
 
   return (
     <div className='space-y-4'>
@@ -174,11 +111,10 @@ export default function MitigationTable() {
             <div className='flex flex-wrap items-center gap-2'>
               <div>
                 <FilterLabel>Filters</FilterLabel>
-
                 <Button
                   variant={isFilterOptionOpen ? "default" : "outline"}
                   size='sm'
-                  onClick={() => toggleFilterDrawer()}
+                  onClick={toggleFilterDrawer}
                   className='flex items-center gap-1.5'
                 >
                   <SlidersHorizontal className='h-3.5 w-3.5' />
@@ -195,11 +131,10 @@ export default function MitigationTable() {
               </div>
               <div>
                 <FilterLabel>Sort</FilterLabel>
-
                 <Button
                   variant='outline'
                   size='sm'
-                  onClick={() => setSortDirection()}
+                  onClick={setSortDirection}
                   className='flex items-center gap-1.5'
                 >
                   {sortDirection === "desc" || !sortDirection ? (
@@ -211,7 +146,6 @@ export default function MitigationTable() {
                 </Button>
               </div>
               <Separator orientation='vertical' className='h-6' />
-
               <ViewPicker />
               <GroupByPicker />
             </div>
@@ -224,9 +158,8 @@ export default function MitigationTable() {
                     <h3 className='whitespace-nowrap text-sm font-medium'>
                       Filters:
                     </h3>
-
                     <div className='min-w-[200px] flex-1'>
-                      <Select
+                      <Select<RoomOption, true>
                         instanceId={reactSelectId}
                         options={roomsOptions}
                         isMulti
@@ -286,16 +219,15 @@ export default function MitigationTable() {
 
       <div className='space-y-4'>
         <OptimisticUploadUI />
-        {!loading && filteredImages.length === 0 ? (
+        {!isLoadingImages &&
+        (!imagesData?.data || imagesData?.data.length === 0) ? (
           <EmptyState
-            imagePath={"/images/no-uploads.svg"}
-            title={"Get started by uploading photos"}
-            description={
-              "Once uploaded, we will sort your photos by room as well as identify items within each picture."
-            }
+            imagePath='/images/no-uploads.svg'
+            title='Get started by uploading photos'
+            description='Once uploaded, we will sort your photos by room as well as identify items within each picture.'
           />
         ) : (
-          <PhotoList photos={filteredImages} setPhotos={setImages} />
+          <PhotoList photos={imagesData?.data} />
         )}
       </div>
     </div>

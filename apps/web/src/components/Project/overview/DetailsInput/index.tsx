@@ -16,13 +16,21 @@ import { Button } from "@components/ui/button";
 import { Card } from "@components/ui/card";
 import { Separator } from "@components/ui/separator";
 import { useSidebar } from "@components/ui/sidebar";
+import {
+  useGetProjectById,
+  useDeleteProject,
+  useGetOrganizationMembers,
+} from "@service-geek/api-client";
 
 export default function DetailsInput() {
-  const [isConfirming, setIsConfirming] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const { id } = useParams();
+
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
   const { toggleSidebar, state } = useSidebar();
+  const deleteProject = useDeleteProject();
+
   useEffect(() => {
     if (state === "expanded") {
       toggleSidebar();
@@ -34,89 +42,19 @@ export default function DetailsInput() {
       setIsConfirming(true);
       return;
     }
-    setIsLoading(false);
-    try {
-      const res = await fetch(`/api/v1/projects`, {
-        method: "DELETE",
-        body: JSON.stringify({
-          id: id as string,
-        }),
-      });
-      if (res.ok) {
-        router.push("/projects");
-      } else {
-        toast.error("Could not delete project");
-      }
-    } catch {
-      toast.error("Could not delete project");
-    }
-    setIsLoading(true);
-    setIsConfirming(false);
-  };
 
-  const projectInfo = projectStore((state) => state.project);
-  const teamMembers = teamMembersStore((state) => state.teamMembers);
-
-  // const createProjectNote = trpc.projects.createProjectNote.useMutation();
-  // const projectNotes = trpc.projects.getProjectNotes.useQuery({
-  //   projectId: projectInfo!.id,
-  // });
-  // const notes = projectNotes.data || [];
-  // const notesLoading = projectNotes.isLoading;
-  const handleAddProjectNote = async ({
-    note,
-    mentions,
-    metadata,
-  }: {
-    note: string;
-    mentions: string[];
-    metadata: MentionMetadata[];
-  }) => {
-    // const res = await createProjectNote.mutateAsync(
-    //   {
-    //     projectPublicId: id as string,
-    //     body: note,
-    //     mentions,
-    //   },
-    //   {
-    //     onSettled: async () => {
-    //       await notifyMentions({
-    //         phoneNumbers: teamMembers
-    //           .filter((tm) => mentions.includes(tm.userId))
-    //           .map((t) => t.User.phone),
-    //         metadata,
-    //       });
-    //       trpcContext.projects.getProjectNotes.invalidate();
-    //     },
-    //   }
-    // );
-  };
-  const notifyMentions = async ({
-    phoneNumbers,
-    metadata,
-  }: {
-    phoneNumbers: string[];
-    metadata: MentionMetadata[];
-  }) => {
+    setIsDeleting(true);
     try {
-      const plainText = metadata.map(({ text }) => text).join("");
-      const res = await fetch(`/api/notifications/mentions`, {
-        method: "POST",
-        body: JSON.stringify({
-          body: plainText,
-          phoneNumbers,
-          client: projectInfo!.clientName,
-          location: projectInfo!.location,
-        }),
-      });
-      if (res.ok) {
-        const json = await res.json();
-        console.log("mentions notified", json);
-      }
+      await deleteProject.mutateAsync(id as string);
+      router.push("/projects");
     } catch (error) {
-      console.error(error);
+      toast.error("Could not delete project");
+    } finally {
+      setIsDeleting(false);
+      setIsConfirming(false);
     }
   };
+
   return (
     <div className='space-y-7'>
       <PropertyOwnerInformation />
@@ -144,10 +82,16 @@ export default function DetailsInput() {
             </div>
           </div>
           <Separator />
-          <Button onClick={() => onDelete()} variant='destructive'>
-            {isConfirming
-              ? "Are you sure? This cannot be undone."
-              : "Delete Project"}
+          <Button
+            onClick={() => onDelete()}
+            variant='destructive'
+            disabled={isDeleting}
+          >
+            {isDeleting
+              ? "Deleting..."
+              : isConfirming
+                ? "Are you sure? This cannot be undone."
+                : "Delete Project"}
           </Button>
         </div>
       </Card>

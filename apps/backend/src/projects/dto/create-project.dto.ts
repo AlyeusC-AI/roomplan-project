@@ -162,4 +162,9 @@ export class CreateProjectDto {
   @ApiProperty()
   @IsString()
   organizationId: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  assignmentNumber?: string;
 }

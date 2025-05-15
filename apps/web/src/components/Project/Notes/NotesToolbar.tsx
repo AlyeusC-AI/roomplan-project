@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import RoomCreationModal from "../RoomCreationModal";
+import RoomCreationModal from "../rooms/RoomCreationModal";
 import { Button } from "@components/ui/button";
 
 export default function NotesToolbar() {

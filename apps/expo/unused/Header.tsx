@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 24,
+    // marginBottom: 24,
     marginTop: 10,
   },
   headerSearch: {

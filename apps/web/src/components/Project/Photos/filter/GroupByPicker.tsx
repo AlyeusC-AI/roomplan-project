@@ -1,16 +1,16 @@
 import FilterLabel from "./FilterLabel";
 import { Button } from "@components/ui/button";
 import { Calendar, Home } from "lucide-react";
-import { userInfoStore } from "@atoms/user-info";
+import { userPreferenceStore } from "@state/user-prefrence";
+import { user } from "@lib/supabase/get-user";
 
 export default function GroupByPicker() {
-  const user = userInfoStore();
+  const { savedPhotoGroupBy, updatePreference } = userPreferenceStore();
 
   const onClick = () => {
-    const newView =
-      user.user?.groupView == "dateView" ? "roomView" : "dateView";
-    user.updateUser({
-      groupView: newView,
+    const newView = savedPhotoGroupBy == "date" ? "room" : "date";
+    updatePreference({
+      savedPhotoGroupBy: newView,
     });
     fetch("/api/v1/user", {
       method: "POST",
@@ -18,7 +18,7 @@ export default function GroupByPicker() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        groupView: newView,
+        savedPhotoGroupBy: newView,
       }),
     });
   };
@@ -27,7 +27,7 @@ export default function GroupByPicker() {
     <div className='flex flex-col'>
       <FilterLabel>Group By</FilterLabel>
       <Button variant='outline' onClick={onClick}>
-        {user.user?.groupView == "dateView" ? (
+        {savedPhotoGroupBy == "date" ? (
           <>
             <Calendar className='mr-2 size-5' />
             Date

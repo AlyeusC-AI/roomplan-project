@@ -1,13 +1,10 @@
 import { toast } from "sonner";
 // import { AutoSaveTextInput } from '@components/components/input'
 import { useParams } from "next/navigation";
-import { projectStore } from "@atoms/project";
-import { userInfoStore } from "@atoms/user-info";
 
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { orgStore } from "@atoms/organization";
 import {
   Form,
   FormControl,
@@ -22,6 +19,12 @@ import { Button } from "@components/ui/button";
 import { Card } from "@components/ui/card";
 import { useState } from "react";
 import { LoadingSpinner } from "@components/ui/spinner";
+import {
+  useActiveOrganization,
+  useCurrentUser,
+  useGetProjectById,
+  useUpdateProject,
+} from "@service-geek/api-client";
 
 const formSchema = z.object({
   name: z.string().min(1, "Project Name is required"),
@@ -32,48 +35,37 @@ const formSchema = z.object({
 export default function ProjectInformation() {
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
-  const { project: projectInfo, setProject } = projectStore((state) => state);
-  const userInfo = userInfoStore((state) => state.user);
-  const org = orgStore((state) => state.organization);
+  const { data: projectData } = useGetProjectById(id as string);
+  const updateProject = useUpdateProject();
+
+  const project = projectData?.data;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: projectInfo?.name || "",
-      managerName:
-        projectInfo?.managerName ||
-        `${userInfo?.firstName} ${userInfo?.lastName}`,
-      companyName: projectInfo?.companyName || org?.name || "",
+      name: project?.name || "",
+      managerName: project?.managerName,
+      companyName: project?.companyName || "",
     },
   });
 
   const onSave = async (data: z.infer<typeof formSchema>) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/v1/projects/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
+      await updateProject.mutateAsync({
+        id: id as string,
+        data,
       });
-      if (res.ok) {
-        setProject({
-          ...projectInfo!,
-          ...data,
-        });
 
-        toast.success("Project updated successfully!");
-      } else {
-        toast.error(
-          "Updated Failed. If the error persists please contact support@restoregeek.app"
-        );
-      }
+      toast.success("Project updated successfully!");
     } catch (error) {
       console.error(error);
       toast.error(
-        "Updated Failed. If the error persists please contact support@restoregeek.app"
+        "Update Failed. If the error persists please contact support@restoregeek.app"
       );
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (

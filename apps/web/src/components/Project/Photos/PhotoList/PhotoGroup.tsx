@@ -1,10 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@components/ui/button";
-import { userInfoStore } from "@atoms/user-info";
-import RoomActions from "@components/Project/RoomActions";
-import { roomStore } from "@atoms/room";
+import RoomActions from "@components/Project/rooms/RoomActions";
 import { useParams } from "next/navigation";
 import {
   DndContext,
@@ -23,6 +21,13 @@ import {
 import type { DragEndEvent } from "@dnd-kit/core";
 
 import Photo from "./Photo";
+import { userPreferenceStore } from "@state/user-prefrence";
+import {
+  Image,
+  useBulkUpdateImages,
+  useGetRooms,
+  useUpdateImagesOrder,
+} from "@service-geek/api-client";
 
 const PhotoGroup = ({
   photos,
@@ -30,20 +35,23 @@ const PhotoGroup = ({
   day,
   onPhotoClick,
   onSelectPhoto,
-  setPhotos,
 }: {
-  photos: ImageQuery_Image[];
-  selectedPhotos: ImageQuery_Image[];
+  photos: Image[];
+  selectedPhotos: Image[];
   day: string;
   onPhotoClick: (key: string) => void;
-  onSelectPhoto: (photo: ImageQuery_Image) => void;
-  setPhotos: React.Dispatch<React.SetStateAction<ImageQuery_Image[]>>;
+  onSelectPhoto: (photo: Image) => void;
 }) => {
   console.log("🚀 ~ phasdasdaotos:", photos);
   const [isOpen, setOpen] = useState(true);
-  const user = userInfoStore();
-  const rooms = roomStore();
+  const { savedPhotoGroupBy, savedPhotoView } = userPreferenceStore();
   const { id } = useParams<{ id: string }>();
+  const { data: rooms } = useGetRooms(id);
+  const { mutate: updateImagesOrder } = useUpdateImagesOrder();
+  const [images, setImages] = useState<Image[]>(photos);
+  useEffect(() => {
+    setImages(photos);
+  }, [photos]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -52,12 +60,9 @@ const PhotoGroup = ({
     })
   );
 
+  const room = rooms?.find((room) => room.name === day);
   // Check if this is a room group by looking at the first photo's room
-  const isRoomGroup = user.user?.groupView === "roomView";
-  const roomId = photos[0]?.Inference?.[0]?.Room?.publicId;
-  const room = roomId
-    ? rooms.rooms.find((r) => r.publicId === roomId)
-    : rooms.rooms.find((r) => r.name === day);
+  const isRoomGroup = savedPhotoGroupBy === "room";
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -66,45 +71,38 @@ const PhotoGroup = ({
       return;
     }
 
-    const oldIndex = photos.findIndex((photo) => photo.key === active.id);
-    const newIndex = photos.findIndex((photo) => photo.key === over.id);
+    const oldIndex = photos.findIndex((photo) => photo.id === active.id);
+    const newIndex = photos.findIndex((photo) => photo.id === over.id);
 
     if (oldIndex !== -1 && newIndex !== -1) {
       const newPhotos = arrayMove(photos, oldIndex, newIndex);
 
       // Update order in backend
       const orderUpdates = newPhotos.map((photo, idx) => ({
-        publicId: photo.publicId,
+        id: photo.id,
         order: idx,
       }));
 
       const newPhotosLocal = photos.map((photo) => {
         const updatedPhoto = orderUpdates.find(
-          (update) => update.publicId === photo.publicId
+          (update) => update.id === photo.id
         );
         return updatedPhoto ? { ...photo, order: updatedPhoto.order } : photo;
       });
-      // Update local state
-      setPhotos(newPhotosLocal);
-      try {
-        const response = await fetch(`/api/v1/projects/${id}/images`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            order: orderUpdates,
-          }),
-        });
+      setImages(newPhotosLocal);
 
-        if (!response.ok) {
-          throw new Error("Failed to update image order");
-        }
+      try {
+        updateImagesOrder(
+          orderUpdates.map((update) => ({
+            id: update.id,
+            order: update.order,
+          }))
+        );
 
         // setPhotos((prevPhotos) =>
         //   prevPhotos.map((photo) => {
         //     const updatedPhoto = orderUpdates.find(
-        //       (update) => update.publicId === photo.publicId
+        //       (update) => update.id === photo.id
         //     );
         //     if (updatedPhoto) {
         //       return { ...photo, order: updatedPhoto.order };
@@ -118,41 +116,21 @@ const PhotoGroup = ({
     }
   };
 
-  const refetchData = async () => {
-    try {
-      // Refetch rooms
-      const roomsRes = await fetch(`/api/v1/projects/${id}/room`);
-      if (roomsRes.ok) {
-        const roomsData = await roomsRes.json();
-        rooms.setRooms(roomsData.rooms);
-      }
-
-      // Refetch images
-      const imagesRes = await fetch(`/api/v1/projects/${id}/images`);
-      if (imagesRes.ok) {
-        const imagesData = await imagesRes.json();
-        setPhotos(imagesData.images);
-      }
-    } catch (error) {
-      console.error("Error refetching data:", error);
-    }
-  };
-
   const renderPhotos = () => (
     <div
       className={clsx(
         "mt-4 flex",
-        user.user?.photoView === "photoGridView" && "flex-wrap gap-x-3 gap-y-8",
-        user.user?.photoView === "photoListView" && "flex-col"
+        savedPhotoView === "photoGridView" && "flex-wrap gap-x-3 gap-y-8",
+        savedPhotoView === "photoListView" && "flex-col"
       )}
     >
-      {photos
+      {images
         .sort((a, b) => a.order - b.order)
         .map((photo) => (
           <Photo
-            isSelected={selectedPhotos.some((p) => p.key === photo.key)}
-            key={photo.key}
-            id={photo.key}
+            isSelected={selectedPhotos.some((p) => p.id === photo.id)}
+            key={photo.id}
+            id={photo.id}
             photo={photo}
             onPhotoClick={onPhotoClick}
             onSelectPhoto={onSelectPhoto}
@@ -175,9 +153,7 @@ const PhotoGroup = ({
         </Button>
         <div className='ml-4 flex items-center gap-4'>
           <h2 className='text-xl font-bold'>{day}</h2>
-          {isRoomGroup && room && (
-            <RoomActions room={room} onSuccess={refetchData} />
-          )}
+          {isRoomGroup && room && <RoomActions room={room} />}
         </div>
       </div>
       {isOpen &&
@@ -188,7 +164,7 @@ const PhotoGroup = ({
             onDragEnd={handleDragEnd}
           >
             <SortableContext
-              items={photos.map((photo) => photo.key)}
+              items={photos.map((photo) => photo.id)}
               strategy={rectSortingStrategy}
             >
               {renderPhotos()}

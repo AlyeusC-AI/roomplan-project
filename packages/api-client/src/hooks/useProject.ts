@@ -57,17 +57,27 @@ export function useGetProjects(options: UseGetProjectsOptions = {}) {
       return response.data;
     },
     enabled: enabled && !!org?.id && !!useAuthStore.getState().token,
+    notifyOnChangeProps: "all",
   };
 
   return useQuery(queryOptions);
 }
 
 export function useGetProjectById(id: string) {
-  return useQuery({
+  const { data: projects } = useGetProjects();
+
+  const a = useQuery({
     queryKey: ["projects", id],
     queryFn: () => projectService.findOne(id),
     enabled: !!id,
   });
+
+  const project = projects?.data?.find((p) => p.id === id);
+
+  return {
+    ...a,
+    data: a.data ?? (project ? { data: project } : undefined),
+  };
 }
 
 export function useDeleteProject() {
@@ -99,3 +109,56 @@ export const useGetProjectsByStatus = (
     enabled: options?.enabled ?? true,
   });
 };
+
+// Add project member hooks
+export function useGetProjectMembers(projectId: string) {
+  return useQuery({
+    queryKey: ["projects", projectId, "members"],
+    queryFn: () => projectService.getProjectMembers(projectId),
+    enabled: !!projectId,
+  });
+}
+
+export function useAddProjectMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      userId,
+    }: {
+      projectId: string;
+      userId: string;
+    }) => projectService.addProjectMember(projectId, userId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["projects", variables.projectId, "members"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["projects", variables.projectId],
+      });
+    },
+  });
+}
+
+export function useRemoveProjectMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      userId,
+    }: {
+      projectId: string;
+      userId: string;
+    }) => projectService.removeProjectMember(projectId, userId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["projects", variables.projectId, "members"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["projects", variables.projectId],
+      });
+    },
+  });
+}

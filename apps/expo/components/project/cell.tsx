@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { TouchableOpacity, Image, View, StyleSheet, Text } from "react-native";
 import { router } from "expo-router";
 import { Separator } from "@/components/ui/separator";
+import { Project, useGetProjectStatus } from "@service-geek/api-client";
 
 const getStatusColor = (status: string | null): string => {
   switch (status) {
@@ -28,6 +29,7 @@ export default function ProjectCell({ project }: { project: Project }) {
   const formatProjectName = (name: string): string => {
     return name.split(" ").join("+");
   };
+  const { data: status } = useGetProjectStatus(project.statusId);
   const images = project.images
     ?.filter((image: any) => !image.isDeleted)
     .map((image: any) => image?.url);
@@ -41,7 +43,7 @@ export default function ProjectCell({ project }: { project: Project }) {
       className="mt-3"
       onPress={() =>
         router.push({
-          pathname: `/projects/${project.publicId}`,
+          pathname: `/projects/${project.id}`,
           params: {
             projectName: project.name,
           },
@@ -75,13 +77,8 @@ export default function ProjectCell({ project }: { project: Project }) {
         )}
 
         <View style={styles.cardBody}>
-          <Text
-            style={[
-              styles.cardTag,
-              { color: getStatusColor(project.status ?? "active") },
-            ]}
-          >
-            {project.status}
+          <Text style={[styles.cardTag, { color: status?.data.color }]}>
+            {status?.data.label}
           </Text>
 
           <Text style={styles.cardTitle}>{`${project.name}`}</Text>

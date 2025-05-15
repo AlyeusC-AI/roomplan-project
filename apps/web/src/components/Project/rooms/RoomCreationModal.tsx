@@ -1,7 +1,6 @@
 import { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { roomStore } from "@atoms/room";
 import { Input } from "@components/ui/input";
 import { Button } from "@components/ui/button";
 import { toast } from "sonner";
@@ -15,6 +14,7 @@ import {
 } from "@components/ui/dialog";
 import { LoadingPlaceholder } from "@components/ui/spinner";
 import { Label } from "@components/ui/label";
+import { useCreateRoom } from "@service-geek/api-client";
 
 const RoomCreationModal = ({
   setOpen,
@@ -24,52 +24,31 @@ const RoomCreationModal = ({
   isOpen: boolean;
 }) => {
   const [roomName, setRoomName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const rooms = roomStore();
-
   const { id } = useParams();
+  const createRoomMutation = useCreateRoom();
 
   const createRoom = async () => {
-    try {
-      setLoading(true);
-      if (roomName.length < 3) {
-        toast.error("Room name must be at least 3 characters");
-        return;
-      }
-
-      const res = await fetch(`/api/v1/projects/${id}/room`, {
-        method: "POST",
-        body: JSON.stringify({ name: roomName }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const body = await res.json();
-
-      if (!res.ok && body.reason === "existing-room") {
-        toast.error("A room with this name already exists.");
-        return;
-      } else if (!res.ok) {
-        toast.error("Failed to create room");
-        return;
-      }
-
-      setRoomName("");
-      setOpen(false);
-      rooms.addRoom(body.room);
-      // inferences.addInference({
-      //   publicId: body.room.publicId,
-      //   detections: [],
-      //   inferences: [],
-      //   name: body.room.name,
-      // });
-    } catch {
-      toast.error("Failed to create room");
+    if (roomName.length < 3) {
+      toast.error("Room name must be at least 3 characters");
       return;
     }
 
-    setLoading(false);
+    try {
+      const result = await createRoomMutation.mutateAsync({
+        name: roomName,
+        projectId: id as string,
+      });
+
+      setRoomName("");
+      setOpen(false);
+      toast.success("Room created successfully");
+    } catch (error: any) {
+      // if (error?.response?.data?.reason === "existing-room") {
+      //   toast.error("A room with this name already exists.");
+      // } else {
+      //   toast.error("Failed to create room");
+      // }
+    }
   };
 
   return (
@@ -81,7 +60,7 @@ const RoomCreationModal = ({
             Add a new room to your project to start recording readings.
           </DialogDescription>
         </DialogHeader>
-        {loading ? (
+        {createRoomMutation.isPending ? (
           <LoadingPlaceholder />
         ) : (
           <>

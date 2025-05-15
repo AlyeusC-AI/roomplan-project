@@ -55,10 +55,10 @@ export function useGetProjectStatuses() {
   return useQuery(options);
 }
 
-export function useGetProjectStatus(id: string) {
+export function useGetProjectStatus(id?: string) {
   return useQuery({
     queryKey: ["projectStatuses", id],
-    queryFn: () => projectStatusService.findOne(id),
+    queryFn: () => projectStatusService.findOne(id ?? ""),
     enabled: !!id,
   });
 }

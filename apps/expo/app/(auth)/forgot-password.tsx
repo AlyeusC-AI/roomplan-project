@@ -1,5 +1,5 @@
 import { ChevronLeft } from "lucide-react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   SafeAreaView,
@@ -11,10 +11,11 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useRequestPasswordReset } from "@service-geek/api-client";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import { toast } from "sonner-native";
 
 export default function ForgotPassword() {
+  const navigation = useNavigation();
   const [form, setForm] = useState({
     email: "",
   });
@@ -31,6 +32,10 @@ export default function ForgotPassword() {
       });
     }
   };
+
+  useEffect(() => {
+    navigation.setOptions({ headerTitle: "Forgot password" });
+  }, []);
 
   if (isSubmitted) {
     return (
@@ -68,11 +73,11 @@ export default function ForgotPassword() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#e8ecf4" }}>
       <KeyboardAwareScrollView style={styles.container}>
         <View style={styles.header}>
-          <View style={styles.headerBack}>
+          {/* <View style={styles.headerBack}>
             <TouchableOpacity onPress={() => router.back()}>
               <ChevronLeft color="#1D2A32" size={30} />
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           <Text style={styles.title}>Forgot password?</Text>
 

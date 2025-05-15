@@ -1,6 +1,5 @@
 import { format } from "date-fns";
 import { useMemo } from "react";
-import useSupabaseImage from "@utils/hooks/useSupabaseImage";
 
 import PDFTableTd from "./PDFTable/PDFTableTd";
 import PDFTableTh from "./PDFTable/PDFTableTh";

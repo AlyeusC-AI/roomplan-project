@@ -1,8 +1,6 @@
-import useSupabaseImage from "@utils/hooks/useSupabaseImage";
 import clsx from "clsx";
 import { format, formatDistance } from "date-fns";
 import { useParams } from "next/navigation";
-import { imagesStore } from "@atoms/images";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Check, Star, Loader2, GripVertical } from "lucide-react";
@@ -14,9 +12,14 @@ import {
   TooltipTrigger,
 } from "@components/ui/tooltip";
 import { Card } from "@components/ui/card";
-import { userInfoStore } from "@atoms/user-info";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import {
+  Image,
+  useCurrentUser,
+  useBulkUpdateImages,
+} from "@service-geek/api-client";
+import { userPreferenceStore } from "@state/user-prefrence";
 
 const Photo = ({
   photo,
@@ -26,18 +29,18 @@ const Photo = ({
   id,
   isDraggable = false,
 }: {
-  photo: ImageQuery_Image;
-  onPhotoClick: (key: string) => void;
-  onSelectPhoto: (photo: ImageQuery_Image) => void;
+  photo: Image;
+  onPhotoClick: (id: string) => void;
+  onSelectPhoto: (photo: Image) => void;
   isSelected: boolean;
   id: string;
   isDraggable?: boolean;
 }) => {
-  const supabaseUrl = useSupabaseImage(photo.key);
-  const user = userInfoStore();
+  const supabaseUrl = photo.url;
+  const { savedPhotoView, savedPhotoGroupBy } = userPreferenceStore();
   const { id: projectId } = useParams<{ id: string }>();
-  const { images, setImages } = imagesStore();
   const [isUpdating, setIsUpdating] = useState(false);
+  const bulkUpdateImages = useBulkUpdateImages();
 
   const {
     attributes,
@@ -61,34 +64,15 @@ const Photo = ({
     try {
       setIsUpdating(true);
 
-      // Make API call to update the image
-      const response = await fetch(`/api/v1/projects/${projectId}/images`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
+      await bulkUpdateImages.mutateAsync({
+        projectId,
+        filters: {
+          ids: [photo.id],
         },
-        body: JSON.stringify({
-          id: photo.publicId,
-          includeInReport: !photo.includeInReport,
-        }),
+        updates: {
+          showInReport: !photo.showInReport,
+        },
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to update image");
-      }
-
-      // Update global state
-      setImages(
-        images.map((p) => {
-          if (p.key === photo.key) {
-            return {
-              ...p,
-              includeInReport: !photo.includeInReport,
-            };
-          }
-          return p;
-        })
-      );
 
       toast.success("Image updated successfully");
     } catch (error) {
@@ -121,8 +105,8 @@ const Photo = ({
         <Star
           className={clsx(
             "size-6",
-            !photo.includeInReport && "text-gray-500",
-            photo.includeInReport && "fill-yellow-400 text-yellow-400"
+            !photo.showInReport && "text-gray-500",
+            photo.showInReport && "fill-yellow-400 text-yellow-400"
           )}
         />
       )}
@@ -131,7 +115,7 @@ const Photo = ({
 
   if (!supabaseUrl) return null;
 
-  if (user.user?.photoView === "photoGridView") {
+  if (savedPhotoView === "photoGridView") {
     return (
       <div ref={setNodeRef} style={style}>
         <div className='relative'>
@@ -148,7 +132,7 @@ const Photo = ({
             className='group relative block size-56 cursor-pointer overflow-hidden rounded-lg'
             onClick={(e) => {
               e.stopPropagation();
-              onPhotoClick(photo.key);
+              onPhotoClick(photo.id);
             }}
           >
             <div
@@ -181,12 +165,12 @@ const Photo = ({
           <div
             className={clsx(
               "w-full text-primary",
-              user.user.groupView === "roomView" && "py-2"
+              savedPhotoGroupBy === "room" && "py-2"
             )}
           >
             <div className='flex items-center justify-between'>
               <div className='flex flex-1 flex-col justify-between'>
-                {user.user.groupView === "roomView" && (
+                {savedPhotoGroupBy === "room" && (
                   <div className='text-xs font-semibold'>
                     <p>
                       {format(
@@ -200,9 +184,9 @@ const Photo = ({
                   {formatDistance(new Date(photo.createdAt), Date.now(), {
                     addSuffix: true,
                   })}
-                  {photo?.ImageNote.length > 0 && (
+                  {photo?.comments?.length > 0 && (
                     <div className='text-xs'>
-                      {photo?.ImageNote.length} comments
+                      {photo?.comments?.length} comments
                     </div>
                   )}
                 </div>
@@ -250,7 +234,7 @@ const Photo = ({
             className='group relative block size-24 cursor-pointer overflow-hidden rounded-lg'
             onClick={(e) => {
               e.stopPropagation();
-              onPhotoClick(photo.key);
+              onPhotoClick(photo.id);
             }}
           >
             <img src={supabaseUrl} alt='' className='h-full w-auto' />

@@ -286,4 +286,92 @@ export class ProjectsService {
       },
     };
   }
+
+  // Project Member Management
+
+  async getProjectMembers(projectId: string, userId: string) {
+    // Get the project to verify it exists and user has access
+    const project = await this.findOne(projectId, userId);
+
+    // Retrieve all members of the project with their user data
+    const projectWithMembers = await this.prisma.user.findMany({
+      where: { projects: { some: { id: projectId } } },
+    });
+
+    return {
+      users: projectWithMembers,
+    };
+  }
+
+  async addProjectMember(
+    projectId: string,
+    memberUserId: string,
+    requestingUserId: string,
+  ) {
+    // Get the project to verify it exists and user has access
+    const project = await this.findOne(projectId, requestingUserId);
+
+    // Check if user exists
+    const user = await this.prisma.user.findUnique({
+      where: { id: memberUserId },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${memberUserId} not found`);
+    }
+
+    // Check if user is already a member of the project
+    const existingMember = await this.prisma.project.findFirst({
+      where: {
+        id: projectId,
+        members: {
+          some: {
+            id: memberUserId,
+          },
+        },
+      },
+    });
+
+    if (existingMember) {
+      // If already a member, simply return success
+      return { status: 'ok' };
+    }
+
+    // Add the user to the project members
+    await this.prisma.project.update({
+      where: { id: projectId },
+      data: {
+        members: {
+          connect: {
+            id: memberUserId,
+          },
+        },
+      },
+    });
+
+    return { status: 'ok' };
+  }
+
+  async removeProjectMember(
+    projectId: string,
+    memberUserId: string,
+    requestingUserId: string,
+  ) {
+    // Get the project to verify it exists and user has access
+    const project = await this.findOne(projectId, requestingUserId);
+
+    // Remove the user from the project members
+    await this.prisma.project.update({
+      where: { id: projectId },
+      data: {
+        members: {
+          disconnect: {
+            id: memberUserId,
+          },
+        },
+      },
+    });
+
+    return { status: 'ok' };
+  }
 }

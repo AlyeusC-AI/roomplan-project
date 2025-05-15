@@ -3,9 +3,10 @@ import { Button } from "@components/ui/button";
 import { Edit2, Trash2 } from "lucide-react";
 import RoomEditModal from "./RoomEditModal";
 import RoomDeleteModal from "./RoomDeleteModal";
+import { Room } from "@service-geek/api-client";
 
 interface RoomActionsProps {
-  room: RoomWithReadings;
+  room: Room;
   onSuccess?: () => void;
 }
 

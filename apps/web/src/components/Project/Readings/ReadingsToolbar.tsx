@@ -2,7 +2,7 @@ import { useState } from "react";
 import { PrimaryButton } from "@components/components/button";
 import Modal from "@components/DesignSystem/Modal";
 
-import RoomCreationModal from "../RoomCreationModal";
+import RoomCreationModal from "../rooms/RoomCreationModal";
 import TabTitleArea from "../TabTitleArea";
 
 export default function MitigationToolbar() {

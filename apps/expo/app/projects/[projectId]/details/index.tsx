@@ -12,19 +12,21 @@ import {
   TouchableWithoutFeedback,
   Pressable,
 } from "react-native";
-import { projectStore } from "@/lib/state/project";
 import { FormInput } from "@/components/ui/form";
 import { Box, VStack, HStack, Button, Spinner, FormControl } from "native-base";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-import { DamageTypeSelector } from "@/components/project/damageSelector";
-import { 
-  Phone, 
-  ChevronLeft, 
-  User, 
-  Mail, 
-  MapPin, 
-  Building2, 
-  ClipboardList, 
+import {
+  DamageTypeSelector,
+  DamageType,
+} from "@/components/project/damageSelector";
+import {
+  Phone,
+  ChevronLeft,
+  User,
+  Mail,
+  MapPin,
+  Building2,
+  ClipboardList,
   AlertTriangle,
   Shield,
   FileText,
@@ -40,20 +42,115 @@ import {
   Calendar as CalendarIcon,
   X,
   ChevronRight,
-  ChevronLeft as ChevronLeftIcon
+  ChevronLeft as ChevronLeftIcon,
+  ChevronDown,
 } from "lucide-react-native";
 import { Linking } from "react-native";
-import { router, useGlobalSearchParams } from "expo-router";
+import {
+  router,
+  useGlobalSearchParams,
+  useLocalSearchParams,
+} from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { userStore } from "@/lib/state/user";
 import { toast } from "sonner-native";
-import { api } from "@/lib/api";
-import DateTimePicker, { DateType, useDefaultStyles } from "react-native-ui-datepicker";
+import DateTimePicker, {
+  DateType,
+  useDefaultStyles,
+} from "react-native-ui-datepicker";
 import dayjs from "dayjs";
 import { Modal } from "@/components/ui/modal";
+import {
+  useGetProjectById,
+  useUpdateProject,
+  LossType,
+} from "@service-geek/api-client";
 
 type TabType = "customer" | "loss" | "insurance";
+
+// Create a LossType selector component
+const LOSS_TYPES = [
+  { label: "Fire Damage", value: LossType.FIRE },
+  { label: "Water Damage", value: LossType.WATER },
+  { label: "Wind Damage", value: LossType.WIND },
+  { label: "Hail Damage", value: LossType.HAIL },
+  { label: "Mold Damage", value: LossType.MOLD },
+  { label: "Other", value: LossType.OTHER },
+] as const;
+
+interface LossTypeSelectorProps {
+  value?: LossType;
+  onChange: (value: LossType) => void;
+  style?: any;
+}
+
+function LossTypeSelector({ value, onChange, style }: LossTypeSelectorProps) {
+  const [modalVisible, setModalVisible] = useState(false);
+  const selectedLabel = value
+    ? LOSS_TYPES.find((type) => type.value === value)?.label
+    : "Select loss type";
+
+  return (
+    <Box>
+      <FormControl.Label>Type of Loss</FormControl.Label>
+      <TouchableOpacity
+        style={[styles.selectorInput, style]}
+        onPress={() => setModalVisible(true)}
+      >
+        <Text style={[styles.inputText, !value && styles.placeholderText]}>
+          {selectedLabel}
+        </Text>
+        <ChevronDown size={20} color="#1d1d1d" />
+      </TouchableOpacity>
+
+      <Modal isOpen={modalVisible} onClose={() => setModalVisible(false)}>
+        <Box style={styles.calendarContainer}>
+          <HStack justifyContent="space-between" alignItems="center" mb={4}>
+            <Text style={styles.modalTitle}>Select Loss Type</Text>
+            <Pressable onPress={() => setModalVisible(false)}>
+              <X color="#64748b" size={20} />
+            </Pressable>
+          </HStack>
+
+          <VStack space={2}>
+            {LOSS_TYPES.map((type) => (
+              <TouchableOpacity
+                key={type.value}
+                style={[
+                  styles.optionItem,
+                  value === type.value && styles.selectedOption,
+                ]}
+                onPress={() => {
+                  onChange(type.value);
+                  setModalVisible(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.optionText,
+                    value === type.value && styles.selectedOptionText,
+                  ]}
+                >
+                  {type.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </VStack>
+
+          <HStack space={2} mt={4}>
+            <Button
+              variant="outline"
+              onPress={() => setModalVisible(false)}
+              style={styles.modalButton}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </Button>
+          </HStack>
+        </Box>
+      </Modal>
+    </Box>
+  );
+}
 
 const DateInput: React.FC<{
   label: string;
@@ -76,10 +173,7 @@ const DateInput: React.FC<{
   return (
     <Box>
       <FormControl.Label>{label}</FormControl.Label>
-      <Pressable
-        onPress={() => setShowPicker(true)}
-        style={styles.dateInput}
-      >
+      <Pressable onPress={() => setShowPicker(true)} style={styles.dateInput}>
         <Text style={styles.dateInputText}>
           {dayjs(value).format("MMM D, YYYY")}
         </Text>
@@ -97,7 +191,7 @@ const DateInput: React.FC<{
           <Box style={styles.datePickerContainer}>
             <DateTimePicker
               mode="single"
-              minDate={dayjs().subtract(1, 'year').toDate()}
+              minDate={dayjs().subtract(1, "year").toDate()}
               maxDate={dayjs().toDate()}
               components={{
                 IconNext: <ChevronRight color="#1d4ed8" size={28} />,
@@ -150,36 +244,65 @@ const DateInput: React.FC<{
 
 export default function ProjectDetails() {
   const [activeTab, setActiveTab] = useState<TabType>("customer");
-  const project = projectStore();
-  const searchParams = useGlobalSearchParams();
-  console.log("🚀 ~ ProjectDetails ~ searchParams:", searchParams)
+  const searchParams = useLocalSearchParams();
+  const projectId = searchParams.projectId as string;
+
+  const { data: project, isLoading: isLoadingProject } =
+    useGetProjectById(projectId);
+  const updateProjectMutation = useUpdateProject();
 
   useEffect(() => {
-
     if (searchParams.activeTab) {
       setActiveTab(searchParams.activeTab as TabType);
     }
   }, [searchParams.activeTab]);
+
   const [loading, setLoading] = useState(false);
-  const [currentAddress, setCurrentAddress] = useState(project.project?.location || "");
+  const [currentAddress, setCurrentAddress] = useState("");
   const [firstTime, setFirstTime] = useState(true);
-  const [clientName, setClientName] = useState(project.project?.clientName || "");
-  const [clientPhoneNumber, setClientPhoneNumber] = useState(project.project?.clientPhoneNumber || "");
-  const [clientEmail, setClientEmail] = useState(project.project?.clientEmail || "");
-  const [damageType, setDamageType] = useState(project.project?.damageType);
-  const [projectName, setProjectName] = useState(project.project?.name || "");
-  const [managerName, setManagerName] = useState(project.project?.managerName || "");
-  const [companyName, setCompanyName] = useState(project.project?.companyName || "");
-  const [insuranceCompanyName, setInsuranceCompanyName] = useState(project.project?.insuranceCompanyName || "");
-  const [adjusterName, setAdjusterName] = useState(project.project?.adjusterName || "");
-  const [adjusterEmail, setAdjusterEmail] = useState(project.project?.adjusterEmail || "");
-  const [adjusterPhoneNumber, setAdjusterPhoneNumber] = useState(project.project?.adjusterPhoneNumber || "");
-  const [insuranceClaimId, setInsuranceClaimId] = useState(project.project?.insuranceClaimId || "");
-  const [policyNumber, setPolicyNumber] = useState(project.project?.policyNumber || "");
-  const [catCode, setCatCode] = useState((project.project?.catCode) || "");
-  const [claimSummary, setClaimSummary] = useState(project.project?.claimSummary || "");
-  const [dateOfLoss, setDateOfLoss] = useState<DateType>(project.project?.dateOfLoss ? dayjs(project.project.dateOfLoss).toDate() : dayjs().toDate());
-  console.log("🚀 ~ ProjectDetails ~ project:", currentAddress)
+  const [clientName, setClientName] = useState("");
+  const [clientPhoneNumber, setClientPhoneNumber] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [lossType, setLossType] = useState<LossType | undefined>(undefined);
+  const [projectName, setProjectName] = useState("");
+  const [managerName, setManagerName] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [insuranceCompanyName, setInsuranceCompanyName] = useState("");
+  const [adjusterName, setAdjusterName] = useState("");
+  const [adjusterEmail, setAdjusterEmail] = useState("");
+  const [adjusterPhoneNumber, setAdjusterPhoneNumber] = useState("");
+  const [insuranceClaimId, setInsuranceClaimId] = useState("");
+  const [policyNumber, setPolicyNumber] = useState("");
+  const [catCode, setCatCode] = useState("");
+  const [claimSummary, setClaimSummary] = useState("");
+  const [dateOfLoss, setDateOfLoss] = useState<DateType>(dayjs().toDate());
+
+  // Update form values when project data is loaded
+  useEffect(() => {
+    if (project) {
+      setCurrentAddress(project.data?.location || "");
+      setClientName(project.data?.clientName || "");
+      setClientPhoneNumber(project.data?.clientPhoneNumber || "");
+      setClientEmail(project.data?.clientEmail || "");
+      setLossType(project.data?.lossType);
+      setProjectName(project.data?.name || "");
+      setManagerName(project.data?.managerName || "");
+      setCompanyName(project.data?.companyName || "");
+      setInsuranceCompanyName(project.data?.insuranceCompanyName || "");
+      setAdjusterName(project.data?.adjusterName || "");
+      setAdjusterEmail(project.data?.adjusterEmail || "");
+      setAdjusterPhoneNumber(project.data?.adjusterPhoneNumber || "");
+      setInsuranceClaimId(project.data?.insuranceClaimId || "");
+      setPolicyNumber(project.data?.policyNumber || "");
+      setCatCode(project.data?.catCode || "");
+      setClaimSummary(project.data?.claimSummary || "");
+      setDateOfLoss(
+        project.data?.dateOfLoss
+          ? dayjs(project.data.dateOfLoss).toDate()
+          : dayjs().toDate()
+      );
+    }
+  }, [project]);
 
   const handleCallPress = (phoneNumber: string) => {
     if (phoneNumber) {
@@ -190,42 +313,44 @@ export default function ProjectDetails() {
   const updateProject = async () => {
     try {
       setLoading(true);
+
       const update = {
         clientName,
         clientPhoneNumber,
         clientEmail,
         location: currentAddress,
-        damageType,
         name: projectName,
         managerName,
         companyName,
         insuranceCompanyName,
         adjusterName,
-        adjusterEmail,
+        adjusterEmail: adjusterEmail ?? undefined,
         adjusterPhoneNumber,
         insuranceClaimId,
         policyNumber,
-        dateOfLoss,
-        catCode: (catCode),
+        dateOfLoss:
+          dateOfLoss instanceof Date
+            ? dateOfLoss
+            : dateOfLoss
+              ? new Date(dateOfLoss as string)
+              : undefined,
+        catCode,
         claimSummary,
       };
 
-      const res = await api.patch   (
-        `/api/v1/projects/${project.project?.publicId}`,
-        update,
-       
-      );
-      console.log("🚀 ~ updateProject ~ res:", res.data)
+      await updateProjectMutation.mutateAsync({
+        id: projectId,
+        data: {
+          ...update,
+          lossType: lossType || undefined,
+          adjusterEmail: adjusterEmail || undefined,
+        },
+      });
 
-      if (res.status === 200) {
-        project.updateProject(update);
-        toast.success("Project updated successfully!");
-      } else {
-        toast.error("Could not update project. Please try again.");
-      }
+      toast.success("Project updated successfully!");
     } catch (error) {
       console.error(error);
-      toast.error("Could not update project. Please try again.");
+      // toast.error("Could not update project. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -245,7 +370,9 @@ export default function ProjectDetails() {
             value={clientName}
             onChangeText={setClientName}
             containerStyle={styles.inputContainer}
-            leftElement={<User size={20} color="#94a3b8" style={styles.inputIcon} />}
+            leftElement={
+              <User size={20} color="#94a3b8" style={styles.inputIcon} />
+            }
           />
           <FormInput
             label="Phone Number"
@@ -253,16 +380,28 @@ export default function ProjectDetails() {
             value={clientPhoneNumber}
             onChangeText={setClientPhoneNumber}
             containerStyle={styles.inputContainer}
-            leftElement={<Phone size={20} color="#94a3b8" style={styles.inputIcon} />}
+            leftElement={
+              <Phone size={20} color="#94a3b8" style={styles.inputIcon} />
+            }
             rightElement={
-              <TouchableOpacity 
-                onPress={() => handleCallPress(clientPhoneNumber)} 
+              <TouchableOpacity
+                onPress={() => handleCallPress(clientPhoneNumber)}
                 style={styles.callButton}
                 disabled={!clientPhoneNumber}
               >
                 <HStack space={1} alignItems="center">
-                  <PhoneCall size={16} color={clientPhoneNumber ? "#2563eb" : "#94a3b8"} />
-                  <Text style={[styles.callText, !clientPhoneNumber && styles.callTextDisabled]}>Call</Text>
+                  <PhoneCall
+                    size={16}
+                    color={clientPhoneNumber ? "#2563eb" : "#94a3b8"}
+                  />
+                  <Text
+                    style={[
+                      styles.callText,
+                      !clientPhoneNumber && styles.callTextDisabled,
+                    ]}
+                  >
+                    Call
+                  </Text>
                 </HStack>
               </TouchableOpacity>
             }
@@ -273,7 +412,9 @@ export default function ProjectDetails() {
             value={clientEmail}
             onChangeText={setClientEmail}
             containerStyle={styles.inputContainer}
-            leftElement={<Mail size={20} color="#94a3b8" style={styles.inputIcon} />}
+            leftElement={
+              <Mail size={20} color="#94a3b8" style={styles.inputIcon} />
+            }
           />
         </View>
 
@@ -286,7 +427,7 @@ export default function ProjectDetails() {
             <GooglePlacesAutocomplete
               placeholder="Enter your street address"
               onPress={(data, details = null) => {
-                console.log("🚀 ~ ProjectDetails ~ details:", details)
+                console.log("🚀 ~ ProjectDetails ~ details:", details);
                 if (details) {
                   setCurrentAddress(data.description);
                 }
@@ -299,12 +440,13 @@ export default function ProjectDetails() {
                 value: currentAddress,
                 defaultValue: currentAddress,
                 onChangeText: (text) => {
-                  console.log("🚀 ~ ProjectDetails ~ text:", text)
+                  console.log("🚀 ~ ProjectDetails ~ text:", text);
                   if (!text && firstTime) {
                     return setFirstTime(false);
                   }
-                  
-                  (text ?? currentAddress)&&   setCurrentAddress(text ?? currentAddress);
+
+                  (text ?? currentAddress) &&
+                    setCurrentAddress(text ?? currentAddress);
                 },
               }}
               styles={{
@@ -350,80 +492,82 @@ export default function ProjectDetails() {
 
   const renderLossTab = () => (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-
-    <VStack space={4}>
-    <View style={styles.section}>
-        <HStack space={2} alignItems="center" mb={4}>
-          <AlertTriangle size={24} color="#2563eb" />
-          <Text style={styles.sectionTitle}>Loss Details</Text>
-        </HStack>
-        <Box style={styles.damageTypeContainer}>
-          <Text style={styles.label}>Type of Loss</Text>
-          <DamageTypeSelector
-            value={damageType}
-            onChange={setDamageType}
+      <VStack space={4}>
+        <View style={styles.section}>
+          <HStack space={2} alignItems="center" mb={4}>
+            <AlertTriangle size={24} color="#2563eb" />
+            <Text style={styles.sectionTitle}>Loss Details</Text>
+          </HStack>
+          <LossTypeSelector
+            value={lossType}
+            onChange={setLossType}
             style={styles.sectionInput}
           />
-        </Box>
-        <DateInput
-          label="Date of Loss"
-          value={dateOfLoss}
-          onChange={setDateOfLoss}
-        />
-        <FormInput
-          label="Category Code"
-          placeholder="Enter category code"
-          value={catCode.toString()}
-          onChangeText={setCatCode}
-          // keyboardType="numeric"
-          containerStyle={styles.inputContainer}
-          leftElement={<Hash size={20} color="#94a3b8" style={styles.inputIcon} />}
-        />
-        <FormInput
-          label="Claim Summary"
-          placeholder="Enter claim summary"
-          value={claimSummary}
-          onChangeText={setClaimSummary}
-          multiline
-          numberOfLines={4}
-          containerStyle={styles.inputContainer}
-          leftElement={<FileCheck size={20} color="#94a3b8" style={styles.inputIcon} />}
-        />
-      </View>
-      <View style={styles.section}>
-        <HStack space={2} alignItems="center" mb={4}>
-          <Building2 size={24} color="#2563eb" />
-          <Text style={styles.sectionTitle}>Project Information</Text>
-        </HStack>
-        <FormInput
-          label="Project Name"
-          placeholder="Enter project name"
-          value={projectName}
-          onChangeText={setProjectName}
-          containerStyle={styles.inputContainer}
-          leftElement={<FileText size={20} color="#94a3b8" style={styles.inputIcon} />}
-        />
-        <FormInput
-          label="Project Manager Name"
-          placeholder="Enter project manager name"
-          value={managerName}
-          onChangeText={setManagerName}
-          containerStyle={styles.inputContainer}
-          leftElement={<UserCircle size={20} color="#94a3b8" style={styles.inputIcon} />}
-        />
-        <FormInput
-          label="Company Name"
-          placeholder="Enter company name"
-          value={companyName}
-          onChangeText={setCompanyName}
-          containerStyle={styles.inputContainer}
-          leftElement={<Building size={20} color="#94a3b8" style={styles.inputIcon} />}
-        />
-      </View>
-
-     
-  
-    </VStack>
+          <DateInput
+            label="Date of Loss"
+            value={dateOfLoss}
+            onChange={setDateOfLoss}
+          />
+          <FormInput
+            label="Category Code"
+            placeholder="Enter category code"
+            value={catCode}
+            onChangeText={setCatCode}
+            containerStyle={styles.inputContainer}
+            leftElement={
+              <Hash size={20} color="#94a3b8" style={styles.inputIcon} />
+            }
+          />
+          <FormInput
+            label="Claim Summary"
+            placeholder="Enter claim summary"
+            value={claimSummary}
+            onChangeText={setClaimSummary}
+            multiline
+            numberOfLines={4}
+            containerStyle={styles.inputContainer}
+            leftElement={
+              <FileCheck size={20} color="#94a3b8" style={styles.inputIcon} />
+            }
+          />
+        </View>
+        <View style={styles.section}>
+          <HStack space={2} alignItems="center" mb={4}>
+            <Building2 size={24} color="#2563eb" />
+            <Text style={styles.sectionTitle}>Project Information</Text>
+          </HStack>
+          <FormInput
+            label="Project Name"
+            placeholder="Enter project name"
+            value={projectName}
+            onChangeText={setProjectName}
+            containerStyle={styles.inputContainer}
+            leftElement={
+              <FileText size={20} color="#94a3b8" style={styles.inputIcon} />
+            }
+          />
+          <FormInput
+            label="Project Manager Name"
+            placeholder="Enter project manager name"
+            value={managerName}
+            onChangeText={setManagerName}
+            containerStyle={styles.inputContainer}
+            leftElement={
+              <UserCircle size={20} color="#94a3b8" style={styles.inputIcon} />
+            }
+          />
+          <FormInput
+            label="Company Name"
+            placeholder="Enter company name"
+            value={companyName}
+            onChangeText={setCompanyName}
+            containerStyle={styles.inputContainer}
+            leftElement={
+              <Building size={20} color="#94a3b8" style={styles.inputIcon} />
+            }
+          />
+        </View>
+      </VStack>
     </TouchableWithoutFeedback>
   );
 
@@ -441,7 +585,9 @@ export default function ProjectDetails() {
             value={insuranceCompanyName}
             onChangeText={setInsuranceCompanyName}
             containerStyle={styles.inputContainer}
-            leftElement={<Building2 size={20} color="#94a3b8" style={styles.inputIcon} />}
+            leftElement={
+              <Building2 size={20} color="#94a3b8" style={styles.inputIcon} />
+            }
           />
           <FormInput
             label="Adjuster Name"
@@ -449,7 +595,9 @@ export default function ProjectDetails() {
             value={adjusterName}
             onChangeText={setAdjusterName}
             containerStyle={styles.inputContainer}
-            leftElement={<User size={20} color="#94a3b8" style={styles.inputIcon} />}
+            leftElement={
+              <User size={20} color="#94a3b8" style={styles.inputIcon} />
+            }
           />
           <FormInput
             label="Adjuster Email"
@@ -457,7 +605,9 @@ export default function ProjectDetails() {
             value={adjusterEmail}
             onChangeText={setAdjusterEmail}
             containerStyle={styles.inputContainer}
-            leftElement={<MailIcon size={20} color="#94a3b8" style={styles.inputIcon} />}
+            leftElement={
+              <MailIcon size={20} color="#94a3b8" style={styles.inputIcon} />
+            }
           />
           <FormInput
             label="Adjuster Number"
@@ -465,16 +615,28 @@ export default function ProjectDetails() {
             value={adjusterPhoneNumber}
             onChangeText={setAdjusterPhoneNumber}
             containerStyle={styles.inputContainer}
-            leftElement={<Phone size={20} color="#94a3b8" style={styles.inputIcon} />}
+            leftElement={
+              <Phone size={20} color="#94a3b8" style={styles.inputIcon} />
+            }
             rightElement={
-              <TouchableOpacity 
-                onPress={() => handleCallPress(adjusterPhoneNumber)} 
+              <TouchableOpacity
+                onPress={() => handleCallPress(adjusterPhoneNumber)}
                 style={styles.callButton}
                 disabled={!adjusterPhoneNumber}
               >
                 <HStack space={1} alignItems="center">
-                  <PhoneCall size={16} color={adjusterPhoneNumber ? "#2563eb" : "#94a3b8"} />
-                  <Text style={[styles.callText, !adjusterPhoneNumber && styles.callTextDisabled]}>Call</Text>
+                  <PhoneCall
+                    size={16}
+                    color={adjusterPhoneNumber ? "#2563eb" : "#94a3b8"}
+                  />
+                  <Text
+                    style={[
+                      styles.callText,
+                      !adjusterPhoneNumber && styles.callTextDisabled,
+                    ]}
+                  >
+                    Call
+                  </Text>
                 </HStack>
               </TouchableOpacity>
             }
@@ -485,7 +647,9 @@ export default function ProjectDetails() {
             value={insuranceClaimId}
             onChangeText={setInsuranceClaimId}
             containerStyle={styles.inputContainer}
-            leftElement={<FileText size={20} color="#94a3b8" style={styles.inputIcon} />}
+            leftElement={
+              <FileText size={20} color="#94a3b8" style={styles.inputIcon} />
+            }
           />
           <FormInput
             label="Policy Number"
@@ -493,7 +657,9 @@ export default function ProjectDetails() {
             value={policyNumber}
             onChangeText={setPolicyNumber}
             containerStyle={styles.inputContainer}
-            leftElement={<FileText size={20} color="#94a3b8" style={styles.inputIcon} />}
+            leftElement={
+              <FileText size={20} color="#94a3b8" style={styles.inputIcon} />
+            }
           />
         </View>
       </VStack>
@@ -502,95 +668,136 @@ export default function ProjectDetails() {
 
   const { top } = useSafeAreaInsets();
 
+  if (isLoadingProject) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <StatusBar backgroundColor="#2563eb" />
+        <View style={[styles.header, { paddingTop: top }]}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
+            <ChevronLeft size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Project Details</Text>
+          <View style={styles.saveButton} />
+        </View>
+        <View style={styles.loadingContent}>
+          <Spinner size="lg" color="#2563eb" />
+          <Text style={styles.loadingText}>Loading project details...</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
-        <View style={styles.container}>
-          <StatusBar backgroundColor="#2563eb" />
-          <View style={[styles.header,{
-            paddingTop: top,
-          }]}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-              <ChevronLeft size={24} color="#fff" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Project Details</Text>
-            <TouchableOpacity onPress={updateProject} style={styles.saveButton}>
-              {loading ? (
-                <Spinner size="sm" color="#fff" />
-              ) : (
-                <HStack space={1} alignItems="center">
-                  <Save size={20} color="#fff" />
-                  <Text style={styles.saveText}>Save</Text>
-                </HStack>
-              )}
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === "customer" && styles.activeTab]}
-              onPress={() => setActiveTab("customer")}
-            >
-              <HStack space={2} alignItems="center">
-                <UserCircle size={20} color={activeTab === "customer" ? "#1e88e5" : "#94a3b8"} />
-                <Text
-                  style={[
-                    styles.tabText,
-                    activeTab === "customer" && styles.activeTabText,
-                  ]}
-                >
-                  Customer
-                </Text>
-              </HStack>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === "loss" && styles.activeTab]}
-              onPress={() => setActiveTab("loss")}
-            >
-              <HStack space={2} alignItems="center">
-                <AlertCircle size={20} color={activeTab === "loss" ? "#1e88e5" : "#94a3b8"} />
-                <Text
-                  style={[styles.tabText, activeTab === "loss" && styles.activeTabText]}
-                >
-                  Loss
-                </Text>
-              </HStack>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === "insurance" && styles.activeTab]}
-              onPress={() => setActiveTab("insurance")}
-            >
-              <HStack space={2} alignItems="center">
-                <Shield size={20} color={activeTab === "insurance" ? "#1e88e5" : "#94a3b8"} />
-                <Text
-                  style={[
-                    styles.tabText,
-                    activeTab === "insurance" && styles.activeTabText,
-                  ]}
-                >
-                  Insurance
-                </Text>
-              </HStack>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView 
-            style={styles.content} 
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="always"
-            contentContainerStyle={{ paddingBottom: 20 }}
-            bounces={true}
-            alwaysBounceVertical={true}
+      <View style={styles.container}>
+        <StatusBar backgroundColor="#2563eb" />
+        <View
+          style={[
+            styles.header,
+            {
+              paddingTop: top,
+            },
+          ]}
+        >
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
           >
-            {activeTab === "customer" && renderCustomerTab()}
-            {activeTab === "loss" && renderLossTab()}
-            {activeTab === "insurance" && renderInsuranceTab()}
-
-          </ScrollView>
+            <ChevronLeft size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Project Details</Text>
+          <TouchableOpacity onPress={updateProject} style={styles.saveButton}>
+            {loading ? (
+              <Spinner size="sm" color="#fff" />
+            ) : (
+              <HStack space={1} alignItems="center">
+                <Save size={20} color="#fff" />
+                <Text style={styles.saveText}>Save</Text>
+              </HStack>
+            )}
+          </TouchableOpacity>
         </View>
+
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "customer" && styles.activeTab]}
+            onPress={() => setActiveTab("customer")}
+          >
+            <HStack space={2} alignItems="center">
+              <UserCircle
+                size={20}
+                color={activeTab === "customer" ? "#1e88e5" : "#94a3b8"}
+              />
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "customer" && styles.activeTabText,
+                ]}
+              >
+                Customer
+              </Text>
+            </HStack>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "loss" && styles.activeTab]}
+            onPress={() => setActiveTab("loss")}
+          >
+            <HStack space={2} alignItems="center">
+              <AlertCircle
+                size={20}
+                color={activeTab === "loss" ? "#1e88e5" : "#94a3b8"}
+              />
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "loss" && styles.activeTabText,
+                ]}
+              >
+                Loss
+              </Text>
+            </HStack>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "insurance" && styles.activeTab]}
+            onPress={() => setActiveTab("insurance")}
+          >
+            <HStack space={2} alignItems="center">
+              <Shield
+                size={20}
+                color={activeTab === "insurance" ? "#1e88e5" : "#94a3b8"}
+              />
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "insurance" && styles.activeTabText,
+                ]}
+              >
+                Insurance
+              </Text>
+            </HStack>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          style={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="always"
+          contentContainerStyle={{ paddingBottom: 20 }}
+          bounces={true}
+          alwaysBounceVertical={true}
+        >
+          {activeTab === "customer" && renderCustomerTab()}
+          {activeTab === "loss" && renderLossTab()}
+          {activeTab === "insurance" && renderInsuranceTab()}
+        </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -807,5 +1014,57 @@ const styles = StyleSheet.create({
     color: "#1d4ed8",
     fontSize: 16,
     fontWeight: "600",
+  },
+  loadingContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1d1d1d",
+    marginTop: 16,
+  },
+  selectorInput: {
+    height: 44,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    fontSize: 17,
+    fontWeight: "500",
+    color: "#1d1d1d",
+    borderWidth: 1,
+    borderColor: "rgb(212, 212, 212)",
+    backgroundColor: "#f8f8f8",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  optionItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  selectedOption: {
+    backgroundColor: "#e6f0ff",
+  },
+  optionText: {
+    fontSize: 16,
+    color: "#1d1d1d",
+  },
+  selectedOptionText: {
+    color: "#1e88e5",
+    fontWeight: "600",
+  },
+  inputText: {
+    fontSize: 16,
+    color: "#1d1d1d",
+  },
+  placeholderText: {
+    color: "#94a3b8",
   },
 });

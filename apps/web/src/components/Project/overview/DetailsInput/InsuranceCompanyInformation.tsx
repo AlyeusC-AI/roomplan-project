@@ -1,6 +1,5 @@
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
-import { projectStore } from "@atoms/project";
 
 import {
   Form,
@@ -34,8 +33,11 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@lib/utils";
 import { useState } from "react";
 import { LoadingSpinner } from "@components/ui/spinner";
-
-const lossTypes = ["Fire", "Water", "Wind", "Mold", "Catastrophe"];
+import {
+  LossType,
+  useGetProjectById,
+  useUpdateProject,
+} from "@service-geek/api-client";
 
 const formSchema = z.object({
   insuranceCompanyName: z.string().optional(),
@@ -48,54 +50,44 @@ const formSchema = z.object({
 });
 
 export default function InsuranceCompanyInformation() {
-  const { project: projectInfo, setProject } = projectStore((state) => state);
   const [loading, setLoading] = useState(false);
-
+  const { id } = useParams<{ id: string }>();
+  const { data: projectData } = useGetProjectById(id as string);
+  const updateProject = useUpdateProject();
+  const project = projectData?.data;
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      insuranceCompanyName: projectInfo?.insuranceCompanyName,
-      adjusterName: projectInfo?.adjusterName,
-      adjusterPhoneNumber: projectInfo?.adjusterPhoneNumber,
-      adjusterEmail: projectInfo?.adjusterEmail,
-      insuranceClaimId: projectInfo?.insuranceClaimId,
-      lossType: projectInfo?.lossType,
-      catCode: `${projectInfo?.catCode ?? ""}`,
+      insuranceCompanyName: project?.insuranceCompanyName,
+      adjusterName: project?.adjusterName,
+      adjusterPhoneNumber: project?.adjusterPhoneNumber,
+      adjusterEmail: project?.adjusterEmail,
+      insuranceClaimId: project?.insuranceClaimId,
+      lossType: project?.lossType,
+      catCode: `${project?.catCode ?? ""}`,
     },
   });
-
-  const { id } = useParams<{ id: string }>();
 
   const onSave = async (data: z.infer<typeof formSchema>) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/v1/projects/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        setProject({
-          ...projectInfo!,
+      await updateProject.mutateAsync({
+        id: id as string,
+        data: {
           ...data,
-          catCode: data.catCode ? (data.catCode) : null,
-        });
+          catCode: data.catCode ? data.catCode : undefined,
+          lossType: data.lossType ? (data.lossType as LossType) : undefined,
+        },
+      });
 
-        toast.success("Project updated successfully!");
-      } else {
-        toast.error(
-          "Updated Failed. If the error persists please contact support@restoregeek.app"
-        );
-      }
+      toast.success("Project updated successfully!");
     } catch (error) {
       console.error(error);
-      toast.error(
-        "Updated Failed. If the error persists please contact support@restoregeek.app"
-      );
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
-
+  const lossTypes = Object.values(LossType);
   return (
     <Card className='w-full lg:col-span-2'>
       <div className='p-4'>
@@ -260,20 +252,18 @@ export default function InsuranceCompanyInformation() {
             control={form.control}
             name='catCode'
             render={({ field }) => (
-              <FormItem className='lg:col-span-2'>
-                <FormLabel>Category Code</FormLabel>
+              <FormItem>
+                <FormLabel>CAT Code</FormLabel>
                 <FormControl>
-                  <Input placeholder='Category Code'  {...field} />
+                  <Input placeholder='CAT Code' {...field} />
                 </FormControl>
-                <FormDescription>
-                  The category code of the loss for the project.
-                </FormDescription>
+                <FormDescription>The CAT code of the project.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <div className='col-span-2 flex justify-end'>
-            <Button type='submit' className='ml-auto'>
+          <div className='col-span-full mt-6 flex justify-end'>
+            <Button type='submit' disabled={loading}>
               {loading ? <LoadingSpinner /> : "Save"}
             </Button>
           </div>

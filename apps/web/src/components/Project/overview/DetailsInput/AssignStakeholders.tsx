@@ -3,13 +3,19 @@ import UserAvatar from "@components/DesignSystem/UserAvatar";
 import { ChevronUpIcon, CheckIcon } from "lucide-react";
 import clsx from "clsx";
 import { useParams } from "next/navigation";
-// import { teamMembersStore } from "@atoms/team-members";
 import { LoadingSpinner } from "@components/ui/spinner";
+import {
+  useGetOrganizationMembers,
+  useGetProjectById,
+  useGetProjectMembers,
+  useAddProjectMember,
+  useRemoveProjectMember,
+  User,
+} from "@service-geek/api-client";
+import { OrganizationMembership } from "@service-geek/api-client/src/types/organization";
 
 interface ProjectMember {
-  id: number;
   userId: string;
-  projectId: number;
   User: {
     email: string;
     firstName: string;
@@ -19,51 +25,28 @@ interface ProjectMember {
 }
 
 export default function AssignStakeholders() {
-  // const { teamMembers } = teamMembersStore();
-  const [teamMembers, setTeamMembers] = useState([]);
+  const { data: teamMembersData } = useGetOrganizationMembers();
+  const teamMembers = teamMembersData?.data || [];
+
   const [loadingId, setLoadingId] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [projectMembers, setProjectMembers] = useState<ProjectMember[]>([]);
   const { id } = useParams();
+  const { data: projectData } = useGetProjectById(id as string);
+  const { data: projectMembersData, refetch: refetchProjectMembers } =
+    useGetProjectMembers(id as string);
+  const projectMembers = projectMembersData?.users || [];
+  const addProjectMemberMutation = useAddProjectMember();
+  const removeProjectMemberMutation = useRemoveProjectMember();
   const ref = useRef<HTMLDivElement>(null);
-
-  const addUser = (userId: string) => {
-    return fetch(`/api/v1/projects/${id}/member`, {
-      method: "POST",
-      body: JSON.stringify({
-        userId,
-      }),
-    });
-  };
-
-  const removeUser = (userId: string) => {
-    return fetch(`/api/v1/projects/${id}/member`, {
-      method: "DELETE",
-      body: JSON.stringify({
-        userId: userId,
-      }),
-    });
-  };
-
-  const fetchProjectMembers = async () => {
-    try {
-      const res = await fetch(`/api/v1/projects/${id}/member`);
-      const data = await res.json();
-      setProjectMembers(data.users || []);
-    } catch (error) {
-      console.error("Failed to fetch project members:", error);
-    }
-  };
 
   const onRemove = async (userId: string) => {
     setLoadingId(userId);
     try {
-      const res = await removeUser(userId);
-      if (!res.ok) {
-        console.error(res);
-      } else {
-        await fetchProjectMembers();
-      }
+      await removeProjectMemberMutation.mutateAsync({
+        projectId: id as string,
+        userId,
+      });
+      await refetchProjectMembers();
     } catch (error) {
       console.error(error);
     }
@@ -73,29 +56,16 @@ export default function AssignStakeholders() {
   const onAdd = async (userId: string) => {
     setLoadingId(userId);
     try {
-      const res = await addUser(userId);
-      if (!res.ok) {
-        console.error(res);
-      } else {
-        await fetchProjectMembers();
-      }
+      await addProjectMemberMutation.mutateAsync({
+        projectId: id as string,
+        userId,
+      });
+      await refetchProjectMembers();
     } catch (error) {
       console.error(error);
     }
     setLoadingId("");
   };
-
-  useEffect(() => {
-    fetch("/api/v1/organization/members")
-      .then((res) => res.json())
-      .then((data) => {
-        teamMembersStore.getState().setTeamMembers(data.members);
-      });
-  }, []);
-
-  useEffect(() => {
-    fetchProjectMembers();
-  }, [id]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -135,9 +105,9 @@ export default function AssignStakeholders() {
           </button>
           {isOpen && (
             <div className='absolute left-0 top-full z-50 w-full rounded-md border border-gray-300 bg-white shadow-md'>
-              {teamMembers.map((member) => {
+              {teamMembers.map((member: OrganizationMembership) => {
                 const selected = projectMembers.some(
-                  (pm) => pm.userId === member.id
+                  (pm: User) => pm.id === member.user?.id
                 );
                 return (
                   <button
@@ -146,19 +116,18 @@ export default function AssignStakeholders() {
                     onClick={(e) => {
                       e.stopPropagation();
                       if (selected) {
-                        onRemove(member.id);
+                        onRemove(member.user?.id || "");
                       } else {
-                        onAdd(member.id);
+                        onAdd(member.user?.id || "");
                       }
                     }}
                     className='grid w-full grid-cols-7 gap-2 px-4 py-3 text-sm hover:bg-blue-50 sm:text-base'
                   >
                     <div className='col-span-1 flex h-full items-center justify-center'>
                       <UserAvatar
-                        userId={member.id}
-                        firstName={member.firstName}
-                        lastName={member.lastName}
-                        email={member.email}
+                        firstName={member.user?.firstName}
+                        lastName={member.user?.lastName}
+                        email={member.user?.email}
                       />
                     </div>
                     <div className='col-span-5 flex h-full flex-col justify-start overflow-hidden'>
@@ -168,9 +137,9 @@ export default function AssignStakeholders() {
                           "block truncate text-left"
                         )}
                       >
-                        {member.firstName && member.lastName && (
+                        {member.user?.firstName && member.user?.lastName && (
                           <span className='mr-2'>
-                            {member.firstName} {member.lastName}
+                            {member.user.firstName} {member.user.lastName}
                           </span>
                         )}
                       </div>
@@ -180,7 +149,7 @@ export default function AssignStakeholders() {
                           "text-left font-semibold"
                         )}
                       >
-                        {member.email}
+                        {member.user?.email}
                       </span>
                       <span
                         className={clsx(
@@ -188,11 +157,11 @@ export default function AssignStakeholders() {
                           "text-left font-semibold"
                         )}
                       >
-                        {member.phone}
+                        {member.user?.phone}
                       </span>
                     </div>
                     <div className='col-span-1 flex h-full items-center justify-center'>
-                      {loadingId === member.id ? (
+                      {loadingId === member.user?.id ? (
                         <LoadingSpinner />
                       ) : (
                         <>{selected && <CheckIcon className='h-6' />}</>
@@ -206,27 +175,26 @@ export default function AssignStakeholders() {
         </div>
       </div>
       <ul className='grow space-y-4 px-4 py-5 sm:space-y-6 sm:p-6'>
-        {projectMembers.map((member) => (
+        {projectMembers.map((member: User) => (
           <li key={`member-${member.id}`} className='flex items-center'>
             <UserAvatar
-              userId={member.userId}
-              firstName={member.User.firstName}
-              lastName={member.User.lastName}
-              email={member.User.email}
+              firstName={member.firstName}
+              lastName={member.lastName}
+              email={member.email}
             />
             <div className='ml-4 flex flex-col justify-start truncate'>
               <div className={clsx("font-semibold", "block truncate")}>
-                {member.User.firstName && member.User.lastName && (
+                {member.firstName && member.lastName && (
                   <span className='mr-2'>
-                    {member.User.firstName} {member.User.lastName}
+                    {member.firstName} {member.lastName}
                   </span>
                 )}
               </div>
               <span className={clsx("text-gray-500", "font-semibold")}>
-                {member.User.email}
+                {member.email}
               </span>
               <span className={clsx("text-gray-500", "font-semibold")}>
-                {member.User.phone}
+                {member.phone}
               </span>
             </div>
           </li>

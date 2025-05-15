@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { userStore } from "@/lib/state/user";
 import { Check, Users, Search } from "lucide-react-native";
 import {
@@ -12,85 +12,77 @@ import { Text } from "../ui/text";
 import { View } from "react-native";
 import { Card } from "../ui/card";
 import { useGlobalSearchParams } from "expo-router";
-import { projectStore } from "@/lib/state/project";
-import { User } from "@supabase/supabase-js";
 import { Input } from "../ui/input";
 import { cn } from "@/lib/utils";
-import { api } from "@/lib/api";
-interface ProjectAssignee {
-  userId: string;
-  User?: {
-    firstName?: string;
-    lastName?: string;
-    email: string;
-    avatarUrl?: string;
-  };
-}
+import {
+  useGetOrganizationMembers,
+  useGetProjectMembers,
+  useAddProjectMember,
+  useRemoveProjectMember,
+  User,
+} from "@service-geek/api-client";
 
-interface AssigneeSelectProps {
-  projectAssignees: ProjectAssignee[];
-  teamMembers: User[];
-}
-
-const AssigneeSelect: React.FC<AssigneeSelectProps> = ({
-  projectAssignees,
-  teamMembers,
-}) => {
+const AssigneeSelect = () => {
   const { projectId } = useGlobalSearchParams<{ projectId: string }>();
-  const project = projectStore();
+
+  // Use the same API hooks as the web version
+  const { data: teamMembersData } = useGetOrganizationMembers();
+  const teamMembers = teamMembersData?.data || [];
+
+  const { data: projectMembersData, refetch: refetchProjectMembers } =
+    useGetProjectMembers(projectId as string);
+  const projectMembers = projectMembersData?.users || [];
+
+  const addProjectMemberMutation = useAddProjectMember();
+  const removeProjectMemberMutation = useRemoveProjectMember();
+
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { session } = userStore((state) => state);
   const currentUserId = session?.user?.id;
 
-  const selectedMembers = projectAssignees.filter((p) =>
-    teamMembers.find((t) => t.id === p.userId)
-  );
-
   const filteredMembers = teamMembers.filter((member) => {
-    const userData = member.user_metadata || {};
-    const fullName = `${userData.firstName || ""} ${userData.lastName || ""}`.trim();
-    const email = member.email || "";
+    const fullName =
+      `${member.user?.firstName || ""} ${member.user?.lastName || ""}`.trim();
+    const email = member.user?.email || "";
     return (
       fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       email.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 
-  const onPress = useCallback(async (userId: string, isAlreadySelected: boolean) => {
+  const onPress = async (userId: string, isAlreadySelected: boolean) => {
     if (!session?.access_token) return;
-    
+
     if (isAlreadySelected && userId === currentUserId) {
       return;
     }
-    
+
     setIsLoading(true);
     try {
-      const response = await api(
-        `/api/v1/projects/${projectId}/assignee`,
-        {
-          method: isAlreadySelected ? "DELETE" : "POST",
-          data: { userId },
-        }
-      );
-
-      if (response.status !== 200) {
-        throw new Error("Failed to update assignee");
+      if (isAlreadySelected) {
+        await removeProjectMemberMutation.mutateAsync({
+          projectId: projectId as string,
+          userId,
+        });
+      } else {
+        await addProjectMemberMutation.mutateAsync({
+          projectId: projectId as string,
+          userId,
+        });
       }
-
-      await project.fetchProject(projectId as string);
-    } catch (error: any) {
-      console.error("Error updating assignee:", JSON.stringify(error.response, null, 2));
+      await refetchProjectMembers();
+    } catch (error) {
+      console.error("Error updating assignee:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, session?.access_token, project, currentUserId]);
+  };
 
   const getUserInitials = (user: User) => {
-    const metadata = user.user_metadata || {};
-    if (metadata.firstName && metadata.lastName) {
-      return `${metadata.firstName[0]}${metadata.lastName[0]}`;
+    if (user.firstName && user.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`;
     }
     return user.email?.[0]?.toUpperCase() || "U";
   };
@@ -100,14 +92,14 @@ const AssigneeSelect: React.FC<AssigneeSelectProps> = ({
       <DialogTrigger className="flex flex-row items-center space-x-2 p-2 gap-2 rounded-lg hover:bg-gray-100">
         <Users height={24} width={24} className="text-black" color="#000" />
         <View className="flex-row items-center gap-2">
-          {selectedMembers.length > 0 ? (
+          {projectMembers.length > 0 ? (
             <>
-              <Text className=" text-primary font-medium">
-                {selectedMembers[0].User?.firstName || selectedMembers[0].User?.email}
+              <Text className="text-primary font-medium">
+                {projectMembers[0]?.firstName || projectMembers[0]?.email}
               </Text>
-              {selectedMembers.length > 1 && (
-                <Text className=" text-gray-500 ml-1">
-                  +{selectedMembers.length - 1} more
+              {projectMembers.length > 1 && (
+                <Text className="text-gray-500 ml-1">
+                  +{projectMembers.length - 1} more
                 </Text>
               )}
             </>
@@ -119,13 +111,13 @@ const AssigneeSelect: React.FC<AssigneeSelectProps> = ({
       <DialogContent className="w-[90vw] max-w-[600px] max-h-[80vh]">
         <DialogHeader>
           <Text className="text-3xl font-bold mb-6">Team Members</Text>
-          <View className=" flex-row items-center gap-2 px-5">
-            <Search className=" text-gray-400" size={20} />
+          <View className="flex-row items-center gap-2 px-5">
+            <Search className="text-gray-400" size={20} />
             <Input
               placeholder="Search members..."
               value={searchQuery}
               onChangeText={setSearchQuery}
-              className=" h-12 text-lg w-full"
+              className="h-12 text-lg w-full"
             />
           </View>
         </DialogHeader>
@@ -136,45 +128,58 @@ const AssigneeSelect: React.FC<AssigneeSelectProps> = ({
             </View>
           ) : (
             filteredMembers.map((member) => {
-              const isSelected = projectAssignees.some((a) => a.userId === member.id);
-              const metadata = member.user_metadata || {};
-              const fullName = `${metadata.firstName || ""} ${metadata.lastName || ""}`.trim();
+              const isSelected = projectMembers.some(
+                (pm: User) => pm.id === member.user?.id
+              );
+              const fullName =
+                `${member.user?.firstName || ""} ${member.user?.lastName || ""}`.trim();
 
               return (
                 <TouchableOpacity
                   key={member.id}
-                  onPress={() => onPress(member.id, isSelected)}
-                  disabled={isLoading || (isSelected && member.id === currentUserId)}
+                  onPress={() => onPress(member.user?.id || "", isSelected)}
+                  disabled={
+                    isLoading ||
+                    (isSelected && member.user?.id === currentUserId)
+                  }
                 >
                   <Card
                     className={cn(
                       "flex-row items-center p-5 w-full mb-2",
                       isSelected && "bg-primary/5",
-                      isSelected && member.id === currentUserId && "opacity-50"
+                      isSelected &&
+                        member.user?.id === currentUserId &&
+                        "opacity-50"
                     )}
                   >
                     <View className="h-12 w-12 rounded-full bg-primary/10 items-center justify-center">
                       <Text className="text-primary font-medium text-lg">
-                        {getUserInitials(member)}
+                        {getUserInitials(member.user!)}
                       </Text>
                     </View>
                     <View className="ml-4 flex-1">
                       <View className="flex-row items-center">
                         <Text className="font-medium text-lg">
-                          {fullName || member.email}
+                          {fullName || member.user?.email}
                         </Text>
-                        {member.id === currentUserId && (
-                          <Text className="ml-2 text-sm text-gray-500">(You)</Text>
+                        {member.user?.id === currentUserId && (
+                          <Text className="ml-2 text-sm text-gray-500">
+                            (You)
+                          </Text>
                         )}
                       </View>
                       {fullName && (
-                        <Text className="text-sm text-gray-500 mt-1">{member.email}</Text>
+                        <Text className="text-sm text-gray-500 mt-1">
+                          {member.user?.email}
+                        </Text>
                       )}
                     </View>
                     {isSelected && (
                       <View className="flex-row items-center">
-                        {member.id === currentUserId ? (
-                          <Text className="text-sm text-gray-500 mr-2">Required</Text>
+                        {member.user?.id === currentUserId ? (
+                          <Text className="text-sm text-gray-500 mr-2">
+                            Required
+                          </Text>
                         ) : null}
                         <Check className="text-primary" size={24} />
                       </View>

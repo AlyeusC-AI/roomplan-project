@@ -47,9 +47,16 @@ import {
 // import { DialogClose } from "@radix-ui/react-dialog";
 // import { Input } from "@/components/ui/input";
 // import { Label } from "@/components/ui/label";
-import { statusStore } from "@atoms/status";
-import { projectStore } from "@atoms/project";
+
 import { toast } from "sonner";
+import {
+  ProjectStatus,
+  useGetProjectById,
+  useGetProjectStatus,
+  useGetProjectStatuses,
+  useUpdateProject,
+} from "@service-geek/api-client";
+import { useParams } from "next/navigation";
 
 // FIXME: https://twitter.com/lemcii/status/1659649371162419202?s=46&t=gqNnMIjMWXiG2Rbrr5gT6g
 // Removing states would help maybe?
@@ -65,38 +72,21 @@ export function FancyBox() {
   const [openCombobox, setOpenCombobox] = React.useState(false);
   const [openDialog, setOpenDialog] = React.useState(false);
   const [inputValue, setInputValue] = React.useState<string>("");
+  const { id } = useParams();
 
-  const statuses = statusStore();
-  const project = projectStore();
+  const statuses = useGetProjectStatuses();
+  const project = useGetProjectById(id as string);
+  const updateProject = useUpdateProject();
 
-  React.useEffect(() => {
-    console.log("BUEBFNQAFNJI");
-    statuses.getStatuses();
-    console.log(project.project?.status);
-  });
-
-  // const createFramework = (name: string) => {
-  //   const newFramework = {
-  //     value: name.toLowerCase(),
-  //     label: name,
-  //     color: "#ffffff",
-  //   };
-  //   statuses.setStatuses([...statuses.statuses, newFramework]);
-  //   setSelectedValues(newFramework.label);
-  // };
-
-  const toggleFramework = async (framework: Status) => {
+  const toggleFramework = async (framework: ProjectStatus) => {
     try {
-      await fetch(`/api/v1/projects/${project.project?.publicId}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          status: framework.label.toLowerCase(),
-        }),
+      await updateProject.mutateAsync({
+        id: id as string,
+        data: {
+          statusId: framework.id,
+        },
       });
-      project.setProject({
-        ...project.project!,
-        status: framework.label.toLowerCase(),
-      });
+
       inputRef?.current?.focus();
       toast.success("Status updated successfully.");
     } catch {
@@ -132,11 +122,8 @@ export function FancyBox() {
             className='w-[200px] justify-between text-foreground'
           >
             <span className='truncate'>
-              {statuses.statuses.find(
-                (e) =>
-                  e.label.toLowerCase() ==
-                  project.project?.status?.toLowerCase()
-              )?.label ?? "Select label"}
+              {statuses.data?.find((e) => e.id == project.data?.data?.statusId)
+                ?.label ?? "Select label"}
             </span>
             <ChevronsUpDown className='ml-2 size-4 shrink-0 opacity-50' />
           </Button>
@@ -151,10 +138,8 @@ export function FancyBox() {
             />
             <CommandList>
               <CommandGroup className='max-h-[145px] overflow-auto'>
-                {statuses.statuses.map((framework) => {
-                  const isActive =
-                    project.project?.status?.toLowerCase() ==
-                    framework.label.toLowerCase();
+                {statuses.data?.map((framework) => {
+                  const isActive = project.data?.data?.statusId == framework.id;
                   return (
                     <CommandItem
                       key={framework.id}

@@ -4,7 +4,6 @@ import { Toaster } from "sonner-native";
 import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
 import { Stack } from "expo-router";
 import "@/global.css";
-import { supabase } from "@/lib/supabase";
 import { AppState, View, StatusBar, SafeAreaView } from "react-native";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { PortalHost } from "@rn-primitives/portal";
@@ -21,16 +20,7 @@ SplashScreen.preventAutoHideAsync().catch((err) => {
   console.warn("Error preventing splash screen auto hide:", err);
 });
 
-AppState.addEventListener("change", (state) => {
-  if (state === "active") {
-    supabase.auth.startAutoRefresh();
-  } else {
-    supabase.auth.stopAutoRefresh();
-  }
-});
-
 export default function AppRoot() {
-  const { setSession } = userStore();
   console.log("AppRoot component started rendering");
 
   const theme = extendTheme({
@@ -92,7 +82,7 @@ export default function AppRoot() {
     return () => {
       // Clean up any listeners if needed
     };
-  }, [setSession]);
+  }, []);
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {

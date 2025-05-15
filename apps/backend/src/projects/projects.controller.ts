@@ -93,7 +93,7 @@ export class ProjectsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update project' })
+  @ApiOperation({ summary: 'Update project by id' })
   @ApiParam({ name: 'id', description: 'Project ID' })
   @ApiBody({ type: UpdateProjectDto })
   @ApiResponse({
@@ -113,7 +113,7 @@ export class ProjectsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete project' })
+  @ApiOperation({ summary: 'Delete project by id' })
   @ApiParam({ name: 'id', description: 'Project ID' })
   @ApiResponse({
     status: 200,
@@ -127,6 +127,90 @@ export class ProjectsController {
     @Request() req: RequestWithUser,
   ): Promise<Project> {
     return this.projectsService.remove(id, req.user.userId);
+  }
+
+  @Get(':id/member')
+  @ApiOperation({ summary: 'Get all members of a project' })
+  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return all members of the project.',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Project not found.' })
+  getMembers(@Param('id') id: string, @Request() req: RequestWithUser) {
+    return this.projectsService.getProjectMembers(id, req.user.userId);
+  }
+
+  @Post(':id/member')
+  @ApiOperation({ summary: 'Add a member to a project' })
+  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        userId: {
+          type: 'string',
+          description: 'User ID to add as a member',
+        },
+      },
+      required: ['userId'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'The member has been successfully added to the project.',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Project or user not found.' })
+  addMember(
+    @Param('id') id: string,
+    @Body() body: { userId: string },
+    @Request() req: RequestWithUser,
+  ) {
+    return this.projectsService.addProjectMember(
+      id,
+      body.userId,
+      req.user.userId,
+    );
+  }
+
+  @Delete(':id/member')
+  @ApiOperation({ summary: 'Remove a member from a project' })
+  @ApiParam({ name: 'id', description: 'Project ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        userId: {
+          type: 'string',
+          description: 'User ID to remove from the project',
+        },
+      },
+      required: ['userId'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'The member has been successfully removed from the project.',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Project or member not found.' })
+  removeMember(
+    @Param('id') id: string,
+    @Body() body: { userId: string },
+    @Request() req: RequestWithUser,
+  ) {
+    return this.projectsService.removeProjectMember(
+      id,
+      body.userId,
+      req.user.userId,
+    );
   }
 
   @Get('organization/:organizationId/status/:statusId')

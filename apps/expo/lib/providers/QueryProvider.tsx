@@ -5,14 +5,22 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
     defaultOptions: {
       mutations: {
         onError: (error) => {
-          console.log("🚀 ~ QueryProvider ~ error:", error);
-          toast.error(error.message || "An error occurred while fetching data");
+          console.log("🚀 ~ QueryProvider ~ error:", error.response?.data);
+          toast.error(
+            error.response?.data?.message ||
+              error.message ||
+              "An error occurred while fetching data"
+          );
         },
       },
       queries: {
         throwOnError: (error) => {
-          console.log("🚀 ~ QueryProvider ~ error:", error);
-          toast.error(error.message || "An error occurred while fetching data");
+          console.log("🚀 ~ QueryProvider ~ error:", error.response);
+          toast.error(
+            error.response?.data?.message ||
+              error.message ||
+              "An error occurred while fetching data"
+          );
           return true;
         },
       },

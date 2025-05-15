@@ -5,9 +5,13 @@ import DetailsInput from "@components/Project/overview/DetailsInput";
 import { FancyBox } from "@components/ui/fancy-box";
 import { Separator } from "@components/ui/separator";
 import { LoadingPlaceholder } from "@components/ui/spinner";
+import { useGetProjectById } from "@service-geek/api-client";
+import { useParams } from "next/navigation";
 
 export default function OverviewPage() {
-  const { project } = projectStore((state) => state);
+  const { id } = useParams();
+  const { data: project, isLoading } = useGetProjectById(id as string);
+
   return (
     <div className='space-y-6'>
       <div className='flex items-center justify-between'>
@@ -20,7 +24,7 @@ export default function OverviewPage() {
         <FancyBox />
       </div>
       <Separator />
-      <>{!project ? <LoadingPlaceholder /> : <DetailsInput />}</>
+      {isLoading ? <LoadingPlaceholder /> : <DetailsInput />}
     </div>
   );
 }

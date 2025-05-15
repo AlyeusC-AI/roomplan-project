@@ -1,12 +1,18 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import useSupabaseImage from "@utils/hooks/useSupabaseImage";
 import probe from "probe-image-size";
 import Image from "next/image";
 
-import { projectStore } from "@atoms/project";
 import Notes from "@components/Project/overview/DetailsInput/Notes";
 import { MentionMetadata } from "@components/DesignSystem/Mentions/useMentionsMetadata";
+import {
+  Image as ImageType,
+  useAddComment,
+  useCurrentUser,
+  useGetProjectById,
+} from "@service-geek/api-client";
+import { useParams } from "next/navigation";
+import { toast } from "sonner";
 
 // const TheaterModeSlideImage = ({
 //   photo,
@@ -53,55 +59,47 @@ export default function TheaterMode({
 }: {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
-  photos: ImageQuery_Image[];
+  photos: ImageType[];
   theaterModeIndex: number;
   setTheaterModeIndex: Dispatch<SetStateAction<number>>;
 }) {
-  const projectInfo = projectStore((state) => state.project);
-  const supabaseUrl = useSupabaseImage(photos[theaterModeIndex].key);
+  const { id } = useParams<{ id: string }>();
+  const { data: project } = useGetProjectById(id);
+  const { mutate: createImageNote } = useAddComment();
   const [size, setSize] = useState<probe.ProbeResult | null>(null);
-  const [photoNotes, setPhotoNotes] = useState<ImageQuery_ImageNote[]>(
-    photos[theaterModeIndex].ImageNote
-  );
+  const { data: user } = useCurrentUser();
   // const createPhotoNote = trpc.photos.createImageNote.useMutation();
 
   const handleAddProjectNote = async ({
     note,
-    mentions,
-    metadata,
+    // mentions,
+    // metadata,
   }: {
     note: string;
-    mentions: string[];
-    metadata: MentionMetadata[];
+    // mentions: string[];
+    // metadata: MentionMetadata[];
   }) => {
-    const res = await fetch(
-      `/api/v1/projects/${projectInfo?.publicId}/images`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          imageId: photos[theaterModeIndex].id,
-          body: note,
-        }),
-      }
-    );
-
-    const { data } = await res.json();
-    console.log(data);
-    setPhotoNotes([...photoNotes, data]);
+    await createImageNote({
+      imageId: photos[theaterModeIndex].id,
+      data: {
+        content: note,
+        userId: user?.id!,
+        // mentions,
+        // metadata,
+      },
+    });
+    toast.success("Note added successfully");
   };
 
   useEffect(() => {
     const updateSize = async () => {
-      if (supabaseUrl) {
-        const size = await probe(supabaseUrl);
+      if (photos[theaterModeIndex].url) {
+        const size = await probe(photos[theaterModeIndex].url);
         setSize(size);
       }
     };
     updateSize();
-  }, [supabaseUrl]);
+  }, [photos[theaterModeIndex].url]);
 
   useEffect(() => {
     const keyHandler = ({ keyCode }: { keyCode: number }) => {
@@ -118,7 +116,7 @@ export default function TheaterMode({
     return () => {
       window.removeEventListener("keydown", keyHandler);
     };
-  }, [photos, setTheaterModeIndex]);
+  }, [photos]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -138,9 +136,9 @@ export default function TheaterMode({
         <div className='size-full overflow-scroll rounded-lg bg-background'>
           <div className='flex size-full overflow-scroll rounded-lg bg-background'>
             <div className='relative flex size-full items-center justify-center overflow-hidden align-middle'>
-              {size && supabaseUrl && (
+              {size && photos[theaterModeIndex].url && (
                 <Image
-                  src={supabaseUrl}
+                  src={photos[theaterModeIndex].url}
                   width={size.width}
                   height={size.height}
                   alt=''
@@ -155,10 +153,10 @@ export default function TheaterMode({
                   <div className='flex items-start justify-between space-x-3'>
                     <div className='space-y-1'>
                       <DialogTitle className='text-base font-semibold leading-6 text-foreground'>
-                        {projectInfo?.name}
+                        {project?.data.name}
                       </DialogTitle>
                       <p className='text-sm text-gray-500'>
-                        {projectInfo?.location}
+                        {project?.data.location}
                       </p>
                     </div>
                   </div>
@@ -171,7 +169,7 @@ export default function TheaterMode({
               {/* Action buttons */}
               <div className='shrink-0 border-t px-4 py-5 sm:px-6'>
                 <Notes
-                  notesData={photoNotes}
+                  image={photos[theaterModeIndex]}
                   isLoading={false}
                   handleAddProjectNote={handleAddProjectNote}
                 />

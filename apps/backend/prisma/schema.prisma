@@ -30,6 +30,10 @@ model User {
   organizationMemberships OrganizationMember[]
   calendarEvents          CalendarEvent[]
   calendarEventReminders  CalendarEventReminder[]
+
+  // Add direct many-to-many relationship with Project
+  projects Project[] @relation("ProjectMembers")
+  comments Comment[]
 }
 
 model Organization {
@@ -43,7 +47,7 @@ model Organization {
   postalCode              String?
   country                 String?
   faxNumber               String?
-  size                    Int?
+  size                    Int?      @default(10)
   isDeleted               Boolean   @default(false)
   logo                    String?
   lat                     Float?
@@ -158,6 +162,9 @@ model Project {
   equipmentProject    EquipmentProject[]
   calendarEvents      CalendarEvent[]
 
+  // Add direct many-to-many relationship with User
+  members User[] @relation("ProjectMembers")
+
   closedAt         DateTime?
   assignmentNumber String?
 
@@ -189,6 +196,50 @@ model Project {
 
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId String
+  rooms          Room[]
+  images         Image[]
+}
+
+model Room {
+  id        String   @id @default(uuid())
+  name      String
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  images    Image[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model Image {
+  id           String    @id @default(uuid())
+  url          String
+  roomId       String?
+  room         Room?     @relation(fields: [roomId], references: [id])
+  comments     Comment[]
+  showInReport Boolean   @default(false)
+  order        Int       @default(0)
+  projectId    String
+  project      Project   @relation(fields: [projectId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([roomId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  imageId   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  image     Image    @relation(fields: [imageId], references: [id])
+
+  @@index([imageId])
+  @@index([userId])
 }
 
 model EquipmentProject {

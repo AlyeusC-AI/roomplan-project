@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import EmptyState from "@components/DesignSystem/EmptyState";
 import useFilterParams from "@utils/hooks/useFilterParams";
 import { format } from "date-fns";
@@ -10,27 +10,19 @@ import { toast } from "sonner";
 import PhotoGroup from "./PhotoGroup";
 import RoomReassignModal from "./RoomReassignModal";
 import TheaterMode from "./TheaterMode";
-import { roomStore } from "@atoms/room";
 import { LoadingPlaceholder } from "@components/ui/spinner";
 import { Button } from "@components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@components/ui/dialog";
-import { userInfoStore } from "@atoms/user-info";
-// import { teamMembersStore } from "@atoms/team-members";
-import { Trash2, FolderInput, X, Loader2, Star } from "lucide-react";
 
-const PhotoList = ({
-  photos,
-  setPhotos,
-}: {
-  photos?: ImageQuery_Image[];
-  setPhotos: React.Dispatch<React.SetStateAction<ImageQuery_Image[]>>;
-}) => {
+import { Trash2, FolderInput, X, Loader2, Star } from "lucide-react";
+import {
+  Image,
+  useBulkUpdateImages,
+  useGetRooms,
+  useBulkRemoveImages,
+} from "@service-geek/api-client";
+import { userPreferenceStore } from "@state/user-prefrence";
+
+const PhotoList = ({ photos }: { photos?: Image[] }) => {
   const { id } = useParams<{ id: string }>();
   const [theaterModeIndex, setTheaterModeIndex] = useState(0);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
@@ -39,81 +31,45 @@ const PhotoList = ({
   const [isAssigningRoom, setIsAssigningRoom] = useState(false);
   const [isUpdatingAll, setIsUpdatingAll] = useState(false);
   const { rooms, onlySelected } = useFilterParams();
-  const roomList = roomStore((state) => state.rooms);
-  const user = userInfoStore();
-
-  const [selectedPhotos, setSelectedPhotos] = useState<ImageQuery_Image[]>([]);
-
-  const fetchImages = async () => {
-    try {
-      const response = await fetch(`/api/v1/projects/${id}/images`);
-      const data = await response.json();
-      if (response.ok) {
-        setPhotos(data.images);
-      } else {
-        throw new Error(data.message || "Failed to fetch images");
-      }
-    } catch (error) {
-      console.error("Error fetching images:", error);
-      toast.error("Failed to refresh images");
-    }
-  };
+  const [selectedPhotos, setSelectedPhotos] = useState<Image[]>([]);
+  const { mutate: bulkUpdateImages } = useBulkUpdateImages();
+  const { mutate: bulkRemoveImages } = useBulkRemoveImages();
+  const savedPhotoGroupBy = userPreferenceStore(
+    (state) => state.savedPhotoGroupBy
+  );
+  const { data: roomsData } = useGetRooms(id);
 
   const includeAllInReport = async () => {
-    if (!photos) return;
+    // if (!photos) return;
 
     try {
       setIsUpdatingAll(true);
-      const response = await fetch(`/api/v1/projects/${id}/images`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
+      bulkUpdateImages({
+        projectId: id,
+        filters: {
+          // ids: photos.map((img) => img.id),
         },
-        body: JSON.stringify({
-          ids: photos.map((img) => img.publicId),
-          includeInReport: true,
-        }),
+        updates: {
+          showInReport: true,
+        },
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to update images");
-      }
-
-      // Update local state
-      setPhotos(
-        photos.map((p) => ({
-          ...p,
-          includeInReport: true,
-        }))
-      );
 
       toast.success("All images included in report");
     } catch (error) {
-      console.error("Error updating images:", error);
-      toast.error("Failed to update images");
+      console.log("🚀 ~ includeAllInReport ~ error:", error);
+      // toast.error("Failed to update images");
     } finally {
       setIsUpdatingAll(false);
     }
   };
 
   const onPhotoClick = (key: string) => {
-    const photoIndex = photos?.findIndex((p) => p.key === key);
+    const photoIndex = photos?.findIndex((p) => p.id === key);
     if (photoIndex !== undefined && photoIndex >= 0) {
       setTheaterModeIndex(photoIndex);
       setIsTheaterMode(true);
     }
   };
-
-  useEffect(() => {
-    console.log("fetching team members");
-    fetch("/api/v1/organization/members")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("team members", data);
-        // teamMembersStore.getState().setTeamMembers(data.members);
-        console.log(data);
-      });
-  }, []);
 
   if (!photos) {
     return (
@@ -137,42 +93,39 @@ const PhotoList = ({
     );
   }
 
-  let grouped: Record<string, ImageQuery_Image[]> = {};
-  if (user.user?.groupView === "dateView") {
-    grouped = photos.reduce((prev, photo) => {
-      const day = format(new Date(photo.createdAt), "eee, MMM d, yyyy");
-      return {
-        ...prev,
-        [day]: [...(prev[day] ? prev[day] : []), photo],
-      };
-    }, {});
+  let grouped: Record<string, Image[]> = {};
+  if (savedPhotoGroupBy === "date") {
+    grouped = photos.reduce(
+      (prev, photo) => {
+        const day = format(new Date(photo.createdAt), "eee, MMM d, yyyy");
+        return {
+          ...prev,
+          [day]: [...(prev[day] || []), photo],
+        };
+      },
+      {} as Record<string, Image[]>
+    );
   } else {
-    grouped = photos.reduce((prev, photo) => {
-      const room =
-        photo.Inference.find((_, i) => i === 0)?.Room?.name || "Unknown room";
-      return {
-        ...prev,
-        [room]: [...(prev[room] ? prev[room] : []), photo],
-      };
-    }, {});
-    if (!rooms) {
-      for (let i = 0; i < roomList.length; i++) {
-        if (!grouped[roomList[i].name]) {
-          grouped[roomList[i].name] = [];
-        }
-      }
-    }
+    grouped =
+      roomsData?.reduce((prev, room) => {
+        const images = photos.filter((photo) => photo.roomId === room.id);
+
+        return {
+          ...prev,
+          [room.name]: images,
+        };
+      }, {}) || {};
   }
 
-  const onSelectPhoto = (photo: ImageQuery_Image) => {
-    const photoIndex = selectedPhotos.findIndex((p) => p.key === photo.key);
+  const onSelectPhoto = (photo: Image) => {
+    const photoIndex = selectedPhotos.findIndex((p) => p.id === photo.id);
     if (photoIndex === undefined || photoIndex === -1) {
       setSelectedPhotos([...selectedPhotos, photo]);
       return;
     } else if (photoIndex >= 0) {
       setSelectedPhotos((prev) =>
         produce(prev, (draft) => {
-          const prevIndex = prev.findIndex((p) => p.key === photo.key);
+          const prevIndex = prev.findIndex((p) => p.id === photo.id);
           if (prevIndex >= 0) {
             draft.splice(prevIndex, 1);
           }
@@ -184,54 +137,36 @@ const PhotoList = ({
   const onDelete = async () => {
     try {
       setIsDeleting(true);
-      const photoIds = selectedPhotos
-        .map((p) => p.publicId)
-        .filter((p) => photos.some((o) => o.publicId === p));
-
-      const response = await fetch(`/api/v1/projects/${id}/images`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
+      await bulkRemoveImages({
+        projectId: id,
+        filters: {
+          ids: selectedPhotos.map((p) => p.id),
         },
-        body: JSON.stringify({ photoIds }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to delete images");
-      }
-
       toast.success("Images deleted successfully");
-      await fetchImages();
+      setSelectedPhotos([]);
     } catch (error) {
       console.error("Error deleting images:", error);
-      toast.error("Failed to delete images");
+      // toast.error("Failed to delete images");
     } finally {
       setIsDeleting(false);
-      setSelectedPhotos([]);
     }
   };
 
   const onUpdateRoom = async (roomId: string) => {
     try {
       setIsAssigningRoom(true);
-      const photoKeys = selectedPhotos
-        .map((p) => p.key)
-        .filter((p) => photos.some((o) => o.key === p));
 
-      const response = await fetch(`/api/v1/projects/${id}/images/room`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
+      await bulkUpdateImages({
+        projectId: id,
+        filters: {
+          ids: selectedPhotos.map((p) => p.id),
         },
-        body: JSON.stringify({ photoKeys, roomId }),
+        updates: { roomId },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to assign room");
-      }
-
       toast.success("Room assigned successfully");
-      await fetchImages();
     } catch (error) {
       console.error("Error assigning room:", error);
       toast.error("Failed to assign room");
@@ -353,7 +288,7 @@ const PhotoList = ({
               onPhotoClick={onPhotoClick}
               onSelectPhoto={onSelectPhoto}
               selectedPhotos={selectedPhotos}
-              setPhotos={setPhotos}
+              // setPhotos={setPhotos}
             />
           </motion.div>
         ))}

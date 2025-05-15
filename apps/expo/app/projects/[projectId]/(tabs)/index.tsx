@@ -37,33 +37,27 @@ import {
   File,
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { projectStore } from "@/lib/state/project";
-import { teamMemberStore } from "@/lib/state/team-members";
-import { userStore } from "@/lib/state/user";
+
 import { uiPreferencesStore } from "@/lib/state/ui-preferences";
 import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner-native";
 import { api } from "@/lib/api";
-
-// Import Project type to fix linter errors
-type Project = {
-  clientName?: string;
-  location?: string;
-  clientEmail?: string;
-  clientPhoneNumber?: string;
-  assignees?: any[];
-  damageType?: "fire" | "water" | "mold" | "other";
-};
+import {
+  Project,
+  useGetOrganizationMembers,
+  useGetProjectById,
+  useGetProjectMembers,
+} from "@service-geek/api-client";
 
 export default function ProjectOverview() {
   const { projectId } = useLocalSearchParams<{
     projectId: string;
     projectName: string;
   }>();
-  const members = teamMemberStore();
-  const user = userStore();
-  const project = projectStore();
+
+  const { data: project } = useGetProjectById(projectId);
+
   const { projectViewMode, setProjectViewMode } = uiPreferencesStore();
   // Add state to control client info modal visibility
   const [showClientInfo, setShowClientInfo] = useState(false);
@@ -79,7 +73,7 @@ export default function ProjectOverview() {
     animateButton(directionsScale);
     setTimeout(() => {
       Linking.openURL(
-        `https://www.google.com/maps/search/?api=1&query=${project.project?.location}`
+        `https://www.google.com/maps/search/?api=1&query=${project?.data.location}`
       );
     }, 200);
   };
@@ -109,15 +103,6 @@ export default function ProjectOverview() {
       }),
     ]).start();
   };
-
-  const fetchMembers = async () => {
-    const res = await api.get(`/api/v1/organization/members`, {});
-    members.setMembers(res.data.members);
-  };
-
-  useEffect(() => {
-    fetchMembers();
-  }, []);
 
   const navigationItems = [
     // {
@@ -236,7 +221,7 @@ export default function ProjectOverview() {
             className="flex-row items-center"
           >
             <Text className="text-2xl font-bold text-foreground">
-              {project.project?.clientName}
+              {project?.data?.clientName}
             </Text>
             <ChevronDown size={20} className="ml-2 text-foreground" />
           </TouchableOpacity>
@@ -296,7 +281,7 @@ export default function ProjectOverview() {
           <View className="bg-background rounded-t-3xl p-5">
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-xl font-bold text-foreground">
-                {project.project?.clientName}
+                {project?.data?.clientName}
               </Text>
               <TouchableOpacity
                 onPress={() => setShowClientInfo(false)}
@@ -307,7 +292,7 @@ export default function ProjectOverview() {
             </View>
 
             <View className="space-y-4">
-              {project.project?.damageType && (
+              {project?.data?.lossType && (
                 <View className="flex flex-row items-center">
                   <View className="bg-primary/10 p-2 rounded-lg">
                     <AlertTriangle
@@ -321,7 +306,7 @@ export default function ProjectOverview() {
                       Damage Type
                     </Text>
                     <Text className="text-base text-foreground capitalize">
-                      {project.project.damageType.replace(/_/g, " ")}
+                      {project?.data?.lossType.replace(/_/g, " ")}
                     </Text>
                   </View>
                 </View>
@@ -329,30 +314,30 @@ export default function ProjectOverview() {
 
               <TouchableOpacity
                 onPress={openInMaps}
-                onLongPress={() => copyText(project.project?.location)}
+                onLongPress={() => copyText(project?.data?.location)}
                 className="flex flex-row items-center"
               >
                 <View className="bg-primary/10 p-2 rounded-lg">
                   <Map height={20} width={20} className="text-primary" />
                 </View>
                 <Text className="text-base ml-3 text-foreground">
-                  {project.project?.location || "No location"}
+                  {project?.data?.location || "No location"}
                 </Text>
               </TouchableOpacity>
 
-              {project.project?.clientEmail ? (
+              {project?.data?.clientEmail ? (
                 <TouchableOpacity
                   onPress={() =>
-                    Linking.openURL(`mailto:${project.project?.clientEmail}`)
+                    Linking.openURL(`mailto:${project?.data?.clientEmail}`)
                   }
-                  onLongPress={() => copyText(project.project?.clientEmail)}
+                  onLongPress={() => copyText(project?.data?.clientEmail)}
                   className="flex flex-row items-center"
                 >
                   <View className="bg-primary/10 p-2 rounded-lg">
                     <Mail height={20} width={20} className="text-primary" />
                   </View>
                   <Text className="text-base ml-3 text-foreground">
-                    {project.project?.clientEmail}
+                    {project?.data?.clientEmail}
                   </Text>
                 </TouchableOpacity>
               ) : (
@@ -366,21 +351,19 @@ export default function ProjectOverview() {
                 </View>
               )}
 
-              {project.project?.clientPhoneNumber ? (
+              {project?.data?.clientPhoneNumber ? (
                 <TouchableOpacity
                   onPress={() =>
-                    Linking.openURL(`tel:${project.project?.clientPhoneNumber}`)
+                    Linking.openURL(`tel:${project?.data?.clientPhoneNumber}`)
                   }
-                  onLongPress={() =>
-                    copyText(project.project?.clientPhoneNumber)
-                  }
+                  onLongPress={() => copyText(project?.data?.clientPhoneNumber)}
                   className="flex flex-row items-center"
                 >
                   <View className="bg-primary/10 p-2 rounded-lg">
                     <Phone height={20} width={20} className="text-primary" />
                   </View>
                   <Text className="text-base ml-3 text-foreground">
-                    {project.project?.clientPhoneNumber}
+                    {project?.data?.clientPhoneNumber}
                   </Text>
                 </TouchableOpacity>
               ) : (
@@ -504,10 +487,7 @@ export default function ProjectOverview() {
             </Animated.View>
           </View>
 
-          <AssigneeSelect
-            projectAssignees={project.project?.assignees ?? []}
-            teamMembers={members.members}
-          />
+          <AssigneeSelect />
 
           <View className="py-4">
             {projectViewMode === "list" ? (
@@ -515,7 +495,7 @@ export default function ProjectOverview() {
                 {navigationItems.map((item, index) => (
                   <NavigationCell
                     key={index}
-                    project={project.project}
+                    project={project?.data!}
                     path={item.path}
                     params={item.params}
                     Icon={item.Icon}
@@ -530,7 +510,7 @@ export default function ProjectOverview() {
                 {navigationItems.map((item, index) => (
                   <GridCell
                     key={index}
-                    project={project.project}
+                    project={project?.data!}
                     path={item.path}
                     params={item.params}
                     Icon={item.Icon}
