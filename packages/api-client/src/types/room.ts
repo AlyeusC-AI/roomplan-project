@@ -1,3 +1,5 @@
+import { User } from "./auth";
+
 export interface Room {
   id: string;
   name: string;
@@ -26,6 +28,7 @@ export interface Comment {
   userId: string;
   createdAt: string;
   updatedAt: string;
+  user: User;
 }
 
 export interface CreateRoomDto {

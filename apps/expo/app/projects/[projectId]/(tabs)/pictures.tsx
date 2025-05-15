@@ -23,21 +23,14 @@ import {
   Home,
   XCircle,
 } from "lucide-react-native";
-import { userStore } from "@/lib/state/user";
 import { useFocusEffect, useGlobalSearchParams, useRouter } from "expo-router";
 import { toast } from "sonner-native";
 import Empty from "@/components/project/empty";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+
 import { Text } from "@/components/ui/text";
-import { urlMapStore } from "@/lib/state/url-map";
-import { roomInferenceStore } from "@/lib/state/readings-image";
+
 import { Button } from "@/components/ui/button";
-import ImageGallery from "@/components/project/ImageGallery";
+import ImageGallery, { Inference } from "@/components/project/ImageGallery";
 import {
   takePhoto,
   pickMultipleImages,
@@ -47,65 +40,74 @@ import {
 import safelyGetImageUrl from "@/utils/safelyGetImageKey";
 
 import AddRoomButton from "@/components/project/AddRoomButton";
-import { projectStore } from "@/lib/state/project";
 import { uploadImage } from "@/lib/imagekit";
 import { launchImageLibraryAsync } from "expo-image-picker";
 import * as ImagePicker from "expo-image-picker";
 import { api } from "@/lib/api";
-
-interface PhotoResult {
-  uri: string;
-}
-
-interface Inference {
-  isDeleted?: boolean;
-  Image?: {
-    isDeleted?: boolean;
-    publicId?: string;
-    includeInReport?: boolean;
-  };
-  imageKey?: string;
-  publicId?: string;
-}
-
-interface Room {
-  id: number;
-  name: string;
-  isDeleted?: boolean;
-  Inference: Inference[];
-}
-
-// Get screen dimensions for responsive sizing
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+import {
+  useAddComment,
+  useAddImage,
+  useCurrentUser,
+  useGetProjectById,
+  useGetRooms,
+  useSearchImages,
+  useUpdateImagesOrder,
+  useBulkRemoveImages,
+  useBulkUpdateImages,
+  useRemoveImage,
+  useUpdateProject,
+} from "@service-geek/api-client";
 
 export default function ProjectPhotos() {
   const { projectId } = useGlobalSearchParams<{
     projectId: string;
     projectName: string;
   }>();
-  const { session: supabaseSession } = userStore((state) => state);
   const [loading, setLoading] = useState(true);
   const [expandedValue, setExpandedValue] = useState<string | undefined>(
     undefined
   );
-  const { project } = projectStore();
+  const { data } = useGetProjectById(projectId);
+  const project = data?.data;
+  const { data: user } = useCurrentUser();
   const [showRoomSelection, setShowRoomSelection] = useState(false);
-  const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [shouldOpenCamera, setShouldOpenCamera] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [isUpdatingAll, setIsUpdatingAll] = useState(false);
-  const rooms = roomInferenceStore();
-  const urlMap = urlMapStore();
+
   const router = useRouter();
   const [isUploadingMainImage, setIsUploadingMainImage] = useState(false);
   const [mainImage, setMainImage] = useState<string | null>(null);
   const [showCoverModal, setShowCoverModal] = useState(false);
-  useFocusEffect(
-    useCallback(() => {
-      refreshData();
-    }, [])
+  const { mutate: addImage } = useAddImage();
+  const { mutate: addComment } = useAddComment();
+
+  const { data: rooms } = useGetRooms(projectId);
+  const { mutate: removeImage } = useRemoveImage();
+  const { mutate: bulkUpdateImages } = useBulkUpdateImages();
+  const { mutate: bulkRemoveImages } = useBulkRemoveImages();
+  const { mutate: updateImagesOrder } = useUpdateImagesOrder();
+  const { mutate: updateProject } = useUpdateProject();
+
+  const { data: images } = useSearchImages(
+    projectId,
+    {
+      // roomId: selectedRoom,
+    },
+    {
+      direction: "desc",
+      field: "order",
+    },
+    { page: 1, limit: 100 }
   );
+
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     refreshData();
+  //   }, [])
+  // );
   useEffect(() => {
     if (selectedRoom) {
       if (shouldOpenCamera) {
@@ -115,9 +117,6 @@ export default function ProjectPhotos() {
       }
     }
   }, [selectedRoom]);
-  useEffect(() => {
-    refreshData();
-  }, []);
 
   useEffect(() => {
     if (project?.mainImage) {
@@ -125,93 +124,26 @@ export default function ProjectPhotos() {
     }
   }, [project]);
 
-  const refreshData = async () => {
-    setLoading(true);
+  const uploadToSupabase = async (imagePath: string, roomId: string) => {
     try {
-      // Fetch rooms
-      const roomsRes = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room`,
+      const imageUrl = await uploadImage(
         {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": supabaseSession?.access_token || "",
-          },
+          uri: imagePath,
+          type: "image/jpeg",
+          name: `${Date.now()}.jpg`,
+        },
+        {
+          folder: `projects/${projectId}/rooms/${roomId}`,
         }
       );
 
-      const roomsData = await roomsRes.json();
-      rooms.setRooms(roomsData.rooms);
-
-      // Fetch images
-      const imagesRes = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/images`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": supabaseSession?.access_token || "",
-          },
-        }
-      );
-      const imagesData = await imagesRes.json();
-      urlMap.setUrlMap(imagesData.urlMap);
-
-      // Set the first room as expanded by default if none is selected
-      // if (!expandedValue && roomsData.rooms.length > 0) {
-      //   setExpandedValue(roomsData.rooms[0].name);
-      // }
-    } catch (error) {
-      console.error("Error refreshing data:", error);
-      toast.error("Failed to load project data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const uploadToSupabase = async (imagePath: string, roomId: number) => {
-    try {
-      // const fileInfo = await FileSystem.getInfoAsync(fileUri);
-      // if (!fileInfo.exists) {
-      //   throw new Error('File does not exist');
-      // }
-
-      // const fileName = `${uuidv4()}_${fileInfo.uri.split('/').pop()}`;
-      // const fileContent = await FileSystem.readAsStringAsync(fileUri, {
-      //   encoding: FileSystem.EncodingType.Base64,
-      // });
-
-      // const { data: uploadData, error: uploadError } = await supabase.storage
-      //   .from(STORAGE_BUCKETS.PROJECT)
-      //   .upload(`projects/${projectId}/rooms/${fileName}`, Buffer.from(fileContent, 'base64'), {
-      //     contentType: 'image/jpeg',
-      //     upsert: false,
-      //   });
-
-      // if (uploadError) throw uploadError;
-
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/image`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": supabaseSession?.access_token || "",
-          },
-          body: JSON.stringify({
-            // imageId: uploadData?.path,
-            imageId: imagePath,
-            roomId: rooms.rooms.find((r) => r.id === roomId)?.publicId,
-            roomName: rooms.rooms.find((r) => r.id === roomId)?.name || "",
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.status !== "ok") {
-        throw new Error("Failed to process image");
-      }
+      await addImage({
+        data: {
+          url: imageUrl.url,
+          roomId: roomId,
+          projectId,
+        },
+      });
 
       setUploadProgress((prev) => prev + 1);
       return true;
@@ -237,7 +169,6 @@ export default function ProjectPhotos() {
         compression: "high",
         onSuccess: async (file) => {
           await uploadToSupabase(file.path, selectedRoom);
-          await refreshData();
         },
       });
       setShouldOpenCamera(false);
@@ -270,7 +201,7 @@ export default function ProjectPhotos() {
           for (const file of files) {
             await uploadToSupabase(file.path, selectedRoom);
           }
-          await refreshData();
+          // await refreshData();
         },
       });
       // uploadToSupabase(fileUri, selectedRoom);
@@ -284,142 +215,32 @@ export default function ProjectPhotos() {
     }
   };
 
-  // Get a preview image for a room
-  const getRoomPreviewImage = (
-    roomInferences:
-      | Array<{ imageKey: string | null; Image?: { order: number } }>
-      | undefined
-  ): string | null => {
-    if (!roomInferences || roomInferences.length === 0) return null;
-
-    for (const inference of roomInferences.sort(
-      (a, b) => (a.Image?.order || 0) - (b.Image?.order || 0)
-    )) {
-      if (inference.imageKey) {
-        const imageUrl = safelyGetImageUrl(
-          urlMap.urlMap,
-          inference.imageKey,
-          ""
-        );
-        if (imageUrl) return imageUrl;
-      }
-    }
-
-    // If no valid image URL was found, try to get any image key and construct a URL
-    for (const inference of roomInferences) {
-      if (inference.imageKey) {
-        // Try to construct a URL directly using the storage URL
-        const directUrl = getStorageUrl(inference.imageKey);
-        if (directUrl) return directUrl;
-      }
-    }
-
-    return null;
-  };
-
-  const handleAddNote = async (imageId: number, note: string) => {
-    try {
-      const response = await api.post(`/api/v1/projects/${projectId}/images`, {
-        imageId,
-        body: note,
-      });
-      console.log("🚀 ~ handleAddNote ~ response:", response.data);
-
-      const data = response.data;
-      if (data) {
-        toast.success("Note added successfully");
-        await refreshData();
-      } else {
-        throw new Error("Failed to add note");
-      }
-    } catch (error) {
-      console.error("Error adding note:", error);
-      toast.error("Failed to add note");
-    }
-  };
-
-  const handleToggleIncludeInReport = async (
-    publicId: string,
-    includeInReport: boolean
-  ) => {
-    try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/images`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": supabaseSession?.access_token || "",
-          },
-          body: JSON.stringify({
-            id: publicId,
-            includeInReport,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to update image");
-      }
-
-      toast.success("Image updated successfully");
-      await refreshData();
-    } catch (error) {
-      console.error("Error updating image:", error);
-      toast.error("Failed to update image");
-      throw error; // Re-throw to be handled by the ImageGallery component
-    }
-  };
-
   const includeAllInReport = async () => {
     try {
       setIsUpdatingAll(true);
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/images`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": supabaseSession?.access_token || "",
-          },
-          body: JSON.stringify({
-            ids: rooms.rooms.flatMap((room) =>
-              room.Inference.filter(
-                (i: Inference) => !i.isDeleted && !i.Image?.isDeleted
-              ).map((i: Inference) => i.Image?.publicId || i.publicId)
-            ),
-            includeInReport: true,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to update images");
-      }
+      const response = await bulkUpdateImages({
+        projectId,
+        filters: {
+          ids: images?.data?.map((image) => image.id) || [],
+        },
+        updates: {
+          showInReport: true,
+        },
+      });
 
       toast.success("All images included in report");
-      await refreshData();
     } catch (error) {
       console.error("Error updating images:", error);
-      toast.error("Failed to update images");
+      // toast.error("Failed to update images");
     } finally {
       setIsUpdatingAll(false);
     }
   };
 
   // Add function to check if all images are included in report
-  const areAllImagesIncluded = () => {
-    if (!rooms.rooms?.length) return false;
-
-    return rooms.rooms.every((room) =>
-      room.Inference?.every(
-        (inference: Inference) =>
-          !inference.isDeleted &&
-          !inference.Image?.isDeleted &&
-          inference.Image?.includeInReport
-      )
-    );
-  };
+  const areAllImagesIncluded = images?.data?.every(
+    (image) => image.showInReport
+  );
 
   const handleSetMainImage = async (useCamera: boolean = false) => {
     try {
@@ -466,23 +287,12 @@ export default function ProjectPhotos() {
         );
 
         if (uploadResult.url) {
-          const response = await fetch(
-            `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}`,
-            {
-              method: "PATCH",
-              headers: {
-                "Content-Type": "application/json",
-                "auth-token": supabaseSession?.access_token || "",
-              },
-              body: JSON.stringify({
-                mainImage: uploadResult.url,
-              }),
-            }
-          );
-
-          if (!response.ok) {
-            throw new Error("Failed to update project main image");
-          }
+          updateProject({
+            id: projectId,
+            data: {
+              mainImage: uploadResult.url,
+            },
+          });
 
           setMainImage(uploadResult.url);
           toast.success("Cover image updated successfully");
@@ -496,48 +306,8 @@ export default function ProjectPhotos() {
       // setShowCoverModal(false);
     }
   };
-  const onDelete = async (imagePublicId: string) => {
-    try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/images`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": supabaseSession?.access_token || "",
-          },
-          body: JSON.stringify({ photoIds: [imagePublicId] }),
-        }
-      );
-      const data = await response.json();
 
-      if (!data.success) {
-        throw new Error("Failed to delete images");
-      }
-
-      toast.success("Images deleted successfully");
-      await refreshData();
-    } catch (error) {
-      console.error("Error deleting images:", error);
-      toast.error("Failed to delete images");
-    } finally {
-      // setIsDeleting(false);
-      // setSelectedPhotos([]);
-    }
-  };
-  const finalRooms = rooms?.rooms?.map((room) => {
-    return {
-      ...room,
-      Inference: room.Inference?.filter(
-        (i: Inference) =>
-          !i.isDeleted &&
-          !i.Image?.isDeleted &&
-          i.Image &&
-          i.imageKey !== "undefined"
-      ),
-    };
-  });
-  if (loading && !rooms?.rooms?.length) {
+  if (loading && !rooms?.length) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#1e40af" />
@@ -545,7 +315,7 @@ export default function ProjectPhotos() {
     );
   }
 
-  if (!loading && !rooms?.rooms?.length) {
+  if (!loading && !rooms?.length) {
     return (
       <Empty
         title="No Images"
@@ -560,7 +330,7 @@ export default function ProjectPhotos() {
         onPress={() =>
           router.push({
             pathname: "../rooms/create",
-            params: { projectName: project.name },
+            params: { projectName: project?.name },
           })
         }
       />
@@ -570,9 +340,9 @@ export default function ProjectPhotos() {
   return (
     <View style={styles.container}>
       <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={refreshData} />
-        }
+        // refreshControl={
+        //   <RefreshControl refreshing={loading} onRefresh={refreshData} />
+        // }
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -613,7 +383,7 @@ export default function ProjectPhotos() {
                   isUpdatingAll && styles.actionButtonDisabled,
                 ]}
                 onPress={includeAllInReport}
-                disabled={isUpdatingAll || !rooms.rooms.length}
+                disabled={isUpdatingAll || !rooms?.length}
                 className="ml-2 bg-accent rounded-full border border-gray-200"
               >
                 {isUpdatingAll ? (
@@ -624,8 +394,8 @@ export default function ProjectPhotos() {
                   <View>
                     <Star
                       size={20}
-                      color={areAllImagesIncluded() ? "#FBBF24" : "#1e40af"}
-                      fill={areAllImagesIncluded() ? "#FBBF24" : "transparent"}
+                      color={areAllImagesIncluded ? "#FBBF24" : "#1e40af"}
+                      fill={areAllImagesIncluded ? "#FBBF24" : "transparent"}
                     />
                   </View>
                 )}
@@ -651,77 +421,75 @@ export default function ProjectPhotos() {
         </View>
 
         <View style={styles.roomsContainer}>
-          {finalRooms
-            ?.filter((room) => !room.isDeleted)
-            ?.map((room) => {
-              const previewImageUrl = getRoomPreviewImage(room.Inference);
-              const imageCount = room.Inference?.length || 0;
+          {rooms?.map((room) => {
+            const imagePerRoom = images?.data?.filter(
+              (image) => image.roomId === room.id
+            );
+            const previewImageUrl = imagePerRoom?.[0]?.url;
+            const imageCount = imagePerRoom?.length || 0;
 
-              return (
-                <TouchableOpacity
-                  key={room.name}
-                  style={styles.roomCard}
-                  onPress={() => {
-                    setExpandedValue(
-                      expandedValue === room.name ? undefined : room.name
-                    );
-                  }}
-                >
-                  <View style={styles.roomCardContent}>
-                    <View style={styles.roomInfo}>
-                      <Text style={styles.roomName}>{room.name}</Text>
-                      <Text style={styles.imageCount}>
-                        {imageCount} {imageCount === 1 ? "image" : "images"}
-                      </Text>
-                    </View>
-
-                    {previewImageUrl ? (
-                      <Image
-                        source={{ uri: previewImageUrl }}
-                        style={styles.roomPreviewImage}
-                      />
-                    ) : (
-                      <View style={styles.roomPreviewPlaceholder}>
-                        <ImageIcon size={24} color="#9CA3AF" />
-                      </View>
-                    )}
+            return (
+              <TouchableOpacity
+                key={room.name}
+                style={styles.roomCard}
+                onPress={() => {
+                  setExpandedValue(
+                    expandedValue === room.name ? undefined : room.name
+                  );
+                }}
+              >
+                <View style={styles.roomCardContent}>
+                  <View style={styles.roomInfo}>
+                    <Text style={styles.roomName}>{room.name}</Text>
+                    <Text style={styles.imageCount}>
+                      {imageCount} {imageCount === 1 ? "image" : "images"}
+                    </Text>
                   </View>
 
-                  {expandedValue === room.name && (
-                    <View style={styles.galleryContainer}>
-                      <ImageGallery
-                        inferences={room.Inference || []}
-                        urlMap={urlMap.urlMap}
-                        onRefresh={refreshData}
-                        roomName={room.name}
-                        onDelete={onDelete}
-                        onAddNote={handleAddNote}
-                        onToggleIncludeInReport={handleToggleIncludeInReport}
-                      />
+                  {previewImageUrl ? (
+                    <Image
+                      source={{ uri: previewImageUrl }}
+                      style={styles.roomPreviewImage}
+                    />
+                  ) : (
+                    <View style={styles.roomPreviewPlaceholder}>
+                      <ImageIcon size={24} color="#9CA3AF" />
                     </View>
                   )}
-                </TouchableOpacity>
-              );
-            })}
+                </View>
+
+                {expandedValue === room.name && (
+                  <View style={styles.galleryContainer}>
+                    <ImageGallery
+                      images={imagePerRoom || []}
+                      // onRefresh={refreshData}
+                      room={room}
+                    />
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </ScrollView>
 
-      {rooms.rooms.length > 0 && (
-        <View style={styles.fabContainer}>
-          <TouchableOpacity
-            onPress={() => router.push("../camera")}
-            // onPress={handleTakePhoto}
-            style={[styles.fab, isUploading && styles.fabDisabled]}
-            disabled={isUploading}
-          >
-            {isUploading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <CameraIcon size={30} color="#fff" />
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
+      {rooms?.length ||
+        (0 > 0 && (
+          <View style={styles.fabContainer}>
+            <TouchableOpacity
+              onPress={() => router.push("../camera")}
+              // onPress={handleTakePhoto}
+              style={[styles.fab, isUploading && styles.fabDisabled]}
+              disabled={isUploading}
+            >
+              {isUploading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <CameraIcon size={30} color="#fff" />
+              )}
+            </TouchableOpacity>
+          </View>
+        ))}
 
       {isUploading && (
         <View style={styles.uploadProgress}>
@@ -761,30 +529,28 @@ export default function ProjectPhotos() {
               </Text>
 
               <View style={styles.roomList}>
-                {rooms.rooms
-                  .filter((room) => !room.isDeleted)
-                  .map((room) => (
-                    <TouchableOpacity
-                      key={room.id}
+                {rooms?.map((room) => (
+                  <TouchableOpacity
+                    key={room.id}
+                    style={[
+                      styles.roomOption,
+                      selectedRoom === room.id && styles.selectedRoom,
+                    ]}
+                    onPress={() => {
+                      setSelectedRoom(room.id);
+                      setShowRoomSelection(false);
+                    }}
+                  >
+                    <Text
                       style={[
-                        styles.roomOption,
-                        selectedRoom === room.id && styles.selectedRoom,
+                        styles.roomOptionText,
+                        selectedRoom === room.id && styles.selectedRoomText,
                       ]}
-                      onPress={() => {
-                        setSelectedRoom(room.id);
-                        setShowRoomSelection(false);
-                      }}
                     >
-                      <Text
-                        style={[
-                          styles.roomOptionText,
-                          selectedRoom === room.id && styles.selectedRoomText,
-                        ]}
-                      >
-                        {room.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                      {room.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
           </View>

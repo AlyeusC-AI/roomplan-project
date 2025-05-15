@@ -28,19 +28,29 @@ import {
   Loader,
 } from "lucide-react-native";
 import { Button } from "@/components/ui/button";
-import { deleteImage, getStorageUrl } from "@/lib/utils/imageModule";
-import safelyGetImageUrl from "@/utils/safelyGetImageKey";
 import {
   GestureHandlerRootView,
   PanGestureHandler,
 } from "react-native-gesture-handler";
 import { Inference } from "../project/ImageGallery";
-
+import {
+  Image,
+  useAddComment,
+  useBulkUpdateImages,
+  useCurrentUser,
+  useGetComments,
+  useGetProjectById,
+  useRemoveImage,
+  useUpdateProject,
+} from "@service-geek/api-client";
+import { toast } from "sonner-native";
+import { useRouter } from "next/router";
+import { useGlobalSearchParams } from "expo-router";
 // Get screen dimensions for responsive sizing
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface ImageGalleryProps {
-  images: Inference[];
+  images: Image[];
   urlMap: {
     [imageKey: string]: string;
   };
@@ -60,22 +70,14 @@ interface ImageGalleryProps {
 
 export default function ModalImagesWithNotes({
   images,
-  urlMap,
-  onRefresh,
+
   roomName,
-  onDelete,
-  onAddNote,
-  onToggleIncludeInReport,
+
   setModalVisible,
   modalVisible,
   activeImageIndex,
   setActiveImageIndex,
 }: ImageGalleryProps) {
-  const [showNotes, setShowNotes] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isAddingNote, setIsAddingNote] = useState(false);
-  const [isUpdatingReport, setIsUpdatingReport] = useState(false);
-
   // Refs for scrolling and input
   const modalScrollRef = useRef<FlatList>(null);
   const thumbnailScrollRef = useRef<ScrollView>(null);
@@ -135,271 +137,6 @@ export default function ModalImagesWithNotes({
     }
   };
 
-  // Handle image deletion
-  const handleDeleteImage = async (imageKey: string, publicId: string) => {
-    Alert.alert("Delete Image", "Are you sure you want to delete this image?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            setIsDeleting(true);
-            if (onDelete) {
-              await onDelete(publicId);
-              handleCloseModal();
-              return;
-            }
-            if (onRefresh) {
-              await deleteImage(imageKey, { onRefresh });
-              if (
-                modalVisible &&
-                images[activeImageIndex]?.imageKey === imageKey
-              ) {
-                handleCloseModal();
-              }
-            }
-          } finally {
-            setIsDeleting(false);
-          }
-        },
-      },
-    ]);
-  };
-
-  // Add function to toggle notes
-  const toggleNotes = () => {
-    if (showNotes) {
-      Animated.spring(notesSheetAnim, {
-        toValue: 0,
-        damping: 20,
-        stiffness: 90,
-        useNativeDriver: true,
-      }).start(() => setShowNotes(false));
-    } else {
-      setShowNotes(true);
-      Animated.spring(notesSheetAnim, {
-        toValue: 1,
-        damping: 20,
-        stiffness: 90,
-        useNativeDriver: true,
-      }).start();
-    }
-  };
-
-  const handleAddNote = async (imageId: number, note: string) => {
-    console.log("🚀 ~ handleAddNote ~ imageId:", imageId);
-    console.log("🚀 ~ handleAddNote ~ note:", note);
-    if (onAddNote && note.trim()) {
-      try {
-        setIsAddingNote(true);
-        await onAddNote(imageId, note.trim());
-        currentNoteText.current = "";
-        noteInputRef.current?.clear();
-      } finally {
-        setIsAddingNote(false);
-      }
-    }
-  };
-
-  // Add toggleIncludeInReport function
-  const handleToggleIncludeInReport = async (inference: Inference) => {
-    if (!onToggleIncludeInReport || isUpdatingReport) return;
-
-    try {
-      setIsUpdatingReport(true);
-      await onToggleIncludeInReport(
-        inference.Image?.publicId || inference.publicId,
-        !inference.Image?.includeInReport
-      );
-      if (onRefresh) {
-        await onRefresh();
-      }
-    } catch (error) {
-      console.error("Error updating image:", error);
-      Alert.alert("Error", "Failed to update image");
-    } finally {
-      setIsUpdatingReport(false);
-    }
-  };
-
-  // Add this near the top of the file
-  const notesSheetStyle = {
-    transform: [
-      {
-        translateY: notesSheetAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [600, 0],
-        }),
-      },
-    ],
-  };
-
-  // Render image in the modal
-  const renderModalItem = ({
-    item,
-    index,
-  }: {
-    item: Inference & { imageKey: string };
-    index: number;
-  }) => {
-    const imageKey = item.imageKey || item.Image?.key || "";
-    let imageUrl = safelyGetImageUrl(urlMap, imageKey, "");
-    if (!imageUrl) {
-      imageUrl = getStorageUrl(imageKey);
-    }
-
-    const noteCount = item.notes?.length || 0;
-
-    return (
-      <View style={styles.modalImageContainer}>
-        <OptimizedImage
-          uri={imageUrl}
-          style={styles.modalImage}
-          resizeMode="contain"
-          imageKey={imageKey}
-          showInfo={true}
-          backgroundColor="#000000"
-        />
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={[styles.actionButton, isDeleting && styles.disabledButton]}
-            onPress={() =>
-              handleDeleteImage(item.imageKey, item.Image?.publicId || "")
-            }
-            disabled={isDeleting}
-          >
-            <Trash2 size={24} color="#fff" opacity={isDeleting ? 0.5 : 1} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.actionButton,
-              isUpdatingReport && styles.disabledButton,
-            ]}
-            onPress={() => handleToggleIncludeInReport(item)}
-            disabled={isUpdatingReport}
-          >
-            {isUpdatingReport ? (
-              <Loader size={24} color="#fff" />
-            ) : (
-              <Star
-                size={24}
-                color="#fff"
-                fill={item.Image?.includeInReport ? "#FBBF24" : "transparent"}
-              />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionButton} onPress={toggleNotes}>
-            <MessageCircle size={24} color="#fff" />
-            {noteCount > 0 && (
-              <View style={styles.noteBadge}>
-                <Text style={styles.noteBadgeText}>{noteCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Notes Bottom Sheet */}
-        {showNotes && (
-          <Animated.View style={[styles.notesSheet, notesSheetStyle]}>
-            <View style={styles.notesHeader}>
-              <Text style={styles.notesHeaderText}>Notes</Text>
-              <TouchableOpacity
-                onPress={toggleNotes}
-                style={styles.closeNotesButton}
-              >
-                <X size={24} color="#fff" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.notesList}>
-              {item.Image?.ImageNote?.reverse().map((note) => (
-                <View key={note.id} style={styles.noteItem}>
-                  <View style={styles.noteHeader}>
-                    <View style={styles.noteAvatar}>
-                      <Text style={styles.noteAvatarText}>
-                        {note.User?.firstName?.charAt(0) || "N"} +
-                        {note.User?.lastName?.charAt(0) || "N"}
-                      </Text>
-                    </View>
-                    <View style={styles.noteMetadata}>
-                      <Text style={styles.noteAuthor}>
-                        {note.User?.firstName} {note.User?.lastName}
-                      </Text>
-                      <Text style={styles.noteDate}>
-                        {new Date(note.createdAt).toLocaleDateString()}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={styles.noteText}>{note.body}</Text>
-                </View>
-              ))}
-            </ScrollView>
-
-            <KeyboardAvoidingView
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
-              keyboardVerticalOffset={Platform.OS === "ios" ? 240 : 20}
-              style={styles.addNoteContainer}
-            >
-              <TextInput
-                ref={noteInputRef}
-                style={styles.noteInput}
-                placeholder="Add a note..."
-                placeholderTextColor="#999"
-                multiline
-                numberOfLines={3}
-                returnKeyType="done"
-                blurOnSubmit={true}
-                onChangeText={(text) => {
-                  currentNoteText.current = text;
-                }}
-                onSubmitEditing={async (e) => {
-                  if (item.Image?.id) {
-                    await handleAddNote(
-                      item.Image?.id,
-                      currentNoteText.current
-                    );
-                  }
-                }}
-              />
-              <TouchableOpacity
-                style={[
-                  styles.submitNoteButton,
-                  isAddingNote && styles.disabledButton,
-                ]}
-                onPress={async () => {
-                  if (item.Image?.id) {
-                    await handleAddNote(
-                      item.Image?.id,
-                      currentNoteText.current
-                    );
-                  }
-                }}
-                disabled={isAddingNote}
-              >
-                <Text
-                  style={[
-                    styles.submitNoteButtonText,
-                    isAddingNote && styles.disabledButtonText,
-                  ]}
-                >
-                  {isAddingNote ? "Posting..." : "Post"}
-                </Text>
-              </TouchableOpacity>
-            </KeyboardAvoidingView>
-          </Animated.View>
-        )}
-      </View>
-    );
-  };
-
   // Handle scroll end in modal
   const handleScrollEnd = (e: any) => {
     const contentOffset = e.nativeEvent.contentOffset;
@@ -443,8 +180,16 @@ export default function ModalImagesWithNotes({
                 offset: SCREEN_WIDTH * index,
                 index,
               })}
-              renderItem={renderModalItem}
-              keyExtractor={(item) => item.imageKey || item.Image?.key || ""}
+              renderItem={({ item }) => (
+                <ModalItem
+                  item={item}
+                  modalVisible={modalVisible}
+                  activeImageIndex={activeImageIndex}
+                  handleCloseModal={handleCloseModal}
+                  images={images}
+                />
+              )}
+              keyExtractor={(item) => item.id}
               onMomentumScrollEnd={handleScrollEnd}
             />
 
@@ -499,16 +244,11 @@ export default function ModalImagesWithNotes({
                 snapToAlignment="start"
               >
                 {images.map((image, index) => {
-                  const imageKey = image.imageKey || image.Image?.key || "";
-                  let imageUrl = safelyGetImageUrl(urlMap, imageKey, "");
-
-                  if (!imageUrl) {
-                    imageUrl = getStorageUrl(imageKey);
-                  }
+                  const imageUrl = image.url;
 
                   return (
                     <TouchableOpacity
-                      key={imageKey}
+                      key={image.id}
                       activeOpacity={0.7}
                       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                       onPress={() => {
@@ -533,7 +273,7 @@ export default function ModalImagesWithNotes({
                         uri={imageUrl}
                         style={styles.thumbnailImage}
                         size="small"
-                        imageKey={imageKey}
+                        imageKey={image.id}
                         disabled={true}
                         backgroundColor="#000000"
                       />
@@ -549,6 +289,289 @@ export default function ModalImagesWithNotes({
   );
 }
 
+// Render image in the modal
+const ModalItem = ({
+  item,
+
+  modalVisible,
+  activeImageIndex,
+  handleCloseModal,
+  images,
+}: {
+  item: Image;
+  images: Image[];
+
+  modalVisible: boolean;
+  activeImageIndex: number;
+  handleCloseModal: () => void;
+}) => {
+  const [showNotes, setShowNotes] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [isUpdatingReport, setIsUpdatingReport] = useState(false);
+  const { mutate: deleteImage } = useRemoveImage();
+  const imageUrl = item.url;
+  const { data: comments } = useGetComments(item.id);
+  const noteCount = comments?.length || 0;
+  const currentNoteText = useRef("");
+  const noteInputRef = useRef<TextInput>(null);
+  const { mutate: removeImage } = useRemoveImage();
+  const { mutate: bulkUpdateImages } = useBulkUpdateImages();
+  const { data: user } = useCurrentUser();
+  const { mutate: addComment } = useAddComment();
+
+  const { projectId } = useGlobalSearchParams<{
+    projectId: string;
+    projectName: string;
+  }>();
+
+  const { data: project } = useGetProjectById(projectId as string);
+
+  // Animation values
+  const notesSheetAnim = useRef(new Animated.Value(0)).current;
+
+  // Handle image deletion
+  const handleDeleteImage = async (id: string) => {
+    Alert.alert("Delete Image", "Are you sure you want to delete this image?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            setIsDeleting(true);
+            await deleteImage(item.id);
+            toast.success("Images deleted successfully");
+
+            if (modalVisible && images[activeImageIndex]?.id === item.id) {
+              handleCloseModal();
+            }
+          } finally {
+            setIsDeleting(false);
+          }
+        },
+      },
+    ]);
+  };
+
+  // Add function to toggle notes
+  const toggleNotes = () => {
+    if (showNotes) {
+      Animated.spring(notesSheetAnim, {
+        toValue: 0,
+        damping: 20,
+        stiffness: 90,
+        useNativeDriver: true,
+      }).start(() => setShowNotes(false));
+    } else {
+      setShowNotes(true);
+      Animated.spring(notesSheetAnim, {
+        toValue: 1,
+        damping: 20,
+        stiffness: 90,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+
+  const handleAddNote = async (imageId: string, note: string) => {
+    console.log("🚀 ~ handleAddNote ~ imageId:", imageId);
+    console.log("🚀 ~ handleAddNote ~ note:", note);
+    if (note.trim()) {
+      try {
+        setIsAddingNote(true);
+        const response = await addComment({
+          imageId: imageId,
+          data: {
+            content: note,
+            userId: user?.id!,
+          },
+        });
+        console.log("🚀 ~ handleAddNote ~ response:", response);
+
+        toast.success("Note added successfully");
+        currentNoteText.current = "";
+        noteInputRef.current?.clear();
+      } finally {
+        setIsAddingNote(false);
+      }
+    }
+  };
+
+  // Add toggleIncludeInReport function
+  const handleToggleIncludeInReport = async (image: Image) => {
+    try {
+      setIsUpdatingReport(true);
+      const response = await bulkUpdateImages({
+        projectId,
+        filters: {
+          ids: [image.id],
+        },
+        updates: {
+          showInReport: !image?.showInReport,
+        },
+      });
+      toast.success("Image updated successfully");
+    } catch (error) {
+      console.error("Error updating image:", error);
+      Alert.alert("Error", "Failed to update image");
+    } finally {
+      setIsUpdatingReport(false);
+    }
+  };
+
+  // Add this near the top of the file
+  const notesSheetStyle = {
+    transform: [
+      {
+        translateY: notesSheetAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [600, 0],
+        }),
+      },
+    ],
+  };
+
+  return (
+    <View style={styles.modalImageContainer}>
+      <OptimizedImage
+        uri={imageUrl}
+        style={styles.modalImage}
+        resizeMode="contain"
+        imageKey={item.id}
+        showInfo={true}
+        backgroundColor="#000000"
+      />
+
+      {/* Action Buttons */}
+      <View style={styles.actionButtons}>
+        <TouchableOpacity
+          style={[styles.actionButton, isDeleting && styles.disabledButton]}
+          onPress={() => handleDeleteImage(item.id)}
+          disabled={isDeleting}
+        >
+          <Trash2 size={24} color="#fff" opacity={isDeleting ? 0.5 : 1} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.actionButton,
+            isUpdatingReport && styles.disabledButton,
+          ]}
+          onPress={() => handleToggleIncludeInReport(item)}
+          disabled={isUpdatingReport}
+        >
+          {isUpdatingReport ? (
+            <Loader size={24} color="#fff" />
+          ) : (
+            <Star
+              size={24}
+              color="#fff"
+              fill={item.showInReport ? "#FBBF24" : "transparent"}
+            />
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.actionButton} onPress={toggleNotes}>
+          <MessageCircle size={24} color="#fff" />
+          {noteCount > 0 && (
+            <View style={styles.noteBadge}>
+              <Text style={styles.noteBadgeText}>{noteCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Notes Bottom Sheet */}
+      {showNotes && (
+        <Animated.View style={[styles.notesSheet, notesSheetStyle]}>
+          <View style={styles.notesHeader}>
+            <Text style={styles.notesHeaderText}>Notes</Text>
+            <TouchableOpacity
+              onPress={toggleNotes}
+              style={styles.closeNotesButton}
+            >
+              <X size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.notesList}>
+            {comments?.map((note) => (
+              <View key={note.id} style={styles.noteItem}>
+                <View style={styles.noteHeader}>
+                  <View style={styles.noteAvatar}>
+                    <Text style={styles.noteAvatarText}>
+                      {note.user?.firstName?.charAt(0) || "N"} +
+                      {note.user?.lastName?.charAt(0) || "N"}
+                    </Text>
+                  </View>
+                  <View style={styles.noteMetadata}>
+                    <Text style={styles.noteAuthor}>
+                      {note.user?.firstName} {note.user?.lastName}
+                    </Text>
+                    <Text style={styles.noteDate}>
+                      {new Date(note.createdAt).toLocaleDateString()}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.noteText}>{note.content}</Text>
+              </View>
+            ))}
+          </ScrollView>
+
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 240 : 20}
+            style={styles.addNoteContainer}
+          >
+            <TextInput
+              ref={noteInputRef}
+              style={styles.noteInput}
+              placeholder="Add a note..."
+              placeholderTextColor="#999"
+              multiline
+              numberOfLines={3}
+              returnKeyType="done"
+              blurOnSubmit={true}
+              onChangeText={(text) => {
+                currentNoteText.current = text;
+              }}
+              onSubmitEditing={async (e) => {
+                if (item.id) {
+                  await handleAddNote(item.id, currentNoteText.current);
+                }
+              }}
+            />
+            <TouchableOpacity
+              style={[
+                styles.submitNoteButton,
+                isAddingNote && styles.disabledButton,
+              ]}
+              onPress={async () => {
+                if (item.id) {
+                  await handleAddNote(item.id, currentNoteText.current);
+                }
+              }}
+              disabled={isAddingNote}
+            >
+              <Text
+                style={[
+                  styles.submitNoteButtonText,
+                  isAddingNote && styles.disabledButtonText,
+                ]}
+              >
+                {isAddingNote ? "Posting..." : "Post"}
+              </Text>
+            </TouchableOpacity>
+          </KeyboardAvoidingView>
+        </Animated.View>
+      )}
+    </View>
+  );
+};
 const styles = StyleSheet.create({
   container: {
     flex: 1,

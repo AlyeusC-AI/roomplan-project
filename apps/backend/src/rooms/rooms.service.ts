@@ -508,6 +508,9 @@ export class RoomsService {
   async getComments(imageId: string): Promise<Prisma.CommentGetPayload<{}>[]> {
     return this.prisma.comment.findMany({
       where: { imageId },
+      include: {
+        user: true,
+      },
       orderBy: {
         createdAt: 'desc',
       },

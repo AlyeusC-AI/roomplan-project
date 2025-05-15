@@ -45,6 +45,7 @@ import ModalImagesWithNotes from "../pictures/modalImagesWithNotes";
 import { api } from "@/lib/api";
 import { toast } from "sonner-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { Image, Room, useUpdateImagesOrder } from "@service-geek/api-client";
 // Get screen dimensions for responsive sizing
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -82,28 +83,19 @@ interface ImageNote {
 }
 
 interface ImageGalleryProps {
-  inferences: Inference[];
-  urlMap: {
-    [imageKey: string]: string;
-  };
-  onRefresh?: () => Promise<void>;
-  roomName?: string;
+  images: Image[];
+  room: Room;
   selectable?: boolean;
   onSelectionChange?: (selectedKeys: string[]) => void;
   initialSelectedKeys?: string[];
-  onDelete?: (imageKey: string) => Promise<void>;
-  onAddNote?: (imageId: number, note: string) => Promise<void>;
-  onToggleIncludeInReport?: (
-    publicId: string,
-    includeInReport: boolean
-  ) => Promise<void>;
+
   onReorder?: (newOrder: Inference[]) => void;
 }
 
 // Add this new component before the main ImageGallery component
 const GridItem = React.memo(
   ({
-    inference,
+    image,
     index,
     imageKey,
     imageUrl,
@@ -117,7 +109,7 @@ const GridItem = React.memo(
     toggleImageSelection,
     selectable,
   }: {
-    inference: Inference | null;
+    image: Image | null;
     index: number;
     imageKey: string;
     imageUrl: string;
@@ -144,22 +136,24 @@ const GridItem = React.memo(
         runOnJS(handleDragStart)(index);
       },
       onActive: (event) => {
-        positions.value = positions.value.map((pos, i) => {
-          if (i === index) {
-            return {
-              x: event.translationX,
-              y: event.translationY,
-            };
+        positions.value = positions.value.map(
+          (pos: { x: number; y: number }, i: number) => {
+            if (i === index) {
+              return {
+                x: event.translationX,
+                y: event.translationY,
+              };
+            }
+            return pos;
           }
-          return pos;
-        });
+        );
       },
       onEnd: () => {
         runOnJS(handleDragEnd)(index);
       },
     });
 
-    if (!inference) {
+    if (!image) {
       return <View key={`empty-${index}`} style={styles.galleryItem} />;
     }
 
@@ -195,16 +189,11 @@ const GridItem = React.memo(
 );
 
 export default function ImageGallery({
-  inferences,
-  urlMap,
-  onRefresh,
-  roomName,
+  images: imagesProp,
+  room,
   selectable = false,
   onSelectionChange,
   initialSelectedKeys = [],
-  onDelete,
-  onAddNote,
-  onToggleIncludeInReport,
 }: ImageGalleryProps) {
   const [selectedKeys, setSelectedKeys] =
     useState<string[]>(initialSelectedKeys);
@@ -214,27 +203,19 @@ export default function ImageGallery({
   const [isDragging, setIsDragging] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const itemsPerRow = 3;
-  const [images, setImages] = useState<Inference[]>(inferences);
+  const [images, setImages] = useState<Image[]>(imagesProp);
+  // const { mutate: removeImage } = useRemoveImage();
+  // const { mutate: bulkUpdateImages } = useBulkUpdateImages();
+  // const { mutate: bulkRemoveImages } = useBulkRemoveImages();
+  const { mutate: updateImagesOrder } = useUpdateImagesOrder();
+  // const { mutate: updateProject } = useUpdateProject();
 
-  // Filter out inferences without imageKey or with undefined urlMap entries
-  const validInferences = images.filter(
-    (inference): inference is Inference & { imageKey: string } =>
-      // !!inference.imageKey &&
-      // typeof inference.imageKey === "string" &&
-      !inference.isDeleted && !inference.Image?.isDeleted
-    //  &&
-    // !!inference.imageKey
-  );
-  const positions = useSharedValue(
-    validInferences.map((_, index) => ({ x: 0, y: 0 }))
-  );
+  const positions = useSharedValue(images.map((_, index) => ({ x: 0, y: 0 })));
   useEffect(() => {
-    console.log("🚀 ~ inferences:", JSON.stringify(inferences, null, 2));
+    console.log("🚀 ~ images:", JSON.stringify(images, null, 2));
 
-    setImages(
-      inferences.sort((a, b) => (a.Image?.order || 0) - (b.Image?.order || 0))
-    );
-  }, [inferences]);
+    setImages(images.sort((a, b) => (a.order || 0) - (b.order || 0)));
+  }, [images]);
   // useEffect(() => {
   //   console.log("🚀 ~ inferences:", JSON.stringify(inferences, null, 2));
   // }, [inferences]);
@@ -243,15 +224,12 @@ export default function ImageGallery({
 
   // Organize inferences into rows for grid display
   const rows = Array.from({
-    length: Math.ceil(validInferences.length / itemsPerRow),
+    length: Math.ceil(images.length / itemsPerRow),
   }).map((_, rowIndex) => {
     const startIndex = rowIndex * itemsPerRow;
-    const rowItems = validInferences.slice(
-      startIndex,
-      startIndex + itemsPerRow
-    );
+    const rowItems = images.slice(startIndex, startIndex + itemsPerRow);
     // Pad the row with null values if needed to maintain 3 columns
-    const paddedItems: ((typeof validInferences)[0] | null)[] = [...rowItems];
+    const paddedItems: ((typeof images)[0] | null)[] = [...rowItems];
     while (paddedItems.length < itemsPerRow) {
       paddedItems.push(null);
     }
@@ -289,40 +267,27 @@ export default function ImageGallery({
     const currentCol = index % 3;
     const newRow = Math.max(
       0,
-      Math.min(currentRow + rowChange, Math.floor(validInferences.length / 3))
+      Math.min(currentRow + rowChange, Math.floor(images.length / 3))
     );
     const newCol = Math.max(0, Math.min(currentCol + colChange, 2));
     const newIndex = newRow * 3 + newCol;
 
     // Only reorder if the position has changed
     if (newIndex !== index) {
-      const newOrder = [...validInferences];
+      const newOrder = [...images];
       const [movedItem] = newOrder.splice(index, 1);
       newOrder.splice(newIndex, 0, movedItem);
       setImages(newOrder);
 
       // Update order in backend
-      const orderUpdates = newOrder.map((inference, idx) => ({
-        publicId: inference.Image?.publicId,
+      const orderUpdates = newOrder.map((image, idx) => ({
+        id: image.id,
         order: idx,
       }));
 
       console.log("🚀 ~ orderUpdates:", JSON.stringify(orderUpdates, null, 2));
 
-      api
-        .patch(`/api/v1/projects/${inferences[0]?.projectId}/images`, {
-          order: orderUpdates,
-        })
-        .then((res) => {
-          // toast.success("Image order updated");
-
-          console.log("🚀 ~ rsasdadsadasdes:", res.data);
-          // onRefresh?.();
-        })
-        .catch((error) => {
-          console.error("Failed to update image order:", error);
-          toast.error("Failed to update image order");
-        });
+      updateImagesOrder(orderUpdates);
     }
   };
 
@@ -349,25 +314,21 @@ export default function ImageGallery({
   };
 
   // Replace the renderGridItem function with this:
-  const renderGridItem = (inference: Inference | null, index: number) => {
-    if (!inference || (!inference.imageKey && !inference.Image?.key)) {
+  const renderGridItem = (image: Image | null, index: number) => {
+    if (!image) {
       return <View key={`empty-${index}`} style={styles.galleryItem} />;
     }
 
-    const imageKey = inference.imageKey || inference.Image?.key || "";
-    let imageUrl = safelyGetImageUrl(urlMap, imageKey, "");
-    if (!imageUrl) {
-      imageUrl = getStorageUrl(imageKey);
-    }
+    const imageUrl = image.url || "";
 
-    const isSelected = selectedKeys.includes(imageKey);
+    const isSelected = selectedKeys.includes(image.id);
 
     return (
       <GridItem
-        key={imageKey}
-        inference={inference}
+        key={image.id}
+        image={image}
         index={index}
-        imageKey={imageKey}
+        imageKey={image.id}
         imageUrl={imageUrl}
         isSelected={isSelected}
         positions={positions}
@@ -408,12 +369,8 @@ export default function ImageGallery({
       {/* Full Screen Modal */}
       <ModalImagesWithNotes
         images={images}
-        urlMap={urlMap}
-        onRefresh={onRefresh}
-        roomName={roomName}
-        onAddNote={onAddNote}
-        onToggleIncludeInReport={onToggleIncludeInReport}
-        onDelete={onDelete}
+        // onRefresh={onRefresh}
+        roomName={room.name}
         setModalVisible={setModalVisible}
         modalVisible={modalVisible}
         activeImageIndex={activeImageIndex}
