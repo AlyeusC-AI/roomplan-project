@@ -218,7 +218,7 @@ function calculatePolygonProperties(inputPoints: Point[]) {
     const boundingBox = getSmallestBoundingSquare(points);
 
     return {
-        area: area / scaleFactor / scaleFactor,
+        area: area / scaleFactor / scaleFactor * 1.15 * 1.15,
         centroid: { x: cx, y: cy },
         boundingBox
     };
