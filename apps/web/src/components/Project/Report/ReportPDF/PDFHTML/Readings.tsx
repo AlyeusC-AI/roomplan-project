@@ -96,7 +96,9 @@ const Readings = ({
           );
           const displayGPP = calculatedGPP
             ? calculatedGPP.toFixed(2)
-            : reading.gpp || "--";
+            : reading.gpp
+              ? Number(reading.gpp).toFixed(2)
+              : "--";
 
           // Filter wall and floor images
           const wallImages =
