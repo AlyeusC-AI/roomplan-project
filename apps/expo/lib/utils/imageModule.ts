@@ -4,6 +4,7 @@ import * as ImageManipulator from "expo-image-manipulator";
 import { v4 } from "react-native-uuid/dist/v4";
 import { supabaseServiceRole } from "@/app/projects/[projectId]/camera";
 import { toast } from "sonner-native";
+import { uploadImage } from "../imagekit";
 
 // Constants for different storage buckets
 export const STORAGE_BUCKETS = {
@@ -190,44 +191,34 @@ export const uploadImageToStorage = async (
       ? `/${pathPrefix}/${entityId}/${v4()}.jpeg`
       : `/${entityId}/${v4()}.jpeg`;
 
-    const res = await supabaseServiceRole.storage
-      .from(bucket)
-      .upload(path, formData, {
-        cacheControl: "3600",
-        upsert: false,
-      });
-
-    if (!res.data?.path) {
-      throw new Error(`Failed to upload image to ${bucket}`);
-    }
-
-    // If a database table is specified, add a record to it
-    if (tableName && idField) {
-      const record: Record<string, any> = {};
-      record[idField] = entityId;
-      record[imageKeyField] = res.data.path;
-
-      const { error } = await supabaseServiceRole
-        .from(tableName)
-        .insert(record);
-
-      if (error) {
-        console.error(
-          `Failed to add image to ${tableName} table`,
-          JSON.stringify(error, null, 2)
-        );
-        toast.error(`Failed to add image to ${tableName} table`);
-        return undefined;
+    // const res = await supabaseServiceRole.storage
+    //   .from(bucket)
+    //   .upload(path, formData, {
+    //     cacheControl: "3600",
+    //     upsert: false,
+    //   });
+    const res = await uploadImage(
+      {
+        uri: p.uri,
+        type: p.type,
+        name: p.name,
+      },
+      {
+        folder: `projects/${entityId}/rooms/${entityId}`,
       }
+    );
+
+    if (!res.filePath) {
+      throw new Error(`Failed to upload image to ${bucket}`);
     }
 
     // Call onSuccess callback if provided
     if (onSuccess) {
-      await onSuccess(res.data);
+      await onSuccess(res);
     }
 
     toast.success("Image uploaded successfully");
-    return res.data;
+    return res;
   } catch (error) {
     console.error("Upload error:", error);
     toast.error("Failed to upload image");
@@ -297,8 +288,8 @@ export const takePhoto = async (
       options.compression === "high"
         ? 0.9
         : options.compression === "low"
-        ? 0.5
-        : 0.7;
+          ? 0.5
+          : 0.7;
 
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ["images"],
@@ -358,8 +349,8 @@ export const pickMultipleImages = async (
       options.compression === "high"
         ? 0.9
         : options.compression === "low"
-        ? 0.5
-        : 0.7;
+          ? 0.5
+          : 0.7;
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],

@@ -40,7 +40,6 @@ import {
 import safelyGetImageUrl from "@/utils/safelyGetImageKey";
 
 import AddRoomButton from "@/components/project/AddRoomButton";
-import { uploadImage } from "@/lib/imagekit";
 import { launchImageLibraryAsync } from "expo-image-picker";
 import * as ImagePicker from "expo-image-picker";
 import { api } from "@/lib/api";
@@ -57,6 +56,7 @@ import {
   useRemoveImage,
   useUpdateProject,
 } from "@service-geek/api-client";
+import { uploadImage } from "@/lib/imagekit";
 
 export default function ProjectPhotos() {
   const { projectId } = useGlobalSearchParams<{
@@ -69,7 +69,6 @@ export default function ProjectPhotos() {
   );
   const { data } = useGetProjectById(projectId);
   const project = data?.data;
-  const { data: user } = useCurrentUser();
   const [showRoomSelection, setShowRoomSelection] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [shouldOpenCamera, setShouldOpenCamera] = useState(false);
@@ -97,7 +96,7 @@ export default function ProjectPhotos() {
       // roomId: selectedRoom,
     },
     {
-      direction: "desc",
+      direction: "asc",
       field: "order",
     },
     { page: 1, limit: 100 }
@@ -125,21 +124,21 @@ export default function ProjectPhotos() {
   }, [project]);
 
   const uploadToSupabase = async (imagePath: string, roomId: string) => {
+    console.log("🚀 ~ uploadToSupabase ~ imagePath:", imagePath, roomId);
     try {
-      const imageUrl = await uploadImage(
-        {
-          uri: imagePath,
-          type: "image/jpeg",
-          name: `${Date.now()}.jpg`,
-        },
-        {
-          folder: `projects/${projectId}/rooms/${roomId}`,
-        }
-      );
-
+      // const imageUrl = await uploadImage(
+      //   {
+      //     uri: imagePath,
+      //     type: "image/jpeg",
+      //     name: `${Date.now()}.jpg`,
+      //   },
+      //   {
+      //     folder: `projects/${projectId}/rooms/${roomId}`,
+      //   }
+      // );
       await addImage({
         data: {
-          url: imageUrl.url,
+          url: imagePath,
           roomId: roomId,
           projectId,
         },
@@ -199,7 +198,8 @@ export default function ProjectPhotos() {
         maxImages: 20,
         onSuccess: async (files) => {
           for (const file of files) {
-            await uploadToSupabase(file.path, selectedRoom);
+            console.log("🚀 ~ onSuccess: ~ file:", file);
+            await uploadToSupabase(file.url, selectedRoom);
           }
           // await refreshData();
         },
@@ -473,23 +473,22 @@ export default function ProjectPhotos() {
         </View>
       </ScrollView>
 
-      {rooms?.length ||
-        (0 > 0 && (
-          <View style={styles.fabContainer}>
-            <TouchableOpacity
-              onPress={() => router.push("../camera")}
-              // onPress={handleTakePhoto}
-              style={[styles.fab, isUploading && styles.fabDisabled]}
-              disabled={isUploading}
-            >
-              {isUploading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <CameraIcon size={30} color="#fff" />
-              )}
-            </TouchableOpacity>
-          </View>
-        ))}
+      {(rooms?.length || 0) > 0 && (
+        <View style={styles.fabContainer}>
+          <TouchableOpacity
+            onPress={() => router.push("../camera")}
+            // onPress={handleTakePhoto}
+            style={[styles.fab, isUploading && styles.fabDisabled]}
+            disabled={isUploading}
+          >
+            {isUploading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <CameraIcon size={30} color="#fff" />
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
 
       {isUploading && (
         <View style={styles.uploadProgress}>

@@ -124,7 +124,7 @@ const GridItem = React.memo(
     selectable: boolean;
   }) => {
     const gestureHandler = useAnimatedStyle(() => {
-      const { x, y } = positions.value[index];
+      const { x, y } = positions.value[index] || { x: 0, y: 0 };
       return {
         transform: [{ translateX: x }, { translateY: y }],
         zIndex: isDragging && draggedIndex === index ? 1 : 0,
@@ -212,10 +212,10 @@ export default function ImageGallery({
 
   const positions = useSharedValue(images.map((_, index) => ({ x: 0, y: 0 })));
   useEffect(() => {
-    console.log("🚀 ~ images:", JSON.stringify(images, null, 2));
+    console.log("🚀 ~ images:", JSON.stringify(imagesProp, null, 2));
 
-    setImages(images.sort((a, b) => (a.order || 0) - (b.order || 0)));
-  }, [images]);
+    setImages(imagesProp.sort((a, b) => (a.order || 0) - (b.order || 0)));
+  }, [imagesProp]);
   // useEffect(() => {
   //   console.log("🚀 ~ inferences:", JSON.stringify(inferences, null, 2));
   // }, [inferences]);
@@ -259,8 +259,8 @@ export default function ImageGallery({
     const itemHeight = itemWidth; // Since it's square
 
     // Calculate row and column changes
-    const colChange = Math.round(dragDistance.x / itemWidth);
-    const rowChange = Math.round(dragDistance.y / itemHeight);
+    const colChange = Math.round(dragDistance?.x / itemWidth);
+    const rowChange = Math.round(dragDistance?.y / itemHeight);
 
     // Calculate the new index based on row and column changes
     const currentRow = Math.floor(index / 3);
@@ -344,7 +344,7 @@ export default function ImageGallery({
   };
 
   // If there are no valid images, show an empty state
-  if (validInferences.length === 0) {
+  if (images.length === 0) {
     return (
       <View style={styles.emptyContainer}>
         <ImageIcon size={40} color="#9CA3AF" />

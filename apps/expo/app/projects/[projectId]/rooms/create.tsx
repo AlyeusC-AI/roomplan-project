@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { userStore } from "@/lib/state/user";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { toast } from "sonner-native";
 import { Label } from "@/components/ui/label";
@@ -15,19 +14,26 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, Trash2, Save } from "lucide-react-native";
-import { roomsStore } from "@/lib/state/rooms";
-import { roomInferenceStore } from "@/lib/state/readings-image";
-import { api } from "@/lib/api";
-import { notesStore } from "@/lib/state/notes";
+import {
+  useCreateRoom,
+  useUpdateRoom,
+  useDeleteRoom,
+} from "@service-geek/api-client";
 
 export default function RoomCreationScreen() {
   const [roomName, setRoomName] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { mutate: createRoomMutation } = useCreateRoom();
+  const { mutate: updateRoomMutation } = useUpdateRoom();
+  const { mutate: deleteRoomMutation } = useDeleteRoom();
 
-  const { session: supabaseSession } = userStore((state) => state);
-
-  const { projectId, projectName, roomName: roomNameParam, roomId: roomIdParam } = useLocalSearchParams<{
+  const {
+    projectId,
+    projectName,
+    roomName: roomNameParam,
+    roomId: roomIdParam,
+  } = useLocalSearchParams<{
     projectId: string;
     projectName: string;
     roomName: string;
@@ -69,22 +75,13 @@ export default function RoomCreationScreen() {
 
       setLoading(true);
 
-      const res = await api.patch(`/api/v1/projects/${projectId}/room`, { 
-        name: roomName,
-        roomId: roomIdParam,
-      });
-
-      const json = res.data;
-      console.log("🚀 ~ updateRoom ~ json:", json);
-
-      roomsStore.getState().updateRoom({  name: roomName, publicId: roomIdParam });
-      roomInferenceStore.getState().setRooms([{   name: roomName }]);
-      notesStore.getState().setNotes(notesStore.getState().notes.map(note => note.publicId === roomIdParam ? { ...note, name: roomName } : note));
+      updateRoomMutation({ id: roomIdParam, data: { name: roomName } });
 
       router.dismiss();
     } catch (error: unknown) {
       console.log("🚀 ~ updateRoom ~ error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Could not update room.";
+      const errorMessage =
+        error instanceof Error ? error.message : "Could not update room.";
       toast.error(errorMessage);
     }
 
@@ -95,23 +92,9 @@ export default function RoomCreationScreen() {
     try {
       setLoading(true);
 
-      const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room/${roomIdParam}`,
-        {
-          method: "DELETE",
-          headers: {
-            "auth-token": supabaseSession?.access_token || "",
-          },
-        }
-      );
+      deleteRoomMutation(roomIdParam);
 
-      if (res.ok) {
-        roomsStore.getState().setRooms(roomsStore.getState().rooms.filter(r => r.publicId !== roomIdParam));
-        roomInferenceStore.getState().setRooms(roomInferenceStore.getState().rooms.filter(r => r.publicId !== roomIdParam));
-        router.dismiss();
-      } else {
-        throw new Error("Failed to delete room");
-      }
+      router.dismiss();
     } catch {
       toast.error(
         "Could not delete room. If this error persists, please contact support@servicegeek.com"
@@ -131,24 +114,7 @@ export default function RoomCreationScreen() {
 
       setLoading(true);
 
-      const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": supabaseSession?.access_token || "",
-          },
-          body: JSON.stringify({
-            name: roomName,
-          }),
-        }
-      );
-
-      const json = await res.json();
-
-      roomsStore.getState().addRoom({ ...json.room, RoomReading: [] });
-      roomInferenceStore.getState().addRoom({ ...json.room, Inference: [] });
+      createRoomMutation({ name: roomName, projectId: projectId });
 
       router.dismiss();
     } catch {
@@ -164,7 +130,7 @@ export default function RoomCreationScreen() {
     <ScrollView className="flex-1 bg-white">
       <View className="p-6">
         <View className="flex flex-row items-center w-full mb-8">
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => router.back()}
             className="p-2 rounded-full bg-gray-100"
           >
