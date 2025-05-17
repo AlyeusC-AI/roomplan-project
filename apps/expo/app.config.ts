@@ -8,7 +8,7 @@ const config: ExpoConfig = {
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
   scheme: "servicegeek",
-  version: "1.3.3",
+  version: "1.3.4",
   runtimeVersion: "appVersion",
   updates: {
     fallbackToCacheTimeout: 0,
@@ -26,7 +26,7 @@ const config: ExpoConfig = {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#FFFFFF",
     },
-    permissions: ["com.google.android.gms.permission.AD_ID"]
+    permissions: ["com.google.android.gms.permission.AD_ID"],
   },
   ios: {
     bundleIdentifier: "com.servicegeek.servicegeekmobile",
@@ -84,8 +84,8 @@ const config: ExpoConfig = {
             "kotlin.version": "1.9.25",
             "android.kotlinCompilerVersion": "1.9.25",
             "compose.kotlin.compiler.version": "1.9.25",
-            "compose.compiler.extension.version": "1.5.10"
-          }
+            "compose.compiler.extension.version": "1.5.10",
+          },
         },
         ios: {
           deploymentTarget: "16.0",
