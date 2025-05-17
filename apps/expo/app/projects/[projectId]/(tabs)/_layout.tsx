@@ -101,7 +101,7 @@ export default function Layout() {
           if (route.name === "readings") {
             return <BookOpen size={24} color={color} />;
           }
-          if (route.name === "notes") {
+          if (route.name === "notes/index") {
             return <StickyNote size={24} color={color} />;
           }
           if (route.name === "forms") {
@@ -138,9 +138,24 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
-        name="notes"
+        name="notes/index"
         options={{
           title: "Notes",
+          // href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="notes/_comps/noteCard"
+        options={{
+          // title: "Room Notes",
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="notes/_comps/notesGallery"
+        options={{
+          title: "Room Notes",
+          href: null,
         }}
       />
       <Tabs.Screen

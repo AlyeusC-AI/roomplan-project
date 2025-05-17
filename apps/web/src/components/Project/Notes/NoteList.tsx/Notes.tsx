@@ -1,7 +1,11 @@
+import { useParams } from "next/navigation";
 import Note from "./Note";
-
-const Notes = ({ room }: { room: RoomWithReadings }) => {
-  if (!room.Notes)
+import { Room, useGetNotes } from "@service-geek/api-client";
+import { LoadingPlaceholder } from "@components/ui/spinner";
+const Notes = ({ room }: { room: Room }) => {
+  const { data: notes, isLoading } = useGetNotes(room.id as string);
+  if (isLoading) return <LoadingPlaceholder />;
+  if (!notes)
     return (
       <div className='ml-2 mt-4 flex items-center justify-start'>
         <div className='max-w-[35%] border-l-2 border-l-gray-400 px-2'>
@@ -17,10 +21,12 @@ const Notes = ({ room }: { room: RoomWithReadings }) => {
 
   return (
     <div>
-      {room.Notes.filter((note) => note).map((note) => (
-        <Note key={note.publicId} roomPublicId={room.publicId} note={note} />
-      ))}
-      {room.Notes.length === 0 && (
+      {notes
+        .filter((note) => note)
+        .map((note) => (
+          <Note key={note.id} note={note} />
+        ))}
+      {notes.length === 0 && (
         <div className='ml-2 mt-4 flex items-center justify-start'>
           <div className='max-w-[35%] border-l-2 border-l-gray-400 px-2'>
             <h5 className='text-lg font-semibold'>No Notes</h5>

@@ -8,6 +8,7 @@ export * from "./types/equipment";
 export * from "./types/calendar-event";
 export * from "./types/project";
 export * from "./types/room";
+export * from "./types/note";
 // Hooks
 export * from "./hooks/useBilling";
 export * from "./hooks/useOrganization";
@@ -17,6 +18,7 @@ export * from "./hooks/useEquipment";
 export * from "./hooks/useCalendarEvent";
 export * from "./hooks/useProject";
 export * from "./hooks/useRooms";
+export * from "./hooks/useNotes";
 // Services
 export * from "./services/auth";
 export * from "./services/organization";
@@ -28,3 +30,4 @@ export * from "./services/equipment";
 export * from "./services/calendar-event";
 export * from "./services/project";
 export * from "./services/rooms";
+export * from "./services/notes";

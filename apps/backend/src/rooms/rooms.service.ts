@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 
@@ -123,6 +127,7 @@ export class RoomsService {
     return this.prisma.room.delete({
       where: { id },
       include: {
+        notes: true,
         images: {
           include: {
             comments: true,
@@ -139,6 +144,7 @@ export class RoomsService {
     order?: number;
     projectId: string;
     roomId?: string;
+    noteId?: string;
   }): Promise<
     Prisma.ImageGetPayload<{
       include: { comments: true };
@@ -164,23 +170,57 @@ export class RoomsService {
         roomId = room.id;
       }
     }
-    return this.prisma.image.create({
+
+    // If noteId is provided, verify it exists and belongs to the same project
+    if (data.noteId) {
+      const note = await this.prisma.note.findUnique({
+        where: { id: data.noteId },
+        include: {
+          room: {
+            include: {
+              project: true,
+            },
+          },
+        },
+      });
+
+      if (!note) {
+        throw new NotFoundException('Note not found');
+      }
+
+      if (note.room.projectId !== data.projectId) {
+        throw new BadRequestException(
+          'Note does not belong to the same project',
+        );
+      }
+    }
+
+    // Create the image
+    const image = await this.prisma.image.create({
       data: {
         ...data,
-        roomId,
+        url: data.url,
+        showInReport: data.showInReport ?? false,
+        order: data.order ?? 0,
+        projectId: data.projectId,
+        roomId: roomId,
+        noteId: data.noteId,
       },
       include: {
         comments: true,
       },
     });
+
+    return image;
   }
 
-  // Remove image from room
+  // Remove image from room and disconnect from any notes
   async removeImage(imageId: string): Promise<
     Prisma.ImageGetPayload<{
       include: { comments: true };
     }>
   > {
+    // Then delete the image
     return this.prisma.image.delete({
       where: { id: imageId },
       include: {

@@ -8,8 +8,93 @@ import {
 import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import { Database } from '../../src/types/database';
+import ImageKit from 'imagekit';
+const supabaseUrlForImages =
+  'https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/media/';
 
 dotenv.config();
+
+interface RoomReading_Supabase {
+  id: number;
+  createdAt: string;
+  date: string;
+  humidity: string | null;
+  temperature: string | null;
+  moistureContentWall: string;
+  moistureContentFloor: string;
+  equipmentUsed: string[];
+  roomId: number;
+  isDeleted: boolean;
+  publicId: string;
+  projectId: number;
+  gpp: string | null;
+  wallName: string | null;
+  floorName: string | null;
+  extendedWalls: {
+    id: string;
+    name: string;
+    type: string;
+    value: string;
+  }[];
+  RoomReadingImage: {
+    id: number;
+    type: 'wall' | 'floor';
+    imageKey: string;
+    created_at: string;
+    RoomReadingId: number;
+  }[];
+  GenericRoomReading: {
+    id: number;
+    gpp: string;
+    type: string;
+    value: string;
+    humidity: string;
+    publicId: string;
+    createdAt: string;
+    isDeleted: boolean;
+    temperature: string;
+    roomReadingId: number;
+  }[];
+  Room: { publicId: string };
+  Project: { publicId: string };
+}
+
+interface Note_Supabase {
+  id: number;
+  createdAt: string;
+  updatedAt: string | null;
+  date: string;
+  roomId: number;
+  isDeleted: boolean;
+  publicId: string;
+  projectId: number;
+  body: string;
+  Room: { publicId: string };
+  Project: { publicId: string };
+  User: { publicId: string };
+  NoteImage: {
+    id: number;
+    imageKey: string;
+  }[];
+}
+
+interface Inference_Supabase {
+  id: number;
+  createdAt: string;
+  isDeleted: boolean;
+  publicId: string;
+  imageId: number;
+  imageKey: string;
+  projectId: number;
+  Image: {
+    id: number;
+    key: string;
+    includeInReport: boolean;
+    order: number;
+    Project: { publicId: string };
+    Room: { publicId: string };
+  };
+}
 
 interface User_Supabase {
   id: string;
@@ -158,6 +243,20 @@ interface CalendarEventReminder_Supabase {
   email: string | null;
   userId: string | null;
 }
+
+interface Image_Supabase {
+  id: number;
+  createdAt: string;
+  isDeleted: boolean;
+  publicId: string;
+  key: string;
+  projectId: number;
+  organizationId: number;
+  includeInReport: boolean;
+  description: string | null;
+  order: number | null;
+}
+
 const prisma = new PrismaClient();
 
 // Initialize Supabase client
@@ -754,6 +853,218 @@ async function migrateCalendarEventReminders() {
   }
 }
 
+async function uploadImage(blob: Blob) {
+  const imagekit = new ImageKit({
+    publicKey: process.env.IMAGEKIT_PUBLIC_KEY || '',
+    privateKey: process.env.IMAGEKIT_PRIVATE_KEY || '',
+    urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || '',
+  });
+
+  const file = await blob.arrayBuffer();
+  const result = await imagekit.upload({
+    file: Buffer.from(file),
+    fileName: `migrated_${Date.now()}.jpg`,
+    folder: 'migrated',
+  });
+
+  return result.url;
+}
+
+async function migrateInferences() {
+  console.log('Starting inferences migration...');
+  const { data: inferences, error } = await supabase
+    .from('Inference')
+    .select(
+      '* , Image(id, key, includeInReport, order, Project(publicId), Room(publicId))',
+    )
+    .eq('isDeleted', false);
+  if (error) {
+    throw new Error(`Error fetching inferences: ${error.message}`);
+  }
+  console.log(`Found ${inferences.length} inferences to migrate`);
+  for (const inference of inferences as Inference_Supabase[]) {
+    console.log('🚀 ~ migrateInferences ~ inference:', inference);
+    const image = inference.Image;
+    // const image = await supabase
+    //   .from('Image')
+    //   .select('* , Project(publicId)')
+    //   .eq('isDeleted', false)
+    //   .eq('id', inference.imageId)
+    //   .single();
+    if (!image) {
+      console.error(`Image ${inference.imageId} not found`);
+      continue;
+    }
+    console.log('🚀 ~ migrateInferences ~ image:', image);
+    let imageUrl = image.key;
+    if (!imageUrl.startsWith('http')) {
+      imageUrl = `${supabaseUrlForImages}${image.key}`;
+      const imageData = await fetch(imageUrl);
+      const blob = await imageData.blob();
+      imageUrl = await uploadImage(blob);
+      console.log('🚀 ~ migrateImages ~ optimizedImageUrl:', imageUrl);
+    }
+    console.log('🚀 ~ migrateInferences ~ imageUrl:', imageUrl);
+    try {
+      await prisma.image.upsert({
+        where: { supabaseId: image.id.toString() },
+        update: {
+          url: imageUrl,
+          supabaseId: image.id.toString(),
+          project: {
+            connect: { supabaseId: image.Project.publicId },
+          },
+        },
+        create: {
+          url: imageUrl,
+          supabaseId: image.id.toString(),
+          project: {
+            connect: { supabaseId: image.Project.publicId },
+          },
+          order: image.order || undefined,
+          showInReport: image.includeInReport || false,
+          room: {
+            connect: { supabaseId: image.Room.publicId },
+          },
+        },
+      });
+    } catch (error) {
+      console.error(`Error migrating inference ${inference.id}:`, error);
+    }
+  }
+}
+
+async function migrateNotes() {
+  console.log('Starting notes migration...');
+  const { data: notes, error } = await supabase
+    .from('Notes')
+    .select('* , NoteImage(id, imageKey), Room(publicId), Project(publicId)')
+    .eq('isDeleted', false)
+    .neq('body', '');
+
+  if (error) {
+    throw new Error(`Error fetching notes: ${error.message}`);
+  }
+  console.log(`Found ${notes.length} notes to migrate`);
+  for (const note of notes as Note_Supabase[]) {
+    console.log('🚀 ~ migrateNotes ~ note:', note);
+    try {
+      let images: string[] = [];
+      for (const image of note.NoteImage) {
+        if (!image.imageKey) {
+          continue;
+        }
+        if (image.imageKey.startsWith('http')) {
+          images.push(image.imageKey);
+        } else {
+          const imageUrl = `${supabaseUrlForImages}${image.imageKey}`;
+          const imageData = await fetch(imageUrl);
+          const blob = await imageData.blob();
+          const optimizedImageUrl = await uploadImage(blob);
+          images.push(optimizedImageUrl);
+        }
+      }
+
+      await prisma.note.upsert({
+        where: { supabaseId: note.id.toString() },
+        update: {
+          body: note.body,
+          images: {
+            deleteMany: {},
+            create: images.map((image) => ({
+              url: image,
+              project: {
+                connect: { supabaseId: note.Project.publicId },
+              },
+            })),
+          },
+        },
+        create: {
+          body: note.body,
+          room: {
+            connect: { supabaseId: note.Room.publicId },
+          },
+          images: {
+            create: images.map((image) => ({
+              url: image,
+              project: {
+                connect: { supabaseId: note.Project.publicId },
+              },
+            })),
+          },
+        },
+      });
+    } catch (error) {
+      console.error(`Error migrating note ${note.id}:`, error);
+    }
+  }
+}
+
+async function migrateReading() {
+  console.log('Starting reading migration...');
+  const { data: readings, error } = await supabase
+    .from('RoomReading')
+    .select(
+      '* , RoomReadingImage(*),GenericRoomReading(*), Room(publicId), Project(publicId)',
+    )
+    .eq('isDeleted', false);
+
+  if (error) {
+    throw new Error(`Error fetching readings: ${error.message}`);
+  }
+  console.log(`Found ${readings.length} readings to migrate`);
+  await prisma.roomReading.deleteMany();
+  for (const reading of readings as RoomReading_Supabase[]) {
+    console.log('🚀 ~ migrateReading ~ reading:', reading);
+    const room = await prisma.room.findUnique({
+      where: { supabaseId: reading.Room.publicId },
+    });
+    if (!room) {
+      console.error(`Room ${reading.Room.publicId} not found`);
+      continue;
+    }
+    const project = await prisma.project.findUnique({
+      where: { supabaseId: reading.Project.publicId },
+    });
+    if (!project) {
+      console.error(`Project ${reading.Project.publicId} not found`);
+      continue;
+    }
+
+    const roomReading = await prisma.roomReading.create({
+      data: {
+        room: {
+          connect: { id: room.id },
+        },
+        date: new Date(reading.date),
+        humidity: reading.humidity ? parseFloat(reading.humidity) : 0,
+        temperature: reading.temperature ? parseFloat(reading.temperature) : 0,
+        gpp: reading.gpp ? parseFloat(reading.gpp) : 0,
+        equipmentUsed: reading.equipmentUsed,
+        genericRoomReading: {
+          create: reading.GenericRoomReading.map((reading) => ({
+            gpp: reading.gpp ? parseFloat(reading.gpp) : 0,
+            value: reading.value,
+            humidity: reading.humidity ? parseFloat(reading.humidity) : 0,
+            temperature: reading.temperature
+              ? parseFloat(reading.temperature)
+              : 0,
+          })),
+        },
+        wallReadings: {
+          create: reading.extendedWalls.map((wall) => ({
+            type: wall.type,
+            value: wall.value,
+            roomReading: {
+              connect: { id: roomReading.id },
+            },
+          })),
+        },
+      },
+    });
+  }
+}
+
 async function main() {
   try {
     console.log('Starting migration from Supabase...');
@@ -762,9 +1073,14 @@ async function main() {
     // await migrateUsers();
     // await migrateOrganizations();
     // await migrateOrganizationMemberships();
-    await migrateProjects();
+    // await migrateProjects();
     // await migrateCalendarEvents();
     // await migrateCalendarEventReminders();
+    // await migrateRooms();
+    // await migrateNotes();
+    await migrateReading();
+
+    // await migrateInferences();
     console.log('Migration completed successfully!');
   } catch (error) {
     console.error('Migration failed:', error);

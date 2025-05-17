@@ -19,8 +19,17 @@ import {
   DialogFooter,
   DialogHeader,
 } from "@components/ui/dialog";
-
-const NoteList = ({ room }: { room: RoomWithReadings }) => {
+import {
+  Room,
+  useGetNotes,
+  useCreateNote,
+  useUpdateNote,
+  useDeleteNote,
+  Note,
+  useUpdateRoom,
+  useDeleteRoom,
+} from "@service-geek/api-client";
+const NoteList = ({ room }: { room: Room }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -28,30 +37,28 @@ const NoteList = ({ room }: { room: RoomWithReadings }) => {
   const { track } = useAmplitudeTrack();
   const [internalRoomName, setInternalRoomName] = useState(room.name);
 
-  const { id } = useParams<{ id: string }>();
-
+  const { mutate: createNote } = useCreateNote();
+  const { mutate: updateNote } = useUpdateNote();
+  const { mutate: updateRoom } = useUpdateRoom();
+  const { mutate: deleteNote } = useDeleteNote();
+  const { mutate: deleteRoomMutation } = useDeleteRoom();
   const updateRoomName = async () => {
     if (internalRoomName === "" || internalRoomName.trim() === "") return;
     setIsSaving(true);
     track("Update Room Name");
 
     try {
-      const res = await fetch(`/api/v1/projects/${id}/room`, {
-        method: "PATCH",
-        body: JSON.stringify({
+      updateRoom({
+        id: room.id,
+        data: {
           name: internalRoomName,
-          roomId: room.publicId,
-        }),
+        },
       });
-      if (res.ok) {
-        toast.success("Room name updated");
-        roomStore.getState().updateRoomName(room, internalRoomName);
-        setIsEditingTitle(false);
-      } else {
-        toast.error("Failed to update room name");
-      }
+      toast.success("Room name updated");
+
+      setIsEditingTitle(false);
     } catch (error) {
-      toast.error("Failed to update room name");
+      // toast.error("Failed to update room name");
       console.log(error);
     }
 
@@ -65,15 +72,8 @@ const NoteList = ({ room }: { room: RoomWithReadings }) => {
     setIsDeleting(true);
     track("Delete Room");
     try {
-      const res = await fetch(`/api/v1/projects/${id}/room/${room.publicId}`, {
-        method: "DELETE",
-        body: JSON.stringify({
-          roomId: room.publicId,
-        }),
-      });
-      if (res.ok) {
-        roomStore.getState().removeRoom(room);
-      }
+      deleteRoomMutation(room.id);
+      toast.success("Room deleted");
     } catch (error) {
       console.log(error);
     }
@@ -88,18 +88,11 @@ const NoteList = ({ room }: { room: RoomWithReadings }) => {
     track("Add Room Note");
 
     try {
-      const res = await fetch(`/api/v1/projects/${id}/notes`, {
-        method: "POST",
-        body: JSON.stringify({
-          roomId: room.publicId,
-          body: "",
-        }),
+      createNote({
+        roomId: room.id,
+        body: "",
       });
-      if (res.ok) {
-        const json = await res.json();
-        console.log("Note created", json);
-        roomStore.getState().addRoomNote(room.publicId, json.note);
-      }
+      toast.success("Note created");
     } catch (error) {
       console.error(error);
     }

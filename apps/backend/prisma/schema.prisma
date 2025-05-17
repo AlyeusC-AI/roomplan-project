@@ -201,22 +201,85 @@ model Project {
 }
 
 model Room {
-  id        String   @id @default(uuid())
-  name      String
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
-  images    Image[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String        @id @default(uuid())
+  name        String
+  projectId   String
+  supabaseId  String?       @unique
+  project     Project       @relation(fields: [projectId], references: [id])
+  images      Image[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  notes       Note[]
+  walls       Wall[]
+  roomReading RoomReading[]
 
   @@index([projectId])
+}
+
+enum WallType {
+  WALL
+  CEILING
+  FLOOR
+}
+
+model Wall {
+  id          String        @id @default(uuid())
+  roomId      String
+  room        Room          @relation(fields: [roomId], references: [id])
+  name        String
+  type        WallType
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  wallReading WallReading[]
+
+  @@index([roomId])
+}
+
+model RoomReading {
+  id                 String               @id @default(uuid())
+  roomId             String
+  room               Room                 @relation(fields: [roomId], references: [id])
+  wallReadings       WallReading[]
+  genericRoomReading GenericRoomReading[]
+  date               DateTime
+  humidity           Float
+  temperature        Float
+  gpp                Float
+  equipmentUsed      String[]
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+}
+
+model GenericRoomReading {
+  id            String      @id @default(uuid())
+  gpp           Float
+  value         String
+  humidity      Float
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  temperature   Float
+  roomReadingId String
+  roomReading   RoomReading @relation(fields: [roomReadingId], references: [id])
+}
+
+model WallReading {
+  id      String @id @default(uuid())
+  wallId  String
+  wall    Wall   @relation(fields: [wallId], references: [id])
+  reading Int
+
+  roomReading   RoomReading? @relation(fields: [roomReadingId], references: [id])
+  roomReadingId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Image {
   id           String    @id @default(uuid())
   url          String
   roomId       String?
-  room         Room?     @relation(fields: [roomId], references: [id])
+  room         Room?     @relation(fields: [roomId], references: [id], onDelete: Cascade)
   comments     Comment[]
   showInReport Boolean   @default(false)
   order        Int       @default(0)
@@ -224,8 +287,22 @@ model Image {
   project      Project   @relation(fields: [projectId], references: [id])
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  supabaseId   String?   @unique
+  Note         Note?     @relation(fields: [noteId], references: [id])
+  noteId       String?
 
   @@index([roomId])
+}
+
+model Note {
+  id         String   @id @default(uuid())
+  body       String
+  roomId     String
+  room       Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  images     Image[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  supabaseId String?  @unique
 }
 
 model Comment {

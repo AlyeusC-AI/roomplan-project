@@ -10,45 +10,39 @@ import { useParams } from "next/navigation";
 import { Textarea } from "@components/ui/textarea";
 import debounce from "lodash/debounce";
 import ImageGallery from "./ImageGallery";
+import {
+  Note as NoteType,
+  useCreateNote,
+  useUpdateNote,
+  useUpdateRoom,
+  useDeleteNote,
+} from "@service-geek/api-client";
 
-const Note = ({ roomPublicId, note }: { roomPublicId: string; note: Note }) => {
+const Note = ({ note }: { note: NoteType }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [body, setBody] = useState(note.body);
   const [lastSavedBody, setLastSavedBody] = useState(note.body);
   const { id } = useParams<{ id: string }>();
+  const { mutate: createNote } = useCreateNote();
+  const { mutate: updateNote } = useUpdateNote();
+  const { mutate: updateRoom } = useUpdateRoom();
+  const { mutate: deleteNote } = useDeleteNote();
 
   const saveNote = async (newBody: string) => {
     try {
       setIsSaving(true);
-      const res = await fetch(`/api/v1/projects/${id}/notes`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          roomId: roomPublicId,
+      updateNote({
+        id: note.id,
+        data: {
           body: newBody,
-          noteId: note.publicId,
-        }),
+        },
       });
 
-      if (res.ok) {
-        const json = await res.json();
-        roomStore.getState().updateRoomNote(roomPublicId, note.publicId, {
-          notesAuditTrail: json.note.NotesAuditTrail,
-          updatedAt: json.note.updatedAt,
-          body: newBody,
-        } as Partial<Note>);
-        setLastSavedBody(newBody);
-        // Only show success toast when manually saving
-        if (!json.note.autosave) {
-          toast.success("Note saved");
-        }
-      } else {
-        toast.error("Failed to save note");
-        console.error("Failed to save note");
-      }
+      setLastSavedBody(newBody);
+      toast.success("Note saved");
     } catch (error) {
-      toast.error("Failed to save note");
       console.log(error);
     } finally {
       setIsSaving(false);
@@ -75,19 +69,8 @@ const Note = ({ roomPublicId, note }: { roomPublicId: string; note: Note }) => {
   const onDeleteNote = async () => {
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/v1/projects/${id}/notes`, {
-        method: "DELETE",
-        body: JSON.stringify({
-          roomId: roomPublicId,
-          noteId: note.publicId,
-        }),
-      });
-      if (res.ok) {
-        roomStore.getState().removeRoomNote(roomPublicId, note.publicId);
-      } else {
-        console.error("Failed to delete note");
-        toast.error("Failed to delete note");
-      }
+      deleteNote(note.id);
+      toast.success("Note deleted");
     } catch (error) {
       console.log(error);
       toast.error("Failed to delete note");
@@ -101,70 +84,13 @@ const Note = ({ roomPublicId, note }: { roomPublicId: string; note: Note }) => {
     debouncedSave(newBody);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("noteId", note.publicId);
-      formData.append("roomId", roomPublicId);
-
-      const res = await fetch(`/api/v1/projects/${id}/notes/images`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (res.ok) {
-        const json = await res.json();
-        roomStore.getState().updateRoomNote(roomPublicId, note.publicId, {
-          NoteImage: [...(note.NoteImage || []), json.image],
-        } as Partial<Note>);
-        toast.success("Image uploaded successfully");
-      } else {
-        toast.error("Failed to upload image");
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to upload image");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleDeleteImage = async (imageKey: string) => {
-    try {
-      const res = await fetch(`/api/v1/projects/${id}/notes/images`, {
-        method: "DELETE",
-        body: JSON.stringify({
-          roomId: roomPublicId,
-          noteId: note.publicId,
-          imageKey,
-        }),
-      });
-
-      if (res.ok) {
-        roomStore.getState().updateRoomNote(roomPublicId, note.publicId, {
-          NoteImage: note.NoteImage?.filter((img) => img.imageKey !== imageKey),
-        } as Partial<Note>);
-      } else {
-        throw new Error("Failed to delete image");
-      }
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  };
-
   const hasUnsavedChanges = body !== lastSavedBody;
 
   return (
     <div className='mt-6 border-l-2 border-gray-500 pl-4'>
       <div className='grid grid-cols-2 gap-6'>
         <div className='col-span-1 flex items-center justify-between'>
-          <h4>{format(new Date(note.date), "PPp")}</h4>
+          <h4>{format(new Date(note.createdAt), "PPp")}</h4>
           <div className='flex items-center space-x-2'>
             {hasUnsavedChanges && (
               <span className='text-sm text-yellow-600'>
@@ -213,8 +139,8 @@ const Note = ({ roomPublicId, note }: { roomPublicId: string; note: Note }) => {
         <div className='col-start-1'>
           <div className={clsx("relative mt-1 rounded-md shadow-sm")}>
             <Textarea
-              name={note.publicId}
-              id={note.publicId}
+              name={note.id}
+              id={note.id}
               className={clsx(
                 "block w-full rounded-md border-gray-300 pr-12 text-sm focus:border-blue-500 focus:ring-blue-500",
                 isSaving && "bg-gray-50"
@@ -233,21 +159,14 @@ const Note = ({ roomPublicId, note }: { roomPublicId: string; note: Note }) => {
                   {formatDistance(new Date(note.updatedAt), Date.now(), {
                     addSuffix: true,
                   })}
-                  {note.NotesAuditTrail?.length > 0 &&
-                    note.NotesAuditTrail[0].userName && (
-                      <>
-                        {" "}
-                        by <strong>{note.NotesAuditTrail[0].userName}</strong>
-                      </>
-                    )}
                 </p>
               </>
             )}
           </div>
         </div>
       </div>
-      {note.NoteImage && note.NoteImage.length > 0 && (
-        <ImageGallery images={note.NoteImage} onDeleteImage={handleDeleteImage} />
+      {note.images && note.images.length > 0 && (
+        <ImageGallery images={note.images} />
       )}
     </div>
   );

@@ -74,6 +74,7 @@ export interface AddImageDto {
   order?: number;
   projectId: string;
   roomId?: string;
+  noteId?: string;
 }
 
 export interface AddCommentDto {
