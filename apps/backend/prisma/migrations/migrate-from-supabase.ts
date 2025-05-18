@@ -1039,7 +1039,7 @@ async function migrateReading() {
         date: new Date(reading.date),
         humidity: reading.humidity ? parseFloat(reading.humidity) : 0,
         temperature: reading.temperature ? parseFloat(reading.temperature) : 0,
-        gpp: reading.gpp ? parseFloat(reading.gpp) : 0,
+        // gpp: reading.gpp ? parseFloat(reading.gpp) : 0,
         equipmentUsed: reading.equipmentUsed,
         genericRoomReading: {
           create: reading.GenericRoomReading.map((reading) => ({

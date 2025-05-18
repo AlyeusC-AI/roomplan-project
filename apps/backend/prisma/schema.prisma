@@ -225,7 +225,7 @@ enum WallType {
 model Wall {
   id          String        @id @default(uuid())
   roomId      String
-  room        Room          @relation(fields: [roomId], references: [id])
+  room        Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
   name        String
   type        WallType
   createdAt   DateTime      @default(now())
@@ -238,41 +238,41 @@ model Wall {
 model RoomReading {
   id                 String               @id @default(uuid())
   roomId             String
-  room               Room                 @relation(fields: [roomId], references: [id])
+  room               Room                 @relation(fields: [roomId], references: [id], onDelete: Cascade)
   wallReadings       WallReading[]
   genericRoomReading GenericRoomReading[]
   date               DateTime
-  humidity           Float
-  temperature        Float
-  gpp                Float
-  equipmentUsed      String[]
+  humidity           Float?
+  temperature        Float?
+  equipmentUsed      Json?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 }
 
 model GenericRoomReading {
   id            String      @id @default(uuid())
-  gpp           Float
   value         String
   humidity      Float
+  images        String[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   temperature   Float
   roomReadingId String
-  roomReading   RoomReading @relation(fields: [roomReadingId], references: [id])
+  roomReading   RoomReading @relation(fields: [roomReadingId], references: [id], onDelete: Cascade)
 }
 
 model WallReading {
-  id      String @id @default(uuid())
-  wallId  String
-  wall    Wall   @relation(fields: [wallId], references: [id])
-  reading Int
-
+  id            String       @id @default(uuid())
+  wallId        String
+  wall          Wall         @relation(fields: [wallId], references: [id], onDelete: Cascade)
+  reading       Int
+  images        String[]
   roomReading   RoomReading? @relation(fields: [roomReadingId], references: [id])
   roomReadingId String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@unique([wallId, roomReadingId])
 }
 
 model Image {
@@ -313,7 +313,7 @@ model Comment {
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  image     Image    @relation(fields: [imageId], references: [id])
+  image     Image    @relation(fields: [imageId], references: [id], onDelete: Cascade)
 
   @@index([imageId])
   @@index([userId])

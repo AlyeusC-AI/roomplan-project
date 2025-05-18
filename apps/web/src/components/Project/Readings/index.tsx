@@ -13,47 +13,28 @@ import { Input } from "@components/ui/input";
 import { Label } from "@components/ui/label";
 import { useState } from "react";
 import { toast } from "sonner";
-import { roomStore } from "@atoms/room";
 import { useParams } from "next/navigation";
 import { LoadingPlaceholder } from "@components/ui/spinner";
+import { useGetRooms, useCreateRoom } from "@service-geek/api-client";
 
 const Readings = () => {
   const [roomName, setRoomName] = useState("");
-  const rooms = roomStore();
-  const [showModal, setShowModal] = useState(false);
-  const [loading, setLoading] = useState(false);
-
   const { id } = useParams<{ id: string }>();
+  const { mutate: createRoomMutation, isPending: isCreatingRoom } =
+    useCreateRoom();
+  const [showModal, setShowModal] = useState(false);
 
   const createRoom = async () => {
     try {
-      setLoading(true);
       if (roomName.length < 3) {
         toast.error("Room name must be at least 3 characters");
         return;
       }
 
-      const res = await fetch(`/api/v1/projects/${id}/room`, {
-        method: "POST",
-        body: JSON.stringify({ name: roomName }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const body = await res.json();
-
-      if (!res.ok && body.reason === "existing-room") {
-        toast.error("A room with this name already exists.");
-        return;
-      } else if (!res.ok) {
-        toast.error("Failed to create room");
-        return;
-      }
+      await createRoomMutation({ name: roomName, projectId: id });
 
       setRoomName("");
       setShowModal(false);
-      rooms.addRoom(body.room);
       // inferences.addInference({
       //   publicId: body.room.publicId,
       //   detections: [],
@@ -61,11 +42,8 @@ const Readings = () => {
       //   name: body.room.name,
       // });
     } catch {
-      toast.error("Failed to create room");
       return;
     }
-
-    setLoading(false);
   };
 
   return (
@@ -81,17 +59,17 @@ const Readings = () => {
           </div>
           <Button onClick={() => setShowModal(true)}>Add Room</Button>
         </div>
-        <Separator className="dark:bg-gray-700" />
-        {loading ? <LoadingPlaceholder /> : <ReadingsTable />}
+        <Separator className='dark:bg-gray-700' />
+        {isCreatingRoom ? <LoadingPlaceholder /> : <ReadingsTable />}
       </div>
-      <DialogContent className='sm:max-w-[425px] dark:bg-gray-900'>
+      <DialogContent className='dark:bg-gray-900 sm:max-w-[425px]'>
         <DialogHeader>
-          <DialogTitle className="dark:text-white">Create A Room</DialogTitle>
-          <DialogDescription className="dark:text-gray-400">
+          <DialogTitle className='dark:text-white'>Create A Room</DialogTitle>
+          <DialogDescription className='dark:text-gray-400'>
             Add a new room to your project to start recording readings.
           </DialogDescription>
         </DialogHeader>
-        {loading ? (
+        {isCreatingRoom ? (
           <LoadingPlaceholder />
         ) : (
           <>
@@ -104,7 +82,7 @@ const Readings = () => {
                   id='name'
                   value={roomName}
                   onChange={(e) => setRoomName(e.target.value)}
-                  className='col-span-3 dark:bg-gray-800 dark:text-white dark:border-gray-700'
+                  className='col-span-3 dark:border-gray-700 dark:bg-gray-800 dark:text-white'
                 />
               </div>
             </div>

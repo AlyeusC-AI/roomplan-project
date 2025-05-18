@@ -16,6 +16,7 @@ import { CalendarEventsModule } from './calendar-events/calendar-events.module';
 import { ProjectsModule } from './projects/projects.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { NotesModule } from './notes/notes.module';
+import { ReadingsModule } from './readings/readings.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { NotesModule } from './notes/notes.module';
     ProjectsModule,
     RoomsModule,
     NotesModule,
+    ReadingsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

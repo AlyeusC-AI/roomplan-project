@@ -1,9 +1,17 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import RoomReadingCell from "./room-reading-cell";
+import {
+  Room,
+  useGetRoomReadings,
+  RoomReading,
+} from "@service-geek/api-client";
 
-const Readings = ({ room }: { room: RoomWithReadings }) => {
-  const [expandedReadings, setExpandedReadings] = useState<Set<string>>(new Set());
+const Readings = ({ room }: { room: Room }) => {
+  const [expandedReadings, setExpandedReadings] = useState<Set<string>>(
+    new Set()
+  );
+  const { data: roomReadings } = useGetRoomReadings(room.id);
 
   const toggleReading = (publicId: string) => {
     setExpandedReadings((prev) => {
@@ -59,47 +67,52 @@ const Readings = ({ room }: { room: RoomWithReadings }) => {
   //   },
   // });
   return (
-    <div className="space-y-2">
-      {room.RoomReading?.sort((a, b) =>
-        new Date(a.createdAt) > new Date(b.createdAt) ? -1 : 1
-      ).map((r) => {
-        const isExpanded = expandedReadings.has(r.publicId);
-        return (
-          <div
-            key={r.publicId}
-            className="rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
-          >
-            <button
-              onClick={() => toggleReading(r.publicId)}
-              className="flex w-full items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700"
-            >
-              <span className="font-medium dark:text-white">
-                {new Date(r.date).toLocaleDateString()}
-              </span>
-              {isExpanded ? (
-                <ChevronDown className="h-4 w-4 dark:text-gray-400" />
-              ) : (
-                <ChevronRight className="h-4 w-4 dark:text-gray-400" />
-              )}
-            </button>
+    <div className='space-y-2'>
+      {roomReadings?.data
+        ?.sort((a: RoomReading, b: RoomReading) =>
+          new Date(a.date) > new Date(b.date) ? -1 : 1
+        )
+        .map((r: RoomReading) => {
+          const isExpanded = expandedReadings.has(r.id);
+          return (
             <div
-              className={`overflow-hidden transition-all duration-200 ${
-                isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
-              }`}
+              key={r.id}
+              className='rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800'
             >
-              <div className="p-4 pt-0">
-                <RoomReadingCell r={r} room={room} />
+              <button
+                onClick={() => toggleReading(r.id)}
+                className='flex w-full items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700'
+              >
+                <span className='font-medium dark:text-white'>
+                  {new Date(r.date).toLocaleDateString()}
+                </span>
+                {isExpanded ? (
+                  <ChevronDown className='h-4 w-4 dark:text-gray-400' />
+                ) : (
+                  <ChevronRight className='h-4 w-4 dark:text-gray-400' />
+                )}
+              </button>
+              <div
+                className={`overflow-hidden transition-all duration-200 ${
+                  isExpanded ? "opacity-100" : "max-h-0 opacity-0"
+                }`}
+              >
+                <div className='p-4 pt-0'>
+                  <RoomReadingCell r={r} room={room} />
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })}
-      {(!room.RoomReading || room.RoomReading?.length === 0) && (
-        <div className="flex items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 dark:border-gray-700 dark:bg-gray-900">
-          <div className="text-center">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">No reading data</h3>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Click "Add Reading" to record temperature, humidity, and dehumidifer readings.
+          );
+        })}
+      {(!roomReadings || roomReadings?.data?.length === 0) && (
+        <div className='flex items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 dark:border-gray-700 dark:bg-gray-900'>
+          <div className='text-center'>
+            <h3 className='text-lg font-medium text-gray-900 dark:text-white'>
+              No reading data
+            </h3>
+            <p className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
+              Click "Add Reading" to record temperature, humidity, and
+              dehumidifer readings.
             </p>
           </div>
         </div>

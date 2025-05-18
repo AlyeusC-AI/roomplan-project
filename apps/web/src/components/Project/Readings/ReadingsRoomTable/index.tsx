@@ -2,9 +2,13 @@ import { useState } from "react";
 import useAmplitudeTrack from "@utils/hooks/useAmplitudeTrack";
 import { event } from "nextjs-google-analytics";
 import { ChevronDown, ChevronRight, Pencil, Trash } from "lucide-react";
-
+import {
+  Room,
+  useCreateRoomReading,
+  useDeleteRoom,
+  useUpdateRoom,
+} from "@service-geek/api-client";
 import Readings from "./Readings";
-import { roomStore } from "@atoms/room";
 import { useParams } from "next/navigation";
 import { Button } from "@components/ui/button";
 import { LoadingSpinner } from "@components/ui/spinner";
@@ -18,7 +22,7 @@ import {
 } from "@components/ui/dialog";
 import { v4 } from "uuid";
 
-const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
+const MitigationRoomTable = ({ room }: { room: Room }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -27,7 +31,9 @@ const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
   const { track } = useAmplitudeTrack();
   const [internalRoomName, setInternalRoomName] = useState(room.name);
   const [isCreating, setIsCreating] = useState(false);
-
+  const { mutate: updateRoom } = useUpdateRoom();
+  const { mutate: deleteRoomMutation } = useDeleteRoom();
+  const { mutate: createRoomReading } = useCreateRoomReading();
   const { id } = useParams<{ id: string }>();
 
   const updateRoomName = async () => {
@@ -36,22 +42,19 @@ const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
     track("Update Room Name");
 
     try {
-      const res = await fetch(`/api/v1/projects/${id}/room`, {
-        method: "PATCH",
-        body: JSON.stringify({
+      await updateRoom({
+        id: room.id,
+        data: {
           name: internalRoomName,
-          roomId: room.publicId,
-        }),
+        },
       });
-      if (res.ok) {
-        roomStore.getState().updateRoomName(room, internalRoomName);
-        setIsEditingTitle(false);
-        toast.success("Room name updated");
-      } else {
-        toast.error("Failed to update room name");
-      }
+
+      setIsSaving(false);
+      setIsEditingTitle(false);
+
+      toast.success("Room name updated");
     } catch (error) {
-      toast.error("Failed to update room name");
+      // toast.error("Failed to update room name");
       console.log(error);
     }
 
@@ -65,21 +68,10 @@ const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
     setIsDeleting(true);
     track("Delete Room");
     try {
-      const res = await fetch(`/api/v1/projects/${id}/room/${room.publicId}`, {
-        method: "DELETE",
-        body: JSON.stringify({
-          roomId: room.publicId,
-          name: room.name,
-        }),
-      });
-      if (res.ok) {
-        roomStore.getState().removeRoom(room);
-        toast.success("Room deleted");
-      } else {
-        toast.error("Failed to delete room");
-      }
+      await deleteRoomMutation(room.id);
+      toast.success("Room deleted");
     } catch (error) {
-      toast.error("Failed to delete room");
+      // toast.error("Failed to delete room");
       console.log(error);
     }
     setIsDeleting(false);
@@ -90,27 +82,19 @@ const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
     setIsCreating(true);
     track("Add Room Reading");
     try {
-      const res = await fetch(`/api/v1/projects/${id}/readings`, {
-        method: "POST",
-        body: JSON.stringify({
-          type: "standard",
-          data: { roomId: room.id, publicId: v4(), projectId: room.projectId },
-        }),
+      await createRoomReading({
+        roomId: room.id,
+        date: new Date(),
+        humidity: 0,
+        temperature: 0,
+        equipmentUsed: [],
       });
-      if (res.ok) {
-        const body = await res.json();
-        console.log("🚀 ~ addReading ~ body:", body);
-        console.log("🚀 ~ addReading ~ room:", room);
+      toast.success("Reading added successfully");
 
-        toast.success("Reading added successfully");
-        roomStore.getState().addReading(room.publicId, body.reading);
-      } else {
-        toast.error("Failed to add reading");
-      }
       // setIsCreating(false);
     } catch (error) {
       console.log("🚀 ~ addReading ~ error:", error);
-      toast.error("Failed to add reading");
+      // toast.error("Failed to add reading");
     }
     setIsCreating(false);
   };
@@ -191,7 +175,7 @@ const MitigationRoomTable = ({ room }: { room: RoomWithReadings }) => {
       </div>
       <div
         className={`overflow-hidden transition-all duration-200 ${
-          isExpanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+          isExpanded ? "opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <div className='p-4'>

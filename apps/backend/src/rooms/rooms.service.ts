@@ -49,7 +49,21 @@ export class RoomsService {
     }
 
     return this.prisma.room.create({
-      data,
+      data: {
+        ...data,
+        walls: {
+          create: [
+            {
+              name: 'Wall',
+              type: 'WALL',
+            },
+            {
+              name: 'Floor',
+              type: 'FLOOR',
+            },
+          ],
+        },
+      },
       include: {
         images: {
           include: {
@@ -62,12 +76,16 @@ export class RoomsService {
 
   async findAll(projectId: string): Promise<
     Prisma.RoomGetPayload<{
-      include: { images: { include: { comments: true } } };
+      include: {
+        walls: true;
+        images: { include: { comments: true } };
+      };
     }>[]
   > {
     return this.prisma.room.findMany({
       where: { projectId },
       include: {
+        walls: true,
         images: {
           include: {
             comments: true,

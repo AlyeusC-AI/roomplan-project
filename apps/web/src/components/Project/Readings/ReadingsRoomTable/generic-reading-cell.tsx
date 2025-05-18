@@ -1,47 +1,47 @@
-import { roomStore } from "@atoms/room";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
 import { Label } from "@components/ui/label";
 import { LoadingSpinner } from "@components/ui/spinner";
+import {
+  GenericRoomReading,
+  Room,
+  useDeleteGenericRoomReading,
+  useUpdateGenericRoomReading,
+} from "@service-geek/api-client";
 import { Pencil, Trash } from "lucide-react";
-import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function GenericReadingCell({
   g,
   room,
-  onDelete,
-  deletingId,
 }: {
   g: GenericRoomReading;
-  room: RoomWithReadings;
-  onDelete: (id: string, type: "generic") => void;
-  deletingId: string;
+  room: Room;
 }) {
-  const [isUpdating, setIsUpdating] = useState(false);
-  const rooms = roomStore((state) => state);
   const [tempGenericReading, setTempGenericReading] = useState(g);
-  const { id } = useParams<{ id: string }>();
+  const { mutate: deleteGenericReading, isPending: isDeleting } =
+    useDeleteGenericRoomReading();
+  const { mutate: updateGenericReading, isPending: isUpdating } =
+    useUpdateGenericRoomReading();
 
   const onSaveGeneric = async () => {
-    setIsUpdating(true);
     try {
-      await fetch(`/api/v1/projects/${id}/readings`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          type: "generic",
-          readingId: g.publicId,
-          readingData: tempGenericReading,
-        }),
+      await updateGenericReading({
+        id: g.id,
+        data: {
+          temperature: tempGenericReading.temperature,
+          humidity: tempGenericReading.humidity,
+          images: tempGenericReading.images,
+          value: tempGenericReading.value,
+        },
       });
 
       toast.success("Dehumidifier reading updated");
-      rooms.updateGenericReading(room.publicId, g.publicId, tempGenericReading);
-    } catch {
-      toast.error("Failed to update dehumidifier reading");
+    } catch (error) {
+      console.error(error);
+      // toast.error("Failed to update dehumidifier reading");
     }
-    setIsUpdating(false);
     // await updateGenericReading.mutateAsync({
     //   projectPublicId: id,
     //   roomPublicId: room.publicId,
@@ -55,7 +55,7 @@ export default function GenericReadingCell({
 
   return (
     <div
-      key={g.publicId}
+      // key={g.id}
       className='grid w-full grid-cols-2 items-end gap-6 md:grid-cols-4'
     >
       {/* <Input
@@ -68,25 +68,33 @@ export default function GenericReadingCell({
                 placeholder='Temperature'
               /> */}
       <div className='flex flex-col items-start space-y-2'>
-        <Label className="dark:text-white">Temperature (F)</Label>
+        <Label className='dark:text-white'>Temperature (F)</Label>
         <Input
-          className='col-span-1 dark:bg-gray-800 dark:text-white dark:border-gray-700'
+          className='col-span-1 dark:border-gray-700 dark:bg-gray-800 dark:text-white'
           defaultValue={g.temperature || ""}
           onChange={(e) =>
-            setTempGenericReading({ ...g, temperature: e.target.value })
+            setTempGenericReading((prev) => ({
+              ...prev,
+              temperature: parseFloat(e.target.value),
+            }))
           }
           placeholder='Temperature'
+          type='number'
         />
       </div>
       <div className='flex flex-col items-start space-y-2'>
-        <Label className="dark:text-white">Humidity (RH)</Label>
+        <Label className='dark:text-white'>Humidity (RH)</Label>
         <Input
-          className='col-span-1 dark:bg-gray-800 dark:text-white dark:border-gray-700'
+          className='col-span-1 dark:border-gray-700 dark:bg-gray-800 dark:text-white'
           defaultValue={g.humidity || ""}
           onChange={(e) =>
-            setTempGenericReading({ ...g, humidity: e.target.value })
+            setTempGenericReading((prev) => ({
+              ...prev,
+              humidity: parseFloat(e.target.value),
+            }))
           }
           placeholder='Relative Humidity'
+          type='number'
         />
       </div>
       {/* <div className='w-full'>
@@ -113,10 +121,9 @@ export default function GenericReadingCell({
         </Button>
         <Button
           variant='destructive'
-          onClick={() => onDelete(g.publicId, "generic")}
-          disabled={deletingId === g.publicId}
+          onClick={() => deleteGenericReading(g.id)}
         >
-          {deletingId === g.publicId ? (
+          {isDeleting ? (
             <LoadingSpinner />
           ) : (
             <>

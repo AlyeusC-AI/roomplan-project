@@ -1,77 +1,49 @@
 import { useState } from "react";
 import useAmplitudeTrack from "@utils/hooks/useAmplitudeTrack";
 import { Button } from "@components/ui/button";
-import { useParams } from "next/navigation";
 import { LoadingSpinner } from "@components/ui/spinner";
 import { toast } from "sonner";
-import { roomStore } from "@atoms/room";
-import { v4 } from "uuid";
-import { Database } from "@/types/database";
 import GenericReadingCell from "./generic-reading-cell";
+import {
+  RoomReading,
+  Room,
+  useCreateGenericRoomReading,
+  useUpdateGenericRoomReading,
+  useDeleteGenericRoomReading,
+} from "@service-geek/api-client";
 
 const GenericRoomReadings = ({
   room,
   reading,
+  onUpdate,
 }: {
-  room: RoomWithReadings;
-  reading: ReadingsWithGenericReadings;
+  room: Room;
+  reading: RoomReading;
+  onUpdate: (reading: RoomReading) => void;
 }) => {
+  console.log("🚀 ~ readasasasing:", reading);
   const [isCreatingGeneric, setIsCreatingGeneric] = useState(false);
-  const [deletingId, setDeletingId] = useState("");
   const { track } = useAmplitudeTrack();
-  const { id } = useParams<{ id: string }>();
-  const rooms = roomStore((state) => state);
-
-  // const removeReading = trpc.readings.deleteReading.useMutation({
-  //   async onSettled() {
-  //     await trpcContext.readings.getAll.invalidate();
-  //     setIsDeletingReading(false);
-  //   },
-  // });
-
-  // const addGenericReading = trpc.readings.addGenericReading.useMutation({
-  //   async onSettled() {
-  //     await trpcContext.readings.getAll.invalidate();
-  //     setIsCreatingGeneric(false);
-  //   },
-  // });
-
-  // const deleteGenericReading = trpc.readings.deleteGenericReading.useMutation({
-  //   async onSettled() {
-  //     await trpcContext.readings.getAll.invalidate();
-  //     setDeletingId("");
-  //   },
-  // });
-
-  // const updateGenericReading = trpc.readings.updateGenericReading.useMutation({
-  //   onSettled() {
-  //     trpcContext.readings.getAll.invalidate();
-  //   },
-  // });
+  const { mutate: createGenericReading } = useCreateGenericRoomReading();
+  const { mutate: deleteGenericReading } = useDeleteGenericRoomReading();
+  const { mutate: updateGenericReading } = useUpdateGenericRoomReading();
 
   const onCreateGenericReading = async () => {
     setIsCreatingGeneric(true);
     track("Add Generic Room Reading");
     try {
-      const res = await fetch(`/api/v1/projects/${id}/readings`, {
-        method: "POST",
-        body: JSON.stringify({
-          type: "generic",
-          data: {
-            publicId: v4(),
-            roomReadingId: reading.id,
-            type: "dehumidifer",
-            value: "",
-          } satisfies Database["public"]["Tables"]["GenericRoomReading"]["Insert"],
-        }),
+      await createGenericReading({
+        humidity: 0,
+        temperature: 0,
+        roomReadingId: reading.id,
+        value: "",
+        images: [],
       });
 
-      const json = await res.json();
-
-      rooms.addGenericReading(room.publicId, json.reading);
       toast.success("Dehumidifier reading added");
-    } catch {
-      toast.error("Failed to add dehumidifier reading");
+    } catch (error) {
+      console.error(error);
+      // toast.error("Failed to add dehumidifier reading");
     }
     setIsCreatingGeneric(false);
     // await addGenericReading.mutateAsync({
@@ -82,34 +54,35 @@ const GenericRoomReadings = ({
     // });
   };
 
-  const onDelete = async (
-    genericRoomReadingId: string,
-    type: "generic" | "standard"
-  ) => {
-    setDeletingId(genericRoomReadingId);
-    track("Delete Generic Room Reading");
-    try {
-      await fetch(`/api/v1/projects/${id}/readings`, {
-        method: "DELETE",
-        body: JSON.stringify({
-          type,
-          readingId: genericRoomReadingId,
-        }),
-      });
+  // const onDelete = async (
+  //   genericRoomReadingId: string,
+  //   type: "generic" | "standard"
+  // ) => {
+  //   setDeletingId(genericRoomReadingId);
+  //   track("Delete Generic Room Reading");
+  //   try {
+  //     await fetch(`/api/v1/projects/${id}/readings`, {
+  //       method: "DELETE",
+  //       body: JSON.stringify({
+  //         type,
+  //         readingId: genericRoomReadingId,
+  //       }),
+  //     });
 
-      rooms.removeGenericReading(room.publicId, genericRoomReadingId);
-      toast.success("Dehumidifier reading removed");
-    } catch {
-      toast.error("Failed to remove dehumidifier reading");
-    }
-  };
+  //     toast.success("Dehumidifier reading removed");
+  //   } catch {
+  //     toast.error("Failed to remove dehumidifier reading");
+  //   }
+  // };
 
   return (
     <div>
       <div className='mt-4 flex flex-col gap-6'>
         <div className='mt-4 flex items-center justify-between'>
           <div>
-            <h3 className='text-lg font-medium dark:text-white'>Dehumidier Readings</h3>
+            <h3 className='text-lg font-medium dark:text-white'>
+              Dehumidier Readings
+            </h3>
             <p className='text-sm text-muted-foreground dark:text-gray-400'>
               Add and manage your dehumidifier readings.
             </p>
@@ -126,27 +99,21 @@ const GenericRoomReadings = ({
                 "Add Dehumidifer Reading"
               )}
             </Button>
-            <Button
+            {/* <Button
               variant='destructive'
-              disabled={deletingId == room.publicId}
-              onClick={() => onDelete(reading.publicId, "standard")}
+              disabled={deletingId == room.id}
+              onClick={() => onDelete(reading.id, "standard")}
             >
-              {deletingId == room.publicId ? (
+              {deletingId == room.id ? (
                 <LoadingSpinner />
               ) : (
                 "Delete All Readings"
               )}
-            </Button>
+            </Button> */}
           </div>
         </div>
-        {reading.GenericRoomReading.map((g) => (
-          <GenericReadingCell
-            key={g.publicId}
-            g={g}
-            room={room}
-            onDelete={onDelete}
-            deletingId={deletingId}
-          />
+        {reading.genericRoomReading?.map((g) => (
+          <GenericReadingCell key={g.id} g={g} room={room} />
         ))}
       </div>
     </div>

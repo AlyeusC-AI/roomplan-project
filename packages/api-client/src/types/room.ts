@@ -1,4 +1,5 @@
 import { User } from "./auth";
+import { Wall } from "./reading";
 
 export interface Room {
   id: string;
@@ -7,6 +8,7 @@ export interface Room {
   createdAt: string;
   updatedAt: string;
   images: Image[];
+  walls: Wall[];
 }
 
 export interface Image {
