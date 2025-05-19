@@ -45,7 +45,6 @@ const CreateNewInvoice = ({
   const [clientEmail, setClientEmail] = useState("");
   const [projectName, setProjectName] = useState("");
   const [projectId, setProjectId] = useState("");
-  const [poNumber, setPoNumber] = useState("");
   const [daysToPay, setDaysToPay] = useState("30");
   const [isCreating, setIsCreating] = useState(false);
   const [invoiceDate, setInvoiceDate] = useState<Date>(new Date());
@@ -69,6 +68,8 @@ const CreateNewInvoice = ({
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loadingSavedItems, setLoadingSavedItems] = useState(false);
   const [localSavedLineItems, setLocalSavedLineItems] = useState<any[]>([]);
+  const [projectSearchTerm, setProjectSearchTerm] = useState("");
+  const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
 
   const router = useRouter();
   const { addInvoice } = invoicesStore((state) => state);
@@ -239,7 +240,6 @@ const CreateNewInvoice = ({
           clientName,
           clientEmail,
           projectPublicId: projectId,
-          poNumber,
           invoiceDate: invoiceDate.toISOString(),
           dueDate: dueDate.toISOString(),
           subtotal: calculateSubtotal(),
@@ -379,6 +379,26 @@ const CreateNewInvoice = ({
     );
   };
 
+  // Add project search function
+  useEffect(() => {
+    if (projectSearchTerm.trim() === '') {
+      setFilteredProjects(projects);
+      return;
+    }
+
+    const searchTermLower = projectSearchTerm.toLowerCase();
+    const filtered = projects.filter(project => 
+      // Search by project name
+      project.name?.toLowerCase().includes(searchTermLower) ||
+      // Search by project address
+      project.address?.toLowerCase().includes(searchTermLower) ||
+      // Search by client phone
+      project.clientPhone?.includes(searchTermLower) 
+    );
+    
+    setFilteredProjects(filtered);
+  }, [projectSearchTerm, projects]);
+
   if (isCreating) {
     return (
       <Modal visible={visible} transparent animationType="slide">
@@ -400,36 +420,60 @@ const CreateNewInvoice = ({
       onRequestClose={() => setShowProjectPicker(false)}
     >
       <View style={styles.modalContainer}>
-        <View style={styles.savedItemsModal}>
+        <View style={styles.modalContent}>
           <SafeAreaView style={styles.safeArea}>
-            <View style={styles.savedItemsHeader}>
-              <TouchableOpacity 
+            <View style={styles.modalHeader}>
+              <TouchableOpacity
                 onPress={() => setShowProjectPicker(false)}
-                style={styles.headerButton}
+                style={styles.closeButton}
               >
                 <X size={24} color="#64748b" />
               </TouchableOpacity>
-              
-              <Text style={styles.headerTitle}>Select Project</Text>
-              
-              <View style={styles.headerButton} />
+              <Text style={styles.modalTitle}>Select Project</Text>
+              <View style={{ width: 60 }} />
             </View>
-            
+
+            {/* Add project search input */}
+            <View style={styles.searchContainer}>
+              <TextInput
+                style={styles.searchInput}
+                value={projectSearchTerm}
+                onChangeText={setProjectSearchTerm}
+                placeholder="Search by name, address, or client phone"
+                clearButtonMode="while-editing"
+              />
+            </View>
+
             <FlatList
-              data={projects}
+              data={filteredProjects}
               keyExtractor={(item) => item.publicId}
-              renderItem={({ item, index }) => (
-                <TouchableOpacity 
-                  style={styles.clientItem}
-                  onPress={() => handleProjectSelect(index)}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.projectItem}
+                  onPress={() => {
+                    handleProjectSelect(projects.findIndex(
+                      (p) => p.publicId === item.publicId
+                    ));
+                    setShowProjectPicker(false);
+                  }}
                 >
-                  <Text style={styles.clientName}>{item.name}</Text>
+                  <View style={styles.projectItemContent}>
+                    <Text style={styles.projectName}>{item.name}</Text>
+                    {item.address && (
+                      <Text style={styles.projectAddress}>{item.address}</Text>
+                    )}
+                    {item.clientPhone && (
+                      <Text style={styles.projectPhone}>{item.clientPhone}</Text>
+                    )}
+                  </View>
                 </TouchableOpacity>
               )}
               ListEmptyComponent={() => (
-                <View style={styles.emptyStateContainer}>
-                  <Text style={styles.emptyStateText}>
-                    No projects found.
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>
+                    {projectSearchTerm.length > 0 
+                      ? `No projects found matching "${projectSearchTerm}"`
+                      : "No projects found."}
                   </Text>
                 </View>
               )}
@@ -469,16 +513,6 @@ const CreateNewInvoice = ({
               {/* Basic Info Section */}
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>Basic Information</Text>
-                
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Invoice #</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    value={invoiceNumber}
-                    onChangeText={setInvoiceNumber}
-                    placeholder="INV-000"
-                  />
-                </View>
                 
                 <TouchableOpacity 
                   style={styles.dateSelector} 
@@ -523,16 +557,6 @@ const CreateNewInvoice = ({
                   <Text style={styles.dateValue}>
                     {format(dueDate, 'MMM d, yyyy')}
                   </Text>
-                </View>
-                
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>PO Number</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    value={poNumber}
-                    onChangeText={setPoNumber}
-                    placeholder="Optional"
-                  />
                 </View>
               </View>
 
@@ -1344,6 +1368,51 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#64748b',
     textTransform: 'uppercase',
+  },
+  searchContainer: {
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e5e5',
+  },
+  searchInput: {
+    backgroundColor: '#f1f5f9',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+  },
+  projectItemContent: {
+    flex: 1,
+  },
+  projectAddress: {
+    fontSize: 14,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  projectPhone: {
+    fontSize: 14,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#64748b',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  projectName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#0f172a',
+  },
+  closeButton: {
+    minWidth: 60,
   },
 });
 
