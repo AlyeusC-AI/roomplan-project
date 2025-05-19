@@ -40,7 +40,7 @@ const EditInvoice = () => {
   const invoiceId = params.publicId as string;
 
   // We can use '_invoice' for future enhancements
-  const [_invoice, setInvoice] = useState<Invoice | null>(null);
+  const [, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -364,7 +364,7 @@ const EditInvoice = () => {
     <div className='container mx-auto space-y-6 py-6'>
       <div className='flex items-center justify-between'>
         <Button variant='outline' onClick={() => router.back()}>
-          <ArrowLeft className='mr-2 h-4 w-4' /> Back
+          <ArrowLeft className='mr-2 size-4' /> Back
         </Button>
 
         <div className='flex gap-2'>
@@ -580,7 +580,7 @@ const EditInvoice = () => {
                   type='button'
                   onClick={addLineItem}
                 >
-                  <Plus className='mr-1 h-4 w-4' /> Add Line Item
+                  <Plus className='mr-1 size-4' /> Add Line Item
                 </Button>
               </div>
             </div>
@@ -647,7 +647,7 @@ const EditInvoice = () => {
                       size='icon'
                       onClick={() => removeLineItem(item.id)}
                     >
-                      <X className='h-4 w-4' />
+                      <X className='size-4' />
                     </Button>
                   </div>
                 </div>
