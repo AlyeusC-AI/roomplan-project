@@ -16,7 +16,6 @@ import {
   ActivityIndicator,
   Pressable,
 } from "react-native";
-import DateTimePicker, { useDefaultStyles } from "react-native-ui-datepicker";
 import { ExtendedWallItem, ReadingType } from "@/types/app";
 import { toast } from "sonner-native";
 
@@ -25,153 +24,128 @@ import { RoomReadingInput } from "./RoomReadingInput";
 import { ExtendedWallSection } from "./ExtendedWallSection";
 import { GenericRoomReadingSection } from "./GenericRoomReadingSection";
 
-// Import hooks
-import { useRoomReadingState } from "../hooks/useRoomReadingState";
-import { useImageHandling } from "../hooks/useImageHandling";
 import { OptimizedImage } from "@/lib/utils/OptimizedImage";
-import { Database } from "@/types/database";
+import {
+  calculateGPP,
+  Room,
+  RoomReading,
+  useDeleteRoomReading,
+  useDeleteWall,
+  useUpdateRoom,
+  useUpdateRoomReading,
+  Wall,
+  WallReading,
+} from "@service-geek/api-client";
+import { useDebounce } from "@/utils/debounce";
 
 const RoomReadingItem = ({
   room,
   reading,
-  addReading,
-  // Store access
-  supabaseSession,
-  rooms,
-  projectId,
-  updateRoom,
-  // Extended walls state
-  extendedWallsStructure,
-  setExtendedWallsStructure,
-  setShowExtendedWallEdit,
-  setCurrentEditingWall,
-  // Storage for images
-  roomImages,
-  genericImages,
-  setShowWallNameEdit,
-  setShowFloorNameEdit,
-  wallName,
-  floorName,
-  updateRoomReading,
   pickImage,
   openImageViewer,
+  setWall,
 }: {
-  room: any;
-  reading: any;
-  addReading: any;
-  supabaseSession: any;
-  rooms: any;
-  projectId: any;
-  updateRoom: any;
-  extendedWallsStructure: any;
-  setExtendedWallsStructure: any;
-  setShowExtendedWallEdit: any;
-  setCurrentEditingWall: any;
-  roomImages: any;
-  genericImages: any;
-  setShowWallNameEdit: any;
-  setShowFloorNameEdit: any;
-  wallName: any;
-  floorName: any;
-  updateRoomReading: any;
-  pickImage: any;
-  openImageViewer: any;
+  room: Room;
+  reading: RoomReading;
+  pickImage: (
+    type: "wall" | "generic",
+    wallId: string,
+    updateImages: (type: "generic" | "wall", id: string, images: any[]) => void
+  ) => void;
+  openImageViewer: (
+    index: number,
+    type: "generic" | "floor" | "wall" | string,
+    genericId?: number
+  ) => void;
+  setWall: (wall: Partial<Wall>) => void;
 }) => {
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
+  const { mutate: updateRoomReading } = useUpdateRoomReading();
+  const { mutate: deleteWall } = useDeleteWall();
+  const { mutate: deleteRoomReading, isPending: isDeleting } =
+    useDeleteRoomReading();
+  const [tempRoomReading, setTempRoomReading] = useState<RoomReading>(reading);
+  console.log("🚀 ~ tempRoomReading:", tempRoomReading.humidity);
+  // useEffect(() => {
+  //   setTempRoomReading(reading);
+  // }, [reading]);
 
-  // Extended walls state
-  const [extendedWalls, setExtendedWalls] = useState<ExtendedWallItem[]>([]);
+  const debouncedRoomReading = useDebounce(tempRoomReading, 1000);
+  // console.log("🚀 ~ debouncedRoomReading:", debouncedRoomReading);
 
-  const [computedGPP, setComputedGPP] = useState<string | null>(null);
-
-  const calculateGPP = (
-    temperature: string | null,
-    humidity: string | null
-  ) => {
-    if (!temperature || !humidity) return null;
-    const temp = Number(temperature);
-    const hum = Number(humidity);
-    if (isNaN(temp) || isNaN(hum)) return null;
-    return (hum / 100) * 7000 * (1 / 7000 + (2 / 7000) * (temp - 32));
-  };
-
-  // Add effect to calculate initial gpp
   useEffect(() => {
-    const initialGPP = calculateGPP(reading.temperature, reading.humidity);
-    setComputedGPP(initialGPP?.toFixed(2) || null);
+    updateRoomReading({
+      id: reading.id,
+      data: {
+        date: debouncedRoomReading.date,
+        temperature: debouncedRoomReading.temperature,
+        humidity: debouncedRoomReading.humidity,
+        wallReadings: debouncedRoomReading.wallReadings,
+        // genericRoomReading: debouncedRoomReading.genericRoomReading,
+      },
+    });
+  }, [
+    debouncedRoomReading.humidity,
+    debouncedRoomReading.temperature,
+    debouncedRoomReading.wallReadings,
+    debouncedRoomReading.date,
+  ]);
 
-    if (initialGPP !== null && reading.gpp !== initialGPP.toFixed(2)) {
-      updateRoomReading(reading.publicId, "standard", {
-        gpp: initialGPP.toFixed(2),
-      });
-    }
-  }, []);
+  const walls = room.walls?.filter((w) => w.type === "WALL");
+  const floors = room.walls?.filter((w) => w.type === "FLOOR");
 
   // Handlers for extended walls/floors
-  const handleAddExtendedWall = (type: "wall" | "floor") => {
-    const newWall: ExtendedWallItem = {
-      id: v4().toString(),
+  const handleAddExtendedWall = (type: "WALL" | "FLOOR" | "CEILING") => {
+    setWall({
       name:
-        type === "wall"
-          ? `Wall ${
-              extendedWallsStructure.filter((w: any) => w.type === "wall")
-                .length + 1
-            }`
-          : `Floor ${
-              extendedWallsStructure.filter((w: any) => w.type === "floor")
-                .length + 1
-            }`,
-      value: null,
+        type === "WALL"
+          ? `Wall ${walls.length + 1}`
+          : `Floor ${floors.length + 1}`,
       type,
-    };
-    setCurrentEditingWall(newWall);
-    setShowExtendedWallEdit(true);
+      roomId: room.id,
+    });
   };
 
-  const handleEditExtendedWall = (wall: ExtendedWallItem) => {
-    setCurrentEditingWall({ ...wall });
-    setShowExtendedWallEdit(true);
+  const handleEditExtendedWall = (wall: Wall) => {
+    setWall(wall);
+    // const isWallReading = tempRoomReading.wallReadings?.find(
+    //   (w) => w.id === wallReading.id
+    // );
+
+    // setTempRoomReading({
+    //   ...tempRoomReading,
+    //   //@ts-ignore
+    //   wallReadings: isWallReading
+    //     ? tempRoomReading.wallReadings?.map((w) =>
+    //         w.id === wallReading.id
+    //           ? {
+    //               ...w,
+    //               images: {
+    //                 ...w.images,
+    //                 ...wallReading.images,
+    //               },
+    //             }
+    //           : w
+    //       )
+    //     : [...(tempRoomReading.wallReadings || []), wallReading],
+    // });
   };
 
   const handleDeleteExtendedWall = async (id: string) => {
     try {
-      const updatedWalls = extendedWallsStructure.filter(
-        (w: any) => w.id !== id
-      );
-      setExtendedWallsStructure(updatedWalls);
-
-      await updateRoom({
-        extendedWalls: updatedWalls,
-      });
+      await deleteWall(id);
 
       toast.success("Measurement deleted successfully");
     } catch (error) {
-      toast.error("Failed to delete measurement");
+      console.log("🚀 ~ handleDeleteExtendedWall ~ error:", error);
+      // toast.error("Failed to delete measurement");
     }
   };
-  const deleteReading = async (readingId: string, type: ReadingType) => {
+  const deleteReading = async (readingId: string) => {
     try {
-      setIsDeleting(true);
-      await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/readings`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": supabaseSession?.access_token || "",
-          },
-          body: JSON.stringify({
-            type,
-            readingId,
-          }),
-        }
-      );
-      rooms.removeReading(room.id, reading.id);
-    } catch {
-      toast.error("Could not delete reading");
-    } finally {
-      setIsDeleting(false);
+      await deleteRoomReading(readingId);
+    } catch (error) {
+      console.log("🚀 ~ deleteReading ~ error:", error);
+      // toast.error("Could not delete reading");
     }
   };
 
@@ -189,44 +163,134 @@ const RoomReadingItem = ({
         {
           text: "Delete",
           style: "destructive",
-          onPress: async () => deleteReading(reading.publicId, "standard"),
+          onPress: async () => deleteReading(reading.id),
         },
       ]
     );
   };
 
   // Helper function to get images for a specific extended wall
-  const getExtendedWallImagesForUI = (
-    wallId: string
-  ): { key: string; uri: string }[] => {
-    if (!reading.RoomReadingImage) return [];
+  const getExtendedWallImagesForUI = (wallId: string): string[] => {
+    const wall = tempRoomReading.wallReadings?.find((w) => w.wallId === wallId);
+    if (!wall?.images.length) return [];
 
-    const images = reading.RoomReadingImage.filter(
-      (img: any) => img.type === wallId
-    )
-      .map((img: any) => ({
-        key: img.imageKey,
-        uri: roomImages[img.imageKey] || "",
-      }))
-      .filter((img: { key: string; uri: string }) => img.uri);
+    const images = wall.images;
 
     return images;
   };
 
   // Function to handle value changes for extended walls
-  const handleExtendedWallValueChange = async (id: string, value: string) => {
-    const updatedWalls = extendedWalls.map((w) =>
-      w.id === id ? { ...w, value } : w
-    );
-    setExtendedWalls(updatedWalls);
-    await updateRoomReading(reading.publicId, "standard", {
-      extendedWalls: updatedWalls,
+  const handleExtendedWallValueChange = async (
+    id: string,
+    value: string,
+    wallId: string
+  ) => {
+    const updatedWall = reading.wallReadings?.find((w) => w.wallId === wallId);
+    const updatedWalls = updatedWall
+      ? reading.wallReadings?.map((w) =>
+          w.id === id ? { ...w, reading: Number(value) } : w
+        )
+      : [
+          ...(reading.wallReadings || []),
+          {
+            reading: Number(value),
+            images: [],
+            wallId: wallId,
+          },
+        ];
+    setTempRoomReading({
+      ...tempRoomReading,
+      wallReadings: updatedWalls,
     });
+  };
+  const getExtendedWallSection = (wall: Wall) => {
+    const wallReading = reading.wallReadings?.find((w) => w.id === wall.id);
+    const images = wallReading?.images;
+    return (
+      <View key={wall.id}>
+        {/* Wall Moisture Content Section */}
+
+        <View className="flex-row items-center justify-between mb-0.5">
+          <View className="flex-row items-center">
+            <TouchableOpacity onPress={() => setWall(wall)}>
+              <FormControl.Label className="text-gray-700 font-medium text-sm">
+                {wall.name || "Moisture Content (Wall)"}
+              </FormControl.Label>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleAddExtendedWall(wall.type)}
+              className="ml-2"
+            >
+              <Plus color="#1d4ed8" size={16} />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            onPress={() =>
+              pickImage("wall", wall.id, (type, id, images) => {
+                setTempRoomReading({
+                  ...tempRoomReading,
+                  wallReadings: tempRoomReading.wallReadings?.map((w) =>
+                    w.id === id
+                      ? {
+                          ...w,
+                          images: {
+                            ...w.images,
+                            ...images,
+                          },
+                        }
+                      : w
+                  ),
+                });
+              })
+            }
+            className="p-0.5"
+          >
+            <Camera color="#1d4ed8" size={20} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Wall Moisture Content Input */}
+        <RoomReadingInput
+          value={
+            tempRoomReading.wallReadings
+              ?.find((w) => w.id === wall.id)
+              ?.reading?.toString() || ""
+          }
+          placeholder="Enter moisture content percentage"
+          rightText="%"
+          onChange={(moistureContentWall) =>
+            setTempRoomReading({
+              ...tempRoomReading,
+              wallReadings: tempRoomReading.wallReadings?.map((w) =>
+                w.id === wall.id
+                  ? { ...w, reading: Number(moistureContentWall) }
+                  : w
+              ),
+            })
+          }
+        />
+        {/* Wall Images */}
+        {images?.length && images.length > 0 && (
+          <View className="flex-row flex-wrap gap-1.5 mt-1 mb-1">
+            {images
+              .filter((img: string) => img)
+              .map((img: string, index: number) => (
+                <OptimizedImage
+                  onPress={() => openImageViewer(index, wall.id)}
+                  uri={img}
+                  style={{ width: 80, height: 80, borderRadius: 6 }}
+                  key={img}
+                />
+              ))}
+          </View>
+        )}
+      </View>
+    );
   };
 
   return (
     <Box
-      key={reading?.publicId}
+      key={reading.id}
       w="full"
       pl={4}
       borderLeftWidth={1}
@@ -265,15 +329,13 @@ const RoomReadingItem = ({
               Temperature
             </FormControl.Label>
             <RoomReadingInput
-              value={reading.temperature || ""}
+              value={tempRoomReading.temperature?.toString() || ""}
               placeholder="Temperature"
               rightText="°F"
               onChange={(value) => {
-                const gpp = calculateGPP(value, reading.humidity);
-                setComputedGPP(gpp ? gpp.toFixed(2) : null);
-                updateRoomReading(reading.publicId, "standard", {
-                  temperature: value,
-                  gpp: gpp ? gpp.toFixed(2) : null,
+                setTempRoomReading({
+                  ...tempRoomReading,
+                  temperature: Number(value),
                 });
               }}
             />
@@ -285,15 +347,13 @@ const RoomReadingItem = ({
               Relative Humidity
             </FormControl.Label>
             <RoomReadingInput
-              value={reading.humidity || ""}
+              value={tempRoomReading.humidity?.toString() || ""}
               placeholder="Relative Humidity"
               rightText="%"
               onChange={(value) => {
-                const gpp = calculateGPP(reading.temperature, value);
-                setComputedGPP(gpp ? gpp.toFixed(2) : null);
-                updateRoomReading(reading.publicId, "standard", {
-                  humidity: value,
-                  gpp: gpp ? gpp.toFixed(2) : null,
+                setTempRoomReading({
+                  ...tempRoomReading,
+                  humidity: Number(value),
                 });
               }}
             />
@@ -305,7 +365,12 @@ const RoomReadingItem = ({
               Grains Per Pound
             </FormControl.Label>
             <RoomReadingInput
-              value={computedGPP || ""}
+              value={
+                calculateGPP(
+                  tempRoomReading.temperature,
+                  tempRoomReading.humidity
+                )?.toString() || ""
+              }
               placeholder="Grains Per Pound"
               rightText="gpp"
               disabled
@@ -313,157 +378,86 @@ const RoomReadingItem = ({
             />
           </View>
 
-          {/* Wall Moisture Content Section */}
-          <View>
-            <View className="flex-row items-center justify-between mb-0.5">
-              <View className="flex-row items-center">
-                <TouchableOpacity onPress={() => setShowWallNameEdit(true)}>
-                  <FormControl.Label className="text-gray-700 font-medium text-sm">
-                    {wallName || "Moisture Content (Wall)"}
-                  </FormControl.Label>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => handleAddExtendedWall("wall")}
-                  className="ml-2"
-                >
-                  <Plus color="#1d4ed8" size={16} />
-                </TouchableOpacity>
-              </View>
-              <TouchableOpacity
-                onPress={() => pickImage("room", undefined, "wall")}
-                className="p-0.5"
-              >
-                <Camera color="#1d4ed8" size={20} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Wall Moisture Content Input */}
-            <RoomReadingInput
-              value={reading.moistureContentWall || ""}
-              placeholder="Enter moisture content percentage"
-              rightText="%"
-              onChange={(moistureContentWall) =>
-                updateRoomReading(reading.publicId, "standard", {
-                  moistureContentWall,
-                })
-              }
-            />
-
-            {/* Wall Images */}
-            {reading.RoomReadingImage &&
-              reading.RoomReadingImage.filter((img: any) => img.type === "wall")
-                .length > 0 && (
-                <View className="flex-row flex-wrap gap-1.5 mt-1 mb-1">
-                  {reading.RoomReadingImage.filter(
-                    (img: any) => img.type === "wall"
-                  ).map((img: any, index: number) => (
-                    <OptimizedImage
-                      onPress={() => openImageViewer(index, "wall")}
-                      uri={roomImages[img.imageKey]}
-                      style={{ width: 80, height: 80, borderRadius: 6 }}
-                      key={img.imageKey}
-                    />
-                  ))}
-                </View>
-              )}
-
+          <View className="gap-y-2">
             {/* Extended Walls Section */}
-            {extendedWallsStructure
-              ?.filter((w) => w.type === "wall")
-              .map((wall) => (
-                <ExtendedWallSection
-                  key={wall.id}
-                  wall={{
-                    ...wall,
-                    value:
-                      reading.extendedWalls?.find((w) => w.id === wall.id)
-                        ?.value || null,
-                  }}
-                  onEdit={handleEditExtendedWall}
-                  onDelete={handleDeleteExtendedWall}
-                  onPickImage={(id) => pickImage("room", undefined, id)}
-                  onValueChange={handleExtendedWallValueChange}
-                  images={getExtendedWallImagesForUI(wall.id)}
-                  onImagePress={(index, id) => openImageViewer(index, id)}
-                />
-              ))}
+            {walls.map((wall) => (
+              <ExtendedWallSection
+                key={wall.id}
+                wall={wall}
+                wallReading={tempRoomReading.wallReadings?.find(
+                  (w) => w.wallId === wall.id
+                )}
+                onEdit={handleEditExtendedWall}
+                onDelete={handleDeleteExtendedWall}
+                onPickImage={(id) =>
+                  pickImage("wall", id, (type, id, images) => {
+                    const updatedWall = reading.wallReadings?.find(
+                      (w) => w.wallId === wall.id
+                    );
+
+                    setTempRoomReading({
+                      ...tempRoomReading,
+                      wallReadings: updatedWall
+                        ? tempRoomReading.wallReadings?.map((w) =>
+                            w.id === id
+                              ? {
+                                  ...w,
+                                  images: [...(w.images || []), ...images],
+                                }
+                              : w
+                          )
+                        : [
+                            ...(tempRoomReading.wallReadings || []),
+                            {
+                              reading: 0,
+                              images: images,
+                              wallId: wall.id,
+                            },
+                          ],
+                    });
+                  })
+                }
+                handleAddExtendedWall={handleAddExtendedWall}
+                onValueChange={handleExtendedWallValueChange}
+                onImagePress={(index, id) => openImageViewer(index, wall.id)}
+              />
+            ))}
           </View>
-
-          {/* Floor Moisture Content Section */}
-          <View>
-            <View className="flex-row items-center justify-between mb-0.5">
-              <View className="flex-row items-center">
-                <TouchableOpacity onPress={() => setShowFloorNameEdit(true)}>
-                  <FormControl.Label className="text-gray-700 font-medium text-sm">
-                    {floorName || "Moisture Content (Floor)"}
-                  </FormControl.Label>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => handleAddExtendedWall("floor")}
-                  className="ml-2"
-                >
-                  <Plus color="#1d4ed8" size={16} />
-                </TouchableOpacity>
-              </View>
-              <TouchableOpacity
-                onPress={() => pickImage("room", undefined, "floor")}
-                className="p-0.5"
-              >
-                <Camera color="#1d4ed8" size={20} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Floor Moisture Content Input */}
-            <RoomReadingInput
-              value={reading.moistureContentFloor || ""}
-              placeholder="Enter moisture content percentage"
-              rightText="%"
-              onChange={(moistureContentFloor) =>
-                updateRoomReading(reading.publicId, "standard", {
-                  moistureContentFloor,
-                })
-              }
-            />
-
-            {/* Floor Images */}
-            {reading.RoomReadingImage &&
-              reading.RoomReadingImage.filter(
-                (img: any) => img.type === "floor"
-              ).length > 0 && (
-                <View className="flex-row flex-wrap gap-1.5 mt-1 mb-1">
-                  {reading.RoomReadingImage.filter(
-                    (img: any) => img.type === "floor"
-                  ).map((img: any, index: number) => (
-                    <OptimizedImage
-                      uri={roomImages[img.imageKey]}
-                      style={{ width: 80, height: 80, borderRadius: 6 }}
-                      key={img.imageKey}
-                      onPress={() => openImageViewer(index, "floor")}
-                    />
-                  ))}
-                </View>
-              )}
-
+          <View className="gap-y-2">
             {/* Extended Floors Section */}
-            {extendedWallsStructure
-              ?.filter((w) => w.type === "floor")
-              .map((floor) => (
-                <ExtendedWallSection
-                  key={floor.id}
-                  wall={{
-                    ...floor,
-                    value:
-                      reading.extendedWalls?.find((w) => w.id === floor.id)
-                        ?.value || null,
-                  }}
-                  onEdit={handleEditExtendedWall}
-                  onDelete={handleDeleteExtendedWall}
-                  onPickImage={(id) => pickImage("room", undefined, id)}
-                  onValueChange={handleExtendedWallValueChange}
-                  images={getExtendedWallImagesForUI(floor.id)}
-                  onImagePress={(index, id) => openImageViewer(index, id)}
-                />
-              ))}
+            {floors.map((floor) => (
+              <ExtendedWallSection
+                key={floor.id}
+                wall={floor}
+                wallReading={tempRoomReading.wallReadings?.find(
+                  (w) => w.wallId === floor.id
+                )}
+                onEdit={handleEditExtendedWall}
+                onDelete={handleDeleteExtendedWall}
+                handleAddExtendedWall={handleAddExtendedWall}
+                onPickImage={(id) =>
+                  pickImage("wall", id, (type, id, images) => {
+                    console.log("🚀 ~ pickImage ~ images:", images);
+                    setTempRoomReading({
+                      ...tempRoomReading,
+                      wallReadings: tempRoomReading.wallReadings?.map((w) =>
+                        w.id === id
+                          ? {
+                              ...w,
+                              images: {
+                                ...w.images,
+                                ...images,
+                              },
+                            }
+                          : w
+                      ),
+                    });
+                  })
+                }
+                onValueChange={handleExtendedWallValueChange}
+                onImagePress={(index, id) => openImageViewer(index, floor.id)}
+              />
+            ))}
           </View>
 
           {/* Dehumidifier Readings Section */}
@@ -477,31 +471,29 @@ const RoomReadingItem = ({
           </Heading>
 
           {/* Map through generic readings */}
-          {reading.GenericRoomReading.map((grr: any, index: number) => (
+          {/* {reading.genericRoomReading.map((grr: any) => (
             <GenericRoomReadingSection
-              key={grr.publicId}
-              index={index}
+              key={grr.id}
               reading={grr}
-              onUpdateReading={updateRoomReading}
               onPickImage={(id) => pickImage("generic", id)}
               genericImages={genericImages}
               onImagePress={(imgIndex, genericId) =>
                 openImageViewer(imgIndex, "generic", genericId)
               }
             />
-          ))}
+          ))} */}
 
           {/* Empty state for generic readings */}
-          {reading.GenericRoomReading.length === 0 && (
+          {/* {reading.GenericRoomReading.length === 0 && (
             <View className="flex items-center justify-center py-4">
               <Text className="text-gray-400 font-medium text-sm">
                 No dehumidifier readings yet
               </Text>
             </View>
-          )}
+          )} */}
 
           {/* Add Dehumidifier Reading Button */}
-          <Button
+          {/* <Button
             onPress={async () => {
               setIsAdding(true);
               try {
@@ -538,7 +530,7 @@ const RoomReadingItem = ({
                 {isAdding ? "Adding..." : "Add Dehumidifier Reading"}
               </Text>
             </View>
-          </Button>
+          </Button> */}
         </Stack>
       </FormControl>
     </Box>

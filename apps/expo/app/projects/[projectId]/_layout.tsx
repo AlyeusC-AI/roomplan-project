@@ -9,11 +9,19 @@ export default function Project() {
       />
       <Stack.Screen
         name="edit-insurance"
-        options={{ headerShown: true, headerTitle: "Edit Insurance", headerBackTitle: "Back" }}
+        options={{
+          headerShown: true,
+          headerTitle: "Edit Insurance",
+          headerBackTitle: "Back",
+        }}
       />
       <Stack.Screen
         name="lidar/rooms"
-        options={{ headerShown: true, headerTitle: "Lidar Scan", headerBackTitle: "Back" }}
+        options={{
+          headerShown: true,
+          headerTitle: "Lidar Scan",
+          headerBackTitle: "Back",
+        }}
       />
       <Stack.Screen
         name="lidar/scan"

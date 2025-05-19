@@ -1,65 +1,56 @@
 import { FlatList, Box, Heading, VStack, HStack, Center } from "native-base";
 import React, { useEffect, useState } from "react";
 import RoomReading from "@/components/project/reading";
-import { userStore } from "@/lib/state/user";
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import { toast } from "sonner-native";
 import Empty from "@/components/project/empty";
 import { Building, Plus } from "lucide-react-native";
 import { Button } from "@/components/ui/button";
-import { ActivityIndicator, View, TouchableOpacity, Platform, KeyboardAvoidingView, Keyboard, TouchableWithoutFeedback } from "react-native";
-import { roomsStore } from "@/lib/state/rooms";
-import { Database } from "@/types/database";
-import { v4 } from "react-native-uuid/dist/v4";
+import {
+  ActivityIndicator,
+  View,
+  TouchableOpacity,
+  Platform,
+  KeyboardAvoidingView,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from "react-native";
 import AddRoomButton from "@/components/project/AddRoomButton";
 import { Text } from "@/components/ui/text";
-import { ReadingType } from "@/types/app";
+import {
+  Room,
+  RoomReading as RoomReadingType,
+  useCreateRoomReading,
+  useGetRoomReadings,
+  useGetRooms,
+} from "@service-geek/api-client";
 
-const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
-  const [isAdding, setIsAdding] = useState(false);
-  const { session: supabaseSession } = userStore((state) => state);
+const RoomReadingItem = ({ room }: { room: Room }) => {
   const { projectId } = useGlobalSearchParams<{
     projectId: string;
   }>();
+  const { mutate: createRoomReading, isPending: isCreatingRoomReading } =
+    useCreateRoomReading();
+  const { data: roomReadings } = useGetRoomReadings(room.id);
+  console.log("🚀 ~ RoomReadingItem ~ roomReadings:", roomReadings?.data);
+
   const router = useRouter();
-  const addReading = async (data: any, type: ReadingType) => {
+  const addReading = async () => {
     try {
-      setIsAdding(true);
-      const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/readings`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": supabaseSession?.access_token || "",
-          },
-          body: JSON.stringify({
-            type,
-            data,
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        throw new Error("Could not add reading");
-      }
-
-      const body = await res.json();
-
-      if (type === "standard") {
-        roomsStore.getState().addReading(room.id, body.reading);
-      }
-
-      return body;
-    } catch {
-      toast.error("Could not add reading");
-    } finally {
-      setIsAdding(false);
+      createRoomReading({
+        roomId: room.id,
+        date: new Date(),
+        humidity: 0,
+        temperature: 0,
+        equipmentUsed: [],
+      });
+    } catch (error) {
+      console.log(error);
+      //   toast.error("Could not add reading");
     }
   };
 
   return (
-  
     <View className="mt-3">
       <HStack
         w="full"
@@ -68,24 +59,23 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
         direction="row"
         mb={4}
       >
-        <TouchableOpacity onPress={() => router.push(`/projects/${projectId}/rooms/create?roomId=${room.publicId}&roomName=${room.name}`)}>
+        <TouchableOpacity
+          onPress={() =>
+            router.push(
+              `/projects/${projectId}/rooms/create?roomId=${room.id}&roomName=${room.name}`
+            )
+          }
+        >
           <Heading size="md">{room.name}</Heading>
         </TouchableOpacity>
         <Button
           onPress={() => {
-            addReading(
-              {
-                projectId: room.projectId,
-                publicId: v4(),
-                roomId: room.id,
-              },
-              "standard"
-            );
+            addReading();
           }}
           size="sm"
           variant="outline"
         >
-          {isAdding ? (
+          {isCreatingRoomReading ? (
             <ActivityIndicator />
           ) : (
             <View className="flex-row items-center">
@@ -96,23 +86,16 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
         </Button>
       </HStack>
       <VStack w="100%" space={2}>
-        {room.RoomReading?.length === 0 ? (
+        {roomReadings?.data?.length === 0 ? (
           <Center w="full" py={4}>
             <Heading size="sm" color="gray.400">
               No readings yet
             </Heading>
           </Center>
         ) : (
-         
-          room.RoomReading?.map((reading) => (
-            <RoomReading
-              room={room}
-              key={reading.publicId}
-              reading={reading}
-              addReading={addReading}
-            />
+          roomReadings?.data?.map((reading: RoomReadingType) => (
+            <RoomReading room={room} key={reading.id} reading={reading} />
           ))
-
         )}
       </VStack>
     </View>
@@ -120,14 +103,12 @@ const RoomReadingItem = ({ room }: { room: RoomWithReadings }) => {
 };
 
 export default function RoomReadings() {
-  const { session: supabaseSession } = userStore((state) => state);
   const { projectId, projectName } = useGlobalSearchParams<{
     projectId: string;
     projectName: string;
   }>();
-  const [loading, setLoading] = useState(true);
-  const rooms = roomsStore();
   const router = useRouter();
+  const { data: rooms, isLoading: loading } = useGetRooms(projectId);
 
   const onCreateRoom = async () => {
     router.navigate({
@@ -136,31 +117,7 @@ export default function RoomReadings() {
     });
   };
 
-  const getReadings = () => {
-    setLoading(true);
-    fetch(
-      `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "auth-token": supabaseSession?.access_token || "",
-        },
-      }
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        rooms.setRooms(data.rooms);
-        setLoading(false);
-        console.log(data);
-      });
-  };
-
-  useEffect(() => {
-    getReadings();
-  }, []);
-
-  if (!loading && rooms.rooms?.length === 0) {
+  if (!loading && rooms?.length === 0) {
     return (
       <Empty
         title="There are no rooms yet"
@@ -204,11 +161,11 @@ export default function RoomReadings() {
 
           <FlatList
             refreshing={loading}
-            onRefresh={getReadings}
-            data={rooms.rooms}
-            keyExtractor={(room) => room.publicId}
+            // onRefresh={getReadings}
+            data={rooms}
+            keyExtractor={(room) => room.id}
             renderItem={({ item: room }) => (
-              <RoomReadingItem room={room} key={room.publicId} />
+              <RoomReadingItem room={room} key={room.id} />
             )}
             contentContainerStyle={{ padding: 16 }}
             showsVerticalScrollIndicator={false}

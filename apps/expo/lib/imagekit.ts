@@ -6,7 +6,7 @@ import { STORAGE_BUCKETS } from "./utils/imageHelpers";
 import { supabaseServiceRole } from "@/unused/screens/CameraScreen";
 import { v4 } from "uuid";
 import { getImageKitAuthToken } from "@service-geek/api-client";
-
+import * as ImagePicker from "expo-image-picker";
 export const imagekit = new ImageKit({
   publicKey: "public_3P95CgUAWGTwOS3848WAhIWOjBs=",
   urlEndpoint: "https://ik.imagekit.io/wzgdjvwfm",
@@ -55,7 +55,7 @@ interface ExpoImageAsset {
  * @returns Promise with upload response
  */
 export const uploadImage = async (
-  file: ExpoImageAsset,
+  file: ImagePicker.ImagePickerAsset,
   options: ImageKitUploadOptions = {},
   onProgress?: (progress: number) => void
 ): Promise<ImageKitUploadResponse> => {
@@ -90,7 +90,12 @@ export const uploadImage = async (
     );
     console.log("🚀 ~ manipResult:", manipResult);
     console.log("🚀 ~ returnnewPromise ~ file:", file);
-    const finalFile = { ...file, ...manipResult };
+    const finalFile = {
+      ...file,
+      name: file.name || file.fileName,
+      type: "image/jpeg",
+      ...manipResult,
+    };
     console.log("🚀 ~ finalFile:", finalFile);
     onProgress?.(40);
 
@@ -136,7 +141,7 @@ export const uploadImage = async (
           file: finalFile,
           fileName: options.useUniqueFileName
             ? `${Date.now()}_${file.name || "image.jpg"}`
-            : file.name,
+            : file.name || `${Date.now()}_${file.name || "image.jpg"}`,
           folder: options.folder || "uploads",
           tags: options.tags || [],
           responseFields: options.responseFields || ["tags"],
@@ -146,7 +151,7 @@ export const uploadImage = async (
           signature,
         },
         (err: Error | null, result: ImageKitUploadResponse | null) => {
-          console.log("🚀 ~ returnnewPromise ~ result:", result);
+          console.log("🚀 ~ returnnewPromise ~ result:", err, result);
 
           if (err) {
             reject(err);

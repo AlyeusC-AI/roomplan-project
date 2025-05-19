@@ -23,12 +23,12 @@ export function RoomReadingInput({
   useEffect(() => {
     if (debouncedText === value) return;
     onChange(debouncedText);
-  }, [debouncedText, onChange, value]);
+  }, [debouncedText, value]);
 
   // Update local state if the prop value changes
-  useEffect(() => {
-    setText(value);
-  }, [value]);
+  // useEffect(() => {
+  //   setText(value);
+  // }, [value]);
 
   return (
     <InputGroup

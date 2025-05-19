@@ -102,5 +102,9 @@ export const readingsService = {
 
 export const calculateGPP = (temperature: number, humidity: number) => {
   if (!temperature || !humidity) return null;
-  return (humidity / 100) * 7000 * (1 / 7000 + (2 / 7000) * (temperature - 32));
+  return (
+    (humidity / 100) *
+    7000 *
+    (1 / 7000 + (2 / 7000) * (temperature - 32))
+  ).toFixed(2);
 };
