@@ -10,6 +10,8 @@ import type {
   ImageStats,
   AddImageDto,
   AddCommentDto,
+  AreaAffected,
+  RoomAreaAffected,
 } from "../types/room";
 import { apiClient } from "./client";
 
@@ -145,6 +147,43 @@ class RoomsService {
   async getComments(imageId: string): Promise<Comment[]> {
     const response = await apiClient.get<Comment[]>(
       `/rooms/images/${imageId}/comments`
+    );
+    return response.data;
+  }
+
+  // Area Affected methods
+  async updateAreaAffected(
+    roomId: string,
+    type: "floor" | "walls" | "ceiling",
+    data: {
+      material?: string;
+      totalAreaRemoved?: string;
+      totalAreaMicrobialApplied?: string;
+      cabinetryRemoved?: string;
+      isVisible?: boolean;
+      extraFields?: any;
+    }
+  ): Promise<RoomAreaAffected> {
+    const response = await apiClient.patch<RoomAreaAffected>(
+      `/rooms/${roomId}/area-affected/${type}`,
+      data
+    );
+    return response.data;
+  }
+
+  async deleteAreaAffected(
+    roomId: string,
+    type: "floor" | "walls" | "ceiling"
+  ): Promise<RoomAreaAffected> {
+    const response = await apiClient.delete<RoomAreaAffected>(
+      `/rooms/${roomId}/area-affected/${type}`
+    );
+    return response.data;
+  }
+
+  async getAreaAffected(roomId: string): Promise<RoomAreaAffected> {
+    const response = await apiClient.get<RoomAreaAffected>(
+      `/rooms/${roomId}/area-affected`
     );
     return response.data;
   }

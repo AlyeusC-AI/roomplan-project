@@ -233,4 +233,35 @@ export class RoomsController {
     };
     return this.roomsService.bulkRemoveImages(filters);
   }
+
+  // Area Affected endpoints
+  @Patch(':id/area-affected/:type')
+  async updateAreaAffected(
+    @Param('id') roomId: string,
+    @Param('type') type: 'floor' | 'walls' | 'ceiling',
+    @Body()
+    data: {
+      material?: string;
+      totalAreaRemoved?: string;
+      totalAreaMicrobialApplied?: string;
+      cabinetryRemoved?: string;
+      isVisible?: boolean;
+      extraFields?: any;
+    },
+  ) {
+    return this.roomsService.updateAreaAffected(roomId, type, data);
+  }
+
+  @Delete(':id/area-affected/:type')
+  async deleteAreaAffected(
+    @Param('id') roomId: string,
+    @Param('type') type: 'floor' | 'walls' | 'ceiling',
+  ) {
+    return this.roomsService.deleteAreaAffected(roomId, type);
+  }
+
+  @Get(':id/area-affected')
+  async getAreaAffected(@Param('id') roomId: string) {
+    return this.roomsService.getAreaAffected(roomId);
+  }
 }

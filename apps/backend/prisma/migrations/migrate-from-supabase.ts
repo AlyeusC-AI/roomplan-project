@@ -14,6 +14,25 @@ const supabaseUrlForImages =
 
 dotenv.config();
 
+interface AreaAffected_Supabase {
+  id: number;
+  createdAt: string;
+  date: string;
+  roomId: number;
+  material: string | null;
+  totalAreaRemoved: string | null;
+  totalAreaMicrobialApplied: string | null;
+  cause: string | null;
+  category: number | null;
+  cabinetryRemoved: string | null;
+  isDeleted: boolean;
+  publicId: string;
+  projectId: number;
+  type: string;
+  measurementType: string | null;
+  extraFields: any | null;
+}
+
 interface Room_Supabase {
   id: number;
   createdAt: string;
@@ -41,6 +60,8 @@ interface Room_Supabase {
   cubiModelId: string | null;
   cubiRoomPlan: string | null;
   equipmentUsedQuantity: any | null;
+  AreaAffected: AreaAffected_Supabase[];
+  Project: { publicId: string };
 }
 interface RoomReading_Supabase {
   id: number;
@@ -1068,7 +1089,7 @@ async function migrateReading() {
         humidity: reading.humidity ? parseFloat(reading.humidity) : 0,
         temperature: reading.temperature ? parseFloat(reading.temperature) : 0,
         // gpp: reading.gpp ? parseFloat(reading.gpp) : 0,
-        equipmentUsed: reading.equipmentUsed,
+        // equipmentUsed: reading.equipmentUsed,
         genericRoomReading: {
           create: reading.GenericRoomReading.map((reading) => ({
             gpp: reading.gpp ? parseFloat(reading.gpp) : 0,
@@ -1097,13 +1118,15 @@ async function migrateRooms() {
   console.log('Starting rooms migration...');
   const { data: rooms, error } = await supabase
     .from('Room')
-    .select('*')
+    .select('* , AreaAffected(*), Project(publicId) ')
     .eq('isDeleted', false);
 
   if (error) {
     throw new Error(`Error fetching rooms: ${error.message}`);
   }
   console.log(`Found ${rooms.length} rooms to migrate`);
+  await prisma.areaAffected.deleteMany();
+  await prisma.room.deleteMany();
   for (const room of rooms as Room_Supabase[]) {
     console.log('🚀 ~ migrateRooms ~ room:', room);
     try {
@@ -1122,6 +1145,76 @@ async function migrateRooms() {
       //     },
       //   },
       // });
+      const ceilingAffected = room.AreaAffected.find(
+        (area) => area.type === 'ceiling',
+      );
+      const wallsAffected = room.AreaAffected.find(
+        (area) => area.type === 'wall',
+      );
+      const floorAffected = room.AreaAffected.find(
+        (area) => area.type === 'floor',
+      );
+      await prisma.room.create({
+        data: {
+          name: room.name,
+          project: { connect: { supabaseId: room.Project.publicId } },
+          cubiRoomPlan: room.cubiRoomPlan,
+          cubiTicketId: room.cubiTicketId,
+          cubiModelId: room.cubiModelId,
+          scannedFileKey: room.scannedFileKey,
+          roomPlanSVG: room.roomPlanSVG,
+          humidity: room.humidity ? parseFloat(room.humidity) : 0,
+          dehuReading: room.dehuReading ? parseFloat(room.dehuReading) : 0,
+          temperature: room.temperature ? parseFloat(room.temperature) : 0,
+          length: room.length ? parseFloat(room.length) : 0,
+          width: room.width ? parseFloat(room.width) : 0,
+          height: room.height ? parseFloat(room.height) : 0,
+          totalSqft: room.totalSqft ? parseFloat(room.totalSqft) : 0,
+          windows: room.windows,
+          doors: room.doors,
+          ceilingAffected: {
+            create: ceilingAffected
+              ? {
+                  material: ceilingAffected.material,
+                  totalAreaRemoved: ceilingAffected.totalAreaRemoved,
+                  totalAreaMicrobialApplied:
+                    ceilingAffected.totalAreaMicrobialApplied,
+                  isVisible: !ceilingAffected.isDeleted,
+                }
+              : undefined,
+          },
+          wallsAffected: {
+            create: wallsAffected
+              ? {
+                  material: wallsAffected.material,
+                  totalAreaRemoved: wallsAffected.totalAreaRemoved,
+                  totalAreaMicrobialApplied:
+                    wallsAffected.totalAreaMicrobialApplied,
+                  isVisible: !wallsAffected.isDeleted,
+                }
+              : undefined,
+          },
+          floorAffected: {
+            create: floorAffected
+              ? {
+                  material: floorAffected.material,
+                  totalAreaRemoved: floorAffected.totalAreaRemoved,
+                  totalAreaMicrobialApplied:
+                    floorAffected.totalAreaMicrobialApplied,
+                  isVisible: !floorAffected.isDeleted,
+                }
+              : undefined,
+          },
+          // equipmentsUsed: {
+          //   create: room.equipmentUsed.map((equipment) => ({
+          //     equipment: { connect: { supabaseId: equipment } },
+          //     quantity: 1,
+          //     project: { connect: { supabaseId: room.Project.publicId } },
+
+          //   })),
+          // },
+        },
+      });
     } catch (error) {
       console.error(`Error migrating room ${room.id}:`, error);
     }

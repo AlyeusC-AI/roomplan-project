@@ -1,6 +1,23 @@
 import { User } from "./auth";
 import { Wall } from "./reading";
 
+export interface AreaAffected {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  material?: string;
+  totalAreaRemoved?: string;
+  totalAreaMicrobialApplied?: string;
+  cabinetryRemoved?: string;
+  isVisible: boolean;
+  extraFields?: Record<string, any>;
+}
+export interface RoomAreaAffected extends Room {
+  floorAffected: AreaAffected;
+  wallsAffected: AreaAffected;
+  ceilingAffected: AreaAffected;
+}
+
 export interface Room {
   id: string;
   name: string;
@@ -9,17 +26,36 @@ export interface Room {
   updatedAt: string;
   images: Image[];
   walls: Wall[];
+
+  humidity?: number;
+  dehuReading?: number;
+  temperature?: number;
+  length?: number;
+  width?: number;
+  height?: number;
+  totalSqft?: number;
+  windows?: number;
+  doors?: number;
+  roomPlanSVG?: string;
+  scannedFileKey?: string;
+  cubiTicketId?: string;
+  cubiModelId?: string;
+  cubiRoomPlan?: string;
+  floorRoomId?: string;
+  wallsRoomId?: string;
+  ceilingRoomId?: string;
 }
 
 export interface Image {
   id: string;
   url: string;
-  roomId: string;
+  roomId?: string;
   projectId: string;
   showInReport: boolean;
   order: number;
   createdAt: string;
   updatedAt: string;
+  noteId?: string;
   comments: Comment[];
 }
 
@@ -40,6 +76,15 @@ export interface CreateRoomDto {
 
 export interface UpdateRoomDto {
   name?: string;
+}
+
+export interface UpdateAreaAffectedDto {
+  material?: string;
+  totalAreaRemoved?: string;
+  totalAreaMicrobialApplied?: string;
+  cabinetryRemoved?: string;
+  isVisible?: boolean;
+  extraFields?: Record<string, any>;
 }
 
 export interface ImageFilters {

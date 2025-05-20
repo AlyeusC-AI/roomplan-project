@@ -201,19 +201,58 @@ model Project {
 }
 
 model Room {
-  id          String        @id @default(uuid())
-  name        String
-  projectId   String
-  supabaseId  String?       @unique
-  project     Project       @relation(fields: [projectId], references: [id])
-  images      Image[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  notes       Note[]
-  walls       Wall[]
-  roomReading RoomReading[]
+  id              String             @id @default(uuid())
+  name            String
+  projectId       String
+  supabaseId      String?            @unique
+  project         Project            @relation(fields: [projectId], references: [id])
+  images          Image[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  notes           Note[]
+  walls           Wall[]
+  roomReading     RoomReading[]
+  humidity        Float?
+  dehuReading     Float?
+  temperature     Float?
+  length          Float?
+  width           Float?
+  height          Float?
+  totalSqft       Float?
+  windows         Int?
+  doors           Int?
+  equipmentsUsed  EquipmentProject[]
+  roomPlanSVG     String?
+  scannedFileKey  String?
+  cubiTicketId    String?
+  cubiModelId     String?
+  cubiRoomPlan    String?
+  floorAffected   AreaAffected?      @relation("FloorAffected", fields: [floorRoomId], references: [id])
+  floorRoomId     String?            @unique
+  wallsAffected   AreaAffected?      @relation("WallsAffected", fields: [wallsRoomId], references: [id])
+  wallsRoomId     String?            @unique
+  ceilingAffected AreaAffected?      @relation("CeilingAffected", fields: [ceilingRoomId], references: [id])
+  ceilingRoomId   String?            @unique
 
   @@index([projectId])
+}
+
+model AreaAffected {
+  id String @id @default(uuid())
+
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+  material                  String?
+  totalAreaRemoved          String?
+  totalAreaMicrobialApplied String?
+  cabinetryRemoved          String?
+  isVisible                 Boolean  @default(true)
+
+  floorAffected   Room? @relation("FloorAffected")
+  wallsAffected   Room? @relation("WallsAffected")
+  ceilingAffected Room? @relation("CeilingAffected")
+
+  extraFields Json?
 }
 
 enum WallType {
@@ -244,7 +283,6 @@ model RoomReading {
   date               DateTime
   humidity           Float?
   temperature        Float?
-  equipmentUsed      Json?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 }
@@ -328,6 +366,8 @@ model EquipmentProject {
   quantity    Int
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  roomId      String
+  room        Room      @relation(fields: [roomId], references: [id])
 
   @@index([equipmentId])
   @@index([projectId])

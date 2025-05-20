@@ -574,4 +574,173 @@ export class RoomsService {
       },
     });
   }
+
+  // Area Affected methods
+  async updateAreaAffected(
+    roomId: string,
+    type: 'floor' | 'walls' | 'ceiling',
+    data: {
+      material?: string;
+      totalAreaRemoved?: string;
+      totalAreaMicrobialApplied?: string;
+      cabinetryRemoved?: string;
+      isVisible?: boolean;
+      extraFields?: any;
+    },
+  ): Promise<
+    Prisma.RoomGetPayload<{
+      include: {
+        floorAffected: true;
+        wallsAffected: true;
+        ceilingAffected: true;
+      };
+    }>
+  > {
+    const room = await this.prisma.room.findUnique({
+      where: { id: roomId },
+      include: {
+        floorAffected: true,
+        wallsAffected: true,
+        ceilingAffected: true,
+      },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    const fieldMap = {
+      floor: 'floorAffected',
+      walls: 'wallsAffected',
+      ceiling: 'ceilingAffected',
+    };
+
+    const idFieldMap = {
+      floor: 'floorRoomId',
+      walls: 'wallsRoomId',
+      ceiling: 'ceilingRoomId',
+    };
+
+    const affectedField = fieldMap[type];
+    const idField = idFieldMap[type];
+
+    if (room[affectedField]) {
+      // Update existing area affected
+      await this.prisma.areaAffected.update({
+        where: { id: room[affectedField].id },
+        data,
+      });
+    } else {
+      // Create new area affected and connect to room
+      const areaAffected = await this.prisma.areaAffected.create({
+        data,
+      });
+
+      await this.prisma.room.update({
+        where: { id: roomId },
+        data: {
+          [idField]: areaAffected.id,
+        },
+      });
+    }
+
+    return this.prisma.room.findUniqueOrThrow({
+      where: { id: roomId },
+      include: {
+        floorAffected: true,
+        wallsAffected: true,
+        ceilingAffected: true,
+      },
+    });
+  }
+
+  async deleteAreaAffected(
+    roomId: string,
+    type: 'floor' | 'walls' | 'ceiling',
+  ): Promise<
+    Prisma.RoomGetPayload<{
+      include: {
+        floorAffected: true;
+        wallsAffected: true;
+        ceilingAffected: true;
+      };
+    }>
+  > {
+    const room = await this.prisma.room.findUnique({
+      where: { id: roomId },
+      include: {
+        floorAffected: true,
+        wallsAffected: true,
+        ceilingAffected: true,
+      },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    const fieldMap = {
+      floor: 'floorAffected',
+      walls: 'wallsAffected',
+      ceiling: 'ceilingAffected',
+    };
+
+    const idFieldMap = {
+      floor: 'floorRoomId',
+      walls: 'wallsRoomId',
+      ceiling: 'ceilingRoomId',
+    };
+
+    const affectedField = fieldMap[type];
+    const idField = idFieldMap[type];
+
+    if (room[affectedField]) {
+      // Delete the area affected record
+      await this.prisma.areaAffected.delete({
+        where: { id: room[affectedField].id },
+      });
+
+      // Update room to remove the reference
+      await this.prisma.room.update({
+        where: { id: roomId },
+        data: {
+          [idField]: null,
+        },
+      });
+    }
+
+    return this.prisma.room.findUniqueOrThrow({
+      where: { id: roomId },
+      include: {
+        floorAffected: true,
+        wallsAffected: true,
+        ceilingAffected: true,
+      },
+    });
+  }
+
+  async getAreaAffected(roomId: string): Promise<
+    Prisma.RoomGetPayload<{
+      include: {
+        floorAffected: true;
+        wallsAffected: true;
+        ceilingAffected: true;
+      };
+    }>
+  > {
+    const room = await this.prisma.room.findUnique({
+      where: { id: roomId },
+      include: {
+        floorAffected: true,
+        wallsAffected: true,
+        ceilingAffected: true,
+      },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    return room;
+  }
 }

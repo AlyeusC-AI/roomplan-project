@@ -146,7 +146,7 @@ export default function RoomReadingCell({
               calculateGPP(
                 Number(tempReading.temperature),
                 Number(tempReading.humidity)
-              )?.toFixed(2) || ""
+              ) || ""
             }
             disabled
             className='dark:border-gray-700 dark:bg-gray-800 dark:text-white'

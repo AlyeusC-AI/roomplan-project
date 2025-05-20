@@ -193,3 +193,58 @@ export function useGetComments(imageId: string) {
     enabled: !!imageId,
   });
 }
+
+// Area Affected hooks
+export function useUpdateAreaAffected() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      roomId,
+      type,
+      data,
+    }: {
+      roomId: string;
+      type: "floor" | "walls" | "ceiling";
+      data: {
+        material?: string;
+        totalAreaRemoved?: string;
+        totalAreaMicrobialApplied?: string;
+        cabinetryRemoved?: string;
+        isVisible?: boolean;
+        extraFields?: any;
+      };
+    }) => roomsService.updateAreaAffected(roomId, type, data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["rooms", data.id, "area-affected"],
+      });
+    },
+  });
+}
+
+export function useDeleteAreaAffected() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      roomId,
+      type,
+    }: {
+      roomId: string;
+      type: "floor" | "walls" | "ceiling";
+    }) => roomsService.deleteAreaAffected(roomId, type),
+    onSuccess: (data) => {
+      // queryClient.invalidateQueries({ queryKey: ["rooms", data.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["rooms", data.id, "area-affected"],
+      });
+    },
+  });
+}
+
+export function useGetAreaAffected(roomId: string) {
+  return useQuery({
+    queryKey: ["rooms", roomId, "area-affected"],
+    queryFn: () => roomsService.getAreaAffected(roomId),
+    enabled: !!roomId,
+  });
+}

@@ -1,9 +1,17 @@
-import { FlatList, Box, Heading, VStack, HStack, Center } from "native-base";
-import React from "react";
+import {
+  FlatList,
+  Box,
+  Heading,
+  VStack,
+  HStack,
+  Center,
+  Pressable,
+} from "native-base";
+import React, { useState } from "react";
 import RoomReading from "@/components/project/reading";
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import Empty from "@/components/project/empty";
-import { Building, Plus } from "lucide-react-native";
+import { Building, Plus, ChevronDown } from "lucide-react-native";
 import { Button } from "@/components/ui/button";
 import {
   ActivityIndicator,
@@ -113,6 +121,20 @@ export default function RoomReadings() {
   }>();
   const router = useRouter();
   const { data: rooms, isLoading: loading } = useGetRooms(projectId);
+  const [selectedRoom, setSelectedRoom] = useState<string | "all" | null>(null);
+  const [showRoomSelector, setShowRoomSelector] = useState(false);
+
+  // Set initial selected room when rooms data is loaded
+  React.useEffect(() => {
+    if (rooms && rooms.length > 0 && !selectedRoom) {
+      setSelectedRoom(rooms[0].id);
+    }
+  }, [rooms]);
+
+  const filteredRooms =
+    selectedRoom === "all"
+      ? rooms
+      : rooms?.filter((room) => room.id === selectedRoom);
 
   const onCreateRoom = async () => {
     router.navigate({
@@ -157,16 +179,75 @@ export default function RoomReadings() {
             borderBottomWidth={1}
             borderBottomColor="gray.100"
           >
-            <HStack justifyContent="space-between" alignItems="center">
-              <Heading size="lg">Room Readings</Heading>
-              <AddRoomButton showText={false} size="sm" />
-            </HStack>
+            <VStack space={3}>
+              <HStack justifyContent="space-between" alignItems="center">
+                <Heading size="lg">Room Readings</Heading>
+                <AddRoomButton showText={false} size="sm" />
+              </HStack>
+
+              <Pressable
+                onPress={() => setShowRoomSelector(!showRoomSelector)}
+                className="bg-blue-50 px-4 py-3 rounded-lg flex-row items-center justify-between"
+              >
+                <Text className="text-blue-700 font-medium">
+                  {selectedRoom === "all"
+                    ? "View All"
+                    : rooms?.find((r) => r.id === selectedRoom)?.name}
+                </Text>
+                <ChevronDown color="#1e40af" size={18} />
+              </Pressable>
+
+              {showRoomSelector && (
+                <Box bg="white" rounded="lg" shadow={2}>
+                  <Pressable
+                    onPress={() => {
+                      setSelectedRoom("all");
+                      setShowRoomSelector(false);
+                    }}
+                    className={`px-4 py-3 border-b border-gray-100 ${
+                      selectedRoom === "all" ? "bg-blue-50" : ""
+                    }`}
+                  >
+                    <Text
+                      className={`${
+                        selectedRoom === "all"
+                          ? "text-blue-700 font-medium"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      View All
+                    </Text>
+                  </Pressable>
+                  {rooms?.map((room) => (
+                    <Pressable
+                      key={room.id}
+                      onPress={() => {
+                        setSelectedRoom(room.id);
+                        setShowRoomSelector(false);
+                      }}
+                      className={`px-4 py-3 border-b border-gray-100 ${
+                        room.id === selectedRoom ? "bg-blue-50" : ""
+                      }`}
+                    >
+                      <Text
+                        className={`${
+                          room.id === selectedRoom
+                            ? "text-blue-700 font-medium"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        {room.name}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </Box>
+              )}
+            </VStack>
           </Box>
 
           <FlatList
             refreshing={loading}
-            // onRefresh={getReadings}
-            data={rooms}
+            data={filteredRooms}
             keyExtractor={(room) => room.id}
             renderItem={({ item: room }) => (
               <RoomReadingItem room={room} key={room.id} />
