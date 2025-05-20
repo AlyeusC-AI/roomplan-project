@@ -131,19 +131,18 @@ const RoomReading: React.FC<RoomReadingProps> = ({ room, reading }) => {
       </FormControl>
 
       {/* Image Viewer Modal */}
-      {/* <ImageViewer
+      <ImageViewer
         isOpen={selectedImageIndex !== null}
         onClose={closeImageViewer}
         selectedImageIndex={selectedImageIndex}
         selectedImageType={selectedImageType}
         selectedGenericIndex={selectedGenericIndex}
-        roomImages={roomImages}
-        genericImages={genericImages}
+        room={room}
         reading={reading}
         onDeleteImage={handleDeleteImage}
         onPrevImage={handlePrevImage}
         onNextImage={handleNextImage}
-      /> */}
+      />
 
       {/* Edit Extended Wall/Floor Modal */}
       {wall && (

@@ -6,35 +6,69 @@ import {
   Alert,
   Pressable,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { ExtendedWallItem } from "@/types/app";
 import { Camera, Plus, Trash2 } from "lucide-react-native";
 import { RoomReadingInput } from "./RoomReadingInput";
 import { OptimizedImage } from "@/lib/utils/OptimizedImage";
-import { WallReading, Wall } from "@service-geek/api-client";
+import {
+  WallReading,
+  Wall,
+  useUpdateWallReading,
+  useDeleteWall,
+  useCreateWallReading,
+  RoomReading,
+} from "@service-geek/api-client";
 
 interface ExtendedWallSectionProps {
   wallReading?: WallReading;
   wall: Wall;
   onEdit: (wall: Wall) => void;
-  onDelete: (id: string) => void;
-  onPickImage: (id: string) => void;
-  onValueChange: (id: string, value: string, wallId: string) => void;
+  pickImage: (
+    type: "wall" | "generic",
+    wallId: string,
+    updateImages: (type: "generic" | "wall", id: string, images: any[]) => void
+  ) => void;
   onImagePress: (index: number, id: string, wallId: string) => void;
   handleAddExtendedWall: (type: "WALL" | "FLOOR" | "CEILING") => void;
+  roomReading: RoomReading;
 }
 
 export const ExtendedWallSection: React.FC<ExtendedWallSectionProps> = ({
   wallReading,
   wall,
   onEdit,
-  onDelete,
-  onPickImage,
-  onValueChange,
-
+  pickImage,
   onImagePress,
   handleAddExtendedWall,
+  roomReading,
 }) => {
+  const { mutate: updateWallReading, isPending: isUpdating } =
+    useUpdateWallReading();
+  const { mutate: addWallReading, isPending: isAdding } =
+    useCreateWallReading();
+  const { mutate: deleteWallReading, isPending: isDeleting } = useDeleteWall();
+
+  const isLoading = isUpdating || isAdding;
+
+  const onChange = async (value: string) => {
+    if (wallReading) {
+      await updateWallReading({
+        id: wallReading.id,
+        data: {
+          reading: Number(value),
+        },
+      });
+    } else {
+      await addWallReading({
+        reading: Number(value),
+        wallId: wall.id,
+        images: [],
+        roomReadingId: roomReading?.id,
+      });
+    }
+  };
   const confirmDelete = () => {
     Alert.alert(
       "Delete Measurement",
@@ -44,10 +78,30 @@ export const ExtendedWallSection: React.FC<ExtendedWallSectionProps> = ({
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => onDelete(wall.id),
+          onPress: () => deleteWallReading(wall?.id || ""),
         },
       ]
     );
+  };
+  const onPickImage = async () => {
+    await pickImage("wall", wall.id, async (type, id, images) => {
+      const updatedWall = wallReading;
+      if (updatedWall) {
+        await updateWallReading({
+          id: updatedWall.id,
+          data: {
+            images: [...(updatedWall.images || []), ...images],
+          },
+        });
+      } else {
+        await addWallReading({
+          reading: 0,
+          images: images,
+          wallId: wall.id,
+          roomReadingId: roomReading?.id,
+        });
+      }
+    });
   };
   // useEffect(() => {
   //   if (!wallReading) {
@@ -60,7 +114,7 @@ export const ExtendedWallSection: React.FC<ExtendedWallSectionProps> = ({
   // }, [wallReading]);
 
   const images = wallReading?.images || [];
-  console.log("🚀 ~ images:", images);
+  console.log("🚀 ~ imagasadasdasdes:", images);
 
   return (
     <View key={wall.id} className="mt-2">
@@ -81,38 +135,42 @@ export const ExtendedWallSection: React.FC<ExtendedWallSectionProps> = ({
 
         <View className="flex-row">
           <TouchableOpacity
-            onPress={() => onPickImage(wallReading?.id || "")}
+            onPress={() => onPickImage()}
             className="p-0.5 mr-2"
+            disabled={isLoading}
           >
             <Camera color="#1d4ed8" size={20} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={confirmDelete}>
+          <TouchableOpacity onPress={confirmDelete} disabled={isLoading}>
             <Trash2 color="#dc2626" size={20} />
           </TouchableOpacity>
         </View>
       </View>
-      <RoomReadingInput
-        value={wallReading?.reading.toString() || ""}
-        placeholder="Enter moisture content percentage"
-        rightText="%"
-        onChange={(value) =>
-          onValueChange(wallReading?.id || "", value, wall.id)
-        }
-      />
+      <View className="relative">
+        <RoomReadingInput
+          value={wallReading?.reading.toString() || ""}
+          placeholder="Enter moisture content percentage"
+          rightText="%"
+          onChange={(value) => onChange(value)}
+          disabled={isLoading}
+        />
+        {isLoading && (
+          <View className="absolute right-2 top-1/2 -translate-y-1/2">
+            <ActivityIndicator size="small" color="#1d4ed8" />
+          </View>
+        )}
+      </View>
+
       {images.length > 0 && (
         <View className="flex-row flex-wrap gap-1.5 mt-1 mb-1">
           {images.map((img, index) => (
-            <Pressable
-              key={img}
+            <OptimizedImage
+              uri={img}
+              style={{ width: 80, height: 80, borderRadius: 6 }}
               onPress={() =>
                 onImagePress(index, wallReading?.id || "", wall.id)
               }
-            >
-              <OptimizedImage
-                uri={img}
-                style={{ width: 80, height: 80, borderRadius: 6 }}
-              />
-            </Pressable>
+            />
           ))}
         </View>
       )}

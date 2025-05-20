@@ -7,9 +7,15 @@ import {
   showImagePickerOptions,
   confirmImageDeletion,
 } from "../utils/imageHandling";
-import { RoomReading } from "@service-geek/api-client";
+import {
+  RoomReading,
+  useUpdateGenericRoomReading,
+} from "@service-geek/api-client";
 import { uploadImage } from "@/lib/imagekit";
-
+import {
+  useUpdateRoomReading,
+  useUpdateWallReading,
+} from "@service-geek/api-client";
 export function useImageHandling(reading: RoomReading) {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
     null
@@ -18,8 +24,11 @@ export function useImageHandling(reading: RoomReading) {
     "generic" | string | null
   >(null);
   const [selectedGenericIndex, setSelectedGenericIndex] = useState<
-    number | null
+    string | null
   >(null);
+  const { mutate: updateRoomReading } = useUpdateRoomReading();
+  const { mutate: updateWallReading } = useUpdateWallReading();
+  const { mutate: updateGenericReading } = useUpdateGenericRoomReading();
 
   // Handle image navigation
   const handlePrevImage = () => {
@@ -79,10 +88,7 @@ export function useImageHandling(reading: RoomReading) {
     }
   };
 
-  const handleDeleteImage = (
-    type: "generic" | string,
-    updateReading: (type: "generic" | string, reading: any) => void
-  ) => {
+  const handleDeleteImage = (type: "generic" | string) => {
     confirmImageDeletion(async () => {
       if (type === "generic") {
         const currentGenericReading = reading.genericRoomReading?.find(
@@ -91,7 +97,12 @@ export function useImageHandling(reading: RoomReading) {
         if (currentGenericReading?.images) {
           currentGenericReading.images.splice(selectedImageIndex || 0, 1);
         }
-        updateReading(type, currentGenericReading);
+        updateGenericReading({
+          id: currentGenericReading?.id || "",
+          data: {
+            images: currentGenericReading?.images || [],
+          },
+        });
       } else {
         const currentWallReading = reading.wallReadings?.find(
           (wa) => wa.id === selectedImageType
@@ -99,7 +110,12 @@ export function useImageHandling(reading: RoomReading) {
         if (currentWallReading?.images) {
           currentWallReading.images.splice(selectedImageIndex || 0, 1);
         }
-        updateReading(type, currentWallReading);
+        updateWallReading({
+          id: currentWallReading?.id || "",
+          data: {
+            images: currentWallReading?.images || [],
+          },
+        });
       }
 
       // Update modal state
@@ -174,8 +190,10 @@ export function useImageHandling(reading: RoomReading) {
   const openImageViewer = (
     index: number,
     type: "generic" | "floor" | "wall" | string,
-    genericId?: number
+    genericId?: string
   ) => {
+    console.log("🚀 ~ useImageHandling ~ index:", index);
+
     setSelectedImageIndex(index);
     setSelectedImageType(type);
     if (genericId) {

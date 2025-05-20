@@ -2,21 +2,23 @@ import React from "react";
 import { View, Image, Pressable, Text } from "react-native";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, Trash2, X } from "lucide-react-native";
-import { ReadingsWithGenericReadings } from "@/types/app";
-import { getExtendedWallImages } from "../utils/imageHandling";
-
+import { RoomReading, Room } from "@service-geek/api-client";
 interface ImageViewerProps {
   isOpen: boolean;
   onClose: () => void;
   selectedImageIndex: number | null;
   selectedImageType: "generic" | "floor" | "wall" | string | null;
-  selectedGenericIndex: number | null;
+  selectedGenericIndex: string | null;
   roomImages: { [key: string]: string };
   genericImages: { [key: string]: string };
-  reading: ReadingsWithGenericReadings;
-  onDeleteImage: (imageKey: string, type: 'wall' | 'floor' | 'generic' | string) => void;
+  reading: RoomReading;
+  onDeleteImage: (
+    imageKey: string,
+    type: "wall" | "floor" | "generic" | string
+  ) => void;
   onPrevImage: () => void;
   onNextImage: () => void;
+  room: Room;
 }
 
 export const ImageViewer: React.FC<ImageViewerProps> = ({
@@ -25,20 +27,21 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
   selectedImageIndex,
   selectedImageType,
   selectedGenericIndex,
-  roomImages,
-  genericImages,
+
   reading,
   onDeleteImage,
   onPrevImage,
   onNextImage,
+  room,
 }) => {
-  // Filter wall and floor images
-  const wallImages = reading.RoomReadingImage?.filter(img => img.type === "wall");
-  const floorImages = reading.RoomReadingImage?.filter(img => img.type === "floor");
+  const wallImages = reading.wallReadings?.find(
+    (reading) => reading.id === selectedImageType
+  )?.images;
+  console.log("🚀 ~ asasaswallImages:", selectedImageType, wallImages);
 
   return (
-    <Dialog 
-      open={isOpen} 
+    <Dialog
+      open={isOpen}
       onOpenChange={(open) => {
         if (!open) {
           onClose();
@@ -49,45 +52,48 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
         {selectedImageIndex !== null && selectedImageType && (
           <View className="flex-1 relative">
             <Image
-              source={{ 
-                uri: selectedImageType === 'generic' 
-                  ? genericImages[reading.GenericRoomReading.find(grr => 
-                      grr.id === selectedGenericIndex
-                    )?.GenericRoomReadingImage?.[selectedImageIndex]?.imageKey || '']
-                  : selectedImageType === 'wall'
-                  ? roomImages[wallImages?.[selectedImageIndex]?.imageKey || '']
-                  : selectedImageType === 'floor'
-                  ? roomImages[floorImages?.[selectedImageIndex]?.imageKey || '']
-                  : roomImages[getExtendedWallImages(selectedImageType, reading.RoomReadingImage)
-                      ?.[selectedImageIndex]?.imageKey || '']
+              source={{
+                uri:
+                  selectedImageType === "generic"
+                    ? reading.genericRoomReading?.find(
+                        (grr) => grr.id === selectedGenericIndex
+                      )?.images?.[selectedImageIndex]
+                    : wallImages?.[selectedImageIndex],
               }}
-              style={{ width: '100%', height: '100%' }}
+              style={{ width: "100%", height: "100%" }}
               resizeMode="contain"
             />
             <View className="absolute top-12 right-4 flex-row gap-2 z-20">
-              <Pressable 
+              <Pressable
                 onPress={() => {
                   if (selectedImageIndex === null || !selectedImageType) return;
-                  
-                  if (selectedImageType === 'generic') {
-                    const currentGenericReading = reading.GenericRoomReading?.find(genericReading => 
-                      genericReading.id === selectedGenericIndex
-                    );
-                    if (currentGenericReading?.GenericRoomReadingImage?.[selectedImageIndex]) {
+
+                  if (selectedImageType === "generic") {
+                    const currentGenericReading =
+                      reading.genericRoomReading?.find(
+                        (genericReading) =>
+                          genericReading.id === selectedGenericIndex
+                      );
+                    if (currentGenericReading?.images?.[selectedImageIndex]) {
                       onDeleteImage(
-                        currentGenericReading.GenericRoomReadingImage[selectedImageIndex].imageKey, 
-                        'generic'
+                        currentGenericReading.images[selectedImageIndex],
+                        "generic"
                       );
                     }
-                  } else if (selectedImageType === 'wall' && wallImages?.[selectedImageIndex]) {
-                    onDeleteImage(wallImages[selectedImageIndex].imageKey, 'wall');
-                  } else if (selectedImageType === 'floor' && floorImages?.[selectedImageIndex]) {
-                    onDeleteImage(floorImages[selectedImageIndex].imageKey, 'floor');
                   } else {
                     // Handle extended wall/floor images
-                    const extendedImages = getExtendedWallImages(selectedImageType, reading.RoomReadingImage);
-                    if (extendedImages && extendedImages.length > 0 && extendedImages[selectedImageIndex]) {
-                      onDeleteImage(extendedImages[selectedImageIndex].imageKey, selectedImageType);
+                    const extendedImages = reading.wallReadings?.find(
+                      (reading) => reading.id === selectedImageType
+                    )?.images;
+                    if (
+                      extendedImages &&
+                      extendedImages.length > 0 &&
+                      extendedImages[selectedImageIndex]
+                    ) {
+                      onDeleteImage(
+                        extendedImages[selectedImageIndex],
+                        selectedImageType
+                      );
                     }
                   }
                 }}
@@ -95,7 +101,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
               >
                 <Trash2 color="white" size={24} />
               </Pressable>
-              <Pressable 
+              <Pressable
                 onPress={onClose}
                 className="bg-black/50 rounded-full p-2"
               >
@@ -119,14 +125,17 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
             </View>
             <View className="absolute bottom-4 w-full flex-row justify-center z-10">
               <Text className="text-white text-sm">
-                {selectedImageIndex !== null ? selectedImageIndex + 1 : 0} / {
-                  selectedImageType === 'wall' ? wallImages?.length :
-                  selectedImageType === 'floor' ? floorImages?.length :
-                  selectedImageType === 'generic' && reading.GenericRoomReading ? reading.GenericRoomReading.find(genericReading => 
-                    genericReading.id === selectedGenericIndex
-                  )?.GenericRoomReadingImage?.length :
-                  selectedImageType ? getExtendedWallImages(selectedImageType, reading.RoomReadingImage).length : 0
-                }
+                {selectedImageIndex !== null ? selectedImageIndex + 1 : 0} /{" "}
+                {selectedImageType === "generic" && reading.genericRoomReading
+                  ? reading.genericRoomReading.find(
+                      (genericReading) =>
+                        genericReading.id === selectedGenericIndex
+                    )?.images?.length
+                  : selectedImageType
+                    ? reading.wallReadings?.find(
+                        (reading) => reading.id === selectedImageType
+                      )?.images?.length
+                    : 0}
               </Text>
             </View>
           </View>
@@ -134,4 +143,4 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
       </DialogContent>
     </Dialog>
   );
-}; 
+};

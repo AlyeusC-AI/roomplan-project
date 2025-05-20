@@ -29,6 +29,7 @@ import {
   calculateGPP,
   Room,
   RoomReading,
+  useCreateGenericRoomReading,
   useDeleteRoomReading,
   useDeleteWall,
   useUpdateRoom,
@@ -55,7 +56,7 @@ const RoomReadingItem = ({
   openImageViewer: (
     index: number,
     type: "generic" | "floor" | "wall" | string,
-    genericId?: number
+    genericId?: string
   ) => void;
   setWall: (wall: Partial<Wall>) => void;
 }) => {
@@ -63,30 +64,61 @@ const RoomReadingItem = ({
   const { mutate: deleteWall } = useDeleteWall();
   const { mutate: deleteRoomReading, isPending: isDeleting } =
     useDeleteRoomReading();
+  const { mutate: addGenericRoomReading, isPending: isAdding } =
+    useCreateGenericRoomReading();
   const [tempRoomReading, setTempRoomReading] = useState<RoomReading>(reading);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
+
   console.log("🚀 ~ tempRoomReading:", tempRoomReading.humidity);
-  // useEffect(() => {
-  //   setTempRoomReading(reading);
-  // }, [reading]);
+  useEffect(() => {
+    setTempRoomReading(reading);
+  }, [reading]);
 
   const debouncedRoomReading = useDebounce(tempRoomReading, 1000);
   // console.log("🚀 ~ debouncedRoomReading:", debouncedRoomReading);
 
-  useEffect(() => {
-    updateRoomReading({
+  const save = async () => {
+    await updateRoomReading({
       id: reading.id,
       data: {
         date: debouncedRoomReading.date,
         temperature: debouncedRoomReading.temperature,
         humidity: debouncedRoomReading.humidity,
-        wallReadings: debouncedRoomReading.wallReadings,
-        // genericRoomReading: debouncedRoomReading.genericRoomReading,
+        // wallReadings: debouncedRoomReading.wallReadings,
       },
     });
+  };
+  useEffect(() => {
+    const now = Date.now();
+    // Only update if we're not already updating and enough time has passed since last update
+    if (!isUpdating && now - lastUpdateTime > 1000) {
+      setIsUpdating(true);
+      updateRoomReading(
+        {
+          id: reading.id,
+          data: {
+            date: debouncedRoomReading.date,
+            temperature: debouncedRoomReading.temperature,
+            humidity: debouncedRoomReading.humidity,
+            // wallReadings: debouncedRoomReading.wallReadings,
+          },
+        },
+        {
+          onSuccess: () => {
+            setIsUpdating(false);
+            setLastUpdateTime(Date.now());
+          },
+          onError: () => {
+            setIsUpdating(false);
+          },
+        }
+      );
+    }
   }, [
     debouncedRoomReading.humidity,
     debouncedRoomReading.temperature,
-    debouncedRoomReading.wallReadings,
+    // debouncedRoomReading.wallReadings,
     debouncedRoomReading.date,
   ]);
 
@@ -130,16 +162,6 @@ const RoomReadingItem = ({
     // });
   };
 
-  const handleDeleteExtendedWall = async (id: string) => {
-    try {
-      await deleteWall(id);
-
-      toast.success("Measurement deleted successfully");
-    } catch (error) {
-      console.log("🚀 ~ handleDeleteExtendedWall ~ error:", error);
-      // toast.error("Failed to delete measurement");
-    }
-  };
   const deleteReading = async (readingId: string) => {
     try {
       await deleteRoomReading(readingId);
@@ -166,125 +188,6 @@ const RoomReadingItem = ({
           onPress: async () => deleteReading(reading.id),
         },
       ]
-    );
-  };
-
-  // Helper function to get images for a specific extended wall
-  const getExtendedWallImagesForUI = (wallId: string): string[] => {
-    const wall = tempRoomReading.wallReadings?.find((w) => w.wallId === wallId);
-    if (!wall?.images.length) return [];
-
-    const images = wall.images;
-
-    return images;
-  };
-
-  // Function to handle value changes for extended walls
-  const handleExtendedWallValueChange = async (
-    id: string,
-    value: string,
-    wallId: string
-  ) => {
-    const updatedWall = reading.wallReadings?.find((w) => w.wallId === wallId);
-    const updatedWalls = updatedWall
-      ? reading.wallReadings?.map((w) =>
-          w.id === id ? { ...w, reading: Number(value) } : w
-        )
-      : [
-          ...(reading.wallReadings || []),
-          {
-            reading: Number(value),
-            images: [],
-            wallId: wallId,
-          },
-        ];
-    setTempRoomReading({
-      ...tempRoomReading,
-      wallReadings: updatedWalls,
-    });
-  };
-  const getExtendedWallSection = (wall: Wall) => {
-    const wallReading = reading.wallReadings?.find((w) => w.id === wall.id);
-    const images = wallReading?.images;
-    return (
-      <View key={wall.id}>
-        {/* Wall Moisture Content Section */}
-
-        <View className="flex-row items-center justify-between mb-0.5">
-          <View className="flex-row items-center">
-            <TouchableOpacity onPress={() => setWall(wall)}>
-              <FormControl.Label className="text-gray-700 font-medium text-sm">
-                {wall.name || "Moisture Content (Wall)"}
-              </FormControl.Label>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleAddExtendedWall(wall.type)}
-              className="ml-2"
-            >
-              <Plus color="#1d4ed8" size={16} />
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            onPress={() =>
-              pickImage("wall", wall.id, (type, id, images) => {
-                setTempRoomReading({
-                  ...tempRoomReading,
-                  wallReadings: tempRoomReading.wallReadings?.map((w) =>
-                    w.id === id
-                      ? {
-                          ...w,
-                          images: {
-                            ...w.images,
-                            ...images,
-                          },
-                        }
-                      : w
-                  ),
-                });
-              })
-            }
-            className="p-0.5"
-          >
-            <Camera color="#1d4ed8" size={20} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Wall Moisture Content Input */}
-        <RoomReadingInput
-          value={
-            tempRoomReading.wallReadings
-              ?.find((w) => w.id === wall.id)
-              ?.reading?.toString() || ""
-          }
-          placeholder="Enter moisture content percentage"
-          rightText="%"
-          onChange={(moistureContentWall) =>
-            setTempRoomReading({
-              ...tempRoomReading,
-              wallReadings: tempRoomReading.wallReadings?.map((w) =>
-                w.id === wall.id
-                  ? { ...w, reading: Number(moistureContentWall) }
-                  : w
-              ),
-            })
-          }
-        />
-        {/* Wall Images */}
-        {images?.length && images.length > 0 && (
-          <View className="flex-row flex-wrap gap-1.5 mt-1 mb-1">
-            {images
-              .filter((img: string) => img)
-              .map((img: string, index: number) => (
-                <OptimizedImage
-                  onPress={() => openImageViewer(index, wall.id)}
-                  uri={img}
-                  style={{ width: 80, height: 80, borderRadius: 6 }}
-                  key={img}
-                />
-              ))}
-          </View>
-        )}
-      </View>
     );
   };
 
@@ -333,10 +236,10 @@ const RoomReadingItem = ({
               placeholder="Temperature"
               rightText="°F"
               onChange={(value) => {
-                setTempRoomReading({
-                  ...tempRoomReading,
+                setTempRoomReading((prev) => ({
+                  ...prev,
                   temperature: Number(value),
-                });
+                }));
               }}
             />
           </View>
@@ -351,10 +254,10 @@ const RoomReadingItem = ({
               placeholder="Relative Humidity"
               rightText="%"
               onChange={(value) => {
-                setTempRoomReading({
-                  ...tempRoomReading,
+                setTempRoomReading((prev) => ({
+                  ...prev,
                   humidity: Number(value),
-                });
+                }));
               }}
             />
           </View>
@@ -384,42 +287,14 @@ const RoomReadingItem = ({
               <ExtendedWallSection
                 key={wall.id}
                 wall={wall}
+                roomReading={tempRoomReading}
                 wallReading={tempRoomReading.wallReadings?.find(
                   (w) => w.wallId === wall.id
                 )}
                 onEdit={handleEditExtendedWall}
-                onDelete={handleDeleteExtendedWall}
-                onPickImage={(id) =>
-                  pickImage("wall", id, (type, id, images) => {
-                    const updatedWall = reading.wallReadings?.find(
-                      (w) => w.wallId === wall.id
-                    );
-
-                    setTempRoomReading({
-                      ...tempRoomReading,
-                      wallReadings: updatedWall
-                        ? tempRoomReading.wallReadings?.map((w) =>
-                            w.id === id
-                              ? {
-                                  ...w,
-                                  images: [...(w.images || []), ...images],
-                                }
-                              : w
-                          )
-                        : [
-                            ...(tempRoomReading.wallReadings || []),
-                            {
-                              reading: 0,
-                              images: images,
-                              wallId: wall.id,
-                            },
-                          ],
-                    });
-                  })
-                }
+                pickImage={pickImage}
                 handleAddExtendedWall={handleAddExtendedWall}
-                onValueChange={handleExtendedWallValueChange}
-                onImagePress={(index, id) => openImageViewer(index, wall.id)}
+                onImagePress={(index, id) => openImageViewer(index, id)}
               />
             ))}
           </View>
@@ -429,33 +304,14 @@ const RoomReadingItem = ({
               <ExtendedWallSection
                 key={floor.id}
                 wall={floor}
+                roomReading={tempRoomReading}
                 wallReading={tempRoomReading.wallReadings?.find(
                   (w) => w.wallId === floor.id
                 )}
                 onEdit={handleEditExtendedWall}
-                onDelete={handleDeleteExtendedWall}
                 handleAddExtendedWall={handleAddExtendedWall}
-                onPickImage={(id) =>
-                  pickImage("wall", id, (type, id, images) => {
-                    console.log("🚀 ~ pickImage ~ images:", images);
-                    setTempRoomReading({
-                      ...tempRoomReading,
-                      wallReadings: tempRoomReading.wallReadings?.map((w) =>
-                        w.id === id
-                          ? {
-                              ...w,
-                              images: {
-                                ...w.images,
-                                ...images,
-                              },
-                            }
-                          : w
-                      ),
-                    });
-                  })
-                }
-                onValueChange={handleExtendedWallValueChange}
-                onImagePress={(index, id) => openImageViewer(index, floor.id)}
+                pickImage={pickImage}
+                onImagePress={(index, id) => openImageViewer(index, id)}
               />
             ))}
           </View>
@@ -471,46 +327,42 @@ const RoomReadingItem = ({
           </Heading>
 
           {/* Map through generic readings */}
-          {/* {reading.genericRoomReading.map((grr: any) => (
+          {reading.genericRoomReading?.map((grr: any, index: number) => (
             <GenericRoomReadingSection
               key={grr.id}
-              reading={grr}
-              onPickImage={(id) => pickImage("generic", id)}
-              genericImages={genericImages}
+              genericRoomReading={grr}
+              pickImage={pickImage}
+              index={index}
+              handleAddExtendedWall={handleAddExtendedWall}
+              roomReading={tempRoomReading}
               onImagePress={(imgIndex, genericId) =>
                 openImageViewer(imgIndex, "generic", genericId)
               }
             />
-          ))} */}
+          ))}
 
           {/* Empty state for generic readings */}
-          {/* {reading.GenericRoomReading.length === 0 && (
+          {reading.genericRoomReading?.length === 0 && (
             <View className="flex items-center justify-center py-4">
               <Text className="text-gray-400 font-medium text-sm">
                 No dehumidifier readings yet
               </Text>
             </View>
-          )} */}
+          )}
 
           {/* Add Dehumidifier Reading Button */}
-          {/* <Button
+          <Button
             onPress={async () => {
-              setIsAdding(true);
               try {
-                const body = await addReading(
-                  {
-                    roomReadingId: reading.id,
-                    publicId: v4(),
-                    value: "",
-                    type: "dehumidifer",
-                  },
-                  "generic"
-                );
-                rooms.addGenericRoomReading(room.id, reading.id, body.reading);
+                await addGenericRoomReading({
+                  roomReadingId: reading.id,
+                  value: "",
+                  humidity: 0,
+                  temperature: 0,
+                  images: [],
+                });
               } catch (err) {
                 console.error("Failed to add dehumidifer reading:", err);
-              } finally {
-                setIsAdding(false);
               }
             }}
             className="flex-row items-center justify-center bg-blue-600 rounded-lg py-1.5 px-3 my-2 mx-2 border border-blue-700"
@@ -530,7 +382,7 @@ const RoomReadingItem = ({
                 {isAdding ? "Adding..." : "Add Dehumidifier Reading"}
               </Text>
             </View>
-          </Button> */}
+          </Button>
         </Stack>
       </FormControl>
     </Box>

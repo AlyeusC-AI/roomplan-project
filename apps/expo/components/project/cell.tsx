@@ -30,13 +30,7 @@ export default function ProjectCell({ project }: { project: Project }) {
     return name.split(" ").join("+");
   };
   const { data: status } = useGetProjectStatus(project.statusId);
-  const images = project.images
-    ?.filter((image: any) => !image.isDeleted)
-    .map((image: any) => image?.url);
-  const [imageUrl, setImageUrl] = useState(images?.[0]);
-  useEffect(() => {
-    setImageUrl(images?.[0]);
-  }, [images?.[0]]);
+  const [imageUrl, setImageUrl] = useState(project.mainImage);
 
   return (
     <TouchableOpacity

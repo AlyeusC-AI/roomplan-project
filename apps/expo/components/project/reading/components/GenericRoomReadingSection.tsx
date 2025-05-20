@@ -5,74 +5,54 @@ import { Camera } from "lucide-react-native";
 import { RoomReadingInput } from "./RoomReadingInput";
 import { ReadingType } from "@/types/app";
 import { OptimizedImage } from "@/lib/utils/imageModule";
+import {
+  GenericRoomReading,
+  Room,
+  RoomReading,
+  useUpdateGenericRoomReading,
+  calculateGPP,
+} from "@service-geek/api-client";
 
 interface GenericRoomReadingProps {
+  genericRoomReading: GenericRoomReading; // Generic room reading object
   index: number;
-  reading: any; // Generic room reading object
-  onUpdateReading: (
-    readingId: string,
-    type: ReadingType,
-    data: any
-  ) => Promise<void>;
-  onPickImage: (genericReadingId: number) => void;
-  genericImages: { [key: string]: string };
-  onImagePress: (index: number, genericId: number) => void;
+  pickImage: (
+    type: "wall" | "generic",
+    wallId: string,
+    updateImages: (type: "generic" | "wall", id: string, images: any[]) => void
+  ) => void;
+  onImagePress: (index: number, id: string) => void;
+  handleAddExtendedWall: (type: "WALL" | "FLOOR" | "CEILING") => void;
+  roomReading: RoomReading;
 }
 
 export const GenericRoomReadingSection: React.FC<GenericRoomReadingProps> = ({
+  genericRoomReading,
   index,
-  reading,
-  onUpdateReading,
-  onPickImage,
-  genericImages,
+  pickImage,
   onImagePress,
+  roomReading,
 }) => {
-  const [gpp, setGpp] = useState<number | null>(null);
-  const [temperature, setTemperature] = useState<string | null>(null);
-  const [humidity, setHumidity] = useState<string | null>(null);
-  const calculateGPP = (
-    temperature: string | null,
-    humidity: string | null
-  ) => {
-    console.log("🚀 ~ temperature:");
-    console.log("🚀 ~ humidity:", humidity, temperature);
-    if (!temperature || !humidity) return null;
-    const temp = Number(temperature);
-    const hum = Number(humidity);
-    if (isNaN(temp) || isNaN(hum)) return null;
-    const gpp = (hum / 100) * 7000 * (1 / 7000 + (2 / 7000) * (temp - 32));
-    setGpp(gpp);
-    console.log("🚀 ~ gpp:", gpp);
-
-    return gpp;
+  const { mutate: updateGenericRoomReading } = useUpdateGenericRoomReading();
+  const onPickImage = async () => {
+    await pickImage(
+      "generic",
+      genericRoomReading.id,
+      async (type, id, images) => {
+        const updatedGenericRoomReading = genericRoomReading;
+        await updateGenericRoomReading({
+          id: updatedGenericRoomReading.id,
+          data: {
+            images: [...(updatedGenericRoomReading.images || []), ...images],
+          },
+        });
+      }
+    );
   };
-
-  // Calculate initial gpp
-  useEffect(() => {
-    setTemperature(reading.temperature);
-    setHumidity(reading.humidity);
-    const initialGPP = calculateGPP(reading.temperature, reading.humidity);
-    if (initialGPP !== null) {
-      onUpdateReading(reading.publicId, "generic", {
-        gpp: initialGPP.toFixed(2),
-      });
-    }
-  }, [reading]);
-
-  useEffect(() => {
-    const gpp = calculateGPP(temperature, humidity);
-    if (gpp !== null) {
-      console.log("🚀 ~ gpp:", gpp);
-      onUpdateReading(reading.publicId, "generic", {
-        gpp: gpp.toFixed(2),
-      });
-    }
-  }, [temperature, humidity]);
-
   return (
     <Box
       w="full"
-      key={reading.publicId}
+      key={genericRoomReading.id}
       className="mb-3 bg-gray-50 rounded-lg p-3"
     >
       <Stack mx="2" className="gap-y-2">
@@ -90,7 +70,15 @@ export const GenericRoomReadingSection: React.FC<GenericRoomReadingProps> = ({
             </FormControl.Label>
           </View>
           <TouchableOpacity
-            onPress={() => onPickImage(reading.id)}
+            onPress={() =>
+              pickImage(
+                "generic",
+                genericRoomReading.id,
+                (type, id, images) => {
+                  console.log("🚀 ~ images:", images);
+                }
+              )
+            }
             className="p-0.5"
           >
             <Camera color="#1d4ed8" size={20} />
@@ -98,47 +86,46 @@ export const GenericRoomReadingSection: React.FC<GenericRoomReadingProps> = ({
         </View>
 
         <RoomReadingInput
-          value={reading.value || ""}
+          value={genericRoomReading.value || ""}
           rightText="Each"
           placeholder="Enter dehumidifier reading"
           onChange={(value) =>
-            onUpdateReading(reading.publicId, "generic", {
-              value,
+            updateGenericRoomReading({
+              id: genericRoomReading.id,
+              data: {
+                value,
+              },
             })
           }
         />
 
-        {reading.GenericRoomReadingImage &&
-          reading.GenericRoomReadingImage.length > 0 && (
-            <View className="flex-row flex-wrap gap-1.5 mt-1 mb-1">
-              {reading.GenericRoomReadingImage.map(
-                (img: any, imgIndex: number) => (
-                  <OptimizedImage
-                    uri={genericImages[img.imageKey]}
-                    style={{ width: 80, height: 80, borderRadius: 6 }}
-                    key={img.imageKey}
-                    onPress={() => onImagePress(imgIndex, reading.id)}
-                  />
-                )
-              )}
-            </View>
-          )}
+        {genericRoomReading.images && genericRoomReading.images.length > 0 && (
+          <View className="flex-row flex-wrap gap-1.5 mt-1 mb-1">
+            {genericRoomReading.images.map((img: any, imgIndex: number) => (
+              <OptimizedImage
+                uri={img.imageKey}
+                style={{ width: 80, height: 80, borderRadius: 6 }}
+                key={img.imageKey}
+                onPress={() => onImagePress(imgIndex, genericRoomReading.id)}
+              />
+            ))}
+          </View>
+        )}
 
         <View>
           <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">
             Temperature
           </FormControl.Label>
           <RoomReadingInput
-            value={reading.temperature || ""}
+            value={genericRoomReading.temperature?.toString() || ""}
             rightText="°F"
             placeholder="Enter temperature"
             onChange={(temperature) => {
-              console.log("🚀 ~ temperaturaaaae:", temperature, reading);
-              // const gpp = calculateGPP(temperature, reading.humidity);
-              setTemperature(temperature);
-              onUpdateReading(reading.publicId, "generic", {
-                temperature,
-                gpp: gpp ? gpp.toFixed(2) : null,
+              updateGenericRoomReading({
+                id: genericRoomReading.id,
+                data: {
+                  temperature: Number(temperature),
+                },
               });
             }}
           />
@@ -149,15 +136,15 @@ export const GenericRoomReadingSection: React.FC<GenericRoomReadingProps> = ({
             Relative Humidity
           </FormControl.Label>
           <RoomReadingInput
-            value={reading.humidity || ""}
+            value={genericRoomReading.humidity?.toString() || ""}
             rightText="%"
             placeholder="Enter humidity"
             onChange={(humidity) => {
-              // const gpp = calculateGPP(reading.temperature, humidity);
-              setHumidity(humidity);
-              onUpdateReading(reading.publicId, "generic", {
-                humidity,
-                gpp: gpp ? gpp.toFixed(2) : null,
+              updateGenericRoomReading({
+                id: genericRoomReading.id,
+                data: {
+                  humidity: Number(humidity),
+                },
               });
             }}
           />
@@ -168,7 +155,12 @@ export const GenericRoomReadingSection: React.FC<GenericRoomReadingProps> = ({
             Grains Per Pound
           </FormControl.Label>
           <RoomReadingInput
-            value={gpp ? gpp.toFixed(2) : ""}
+            value={
+              calculateGPP(
+                genericRoomReading.temperature,
+                genericRoomReading.humidity
+              )?.toString() || ""
+            }
             rightText="gpp"
             placeholder="Grains Per Pound"
             disabled

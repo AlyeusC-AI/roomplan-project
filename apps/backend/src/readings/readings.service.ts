@@ -53,12 +53,12 @@ export class ReadingsService {
         wallReadings: true,
         genericRoomReading: {
           orderBy: {
-            createdAt: 'desc',
+            createdAt: 'asc',
           },
         },
       },
       orderBy: {
-        date: 'desc',
+        date: 'asc',
       },
     });
   }
@@ -99,7 +99,7 @@ export class ReadingsService {
     return this.prisma.wall.findMany({
       where: { roomId },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: 'asc',
       },
     });
   }
@@ -153,7 +153,7 @@ export class ReadingsService {
     return this.prisma.wallReading.findMany({
       where: { wallId },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: 'asc',
       },
     });
   }
@@ -204,7 +204,7 @@ export class ReadingsService {
     return this.prisma.genericRoomReading.findMany({
       where: { roomReadingId },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: 'asc',
       },
     });
   }

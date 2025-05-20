@@ -77,6 +77,7 @@ export function useCreateWallReading() {
       readingsService.createWallReading(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wall-readings"] });
+      queryClient.invalidateQueries({ queryKey: ["room-readings"] });
     },
   });
 }
@@ -104,6 +105,7 @@ export function useUpdateWallReading() {
       readingsService.updateWallReading(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wall-readings"] });
+      queryClient.invalidateQueries({ queryKey: ["room-readings"] });
     },
   });
 }
