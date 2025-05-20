@@ -69,18 +69,7 @@ export const GenericRoomReadingSection: React.FC<GenericRoomReadingProps> = ({
               Reading Value
             </FormControl.Label>
           </View>
-          <TouchableOpacity
-            onPress={() =>
-              pickImage(
-                "generic",
-                genericRoomReading.id,
-                (type, id, images) => {
-                  console.log("🚀 ~ images:", images);
-                }
-              )
-            }
-            className="p-0.5"
-          >
+          <TouchableOpacity onPress={onPickImage} className="p-0.5">
             <Camera color="#1d4ed8" size={20} />
           </TouchableOpacity>
         </View>
@@ -101,11 +90,11 @@ export const GenericRoomReadingSection: React.FC<GenericRoomReadingProps> = ({
 
         {genericRoomReading.images && genericRoomReading.images.length > 0 && (
           <View className="flex-row flex-wrap gap-1.5 mt-1 mb-1">
-            {genericRoomReading.images.map((img: any, imgIndex: number) => (
+            {genericRoomReading.images.map((img: string, imgIndex: number) => (
               <OptimizedImage
-                uri={img.imageKey}
+                uri={img}
                 style={{ width: 80, height: 80, borderRadius: 6 }}
-                key={img.imageKey}
+                key={img}
                 onPress={() => onImagePress(imgIndex, genericRoomReading.id)}
               />
             ))}

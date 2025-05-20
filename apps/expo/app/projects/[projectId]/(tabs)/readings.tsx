@@ -1,8 +1,7 @@
 import { FlatList, Box, Heading, VStack, HStack, Center } from "native-base";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import RoomReading from "@/components/project/reading";
 import { useGlobalSearchParams, useRouter } from "expo-router";
-import { toast } from "sonner-native";
 import Empty from "@/components/project/empty";
 import { Building, Plus } from "lucide-react-native";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,8 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
   }>();
   const { mutate: createRoomReading, isPending: isCreatingRoomReading } =
     useCreateRoomReading();
-  const { data: roomReadings } = useGetRoomReadings(room.id);
+  const { data: roomReadings, isPending: isLoadingRoomReadings } =
+    useGetRoomReadings(room.id);
   console.log("🚀 ~ RoomReadingItem ~ roomReadings:", roomReadings?.data);
 
   const router = useRouter();
@@ -86,7 +86,11 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
         </Button>
       </HStack>
       <VStack w="100%" space={2}>
-        {roomReadings?.data?.length === 0 ? (
+        {isLoadingRoomReadings ? (
+          <Center w="full" py={4}>
+            <ActivityIndicator />
+          </Center>
+        ) : roomReadings?.data?.length === 0 ? (
           <Center w="full" py={4}>
             <Heading size="sm" color="gray.400">
               No readings yet

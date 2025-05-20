@@ -10,7 +10,6 @@ import {
 } from "lucide-react-native";
 import { TouchableOpacity, Text, View } from "react-native";
 
-import { ReadingType } from "@/types/app";
 // Import refactored components
 import { EditNameModal } from "./components/EditNameModal";
 import { ImageViewer } from "./components/ImageViewer";

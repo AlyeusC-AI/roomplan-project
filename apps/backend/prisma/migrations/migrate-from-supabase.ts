@@ -14,6 +14,34 @@ const supabaseUrlForImages =
 
 dotenv.config();
 
+interface Room_Supabase {
+  id: number;
+  createdAt: string;
+  isDeleted: boolean;
+  publicId: string;
+  name: string;
+  projectId: number;
+  gpp: string | null;
+  humidity: string | null;
+  dehuReading: string | null;
+  temperature: string | null;
+  length: string | null;
+  width: string | null;
+  height: string | null;
+  totalSqft: string | null;
+  windows: number | null;
+  doors: number | null;
+  equipmentUsed: string[];
+  wallName: string | null;
+  floorName: string | null;
+  extendedWalls: any | null;
+  roomPlanSVG: string | null;
+  scannedFileKey: string | null;
+  cubiTicketId: string | null;
+  cubiModelId: string | null;
+  cubiRoomPlan: string | null;
+  equipmentUsedQuantity: any | null;
+}
 interface RoomReading_Supabase {
   id: number;
   createdAt: string;
@@ -1065,6 +1093,41 @@ async function migrateReading() {
   }
 }
 
+async function migrateRooms() {
+  console.log('Starting rooms migration...');
+  const { data: rooms, error } = await supabase
+    .from('Room')
+    .select('*')
+    .eq('isDeleted', false);
+
+  if (error) {
+    throw new Error(`Error fetching rooms: ${error.message}`);
+  }
+  console.log(`Found ${rooms.length} rooms to migrate`);
+  for (const room of rooms as Room_Supabase[]) {
+    console.log('🚀 ~ migrateRooms ~ room:', room);
+    try {
+      // await prisma.room.upsert({
+      //   where: { supabaseId: room.publicId },
+      //   update: {
+      //     name: room.name,
+      //     project: {
+      //       connect: { supabaseId: room.Project.publicId },
+      //     },
+      //   },
+      //   create: {
+      //     name: room.name,
+      //     project: {
+      //       connect: { supabaseId: room.Project.publicId },
+      //     },
+      //   },
+      // });
+    } catch (error) {
+      console.error(`Error migrating room ${room.id}:`, error);
+    }
+  }
+}
+
 async function main() {
   try {
     console.log('Starting migration from Supabase...');
@@ -1076,9 +1139,9 @@ async function main() {
     // await migrateProjects();
     // await migrateCalendarEvents();
     // await migrateCalendarEventReminders();
-    // await migrateRooms();
+    await migrateRooms();
     // await migrateNotes();
-    await migrateReading();
+    // await migrateReading();
 
     // await migrateInferences();
     console.log('Migration completed successfully!');
