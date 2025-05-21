@@ -1,5 +1,6 @@
 import { User } from "./auth";
 import { Wall } from "./reading";
+import { Equipment, EquipmentProject } from "./equipment";
 
 export interface AreaAffected {
   id: string;
@@ -26,6 +27,7 @@ export interface Room {
   updatedAt: string;
   images: Image[];
   walls: Wall[];
+  equipmentsUsed: EquipmentProject[];
 
   humidity?: number;
   dehuReading?: number;
@@ -76,6 +78,24 @@ export interface CreateRoomDto {
 
 export interface UpdateRoomDto {
   name?: string;
+  equipmentUsed?: {
+    id: string;
+    quantity: number;
+  }[];
+  length?: number;
+  width?: number;
+  height?: number;
+  totalSqft?: number;
+  windows?: number;
+  doors?: number;
+  humidity?: number;
+  dehuReading?: number;
+  temperature?: number;
+  roomPlanSVG?: string;
+  scannedFileKey?: string;
+  cubiTicketId?: string;
+  cubiModelId?: string;
+  cubiRoomPlan?: string;
 }
 
 export interface UpdateAreaAffectedDto {

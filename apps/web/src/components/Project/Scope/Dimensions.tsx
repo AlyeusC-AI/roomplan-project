@@ -28,7 +28,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@components/ui/dialog";
-import { createClient } from "@lib/supabase/client";
+import {
+  Equipment,
+  Room,
+  useCreateEquipment,
+  useDeleteEquipment,
+  useGetEquipment,
+  useUpdateEquipment,
+  useUpdateRoom,
+} from "@service-geek/api-client";
 
 const defaultEquipmentType = [
   "Fan",
@@ -39,88 +47,82 @@ const defaultEquipmentType = [
   "Drying System",
 ];
 
-export default function Dimensions({ room }: { room: RoomWithReadings }) {
-  const [tempRoom, setTempRoom] = useState<RoomWithReadings>(room);
+export default function Dimensions({ room }: { room: Room }) {
+  const [tempRoom, setTempRoom] = useState<Partial<Room>>(room);
+  console.log("🚀 ~ Dimensions ~ tempRoom:", tempRoom);
   const { id } = useParams<{ id: string }>();
   const [open, setOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [showAddCustom, setShowAddCustom] = useState(false);
   const [newCustomEquipment, setNewCustomEquipment] = useState("");
-  const [customEquipment, setCustomEquipment] = useState<string[]>([]);
+  const [equipmentUsed, setEquipmentUsed] = useState<
+    {
+      id: string;
+      name: string;
+      quantity: number;
+    }[]
+  >([]);
+  console.log("🚀 ~ Dimensions ~ equipmentUsed:", equipmentUsed);
+
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState<{
     isOpen: boolean;
     equipment: string;
   }>({ isOpen: false, equipment: "" });
+  const { data: equipments } = useGetEquipment();
+  console.log("🚀 ~ Dimensions ~ equipments:", equipments);
+  const { mutate: createEquipment } = useCreateEquipment();
+  const { mutate: updateEquipment } = useUpdateEquipment();
+  const { mutate: deleteEquipment } = useDeleteEquipment();
+  const { mutate: updateRoom } = useUpdateRoom();
+  console.log("🚀 ~ Dimeaaaasadts:", equipments, room.equipmentsUsed);
 
-  // Add new state for equipment quantities
-  const [equipmentQuantities, setEquipmentQuantities] = useState<
-    Record<string, number>
-  >({});
   useEffect(() => {
-    setEquipmentQuantities(room.equipmentUsedQuantity || {});
-  }, [room?.equipmentUsedQuantity]);
+    if (equipments && room.equipmentUsed) {
+      const equipmentUsedData =
+        room.equipmentsUsed?.map((e) => ({
+          id: e.equipmentId,
+          name: equipments.find((eq) => eq.id === e.equipmentId)?.name || "",
+          quantity: e.quantity,
+        })) || [];
+      console.log("🚀 ~ useEffect ~ equipmentUsedData:", equipmentUsedData);
 
-  // Load custom equipment
-  useEffect(() => {
-    const fetchCustomEquipment = async () => {
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.user?.user_metadata?.organizationId) return;
-
-      const { data, error } = await supabase
-        .from("Organization")
-        .select("extraEquipemnts")
-        .eq("publicId", session.user.user_metadata.organizationId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching custom equipment:", error);
-      } else {
-        setCustomEquipment(data.extraEquipemnts || []);
-      }
-    };
-
-    fetchCustomEquipment();
-  }, []);
-
+      setEquipmentUsed(equipmentUsedData);
+    }
+  }, [room.equipmentsUsed, equipments]);
   const save = async () => {
     try {
       setUpdating(true);
       const d = tempRoom;
       if (d.length) {
-        d.totalSqft = (
-          parseFloat(d.length || "1") * parseFloat(d.width || "1")
-        ).toString();
+        d.totalSqft = Number(d.length) * Number(d.width);
       }
       if (d.width) {
-        d.totalSqft = (
-          parseFloat(d.width || "1") * parseFloat(d.length || "1")
-        ).toString();
+        d.totalSqft = Number(d.width) * Number(d.length);
       }
-      // @ts-expect-error just deleting temp before updating
-      delete d.AreaAffected;
-      // @ts-expect-error just deleting temp before updating
-      delete d.RoomReading;
-      // @ts-expect-error just deleting temp before updating
-      delete d.Inference;
-      // @ts-expect-error just deleting temp before updating
-      delete d.Notes;
-      const res = await fetch(`/api/v1/projects/${id}/room`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          roomId: room.publicId,
-          ...tempRoom,
-        }),
+
+      await updateRoom({
+        id: room.id,
+        data: {
+          name: d.name,
+          length: d.length,
+          width: d.width,
+          height: d.height,
+          totalSqft: d.totalSqft,
+          windows: d.windows,
+          doors: d.doors,
+          equipmentUsed: equipmentUsed,
+          humidity: d.humidity,
+          dehuReading: d.dehuReading,
+          temperature: d.temperature,
+          roomPlanSVG: d.roomPlanSVG,
+          scannedFileKey: d.scannedFileKey,
+          cubiTicketId: d.cubiTicketId,
+          cubiModelId: d.cubiModelId,
+          cubiRoomPlan: d.cubiRoomPlan,
+        },
       });
 
-      if (res.ok) {
-        roomStore.getState().updateRoom(room.publicId, d);
-        toast.success("Room updated successfully.");
-      } else {
-        toast.error("Failed to update room.");
-      }
+      toast.success("Room updated successfully.");
     } catch (e) {
       toast.error("Failed to update room.");
       console.error(e);
@@ -131,41 +133,25 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
 
   const equipmentOptions = useMemo(
     () =>
-      [...defaultEquipmentType, ...customEquipment].map((e) => ({
-        label: e,
-        value: e,
-      })) as { label: string; value: string }[],
-    [customEquipment]
+      equipments?.map((e) => ({
+        label: e.name,
+        value: e.id,
+      })) || ([] as { label: string; value: string }[]),
+    [equipments]
   );
 
   // Add custom equipment
   const handleAddCustomEquipment = async () => {
-    const supabase = createClient();
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (
-      !newCustomEquipment.trim() ||
-      !session?.user?.user_metadata?.organizationId
-    )
-      return;
+    if (!newCustomEquipment.trim()) return;
 
     try {
-      const { error } = await supabase
-        .from("Organization")
-        .update({
-          extraEquipemnts: [...customEquipment, newCustomEquipment.trim()],
-        })
-        .eq("publicId", session.user.user_metadata.organizationId);
-
-      if (error) {
-        toast.error("Failed to add custom equipment");
-      } else {
-        setCustomEquipment((prev) => [...prev, newCustomEquipment.trim()]);
-        setNewCustomEquipment("");
-        setShowAddCustom(false);
-        toast.success("Custom equipment added successfully");
-      }
+      createEquipment({
+        quantity: 1,
+        name: newCustomEquipment.trim(),
+      });
+      setNewCustomEquipment("");
+      setShowAddCustom(false);
+      toast.success("Custom equipment added successfully");
     } catch (error) {
       console.error("Error adding custom equipment:", error);
       toast.error("Failed to add custom equipment");
@@ -178,44 +164,20 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
   };
 
   const confirmDelete = async () => {
-    const supabase = createClient();
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
     const { equipment } = showDeleteConfirmation;
-    if (!session?.user?.user_metadata?.organizationId) return;
 
     try {
-      const { error } = await supabase
-        .from("Organization")
-        .update({
-          extraEquipemnts: customEquipment.filter((e) => e !== equipment),
-        })
-        .eq("publicId", session.user.user_metadata.organizationId);
+      deleteEquipment(equipment);
+      // Also remove from selected equipment if it's selected
+      if (equipmentUsed?.some((e) => e.id === equipment)) {
+        const newEquipment = equipmentUsed.filter((e) => e.id !== equipment);
 
-      if (error) {
-        toast.error("Failed to delete custom equipment");
-      } else {
-        setCustomEquipment((prev) => prev.filter((e) => e !== equipment));
-        // Also remove from selected equipment if it's selected
-        if (tempRoom.equipmentUsed?.includes(equipment)) {
-          const newEquipment = tempRoom.equipmentUsed.filter(
-            (e) => e !== equipment
-          );
-          const newQuantities = { ...equipmentQuantities };
-          delete newQuantities[equipment];
-          setEquipmentQuantities(newQuantities);
-          setTempRoom({
-            ...tempRoom,
-            equipmentUsed: newEquipment,
-            equipmentUsedQuantity: newQuantities,
-          });
-        }
-        toast.success("Custom equipment deleted successfully");
+        setEquipmentUsed(newEquipment);
       }
+      toast.success("Custom equipment deleted successfully");
     } catch (error) {
       console.error("Error deleting custom equipment:", error);
-      toast.error("Failed to delete custom equipment");
+      // toast.error("Failed to delete custom equipment");
     } finally {
       setShowDeleteConfirmation({ isOpen: false, equipment: "" });
     }
@@ -223,36 +185,29 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
 
   // Update the equipment selection handler
   const handleEquipmentSelect = (currentValue: string) => {
-    const isSelected = tempRoom.equipmentUsed?.includes(currentValue);
+    const isSelected = equipmentUsed?.some((e) => e.id === currentValue);
     const newEquipment = isSelected
-      ? tempRoom.equipmentUsed?.filter((e) => e !== currentValue)
-      : [...(tempRoom.equipmentUsed ?? []), currentValue];
+      ? equipmentUsed?.filter((e) => e.id !== currentValue)
+      : [
+          ...(equipmentUsed ?? []),
+          {
+            id: currentValue,
+            name: equipments?.find((e) => e.id === currentValue)?.name || "",
+            quantity: 1,
+          },
+        ];
 
-    // Update quantities
-    const newQuantities = { ...equipmentQuantities };
-    if (isSelected) {
-      delete newQuantities[currentValue];
-    } else {
-      newQuantities[currentValue] = 1; // Default quantity
-    }
-
-    setEquipmentQuantities(newQuantities);
-    setTempRoom({
-      ...tempRoom,
-      equipmentUsed: newEquipment || [],
-      equipmentUsedQuantity: newQuantities,
-    });
+    setEquipmentUsed(newEquipment);
     // setOpen(false);
   };
 
   // Add quantity change handler
   const handleQuantityChange = (equipment: string, quantity: number) => {
-    const newQuantities = { ...equipmentQuantities, [equipment]: quantity };
-    setEquipmentQuantities(newQuantities);
-    setTempRoom({
-      ...tempRoom,
-      equipmentUsedQuantity: newQuantities,
-    });
+    setEquipmentUsed(
+      equipmentUsed?.map((e) =>
+        e.id === equipment ? { ...e, quantity } : e
+      ) || []
+    );
   };
 
   return (
@@ -272,7 +227,7 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
             placeholder=''
             value={tempRoom.length || ""}
             onChange={(e) =>
-              setTempRoom({ ...tempRoom, length: e.target.value })
+              setTempRoom({ ...tempRoom, length: parseFloat(e.target.value) })
             }
             name='roomLength'
             type='number'
@@ -287,7 +242,7 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
             placeholder=''
             value={tempRoom.width ?? 0}
             onChange={(e) =>
-              setTempRoom({ ...tempRoom, width: e.target.value })
+              setTempRoom({ ...tempRoom, width: parseFloat(e.target.value) })
             }
             name='roomWidth'
             type='number'
@@ -301,7 +256,7 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
             placeholder=''
             value={tempRoom.height ?? 0}
             onChange={(e) =>
-              setTempRoom({ ...tempRoom, height: e.target.value })
+              setTempRoom({ ...tempRoom, height: parseFloat(e.target.value) })
             }
             name='roomHeight'
             type='number'
@@ -358,20 +313,19 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
                     aria-expanded={open}
                     className='w-full justify-between'
                   >
-                    {tempRoom.equipmentUsed &&
-                    tempRoom.equipmentUsed?.length > 0
-                      ? tempRoom.equipmentUsed.length > 2
-                        ? `${tempRoom.equipmentUsed
+                    {equipmentUsed && equipmentUsed?.length > 0
+                      ? equipmentUsed.length > 2
+                        ? `${equipmentUsed
                             .slice(0, 2)
                             .map(
                               (equipment) =>
-                                `${equipment} (${equipmentQuantities[equipment] || 1})`
+                                `${equipment.name} (${equipment.quantity || 1})`
                             )
                             .join(", ")}...`
-                        : tempRoom.equipmentUsed
+                        : equipmentUsed
                             .map(
                               (equipment) =>
-                                `${equipment} (${equipmentQuantities[equipment] || 1})`
+                                `${equipment.name} (${equipment.quantity || 1})`
                             )
                             .join(", ")
                       : "Select equipment..."}
@@ -380,7 +334,11 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
                 </PopoverTrigger>
                 <PopoverContent className='w-full p-0'>
                   <Command>
-                    <CommandInput placeholder='Search equipment...' />
+                    {/* <CommandInput
+                      // value={search}
+                      placeholder='Search equipment...'
+                    
+                    /> */}
                     <CommandList>
                       <CommandEmpty>No equipment found.</CommandEmpty>
                       <CommandGroup>
@@ -395,8 +353,8 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
                           >
                             <div className='flex items-center'>
                               <span>{framework.label}</span>
-                              {tempRoom.equipmentUsed?.includes(
-                                framework.value
+                              {equipmentUsed?.some(
+                                (e) => e.id === framework.value
                               ) && (
                                 <div className='ml-4 flex items-center'>
                                   <span className='mr-2 text-sm text-muted-foreground'>
@@ -407,9 +365,9 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
                                     type='number'
                                     min='1'
                                     value={
-                                      equipmentQuantities[
-                                        framework.value
-                                      ]?.toString() || "1"
+                                      equipmentUsed
+                                        ?.find((e) => e.id === framework.value)
+                                        ?.quantity?.toString() || "1"
                                     }
                                     onChange={(e) => {
                                       const quantity =
@@ -425,7 +383,9 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
                               )}
                             </div>
                             <div className='flex items-center gap-2'>
-                              {customEquipment.includes(framework.value) && (
+                              {equipmentUsed?.some(
+                                (e) => e.id === framework.value
+                              ) && (
                                 <Button
                                   variant='ghost'
                                   size='sm'
@@ -443,8 +403,8 @@ export default function Dimensions({ room }: { room: RoomWithReadings }) {
                               <Check
                                 className={cn(
                                   "ml-auto",
-                                  tempRoom.equipmentUsed?.includes(
-                                    framework.value
+                                  equipmentUsed?.some(
+                                    (e) => e.id === framework.value
                                   )
                                     ? "opacity-100"
                                     : "opacity-0"

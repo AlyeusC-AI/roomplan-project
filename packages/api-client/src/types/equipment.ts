@@ -9,6 +9,16 @@ export interface Equipment {
   updatedAt: string;
 }
 
+export interface EquipmentProject {
+  id: string;
+  equipmentId: string;
+  quantity: number;
+  createdAt: string;
+  updatedAt: string;
+  projectId: string;
+  roomId: string;
+}
+
 export interface CreateEquipmentDto {
   name: string;
   description?: string;

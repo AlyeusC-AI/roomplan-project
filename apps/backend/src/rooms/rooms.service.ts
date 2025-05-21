@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Equipment, Prisma } from '@prisma/client';
 
 // Define types for filtering and sorting
 export interface ImageFilters {
@@ -85,6 +85,7 @@ export class RoomsService {
     return this.prisma.room.findMany({
       where: { projectId },
       include: {
+        equipmentsUsed: true,
         walls: true,
         images: {
           include: {
@@ -118,16 +119,85 @@ export class RoomsService {
 
   async update(
     id: string,
-    data: { name?: string },
+    data: {
+      name?: string;
+      equipmentUsed?: { id: string; quantity: number }[];
+      length?: number;
+      width?: number;
+      height?: number;
+      totalSqft?: number;
+      windows?: number;
+      doors?: number;
+      humidity?: number;
+      dehuReading?: number;
+      temperature?: number;
+      roomPlanSVG?: string;
+      scannedFileKey?: string;
+      cubiTicketId?: string;
+      cubiModelId?: string;
+      cubiRoomPlan?: string;
+    },
   ): Promise<
     Prisma.RoomGetPayload<{
-      include: { images: { include: { comments: true } } };
+      include: {
+        images: { include: { comments: true } };
+        equipmentsUsed: true;
+      };
     }>
   > {
+    const room = await this.prisma.room.findUniqueOrThrow({
+      where: { id },
+      select: {
+        projectId: true,
+      },
+    });
+
+    // Calculate totalSqft if length and width are provided
+    let totalSqft = data.totalSqft;
+    if (data.length && data.width) {
+      totalSqft = data.length * data.width;
+    }
+    console.log('🚀 ~ RoomsService ~ data.equipmentUsed:', data.equipmentUsed);
+
     return this.prisma.room.update({
       where: { id },
-      data,
+      data: {
+        name: data.name,
+        length: data.length,
+        width: data.width,
+        height: data.height,
+        totalSqft,
+        windows: data.windows,
+        doors: data.doors,
+        humidity: data.humidity,
+        dehuReading: data.dehuReading,
+        temperature: data.temperature,
+        roomPlanSVG: data.roomPlanSVG,
+        scannedFileKey: data.scannedFileKey,
+        cubiTicketId: data.cubiTicketId,
+        cubiModelId: data.cubiModelId,
+        cubiRoomPlan: data.cubiRoomPlan,
+        equipmentsUsed: data.equipmentUsed
+          ? {
+              deleteMany: {},
+              create: data.equipmentUsed.map((e) => ({
+                equipment: {
+                  connect: {
+                    id: e.id,
+                  },
+                },
+                project: {
+                  connect: {
+                    id: room.projectId,
+                  },
+                },
+                quantity: e.quantity,
+              })),
+            }
+          : undefined,
+      },
       include: {
+        equipmentsUsed: true,
         images: {
           include: {
             comments: true,

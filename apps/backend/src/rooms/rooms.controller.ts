@@ -49,7 +49,25 @@ export class RoomsController {
   @Put(':id')
   async update(
     @Param('id') id: string,
-    @Body() data: { name?: string },
+    @Body()
+    data: {
+      name?: string;
+      equipmentUsed?: { id: string; quantity: number }[];
+      length?: number;
+      width?: number;
+      height?: number;
+      totalSqft?: number;
+      windows?: number;
+      doors?: number;
+      humidity?: number;
+      dehuReading?: number;
+      temperature?: number;
+      roomPlanSVG?: string;
+      scannedFileKey?: string;
+      cubiTicketId?: string;
+      cubiModelId?: string;
+      cubiRoomPlan?: string;
+    },
   ): Promise<
     Prisma.RoomGetPayload<{
       include: { images: { include: { comments: true } } };
