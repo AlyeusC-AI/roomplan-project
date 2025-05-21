@@ -12,8 +12,7 @@ import { Plus, Pencil, Trash2, X, Delete } from "lucide-react";
 
 import Dimensions from "./Dimensions";
 import {
-  AreaAffected,
-  AreaAffected as AreaAffectedType,
+  AreaAffected as AreaAffectedInterface,
   Room,
   useGetAreaAffected,
   useGetRoom,
@@ -137,7 +136,7 @@ function AreaAffected({ room }: { room: Room }) {
   const [currentArea, setCurrentArea] = useState<{
     type: AreaAffectedType;
     id: string;
-    areaAffected?: AreaAffected;
+    areaAffected?: AreaAffectedInterface;
   } | null>(null);
   const [extraFieldValues, setExtraFieldValues] = useState<
     Record<string, string>
@@ -150,6 +149,125 @@ function AreaAffected({ room }: { room: Room }) {
   } | null>(null);
 
   const isSaving = isUpdatingRoom || isUpdatingAreaAffected;
+  const areaAffectedByType = {
+    walls: areaAffected?.wallsAffected,
+    floor: areaAffected?.floorAffected,
+    ceiling: areaAffected?.ceilingAffected,
+  };
+
+  // Update handleAddExtraField
+  const handleAddExtraField = async (areaType: AreaAffectedType) => {
+    if (!newExtraField.label) return;
+
+    const area = areaAffectedByType[areaType];
+    if (!area) return;
+
+    const fieldId = `extra_${Date.now()}`;
+    const updatedArea = {
+      ...area,
+      extraFields: {
+        ...(area.extraFields || {}),
+        [fieldId]: {
+          label: newExtraField.label,
+          unit: newExtraField.unit,
+          value: "",
+        },
+      },
+    };
+
+    // Update local state
+    setExtraFieldValues((prev) => ({
+      ...prev,
+      [fieldId]: "",
+    }));
+
+    // Save to backend
+    await updateAreaAffected({
+      data: updatedArea,
+      roomId: room.id,
+      type: areaType as AreaAffectedType,
+    });
+
+    // Reset form
+    setNewExtraField({ label: "", unit: "" });
+    setShowExtraFieldModal(false);
+  };
+
+  // Update handleUpdateExtraField
+  const handleUpdateExtraField = async (
+    areaType: AreaAffectedType,
+    fieldId: string
+  ) => {
+    if (!editingExtraField) return;
+
+    const area = areaAffectedByType[areaType];
+    if (!area) return;
+
+    const updatedArea = {
+      ...area,
+      extraFields: {
+        ...(area.extraFields || {}),
+        [fieldId]: {
+          ...(area.extraFields?.[fieldId] || {}),
+          label: editingExtraField.label,
+          unit: editingExtraField.unit,
+        },
+      },
+    };
+
+    await updateAreaAffected({
+      data: updatedArea,
+      roomId: room.id,
+      type: areaType as AreaAffectedType,
+    });
+    setEditingExtraField(null);
+  };
+
+  // Update handleRemoveExtraField
+  const handleRemoveExtraField = async (
+    areaType: AreaAffectedType,
+    fieldId: string
+  ) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      fieldId,
+      areaType,
+      areaId: areaAffectedByType[areaType]?.id || "",
+    });
+  };
+
+  // Add confirmDelete function
+  const confirmDelete = async () => {
+    if (!deleteConfirmation) return;
+
+    const { fieldId, areaType } = deleteConfirmation;
+    const area = areaAffectedByType[areaType];
+    if (!area) return;
+
+    const updatedArea = {
+      ...area,
+      extraFields: {
+        ...(area.extraFields || {}),
+      },
+    };
+
+    // Remove the field from extraFields
+    delete updatedArea.extraFields[fieldId];
+
+    // Remove from local state
+    setExtraFieldValues((prev) => {
+      const newValues = { ...prev };
+      delete newValues[fieldId];
+      return newValues;
+    });
+
+    await updateAreaAffected({
+      data: updatedArea,
+      roomId: room.id,
+      type: areaType as AreaAffectedType,
+    });
+    setDeleteConfirmation(null);
+  };
   return (
     <>
       <div
@@ -440,13 +558,10 @@ function AreaAffected({ room }: { room: Room }) {
                                         </button>
                                         <button
                                           onClick={() =>
-                                            setDeleteConfirmation({
-                                              isOpen: true,
-                                              fieldId,
-                                              areaType:
-                                                type as AreaAffectedType,
-                                              areaId: areaAffected?.id || "",
-                                            })
+                                            handleRemoveExtraField(
+                                              type as AreaAffectedType,
+                                              fieldId
+                                            )
                                           }
                                           className='p-1.5 text-xs text-red-500 transition-colors hover:text-red-600'
                                         >
@@ -623,35 +738,12 @@ function AreaAffected({ room }: { room: Room }) {
                 <button
                   onClick={() => {
                     if (editingExtraField && currentArea) {
-                      updateAreaAffected({
-                        data: {
-                          extraFields: {
-                            ...((currentArea.areaAffected
-                              ?.extraFields as ExtraFields) || {}),
-                            [editingExtraField.id]: {
-                              ...editingExtraField,
-                              value: extraFieldValues[editingExtraField.id],
-                            },
-                          },
-                        },
-                        roomId: room.id,
-                        type: currentArea?.type as AreaAffectedType,
-                      });
+                      handleUpdateExtraField(
+                        currentArea.type,
+                        editingExtraField.id
+                      );
                     } else if (currentArea) {
-                      updateAreaAffected({
-                        data: {
-                          extraFields: {
-                            ...((currentArea.areaAffected
-                              ?.extraFields as ExtraFields) || {}),
-                            [newExtraField.label]: {
-                              ...newExtraField,
-                              value: extraFieldValues[newExtraField.label],
-                            },
-                          },
-                        },
-                        roomId: room.id,
-                        type: currentArea?.type as AreaAffectedType,
-                      });
+                      handleAddExtraField(currentArea.type);
                     }
                     setShowExtraFieldModal(false);
                     setEditingExtraField(null);
@@ -660,8 +752,9 @@ function AreaAffected({ room }: { room: Room }) {
                   }}
                   className='flex-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90'
                   disabled={
-                    !newExtraField.label ||
-                    (editingExtraField ? !editingExtraField.label : false)
+                    editingExtraField
+                      ? !editingExtraField.label
+                      : !newExtraField.label
                   }
                 >
                   {editingExtraField ? "Update Field" : "Add Field"}
@@ -704,20 +797,7 @@ function AreaAffected({ room }: { room: Room }) {
                   Cancel
                 </button>
                 <button
-                  onClick={() => {
-                    setDeleteConfirmation(null);
-                    updateAreaAffected({
-                      data: {
-                        extraFields: {
-                          ...((currentArea?.areaAffected
-                            ?.extraFields as ExtraFields) || {}),
-                          [deleteConfirmation.fieldId]: undefined,
-                        },
-                      },
-                      roomId: room.id,
-                      type: currentArea?.type as AreaAffectedType,
-                    });
-                  }}
+                  onClick={confirmDelete}
                   className='flex-1 rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600'
                 >
                   Delete
