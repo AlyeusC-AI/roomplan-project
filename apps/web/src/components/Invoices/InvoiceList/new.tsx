@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { LoadingPlaceholder } from "@components/ui/spinner";
 import { invoicesStore } from "@atoms/invoices";
-import { projectsStore } from "@atoms/projects";
 import {
   Select,
   SelectContent,

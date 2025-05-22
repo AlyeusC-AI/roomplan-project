@@ -1,5 +1,5 @@
 import { Fragment, useRef } from "react";
-import PricingOptions from "unused/Pricing/PricingOptions";
+import PricingOptions from "./PricingOptions";
 import { Dialog, Transition } from "@headlessui/react";
 
 export default function UpgradeModal({

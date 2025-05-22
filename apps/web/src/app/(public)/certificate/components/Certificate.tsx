@@ -18,8 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { orgStore } from "@atoms/organization";
-import Image from "next/image";
+
 import { CertificateFormData, WorkOrderFormData } from "../types/certificate";
 import { SignatureDisplay } from "./SignatureDisplay";
 import { CursiveSignature } from "./CursiveSignature";

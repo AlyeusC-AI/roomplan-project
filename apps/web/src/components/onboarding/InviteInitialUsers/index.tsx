@@ -1,5 +1,3 @@
-import { orgStore } from "@atoms/organization";
-import { teamMembersStore } from "@atoms/team-members";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@components/ui/button";

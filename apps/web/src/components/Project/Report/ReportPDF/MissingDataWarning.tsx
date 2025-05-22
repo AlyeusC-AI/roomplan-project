@@ -1,6 +1,5 @@
 import React from "react";
-import { orgStore } from "@atoms/organization";
-import { projectStore } from "@atoms/project";
+
 import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
 import { CircleAlert } from "lucide-react";
 

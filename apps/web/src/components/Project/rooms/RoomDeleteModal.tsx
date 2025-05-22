@@ -1,7 +1,6 @@
 import { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { roomStore } from "@atoms/room";
 import { Button } from "@components/ui/button";
 import { toast } from "sonner";
 import {

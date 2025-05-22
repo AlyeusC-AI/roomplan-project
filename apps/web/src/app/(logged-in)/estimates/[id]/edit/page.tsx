@@ -9,7 +9,6 @@ import { Label } from "@components/ui/label";
 import { LoadingPlaceholder } from "@components/ui/spinner";
 import { Switch } from "@components/ui/switch";
 import { DateTimePicker } from "@components/ui/date-time-picker";
-import { projectsStore } from "@atoms/projects";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, X } from "lucide-react";
 import {

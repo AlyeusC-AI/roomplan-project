@@ -1,6 +1,5 @@
 import { format } from "date-fns";
-import { orgStore } from "@atoms/organization";
-import { projectStore } from "@atoms/project";
+
 import React, { useState } from "react";
 import "./TitlePage.css";
 import PDFSafeImage from "./PDFSaveImage";

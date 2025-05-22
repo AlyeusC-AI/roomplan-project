@@ -8,9 +8,6 @@ import {
   View,
 } from "@react-pdf/renderer";
 const parser = require("parse-address");
-import { projectStore } from "@atoms/project";
-import { orgStore } from "@atoms/organization";
-import { roomStore } from "@atoms/room";
 
 // Create styles
 const styles = StyleSheet.create({

@@ -90,10 +90,11 @@ export default function AuthRedirect({
       return;
     }
 
-    // if (!activeOrg?.subscriptionPlan) {
-    //   router.push("/register?page=4");
-    //   return;
-    // }
+    if (!activeOrg?.subscriptionPlan) {
+      router.push("/register?page=4");
+      setLoading(false);
+      return;
+    }
     if (pathname === "/register" || pathname === "/login" || pathname === "/") {
       router.push("/projects");
     }

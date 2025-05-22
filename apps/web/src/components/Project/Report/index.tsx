@@ -7,7 +7,6 @@ import dynamic from "next/dynamic";
 import { Button } from "@components/ui/button";
 import { Switch } from "@components/ui/switch";
 import { Label } from "@components/ui/label";
-import { roomStore } from "@atoms/room";
 import { reportSettingsStore } from "@atoms/report-settings";
 import { useParams } from "next/navigation";
 import { LoadingPlaceholder } from "@components/ui/spinner";
@@ -24,8 +23,9 @@ const ReportPDF = dynamic(() => import("./ReportPDF"), {
 
 export default function Report() {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const { showDimensionsAndDetails, toggleDimensionsAndDetails } = reportSettingsStore();
-  
+  const { showDimensionsAndDetails, toggleDimensionsAndDetails } =
+    reportSettingsStore();
+
   const generatePDF = async () => {
     setIsGeneratingPdf(true);
     const pdfBody = document.getElementById("pdf-root");
@@ -81,7 +81,7 @@ export default function Report() {
             />
             <Label htmlFor="dimensions-details">Show Dimensions & Details</Label>
           </div> */}
-                <ReportSettingsPanel />
+          <ReportSettingsPanel />
 
           <Button onClick={generatePDF} disabled={isGeneratingPdf}>
             {isGeneratingPdf ? <LoadingPlaceholder /> : "Generate PDF"}

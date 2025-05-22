@@ -1,11 +1,8 @@
-import { orgStore } from "@atoms/organization";
-import { roomStore } from "@atoms/room";
 import { reportSettingsStore } from "@atoms/report-settings";
 import Script from "next/script";
 
 import AffectedAreas from "./AffectedAreas";
 import DimensionsAndDetails from "./DimensionsAndDetails";
-import LogoContainer from "./LogoContainer";
 import Notes from "./Notes";
 import OverviewPhotos from "./OverviewPhotos";
 import PageCount from "./PageCount";
@@ -63,8 +60,10 @@ const PDFHTML = () => {
                     )}
                   </>
                 )}
-            
-                {showReadings && <Readings room={room} roomReadings={room.RoomReading} />}
+
+                {showReadings && (
+                  <Readings room={room} roomReadings={room.RoomReading} />
+                )}
                 {showNotes && <Notes roomName={room.name} notes={room.Notes} />}
               </div>
             ))}

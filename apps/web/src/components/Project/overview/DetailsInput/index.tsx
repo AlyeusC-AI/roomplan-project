@@ -10,8 +10,6 @@ import Notes from "./Notes";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-import { projectStore } from "@atoms/project";
-import { MentionMetadata } from "@components/DesignSystem/Mentions/useMentionsMetadata";
 import { Button } from "@components/ui/button";
 import { Card } from "@components/ui/card";
 import { Separator } from "@components/ui/separator";

@@ -4,7 +4,6 @@ import { useState } from "react";
 import useAmplitudeTrack from "@utils/hooks/useAmplitudeTrack";
 import { useParams } from "next/navigation";
 import { event } from "nextjs-google-analytics";
-import { roomStore } from "@atoms/room";
 
 import Notes from "./Notes";
 import { Pencil, Trash } from "lucide-react";

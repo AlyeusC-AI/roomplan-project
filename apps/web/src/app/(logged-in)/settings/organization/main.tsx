@@ -1,6 +1,5 @@
 "use client";
 
-import { orgStore } from "@atoms/organization";
 import OrgMembersSection from "@app/(logged-in)/settings/organization/members";
 import AddressAutoComplete from "@components/ui/address-automplete";
 import { Button } from "@components/ui/button";

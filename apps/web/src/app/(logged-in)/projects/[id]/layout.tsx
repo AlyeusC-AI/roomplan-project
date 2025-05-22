@@ -1,8 +1,7 @@
 "use client";
 
 import { SidebarNav } from "@/components/ui/sidebar-nav";
-import { projectStore } from "@atoms/project";
-import { projectsStore } from "@atoms/projects";
+
 import { Separator } from "@components/ui/separator";
 import {
   useActiveOrganization,

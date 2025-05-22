@@ -13,7 +13,6 @@ import {
   PictureInPicture,
 } from "lucide-react";
 import { useParams } from "next/navigation";
-import { userInfoStore } from "@atoms/user-info";
 
 export default function ProjectNavigationContainer() {
   const { id } = useParams();

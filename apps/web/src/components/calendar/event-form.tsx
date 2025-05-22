@@ -28,7 +28,6 @@ import { DateTimePicker } from "@components/ui/date-time-picker";
 import { LoadingSpinner } from "@components/ui/spinner";
 import { Check, ChevronsUpDown, Users, Search, X } from "lucide-react";
 import { cn } from "@lib/utils";
-import { projectsStore } from "@atoms/projects";
 // import { teamMembersStore } from "@atoms/team-members";
 import { UseFormReturn } from "react-hook-form";
 import { CreateEventValues } from "./types";

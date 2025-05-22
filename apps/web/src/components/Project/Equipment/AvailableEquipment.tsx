@@ -154,7 +154,6 @@ import { LoadingSpinner } from "@components/ui/spinner";
 import { toast } from "sonner";
 import { Card } from "@components/ui/card";
 import { useParams } from "next/navigation";
-import { projectStore } from "@atoms/project";
 import Link from "next/link";
 
 const AvaliableEquipment = ({

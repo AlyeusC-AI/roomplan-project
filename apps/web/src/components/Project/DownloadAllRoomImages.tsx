@@ -1,11 +1,8 @@
 import { useState } from "react";
 import { saveAs } from "file-saver";
-import { urlMapStore } from "@atoms/url-map";
-import { projectStore } from "@atoms/project";
 import { ArrowDownToLine } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@components/ui/button";
-import { roomStore } from "@atoms/room";
 
 const JSZip = require("jszip");
 

@@ -1,11 +1,7 @@
-import { projectStore } from "@atoms/project";
-
 import FormContainer from "../overview/DetailsInput/FormContainer";
 import LocationData from "../overview/DetailsInput/LocationData";
 
 const ResponsiveWrapper = () => {
-  const projectInfo = projectStore((state) => state.project);
-
   return (
     <>
       <FormContainer className='col-span-10 bg-background lg:col-span-4'>

@@ -5,7 +5,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@components/ui/tabs";
 
 import { useDebouncedCallback } from "use-debounce";
-import { userInfoStore } from "@atoms/user-info";
 import { invoicesStore } from "@atoms/invoices";
 import { Button } from "@components/ui/button";
 import { Card } from "@components/ui/card";
@@ -112,7 +111,7 @@ export default function InvoiceList() {
             </p>
           </div>
           <div className='ml-auto flex min-w-[100px] flex-col space-y-4'>
-            <Button onClick={() => router.push('/invoices/new')}>
+            <Button onClick={() => router.push("/invoices/new")}>
               New Invoice
             </Button>
           </div>

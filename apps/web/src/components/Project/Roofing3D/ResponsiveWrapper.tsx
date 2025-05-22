@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { projectStore } from "@atoms/project";
 import mapboxgl from "mapbox-gl";
 
 const ResponsiveWrapper = () => {

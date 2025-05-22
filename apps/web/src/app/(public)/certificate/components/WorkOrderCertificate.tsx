@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Button } from "@/components/ui/button";
 import { Printer, PenLine, Type, Undo, UserCircle } from "lucide-react";
-import { orgStore } from "@atoms/organization";
 import Image from "next/image";
 import { WorkOrderFormData, CertificateFormData } from "../types/certificate";
 import { SignatureDisplay } from "./SignatureDisplay";

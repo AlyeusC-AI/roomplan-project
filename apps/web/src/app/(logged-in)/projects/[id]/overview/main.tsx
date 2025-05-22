@@ -1,6 +1,5 @@
 "use client";
 
-import { projectStore } from "@atoms/project";
 import DetailsInput from "@components/Project/overview/DetailsInput";
 import { FancyBox } from "@components/ui/fancy-box";
 import { Separator } from "@components/ui/separator";

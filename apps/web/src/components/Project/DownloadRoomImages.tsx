@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { saveAs } from "file-saver";
-import { urlMapStore } from "@atoms/url-map";
-import { projectStore } from "@atoms/project";
 import { ArrowDownSquareIcon } from "lucide-react";
 import { Button } from "@components/ui/button";
 import { LoadingSpinner } from "@components/ui/spinner";

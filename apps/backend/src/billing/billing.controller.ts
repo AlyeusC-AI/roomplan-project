@@ -96,7 +96,7 @@ export class BillingController {
   }
 
   @Post('webhook')
-  @UseGuards()
+  // Public endpoint for Stripe webhooks - no authentication required
   @ApiOperation({ summary: 'Handle Stripe webhook events' })
   @ApiResponse({
     status: 200,

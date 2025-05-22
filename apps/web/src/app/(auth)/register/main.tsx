@@ -14,11 +14,11 @@ export function RegisterForm() {
   const { data: user } = useCurrentUser();
   const { data: organizations } = useGetOrganizations();
 
-  useEffect(() => {
-    if (user?.isEmailVerified && organizations?.data?.length > 0) {
-      return redirect("/projects");
-    }
-  }, [user, organizations]);
+  // useEffect(() => {
+  //   if (user?.isEmailVerified && (organizations?.length || 0) > 0) {
+  //     return redirect("/projects");
+  //   }
+  // }, [user, organizations]);
 
   switch (searchParams.get("page") ?? "1") {
     case "1":

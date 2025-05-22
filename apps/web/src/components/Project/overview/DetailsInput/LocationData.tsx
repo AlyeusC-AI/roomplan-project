@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useParams } from "next/navigation";
-import { projectStore } from "@atoms/project";
 import mapboxgl from "mapbox-gl";
 import { useTheme } from "next-themes";
 import "mapbox-gl/dist/mapbox-gl.css";

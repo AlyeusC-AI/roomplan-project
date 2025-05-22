@@ -15,17 +15,11 @@ import { cn } from "@lib/utils";
 import { createClient } from "@lib/supabase/client";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { orgStore } from "@atoms/organization";
 import { Loader2 } from "lucide-react";
 import { SubscriptionAlert } from "@/components/subscription-alert";
 
 export default function Layout({ children }: React.PropsWithChildren) {
-  const { setOrganization, setOrganizationLocal } = orgStore((state) => state);
-  const client = createClient();
-  const search = useSearchParams();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const pathname = usePathname();
 
   // useEffect(() => {
   //   client.auth

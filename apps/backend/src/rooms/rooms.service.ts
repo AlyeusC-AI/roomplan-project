@@ -85,7 +85,11 @@ export class RoomsService {
     return this.prisma.room.findMany({
       where: { projectId },
       include: {
-        equipmentsUsed: true,
+        equipmentsUsed: {
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
         walls: true,
         images: {
           include: {
@@ -100,17 +104,24 @@ export class RoomsService {
   }
 
   async findOne(id: string): Promise<Prisma.RoomGetPayload<{
-    include: { images: { include: { comments: true } } };
+    include: {
+      images: { include: { comments: true } };
+      equipmentsUsed: true;
+      walls: true;
+    };
   }> | null> {
     return this.prisma.room.findUnique({
       where: { id },
       include: {
+        equipmentsUsed: {
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
+        walls: true,
         images: {
           include: {
             comments: true,
-          },
-          orderBy: {
-            order: 'asc',
           },
         },
       },

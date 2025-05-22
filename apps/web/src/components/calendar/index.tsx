@@ -67,7 +67,6 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { projectsStore } from "@atoms/projects";
 import { useEffect, useState } from "react";
 import { LoadingPlaceholder, LoadingSpinner } from "@components/ui/spinner";
 import { DateTimePicker } from "@components/ui/date-time-picker";

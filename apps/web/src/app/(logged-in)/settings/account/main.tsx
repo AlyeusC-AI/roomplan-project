@@ -18,7 +18,6 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
 import { useState } from "react";
 import { Label } from "@components/ui/label";
-import { userInfoStore } from "@atoms/user-info";
 import { LoadingSpinner } from "@components/ui/spinner";
 import { PhoneInput } from "@components/ui/phone-input";
 import {

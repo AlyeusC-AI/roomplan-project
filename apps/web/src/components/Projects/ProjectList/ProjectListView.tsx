@@ -16,7 +16,6 @@ const Pagination = dynamic(() => import("./Pagination"), {
 import { MoonLoader } from "react-spinners";
 
 import ProjectListImage from "./ProjectListImage";
-import { projectsStore } from "@atoms/projects";
 const ProjectListView = ({
   redirectTo = "overview",
   hidePagination,

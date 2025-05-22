@@ -2,8 +2,7 @@ import { ChangeEvent, useEffect, useState } from "react";
 import { FileObject } from "@supabase/storage-js";
 import { useParams } from "next/navigation";
 import { event } from "nextjs-google-analytics";
-import { orgStore } from "@atoms/organization";
-import { projectStore } from "@atoms/project";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@components/ui/tabs";
 import {
   FileText,
@@ -34,7 +33,6 @@ import FileList from "./FileList";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@components/ui/spinner";
 import { Check } from "lucide-react";
-import { createClient } from "@lib/supabase/client";
 import { buttonVariants } from "@components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
 

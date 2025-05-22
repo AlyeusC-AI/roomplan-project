@@ -28,6 +28,7 @@ export default function SubscribeForm() {
   const activeOrganization = useActiveOrganization();
   const { data: organizations } = useGetOrganizations();
   const { data: plans = [], isLoading } = useGetSubscriptionPlans();
+  console.log("🚀 ~ SubscribeForm ~ plans:", plans);
   const { mutate: createCheckout, isPending: isCreatingCheckout } =
     useCreateCheckoutSession();
 

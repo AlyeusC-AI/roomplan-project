@@ -12,7 +12,6 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { userInfoStore } from "@atoms/user-info";
 import { LoadingSpinner } from "@components/ui/spinner";
 import { useCurrentUser } from "@service-geek/api-client";
 export function UserNav() {

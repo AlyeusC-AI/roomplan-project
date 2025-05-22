@@ -12,7 +12,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { validate } from "uuid";
-import { projectStore } from "@atoms/project";
 
 type TBreadCrumbProps = {
   capitalizeLinks?: boolean;

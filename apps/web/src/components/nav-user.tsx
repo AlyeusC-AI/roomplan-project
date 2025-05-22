@@ -39,7 +39,6 @@ import { createClient } from "@lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { LoadingPlaceholder } from "./ui/spinner";
-import { userInfoStore } from "@atoms/user-info";
 import { useCurrentUser, useLogout } from "@service-geek/api-client";
 
 export function NavUser() {

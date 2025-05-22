@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import clsx from "clsx";
 import { format, formatDistance } from "date-fns";
-import { roomStore } from "@atoms/room";
 import { Pencil, Trash, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@components/ui/spinner";

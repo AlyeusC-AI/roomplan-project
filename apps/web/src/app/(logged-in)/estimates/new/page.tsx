@@ -8,7 +8,6 @@ import { Input } from "@components/ui/input";
 import { Label } from "@components/ui/label";
 import { Switch } from "@components/ui/switch";
 import { DateTimePicker } from "@components/ui/date-time-picker";
-import { projectsStore } from "@atoms/projects";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, X } from "lucide-react";
 import {
@@ -189,7 +188,7 @@ const CreateEstimatePage = () => {
       setProjectName("");
       return;
     }
-    
+
     const selectedProject = projects.find((p) => p.publicId === projectId);
     if (selectedProject) {
       setProjectId(selectedProject.publicId);
@@ -198,7 +197,7 @@ const CreateEstimatePage = () => {
       setClientEmail(selectedProject.clientEmail || "");
       setClientAddress(selectedProject.location || "");
       setClientPhone(selectedProject.clientPhoneNumber || "");
-      
+
       // Auto-fill adjuster information if available
       if (selectedProject.adjusterName) {
         setAdjusterName(selectedProject.adjusterName);
@@ -212,11 +211,11 @@ const CreateEstimatePage = () => {
       if (selectedProject.adjusterPhone) {
         setAdjusterPhone(selectedProject.adjusterPhone);
       }
-      
+
       toast.success("Project details auto-filled successfully");
     }
   };
-  
+
   const handleAddSavedLineItem = (item: SavedLineItem) => {
     setEstimateItems([
       ...estimateItems,
@@ -304,10 +303,7 @@ const CreateEstimatePage = () => {
         </Button>
 
         <div className='flex gap-2'>
-          <Button
-            variant='outline'
-            onClick={() => router.push('/estimates')}
-          >
+          <Button variant='outline' onClick={() => router.push("/estimates")}>
             Cancel
           </Button>
           <Button onClick={createNewEstimate} disabled={isCreating}>
@@ -380,7 +376,7 @@ const CreateEstimatePage = () => {
                 <div className='col-span-3'>
                   {projects.length > 0 ? (
                     <Select
-                      value={projectId || 'none'}
+                      value={projectId || "none"}
                       onValueChange={handleSelectProject}
                     >
                       <SelectTrigger>
@@ -418,7 +414,10 @@ const CreateEstimatePage = () => {
                   Estimate Date
                 </Label>
                 <div className='col-span-3'>
-                  <DateTimePicker date={estimateDate} setDate={setEstimateDate} />
+                  <DateTimePicker
+                    date={estimateDate}
+                    setDate={setEstimateDate}
+                  />
                 </div>
               </div>
 
@@ -430,7 +429,7 @@ const CreateEstimatePage = () => {
                   <DateTimePicker date={expiryDate} setDate={setExpiryDate} />
                 </div>
               </div>
-              
+
               {showAdjuster && (
                 <>
                   <div className='grid grid-cols-4 items-center gap-4'>
@@ -507,7 +506,7 @@ const CreateEstimatePage = () => {
                   <Label htmlFor='apply-tax'>Apply</Label>
                 </div>
               </div>
-              
+
               <div className='grid grid-cols-4 items-center gap-4'>
                 <Label htmlFor='toggle-adjuster' className='text-right'>
                   Insurance Adjuster
@@ -752,9 +751,7 @@ const CreateEstimatePage = () => {
                 {showDeposit && (
                   <div className='mt-1 flex justify-between'>
                     <span>Deposit Amount</span>
-                    <span>
-                      ${calculateDeposit().toFixed(2)}
-                    </span>
+                    <span>${calculateDeposit().toFixed(2)}</span>
                   </div>
                 )}
               </div>
@@ -764,10 +761,7 @@ const CreateEstimatePage = () => {
       </Card>
 
       {/* Saved Items Dialog */}
-      <Dialog
-        open={showSavedItems}
-        onOpenChange={setShowSavedItems}
-      >
+      <Dialog open={showSavedItems} onOpenChange={setShowSavedItems}>
         <DialogContent className='max-w-3xl'>
           <DialogHeader>
             <DialogTitle>Add from Saved Items</DialogTitle>
@@ -839,4 +833,4 @@ const CreateEstimatePage = () => {
   );
 };
 
-export default CreateEstimatePage; 
+export default CreateEstimatePage;

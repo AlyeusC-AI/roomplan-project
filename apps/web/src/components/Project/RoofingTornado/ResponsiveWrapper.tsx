@@ -1,5 +1,4 @@
 import { Fragment, useEffect, useRef, useState } from "react";
-import { projectStore } from "@atoms/project";
 import { Loader } from "@googlemaps/js-api-loader";
 import { Dialog, Transition } from "@headlessui/react";
 import clsx from "clsx";

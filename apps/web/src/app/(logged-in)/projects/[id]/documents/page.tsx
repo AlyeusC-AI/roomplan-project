@@ -28,7 +28,6 @@ import {
   TooltipTrigger,
 } from "@components/ui/tooltip";
 import { formatDistanceToNow } from "date-fns";
-import { projectStore } from "@atoms/project";
 import {
   Select,
   SelectContent,

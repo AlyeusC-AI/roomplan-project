@@ -1,12 +1,8 @@
-import { orgStore } from "@atoms/organization";
-import { FileObject } from "@supabase/storage-js";
 import { useSearchParams } from "next/navigation";
-import { projectStore } from "@atoms/project";
 import FileList from "@components/Project/Files/FileList";
 import { PrimaryButton } from "@components/components/button";
 import UpgradeModal from "@components/UpgradeModal";
 import { useState } from "react";
-import { userInfoStore } from "@atoms/user-info";
 import { toast } from "sonner";
 
 export interface ProjectData {

@@ -1,5 +1,4 @@
 import EmptyState from "@components/DesignSystem/EmptyState";
-import { roomStore } from "@atoms/room";
 
 import ReadingsRoomTable from "./ReadingsRoomTable";
 import { useGetRooms } from "@service-geek/api-client";

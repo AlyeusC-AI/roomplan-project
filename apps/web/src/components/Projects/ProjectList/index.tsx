@@ -7,7 +7,6 @@ import { Tabs, TabsList, TabsTrigger } from "@components/ui/tabs";
 import CreateNewProject from "./new";
 
 import { useDebouncedCallback } from "use-debounce";
-import { userInfoStore } from "@atoms/user-info";
 import { Button } from "@components/ui/button";
 import { Card } from "@components/ui/card";
 import {

@@ -1,6 +1,5 @@
 "use client";
 
-import { roomStore } from "@atoms/room";
 import { LoadingPlaceholder } from "@components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@components/ui/tabs";
 import { useParams, usePathname, useRouter } from "next/navigation";

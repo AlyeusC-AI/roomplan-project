@@ -1,6 +1,5 @@
 "use client";
 
-import { projectStore } from "@atoms/project";
 import Costs from "@components/Project/Costs";
 
 const ExpensesPage = () => {

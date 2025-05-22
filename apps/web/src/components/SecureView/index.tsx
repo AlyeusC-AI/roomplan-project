@@ -1,6 +1,4 @@
 import Address from "@components/DesignSystem/Address";
-import { inferencesStore } from "@atoms/inferences";
-import { projectStore } from "@atoms/project";
 
 import SecureRoomImages from "./SecureRoomImages";
 

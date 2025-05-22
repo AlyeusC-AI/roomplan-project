@@ -3,7 +3,6 @@ import { toast } from "sonner";
 import { PrimaryButton, Card, Spinner } from "@components/components";
 import UserAvatar from "@components/DesignSystem/UserAvatar";
 import { useRouter } from "next/navigation";
-import { userInfoStore } from "@atoms/user-info";
 import { createClient } from "@lib/supabase/server";
 import { User } from "@supabase/supabase-js";
 import { Camera, Check } from "lucide-react";
