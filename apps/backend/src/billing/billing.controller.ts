@@ -9,6 +9,9 @@ import {
   Req,
   UseGuards,
   BadRequestException,
+  CanActivate,
+  ExecutionContext,
+  Injectable,
 } from '@nestjs/common';
 import { BillingService } from './billing.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,10 +24,18 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 
+@Injectable()
+class SkipAuthGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean {
+    const request = context.switchToHttp().getRequest();
+    return request.path === '/billing/webhook';
+  }
+}
+
 @ApiTags('billing')
 @ApiBearerAuth()
 @Controller('billing')
-@UseGuards(JwtAuthGuard)
+@UseGuards(SkipAuthGuard, JwtAuthGuard)
 export class BillingController {
   constructor(private readonly billingService: BillingService) {}
 
