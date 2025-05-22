@@ -24,22 +24,22 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 
-@Injectable()
-class SkipAuthGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest();
-    return request.path === '/billing/webhook';
-  }
-}
+// @Injectable()
+// class SkipAuthGuard implements CanActivate {
+//   canActivate(context: ExecutionContext): boolean {
+//     const request = context.switchToHttp().getRequest();
+//     return request.path === '/billing/webhook';
+//   }
+// }
 
 @ApiTags('billing')
-@ApiBearerAuth()
 @Controller('billing')
-@UseGuards(SkipAuthGuard, JwtAuthGuard)
 export class BillingController {
   constructor(private readonly billingService: BillingService) {}
 
   @Post('organizations/:organizationId/checkout')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Create a checkout session for subscription' })
   @ApiParam({ name: 'organizationId', description: 'Organization ID' })
   @ApiBody({
@@ -60,6 +60,8 @@ export class BillingController {
   @ApiResponse({ status: 400, description: 'Bad request.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 404, description: 'Organization not found.' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   async createCheckoutSession(
     @Param('organizationId') organizationId: string,
     @Body('priceId') priceId: string,
@@ -91,6 +93,8 @@ export class BillingController {
   @ApiResponse({ status: 400, description: 'Bad request.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 404, description: 'Organization not found.' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   async createPortalSession(@Param('organizationId') organizationId: string) {
     return this.billingService.createPortalSession(organizationId);
   }
@@ -102,6 +106,8 @@ export class BillingController {
     description: 'Return all available subscription plans.',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   async getSubscriptionPlans() {
     return this.billingService.getSubscriptionPlans();
   }
