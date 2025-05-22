@@ -483,8 +483,10 @@ export class BillingService {
                 phone: customer.phone,
               }
             : null,
-        currentPeriodEnd: subscription?.ended_at
-          ? new Date(subscription.ended_at * 1000).toISOString()
+        currentPeriodEnd: subscription?.items.data[0]?.current_period_end
+          ? new Date(
+              subscription.items.data[0].current_period_end * 1000,
+            ).toISOString()
           : null,
         freeTrialEndsAt: organization.freeTrialEndsAt,
         maxUsersForSubscription: organization.maxUsersForSubscription,

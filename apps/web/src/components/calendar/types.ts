@@ -9,7 +9,7 @@ export const calendarEventSchema = z.object({
     .max(30, {
       message: "Event subject must not be longer than 30 characters.",
     }),
-  projectId: z.number().optional(),
+  projectId: z.string().optional(),
   description: z
     .string()
     .min(2, {

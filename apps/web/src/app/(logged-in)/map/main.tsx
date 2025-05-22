@@ -39,32 +39,32 @@ export default function ProjectMapView() {
   const mapNode = useRef(null);
 
   const [loading, setLoading] = useState(false);
-  const { setProjects } = projectsStore();
+  // const { setProjects } = projectsStore();
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
+  // useEffect(() => {
+  //   fetchProjects();
+  // }, []);
 
-  function fetchProjects() {
-    setLoading(true);
-    fetch(`/api/v1/projects?limit=100`)
-      .then((res) => res.json())
-      .then((data) => {
-        setProjects(data.projects, data.total);
-        setLoading(false);
-        console.log(data);
-        setTimeout(() => createMap(data.projects), 1000);
-      })
-      .catch((err) => {
-        if (err instanceof Error) {
-          console.error(err);
-          toast.error("Failed to fetch projects", {
-            description: err.message,
-          });
-        }
-        setLoading(false);
-      });
-  }
+  // function fetchProjects() {
+  //   setLoading(true);
+  //   fetch(`/api/v1/projects?limit=100`)
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       setProjects(data.projects, data.total);
+  //       setLoading(false);
+  //       console.log(data);
+  //       setTimeout(() => createMap(data.projects), 1000);
+  //     })
+  //     .catch((err) => {
+  //       if (err instanceof Error) {
+  //         console.error(err);
+  //         toast.error("Failed to fetch projects", {
+  //           description: err.message,
+  //         });
+  //       }
+  //       setLoading(false);
+  //     });
+  // }
 
   const theme = useTheme();
 

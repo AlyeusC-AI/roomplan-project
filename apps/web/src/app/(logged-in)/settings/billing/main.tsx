@@ -63,6 +63,7 @@ export default function BillingPage() {
   const organizationId = org?.id;
 
   const { data: subscriptionInfo, isLoading } = useGetSubscriptionInfo();
+  console.log("🚀 ~ BillingPage ~ subscriptionInfo:", subscriptionInfo);
   const { mutate: createCheckout, isPending: isCheckoutLoading } =
     useCreateCheckoutSession();
   const { mutate: createPortal, isPending: isPortalLoading } =
@@ -390,13 +391,10 @@ export default function BillingPage() {
                 <CardContent className='mt-6'>
                   <ul className='space-y-3'>
                     {plan.product.marketing_features.map((feature) => (
-                      <li
-                        key={feature.name}
-                        className='flex items-center gap-2'
-                      >
+                      <li key={feature} className='flex items-center gap-2'>
                         <CheckIcon className='h-4 w-4 flex-shrink-0 text-primary' />
                         <span className='text-sm text-muted-foreground'>
-                          {feature.name}
+                          {feature}
                         </span>
                       </li>
                     ))}

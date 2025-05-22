@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { billingService } from "../services/billing";
 import type {
   SubscriptionPlan,
@@ -43,6 +43,7 @@ export function useGetSubscriptionInfo() {
 }
 
 export function useUpdateAdditionalUsers() {
+  const queryClient = useQueryClient();
   return useMutation<
     UpdateUsersResponse,
     Error,
@@ -50,5 +51,8 @@ export function useUpdateAdditionalUsers() {
   >({
     mutationFn: ({ organizationId, additionalUsers }) =>
       billingService.updateAdditionalUsers(organizationId, additionalUsers),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subscription-info"] });
+    },
   });
 }

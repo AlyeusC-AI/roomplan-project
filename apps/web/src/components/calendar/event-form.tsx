@@ -30,13 +30,18 @@ import { Check, ChevronsUpDown, Users, Search, X } from "lucide-react";
 import { cn } from "@lib/utils";
 // import { teamMembersStore } from "@atoms/team-members";
 import { UseFormReturn } from "react-hook-form";
-import { CreateEventValues } from "./types";
 import { useEffect, useState } from "react";
-import { useGetOrganizationMembers } from "@service-geek/api-client";
+import {
+  CalendarEvent,
+  useGetOrganizationMembers,
+  useGetProjects,
+  Project,
+  CreateCalendarEventDto,
+} from "@service-geek/api-client";
 
 type EventFormProps = {
-  form: UseFormReturn<CreateEventValues>;
-  onSubmit: (data: CreateEventValues) => Promise<void>;
+  form: UseFormReturn<CreateCalendarEventDto>;
+  onSubmit: (data: CreateCalendarEventDto) => Promise<void>;
   isCreating: boolean;
   editingEvent: CalendarEvent | null;
   createPopover: boolean;
@@ -55,7 +60,7 @@ export function EventForm({
   project,
   setConfirmDelete,
 }: EventFormProps) {
-  const { projects } = projectsStore((state) => state);
+  const { data: projects } = useGetProjects();
   // const { teamMembers } = teamMembersStore();
   // console.log("🚀 ~ teamMembers:", teamMembers);
   const [searchQuery, setSearchQuery] = useState("");
@@ -95,7 +100,7 @@ export function EventForm({
   useEffect(() => {
     if (editingEvent) {
       console.log("🚀 ~ useEffect ~ editingEvent:", editingEvent);
-      form.setValue("projectId", editingEvent.projectId || 0);
+      form.setValue("projectId", editingEvent.projectId);
       form.setValue("subject", editingEvent.subject || "");
       form.setValue("description", editingEvent.description || "");
       form.setValue(
@@ -116,7 +121,10 @@ export function EventForm({
         (editingEvent.reminderTime as "24h" | "2h" | "40m" | undefined) ||
           undefined
       );
-      form.setValue("users", editingEvent.users || []);
+      form.setValue(
+        "users",
+        editingEvent.usersToRemind.map((user) => user.id) || []
+      );
     } else {
       form.reset();
     }
@@ -145,7 +153,7 @@ export function EventForm({
                       className='w-full justify-between'
                     >
                       {field.value
-                        ? projects.find((p) => p.id === field.value)?.name
+                        ? projects?.data.find((p) => p.id === field.value)?.name
                         : "Select project..."}
                       <ChevronsUpDown className='ml-2 size-4 shrink-0 opacity-50' />
                     </Button>
@@ -156,10 +164,10 @@ export function EventForm({
                       <CommandList>
                         <CommandEmpty>No project found.</CommandEmpty>
                         <CommandGroup>
-                          {projects.map((project) => (
+                          {projects?.data.map((project) => (
                             <CommandItem
-                              key={project.publicId}
-                              value={project.name}
+                              key={project.id}
+                              value={project.id}
                               onSelect={() => {
                                 field.onChange(
                                   project.id === field.value ? 0 : project.id
@@ -377,7 +385,7 @@ export function EventForm({
                           <CommandGroup>
                             {teamMembers?.data.map((member) => {
                               const isSelected = selectedUsers.includes(
-                                member.user?.id
+                                member.user?.id ?? ""
                               );
                               return (
                                 <CommandItem

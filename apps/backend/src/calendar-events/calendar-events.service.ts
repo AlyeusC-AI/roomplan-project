@@ -39,7 +39,7 @@ export class CalendarEventsService {
   }
 
   async create(
-    createCalendarEventDto: CreateCalendarEventDto,
+    { users, ...createCalendarEventDto }: CreateCalendarEventDto,
     userId: string,
   ): Promise<CalendarEvent> {
     // Check if user is a member of the organization
@@ -61,9 +61,9 @@ export class CalendarEventsService {
       data: {
         ...createCalendarEventDto,
         date: dayjs(createCalendarEventDto.start).toDate(),
-        usersToRemind: createCalendarEventDto.users
+        usersToRemind: users
           ? {
-              connect: createCalendarEventDto.users.map((id) => ({ id })),
+              connect: users.map((id) => ({ id })),
             }
           : undefined,
       },
@@ -109,12 +109,9 @@ export class CalendarEventsService {
         });
       }
 
-      if (
-        createCalendarEventDto.users &&
-        createCalendarEventDto.users.length > 0
-      ) {
+      if (users && users.length > 0) {
         reminders.push(
-          ...createCalendarEventDto.users.map((userId) => ({
+          ...users.map((userId) => ({
             date: reminderDate,
             reminderTarget: ReminderTarget.USERS,
             sendEmail: true,
@@ -215,7 +212,7 @@ export class CalendarEventsService {
 
   async update(
     id: string,
-    updateCalendarEventDto: UpdateCalendarEventDto,
+    { users, ...updateCalendarEventDto }: UpdateCalendarEventDto,
     userId: string,
   ): Promise<CalendarEvent> {
     const calendarEvent = await this.prisma.calendarEvent.findUnique({
@@ -257,9 +254,9 @@ export class CalendarEventsService {
         date: updateCalendarEventDto.start
           ? dayjs(updateCalendarEventDto.start).toDate()
           : undefined,
-        usersToRemind: updateCalendarEventDto.users
+        usersToRemind: users
           ? {
-              set: updateCalendarEventDto.users.map((id) => ({ id })),
+              set: users.map((id) => ({ id })),
             }
           : undefined,
       },
@@ -305,12 +302,9 @@ export class CalendarEventsService {
         });
       }
 
-      if (
-        updateCalendarEventDto.users &&
-        updateCalendarEventDto.users.length > 0
-      ) {
+      if (users && users.length > 0) {
         reminders.push(
-          ...updateCalendarEventDto.users.map((userId) => ({
+          ...users.map((userId) => ({
             date: reminderDate,
             reminderTarget: ReminderTarget.USERS,
             sendEmail: true,

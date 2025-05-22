@@ -1,3 +1,5 @@
+import { User } from "./auth";
+
 export interface CalendarEvent {
   id: string;
   subject: string;
@@ -13,6 +15,7 @@ export interface CalendarEvent {
   updatedAt: string;
   projectId?: string;
   organizationId: string;
+  usersToRemind: User[];
 }
 
 export interface CreateCalendarEventDto {
@@ -25,6 +28,8 @@ export interface CreateCalendarEventDto {
   remindProjectOwners?: boolean;
   reminderTime?: string;
   projectId?: string;
+  users?: string[];
+
   //   organizationId: string;
 }
 

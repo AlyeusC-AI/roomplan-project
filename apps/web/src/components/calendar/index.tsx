@@ -93,15 +93,17 @@ import {
   useCreateCalendarEvent,
   useDeleteCalendarEvent,
   useGetCalendarEvents,
+  useGetProjects,
   useUpdateCalendarEvent,
   type CalendarEvent,
   type CreateCalendarEventDto,
+  type Project,
 } from "@service-geek/api-client";
 
 export default function CalendarComponent({
   project = null,
 }: {
-  project: { id: string; organizationId: string } | null;
+  project: Project | null;
 }) {
   const router = useRouter();
   const [createPopover, setCreatePopover] = useState(false);
@@ -209,7 +211,7 @@ export default function CalendarComponent({
     }
   };
 
-  const { projects } = projectsStore((state) => state);
+  const { data: projects } = useGetProjects();
 
   const getStatusColor = (status: string): string => {
     switch (status?.toLowerCase()) {
@@ -435,7 +437,7 @@ export default function CalendarComponent({
             <EventsList
               events={events}
               selectedEvent={selectedEvent}
-              projects={projects}
+              projects={projects?.data || []}
               onEventClick={(event) => {
                 setSelectedEvent(event);
               }}
