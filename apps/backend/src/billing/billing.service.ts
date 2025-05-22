@@ -453,6 +453,10 @@ export class BillingService {
           },
         };
       });
+      console.log(
+        '🚀 ~ BillingService ~ getSubscriptionInfo ~ subscriptionInfo.subscription:',
+        subscription,
+      );
 
       // Format the response
       const subscriptionInfo = {
