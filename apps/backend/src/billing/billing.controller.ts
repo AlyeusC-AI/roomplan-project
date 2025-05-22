@@ -118,9 +118,19 @@ export class BillingController {
     @Headers('stripe-signature') signature: string,
     @Req() request: RawBodyRequest<any>,
   ) {
+    if (!signature) {
+      throw new BadRequestException('No stripe signature found');
+    }
     if (!request.rawBody) {
       throw new BadRequestException('No raw body found');
     }
-    return this.billingService.handleWebhook(signature, request.rawBody);
+    try {
+      return await this.billingService.handleWebhook(
+        signature,
+        request.rawBody,
+      );
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }

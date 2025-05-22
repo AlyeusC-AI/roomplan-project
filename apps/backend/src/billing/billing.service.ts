@@ -110,6 +110,10 @@ export class BillingService {
 
   async handleWebhook(signature: string, payload: Buffer) {
     const webhookSecret = this.configService.get('STRIPE_WEBHOOK_SECRET');
+    if (!webhookSecret) {
+      throw new BadRequestException('Webhook secret is not configured');
+    }
+
     let event: Stripe.Event;
 
     try {
@@ -119,29 +123,39 @@ export class BillingService {
         webhookSecret,
       );
     } catch (err) {
-      throw new BadRequestException(`Webhook Error: ${err.message}`);
+      console.error('Webhook signature verification failed:', err.message);
+      throw new BadRequestException(
+        `Webhook signature verification failed: ${err.message}`,
+      );
     }
 
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
-        await this.handleCheckoutSessionCompleted(session);
-        break;
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed': {
+          const session = event.data.object as Stripe.Checkout.Session;
+          await this.handleCheckoutSessionCompleted(session);
+          break;
+        }
+        case 'customer.subscription.created':
+        case 'customer.subscription.updated': {
+          const subscription = event.data.object as Stripe.Subscription;
+          await this.handleSubscriptionCreatedOrUpdated(subscription);
+          break;
+        }
+        case 'customer.subscription.deleted': {
+          const subscription = event.data.object as Stripe.Subscription;
+          await this.handleSubscriptionDeleted(subscription);
+          break;
+        }
       }
-      case 'customer.subscription.created':
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription;
-        await this.handleSubscriptionCreatedOrUpdated(subscription);
-        break;
-      }
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
-        await this.handleSubscriptionDeleted(subscription);
-        break;
-      }
-    }
 
-    return { received: true };
+      return { received: true };
+    } catch (error) {
+      console.error('Error processing webhook:', error);
+      throw new BadRequestException(
+        `Error processing webhook: ${error.message}`,
+      );
+    }
   }
 
   private async handleCheckoutSessionCompleted(
