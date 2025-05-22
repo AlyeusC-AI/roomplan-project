@@ -4,7 +4,10 @@ import type {
   SubscriptionPlan,
   CheckoutSessionResponse,
   CreateCheckoutSessionParams,
+  SubscriptionInfo,
+  UpdateUsersResponse,
 } from "../types/billing";
+import { useActiveOrganization } from "./useOrganization";
 
 export function useCreateCheckoutSession() {
   return useMutation<
@@ -27,5 +30,25 @@ export function useGetSubscriptionPlans() {
   return useQuery<SubscriptionPlan[], Error>({
     queryKey: ["subscription-plans"],
     queryFn: () => billingService.getSubscriptionPlans(),
+  });
+}
+
+export function useGetSubscriptionInfo() {
+  const org = useActiveOrganization();
+  return useQuery<SubscriptionInfo, Error>({
+    queryKey: ["subscription-info", org?.id],
+    queryFn: () => billingService.getSubscriptionInfo(org?.id || ""),
+    enabled: !!org?.id,
+  });
+}
+
+export function useUpdateAdditionalUsers() {
+  return useMutation<
+    UpdateUsersResponse,
+    Error,
+    { organizationId: string; additionalUsers: number }
+  >({
+    mutationFn: ({ organizationId, additionalUsers }) =>
+      billingService.updateAdditionalUsers(organizationId, additionalUsers),
   });
 }

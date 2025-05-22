@@ -187,56 +187,66 @@ export class BillingService {
   private async handleSubscriptionCreatedOrUpdated(
     subscription: Stripe.Subscription,
   ) {
-    // Get the price to determine the plan
-    const price = await this.stripe.prices.retrieve(
-      subscription.items.data[0].price.id,
-      { expand: ['product'] },
-    );
+    try {
+      // Get the price to determine the plan
+      const price = await this.stripe.prices.retrieve(
+        subscription.items.data[0].price.id,
+        { expand: ['product'] },
+      );
 
-    // Use lookup_key to determine plan type
-    const plan = price.lookup_key as 'startup' | 'team' | 'enterprise';
+      // Use lookup_key to determine plan type
+      const plan = price.lookup_key as 'startup' | 'team' | 'enterprise';
 
-    if (!plan || !['startup', 'team', 'enterprise'].includes(plan)) {
-      throw new BadRequestException('Invalid subscription plan');
+      if (!plan || !['startup', 'team', 'enterprise'].includes(plan)) {
+        throw new BadRequestException('Invalid subscription plan');
+      }
+
+      // Calculate total users including additional seats
+      let additionalUsers = 0;
+      const additionalUserPriceId =
+        plan === 'enterprise'
+          ? this.configService.get('ADDITIONAL_USER_PRICE_ID_ENTERPRISE')
+          : this.configService.get('ADDITIONAL_USER_PRICE_ID');
+
+      // Find additional user subscription items
+      const additionalUserItem = subscription.items.data.find(
+        (item) => item.price.id === additionalUserPriceId,
+      );
+
+      if (additionalUserItem) {
+        additionalUsers = additionalUserItem.quantity || 0;
+      }
+
+      // Base users per plan
+      const baseUsers = plan === 'startup' ? 2 : plan === 'team' ? 5 : 10;
+      const totalMaxUsers = baseUsers + additionalUsers;
+
+      // Get organization ID from metadata
+      const organizationId = subscription.metadata.organizationId;
+
+      if (!organizationId) {
+        throw new BadRequestException('No organization ID in metadata');
+      }
+
+      // Update organization subscription details
+      await this.organizationService.updateSubscription(organizationId, {
+        subscriptionId: subscription.id,
+        subscriptionPlan: plan,
+        customerId: subscription.customer as string,
+        maxUsersForSubscription: totalMaxUsers,
+        freeTrialEndsAt: subscription.trial_end
+          ? new Date(subscription.trial_end * 1000)
+          : null,
+        subscriptionStatus: subscription.status,
+      });
+
+      return { updated: true };
+    } catch (error) {
+      console.error('Error handling subscription update:', error);
+      throw new BadRequestException(
+        `Error handling subscription update: ${error.message}`,
+      );
     }
-
-    // Calculate total users including additional seats
-    let additionalUsers = 0;
-    const additionalUserPriceId =
-      plan === 'enterprise'
-        ? this.configService.get('ADDITIONAL_USER_PRICE_ID_ENTERPRISE')
-        : this.configService.get('ADDITIONAL_USER_PRICE_ID');
-
-    // Find additional user subscription items
-    const additionalUserItem = subscription.items.data.find(
-      (item) => item.price.id === additionalUserPriceId,
-    );
-
-    if (additionalUserItem) {
-      additionalUsers = additionalUserItem.quantity || 0;
-    }
-
-    // Base users per plan
-    const baseUsers = plan === 'startup' ? 2 : plan === 'team' ? 5 : 10;
-    const totalMaxUsers = baseUsers + additionalUsers;
-
-    // Get organization ID from metadata
-    const organizationId = subscription.metadata.organizationId;
-
-    if (!organizationId) {
-      throw new BadRequestException('No organization ID in metadata');
-    }
-
-    // Update organization subscription details
-    await this.organizationService.updateSubscription(organizationId, {
-      subscriptionId: subscription.id,
-      subscriptionPlan: plan,
-      customerId: subscription.customer as string,
-      maxUsersForSubscription: totalMaxUsers,
-      freeTrialEndsAt: subscription.trial_end
-        ? new Date(subscription.trial_end * 1000)
-        : null,
-    });
   }
 
   private async handleSubscriptionDeleted(subscription: Stripe.Subscription) {
@@ -263,5 +273,205 @@ export class BillingService {
       price_enterprise: 100,
     };
     return planLimits[priceId] || 0;
+  }
+
+  async updateAdditionalUsers(organizationId: string, additionalUsers: number) {
+    try {
+      // Get organization details
+      const organization =
+        await this.organizationService.findOne(organizationId);
+      if (!organization) {
+        throw new NotFoundException('Organization not found');
+      }
+
+      if (!organization.subscriptionId) {
+        throw new BadRequestException('No active subscription');
+      }
+
+      // Get the subscription
+      const subscription = await this.stripe.subscriptions.retrieve(
+        organization.subscriptionId,
+      );
+      const price = await this.stripe.prices.retrieve(
+        subscription.items.data[0].price.id,
+        { expand: ['product'] },
+      );
+
+      // Determine plan type
+      const plan = price.lookup_key as 'startup' | 'team' | 'enterprise';
+      if (!plan || !['startup', 'team', 'enterprise'].includes(plan)) {
+        throw new BadRequestException('Invalid subscription plan');
+      }
+
+      // Get the additional user price ID
+      const additionalUserPriceId =
+        plan === 'enterprise'
+          ? this.configService.get('ADDITIONAL_USER_PRICE_ID_ENTERPRISE')
+          : this.configService.get('ADDITIONAL_USER_PRICE_ID');
+
+      if (!additionalUserPriceId) {
+        throw new BadRequestException(
+          'Additional user price ID not configured',
+        );
+      }
+
+      // Find existing additional user item
+      const existingItem = subscription.items.data.find(
+        (item) => item.price.id === additionalUserPriceId,
+      );
+
+      if (existingItem) {
+        // Update existing item
+        await this.stripe.subscriptionItems.update(existingItem.id, {
+          quantity: additionalUsers,
+        });
+      } else if (additionalUsers > 0) {
+        // Add new item
+        await this.stripe.subscriptions.update(subscription.id, {
+          items: [
+            {
+              price: additionalUserPriceId,
+              quantity: additionalUsers,
+            },
+          ],
+        });
+      }
+
+      // Calculate total users
+      const baseUsers = plan === 'startup' ? 2 : plan === 'team' ? 5 : 10;
+      const totalMaxUsers = baseUsers + additionalUsers;
+
+      // Update organization
+      await this.organizationService.updateSubscription(organizationId, {
+        maxUsersForSubscription: totalMaxUsers,
+      });
+
+      return { success: true, maxUsers: totalMaxUsers };
+    } catch (error) {
+      console.error('Error updating users:', error);
+      throw new BadRequestException(`Error updating users: ${error.message}`);
+    }
+  }
+
+  async getSubscriptionInfo(organizationId: string) {
+    try {
+      // Get organization details
+      const organization =
+        await this.organizationService.findOne(organizationId);
+      if (!organization) {
+        throw new NotFoundException('Organization not found');
+      }
+
+      // Fetch subscription details from Stripe
+      const subscription = organization.subscriptionId
+        ? await this.stripe.subscriptions.retrieve(
+            organization.subscriptionId,
+            {
+              expand: [
+                'items.data.price.product',
+                'items.data.price.recurring',
+              ],
+            },
+          )
+        : null;
+
+      // Fetch product features
+      const features = subscription
+        ? await this.stripe.products.list({
+            ids: [
+              (subscription.items.data[0].price.product as Stripe.Product).id,
+            ],
+          })
+        : null;
+
+      // Fetch customer details from Stripe
+      const customer = organization.customerId
+        ? await this.stripe.customers.retrieve(organization.customerId)
+        : null;
+
+      // Fetch recent invoices
+      const invoices = organization.customerId
+        ? await this.stripe.invoices.list({
+            customer: organization.customerId,
+            limit: 5,
+          })
+        : null;
+
+      // Fetch available plans
+      const prices = await this.stripe.prices.list({
+        expand: ['data.product'],
+        active: true,
+        type: 'recurring',
+        recurring: {
+          interval: 'month',
+          usage_type: 'licensed',
+        },
+        lookup_keys: ['enterprise', 'team', 'startup'],
+      });
+
+      const availablePlans = prices.data.map((price: Stripe.Price) => {
+        const product = price.product as Stripe.Product;
+        return {
+          id: price.id,
+          price: price.unit_amount! / 100,
+          product: {
+            name: product.name,
+            description: product.description,
+            marketing_features: product.metadata.marketing_features
+              ? JSON.parse(product.metadata.marketing_features)
+              : [],
+          },
+        };
+      });
+
+      // Format the response
+      const subscriptionInfo = {
+        status: organization.subscriptionId ? subscription?.status : 'never',
+        customerId: organization.customerId,
+        subscriptionId: organization.subscriptionId,
+        plan: subscription?.items.data[0]
+          ? {
+              name: (subscription.items.data[0].price.product as Stripe.Product)
+                .name,
+              price: subscription.items.data[0].price.unit_amount! / 100,
+              interval: subscription.items.data[0].price.recurring?.interval,
+              features:
+                features?.data[0].marketing_features.map(
+                  (feature) => feature.name,
+                ) || [],
+            }
+          : null,
+        customer:
+          customer && !customer.deleted
+            ? {
+                email: customer.email,
+                name: customer.name,
+                phone: customer.phone,
+              }
+            : null,
+        currentPeriodEnd: subscription?.ended_at
+          ? new Date(subscription.ended_at * 1000).toISOString()
+          : null,
+        freeTrialEndsAt: organization.freeTrialEndsAt,
+        maxUsersForSubscription: organization.maxUsersForSubscription,
+        cancelAtPeriodEnd: subscription?.cancel_at_period_end || false,
+        recentInvoices:
+          invoices?.data.map((invoice) => ({
+            id: invoice.id,
+            amount: invoice.amount_paid / 100,
+            status: invoice.status,
+            date: new Date(invoice.created * 1000).toISOString(),
+            pdfUrl: invoice.invoice_pdf,
+          })) || [],
+        availablePlans,
+      };
+
+      return subscriptionInfo;
+    } catch (error) {
+      console.error('Error fetching subscription info:', error);
+      throw new BadRequestException(
+        `Error fetching subscription information: ${error.message}`,
+      );
+    }
   }
 }

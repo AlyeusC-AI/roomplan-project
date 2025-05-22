@@ -130,13 +130,65 @@ export class BillingController {
     if (!request.rawBody) {
       throw new BadRequestException('No raw body found');
     }
+
     try {
-      return await this.billingService.handleWebhook(
+      const result = await this.billingService.handleWebhook(
         signature,
         request.rawBody,
       );
+      return result;
     } catch (error) {
+      console.error('Webhook error:', error);
       throw new BadRequestException(error.message);
     }
+  }
+
+  @Post('organizations/:organizationId/users')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Update additional users for subscription' })
+  @ApiParam({ name: 'organizationId', description: 'Organization ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        additionalUsers: {
+          type: 'number',
+          description: 'Number of additional users to add to the subscription',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Users updated successfully.',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 404, description: 'Organization not found.' })
+  async updateAdditionalUsers(
+    @Param('organizationId') organizationId: string,
+    @Body('additionalUsers') additionalUsers: number,
+  ) {
+    return this.billingService.updateAdditionalUsers(
+      organizationId,
+      additionalUsers,
+    );
+  }
+
+  @Get('organizations/:organizationId/subscription')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get subscription information' })
+  @ApiParam({ name: 'organizationId', description: 'Organization ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Subscription information retrieved successfully.',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 404, description: 'Organization not found.' })
+  async getSubscriptionInfo(@Param('organizationId') organizationId: string) {
+    return this.billingService.getSubscriptionInfo(organizationId);
   }
 }

@@ -90,7 +90,7 @@ export default function AuthRedirect({
       return;
     }
 
-    if (!activeOrg?.subscriptionPlan) {
+    if (activeOrg && !activeOrg?.subscriptionPlan) {
       router.push("/register?page=4");
       setLoading(false);
       return;

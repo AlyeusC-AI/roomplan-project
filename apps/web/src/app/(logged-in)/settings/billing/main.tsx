@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +35,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
+import {
+  useCreateCheckoutSession,
+  useCreatePortalSession,
+  useGetSubscriptionInfo,
+  useUpdateAdditionalUsers,
+  useCurrentUser,
+  useActiveOrganization,
+} from "@service-geek/api-client";
 
 interface Invoice {
   id: string;
@@ -44,181 +52,112 @@ interface Invoice {
   pdfUrl: string | null;
 }
 
-interface SubscriptionInfo {
-  status: "active" | "canceled" | "past_due" | "never" | "trialing";
-  customerId: string;
-  subscriptionId: string;
-  plan: {
-    name: string;
-    price: number;
-    interval: string;
-    features: string[];
-  } | null;
-  customer: {
-    email: string;
-    name: string | null;
-    phone: string | null;
-  } | null;
-  currentPeriodEnd: string | null;
-  freeTrialEndsAt: string | null;
-  maxUsersForSubscription: number;
-  cancelAtPeriodEnd: boolean;
-  recentInvoices: Invoice[];
-  availablePlans?: Array<{
-    id: string;
-    price: number;
-    product: {
-      name: string;
-      description: string;
-      marketing_features: Array<{
-        name: string;
-      }>;
-    };
-  }>;
-}
-
 export default function BillingPage() {
-  const [loading, setLoading] = useState(true);
-  const [portalLoading, setPortalLoading] = useState(false);
-  const [subscriptionInfo, setSubscriptionInfo] =
-    useState<SubscriptionInfo | null>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [isAddingUsers, setIsAddingUsers] = useState(true);
   const [userCount, setUserCount] = useState(1);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  useEffect(() => {
-    fetchSubscriptionInfo();
-  }, []);
+  const { data: user } = useCurrentUser();
+  const org = useActiveOrganization();
+  const organizationId = org?.id;
 
-  const fetchSubscriptionInfo = async () => {
-    try {
-      const response = await fetch("/api/subscription-info");
-      if (!response.ok) throw new Error("Failed to fetch subscription info");
-      const data = await response.json();
-      setSubscriptionInfo(data);
-    } catch (error) {
-      toast.error("Failed to load subscription information");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: subscriptionInfo, isLoading } = useGetSubscriptionInfo();
+  const { mutate: createCheckout, isPending: isCheckoutLoading } =
+    useCreateCheckoutSession();
+  const { mutate: createPortal, isPending: isPortalLoading } =
+    useCreatePortalSession();
+  const { mutate: updateUsers, isPending: isUpdateLoading } =
+    useUpdateAdditionalUsers();
 
   const purchase = async (
-    plan: NonNullable<SubscriptionInfo["availablePlans"]>[0],
+    plan: NonNullable<typeof subscriptionInfo>["availablePlans"][0],
     noTrial: boolean
   ) => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/create-checkout-session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          priceId: plan.id,
-          type: "register",
-          plan: plan.product.name.toLowerCase(),
-          noTrial,
-        }),
-      });
-      const data = await response.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        toast.error(
-          "An error occurred while processing your payment. Please try again later."
-        );
-      }
-    } catch (error) {
-      toast.error(
-        "An error occurred while processing your payment. Please try again later."
-      );
-    } finally {
-      setLoading(false);
+    if (!organizationId) {
+      toast.error("Organization ID not found");
+      return;
     }
+
+    createCheckout(
+      {
+        organizationId,
+        priceId: plan.id,
+        type: "register",
+        plan: plan.product.name.toLowerCase(),
+        noTrial,
+      },
+      {
+        onSuccess: (data) => {
+          if (data.url) {
+            window.location.href = data.url;
+          } else {
+            toast.error(
+              "An error occurred while processing your payment. Please try again later."
+            );
+          }
+        },
+        onError: () => {
+          toast.error(
+            "An error occurred while processing your payment. Please try again later."
+          );
+        },
+      }
+    );
   };
 
   const redirectToPortal = async () => {
-    try {
-      setPortalLoading(true);
-      const response = await fetch("/api/create-portal-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customerId: subscriptionInfo?.customerId }),
-      });
-      const data = await response.json();
-      if (data.url) window.location.href = data.url;
-    } catch (error) {
-      toast.error("Failed to redirect to billing portal");
-    } finally {
-      setPortalLoading(false);
+    if (!organizationId) {
+      toast.error("Organization ID not found");
+      return;
     }
-  };
 
-  const updateUsers = async (additionalUsers: number) => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/update-users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ additionalUsers }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update users");
-      }
-
-      const data = await response.json();
-      setSubscriptionInfo((prev) =>
-        prev
-          ? {
-              ...prev,
-              maxUsersForSubscription: data.maxUsers,
-            }
-          : null
-      );
-      toast.success("Successfully updated user limit");
-    } catch (error) {
-      toast.error("Failed to update user limit");
-    } finally {
-      setLoading(false);
-    }
+    createPortal(organizationId, {
+      onSuccess: (data) => {
+        if (data.url) window.location.href = data.url;
+      },
+      onError: () => {
+        toast.error("Failed to redirect to billing portal");
+      },
+    });
   };
 
   const handleUserUpdate = async () => {
-    try {
-      setIsUpdating(true);
-      if (
-        !subscriptionInfo?.maxUsersForSubscription ||
-        !subscriptionInfo?.plan?.name
-      ) {
-        throw new Error("Invalid subscription info");
-      }
-
-      const currentBaseUsers =
-        subscriptionInfo.plan.name.toLowerCase() === "startup"
-          ? 2
-          : subscriptionInfo.plan.name.toLowerCase() === "team"
-            ? 5
-            : 10;
-      const currentAdditionalUsers =
-        subscriptionInfo.maxUsersForSubscription - currentBaseUsers;
-
-      const newAdditionalUsers = isAddingUsers
-        ? currentAdditionalUsers + userCount
-        : currentAdditionalUsers - userCount;
-
-      await updateUsers(newAdditionalUsers);
-      setShowUserDialog(false);
-      setUserCount(1);
-    } catch (error) {
-      toast.error("Failed to update user limit");
-    } finally {
-      setIsUpdating(false);
+    if (
+      !organizationId ||
+      !subscriptionInfo?.maxUsersForSubscription ||
+      !subscriptionInfo?.plan?.name
+    ) {
+      toast.error("Invalid subscription info");
+      return;
     }
+
+    const currentBaseUsers =
+      subscriptionInfo.plan.name.toLowerCase() === "startup"
+        ? 2
+        : subscriptionInfo.plan.name.toLowerCase() === "team"
+          ? 5
+          : 10;
+    const currentAdditionalUsers =
+      subscriptionInfo.maxUsersForSubscription - currentBaseUsers;
+
+    const newAdditionalUsers = isAddingUsers
+      ? currentAdditionalUsers + userCount
+      : currentAdditionalUsers - userCount;
+
+    updateUsers(
+      { organizationId, additionalUsers: newAdditionalUsers },
+      {
+        onSuccess: (data) => {
+          setShowUserDialog(false);
+          setUserCount(1);
+          toast.success("Successfully updated user limit");
+        },
+        onError: () => {
+          toast.error("Failed to update user limit");
+        },
+      }
+    );
   };
 
   const openUserDialog = (adding: boolean) => {
@@ -227,7 +166,7 @@ export default function BillingPage() {
     setShowUserDialog(true);
   };
 
-  if (loading) return <LoadingPlaceholder />;
+  if (isLoading) return <LoadingPlaceholder />;
 
   return (
     <div className='mx-auto max-w-5xl space-y-8 p-8'>
@@ -279,7 +218,6 @@ export default function BillingPage() {
             <div className='flex flex-col gap-4'>
               <div className='grid grid-cols-2 gap-6'>
                 {/* Price Info */}
-
                 <div className='space-y-2'>
                   <div className='flex items-center gap-2 text-sm text-muted-foreground'>
                     <CreditCard className='h-4 w-4' />
@@ -395,11 +333,11 @@ export default function BillingPage() {
             <div className='flex w-full flex-col gap-4 sm:flex-row'>
               <Button
                 onClick={redirectToPortal}
-                disabled={portalLoading}
+                disabled={isPortalLoading}
                 className='flex-1'
                 size='lg'
               >
-                {portalLoading ? (
+                {isPortalLoading ? (
                   <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                 ) : (
                   <CreditCard className='mr-2 h-4 w-4' />
@@ -467,10 +405,15 @@ export default function BillingPage() {
                 <CardFooter className='mt-6'>
                   <Button
                     onClick={() => purchase(plan, true)}
+                    disabled={isCheckoutLoading}
                     className='w-full'
                     size='lg'
                   >
-                    Get Started
+                    {isCheckoutLoading ? (
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    ) : (
+                      "Get Started"
+                    )}
                   </Button>
                 </CardFooter>
               </Card>
@@ -585,12 +528,12 @@ export default function BillingPage() {
             <Button
               variant='outline'
               onClick={() => setShowUserDialog(false)}
-              disabled={isUpdating}
+              disabled={isUpdateLoading}
             >
               Cancel
             </Button>
-            <Button onClick={handleUserUpdate} disabled={isUpdating}>
-              {isUpdating ? (
+            <Button onClick={handleUserUpdate} disabled={isUpdateLoading}>
+              {isUpdateLoading ? (
                 <>
                   <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                   Updating...
