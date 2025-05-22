@@ -173,13 +173,27 @@ export class BillingService {
       session.customer as string,
     );
 
+    // Get the price to determine the plan
+    const price = await this.stripe.prices.retrieve(
+      subscription.items.data[0].price.id,
+      { expand: ['product'] },
+    );
+
+    // Use lookup_key to determine plan type
+    const plan = price.lookup_key as 'startup' | 'team' | 'enterprise';
+
+    if (!plan || !['startup', 'team', 'enterprise'].includes(plan)) {
+      throw new BadRequestException('Invalid subscription plan');
+    }
+
+    // Base users per plan
+    const baseUsers = plan === 'startup' ? 2 : plan === 'team' ? 5 : 10;
+
     await this.organizationService.updateSubscription(organizationId, {
       subscriptionId: subscription.id,
-      subscriptionPlan: subscription.items.data[0].price.id,
+      subscriptionPlan: plan,
       customerId: customer.id,
-      maxUsersForSubscription: this.getMaxUsersForPlan(
-        subscription.items.data[0].price.id,
-      ),
+      maxUsersForSubscription: baseUsers,
       subscriptionStatus: subscription.status,
     });
   }
@@ -265,14 +279,30 @@ export class BillingService {
     });
   }
 
-  private getMaxUsersForPlan(priceId: string): number {
-    // Define your plan limits here
-    const planLimits = {
-      price_basic: 5,
-      price_pro: 20,
-      price_enterprise: 100,
-    };
-    return planLimits[priceId] || 0;
+  private async getMaxUsersForPlan(priceId: string): Promise<number> {
+    try {
+      // Get the price to determine the plan
+      const price = await this.stripe.prices.retrieve(priceId, {
+        expand: ['product'],
+      });
+
+      // Use lookup_key to determine plan type
+      const plan = price.lookup_key as 'startup' | 'team' | 'enterprise';
+
+      if (!plan || !['startup', 'team', 'enterprise'].includes(plan)) {
+        throw new BadRequestException('Invalid subscription plan');
+      }
+
+      // Base users per plan
+      const baseUsers = plan === 'startup' ? 2 : plan === 'team' ? 5 : 10;
+
+      return baseUsers;
+    } catch (error) {
+      console.error('Error getting max users for plan:', error);
+      throw new BadRequestException(
+        `Error getting max users for plan: ${error.message}`,
+      );
+    }
   }
 
   async updateAdditionalUsers(organizationId: string, additionalUsers: number) {
