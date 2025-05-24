@@ -4,7 +4,7 @@ import { Check, Search, Users, X } from "lucide-react-native";
 import { Box, Input, Text } from "native-base";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
-import { teamMemberStore } from "@/lib/state/team-members";
+import { useGetOrganizationMembers, User } from "@service-geek/api-client";
 
 interface MemberSelectorProps {
   selectedUserIds: string[];
@@ -17,13 +17,17 @@ export default function MemberSelector({
 }: MemberSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { members } = teamMemberStore();
+  const { data: members } = useGetOrganizationMembers();
 
-  const filteredMembers = members.filter((member) => {
-    const userData = member.user_metadata || {};
+  const filteredMembers = members?.data.filter((member) => {
+    const userData = member.user || {
+      firstName: "",
+      lastName: "",
+      email: "",
+    };
     const fullName =
       `${userData.firstName || ""} ${userData.lastName || ""}`.trim();
-    const email = member.email || "";
+    const email = userData.email;
     return (
       fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       email.toLowerCase().includes(searchQuery.toLowerCase())
@@ -106,12 +110,12 @@ export default function MemberSelector({
           </Box>
 
           <ScrollView style={{ maxHeight: 400 }}>
-            {filteredMembers.map((member) => {
-              const isSelected = selectedUserIds.includes(member.userId);
+            {filteredMembers?.map((member) => {
+              const isSelected = selectedUserIds.includes(member.user.id);
               return (
                 <TouchableOpacity
-                  key={member.userId}
-                  onPress={() => handleSelect(member.userId)}
+                  key={member.user?.id}
+                  onPress={() => handleSelect(member.user.id)}
                   className={cn(
                     "flex-row items-center justify-between px-4 py-3",
                     isSelected ? "bg-primary/10" : "hover:bg-muted"
@@ -120,15 +124,15 @@ export default function MemberSelector({
                   <View className="flex-row items-center gap-3">
                     <View className="h-10 w-10 rounded-full bg-primary/10 items-center justify-center">
                       <Text className="text-primary font-medium text-lg">
-                        {getUserInitials(member)}
+                        {getUserInitials(member.user)}
                       </Text>
                     </View>
                     <View>
                       <Text className="text-sm font-medium">
-                        {getUserName(member)}
+                        {getUserName(member.user)}
                       </Text>
                       <Text className="text-xs text-muted-foreground">
-                        {member.email}
+                        {member.user.email}
                       </Text>
                     </View>
                   </View>

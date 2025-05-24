@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Equipment, Prisma } from '@prisma/client';
+import { Equipment, ImageType, Prisma } from '@prisma/client';
 
 // Define types for filtering and sorting
 export interface ImageFilters {
@@ -16,6 +16,7 @@ export interface ImageFilters {
   roomIds?: string[];
   searchTerm?: string;
   ids?: string[];
+  type: ImageType;
 }
 
 export interface ImageSortOptions {
@@ -244,6 +245,9 @@ export class RoomsService {
     projectId: string;
     roomId?: string;
     noteId?: string;
+    name?: string;
+    description?: string;
+    type?: ImageType;
   }): Promise<
     Prisma.ImageGetPayload<{
       include: { comments: true };
@@ -304,6 +308,9 @@ export class RoomsService {
         projectId: data.projectId,
         roomId: roomId,
         noteId: data.noteId,
+        type: data.type ?? (data.noteId ? 'NOTE' : 'ROOM'),
+        name: data.name,
+        description: data.description,
       },
       include: {
         comments: true,
@@ -469,6 +476,7 @@ export class RoomsService {
               },
             }
           : {},
+        filters.type ? { type: filters.type } : {},
 
         // Has comments filter
         filters.hasComments

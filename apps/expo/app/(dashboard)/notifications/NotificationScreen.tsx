@@ -23,9 +23,10 @@ import {
   CheckCircle,
 } from "lucide-react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { userStore } from "@/lib/state/user";
-import { projectsStore } from "@/lib/state/projects";
-import { supabase } from "@/lib/supabase";
+import {
+  useActiveOrganization,
+  useGetProjectById,
+} from "@service-geek/api-client";
 
 export type NotificationType = "arrival" | "start_work" | "complete_work";
 
@@ -53,7 +54,6 @@ export default function NotificationScreen({
   const params = useLocalSearchParams();
   const router = useRouter();
   const navigation = useNavigation();
-  const { session: supabaseSession } = userStore((state) => state);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [charCount, setCharCount] = useState(0);
@@ -61,34 +61,15 @@ export default function NotificationScreen({
   const [status, setStatus] = useState<"heading" | "late">("heading");
   const MAX_CHARS = 300;
   const fadeAnim = useState(new Animated.Value(0))[0];
-  const [org, setOrg] = useState<any | null>(null);
-
-  useEffect(() => {
-    const fetchOrg = async () => {
-      const { data, error } = await supabase
-        .from("Organization")
-        .select("*")
-        .eq("publicId", supabaseSession?.user.user_metadata.organizationId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching organization:", error);
-      } else {
-        setOrg(data);
-      }
-    };
-    fetchOrg();
-  }, []);
+  const org = useActiveOrganization();
+  const { data: projects } = useGetProjectById(
+    (params.projectId as string) || ""
+  );
 
   // Extract project details from params
   // const projectId = params.projectId ? Number(params.projectId) : null;
   const eventId = params.eventId as string;
-  const { projects } = projectsStore();
-  const project = params.projectId
-    ? projects.find(
-        (p) => p.id == params.projectId || p.publicId == params.projectId
-      )
-    : null;
+  const project = projects?.data;
   const projectId = project?.id;
 
   useEffect(() => {
@@ -257,29 +238,6 @@ export default function NotificationScreen({
 
     // Default to adding +1 if no country code is detected
     return `+1${digitsOnly}`;
-  };
-
-  // Helper function to save notification record to your database
-  const saveNotificationRecord = async (notificationData: any) => {
-    try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/notifications`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": `${supabaseSession?.access_token}`,
-          },
-          body: JSON.stringify(notificationData),
-        }
-      );
-
-      if (!response.ok) {
-        console.error("Failed to save notification record");
-      }
-    } catch (error) {
-      console.error("Error saving notification record:", error);
-    }
   };
 
   return (

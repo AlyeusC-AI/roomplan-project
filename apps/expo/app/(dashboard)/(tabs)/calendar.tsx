@@ -31,28 +31,13 @@ import { projectsStore } from "@/lib/state/projects";
 import dayjs, { Dayjs } from "dayjs";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { toast } from "sonner-native";
+import {
+  CalendarEvent,
+  useDeleteCalendarEvent,
+  useGetCalendarEvents,
+} from "@service-geek/api-client";
 
 const { width } = Dimensions.get("window");
-
-interface CalendarEvent {
-  id: number;
-  publicId: string;
-  subject: string;
-  payload: string;
-  date: string;
-  start: string | null;
-  end: string | null;
-  dynamicId: string;
-  projectId: number | null;
-  organizationId: string | null;
-  isDeleted: boolean;
-  createdAt: string;
-  updatedAt: string;
-  remindClient: boolean;
-  remindProjectOwners: boolean;
-  reminderTime?: "24h" | "2h" | "40m";
-  users: string[];
-}
 
 const CustomDay = ({
   day,
@@ -103,8 +88,10 @@ export default function CalendarScreen() {
   const { session: supabaseSession } = userStore((state) => state);
   const navigation = useNavigation();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [loading, setLoading] = useState(false);
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const { data: eventsData, isLoading: isLoadingEvents } =
+    useGetCalendarEvents();
+  const events = eventsData ?? [];
+  const { mutate: deleteEventM } = useDeleteCalendarEvent();
   // const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { projects } = projectsStore();
@@ -114,16 +101,16 @@ export default function CalendarScreen() {
     navigation.setOptions({ headerShown: false });
   }, []);
 
-  useEffect(() => {
-    fetchEvents();
+  // useEffect(() => {
+  //   fetchEvents();
 
-    // Add focus listener to refetch events when returning to the screen
-    const unsubscribe = navigation.addListener("focus", () => {
-      fetchEvents();
-    });
+  //   // Add focus listener to refetch events when returning to the screen
+  //   const unsubscribe = navigation.addListener("focus", () => {
+  //     fetchEvents();
+  //   });
 
-    return unsubscribe;
-  }, []);
+  //   return unsubscribe;
+  // }, []);
 
   function getEventStatus(eventDate: Date): { status: string; color: string } {
     const now = new Date();
@@ -153,60 +140,14 @@ export default function CalendarScreen() {
     return { status, color };
   }
 
-  const fetchEvents = () => {
-    setLoading(true);
-    fetch(
-      `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/calendar-events`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "auth-token": `${supabaseSession?.access_token}`,
-        },
-      }
-    )
-      .then((res) => {
-        console.log("🚀 ~ fetchEvents ~ res:", res);
-        return res.json();
-      })
-      .then((data) => {
-        setLoading(false);
-        setEvents(data.data);
-      })
-      .catch((error) => {
-        setLoading(false);
-        console.error("Error fetching events:", error);
-      });
-  };
-
-  const handleEditEvent = (event: CalendarEvent) => {
-    router.push({
-      pathname: "calendar/new-event",
-      params: {
-        editMode: "true",
-        eventId: event.id,
-        subject: event.subject,
-        payload: event.payload,
-        projectId: event.projectId?.toString() || "",
-        start: event.start || event.date,
-        end: event.end || event.date,
-        remindClient: event.remindClient ? "true" : "false",
-        remindProjectOwners: event.remindProjectOwners ? "true" : "false",
-        reminderTime: event.reminderTime || "",
-        users: event.users || "",
-      },
-    });
-  };
-
   const handleViewEventDetails = (event: CalendarEvent) => {
     router.push({
       pathname: "calendar/event-details",
       params: {
         ...event,
         id: event.id.toString(),
-        publicId: event.publicId,
         subject: event.subject,
-        payload: event.payload,
+        description: event.description,
         date: event.date,
         start: event.start || event.date,
         end: event.end || event.date,
@@ -214,7 +155,7 @@ export default function CalendarScreen() {
         remindClient: event.remindClient ? "true" : "false",
         remindProjectOwners: event.remindProjectOwners ? "true" : "false",
         reminderTime: event.reminderTime || "",
-        users: event.users || [],
+        users: event.usersToRemind.map((user) => user.id) || [],
       },
     });
   };
@@ -239,32 +180,11 @@ export default function CalendarScreen() {
 
   const deleteEvent = async (event: CalendarEvent) => {
     try {
-      setIsDeleting(true);
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/calendar-events`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": `${supabaseSession?.access_token}`,
-          },
-          body: JSON.stringify({
-            publicId: event.publicId,
-          }),
-        }
-      );
-
-      if (response.ok) {
-        await fetchEvents(); // Refetch events after successful deletion
-        toast.success("Event deleted successfully");
-      } else {
-        toast.error("Failed to delete event");
-      }
+      await deleteEventM(event.id);
+      toast.success("Event deleted successfully");
     } catch (error) {
       console.error("Error deleting event:", error);
-      toast.error("Failed to delete event");
-    } finally {
-      setIsDeleting(false);
+      // toast.error("Failed to delete event");
     }
   };
 
@@ -323,9 +243,9 @@ export default function CalendarScreen() {
           </TouchableOpacity>
         </View>
         <ScrollView
-          refreshControl={
-            <RefreshControl refreshing={loading} onRefresh={fetchEvents} />
-          }
+          // refreshControl={
+          //   <RefreshControl refreshing={loading} onRefresh={fetchEvents} />
+          // }
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
         >
@@ -405,7 +325,7 @@ export default function CalendarScreen() {
 
                   return (
                     <Animated.View
-                      key={event.publicId}
+                      key={event.id}
                       style={styles.eventCard}
                       entering={FadeInDown.delay(index * 100).springify()}
                     >
@@ -448,7 +368,7 @@ export default function CalendarScreen() {
                         </View>
 
                         <Text style={styles.eventDescription}>
-                          {event.payload}
+                          {event.description}
                         </Text>
 
                         <View style={styles.eventFooter}>
@@ -457,9 +377,7 @@ export default function CalendarScreen() {
                               style={[
                                 styles.projectBadge,
                                 {
-                                  backgroundColor: getProjectColor(
-                                    event.projectId
-                                  ),
+                                  backgroundColor: getProjectColor(index),
                                 },
                               ]}
                             >

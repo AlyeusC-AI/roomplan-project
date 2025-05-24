@@ -488,7 +488,9 @@ export class BillingService {
               subscription.items.data[0].current_period_end * 1000,
             ).toISOString()
           : null,
-        freeTrialEndsAt: organization.freeTrialEndsAt,
+        freeTrialEndsAt: subscription?.trial_end
+          ? new Date(subscription.trial_end * 1000).toISOString()
+          : null,
         maxUsersForSubscription: organization.maxUsersForSubscription,
         cancelAtPeriodEnd: subscription?.cancel_at_period_end || false,
         recentInvoices:

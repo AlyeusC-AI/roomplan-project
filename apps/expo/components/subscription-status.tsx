@@ -11,49 +11,24 @@ import { useRouter } from "expo-router";
 import { AlertCircle, Clock } from "lucide-react-native";
 import { Progress } from "./ui/progress";
 import { api } from "@/lib/api";
-
-interface SubscriptionInfo {
-  status: string;
-  plan: {
-    name: string;
-    price: number;
-    interval: string;
-  } | null;
-  currentPeriodEnd: string | null;
-  freeTrialEndsAt: string | null;
-  maxUsersForSubscription: number;
-  cancelAtPeriodEnd: boolean;
-}
+import { useGetSubscriptionInfo } from "@service-geek/api-client";
 
 export function SubscriptionStatus() {
-  const [subscriptionInfo, setSubscriptionInfo] =
-    useState<SubscriptionInfo | null>(null);
-  const [loading, setLoading] = useState(true);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const router = useRouter();
+  const { data: subscriptionInfo, isLoading: isLoadingSubscriptionInfo } =
+    useGetSubscriptionInfo();
 
   useEffect(() => {
-    fetchSubscriptionInfo();
-    const interval = setInterval(fetchSubscriptionInfo, 3600000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchSubscriptionInfo = async () => {
-    try {
-      const response = await api.get("/api/subscription-info");
-      const data = response.data;
-      console.log("🚀 ~ fetchSubscriptionInfo ~ data:", data);
-      setSubscriptionInfo(data);
-
-      if (data.status !== "active" && data.status !== "trialing") {
+    if (subscriptionInfo) {
+      if (
+        subscriptionInfo.status !== "active" &&
+        subscriptionInfo.status !== "trialing"
+      ) {
         setShowWarningModal(true);
       }
-    } catch (error) {
-      console.error("Error fetching subscription info:", error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [subscriptionInfo]);
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; color: string }> = {
@@ -102,7 +77,7 @@ export function SubscriptionStatus() {
     Linking.openURL(`${process.env.EXPO_PUBLIC_BASE_URL}/settings/billing`);
   };
 
-  if (loading || !subscriptionInfo) return null;
+  if (isLoadingSubscriptionInfo || !subscriptionInfo) return null;
 
   const isTrial = subscriptionInfo?.status === "trialing";
   const isExpiring = subscriptionInfo?.cancelAtPeriodEnd;

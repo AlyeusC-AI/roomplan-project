@@ -50,7 +50,6 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
         date: new Date(),
         humidity: 0,
         temperature: 0,
-        equipmentUsed: [],
       });
     } catch (error) {
       console.log(error);

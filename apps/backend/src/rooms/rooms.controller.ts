@@ -10,7 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
-import { Prisma } from '@prisma/client';
+import { ImageType, Prisma } from '@prisma/client';
 import {
   ImageFilters,
   ImageSortOptions,
@@ -95,6 +95,9 @@ export class RoomsController {
       order?: number;
       projectId: string;
       roomId?: string;
+      name?: string;
+      description?: string;
+      type?: ImageType;
     },
   ): Promise<Prisma.ImageGetPayload<{ include: { comments: true } }>> {
     return this.roomsService.addImage(data);
@@ -182,6 +185,7 @@ export class RoomsController {
   @Get('project/:projectId/images/search')
   async findImages(
     @Param('projectId') projectId: string,
+    @Query('type') type: ImageType,
     @Query('showInReport') showInReport?: string,
     @Query('hasComments') hasComments?: string,
     @Query('createdAfter') createdAfter?: string,
@@ -201,6 +205,7 @@ export class RoomsController {
       createdBefore: createdBefore ? new Date(createdBefore) : undefined,
       roomIds: roomIds ? roomIds.split(',') : undefined,
       searchTerm,
+      type: type,
     };
 
     const sort: ImageSortOptions = {

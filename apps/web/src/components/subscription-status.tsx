@@ -5,43 +5,26 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2 } from "lucide-react";
-
-interface SubscriptionInfo {
-  status: string;
-  plan: {
-    name: string;
-    price: number;
-    interval: string;
-    features: string[];
-  } | null;
-  currentPeriodEnd: string | null;
-  freeTrialEndsAt: string | null;
-  maxUsersForSubscription: number;
-  cancelAtPeriodEnd: boolean;
-}
+import {
+  SubscriptionInfo,
+  useCreatePortalSession,
+  useGetSubscriptionInfo,
+} from "@service-geek/api-client";
 
 export function SubscriptionStatus() {
-  const [subscriptionInfo, setSubscriptionInfo] =
-    useState<SubscriptionInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  const { data: subscriptionInfo, isLoading: loading } =
+    useGetSubscriptionInfo();
+  const {
+    mutate: createPortalSession,
+    isPending: isCreatingPortalSession,
+    isError: isCreatingPortalSessionError,
+    data: createPortalSessionData,
+  } = useCreatePortalSession();
   useEffect(() => {
-    fetchSubscriptionInfo();
-  }, []);
-
-  const fetchSubscriptionInfo = async () => {
-    try {
-      const response = await fetch("/api/subscription-info");
-      if (!response.ok) throw new Error("Failed to fetch subscription info");
-      const data = await response.json();
-      setSubscriptionInfo(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
+    if (createPortalSessionData) {
+      window.location.href = createPortalSessionData.url;
     }
-  };
+  }, [createPortalSessionData]);
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<
@@ -90,13 +73,9 @@ export function SubscriptionStatus() {
 
   const handleManageSubscription = async () => {
     try {
-      const response = await fetch("/api/create-portal-session", {
-        method: "POST",
-      });
-      const { url } = await response.json();
-      window.location.href = url;
+      const response = await createPortalSession();
     } catch (err) {
-      setError("Failed to open billing portal");
+      console.error("Failed to open billing portal:", err);
     }
   };
 
@@ -108,15 +87,15 @@ export function SubscriptionStatus() {
     );
   }
 
-  if (error) {
-    return (
-      <Card>
-        <CardContent className='p-6 text-center text-destructive'>
-          {error}
-        </CardContent>
-      </Card>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <Card>
+  //       <CardContent className='p-6 text-center text-destructive'>
+  //         {error}
+  //       </CardContent>
+  //     </Card>
+  //   );
+  // }
 
   return (
     <Card>

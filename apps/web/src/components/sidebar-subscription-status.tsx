@@ -3,69 +3,47 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Clock } from "lucide-react";
+import {
+  AlertCircle,
+  Clock,
+  ArrowUpRight,
+  AlertTriangle,
+  Crown,
+} from "lucide-react";
 import { SubscriptionWarningModal } from "./subscription-warning-modal";
 import { useRouter, usePathname } from "next/navigation";
-
-interface SubscriptionInfo {
-  status: string;
-  plan: {
-    name: string;
-    price: number;
-    interval: string;
-  } | null;
-  currentPeriodEnd: string | null;
-  freeTrialEndsAt: string | null;
-  maxUsersForSubscription: number;
-  cancelAtPeriodEnd: boolean;
-}
+import { useGetSubscriptionInfo } from "@service-geek/api-client";
+import { useSidebar } from "./ui/sidebar";
 
 export function SidebarSubscriptionStatus() {
-  const [subscriptionInfo, setSubscriptionInfo] =
-    useState<SubscriptionInfo | null>(null);
-  const [loading, setLoading] = useState(true);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-
-  useEffect(() => {
-    fetchSubscriptionInfo();
-    const interval = setInterval(fetchSubscriptionInfo, 3600000);
-    return () => clearInterval(interval);
-  }, []);
+  const { data: subscriptionInfo, isLoading: isLoadingSubscriptionInfo } =
+    useGetSubscriptionInfo();
+  const { toggleSidebar, state } = useSidebar();
 
   useEffect(() => {
     if (pathname === "/settings/billing") {
       setShowWarningModal(false);
-    } else if (subscriptionInfo&&
+    } else if (
+      subscriptionInfo &&
       subscriptionInfo?.status !== "active" &&
       subscriptionInfo?.status !== "trialing"
     ) {
       setShowWarningModal(true);
     }
   }, [pathname]);
-
-  const fetchSubscriptionInfo = async () => {
-    try {
-      const response = await fetch("/api/subscription-info");
-      if (!response.ok) throw new Error("Failed to fetch subscription info");
-      const data = await response.json();
-      console.log("🚀 ~ fetchSubscriptionInfo ~ data:", data)
-      setSubscriptionInfo(data);
-
-      if (
-        data.status !== "active" &&
-        data.status !== "trialing" &&
-        pathname !== "/settings/billing"
-      ) {
-        setShowWarningModal(true);
-      }
-    } catch (error) {
-      console.error("Error fetching subscription info:", error);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (
+      subscriptionInfo &&
+      subscriptionInfo?.status !== "active" &&
+      subscriptionInfo?.status !== "trialing" &&
+      pathname !== "/settings/billing"
+    ) {
+      setShowWarningModal(true);
     }
-  };
+  }, [subscriptionInfo]);
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<
@@ -122,14 +100,66 @@ export function SidebarSubscriptionStatus() {
     router.push("/settings/billing");
   };
 
-  if (loading || !subscriptionInfo) return null;
+  if (isLoadingSubscriptionInfo || !subscriptionInfo) return null;
+  console.log(
+    "🚀 ~ SidebarSubscriptionStatus ~ subscriptionInfo:",
+    subscriptionInfo
+  );
 
   const isTrial = subscriptionInfo.status === "trialing";
   const isExpiring = subscriptionInfo.cancelAtPeriodEnd;
   const isInactive = !["active", "trialing"].includes(subscriptionInfo.status);
   const showWarning = isTrial || isExpiring || isInactive;
 
-  if(!showWarning) return null;
+  if (!showWarning) return null;
+
+  if (state === "collapsed") {
+    return (
+      <>
+        <Card className='mx-2 mt-2 border-none bg-background/50 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
+          <CardContent className='p-2'>
+            <div className='flex flex-col items-center gap-2'>
+              <div className='flex flex-col items-center gap-1'>
+                {isTrial ? (
+                  <div className='flex items-center gap-1 text-muted-foreground'>
+                    <Clock className='h-4 w-4' />
+                    <span className='text-[10px]'>
+                      {Math.ceil(
+                        (new Date(subscriptionInfo.freeTrialEndsAt!).getTime() -
+                          new Date().getTime()) /
+                          (1000 * 60 * 60 * 24)
+                      )}
+                    </span>
+                  </div>
+                ) : (
+                  <AlertTriangle
+                    className={`h-4 w-4 ${isInactive ? "text-destructive" : "text-yellow-500"}`}
+                  />
+                )}
+              </div>
+              <Button
+                variant={isInactive ? "destructive" : "ghost"}
+                size='sm'
+                className='h-7 w-7 p-0 hover:bg-primary/10'
+                onClick={handleManageSubscription}
+                title={isInactive ? "Upgrade" : "Manage subscription"}
+              >
+                <Crown className='h-4 w-4' />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <SubscriptionWarningModal
+          isOpen={showWarningModal}
+          onClose={() => setShowWarningModal(false)}
+          onUpgrade={handleManageSubscription}
+          status={subscriptionInfo.status}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <Card className='mx-2 mt-2'>

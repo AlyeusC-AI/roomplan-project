@@ -29,47 +29,20 @@ import {
   ChevronRight,
 } from "lucide-react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { userStore } from "@/lib/state/user";
-import dayjs from "dayjs";
-import { projectsStore } from "@/lib/state/projects";
 
-interface ProjectDetails {
-  id: number;
-  publicId: string;
-  name: string;
-  location: string;
-  clientName: string;
-  clientEmail: string;
-  clientPhoneNumber: string;
-  companyName: string;
-  managerName: string;
-  adjusterEmail: string;
-  adjusterName: string;
-  adjusterPhoneNumber: string;
-  insuranceCompanyName: string;
-  insuranceClaimId: string;
-  lossType: string;
-  catCode: number;
-  status: string;
-  rcvValue: number;
-  actualValue: number | null;
-  lat: string;
-  lng: string;
-  [key: string]: any;
-}
+import {
+  useDeleteCalendarEvent,
+  useGetProjectById,
+  useGetProjectStatus,
+} from "@service-geek/api-client";
 
 export default function EventDetailsScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const navigation = useNavigation();
-  const { projects } = projectsStore();
-  const { session: supabaseSession } = userStore((state) => state);
   const [mapImageUrl, setMapImageUrl] = useState<string | null>(null);
   const [isLoadingMap, setIsLoadingMap] = useState(false);
-  const [projectDetails, setProjectDetails] = useState<ProjectDetails | null>(
-    null
-  );
-  const [isLoadingProject, setIsLoadingProject] = useState(false);
+
   const arrivalScale = useRef(new Animated.Value(1)).current;
   const startScale = useRef(new Animated.Value(1)).current;
   const completeScale = useRef(new Animated.Value(1)).current;
@@ -77,11 +50,16 @@ export default function EventDetailsScreen() {
   // Extract event details from params
   const eventId = params.id as string;
   const subject = params.subject as string;
-  const payload = params.payload as string;
+  const description = params.description as string;
   const date = params.date as string;
   const start = params.start as string;
   const end = params.end as string;
-  const projectId = params.projectId ? Number(params.projectId) : null;
+  const projectId = params.projectId as string;
+  const { data: projectData, isLoading: isLoadingProject } =
+    useGetProjectById(projectId);
+  const projectDetails = projectData?.data;
+  const { mutate: deleteEventMutate } = useDeleteCalendarEvent();
+  const { data: statusData } = useGetProjectStatus(projectDetails?.statusId);
 
   // Format date and time for display
   const eventDate = start ? new Date(start) : new Date(date);
@@ -106,16 +84,8 @@ export default function EventDetailsScreen() {
     ? `${formattedStartTime} to ${formattedEndTime}`
     : formattedStartTime;
 
-  // Get project details if available
-  const project = projectId ? projects.find((p) => p.id === projectId) : null;
-
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
-
-    // Fetch project details if we have a projectId
-    if (projectId) {
-      fetchProjectDetails();
-    }
   }, []);
 
   useEffect(() => {
@@ -127,37 +97,6 @@ export default function EventDetailsScreen() {
       getGoogleMapsImageUrl(projectDetails.location);
     }
   }, [projectDetails]);
-
-  const fetchProjectDetails = async () => {
-    console.log("🚀 ~ fetchProjectDetails ~ projectId:", projectId);
-
-    if (!project?.publicId) return;
-
-    try {
-      setIsLoadingProject(true);
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${project?.publicId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": `${supabaseSession?.access_token}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setProjectDetails(data.data);
-      } else {
-        console.error("Failed to fetch project details");
-      }
-    } catch (error) {
-      console.error("Error fetching project details:", error);
-    } finally {
-      setIsLoadingProject(false);
-    }
-  };
 
   const getGoogleMapsImageUrl = async (address: string) => {
     try {
@@ -190,7 +129,7 @@ export default function EventDetailsScreen() {
         editMode: "true",
         eventId: eventId,
         subject: subject,
-        payload: payload,
+        description: description,
         projectId: projectId?.toString() || "",
         start: start || date,
         end: end || date,
@@ -222,22 +161,8 @@ export default function EventDetailsScreen() {
 
   const deleteEvent = async () => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/calendar-events/${eventId}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": `${supabaseSession?.access_token}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        router.back();
-      } else {
-        Alert.alert("Error", "Failed to delete event");
-      }
+      await deleteEventMutate(eventId);
+      router.back();
     } catch (error) {
       console.error("Error deleting event:", error);
       Alert.alert("Error", "An error occurred while deleting the event");
@@ -274,10 +199,10 @@ export default function EventDetailsScreen() {
   };
 
   const handleProjectPress = () => {
-    if (projectDetails && projectDetails.publicId) {
+    if (projectDetails && projectDetails.id) {
       router.push({
         pathname: "/projects/[id]",
-        params: { id: projectDetails.publicId },
+        params: { id: projectDetails.id },
       });
     }
   };
@@ -463,7 +388,7 @@ export default function EventDetailsScreen() {
 
             <View style={styles.detailsSection}>
               <Text style={styles.detailsTitle}>{subject}</Text>
-              <Text style={styles.detailsDescription}>{payload}</Text>
+              <Text style={styles.detailsDescription}>{description}</Text>
             </View>
 
             {projectDetails && (
@@ -478,12 +403,12 @@ export default function EventDetailsScreen() {
                     style={[
                       styles.statusBadge,
                       {
-                        backgroundColor: getStatusColor(projectDetails.status),
+                        backgroundColor: statusData?.data?.color ?? "#64748b",
                       },
                     ]}
                   >
                     <Text style={styles.statusText}>
-                      {projectDetails.status}
+                      {statusData?.data?.label}
                     </Text>
                   </View>
                 </View>
@@ -616,22 +541,6 @@ export default function EventDetailsScreen() {
     </SafeAreaView>
   );
 }
-
-// Helper function to get color based on status
-const getStatusColor = (status: string): string => {
-  switch (status?.toLowerCase()) {
-    case "active":
-      return "#22c55e";
-    case "pending":
-      return "#f59e0b";
-    case "completed":
-      return "#3b82f6";
-    case "cancelled":
-      return "#ef4444";
-    default:
-      return "#64748b";
-  }
-};
 
 const styles = StyleSheet.create({
   container: {

@@ -35,7 +35,7 @@ export interface OrganizationMembership {
     | "OWNER";
   status: "PENDING" | "ACTIVE" | "REJECTED";
   organization: Organization;
-  user?: User;
+  user: User;
   createdAt: Date;
   updatedAt: Date;
 }

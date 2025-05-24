@@ -16,8 +16,6 @@ export class ReadingsService {
     date: Date;
     humidity: number;
     temperature: number;
-
-    equipmentUsed: string[];
   }): Promise<
     Prisma.RoomReadingGetPayload<{
       include: { wallReadings: true; genericRoomReading: true };

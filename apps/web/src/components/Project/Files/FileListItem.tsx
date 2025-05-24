@@ -1,7 +1,6 @@
 /* This example requires Tailwind CSS v2.0+ */
 
 import { useState, useEffect } from "react";
-import { FileObject } from "@supabase/storage-js";
 import dateFormat from "dateformat";
 import { useParams } from "next/navigation";
 import Image from "next/image";
@@ -19,6 +18,27 @@ import {
 import { LoadingSpinner } from "@components/ui/spinner";
 import { Button } from "@components/ui/button";
 import { cn } from "@lib/utils";
+import { Image as ImageType } from "@service-geek/api-client";
+const getFileType = (url: string) => {
+  if (
+    url.endsWith(".jpg") ||
+    url.endsWith(".jpeg") ||
+    url.endsWith(".png") ||
+    url.endsWith(".webp") ||
+    url.endsWith(".gif") ||
+    url.endsWith(".svg") ||
+    url.endsWith(".heic") ||
+    url.endsWith(".heif")
+  ) {
+    return "image";
+  } else if (url.endsWith(".pdf")) {
+    return "pdf";
+  }
+  if (url.endsWith(".txt") || url.endsWith(".docx")) {
+    return "text";
+  }
+  return "other";
+};
 
 export default function FileListItem({
   file,
@@ -27,47 +47,19 @@ export default function FileListItem({
   isDeleting,
 }: {
   isDeleting: string;
-  file: FileObject;
-  onDownload: (file: FileObject, url: string) => Promise<string | void>;
-  onDelete: (file: FileObject) => void;
+  file: ImageType;
+  onDownload: (
+    file: ImageType,
+    way: "view" | "download"
+  ) => Promise<string | void>;
+  onDelete: (file: ImageType) => void;
 }) {
-  const router = useParams<{ id: string }>();
-  const [isSigning, setIsSigning] = useState(false);
-  const [preSignedUrl, setPreSignedUrl] = useState("");
-  const [imageUrl, setImageUrl] = useState<string>("");
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
-
-  const isImage = file.metadata.mimetype?.startsWith("image/");
-  const isPDF = file.metadata.mimetype === "application/pdf";
-  const isText = file.metadata.mimetype === "text/plain";
+  const fileType = getFileType(file.url);
+  const isImage = fileType === "image";
+  const isPDF = fileType === "pdf";
+  const isText = fileType === "text";
 
   const isViewable = isImage || isPDF || isText;
-
-  useEffect(() => {
-    const loadImagePreview = async () => {
-      if (isImage) {
-        const url = await onDownload(file, "preview");
-        if (typeof url === "string") {
-          setImageUrl(url);
-        }
-      }
-    };
-    loadImagePreview();
-  }, [file, isImage, onDownload]);
-
-  const eSign = async () => {
-    if (isSigning) {
-      setIsSigning(false);
-      return;
-    }
-    if (isPDF) {
-      return;
-    }
-  };
-
-  const onSave = () => {
-    setIsSigning(false);
-  };
 
   const handleView = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -100,16 +92,12 @@ export default function FileListItem({
         className='relative aspect-square w-full overflow-hidden rounded-md bg-gray-50 dark:bg-gray-900'
         onClick={handleView}
       >
-        {isImage && imageUrl ? (
+        {isImage && file.url ? (
           <Image
-            src={imageUrl}
-            alt={file.name}
+            src={file.url}
+            alt={file.name || ""}
             fill
-            className={cn(
-              "object-cover transition-opacity duration-300",
-              !isImageLoaded && "opacity-0"
-            )}
-            onLoadingComplete={() => setIsImageLoaded(true)}
+            className={cn("object-cover transition-opacity duration-300")}
           />
         ) : (
           <div className='flex h-full items-center justify-center'>
@@ -131,7 +119,7 @@ export default function FileListItem({
           {file.name}
         </p>
         <p className='text-xs text-gray-500 dark:text-gray-400'>
-          {dateFormat(file.created_at, "mmm d, yyyy")}
+          {dateFormat(file.createdAt, "mmm d, yyyy")}
         </p>
       </div>
 
@@ -153,26 +141,26 @@ export default function FileListItem({
             <Eye className='h-4 w-4' />
           </Button>
         )}
-        {isPDF && (
+        {/* {isPDF && (
           <Button
             size='sm'
             variant='secondary'
             className='h-8'
             onClick={(e) => {
               e.stopPropagation();
-              eSign();
+              // eSign();
             }}
           >
             <PenLine className='h-4 w-4' />
           </Button>
-        )}
+        )} */}
         <Button
           size='sm'
           variant='secondary'
           className='h-8'
           onClick={(e) => {
             e.stopPropagation();
-            onDownload(file, "");
+            onDownload(file, "download");
           }}
           disabled={isDeleting === file.name}
         >
@@ -195,11 +183,11 @@ export default function FileListItem({
         </Button>
       </div>
 
-      {isSigning && (
+      {isPDF && (
         <Signature
-          preSignedUrl={preSignedUrl}
-          fileName={file.name}
-          onSave={onSave}
+          preSignedUrl={file.url}
+          fileName={file.name || ""}
+          onSave={() => {}}
         />
       )}
     </div>

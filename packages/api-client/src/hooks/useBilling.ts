@@ -20,9 +20,9 @@ export function useCreateCheckoutSession() {
 }
 
 export function useCreatePortalSession() {
-  return useMutation<CheckoutSessionResponse, Error, string>({
-    mutationFn: (organizationId) =>
-      billingService.createPortalSession(organizationId),
+  const org = useActiveOrganization();
+  return useMutation<CheckoutSessionResponse, Error>({
+    mutationFn: () => billingService.createPortalSession(org?.id || ""),
   });
 }
 

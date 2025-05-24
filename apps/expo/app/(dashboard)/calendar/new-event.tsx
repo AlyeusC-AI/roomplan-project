@@ -36,8 +36,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { projectsStore } from "@/lib/state/projects";
-import { teamMemberStore } from "@/lib/state/team-members";
 import {
   Box,
   VStack,
@@ -54,28 +52,16 @@ import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import MemberSelector from "@/components/calendar/member-selector";
-
-interface EventFormData {
-  subject: string;
-  payload: string;
-  remindProjectOwners: boolean;
-  remindClient: boolean;
-  projectId: number | null;
-  start: DateType;
-  end: DateType;
-  reminderTime?: "24h" | "2h" | "40m";
-  users: string[];
-}
-
-interface Project {
-  id: number;
-  name: string;
-}
-
-interface SelectItem {
-  label: string;
-  value: string;
-}
+import {
+  CreateCalendarEventDto,
+  useCreateCalendarEvent,
+  useUpdateCalendarEvent,
+  useDeleteCalendarEvent,
+  useGetProjects,
+  useGetOrganizationMembers,
+  CalendarEvent,
+  Project,
+} from "@service-geek/api-client";
 
 const Header: React.FC<{ isEditMode: boolean }> = ({ isEditMode }) => {
   const router = useRouter();
@@ -95,9 +81,9 @@ const Header: React.FC<{ isEditMode: boolean }> = ({ isEditMode }) => {
 };
 
 const ProjectSelector: React.FC<{
-  projectId: number | null;
+  projectId: string | null | undefined;
   projects: Project[];
-  onSelect: (id: number) => void;
+  onSelect: (id: string) => void;
 }> = ({ projectId, projects, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -121,7 +107,7 @@ const ProjectSelector: React.FC<{
         >
           {selectedProject?.name || "Select a project"}
         </Text>
-        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        <ChevronDown color="#64748b" size={16} />
       </Pressable>
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
@@ -268,26 +254,32 @@ export default function NewEvent() {
   const isEditMode = params.editMode === "true";
   const eventId = params.eventId as string;
 
-  const [formData, setFormData] = useState<EventFormData>({
-    start: dayjs(),
-    end: dayjs().add(1, "hour"),
+  const [formData, setFormData] = useState<CreateCalendarEventDto>({
+    start: dayjs().toISOString(),
+    end: dayjs().add(1, "hour").toISOString(),
     subject: "",
-    payload: "",
+    description: "",
     remindProjectOwners: false,
     remindClient: false,
-    projectId: null,
+    projectId: undefined,
     reminderTime: "24h",
     users: [],
   });
 
-  const [isDeleting, setIsDeleting] = useState(false);
-  const { session: supabaseSession } = userStore((state) => state);
-
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const { projects } = projectsStore();
   const navigation = useNavigation();
   const initialDataLoaded = React.useRef(false);
+
+  // API hooks
+  const { data: projectsData, isLoading: projectsLoading } = useGetProjects();
+
+  const createEvent = useCreateCalendarEvent();
+  const updateEvent = useUpdateCalendarEvent();
+  const deleteEvent = useDeleteCalendarEvent();
+
+  const projects = projectsData?.data || [];
+  const loading = createEvent.isPending || updateEvent.isPending;
+  const isDeleting = deleteEvent.isPending;
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -301,12 +293,17 @@ export default function NewEvent() {
 
       setFormData({
         subject: params.subject as string,
-        payload: params.payload as string,
+        description: params.description as string,
+
         remindProjectOwners: params.remindProjectOwners === "true",
         remindClient: params.remindClient === "true",
-        projectId: params.projectId ? Number(params.projectId) : null,
-        start: params.start ? dayjs(params.start as string) : dayjs(),
-        end: params.end ? dayjs(params.end as string) : dayjs().add(1, "hour"),
+        projectId: params.projectId ? (params.projectId as string) : undefined,
+        start: params.start
+          ? dayjs(params.start as string).toISOString()
+          : dayjs().toISOString(),
+        end: params.end
+          ? dayjs(params.end as string).toISOString()
+          : dayjs().add(1, "hour").toISOString(),
         reminderTime:
           (params.reminderTime as "24h" | "2h" | "40m") || undefined,
         users: params.users ? (params.users as string).split(",") : [],
@@ -314,7 +311,7 @@ export default function NewEvent() {
     }
   }, [isEditMode, params]);
 
-  const updateFormData = (key: keyof EventFormData, value: any) => {
+  const updateFormData = (key: keyof CreateCalendarEventDto, value: any) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -330,101 +327,58 @@ export default function NewEvent() {
         {
           text: "Delete",
           style: "destructive",
-          onPress: deleteEvent,
+          onPress: deleteEventHandler,
         },
       ]
     );
   };
 
-  const deleteEvent = async () => {
-    if (!supabaseSession) {
-      toast.error("Authentication required");
-      return;
-    }
-
-    setIsDeleting(true);
-
+  const deleteEventHandler = async () => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/calendar-events`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": supabaseSession.access_token,
-          },
-          body: JSON.stringify({
-            publicId: eventId,
-          }),
-        }
-      );
-
-      if (response.ok) {
-        toast.success("Event deleted successfully");
-        router.back();
-      } else {
-        toast.error("Failed to delete event");
-      }
+      await deleteEvent.mutateAsync(eventId);
+      toast.success("Event deleted successfully");
+      router.push("/calendar");
     } catch (error) {
       console.error(error);
       toast.error("Failed to delete event");
-    } finally {
-      setIsDeleting(false);
     }
   };
 
   const onSubmit = async () => {
-    const { subject, payload, start, end, projectId } = formData;
+    const { subject, description, start, end, projectId } = formData;
 
-    if (!subject || !payload || !start) {
+    if (!subject || !description || !start) {
       toast.error("Please fill all required fields");
       return;
     }
 
-    if (!supabaseSession) {
-      toast.error("Authentication required");
-      return;
-    }
-
-    setLoading(true);
-
     try {
-      const organizationId = supabaseSession.user.user_metadata.organizationId;
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/calendar-events`,
-        {
-          method: isEditMode ? "PATCH" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": supabaseSession.access_token,
-          },
-          body: JSON.stringify({
-            ...formData,
-            organizationId,
-            subject: subject,
-            payload: payload,
-            id: isEditMode ? eventId : undefined,
-            remindProjectOwners: formData.remindProjectOwners,
-            remindClient: formData.remindClient,
-            reminderTime: formData.reminderTime,
-            users: formData.users,
-          }),
-        }
-      );
+      const eventData: CreateCalendarEventDto = {
+        subject: subject,
+        description: description,
+        start: dayjs(start).toISOString(),
+        end: dayjs(end).toISOString(),
+        remindClient: formData.remindClient || false,
+        remindProjectOwners: formData.remindProjectOwners || false,
+        reminderTime: formData.reminderTime,
+        projectId: projectId || undefined,
+        users: formData.users || [],
+      };
 
-      const data = await response.json();
-      console.log("🚀 ~ onSubmit ~ data:", data);
-      toast.success(
-        isEditMode ? "Event updated successfully" : "Event created successfully"
-      );
-      router.back();
+      if (isEditMode) {
+        await updateEvent.mutateAsync({ id: eventId, data: eventData });
+        toast.success("Event updated successfully");
+      } else {
+        await createEvent.mutateAsync(eventData);
+        toast.success("Event created successfully");
+      }
+
+      router.push("/calendar");
     } catch (error) {
       toast.error(
         isEditMode ? "Failed to update event" : "Failed to create event"
       );
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -454,6 +408,7 @@ export default function NewEvent() {
             value={formData.start}
             onChange={(date) => {
               updateFormData("start", date);
+              updateFormData("date", dayjs(date).toISOString());
               const endDate = dayjs(formData.end);
               const startDate = dayjs(date);
               updateFormData("end", startDate.add(1, "hour").toDate());
@@ -475,13 +430,13 @@ export default function NewEvent() {
             />
           </Box>
 
-          <Box>
+          {/* <Box>
             <FormControl.Label>Team Members to Notify</FormControl.Label>
             <MemberSelector
-              selectedUserIds={formData.users}
+              selectedUserIds={formData.users || []}
               onChange={(userIds) => updateFormData("users", userIds)}
             />
-          </Box>
+          </Box> */}
 
           <FormInput
             label="Event Subject"
@@ -493,8 +448,8 @@ export default function NewEvent() {
           <FormInput
             label="Event Description"
             placeholder="Enter event description"
-            value={formData.payload}
-            onChangeText={(text) => updateFormData("payload", text)}
+            value={formData.description || ""}
+            onChangeText={(text) => updateFormData("description", text)}
             multiline={true}
             numberOfLines={3}
           />
@@ -518,7 +473,7 @@ export default function NewEvent() {
 
           <HStack space={2} alignItems="center">
             <Checkbox
-              checked={formData.remindProjectOwners}
+              checked={formData.remindProjectOwners || false}
               onCheckedChange={(checked) =>
                 updateFormData("remindProjectOwners", checked)
               }
@@ -532,7 +487,7 @@ export default function NewEvent() {
                 Select Project Owners to Notify
               </FormControl.Label>
               <MemberSelector
-                selectedUserIds={formData.users}
+                selectedUserIds={formData.users || []}
                 onChange={(userIds) => updateFormData("users", userIds)}
               />
             </Box>
@@ -540,7 +495,7 @@ export default function NewEvent() {
 
           <HStack space={2} alignItems="center">
             <Checkbox
-              checked={formData.remindClient}
+              checked={formData.remindClient || false}
               onCheckedChange={(checked) =>
                 updateFormData("remindClient", checked)
               }

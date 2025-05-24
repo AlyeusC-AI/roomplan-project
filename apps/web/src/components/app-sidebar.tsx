@@ -176,6 +176,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
           <SidebarRail />
         </div>
+        <SidebarSubscriptionStatus />
         <SidebarFooter>
           <NavUser />
         </SidebarFooter>

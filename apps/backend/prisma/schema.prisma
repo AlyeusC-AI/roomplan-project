@@ -314,22 +314,32 @@ model WallReading {
 }
 
 model Image {
-  id           String    @id @default(uuid())
+  id           String     @id @default(uuid())
   url          String
+  name         String?
+  description  String?
   roomId       String?
-  room         Room?     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  room         Room?      @relation(fields: [roomId], references: [id], onDelete: Cascade)
   comments     Comment[]
-  showInReport Boolean   @default(false)
-  order        Int       @default(0)
+  showInReport Boolean    @default(false)
+  order        Int        @default(0)
   projectId    String
-  project      Project   @relation(fields: [projectId], references: [id])
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  supabaseId   String?   @unique
-  Note         Note?     @relation(fields: [noteId], references: [id])
+  project      Project    @relation(fields: [projectId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  supabaseId   String?    @unique
+  Note         Note?      @relation(fields: [noteId], references: [id])
   noteId       String?
+  type         ImageType? @default(ROOM)
 
   @@index([roomId])
+}
+
+enum ImageType {
+  ROOM
+  IMAGE
+  FILE
+  NOTE
 }
 
 model Note {

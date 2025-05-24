@@ -10,39 +10,28 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AlertCircle } from "lucide-react";
-
-interface SubscriptionInfo {
-  status: string;
-  currentPeriodEnd: string | null;
-  freeTrialEndsAt: string | null;
-  cancelAtPeriodEnd: boolean;
-}
+import {
+  SubscriptionInfo,
+  useCreatePortalSession,
+  useGetSubscriptionInfo,
+} from "@service-geek/api-client";
 
 export function SubscriptionAlert() {
-  const [subscriptionInfo, setSubscriptionInfo] =
-    useState<SubscriptionInfo | null>(null);
   const [showAlert, setShowAlert] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [daysUntilEnd, setDaysUntilEnd] = useState<number | null>(null);
 
+  const { data: subscriptionInfo } = useGetSubscriptionInfo();
+  const {
+    mutate: createPortalSession,
+    isPending: isCreatingPortalSession,
+    data: createPortalSessionData,
+  } = useCreatePortalSession();
   useEffect(() => {
-    fetchSubscriptionInfo();
-    // Check every hour
-    const interval = setInterval(fetchSubscriptionInfo, 3600000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchSubscriptionInfo = async () => {
-    try {
-      const response = await fetch("/api/subscription-info");
-      if (!response.ok) throw new Error("Failed to fetch subscription info");
-      const data = await response.json();
-      setSubscriptionInfo(data);
-      checkSubscriptionStatus(data);
-    } catch (error) {
-      console.error("Error fetching subscription info:", error);
+    if (subscriptionInfo) {
+      checkSubscriptionStatus(subscriptionInfo);
     }
-  };
+  }, [subscriptionInfo]);
 
   const checkSubscriptionStatus = (info: SubscriptionInfo) => {
     if (!info) return;
@@ -72,14 +61,15 @@ export function SubscriptionAlert() {
       }
     }
   };
+  useEffect(() => {
+    if (createPortalSessionData) {
+      window.location.href = createPortalSessionData.url;
+    }
+  }, [createPortalSessionData]);
 
   const handleSubscribe = async () => {
     try {
-      const response = await fetch("/api/create-portal-session", {
-        method: "POST",
-      });
-      const { url } = await response.json();
-      window.location.href = url;
+      const response = await createPortalSession();
     } catch (error) {
       console.error("Failed to open billing portal:", error);
     }

@@ -959,6 +959,7 @@ async function migrateInferences() {
         where: { supabaseId: image.id.toString() },
         update: {
           url: imageUrl,
+          type: 'ROOM',
           supabaseId: image.id.toString(),
           project: {
             connect: { supabaseId: image.Project.publicId },
@@ -967,6 +968,7 @@ async function migrateInferences() {
         create: {
           url: imageUrl,
           supabaseId: image.id.toString(),
+          type: 'ROOM',
           project: {
             connect: { supabaseId: image.Project.publicId },
           },
@@ -1022,6 +1024,7 @@ async function migrateNotes() {
             deleteMany: {},
             create: images.map((image) => ({
               url: image,
+              type: 'NOTE',
               project: {
                 connect: { supabaseId: note.Project.publicId },
               },
@@ -1036,6 +1039,7 @@ async function migrateNotes() {
           images: {
             create: images.map((image) => ({
               url: image,
+              type: 'NOTE',
               project: {
                 connect: { supabaseId: note.Project.publicId },
               },
@@ -1229,7 +1233,7 @@ async function main() {
     // await migrateUsers();
     // await migrateOrganizations();
     // await migrateOrganizationMemberships();
-    // await migrateProjects();
+    await migrateProjects();
     // await migrateCalendarEvents();
     // await migrateCalendarEventReminders();
     await migrateRooms();

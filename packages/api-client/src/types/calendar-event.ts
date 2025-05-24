@@ -21,7 +21,6 @@ export interface CalendarEvent {
 export interface CreateCalendarEventDto {
   subject: string;
   description?: string;
-  date: string;
   start: string;
   end: string;
   remindClient?: boolean;

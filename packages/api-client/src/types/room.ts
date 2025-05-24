@@ -2,6 +2,7 @@ import { User } from "./auth";
 import { Wall } from "./reading";
 import { Equipment, EquipmentProject } from "./equipment";
 
+type ImageType = "ROOM" | "FILE" | "NOTE";
 export interface AreaAffected {
   id: string;
   createdAt: string;
@@ -59,6 +60,9 @@ export interface Image {
   updatedAt: string;
   noteId?: string;
   comments: Comment[];
+  name?: string;
+  description?: string;
+  type?: ImageType;
 }
 
 export interface Comment {
@@ -116,6 +120,7 @@ export interface ImageFilters {
   roomIds?: string[];
   searchTerm?: string;
   ids?: string[];
+  type: ImageType;
 }
 
 export interface ImageSortOptions {
@@ -142,6 +147,9 @@ export interface AddImageDto {
   projectId: string;
   roomId?: string;
   noteId?: string;
+  name?: string;
+  description?: string;
+  type?: ImageType;
 }
 
 export interface AddCommentDto {

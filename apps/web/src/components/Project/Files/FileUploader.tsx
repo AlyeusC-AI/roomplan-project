@@ -35,6 +35,13 @@ import { LoadingSpinner } from "@components/ui/spinner";
 import { Check } from "lucide-react";
 import { buttonVariants } from "@components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
+import {
+  uploadImage,
+  useAddImage,
+  useSearchImages,
+  Image,
+  useRemoveImage,
+} from "@service-geek/api-client";
 
 function downloadFile(file: File) {
   // Create a link and set the URL using `createObjectURL`
@@ -69,54 +76,57 @@ const FileUploader = () => {
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [documentToDelete, setDocumentToDelete] = useState<any>(null);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const files = projectStore();
-  const orgInfo = orgStore((state) => state.organization);
-  const supabase = createClient();
-  const { project } = projectStore();
 
   const { id } = useParams<{ id: string }>();
-
-  const fetchFiles = async () => {
-    try {
-      const res = await fetch(`/api/v1/projects/${id}/files`);
-      const data = await res.json();
-      files.setFiles(data);
-    } catch (error) {
-      console.error("Failed to fetch files:", error);
+  const { mutate: addImage } = useAddImage();
+  const { data: filesData } = useSearchImages(
+    id,
+    {
+      type: "FILE",
+    },
+    {
+      field: "createdAt",
+      direction: "desc",
+    },
+    {
+      page: 1,
+      limit: 100,
     }
-  };
+  );
+  const { mutate: removeImage } = useRemoveImage();
+  const files = filesData?.data;
 
-  const fetchDocuments = async () => {
-    try {
-      const response = await fetch(
-        `/api/v1/organization/documents?projectId=${project?.id}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch documents");
-      const data = await response.json();
-      setDocuments(data);
-    } catch (error) {
-      toast.error("Failed to fetch documents");
-      console.error(error);
-    }
-  };
+  // const fetchDocuments = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       `/api/v1/organization/documents?projectId=${project?.id}`
+  //     );
+  //     if (!response.ok) throw new Error("Failed to fetch documents");
+  //     const data = await response.json();
+  //     setDocuments(data);
+  //   } catch (error) {
+  //     toast.error("Failed to fetch documents");
+  //     console.error(error);
+  //   }
+  // };
 
-  useEffect(() => {
-    setLoading(true);
-    Promise.all([fetchFiles(), fetchDocuments()])
-      .then(() => {
-        fetch(`/api/v1/projects/${id}/reports`)
-          .then((res) => res.json())
-          .then((data) => {
-            console.log(data);
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+  // useEffect(() => {
+  //   setLoading(true);
+  //   Promise.all([fetchFiles(), fetchDocuments()])
+  //     .then(() => {
+  //       fetch(`/api/v1/projects/${id}/reports`)
+  //         .then((res) => res.json())
+  //         .then((data) => {
+  //           console.log(data);
+  //         })
+  //         .finally(() => {
+  //           setLoading(false);
+  //         });
+  //     })
+  //     .finally(() => {
+  //       setLoading(false);
+  //     });
+  // }, []);
 
   const onUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -136,47 +146,14 @@ const FileUploader = () => {
     setIsUploading(true);
 
     try {
-      const body = new FormData();
-      body.append("file", file);
+      const image = await uploadImage(file);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      console.log("🚀 ~ uploadToSupabase ~ user:", user?.user_metadata);
-
-      const { data, error } = await supabase.storage
-        .from("user-files")
-        .upload(
-          `${user?.user_metadata.organizationId}/${files.project?.publicId}/${file.name}`,
-          body,
-          {
-            upsert: true,
-            contentType: file.type,
-          }
-        );
-      console.log("🚀 ~ uploadToSupabase ~ error:", error);
-
-      console.log("🚀 ~ uploadToSupabase ~ data:", data);
-
-      files.addFile({
-        name: file.name,
-        created_at: new Date().toDateString(),
-        metadata: {
-          mimetype: file.type,
+      addImage({
+        data: {
+          url: image.url,
+          projectId: id,
+          type: "FILE",
         },
-        bucket_id: "",
-        updated_at: new Date().toDateString(),
-        owner: user!.id,
-        id: data!.id,
-        buckets: {
-          id: "",
-          name: "",
-          created_at: "",
-          updated_at: "",
-          owner: "",
-          public: true,
-        },
-        last_accessed_at: new Date().toDateString(),
       });
       toast.success("Uploaded File");
     } catch (error) {
@@ -187,65 +164,46 @@ const FileUploader = () => {
     }
   };
 
-  const onDownload = async (file: FileObject, url: string) => {
+  const onDownload = async (file: Image, way: "view" | "download") => {
     try {
-      const { data } = await supabase.storage
-        .from("user-files")
-        .createSignedUrl(`${orgInfo?.publicId}/${id}/${file.name}`, 60);
-
-      if (!data?.signedUrl) {
-        // toast.error("Could not access file");
+      if (way === "view") {
+        window.open(file.url, "_blank");
+        return;
+      }
+      const response = await fetch(file.url);
+      if (!response.ok) {
+        toast.error("Could not download file");
         return;
       }
 
-      // If URL is empty, it means we want to download
-      if (!url) {
-        const res = await fetch(data.signedUrl);
-        if (res.ok) {
-          const blob = await res.blob();
-          downloadFile(
-            new File([blob], file.name, { type: file.metadata.mimetype })
-          );
-        } else {
-          toast.error("Could not download file");
-        }
-        return;
-      }
+      const blob = await response.blob();
 
-      // For preview (thumbnails), return the URL without opening
-      if (url === "preview" && file.metadata.mimetype?.startsWith("image/")) {
-        return data.signedUrl;
-      }
+      // Create download link directly from blob
+      const link = document.createElement("a");
+      link.style.display = "none";
+      link.href = URL.createObjectURL(blob);
+      link.download = file.name || "download";
 
-      // For viewing files
-      if (url === "view") {
-        window.open(data.signedUrl, "_blank");
-      }
-    } catch (e) {
-      console.error(e);
-      // toast.error("Could not access file");
+      document.body.appendChild(link);
+      link.click();
+
+      setTimeout(() => {
+        URL.revokeObjectURL(link.href);
+        link.parentNode?.removeChild(link);
+      }, 0);
+    } catch (error) {
+      console.error(error);
+      toast.error("Could not download file");
     }
   };
 
-  const onDelete = async (file: FileObject) => {
+  const onDelete = async (file: Image) => {
     try {
-      const res = await fetch(`/api/v1/projects/${id}/files`, {
-        method: "DELETE",
-        body: JSON.stringify({
-          filename: `${orgInfo?.publicId}/${id}/${file.name}`,
-        }),
-      });
-      if (res.ok) {
-        projectStore.getState().removeFile(file.name);
-        toast.success("File deleted");
-        await fetchFiles(); // Refetch files after successful deletion
-      } else {
-        console.error(res);
-        toast.error("Could not delete file.");
-      }
+      await removeImage(file.id);
+      toast.success("File deleted");
     } catch (error) {
       console.error(error);
-      toast.error("Could not delete file.");
+      // toast.error("Could not delete file.");
     }
   };
 
@@ -381,7 +339,7 @@ const FileUploader = () => {
         </div>
       </div>
 
-      {files.pendingReports && files.pendingReports.length > 0 && (
+      {files && files.length > 0 && (
         <Alert>
           <Check className='size-4' />
           <AlertTitle>Roof report ordered!</AlertTitle>
@@ -407,11 +365,11 @@ const FileUploader = () => {
 
         <TabsContent value='files' className='mt-4'>
           <div className='mx-auto max-w-6xl'>
-            {files.projectFiles.length === 0 ? (
+            {files && files.length === 0 ? (
               <FileEmptyState onChange={onUpload} isUploading={isUploading} />
             ) : (
               <FileList
-                files={files.projectFiles}
+                files={files || []}
                 onDownload={onDownload}
                 onDelete={onDelete}
               />

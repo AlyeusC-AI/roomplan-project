@@ -1,10 +1,10 @@
 /* This example requires Tailwind CSS v2.0+ */
 
 import { useState } from "react";
-import { FileObject } from "@supabase/storage-js";
 
 import FileListItem from "./FileListItem";
 import { Card } from "@components/ui/card";
+import { Image } from "@service-geek/api-client";
 
 export default function FileList({
   files,
@@ -12,24 +12,26 @@ export default function FileList({
   onDelete,
   roofReport = false,
 }: {
-  files: FileObject[];
-  onDownload: (file: FileObject, url: string) => Promise<string | void>;
-  onDelete: (file: FileObject) => Promise<void>;
+  files: Image[];
+  onDownload: (file: Image, way: "view" | "download") => Promise<string | void>;
+  onDelete: (file: Image) => Promise<void>;
   roofReport?: boolean;
 }) {
   const [isDeleting, setIsDeleting] = useState("");
-  const hasRoofReport = files.some((file) =>
-    file.name.toLowerCase().includes("roof")
+  const hasRoofReport = files.some(
+    (file) =>
+      file.name?.toLowerCase().includes("roof") ||
+      file.description?.toLowerCase().includes("roof")
   );
-  const onDel = async (file: FileObject) => {
-    setIsDeleting(file.name);
+  const onDel = async (file: Image) => {
+    setIsDeleting(file.name || "");
     await onDelete(file);
     setIsDeleting("");
   };
 
   if (hasRoofReport && roofReport) {
     const roofReportFiles = files.filter((file) =>
-      file.name.toLowerCase().includes("roof")
+      file.name?.toLowerCase().includes("roof")
     );
     return (
       <Card className='mt-8 p-4'>

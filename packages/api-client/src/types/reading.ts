@@ -52,7 +52,6 @@ export interface RoomReading {
   humidity: number;
   temperature: number;
 
-  equipmentUsed: string[];
   createdAt: Date;
   updatedAt: Date;
   wallReadings?: WallReading[];
@@ -64,8 +63,6 @@ export interface CreateRoomReadingDto {
   date: Date;
   humidity: number;
   temperature: number;
-
-  equipmentUsed: string[];
 }
 
 // Generic Room Reading Types
@@ -102,7 +99,6 @@ export interface UpdateRoomReadingDto {
   humidity?: number;
   temperature?: number;
 
-  equipmentUsed?: string[];
   wallReadings?: {
     wallId: string;
     reading: number;

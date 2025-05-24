@@ -9,7 +9,6 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { PortalHost } from "@rn-primitives/portal";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as SplashScreen from "expo-splash-screen";
-import { userStore } from "@/lib/state/user";
 
 import { QueryProvider } from "../lib/providers/QueryProvider";
 
