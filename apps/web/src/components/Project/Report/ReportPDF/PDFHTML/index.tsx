@@ -15,7 +15,7 @@ import "@/styles/shared-pdf-styles.css";
 import "@/styles/unshared-pdf-styles.css";
 
 const PDFHTML = () => {
-  const rooms = roomStore((state) => state.rooms);
+  // const rooms = roomStore((state) => state.rooms);
   const {
     showTitlePage,
     showWeatherReporting,

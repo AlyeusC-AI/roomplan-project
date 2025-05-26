@@ -6,6 +6,13 @@ import {
   WorkOrderFormData,
 } from "../types/certificate";
 import { toast } from "sonner";
+import { DocumentType, Organization } from "@service-geek/api-client";
+import { Project } from "@service-geek/api-client";
+import {
+  useActiveOrganization,
+  useGetDocumentById,
+  useUpdateDocument,
+} from "@service-geek/api-client";
 const baseFormSchema = z.object({
   customerName: z.string().min(1, "Customer name is required"),
   cellPhone: z.string().min(10, "Valid phone number is required"),
@@ -47,41 +54,36 @@ export const useCertificate = (id?: string) => {
     representativeName: "",
     customerSignature: "",
     representativeSignature: "",
-    type: "cos",
+    type: DocumentType.COS,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
-  const [isLoading, setIsLoading] = useState(false);
-  const { setOrganization } = orgStore((state: any) => state);
-  useEffect(() => {
-    if (id) {
-      fetchDocument();
-    }
-  }, [id]);
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const { data: document, isLoading: isDocumentLoading } = useGetDocumentById(
+    id!
+  );
+  const { mutate: updateDocumentMutation } = useUpdateDocument();
+
   useEffect(() => {
     if (id) {
       debouncedSave();
     }
   }, [formData]);
-  const fetchDocument = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/v1/public/documents/${id}`);
-      if (!response.ok) throw new Error("Failed to fetch document");
 
-      const data = await response.json();
-      const projectData = data.project as Project;
-      const orgData = data.org as Organization;
+  useEffect(() => {
+    if (document) {
+      const projectData = document.data.project as Project;
+      const orgData = document.data.project?.organization as Organization;
       if (orgData) {
         setOrganization(orgData);
       }
 
-      if (data.json) {
-        const documentData = safeParseJSON(data.json) || {};
+      if (document.data.json) {
+        const documentData = document.data.json || {};
         setFormData((prev) => ({
           ...prev,
-          ...(data.project || {}),
+          ...(document.data.project || {}),
           ...documentData,
           customerName:
             prev.customerName ||
@@ -117,16 +119,11 @@ export const useCertificate = (id?: string) => {
           phoneNumber:
             documentData.phoneNumber || projectData?.clientPhoneNumber,
 
-          type: data.name == "COS" ? "cos" : "auth",
+          type: document.data.type == DocumentType.COS ? "cos" : "auth",
         }));
       }
-    } catch (error) {
-      toast.error("Failed to load document");
-      console.error(error);
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [document]);
 
   const debouncedSave = useCallback(() => {
     if (saveTimeoutRef.current) {
@@ -136,7 +133,12 @@ export const useCertificate = (id?: string) => {
     saveTimeoutRef.current = setTimeout(async () => {
       setIsSaving(true);
       try {
-        await updateDocument();
+        await updateDocumentMutation({
+          id: id!,
+          data: {
+            json: formData,
+          },
+        });
       } catch (error) {
         console.error("Failed to auto-save document:", error);
       } finally {
@@ -145,28 +147,12 @@ export const useCertificate = (id?: string) => {
     }, 1000);
   }, [id, formData]);
 
-  const updateDocument = async () => {
-    try {
-      const response = await fetch(`/api/v1/public/documents/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          json: JSON.stringify(formData),
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to update document");
-    } catch (error) {
-      console.error("Failed to auto-save document:", error);
-    }
-  };
-
   const validateForm = () => {
     try {
       const schema =
-        formData.type === "auth" ? baseFormSchema : workOrderFormSchema;
+        formData.type === DocumentType.AUTH
+          ? baseFormSchema
+          : workOrderFormSchema;
       schema.parse(formData);
       setErrors({});
       return true;
@@ -193,7 +179,10 @@ export const useCertificate = (id?: string) => {
         };
 
         // If changing to work-order type, initialize work order specific fields
-        if (data.type === "auth" && prev.type !== "auth") {
+        if (
+          data.type === DocumentType.AUTH &&
+          prev.type !== DocumentType.AUTH
+        ) {
           return {
             ...newData,
             email: "",
@@ -227,8 +216,9 @@ export const useCertificate = (id?: string) => {
     formData,
     errors,
     isSaving,
-    isLoading,
+    isLoading: isDocumentLoading,
     handleFormDataChange,
     validateForm,
+    organization,
   };
 };

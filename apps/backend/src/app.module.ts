@@ -17,6 +17,7 @@ import { ProjectsModule } from './projects/projects.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { NotesModule } from './notes/notes.module';
 import { ReadingsModule } from './readings/readings.module';
+import { DocumentsModule } from './documents/documents.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ReadingsModule } from './readings/readings.module';
     RoomsModule,
     NotesModule,
     ReadingsModule,
+    DocumentsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

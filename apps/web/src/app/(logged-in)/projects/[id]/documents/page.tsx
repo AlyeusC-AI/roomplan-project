@@ -35,20 +35,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@components/ui/select";
-
-interface Document {
-  id: number;
-  publicId: string;
-  name: string;
-  created_at: string;
-  type?: "cos" | "auth";
-}
+import {
+  useGetProjectById,
+  Document,
+  useGetDocuments,
+  DocumentType,
+  useCreateDocument,
+  useDeleteDocument,
+  useSendDocumentEmail,
+} from "@service-geek/api-client";
 
 export default function ProjectDocumentsPage() {
   const router = useRouter();
-  const { project } = projectStore((state) => state);
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { id } = useParams();
+  const { data: project, isLoading: isProjectLoading } = useGetProjectById(
+    id as string
+  );
+
+  const { data: documents, isLoading: isDocumentsLoading } = useGetDocuments(
+    project?.data.id ?? ""
+  );
+  const { mutate: createDocument } = useCreateDocument();
+  const { mutate: deleteDocument } = useDeleteDocument();
+  const { mutate: sendEmail } = useSendDocumentEmail();
+
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
@@ -59,36 +69,14 @@ export default function ProjectDocumentsPage() {
   const [documentToDelete, setDocumentToDelete] = useState<Document | null>(
     null
   );
-  const [selectedDocType, setSelectedDocType] = useState<"cos" | "auth" | null>(
+  const [selectedDocType, setSelectedDocType] = useState<DocumentType | null>(
     null
   );
 
-  useEffect(() => {
-    fetchDocuments();
-  }, [project?.id]);
-
-  const fetchDocuments = async () => {
-    try {
-      const response = await fetch(
-        `/api/v1/organization/documents?projectId=${project?.id}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch documents");
-      const data = await response.json();
-      setDocuments(data);
-    } catch (error) {
-      toast.error("Failed to fetch documents");
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleViewDocument = (
     documentId: string | undefined,
-    type?: "cos" | "auth"
+    type?: DocumentType
   ) => {
-    // router.push(`/documents/${documentId}?projectId=${project?.publicId}`);
-    // window.open(`/documents/${documentId}?projectId=${project?.publicId}`, '_blank');
     window.open(
       `/certificate/?isRep=true${documentId ? `&id=${documentId}` : ""}${
         type ? `&type=${type}` : ""
@@ -102,63 +90,41 @@ export default function ProjectDocumentsPage() {
 
     setIsSendingEmail(true);
     try {
-      const response = await fetch("/api/v1/organization/documents/email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          documentId: selectedDocument.id,
-          projectId: project?.id,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to send email");
+      await sendEmail(selectedDocument.id);
 
       toast.success("Document sent successfully");
       setShowEmailDialog(false);
       setSelectedDocument(null);
     } catch (error) {
-      toast.error("Failed to send document");
+      // toast.error("Failed to send document");
       console.error(error);
     } finally {
       setIsSendingEmail(false);
     }
   };
 
-  const handleCreateDocument = async (type: "cos" | "auth") => {
+  const handleCreateDocument = async (type: DocumentType) => {
     try {
-      const response = await fetch(
-        `/api/v1/organization/documents?projectId=${project?.publicId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: type === "cos" ? "COS" : "Work Auth",
-            projectId: project?.publicId,
-            json: JSON.stringify({
-              name: type === "cos" ? "COS" : "Work Auth",
-              type: type,
-            }),
-          }),
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to create document");
+      await createDocument({
+        name: type === DocumentType.COS ? "COS" : "Work Auth",
+        projectId: project?.data.id ?? "",
+        json: JSON.stringify({
+          name: type === DocumentType.COS ? "COS" : "Work Auth",
+          type: type,
+        }),
+        type: type,
+      });
 
       toast.success("Document created successfully");
       setShowCreateDialog(false);
       setSelectedDocType(null);
-      fetchDocuments(); // Refresh the documents list
     } catch (error) {
       toast.error("Failed to create document");
       console.error(error);
     }
   };
 
-  const handleDeleteDocument = async (documentId: number) => {
+  const handleDeleteDocument = async (documentId: string) => {
     try {
       const response = await fetch("/api/v1/organization/documents", {
         method: "DELETE",
@@ -170,7 +136,6 @@ export default function ProjectDocumentsPage() {
 
       if (!response.ok) throw new Error("Failed to delete document");
 
-      setDocuments(documents.filter((doc) => doc.id !== documentId));
       toast.success("Document deleted successfully");
       setShowDeleteDialog(false);
       setDocumentToDelete(null);
@@ -180,7 +145,7 @@ export default function ProjectDocumentsPage() {
     }
   };
 
-  if (isLoading) {
+  if (isProjectLoading || isDocumentsLoading || !documents) {
     return (
       <div className='flex min-h-screen items-center justify-center'>
         <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-primary'></div>
@@ -251,7 +216,7 @@ export default function ProjectDocumentsPage() {
                           variant='ghost'
                           size='sm'
                           className='h-8 w-8 p-0'
-                          onClick={() => handleViewDocument(doc.publicId)}
+                          onClick={() => handleViewDocument(doc.id)}
                         >
                           <Eye className='h-4 w-4 text-gray-500' />
                         </Button>
@@ -285,7 +250,7 @@ export default function ProjectDocumentsPage() {
                       <FileText className='h-4 w-4' />
                       <span>
                         Added{" "}
-                        {formatDistanceToNow(new Date(doc.created_at), {
+                        {formatDistanceToNow(new Date(doc.createdAt), {
                           addSuffix: true,
                         })}
                       </span>
@@ -314,17 +279,19 @@ export default function ProjectDocumentsPage() {
               <Select
                 value={selectedDocType || ""}
                 onValueChange={(value) =>
-                  setSelectedDocType(value as "cos" | "auth")
+                  setSelectedDocType(value as DocumentType)
                 }
               >
                 <SelectTrigger className='w-full'>
                   <SelectValue placeholder='Select a document type' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='cos'>
+                  <SelectItem value={DocumentType.COS}>
                     Certificate of Service (COS)
                   </SelectItem>
-                  <SelectItem value='auth'>Work Authorization</SelectItem>
+                  <SelectItem value={DocumentType.AUTH}>
+                    Work Authorization
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

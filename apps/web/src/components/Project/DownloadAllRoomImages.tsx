@@ -7,10 +7,10 @@ import { Button } from "@components/ui/button";
 const JSZip = require("jszip");
 
 const DownloadAllRoomImages = () => {
-  const allRooms = roomStore();
-  const [isDownloading, setIsDownloading] = useState(false);
-  const projectInfo = projectStore((state) => state.project);
-  const presignedUrlMap = urlMapStore((state) => state.urlMap);
+  // const allRooms = roomStore();
+  // const [isDownloading, setIsDownloading] = useState(false);
+  // const projectInfo = projectStore((state) => state.project);
+  // const presignedUrlMap = urlMapStore((state) => state.urlMap);
 
   const downloadImage = async (imageKey: string) => {
     try {

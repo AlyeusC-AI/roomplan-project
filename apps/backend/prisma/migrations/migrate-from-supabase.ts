@@ -1225,6 +1225,39 @@ async function migrateRooms() {
   }
 }
 
+interface Document_Supabase {
+  id: number;
+  createdAt: string;
+  publicId: string;
+  name: string;
+  projectId: number;
+  type: string;
+  json: any;
+  Project: { publicId: string };
+}
+async function migrateDocuments() {
+  console.log('Starting documents migration...');
+  const { data: documents, error } = await supabase
+    .from('Document')
+    .select('* , Project(publicId) ');
+
+  if (error) {
+    throw new Error(`Error fetching documents: ${error.message}`);
+  }
+  console.log(`Found ${documents.length} documents to migrate`);
+  for (const document of documents as Document_Supabase[]) {
+    console.log('🚀 ~ migrateDocuments ~ document:', document);
+    await prisma.document.create({
+      data: {
+        name: document.name,
+        project: { connect: { supabaseId: document.Project.publicId } },
+        type: document.json.type == 'cos' ? 'COS' : 'AUTH',
+        json: document.json,
+      },
+    });
+  }
+}
+
 async function main() {
   try {
     console.log('Starting migration from Supabase...');
@@ -1233,14 +1266,15 @@ async function main() {
     // await migrateUsers();
     // await migrateOrganizations();
     // await migrateOrganizationMemberships();
-    await migrateProjects();
+    // await migrateProjects();
     // await migrateCalendarEvents();
     // await migrateCalendarEventReminders();
-    await migrateRooms();
+    // await migrateRooms();
     // await migrateNotes();
     // await migrateReading();
 
     // await migrateInferences();
+    await migrateDocuments();
     console.log('Migration completed successfully!');
   } catch (error) {
     console.error('Migration failed:', error);

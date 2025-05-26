@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CertificateFormData, WorkOrderFormData } from "../types/certificate";
+import { DocumentType } from "@service-geek/api-client";
 
 interface CertificateFormProps {
   formData: CertificateFormData;
@@ -19,7 +20,7 @@ export const CertificateForm = ({
   };
 
   const renderWorkOrderFields = () => {
-    if (formData.type !== "auth") return null;
+    if (formData.type !== DocumentType.AUTH) return null;
     const workOrderData = formData as WorkOrderFormData;
 
     return (
@@ -239,7 +240,7 @@ export const CertificateForm = ({
 
   return (
     <div className='space-y-4'>
-      {formData.type === "auth" ? (
+      {formData.type === DocumentType.AUTH ? (
         renderWorkOrderFields()
       ) : (
         <>

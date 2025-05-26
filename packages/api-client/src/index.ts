@@ -10,6 +10,7 @@ export * from "./types/project";
 export * from "./types/room";
 export * from "./types/note";
 export * from "./types/reading";
+export * from "./types/document";
 // Hooks
 export * from "./hooks/useBilling";
 export * from "./hooks/useOrganization";
@@ -21,6 +22,7 @@ export * from "./hooks/useProject";
 export * from "./hooks/useRooms";
 export * from "./hooks/useNotes";
 export * from "./hooks/useReadings";
+export * from "./hooks/useDocument";
 // Services
 export * from "./services/auth";
 export * from "./services/organization";
@@ -34,3 +36,4 @@ export * from "./services/project";
 export * from "./services/rooms";
 export * from "./services/notes";
 export * from "./services/readings";
+export * from "./services/document";

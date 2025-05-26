@@ -87,7 +87,6 @@ const MitigationRoomTable = ({ room }: { room: Room }) => {
         date: new Date(),
         humidity: 0,
         temperature: 0,
-        equipmentUsed: [],
       });
       toast.success("Reading added successfully");
 

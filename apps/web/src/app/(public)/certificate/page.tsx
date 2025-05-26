@@ -4,7 +4,6 @@ import { useSearchParams } from "next/navigation";
 import { Certificate } from "./components/Certificate";
 import { useCertificate } from "./hooks/useCertificate";
 import { CertificateType } from "./types/certificate";
-import { useEffect } from "react";
 import { Suspense } from "react";
 function CertificatePage() {
   const searchParams = useSearchParams();
@@ -20,8 +19,8 @@ function CertificatePage() {
     isLoading,
     handleFormDataChange,
     validateForm,
+    organization,
   } = useCertificate(id || undefined);
-  console.log("🚀 ~ CertificatesPage ~ formData:", formData);
 
   if (isLoading) {
     return (
@@ -40,8 +39,9 @@ function CertificatePage() {
       isCustomer={!!isCustomer}
       isRep={!!isRep}
       id={id || undefined}
-      type={formData.type || undefined}
+      type={formData.type}
       errors={errors}
+      organization={organization}
     />
   );
 }

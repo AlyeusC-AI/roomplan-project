@@ -27,7 +27,7 @@ const RoomDeleteModal = ({
   room,
   onSuccess,
 }: RoomDeleteModalProps) => {
-  const rooms = roomStore();
+  // const rooms = roomStore();
   const deleteRoomMutation = useDeleteRoom();
 
   const deleteRoom = async () => {

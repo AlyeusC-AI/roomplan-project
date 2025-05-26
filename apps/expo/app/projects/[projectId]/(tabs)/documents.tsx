@@ -9,7 +9,6 @@ import {
   Animated,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
-import { projectStore } from "@/lib/state/project";
 import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
 import {
@@ -24,24 +23,22 @@ import {
 } from "lucide-react-native";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner-native";
-import { api } from "@/lib/api";
 import { BlurView } from "expo-blur";
-
-interface Document {
-  id: number;
-  name: string;
-  url: string;
-  json: string;
-  publicId: string;
-  created_at: string;
-  type?: "cos" | "auth";
-}
+import {
+  Document,
+  useGetDocuments,
+  useDeleteDocument,
+  useCreateDocument,
+  useSendDocumentEmail,
+  useActiveOrganization,
+  useGetProjectById,
+  DocumentType,
+} from "@service-geek/api-client";
 
 export default function ProjectDocumentsPage() {
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
-  const { project } = projectStore();
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: projectData } = useGetProjectById(projectId);
+  const project = projectData?.data;
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -51,91 +48,72 @@ export default function ProjectDocumentsPage() {
   const [documentToDelete, setDocumentToDelete] = useState<Document | null>(
     null
   );
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const [selectedDocType, setSelectedDocType] = useState<"cos" | "auth" | null>(
-    null
-  );
+
   const fadeAnim = new Animated.Value(0);
 
-  useEffect(() => {
-    if (project?.id) {
-      fetchDocuments();
-    }
-  }, [project?.id]);
+  const handleViewDocument = (documentId: string, type?: DocumentType) => {
+    router.push(`/certificate?id=${documentId}${type ? `&type=${type}` : ""}`);
+    // Linking.openURL(
+    //   `https://www.restoregeek.app/certificate?id=${documentId}${type ? `&type=${type}` : ""}`
+    // );
+  };
+  const { data: documents, isLoading: isDocumentsLoading } = useGetDocuments(
+    project?.id!
+  );
+
+  const { mutate: createDocument, data: createDocumentData } =
+    useCreateDocument();
+  const { mutate: deleteDocument, data: deleteDocumentData } =
+    useDeleteDocument();
+  const {
+    mutate: sendDocumentEmail,
+    data: sendDocumentEmailData,
+    isPending: isSendingEmail,
+  } = useSendDocumentEmail();
 
   useEffect(() => {
-    if (!isLoading) {
+    if (createDocumentData) {
+      // Navigate to view the newly created document
+      if (createDocumentData?.data?.id) {
+        handleViewDocument(
+          createDocumentData.data.id,
+          createDocumentData.data.type
+        );
+      }
+    }
+  }, [createDocumentData]);
+  useEffect(() => {
+    if (!isDocumentsLoading) {
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 500,
         useNativeDriver: true,
       }).start();
     }
-  }, [isLoading]);
-
-  const fetchDocuments = async () => {
+  }, [isDocumentsLoading]);
+  const handleCreateDocument = async (type: DocumentType) => {
     try {
-      setIsLoading(true);
-      const response = await api.get(
-        `/api/v1/organization/documents?projectId=${project?.id}`
-      );
-      console.log(
-        "🚀 ~ fetchDocuments ~ response:",
-        JSON.stringify(response.data, null, 2)
-      );
-      if (response.data) {
-        setDocuments(response.data);
-      }
-    } catch (error) {
-      toast.error("Failed to fetch documents");
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleViewDocument = (documentId: string, type?: "cos" | "auth") => {
-    router.push(`/certificate?id=${documentId}${type ? `&type=${type}` : ""}`);
-    // Linking.openURL(
-    //   `https://www.restoregeek.app/certificate?id=${documentId}${type ? `&type=${type}` : ""}`
-    // );
-  };
-
-  const handleCreateDocument = async (type: "cos" | "auth") => {
-    try {
-      const response = await api.post(
-        `/api/v1/organization/documents?projectId=${project?.publicId}`,
-        {
-          name: type === "cos" ? "COS" : "Work Auth",
-          projectId: project?.publicId,
-          json: JSON.stringify({
-            name: type === "cos" ? "COS" : "Work Auth",
-            type: type,
-          }),
-        }
-      );
+      await createDocument({
+        name: type === DocumentType.COS ? "COS" : "Work Auth",
+        projectId: project?.id!,
+        json: {
+          name: type === DocumentType.COS ? "COS" : "Work Auth",
+          type: type,
+        },
+        type: type,
+      });
 
       toast.success("Document created successfully");
       setShowCreateDialog(false);
-      setSelectedDocType(null);
-      fetchDocuments();
-
-      // Navigate to view the newly created document
-      if (response.data?.publicId) {
-        handleViewDocument(response.data.publicId, type);
-      }
     } catch (error) {
-      toast.error("Failed to create document");
+      // toast.error("Failed to create document");
       console.error(error);
     }
   };
 
-  const handleDeleteDocument = async (documentId: number) => {
+  const handleDeleteDocument = async (documentId: string) => {
     try {
-      await api.delete("/api/v1/organization/documents", {
-        data: { id: documentId },
-      });
-      setDocuments(documents.filter((doc) => doc.id !== documentId));
+      await deleteDocument(documentId);
       toast.success("Document deleted successfully");
       setShowDeleteDialog(false);
       setDocumentToDelete(null);
@@ -148,12 +126,8 @@ export default function ProjectDocumentsPage() {
   const handleSendEmail = async () => {
     if (!selectedDocument) return;
 
-    setIsSendingEmail(true);
     try {
-      await api.post("/api/v1/organization/documents/email", {
-        documentId: selectedDocument.id,
-        projectId: project?.id,
-      });
+      await sendDocumentEmail(selectedDocument.id);
 
       toast.success("Document sent successfully");
       setShowEmailDialog(false);
@@ -161,12 +135,10 @@ export default function ProjectDocumentsPage() {
     } catch (error) {
       toast.error("Failed to send document");
       console.error(error);
-    } finally {
-      setIsSendingEmail(false);
     }
   };
 
-  if (isLoading) {
+  if (isDocumentsLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator size="large" color="#1e88e5" />
@@ -203,7 +175,7 @@ export default function ProjectDocumentsPage() {
           </TouchableOpacity>
         </View>
 
-        {documents.length === 0 ? (
+        {documents?.length === 0 ? (
           <View className="flex-1 items-center justify-center py-20">
             <View className="bg-blue-50 p-8 rounded-full mb-6">
               <FileText className="w-12 h-12 text-blue-600" />
@@ -230,7 +202,7 @@ export default function ProjectDocumentsPage() {
           </View>
         ) : (
           <View className="space-y-4 gap-2">
-            {documents.map((doc) => (
+            {documents?.map((doc) => (
               <Card
                 key={doc.id}
                 className="p-5 bg-white rounded-xl border-0 shadow-sm"
@@ -253,7 +225,7 @@ export default function ProjectDocumentsPage() {
                       </View> */}
                       <Text className="text-sm text-gray-500">
                         Added{" "}
-                        {formatDistanceToNow(new Date(doc.created_at), {
+                        {formatDistanceToNow(new Date(doc.createdAt), {
                           addSuffix: true,
                         })}
                       </Text>
@@ -261,7 +233,7 @@ export default function ProjectDocumentsPage() {
                   </View>
                   <View className="flex-row items-center space-x-3 gap-2">
                     <TouchableOpacity
-                      onPress={() => handleViewDocument(doc.publicId, doc.type)}
+                      onPress={() => handleViewDocument(doc.id, doc.type)}
                       className="bg-blue-50 p-3 rounded-full"
                     >
                       <Eye className="w-5 h-5 text-blue-600" />
@@ -314,7 +286,7 @@ export default function ProjectDocumentsPage() {
             </View>
             <View className="space-y-4 gap-4 mb-8">
               <TouchableOpacity
-                onPress={() => handleCreateDocument("cos")}
+                onPress={() => handleCreateDocument(DocumentType.COS)}
                 className="bg-blue-50 p-5 rounded-xl border border-blue-100"
               >
                 <Text className="text-base font-medium text-gray-900">
@@ -325,7 +297,7 @@ export default function ProjectDocumentsPage() {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => handleCreateDocument("auth")}
+                onPress={() => handleCreateDocument(DocumentType.AUTH)}
                 className="bg-blue-50 p-5 rounded-xl border border-blue-100"
               >
                 <Text className="text-base font-medium text-gray-900">

@@ -27,6 +27,7 @@ import SignatureCanvas from "react-signature-canvas";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { WorkOrderCertificate } from "./WorkOrderCertificate";
+import { DocumentType, Organization } from "@service-geek/api-client";
 
 // Add type declaration for ReactNativeWebView
 declare global {
@@ -43,8 +44,9 @@ interface CertificateProps {
   isCustomer?: boolean;
   isRep?: boolean;
   id?: string;
-  type?: "cos" | "auth" | "work-order";
+  type: DocumentType;
   errors?: Record<string, string>;
+  organization: Organization | null;
 }
 
 // Add safe JSON parse utility
@@ -64,12 +66,9 @@ export const Certificate = ({
   id,
   type,
   errors,
+  organization,
 }: CertificateProps) => {
-  const { organization } = orgStore((state) => state);
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const orgLogoUrl = organization?.publicId
-    ? `${supabaseUrl}/storage/v1/object/public/org-pictures/${organization.publicId}/avatar.png`
-    : null;
+  const orgLogoUrl = organization?.logo;
   const orgName = organization?.name || "-";
 
   const [customerSignature, setCustomerSignature] =
@@ -91,9 +90,7 @@ export const Certificate = ({
     }
   }
 
-  const orgAddress = organization?.address
-    ? safeParseJSON(organization.address)
-    : null;
+  const orgAddress = organization?.formattedAddress;
 
   const handlePrint = useReactToPrint({
     contentRef: certificateRef,
@@ -187,7 +184,7 @@ export const Certificate = ({
 
   const renderCertificate = () => {
     switch (formData.type) {
-      case "auth":
+      case DocumentType.AUTH:
         return (
           <WorkOrderCertificate
             formData={formData as WorkOrderFormData}
@@ -196,9 +193,10 @@ export const Certificate = ({
             isRep={isRep}
             id={id}
             errors={errors}
+            organization={organization!}
           />
         );
-      case "cos":
+      case DocumentType.COS:
       default:
         return (
           <div className='p-4'>
@@ -471,14 +469,14 @@ export const Certificate = ({
                       <h1 className='text-lg font-bold sm:text-xl print:text-2xl'>
                         {orgName}
                       </h1>
-                      {orgAddress ? (
+                      {organization?.formattedAddress ? (
                         <div>
                           <p className='text-xs sm:text-sm print:text-base'>
-                            {orgAddress.address}
+                            {orgAddress}
                           </p>
                           <p className='text-xs sm:text-sm print:text-base'>
-                            {orgAddress.city}, {orgAddress.region}{" "}
-                            {orgAddress.postalCode}
+                            {organization.city}, {organization.region}{" "}
+                            {organization.postalCode}
                           </p>
                         </div>
                       ) : (

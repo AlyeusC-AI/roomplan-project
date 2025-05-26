@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { CertificateForm } from "./CertificateForm";
 import { format } from "date-fns";
+import { Organization } from "@service-geek/api-client";
 
 // Add type declaration for ReactNativeWebView
 declare global {
@@ -36,6 +37,7 @@ interface WorkOrderCertificateProps {
   isRep?: boolean;
   id?: string;
   errors?: Record<string, string>;
+  organization: Organization;
 }
 
 // Add safe JSON parse utility
@@ -54,12 +56,9 @@ export const WorkOrderCertificate = ({
   isRep,
   id,
   errors,
+  organization,
 }: WorkOrderCertificateProps) => {
-  const { organization } = orgStore((state) => state);
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const orgLogoUrl = organization?.publicId
-    ? `${supabaseUrl}/storage/v1/object/public/org-pictures/${organization.publicId}/avatar.png`
-    : null;
+  const orgLogoUrl = organization?.logo;
   const orgName = organization?.name || "-";
   const certificateRef = useRef<HTMLDivElement>(null);
   const [customerSignature, setCustomerSignature] =
@@ -144,9 +143,7 @@ export const WorkOrderCertificate = ({
 
   const isWebView = typeof window !== "undefined" && window.ReactNativeWebView;
 
-  const orgAddress = organization?.address
-    ? safeParseJSON(organization.address)
-    : null;
+  const orgAddress = organization?.formattedAddress;
 
   return (
     <div className='p-4 sm:p-6 md:p-8'>
@@ -403,11 +400,11 @@ export const WorkOrderCertificate = ({
                 {orgAddress ? (
                   <div className='space-y-1'>
                     <p className='text-xs sm:text-sm print:text-base'>
-                      {orgAddress.address}
+                      {orgAddress}
                     </p>
                     <p className='text-xs sm:text-sm print:text-base'>
-                      {orgAddress.city}, {orgAddress.region}{" "}
-                      {orgAddress.postalCode}
+                      {organization.city}, {organization.region}{" "}
+                      {organization.postalCode}
                     </p>
                   </div>
                 ) : null}

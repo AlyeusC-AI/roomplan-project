@@ -41,6 +41,13 @@ import {
   useSearchImages,
   Image,
   useRemoveImage,
+  useGetProjectById,
+  Document,
+  useGetDocuments,
+  DocumentType,
+  useCreateDocument,
+  useDeleteDocument,
+  useSendDocumentEmail,
 } from "@service-geek/api-client";
 
 function downloadFile(file: File) {
@@ -63,21 +70,34 @@ function downloadFile(file: File) {
 }
 
 const FileUploader = () => {
+  const { id } = useParams<{ id: string }>();
+  const { data: project, isLoading: isProjectLoading } = useGetProjectById(
+    id as string
+  );
+
+  const { data: documents, isLoading: isDocumentsLoading } = useGetDocuments(
+    project?.data.id ?? ""
+  );
+  const { mutate: createDocument } = useCreateDocument();
+  const { mutate: deleteDocument } = useDeleteDocument();
+  const { mutate: sendEmail } = useSendDocumentEmail();
   const [isUploading, setIsUploading] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [documents, setDocuments] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("documents");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedDocType, setSelectedDocType] = useState<"cos" | "auth" | null>(
+  const [selectedDocType, setSelectedDocType] = useState<DocumentType | null>(
     null
   );
-  const [selectedDocument, setSelectedDocument] = useState<any>(null);
-  const [documentToDelete, setDocumentToDelete] = useState<any>(null);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(
+    null
+  );
+  const [documentToDelete, setDocumentToDelete] = useState<Document | null>(
+    null
+  );
   const [isSendingEmail, setIsSendingEmail] = useState(false);
 
-  const { id } = useParams<{ id: string }>();
   const { mutate: addImage } = useAddImage();
   const { data: filesData } = useSearchImages(
     id,
@@ -207,56 +227,36 @@ const FileUploader = () => {
     }
   };
 
-  const handleCreateDocument = async (type: "cos" | "auth") => {
+  const handleCreateDocument = async (type: DocumentType) => {
     try {
-      const response = await fetch(
-        `/api/v1/organization/documents?projectId=${id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: type === "cos" ? "COS" : "Work Auth",
-            projectId: id,
-            json: JSON.stringify({
-              name: type === "cos" ? "COS" : "Work Auth",
-              type: type,
-            }),
-          }),
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to create document");
+      await createDocument({
+        name: type === DocumentType.COS ? "COS" : "Work Auth",
+        projectId: id,
+        json: {
+          name: type === DocumentType.COS ? "COS" : "Work Auth",
+          type: type,
+        },
+        type: type,
+      });
 
       toast.success("Document created successfully");
       setShowCreateDialog(false);
       setSelectedDocType(null);
-      await fetchDocuments();
     } catch (error) {
-      toast.error("Failed to create document");
+      // toast.error("Failed to create document");
       console.error(error);
     }
   };
 
-  const handleDeleteDocument = async (documentId: number) => {
+  const handleDeleteDocument = async (documentId: string) => {
     try {
-      const response = await fetch("/api/v1/organization/documents", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id: documentId }),
-      });
+      await deleteDocument(documentId);
 
-      if (!response.ok) throw new Error("Failed to delete document");
-
-      setDocuments(documents.filter((doc) => doc.id !== documentId));
       toast.success("Document deleted successfully");
       setShowDeleteDialog(false);
       setDocumentToDelete(null);
     } catch (error) {
-      toast.error("Failed to delete document");
+      // toast.error("Failed to delete document");
       console.error(error);
     }
   };
@@ -266,31 +266,20 @@ const FileUploader = () => {
 
     setIsSendingEmail(true);
     try {
-      const response = await fetch("/api/v1/organization/documents/email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          documentId: selectedDocument.id,
-          projectId: id,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to send email");
+      await sendEmail(selectedDocument.id);
 
       toast.success("Document sent successfully");
       setShowEmailDialog(false);
       setSelectedDocument(null);
     } catch (error) {
-      toast.error("Failed to send document");
+      // toast.error("Failed to send document");
       console.error(error);
     } finally {
       setIsSendingEmail(false);
     }
   };
 
-  if (loading) {
+  if (isProjectLoading || isDocumentsLoading || !documents) {
     return <LoadingSpinner />;
   }
 
@@ -405,7 +394,7 @@ const FileUploader = () => {
                           <button
                             onClick={() =>
                               window.open(
-                                `/certificate/?isRep=true&id=${doc.publicId}&type=${doc.type}`,
+                                `/certificate/?isRep=true&id=${doc.id}&type=${doc.type}`,
                                 "_blank"
                               )
                             }
@@ -438,7 +427,7 @@ const FileUploader = () => {
                       <div className='flex items-center gap-2 text-sm text-gray-500'>
                         <FileText className='h-4 w-4' />
                         <span>
-                          Added {new Date(doc.created_at).toLocaleDateString()}
+                          Added {new Date(doc.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
@@ -466,17 +455,19 @@ const FileUploader = () => {
               <Select
                 value={selectedDocType || ""}
                 onValueChange={(value) =>
-                  setSelectedDocType(value as "cos" | "auth")
+                  setSelectedDocType(value as DocumentType)
                 }
               >
                 <SelectTrigger className='w-full'>
                   <SelectValue placeholder='Select a document type' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='cos'>
+                  <SelectItem value={DocumentType.COS}>
                     Certificate of Service (COS)
                   </SelectItem>
-                  <SelectItem value='auth'>Work Authorization</SelectItem>
+                  <SelectItem value={DocumentType.AUTH}>
+                    Work Authorization
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

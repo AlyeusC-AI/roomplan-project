@@ -1,4 +1,6 @@
-export type CertificateType = "cos" | "auth";
+import { DocumentType } from "@service-geek/api-client";
+
+export type CertificateType = DocumentType;
 
 export interface BaseCertificateFormData {
   customerName: string;

@@ -118,13 +118,13 @@ const TitleText = ({ children }: React.PropsWithChildren) => (
 
 // Create Document Component
 const PDFExport = () => {
-  const rooms = roomStore();
+  // const rooms = roomStore();
 
-  const { project: projectInfo } = projectStore();
-  const { organization: orgInfo } = orgStore();
+  // const { project: projectInfo } = projectStore();
+  // const { organization: orgInfo } = orgStore();
 
-  const address = parser.parseLocation(projectInfo?.location);
-  const orgAddress = parser.parseLocation(orgInfo?.address);
+  // const address = parser.parseLocation(projectInfo?.location);
+  // const orgAddress = parser.parseLocation(orgInfo?.address);
 
   return (
     <Document>

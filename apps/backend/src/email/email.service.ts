@@ -1,6 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { Resend } from 'resend';
 
+interface SendDocumentEmailParams {
+  to: string;
+  documentName: string;
+  projectName: string;
+  organizationName: string;
+  organizationPhone: string;
+  previewLink: string;
+}
+
 @Injectable()
 export class EmailService {
   private resend: Resend;
@@ -249,6 +258,55 @@ export class EmailService {
       return data;
     } catch (error) {
       console.error('Error in sendWelcomeEmail:', error);
+      throw error;
+    }
+  }
+
+  async sendDocumentEmail({
+    to,
+    documentName,
+    projectName,
+    organizationName,
+    organizationPhone,
+    previewLink,
+  }: SendDocumentEmailParams) {
+    try {
+      const { data, error } = await this.resend.emails.send({
+        from: 'RestoreGeek <team@servicegeek.io>',
+        to: [to],
+        subject: `Document: ${documentName}`,
+        html: `
+          ${this.getEmailStyles()}
+          <div class="email-container">
+            <div class="email-header">
+              <img src="${this.LOGO_URL}" alt="RestoreGeek Logo" class="logo">
+              <h1 class="email-title">Document Shared with You</h1>
+            </div>
+            <div class="email-content">
+              <p>Hello,</p>
+              <p>${organizationName} has shared a document with you for the project "${projectName}".</p>
+              <div class="button-container">
+                <a href="${previewLink}" class="button">
+                  View Document
+                </a>
+              </div>
+            </div>
+            <div class="email-footer">
+              <p>If you have any questions, please contact ${organizationName} at ${organizationPhone}.</p>
+              <p>Best regards,<br>The RestoreGeek Team</p>
+            </div>
+          </div>
+        `,
+      });
+
+      if (error) {
+        console.error('Error sending document email:', error);
+        throw new Error('Failed to send document email');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error in sendDocumentEmail:', error);
       throw error;
     }
   }

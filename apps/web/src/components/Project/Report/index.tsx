@@ -46,7 +46,7 @@ export default function Report() {
     setIsGeneratingPdf(false);
   };
 
-  const rooms = roomStore();
+  // const rooms = roomStore();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
 
