@@ -28,7 +28,11 @@ export interface Room {
   updatedAt: string;
   images: Image[];
   walls: Wall[];
-  equipmentsUsed: EquipmentProject[];
+  equipmentsUsed: (EquipmentProject & {
+    equipment: {
+      name: string;
+    };
+  })[];
 
   humidity?: number;
   dehuReading?: number;

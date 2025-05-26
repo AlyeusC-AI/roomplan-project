@@ -90,9 +90,19 @@ export class RoomsService {
           orderBy: {
             createdAt: 'asc',
           },
+          include: {
+            equipment: {
+              select: {
+                name: true,
+              },
+            },
+          },
         },
         walls: true,
         images: {
+          orderBy: {
+            order: 'asc',
+          },
           include: {
             comments: true,
           },
@@ -117,6 +127,13 @@ export class RoomsService {
         equipmentsUsed: {
           orderBy: {
             createdAt: 'asc',
+          },
+          include: {
+            equipment: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
         walls: true,

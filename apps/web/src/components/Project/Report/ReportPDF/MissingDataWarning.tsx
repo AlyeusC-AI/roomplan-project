@@ -2,6 +2,11 @@ import React from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
 import { CircleAlert } from "lucide-react";
+import {
+  useActiveOrganization,
+  useGetProjectById,
+} from "@service-geek/api-client";
+import { useParams } from "next/navigation";
 
 const requiredAttributes = {
   name: "Client name",
@@ -14,11 +19,13 @@ const requiredAttributes = {
 
 const requiredOrgAttributes = {
   name: "Organization name",
-  address: "Organization address",
+  formattedAddress: "Organization address",
 };
 export default function MissingDataWarning() {
-  const projectInfo = projectStore((state) => state.project);
-  const orgInfo = orgStore((state) => state.organization);
+  const { id } = useParams<{ id: string }>();
+  const { data: projectData } = useGetProjectById(id!);
+  const projectInfo = projectData?.data;
+  const orgInfo = useActiveOrganization();
 
   const isMissingProjectInfo = Object.keys(requiredAttributes).find(
     (key) => !projectInfo![key as keyof typeof requiredAttributes]

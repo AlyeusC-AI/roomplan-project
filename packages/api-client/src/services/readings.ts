@@ -9,6 +9,7 @@ import type {
   UpdateGenericRoomReadingDto,
   UpdateRoomReadingDto,
   Wall,
+  RoomReading,
 } from "../types/reading";
 // Service
 export const readingsService = {
@@ -64,7 +65,7 @@ export const readingsService = {
   },
 
   getRoomReadings: async (roomId: string) => {
-    return apiClient.get(`/readings/room/${roomId}`);
+    return apiClient.get<RoomReading[]>(`/readings/room/${roomId}`);
   },
 
   getRoomReading: async (id: string) => {

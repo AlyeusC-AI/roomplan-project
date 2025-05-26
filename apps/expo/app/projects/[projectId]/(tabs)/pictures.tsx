@@ -94,6 +94,7 @@ export default function ProjectPhotos() {
     projectId,
     {
       // roomId: selectedRoom,
+      type: "ROOM",
     },
     {
       direction: "asc",

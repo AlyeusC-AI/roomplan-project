@@ -3,6 +3,9 @@ import { format } from "date-fns";
 import React, { useState } from "react";
 import "./TitlePage.css";
 import PDFSafeImage from "./PDFSaveImage";
+import { useActiveOrganization } from "@service-geek/api-client";
+import { useParams } from "next/navigation";
+import { useGetProjectById } from "@service-geek/api-client";
 
 const InfoRow = ({ label, value }: { label: string; value?: string }) => (
   <div className='pdf info-row'>
@@ -12,11 +15,12 @@ const InfoRow = ({ label, value }: { label: string; value?: string }) => (
 );
 
 const TitlePage = () => {
-  const projectInfo = projectStore((state) => state.project);
-  const orgInfo = orgStore((state) => state.organization);
+  const { id } = useParams<{ id: string }>();
+  const { data: projectData } = useGetProjectById(id!);
+  const projectInfo = projectData?.data;
+  const orgInfo = useActiveOrganization();
   const [date, setDate] = useState(new Date());
-  const logoUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/org-pictures/${orgInfo?.publicId ?? ""}/avatar.png?t=${date.getTime()}`;
-
+  const logoUrl = orgInfo?.logo;
   return (
     <div className='pdf first-page'>
       <div
@@ -30,7 +34,7 @@ const TitlePage = () => {
         <div className='pdf logo-section header-left'>
           <PDFSafeImage
             style={{ width: "50px", height: "50px" }}
-            url={logoUrl}
+            url={logoUrl ?? ""}
             alt='Organization Logo'
             className='pdf org-logo'
           />
@@ -62,9 +66,9 @@ const TitlePage = () => {
                 <InfoRow
                   label='Type of Loss'
                   value={
-                    projectInfo?.damageType
-                      ? projectInfo?.damageType.charAt(0).toUpperCase() +
-                        projectInfo?.damageType.slice(1)
+                    projectInfo?.lossType
+                      ? projectInfo?.lossType.charAt(0).toUpperCase() +
+                        projectInfo?.lossType.slice(1)
                       : "N/A"
                   }
                 />
@@ -108,7 +112,7 @@ const TitlePage = () => {
             <InfoRow label='Project Manager' value={projectInfo?.managerName} />
             <InfoRow
               label='Project Status'
-              value={projectInfo?.status || "N/A"}
+              value={projectInfo?.status?.label || "N/A"}
             />
             <InfoRow
               label='Assignment #'

@@ -41,6 +41,7 @@ export default function MitigationTable() {
   const { data: imagesData, isLoading: isLoadingImages } = useSearchImages(
     id,
     {
+      type: "ROOM",
       roomIds: rooms,
       showInReport: onlySelected || undefined,
     },

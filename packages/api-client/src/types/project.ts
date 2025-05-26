@@ -1,3 +1,5 @@
+import { ProjectStatus } from "./projectStatus";
+
 export enum LossType {
   FIRE = "FIRE",
   WATER = "WATER",
@@ -45,6 +47,7 @@ export interface Project {
   policyNumber?: string;
   dateOfLoss?: Date;
   organizationId: string;
+  status: ProjectStatus;
 }
 
 export interface CreateProjectDto {

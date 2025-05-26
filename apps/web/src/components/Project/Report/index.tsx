@@ -5,10 +5,7 @@ import { ScaleLoader } from "react-spinners";
 import dynamic from "next/dynamic";
 
 import { Button } from "@components/ui/button";
-import { Switch } from "@components/ui/switch";
-import { Label } from "@components/ui/label";
-import { reportSettingsStore } from "@atoms/report-settings";
-import { useParams } from "next/navigation";
+
 import { LoadingPlaceholder } from "@components/ui/spinner";
 import ReportSettingsPanel from "./ReportPDF/PDFHTML/ReportSettingsPanel";
 
@@ -23,8 +20,6 @@ const ReportPDF = dynamic(() => import("./ReportPDF"), {
 
 export default function Report() {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const { showDimensionsAndDetails, toggleDimensionsAndDetails } =
-    reportSettingsStore();
 
   const generatePDF = async () => {
     setIsGeneratingPdf(true);
@@ -45,23 +40,6 @@ export default function Report() {
     }
     setIsGeneratingPdf(false);
   };
-
-  // const rooms = roomStore();
-  const { id } = useParams<{ id: string }>();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch(`/api/v1/projects/${id}/room`)
-      .then((res) => res.json())
-      .then((data) => {
-        rooms.setRooms(data.rooms);
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) {
-    return <LoadingPlaceholder />;
-  }
 
   return (
     <div>

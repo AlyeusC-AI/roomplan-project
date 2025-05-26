@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
 import PDFSafeImage from "./PDFSaveImage";
+import { Comment, Room } from "@service-geek/api-client";
 
 const OverviewPhoto = ({ imageKey }: { imageKey: string }) => {
   const url = imageKey;
@@ -16,28 +17,24 @@ const OverviewPhoto = ({ imageKey }: { imageKey: string }) => {
   );
 };
 
-const PhotoNote = ({
-  notes,
-}: {
-  notes: Array<{ id: string; body: string }>;
-}) => {
+const PhotoNote = ({ notes }: { notes: Comment[] }) => {
   if (!notes || notes.length === 0) return null;
 
   return (
     <div className='photo-note'>
       {notes.map((note) => (
         <div key={note.id} className='note-content'>
-          {note.body}
+          {note.content}
         </div>
       ))}
     </div>
   );
 };
 
-const OverviewPhotos = ({ room }: { room: RoomWithReadings }) => {
+const OverviewPhotos = ({ room }: { room: Room }) => {
   const selectedPhotos = useMemo(
-    () => room.Inference.filter((i) => i.Image?.includeInReport),
-    [room.Inference]
+    () => room.images.filter((i) => i.showInReport),
+    [room.images]
   );
 
   // Group photos into rows of 3
@@ -59,10 +56,10 @@ const OverviewPhotos = ({ room }: { room: RoomWithReadings }) => {
         {selectedPhotos.length === 0 && <p>No photos of this room</p>}
         {photoRows.map((row, rowIndex) => (
           <div key={rowIndex} className='photo-row'>
-            {row.map((inference) => (
-              <div key={inference.imageKey} className='photo-item'>
-                <OverviewPhoto imageKey={inference.imageKey!} />
-                <PhotoNote notes={inference.Image?.ImageNote} />
+            {row.map((image) => (
+              <div key={image.id} className='photo-item'>
+                <OverviewPhoto imageKey={image.url!} />
+                <PhotoNote notes={image.comments || []} />
               </div>
             ))}
             {/* Add empty items to maintain grid if row has less than 3 items */}

@@ -13,9 +13,13 @@ import WeatherReporting from "./WeatherReporting";
 
 import "@/styles/shared-pdf-styles.css";
 import "@/styles/unshared-pdf-styles.css";
+import { useParams } from "next/navigation";
+import { useGetRooms } from "@service-geek/api-client";
 
 const PDFHTML = () => {
-  // const rooms = roomStore((state) => state.rooms);
+  const { id } = useParams<{ id: string }>();
+  const { data: roomsData } = useGetRooms(id!);
+  const rooms = roomsData || [];
   const {
     showTitlePage,
     showWeatherReporting,
@@ -44,27 +48,20 @@ const PDFHTML = () => {
             {showWeatherReporting && <WeatherReporting />}
 
             {rooms.map((room) => (
-              <div key={room.publicId} className='pdf'>
+              <div key={room.id} className='pdf'>
                 <div className='pdf new-page'>
                   <h2 className='pdf room-section-title'>{room.name}</h2>
                   {showOverviewPhotos && <OverviewPhotos room={room} />}
                 </div>
                 {showDimensionsAndDetails && (
                   <>
-                    <DimensionsAndDetails roomName={room.name} room={room} />
-                    {showAffectedAreas && (
-                      <AffectedAreas
-                        roomName={room.name}
-                        areasAffected={room.AreaAffected}
-                      />
-                    )}
+                    <DimensionsAndDetails room={room} />
+                    {showAffectedAreas && <AffectedAreas room={room} />}
                   </>
                 )}
 
-                {showReadings && (
-                  <Readings room={room} roomReadings={room.RoomReading} />
-                )}
-                {showNotes && <Notes roomName={room.name} notes={room.Notes} />}
+                {showReadings && <Readings room={room} />}
+                {showNotes && <Notes room={room} />}
               </div>
             ))}
           </div>

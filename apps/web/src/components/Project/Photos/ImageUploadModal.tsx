@@ -37,7 +37,9 @@ const ImageUploadModal = ({ setOpen }: ImageUploadModalProps) => {
   const addImageMutation = useAddImage();
   const { refetch: refetchImages } = useSearchImages(
     id,
-    {},
+    {
+      type: "ROOM",
+    },
     { field: "createdAt", direction: "desc" },
     { page: 1, limit: 20 }
   );

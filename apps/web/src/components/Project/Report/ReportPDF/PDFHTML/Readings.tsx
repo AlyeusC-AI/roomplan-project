@@ -4,24 +4,17 @@ import { useMemo } from "react";
 import PDFTableTd from "./PDFTable/PDFTableTd";
 import PDFTableTh from "./PDFTable/PDFTableTh";
 import PDFSafeImage from "./PDFSaveImage";
+import {
+  calculateGPP,
+  Room,
+  useGetRoomReadings,
+} from "@service-geek/api-client";
 
 // Use the ExtendedWallItem type from the global declarations
 // This is defined in apps/web/src/types/app.d.ts
 
 // Component to display a reading image
-const ReadingImage = ({ imageKey }: { imageKey: string }) => {
-  const url = useMemo(() => {
-    // This is important - we need to create a public URL for the reading images
-    // which are stored in the readings-images bucket, not the project-images bucket
-    if (!imageKey) return null;
-
-    // Remove leading slash if present for consistent URL formatting
-    const normalizedKey = imageKey.startsWith("/")
-      ? imageKey.substring(1)
-      : imageKey;
-    return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/readings-images/${normalizedKey}`;
-  }, [imageKey]);
-
+const ReadingImage = ({ url }: { url: string }) => {
   if (!url) return null;
 
   return (
@@ -34,42 +27,25 @@ const ReadingImage = ({ imageKey }: { imageKey: string }) => {
 };
 
 // Component to display a group of images
-export const ImageGallery = ({
-  images,
-}: {
-  images: { imageKey: string }[];
-}) => {
+export const ImageGallery = ({ images }: { images: { url: string }[] }) => {
   if (!images || images.length === 0) return null;
 
   return (
     <div className='my-3 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3'>
       {images.map((image) => (
-        <ReadingImage imageKey={image.imageKey} />
+        <ReadingImage url={image.url} />
       ))}
     </div>
   );
 };
 
-const Readings = ({
-  room,
-  roomReadings,
-}: {
-  room: any;
-  roomReadings: ReadingsWithGenericReadings[];
-}) => {
+const Readings = ({ room }: { room: Room }) => {
   const roomName = room.name;
-  if (roomReadings.length === 0) return null;
+  const { data: roomReadingsData } = useGetRoomReadings(room.id);
 
-  const calculateGPP = (
-    temperature: string | null,
-    humidity: string | null
-  ) => {
-    if (!temperature || !humidity) return null;
-    const temp = Number(temperature);
-    const hum = Number(humidity);
-    if (isNaN(temp) || isNaN(hum)) return null;
-    return (hum / 100) * 7000 * (1 / 7000 + (2 / 7000) * (temp - 32));
-  };
+  const roomReadings = roomReadingsData?.data || [];
+
+  if (!roomReadings || roomReadings.length === 0) return null;
 
   return (
     <div className='pdf new-page'>
@@ -82,41 +58,31 @@ const Readings = ({
         })
         .map((reading) => {
           // Create a type-safe version of the reading with all required properties
-          const typedReading = reading as ReadingsWithGenericReadings & {
-            wallName: string | null;
-            floorName: string | null;
-            extendedWalls: ExtendedWallItem[] | null;
-          };
+          const typedReading = reading;
 
           // Calculate GPP if temperature and humidity are available
           const calculatedGPP = calculateGPP(
             reading.temperature,
             reading.humidity
           );
-          const displayGPP = calculatedGPP
-            ? calculatedGPP.toFixed(2)
-            : reading.gpp
-              ? Number(reading.gpp).toFixed(2)
-              : "--";
+          const displayGPP = calculatedGPP ? calculatedGPP : "--";
 
           // Filter wall and floor images
-          const wallImages =
-            reading.RoomReadingImage?.filter((img) => img.type === "wall") ||
-            [];
-          const floorImages =
-            reading.RoomReadingImage?.filter((img) => img.type === "floor") ||
-            [];
+          // const wallImages =
+          //   reading.wallReadings?.filter(
+          //     (img) =>
+          //       room.walls.find((w) => w.id === img.wallId)?.type === "WALL"
+          //   ) || [];
+          // const floorImages =
+          //   reading.wallReadings?.filter(
+          //     (img) =>
+          //       room.walls.find((w) => w.id === img.wallId)?.type === "FLOOR"
+          //   ) || [];
 
           // Helper function to get images for a specific extended wall/floor
-          const getExtendedItemImages = (itemId: string) => {
-            return (
-              reading.RoomReadingImage?.filter((img) => img.type === itemId) ||
-              []
-            );
-          };
 
           return (
-            <div key={reading.publicId} className='mb-8'>
+            <div key={reading.id} className='mb-8'>
               <div className='text-lg font-bold'>
                 {format(new Date(reading.date), "LLLL	d, yyyy")}
               </div>
@@ -144,7 +110,7 @@ const Readings = ({
                     <PDFTableTd>{displayGPP}</PDFTableTd>
                     <PDFTableTd>gpp</PDFTableTd>
                   </tr>
-                  <tr>
+                  {/* <tr>
                     <PDFTableTd>
                       {room.wallName || "Wall Moisture Content"}
                     </PDFTableTd>
@@ -161,33 +127,33 @@ const Readings = ({
                       {reading.moistureContentFloor || "--"}
                     </PDFTableTd>
                     <PDFTableTd>%</PDFTableTd>
-                  </tr>
+                  </tr> */}
                 </tbody>
               </table>
 
               {/* Display wall images */}
-              {wallImages.length > 0 && (
+              {/* {wallImages.length > 0 && (
                 <div className='mt-3'>
                   <h3 className='text-md font-semibold'>
                     {room.wallName || "Wall"} Images
                   </h3>
                   <ImageGallery images={wallImages} />
                 </div>
-              )}
+              )} */}
 
               {/* Display floor images */}
-              {floorImages.length > 0 && (
+              {/* {floorImages.length > 0 && (
                 <div className='mt-3'>
                   <h3 className='text-md font-semibold'>
                     {room.floorName || "Floor"} Images
                   </h3>
                   <ImageGallery images={floorImages} />
                 </div>
-              )}
+              )} */}
 
               {/* Display extended walls and floors */}
-              {typedReading.extendedWalls &&
-                typedReading.extendedWalls.length > 0 && (
+              {typedReading.wallReadings &&
+                typedReading.wallReadings.length > 0 && (
                   <div className='mt-4'>
                     <h3 className='text-md font-semibold'>
                       Additional Measurements
@@ -201,10 +167,13 @@ const Readings = ({
                         </tr>
                       </thead>
                       <tbody>
-                        {typedReading.extendedWalls.map((item) => (
+                        {typedReading?.wallReadings?.map((item) => (
                           <tr key={item.id}>
-                            <PDFTableTd>{item.name}</PDFTableTd>
-                            <PDFTableTd>{item.value || "--"}</PDFTableTd>
+                            <PDFTableTd>
+                              {room.walls.find((w) => w.id === item.wallId)
+                                ?.name || "--"}
+                            </PDFTableTd>
+                            <PDFTableTd>{item.reading || "--"}</PDFTableTd>
                             <PDFTableTd>%</PDFTableTd>
                           </tr>
                         ))}
@@ -212,16 +181,20 @@ const Readings = ({
                     </table>
 
                     {/* Display extended wall/floor images */}
-                    {typedReading.extendedWalls.map((item) => {
-                      const itemImages = getExtendedItemImages(item.id);
-                      if (itemImages.length === 0) return null;
+                    {typedReading.wallReadings.map((item) => {
+                      const itemImages = item.images;
+                      if (!itemImages || itemImages.length === 0) return null;
 
                       return (
                         <div key={`${item.id}-images`} className='mt-3'>
                           <h3 className='text-md font-semibold'>
-                            {item.name} Images
+                            {room.walls.find((w) => w.id === item.wallId)
+                              ?.name || "--"}{" "}
+                            Images
                           </h3>
-                          <ImageGallery images={itemImages} />
+                          <ImageGallery
+                            images={itemImages.map((image) => ({ url: image }))}
+                          />
                         </div>
                       );
                     })}
@@ -229,15 +202,13 @@ const Readings = ({
                 )}
 
               {/* Display dehumidifier readings */}
-              {reading.GenericRoomReading.map((genericRoomReading, index) => (
+              {reading.genericRoomReading?.map((genericRoomReading, index) => (
                 <div
                   className='mt-4 border-l-2 border-gray-300 pl-4'
-                  key={genericRoomReading.publicId}
+                  key={genericRoomReading.id}
                 >
                   <h3 className='text-md font-semibold'>
-                    {genericRoomReading.type === "dehumidifer"
-                      ? `Dehumidifier Reading #${index + 1}`
-                      : ""}
+                    {`Dehumidifier Reading #${index + 1}`}
                   </h3>
                   <table className='pdf room-section-dimensions-details-table section-spacing'>
                     <thead>
@@ -273,14 +244,16 @@ const Readings = ({
                   </table>
 
                   {/* Display dehumidifier images */}
-                  {genericRoomReading.GenericRoomReadingImage &&
-                    genericRoomReading.GenericRoomReadingImage.length > 0 && (
+                  {genericRoomReading.images &&
+                    genericRoomReading.images.length > 0 && (
                       <div className='mt-3'>
                         <h3 className='text-md font-semibold'>
                           Dehumidifier Images
                         </h3>
                         <ImageGallery
-                          images={genericRoomReading.GenericRoomReadingImage}
+                          images={genericRoomReading.images.map((image) => ({
+                            url: image,
+                          }))}
                         />
                       </div>
                     )}

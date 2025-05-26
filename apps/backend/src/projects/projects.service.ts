@@ -134,6 +134,9 @@ export class ProjectsService {
         orderBy: {
           [sortBy]: sortOrder,
         },
+        include: {
+          status: true,
+        },
       }),
     ]);
 

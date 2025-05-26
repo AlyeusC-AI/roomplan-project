@@ -1,21 +1,38 @@
+import {
+  AreaAffected,
+  Room,
+  useGetAreaAffected,
+} from "@service-geek/api-client";
 import PDFTableTd from "./PDFTable/PDFTableTd";
 import PDFTableTh from "./PDFTable/PDFTableTh";
 
-const AffectedAreas = ({
-  roomName,
-  areasAffected,
-}: {
-  roomName: string;
-  areasAffected: AreaAffected[];
-}) => {
-  if (areasAffected.length === 0) return null;
+const AffectedAreas = ({ room }: { room: Room }) => {
+  const { data: areasAffectedData } = useGetAreaAffected(room.id);
+  const areasAffected = areasAffectedData;
+  areasAffectedData;
+  if (!areasAffected || areasAffected.length === 0) return null;
+  const affectedAreas = [
+    {
+      ...areasAffected.floorAffected,
+      type: "floor",
+    },
+    {
+      ...areasAffected.wallsAffected,
+      type: "wall",
+    },
+    {
+      ...areasAffected.ceilingAffected,
+      type: "ceiling",
+    },
+  ].filter((affectedArea) => affectedArea.isVisible);
+  if (affectedAreas.length === 0) return null;
   return (
     <div className='pdf new-page'>
       <h2 className='pdf room-section-subtitle subtitle-spacing minor-break'>
-        {roomName}: Affected Areas
+        {room.name}: Affected Areas
       </h2>
-      {areasAffected.map((affectedArea) => (
-        <div key={affectedArea.publicId}>
+      {affectedAreas.map((affectedArea) => (
+        <div key={affectedArea.id}>
           <h4 className='pdf room-section-minortitle minor-break title-spacing'>
             {affectedArea.type}
           </h4>
@@ -57,13 +74,16 @@ const AffectedAreas = ({
                 </tr>
               )}
               {/* Extra Fields */}
-              {affectedArea.extraFields && Object.entries(affectedArea.extraFields).map(([fieldId, field]: [string, any]) => (
-                <tr key={fieldId}>
-                  <PDFTableTd>{field.label}</PDFTableTd>
-                  <PDFTableTd>{field.value || "--"}</PDFTableTd>
-                  <PDFTableTd>{field.unit || "--"}</PDFTableTd>
-                </tr>
-              ))}
+              {affectedArea.extraFields &&
+                Object.entries(affectedArea.extraFields).map(
+                  ([fieldId, field]: [string, any]) => (
+                    <tr key={fieldId}>
+                      <PDFTableTd>{field.label}</PDFTableTd>
+                      <PDFTableTd>{field.value || "--"}</PDFTableTd>
+                      <PDFTableTd>{field.unit || "--"}</PDFTableTd>
+                    </tr>
+                  )
+                )}
             </tbody>
           </table>
         </div>
