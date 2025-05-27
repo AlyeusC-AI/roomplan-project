@@ -74,6 +74,7 @@ class RoomsService {
       ...(filters.createdBefore && { createdBefore: filters.createdBefore }),
       ...(filters.roomIds?.length && { roomIds: filters.roomIds.join(",") }),
       ...(filters.searchTerm && { searchTerm: filters.searchTerm }),
+      ...(filters.type && { type: filters.type }),
       sortField: sort.field,
       sortDirection: sort.direction,
       page: String(pagination.page || 1),
