@@ -1,12 +1,7 @@
 import ProjectEquipment from "@components/Project/Equipment";
 
 const EquipmentPage = () => {
-  return (
-    <ProjectEquipment
-      initialUsedEquipment={[]}
-      intialOrganizationEquipment={[]}
-    />
-  );
+  return <ProjectEquipment />;
 };
 
 export default EquipmentPage;

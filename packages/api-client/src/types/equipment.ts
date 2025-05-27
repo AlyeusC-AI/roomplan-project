@@ -16,7 +16,12 @@ export interface EquipmentProject {
   createdAt: string;
   updatedAt: string;
   projectId: string;
-  roomId: string;
+  roomId?: string;
+  equipment?: Equipment;
+  room?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface CreateEquipmentDto {
@@ -31,4 +36,11 @@ export interface UpdateEquipmentDto {
   description?: string;
   quantity?: number;
   image?: string;
+}
+
+export interface AssignEquipmentDto {
+  equipmentId: string;
+  projectId: string;
+  quantity: number;
+  roomId?: string;
 }

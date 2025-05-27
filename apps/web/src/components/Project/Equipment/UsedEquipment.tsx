@@ -12,10 +12,15 @@ import {
 import { Button } from "@components/ui/button";
 import { Trash } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
-import { LoadingSpinner } from "@components/ui/spinner";
+import { LoadingPlaceholder, LoadingSpinner } from "@components/ui/spinner";
 import { toast } from "sonner";
 import { Card } from "@components/ui/card";
 import { useParams } from "next/navigation";
+import {
+  EquipmentProject,
+  useGetEquipmentAssignments,
+  useRemoveEquipmentAssignment,
+} from "@service-geek/api-client";
 
 // const UsedEquipmentRow = ({ equipment }: { equipment: ProjectEquipment }) => {
 //   const router = useRouter();
@@ -77,18 +82,17 @@ import { useParams } from "next/navigation";
 //   );
 // };
 
-const UsedEquipment = ({
-  usedEquipment,
-  setUsedEquipment,
-  setAvailableEquipment,
-}: {
-  usedEquipment: ProjectEquipment[];
-  setUsedEquipment: React.Dispatch<React.SetStateAction<ProjectEquipment[]>>;
-  setAvailableEquipment: React.Dispatch<React.SetStateAction<Equipment[]>>;
-}) => {
-  const [isDeleting, setIsDeleting] = useState<ProjectEquipment | null>(null);
+const UsedEquipment = ({}: {}) => {
+  const { id } = useParams<{ id: string }>();
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const { mutate: removeAssignment } = useRemoveEquipmentAssignment();
+  const { data: usedEquipment, isLoading: isLoadingAssignments } =
+    useGetEquipmentAssignments(id);
 
-  const columns: ColumnDef<ProjectEquipment>[] = [
+  if (isLoadingAssignments) {
+    return <LoadingPlaceholder />;
+  }
+  const columns: ColumnDef<EquipmentProject>[] = [
     {
       accessorKey: "name",
       header: ({ column }) => (
@@ -96,7 +100,7 @@ const UsedEquipment = ({
       ),
       cell: ({ row }) => (
         <span className='font-medium'>
-          {row.original.Equipment?.name ?? ""}
+          {row.original.equipment?.name ?? ""}
         </span>
       ),
     },
@@ -111,6 +115,21 @@ const UsedEquipment = ({
         }).format(new Date(row.original.createdAt ?? new Date())),
     },
     {
+      accessorKey: "quantity",
+      header: ({ column }) => (
+        <TableColumnHeader column={column} title='Quantity' />
+      ),
+      cell: ({ row }) => row.original.quantity,
+    },
+    {
+      accessorKey: "room",
+      header: ({ column }) => (
+        <TableColumnHeader column={column} title='Room' />
+      ),
+      cell: ({ row }) => row.original.room?.name ?? "N/A",
+    },
+
+    {
       id: "release",
       accessorFn: (row) => row.id,
       header: ({ column }) => (
@@ -123,39 +142,29 @@ const UsedEquipment = ({
             variant='destructive'
             onClick={() => onDelete(row.original)}
           >
-            {isDeleting && isDeleting.publicId == row.original.publicId ? (
-              <LoadingSpinner />
-            ) : (
-              <Trash />
-            )}
+            {isDeleting === row.original.id ? <LoadingSpinner /> : <Trash />}
           </Button>
         </div>
       ),
     },
   ];
 
-  const { id } = useParams<{ id: string }>();
-
-  const onDelete = async (e: ProjectEquipment) => {
+  const onDelete = async (equipment: EquipmentProject) => {
     try {
-      setIsDeleting(e);
-
-      await fetch(`/api/v1/projects/${id}/equipment`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
+      setIsDeleting(equipment.id);
+      removeAssignment(equipment.id, {
+        onSuccess: () => {
+          toast.success("Equipment removed successfully");
         },
-        body: JSON.stringify({ equipmentId: e.id }),
+        onError: () => {
+          toast.error("An error occurred");
+        },
       });
-
-      setUsedEquipment(usedEquipment.filter((i) => i.publicId !== e.publicId));
-      setAvailableEquipment((prev) => [...prev, e.Equipment]);
-      toast.success("Equipment deleted successfully");
     } catch {
       toast.error("An error occurred");
+    } finally {
+      setIsDeleting(null);
     }
-
-    setIsDeleting(null);
   };
 
   return (
@@ -167,7 +176,7 @@ const UsedEquipment = ({
         </p>
       </div>
       <Card className='w-full'>
-        <TableProvider columns={columns} data={usedEquipment}>
+        <TableProvider columns={columns} data={usedEquipment?.data || []}>
           <TableHeader>
             {({ headerGroup }) => (
               <TableHeaderGroup key={headerGroup.id} headerGroup={headerGroup}>

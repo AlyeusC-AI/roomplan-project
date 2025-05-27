@@ -1,4 +1,4 @@
-import type { WallType } from "@prisma/client";
+type WallType = "WALL" | "CEILING" | "FLOOR";
 
 // Wall Types
 export interface Wall {

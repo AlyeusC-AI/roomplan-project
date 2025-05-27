@@ -30,8 +30,11 @@ const queryClient = new QueryClient({
         return false;
       },
       retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      staleTime: 0,
+
+      // staleTime: 1 * 60 * 1000, // 5 minutes
     },
   },
 });

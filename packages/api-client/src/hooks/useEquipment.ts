@@ -9,6 +9,8 @@ import type {
   CreateEquipmentDto,
   UpdateEquipmentDto,
   Equipment,
+  EquipmentProject,
+  AssignEquipmentDto,
 } from "../types/equipment";
 import { useAuthStore } from "../services/storage";
 import { useActiveOrganization } from "./useOrganization";
@@ -68,6 +70,38 @@ export function useDeleteEquipment() {
     mutationFn: (id: string) => equipmentService.remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["equipment"] });
+    },
+  });
+}
+
+export function useAssignEquipment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AssignEquipmentDto) =>
+      equipmentService.assignEquipment(data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["equipment-assignments", variables.projectId],
+      });
+    },
+  });
+}
+
+export function useGetEquipmentAssignments(projectId: string) {
+  return useQuery({
+    queryKey: ["equipment-assignments", projectId],
+    queryFn: () => equipmentService.getEquipmentAssignments(projectId),
+    enabled: !!projectId && !!useAuthStore.getState().token,
+  });
+}
+
+export function useRemoveEquipmentAssignment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => equipmentService.removeEquipmentAssignment(id),
+    onSuccess: (_, variables) => {
+      // Invalidate all equipment assignments queries since we don't know the projectId
+      queryClient.invalidateQueries({ queryKey: ["equipment-assignments"] });
     },
   });
 }

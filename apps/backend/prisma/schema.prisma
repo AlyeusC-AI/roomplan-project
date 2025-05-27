@@ -377,8 +377,8 @@ model EquipmentProject {
   quantity    Int
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  roomId      String
-  room        Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId      String?
+  room        Room?     @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@index([equipmentId])
   @@index([projectId])

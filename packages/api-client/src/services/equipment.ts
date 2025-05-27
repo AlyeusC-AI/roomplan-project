@@ -2,8 +2,11 @@ import type {
   Equipment,
   CreateEquipmentDto,
   UpdateEquipmentDto,
+  EquipmentProject,
+  AssignEquipmentDto,
 } from "../types/equipment";
 import { apiClient } from "./client";
+
 class EquipmentService {
   async create(data: CreateEquipmentDto & { organizationId: string }) {
     return apiClient.post<Equipment>("/equipment", data);
@@ -25,6 +28,20 @@ class EquipmentService {
 
   async remove(id: string) {
     return apiClient.delete<Equipment>(`/equipment/${id}`);
+  }
+
+  async assignEquipment(data: AssignEquipmentDto) {
+    return apiClient.post<EquipmentProject>("/equipment/assign", data);
+  }
+
+  async getEquipmentAssignments(projectId: string) {
+    return apiClient.get<EquipmentProject[]>(
+      `/equipment/project/${projectId}/assignments`
+    );
+  }
+
+  async removeEquipmentAssignment(id: string) {
+    return apiClient.delete<EquipmentProject>(`/equipment/assignment/${id}`);
   }
 }
 

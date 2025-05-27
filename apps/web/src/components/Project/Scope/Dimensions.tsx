@@ -76,7 +76,7 @@ export default function Dimensions({ room }: { room: Room }) {
   console.log("🚀 ~ Dimeaaaasadts:", equipments, room.equipmentsUsed);
 
   useEffect(() => {
-    if (equipments && room.equipmentUsed) {
+    if (equipments && room.equipmentsUsed) {
       const equipmentUsedData =
         room.equipmentsUsed?.map((e) => ({
           id: e.equipmentId,
