@@ -68,6 +68,7 @@ model Organization {
   equipments      Equipment[]
   calendarEvents  CalendarEvent[]
   projects        Project[]
+  forms           Form[]
 }
 
 enum MemberStatus {
@@ -194,11 +195,13 @@ model Project {
   policyNumber String?
   dateOfLoss   DateTime?
 
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization   Organization   @relation(fields: [organizationId], references: [id])
   organizationId String
   rooms          Room[]
   images         Image[]
   documents      Document[]
+  forms          FormProject[]
+  formResponses  FormResponse[]
 }
 
 model Room {
@@ -456,4 +459,91 @@ model Document {
 enum DocumentType {
   AUTH
   COS
+}
+
+model Form {
+  id             String         @id @default(uuid())
+  name           String
+  description    String?
+  lossTypes      LossType[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  fields         FormField[]
+  sections       FormSection[]
+  projects       FormProject[]
+  formResponses  FormResponse[]
+}
+
+model FormSection {
+  id        String      @id @default(uuid())
+  name      String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  formId    String
+  form      Form        @relation(fields: [formId], references: [id])
+  fields    FormField[]
+  order     Int
+}
+
+model FormField {
+  id                 String              @id @default(uuid())
+  name               String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  formId             String
+  form               Form                @relation(fields: [formId], references: [id])
+  type               FormFieldType
+  options            String[]
+  order              Int
+  isRequired         Boolean             @default(false)
+  formSection        FormSection?        @relation(fields: [formSectionId], references: [id])
+  formSectionId      String?
+  formResponseFields FormResponseField[]
+}
+
+model FormProject {
+  id        String  @id @default(uuid())
+  formId    String
+  form      Form    @relation(fields: [formId], references: [id])
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+}
+
+model FormResponse {
+  id                 String              @id @default(uuid())
+  formId             String
+  form               Form                @relation(fields: [formId], references: [id])
+  projectId          String
+  project            Project             @relation(fields: [projectId], references: [id])
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  formResponseFields FormResponseField[]
+}
+
+model FormResponseField {
+  id             String       @id @default(uuid())
+  formResponseId String
+  formResponse   FormResponse @relation(fields: [formResponseId], references: [id])
+  fieldId        String
+  field          FormField    @relation(fields: [fieldId], references: [id])
+  value          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+enum FormFieldType {
+  TEXT
+  TEXTAREA
+  NUMBER
+  DATE
+  RADIO
+  CHECKBOX
+  SELECT
+  FILE
+  IMAGE
+  RATING
+  SIGNATURE
+  TIME
 }

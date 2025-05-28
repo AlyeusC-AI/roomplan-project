@@ -7,7 +7,6 @@ import {
 } from '@prisma/client';
 import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
-import { Database } from '../../src/types/database';
 import ImageKit from 'imagekit';
 const supabaseUrlForImages =
   'https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/media/';
@@ -316,7 +315,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
   throw new Error('Missing Supabase credentials');
 }
 
-const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey);
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 async function migrateProjects() {
   console.log('Starting project migration...');
 

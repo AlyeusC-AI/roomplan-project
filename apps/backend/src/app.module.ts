@@ -18,6 +18,7 @@ import { RoomsModule } from './rooms/rooms.module';
 import { NotesModule } from './notes/notes.module';
 import { ReadingsModule } from './readings/readings.module';
 import { DocumentsModule } from './documents/documents.module';
+import { FormsModule } from './forms/forms.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { DocumentsModule } from './documents/documents.module';
     NotesModule,
     ReadingsModule,
     DocumentsModule,
+    FormsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Form, FormField, FormSection } from "../types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,19 +50,49 @@ import {
   SelectValue,
 } from "@components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-export declare type DamageType = "fire" | "water" | "mold" | "other";
+import {
+  LossType,
+  Form,
+  FormSection,
+  FormField,
+  FormFieldType,
+  useUpdateForm,
+  useCreateFormSection,
+  CreateFormSectionDto,
+  useCreateFormField,
+  useUpdateFormSection,
+  useUpdateFormField,
+  UpdateFormSectionDto,
+  useDeleteFormSection,
+  useDeleteFormField,
+} from "@service-geek/api-client";
+import debounce from "lodash/debounce";
 
-export const DAMAGE_TYPES = [
-  { label: "Fire Damage", value: "fire" },
-  { label: "Water Damage", value: "water" },
-  { label: "Mold Damage", value: "mold" },
-  { label: "Other", value: "other" },
-] as const;
+export const getLossTypeLabel = (type: LossType) => {
+  switch (type) {
+    case LossType.FIRE:
+      return "Fire Damage";
+    case LossType.WATER:
+      return "Water Damage";
+    case LossType.MOLD:
+      return "Mold Damage";
+    case LossType.HAIL:
+      return "Hail Damage";
+    case LossType.WIND:
+      return "Wind Damage";
+    case LossType.OTHER:
+      return "Other";
+
+    default:
+      return type;
+  }
+};
+
 interface FormBuilderProps {
   form: Form | null;
   onSave: (form: Form) => void;
   onUpdate: (form: Form) => void;
-  onDelete: (formId: number) => void;
+  onDelete: (formId: string) => void;
   setSelectedForm: (form: Form | null) => void;
   isFormsListCollapsed: boolean;
   isSaving: boolean;
@@ -93,7 +122,7 @@ function SortableSection({
   children,
 }: {
   section: FormSection;
-  onUpdate: (field: keyof FormSection, value: any) => void;
+  onUpdate: (field: keyof UpdateFormSectionDto, value: any) => void;
   onDelete: () => void;
   children: React.ReactNode;
 }) {
@@ -154,8 +183,10 @@ function SortableSection({
             )}
           </Button>
           <Input
-            value={section.name}
-            onChange={(e) => onUpdate("name", e.target.value)}
+            defaultValue={section.name}
+            onChange={(e) =>
+              debounce(() => onUpdate("name", e.target.value), 1000)()
+            }
             placeholder='Section name'
             className='h-10 border-none bg-transparent p-0 text-base font-medium focus-visible:ring-0 focus-visible:ring-offset-0 dark:text-gray-100 sm:h-12 sm:text-lg'
           />
@@ -198,7 +229,7 @@ function SortableField({
   children,
 }: {
   field: FormField;
-  sectionId: number;
+  sectionId: string;
   onUpdate: (fieldIndex: number | null, updatedField: FormField) => void;
   onDelete: () => void;
   children: React.ReactNode;
@@ -277,12 +308,19 @@ export function FormBuilder({
   isUpdating,
   isDeleting,
 }: FormBuilderProps) {
-  console.log("🚀 ~ currentForm:", currentForm);
   //   const [currentForm, setCurrentForm] = useState<Form | null>(form);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [activeType, setActiveType] = useState<"section" | "field" | null>(
     null
   );
+  const { mutate: updateForm } = useUpdateForm();
+  const { mutate: createFormSection } = useCreateFormSection(currentForm?.id!);
+  const { mutate: createFormField } = useCreateFormField(currentForm?.id!);
+  const { mutate: updateFormSection } = useUpdateFormSection(currentForm?.id!);
+  const { mutate: updateFormField } = useUpdateFormField(currentForm?.id!);
+  const { mutate: deleteFormSection } = useDeleteFormSection(currentForm?.id!);
+  const { mutate: deleteFormField } = useDeleteFormField(currentForm?.id!);
+  const isEditing = !!currentForm?.id;
 
   // Update currentForm when form prop changes
   //   useEffect(() => {
@@ -305,7 +343,7 @@ export function FormBuilder({
     setActiveId(active.id as number);
 
     // Determine if we're dragging a section or field
-    if (currentForm?.sections?.find((s) => s.id === active.id)) {
+    if (currentForm?.sections?.find((s: FormSection) => s.id === active.id)) {
       setActiveType("section");
     } else {
       setActiveType("field");
@@ -325,14 +363,13 @@ export function FormBuilder({
 
     // Handle section reordering
     if (
-      typeof activeId === "number" &&
+      typeof activeId === "string" &&
       currentForm.sections?.find((s) => s.id === activeId)
     ) {
       const oldIndex = currentForm.sections?.findIndex(
         (s) => s.id === activeId
       );
       const newIndex = currentForm.sections?.findIndex((s) => s.id === overId);
-
       // Update orders for all sections
       const updatedSections = arrayMove(
         currentForm.sections,
@@ -342,6 +379,15 @@ export function FormBuilder({
         ...section,
         order: index + 1,
       }));
+
+      for (const section of updatedSections) {
+        updateFormSection({
+          sectionId: section.id!,
+          data: {
+            order: section.order,
+          },
+        });
+      }
 
       setCurrentForm({
         ...currentForm,
@@ -392,82 +438,76 @@ export function FormBuilder({
 
   const handleAddSection = () => {
     if (!currentForm) return;
-    const newSection: FormSection = {
+    const newSection: CreateFormSectionDto = {
       name: `Section ${(currentForm.sections?.length || 0) + 1}`,
-      fields: [],
       order: (currentForm.sections?.length || 0) + 1,
     };
-    const updatedForm: Form = {
-      ...currentForm,
-      sections: [...(currentForm.sections || []), newSection],
-    };
-    setCurrentForm(updatedForm);
 
+    createFormSection(newSection);
     // Auto-save after adding section
-    if (typeof currentForm.id === "number") {
-      onUpdate(updatedForm);
-    } else {
-      onSave(updatedForm);
-    }
+    // if (typeof currentForm.id === "string") {
+    //   onUpdate(updatedForm as Form);
+    // } else {
+    //   onSave(updatedForm as Form);
+    // }
   };
 
   const handleUpdateSection = (
-    sectionId: number,
-    field: keyof FormSection,
+    sectionId: string,
+    field: keyof UpdateFormSectionDto,
     value: any
   ) => {
     if (!currentForm) return;
-    setCurrentForm({
-      ...currentForm,
-      sections: currentForm.sections?.map((section) =>
-        section.id === sectionId ? { ...section, [field]: value } : section
-      ),
+    updateFormSection({
+      sectionId,
+      data: {
+        [field]: value,
+      },
     });
   };
 
-  const handleDeleteSection = (sectionId: number) => {
+  const handleDeleteSection = (sectionId: string) => {
     if (!currentForm) return;
-    setCurrentForm({
-      ...currentForm,
-      sections: currentForm.sections?.filter(
-        (section) => section.id !== sectionId
-      ),
-    });
+    deleteFormSection(sectionId);
   };
 
-  const handleAddField = (sectionId: number) => {
+  const handleAddField = (sectionId: string) => {
     if (!currentForm) return;
     const section = currentForm.sections?.find((s) => s.id === sectionId);
     if (!section) return;
 
-    const newField: FormField = {
+    const newField: Partial<FormField> = {
       name: "New Field" + ((section.fields?.length || 0) + 1),
-      type: "TEXT",
+      type: "TEXT" as FormFieldType,
       isRequired: false,
-      sectionId: sectionId,
+      // sectionId: sectionId,
+      formSectionId: sectionId,
       order: (section.fields?.length || 0) + 1,
     };
 
-    const updatedForm: Form = {
+    const updatedForm: Partial<Form> = {
       ...currentForm,
       sections: currentForm.sections?.map((section) =>
         section.id === sectionId
-          ? { ...section, fields: [...(section.fields || []), newField] }
+          ? {
+              ...section,
+              fields: [...(section.fields || []), newField as FormField],
+            }
           : section
       ),
     };
-    setCurrentForm(updatedForm);
+    setCurrentForm(updatedForm as Form);
 
     // Auto-save after adding field
-    if (typeof currentForm.id === "number") {
-      onUpdate(updatedForm);
+    if (typeof currentForm.id === "string") {
+      onUpdate(updatedForm as Form);
     } else {
-      onSave(updatedForm);
+      onSave(updatedForm as Form);
     }
   };
 
   const handleUpdateField = (
-    sectionId: number,
+    sectionId: string,
     fieldIndex: number | null,
     updatedField: FormField
   ) => {
@@ -485,7 +525,8 @@ export function FormBuilder({
                 return {
                   ...field,
                   ...updatedField,
-                  sectionId: sectionId,
+                  // sectionId: sectionId,
+                  formSectionId: sectionId,
                   order: field.order || index + 1,
                 };
               }
@@ -507,8 +548,8 @@ export function FormBuilder({
   };
 
   const handleDeleteField = (
-    sectionId: number,
-    fieldId: number | null,
+    sectionId: string,
+    fieldId: string | null,
     fieldIndex: number | null
   ) => {
     if (!currentForm) return;
@@ -541,16 +582,16 @@ export function FormBuilder({
     }
   };
 
-  const handleDamageTypeToggle = (type: DamageType) => {
+  const handleDamageTypeToggle = (type: LossType) => {
     if (!currentForm) return;
-    const currentTypes = currentForm.damageTypes || [];
+    const currentTypes = currentForm.lossTypes || [];
     const newTypes = currentTypes.includes(type)
       ? currentTypes.filter((t) => t !== type)
       : [...currentTypes, type];
 
     setCurrentForm({
       ...currentForm,
-      damageTypes: newTypes,
+      lossTypes: newTypes,
     });
   };
 
@@ -591,29 +632,25 @@ export function FormBuilder({
               Damage Types
             </Label>
             <div className='flex flex-wrap gap-2'>
-              {DAMAGE_TYPES.map((type: DamageType) => (
+              {Object.values(LossType).map((type: LossType) => (
                 <div
-                  key={type.value}
+                  key={type}
                   className={cn(
                     "flex cursor-pointer items-center space-x-2 rounded-md border px-3 py-2 transition-colors",
                     "hover:bg-gray-100 dark:hover:bg-gray-700",
-                    currentForm.damageTypes?.includes(type.value as DamageType)
+                    currentForm.lossTypes?.includes(type)
                       ? "border-primary bg-primary/5 dark:bg-primary/10"
                       : "border-gray-200 dark:border-gray-700"
                   )}
-                  onClick={() =>
-                    handleDamageTypeToggle(type.value as DamageType)
-                  }
+                  onClick={() => handleDamageTypeToggle(type)}
                 >
                   <Checkbox
-                    id={`damage-type-${type.value}`}
-                    checked={currentForm.damageTypes?.includes(
-                      type.value as DamageType
-                    )}
+                    id={`damage-type-${type}`}
+                    checked={currentForm.lossTypes?.includes(type)}
                     className='data-[state=checked]:border-primary data-[state=checked]:bg-primary'
                   />
                   <Label className='cursor-pointer text-sm font-medium'>
-                    {type.label}
+                    {getLossTypeLabel(type)}
                   </Label>
                 </div>
               ))}
@@ -628,8 +665,8 @@ export function FormBuilder({
             </Label>
             <Textarea
               id='formDescription'
-              value={currentForm.desc || ""}
-              onChange={(e) => handleFormChange("desc", e.target.value)}
+              value={currentForm.description || ""}
+              onChange={(e) => handleFormChange("description", e.target.value)}
               placeholder='Enter form description'
               className='min-h-[100px] resize-y dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100'
               disabled={isSaving || isUpdating}
@@ -638,94 +675,73 @@ export function FormBuilder({
         </div>
       </div>
 
-      <div className='space-y-4 sm:space-y-6'>
-        <div className='flex items-center justify-between'>
-          <div>
-            <h3 className='text-lg font-semibold dark:text-gray-100 sm:text-xl'>
-              Form Sections
-            </h3>
-            <p className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
-              Organize your form into sections
-            </p>
+      {isEditing && (
+        <div className='space-y-4 sm:space-y-6'>
+          <div className='flex items-center justify-between'>
+            <div>
+              <h3 className='text-lg font-semibold dark:text-gray-100 sm:text-xl'>
+                Form Sections
+              </h3>
+              <p className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
+                Organize your form into sections
+              </p>
+            </div>
           </div>
-        </div>
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={
-              currentForm.sections
-                ?.sort((a, b) => (a.order || 0) - (b.order || 0))
-                .map((s) => s.id! || "section-" + s.order) || []
-            }
-            strategy={verticalListSortingStrategy}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
           >
-            <div className='space-y-6'>
-              {currentForm.sections
-                ?.sort((a, b) => (a.order || 0) - (b.order || 0))
-                .map((section, i) => (
-                  <SortableSection
-                    key={`section-${section.id}-${i}`}
-                    section={{ ...section, id: section.id || 0 }}
-                    onUpdate={(field, value) =>
-                      handleUpdateSection(section.id!, field, value)
-                    }
-                    onDelete={() => handleDeleteSection(section.id!)}
-                  >
-                    <div className='space-y-6'>
-                      <div className='flex items-center justify-between'>
-                        <h4 className='text-sm font-medium text-gray-500'>
-                          Fields in this section
-                        </h4>
-                      </div>
+            <SortableContext
+              items={
+                currentForm.sections
+                  ?.sort((a, b) => (a.order || 0) - (b.order || 0))
+                  .map((s) => s.id! || "section-" + s.order) || []
+              }
+              strategy={verticalListSortingStrategy}
+            >
+              <div className='space-y-6'>
+                {currentForm.sections
+                  ?.sort((a, b) => (a.order || 0) - (b.order || 0))
+                  .map((section, i) => (
+                    <SortableSection
+                      key={`section-${section.id}-${i}`}
+                      section={{ ...section, id: section.id }}
+                      onUpdate={(field, value) =>
+                        handleUpdateSection(section.id!, field, value)
+                      }
+                      onDelete={() => handleDeleteSection(section.id!)}
+                    >
+                      <div className='space-y-6'>
+                        <div className='flex items-center justify-between'>
+                          <h4 className='text-sm font-medium text-gray-500'>
+                            Fields in this section
+                          </h4>
+                        </div>
 
-                      <SortableContext
-                        items={
-                          section.fields
-                            ?.sort((a, b) => (a.order || 0) - (b.order || 0))
-                            .map((f) => f.id! || "field-" + f.order) || []
-                        }
-                        strategy={verticalListSortingStrategy}
-                      >
-                        <div className='space-y-4'>
-                          {section.fields
-                            ?.sort((a, b) => (a.order || 0) - (b.order || 0))
-                            .map((field, fieldIndex) => (
-                              <SortableField
-                                key={
-                                  field.id
-                                    ? `field-${field.id}`
-                                    : `field-${section.id}-${fieldIndex}`
-                                }
-                                field={{ ...field, id: field.id || 0 }}
-                                sectionId={section.id!}
-                                onUpdate={(fieldIndex, updatedField) =>
-                                  handleUpdateField(
-                                    section.id!,
-                                    fieldIndex,
-                                    updatedField
-                                  )
-                                }
-                                onDelete={() =>
-                                  handleDeleteField(
-                                    section.id!,
-                                    field.id || null,
-                                    fieldIndex
-                                  )
-                                }
-                              >
-                                <FormFieldEditor
+                        <SortableContext
+                          items={
+                            section.fields
+                              ?.sort((a, b) => (a.order || 0) - (b.order || 0))
+                              .map((f) => f.id! || "field-" + f.order) || []
+                          }
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <div className='space-y-4'>
+                            {section.fields
+                              ?.sort((a, b) => (a.order || 0) - (b.order || 0))
+                              .map((field, fieldIndex) => (
+                                <SortableField
                                   key={
                                     field.id
-                                      ? `editor-${field.id}`
-                                      : `editor-${section.id}-${fieldIndex}`
+                                      ? `field-${field.id}`
+                                      : `field-${section.id}-${fieldIndex}`
                                   }
-                                  field={field}
-                                  onUpdate={(updatedField: FormField) =>
+                                  field={{ ...field, id: field.id || "" }}
+                                  sectionId={section.id!}
+                                  onUpdate={(fieldIndex, updatedField) =>
                                     handleUpdateField(
                                       section.id!,
                                       fieldIndex,
@@ -739,87 +755,109 @@ export function FormBuilder({
                                       fieldIndex
                                     )
                                   }
-                                />
-                              </SortableField>
-                            ))}
-                          <div className='relative'>
-                            <div
-                              className='absolute inset-0 flex items-center'
-                              aria-hidden='true'
-                            >
-                              <div className='w-full border-t border-gray-200'></div>
-                            </div>
-                            <div className='relative flex justify-center'>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant='outline'
-                                      size='sm'
-                                      onClick={() =>
-                                        handleAddField(section.id!)
-                                      }
-                                      className='bg-white transition-colors hover:bg-primary/5'
-                                    >
-                                      <Plus className='mr-2 h-4 w-4' />
-                                      Add Field
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Add a new field to this section</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                                >
+                                  <FormFieldEditor
+                                    key={
+                                      field.id
+                                        ? `editor-${field.id}`
+                                        : `editor-${section.id}-${fieldIndex}`
+                                    }
+                                    field={field}
+                                    onUpdate={(updatedField: FormField) =>
+                                      handleUpdateField(
+                                        section.id!,
+                                        fieldIndex,
+                                        updatedField
+                                      )
+                                    }
+                                    onDelete={() =>
+                                      handleDeleteField(
+                                        section.id!,
+                                        field.id || null,
+                                        fieldIndex
+                                      )
+                                    }
+                                  />
+                                </SortableField>
+                              ))}
+                            <div className='relative'>
+                              <div
+                                className='absolute inset-0 flex items-center'
+                                aria-hidden='true'
+                              >
+                                <div className='w-full border-t border-gray-200'></div>
+                              </div>
+                              <div className='relative flex justify-center'>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant='outline'
+                                        size='sm'
+                                        onClick={() =>
+                                          handleAddField(section.id!)
+                                        }
+                                        className='bg-white transition-colors hover:bg-primary/5'
+                                      >
+                                        <Plus className='mr-2 h-4 w-4' />
+                                        Add Field
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Add a new field to this section</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </SortableContext>
-                    </div>
-                  </SortableSection>
-                ))}
-              <div className='relative'>
-                <div
-                  className='absolute inset-0 flex items-center'
-                  aria-hidden='true'
-                >
-                  <div className='w-full border-t border-gray-200'></div>
-                </div>
-                <div className='relative flex justify-center'>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant='outline'
-                          size='lg'
-                          onClick={handleAddSection}
-                          className='bg-white transition-colors hover:bg-primary/5'
-                        >
-                          <Plus className='mr-2 h-5 w-5' />
-                          Add Section
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Add a new section to your form</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                        </SortableContext>
+                      </div>
+                    </SortableSection>
+                  ))}
+                <div className='relative'>
+                  <div
+                    className='absolute inset-0 flex items-center'
+                    aria-hidden='true'
+                  >
+                    <div className='w-full border-t border-gray-200'></div>
+                  </div>
+                  <div className='relative flex justify-center'>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant='outline'
+                            size='lg'
+                            onClick={handleAddSection}
+                            className='bg-white transition-colors hover:bg-primary/5'
+                          >
+                            <Plus className='mr-2 h-5 w-5' />
+                            Add Section
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Add a new section to your form</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                 </div>
               </div>
-            </div>
-          </SortableContext>
+            </SortableContext>
 
-          <DragOverlay>
-            {activeId && activeType && (
-              <DragOverlayContent
-                key={`overlay-${activeId}`}
-                id={activeId}
-                type={activeType}
-              />
-            )}
-          </DragOverlay>
-        </DndContext>
-      </div>
-
+            <DragOverlay>
+              {activeId && activeType && (
+                <DragOverlayContent
+                  key={`overlay-${activeId}`}
+                  id={activeId}
+                  type={activeType}
+                />
+              )}
+            </DragOverlay>
+          </DndContext>
+        </div>
+      )}
       <div
         className={cn(
           "sticky mt-8 border-t bg-white pt-4 dark:border-gray-700 dark:bg-gray-800",
