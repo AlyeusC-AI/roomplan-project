@@ -504,11 +504,15 @@ model FormField {
 }
 
 model FormProject {
-  id        String  @id @default(uuid())
+  id        String   @id @default(uuid())
   formId    String
-  form      Form    @relation(fields: [formId], references: [id])
+  form      Form     @relation(fields: [formId], references: [id])
   projectId String
-  project   Project @relation(fields: [projectId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([formId, projectId])
 }
 
 model FormResponse {

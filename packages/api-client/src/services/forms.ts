@@ -10,6 +10,8 @@ import type {
   UpdateFormSectionDto,
   CreateFormFieldDto,
   UpdateFormFieldDto,
+  FormProject,
+  CreateFormProjectDto,
 } from "../types/forms";
 import { apiClient } from "./client";
 
@@ -27,7 +29,9 @@ class FormsService {
   }
 
   async findFormsByProject(projectId: string) {
-    const response = await apiClient.get<Form[]>(`/forms/project/${projectId}`);
+    const response = await apiClient.get<
+      (Form & { projects: { projectId: string; id: string }[] })[]
+    >(`/forms/project/${projectId}`);
     return response.data;
   }
 
@@ -98,6 +102,29 @@ class FormsService {
     return response.data;
   }
 
+  // Form Project methods
+  async addFormToProject(projectId: string, formId: string) {
+    const response = await apiClient.post<FormProject>(
+      `/forms/projects/${projectId}/forms`,
+      { formId }
+    );
+    return response.data;
+  }
+
+  async removeFormFromProject(projectId: string, formId: string) {
+    const response = await apiClient.delete<FormProject>(
+      `/forms/projects/${projectId}/forms/${formId}`
+    );
+    return response.data;
+  }
+
+  async getProjectForms(projectId: string) {
+    const response = await apiClient.get<FormProject[]>(
+      `/forms/projects/${projectId}/forms`
+    );
+    return response.data;
+  }
+
   // Form Response methods
   async createResponse(data: CreateFormResponseDto) {
     const response = await apiClient.post<FormResponse>(
@@ -116,6 +143,37 @@ class FormsService {
 
   async getResponse(id: string) {
     const response = await apiClient.get<FormResponse>(`/forms/response/${id}`);
+    return response.data;
+  }
+
+  async updateResponse(
+    id: string,
+    fields: { fieldId: string; value?: string }[]
+  ) {
+    const response = await apiClient.patch<FormResponse>(
+      `/forms/response/${id}`,
+      {
+        fields,
+      }
+    );
+    return response.data;
+  }
+
+  async removeResponse(id: string) {
+    const response = await apiClient.delete<FormResponse>(
+      `/forms/response/${id}`
+    );
+    return response.data;
+  }
+
+  async generatePdf(projectId: string, responseIds: string[]) {
+    const response = await apiClient.post<Blob>(
+      `/forms/project/${projectId}/responses/generate-pdf`,
+      { responseIds },
+      {
+        responseType: "blob",
+      }
+    );
     return response.data;
   }
 }

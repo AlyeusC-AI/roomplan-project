@@ -35,6 +35,19 @@ export interface FormField {
   updatedAt: string;
 }
 
+export interface FormProject {
+  id: string;
+  formId: string;
+  projectId: string;
+  createdAt: string;
+  updatedAt: string;
+  project?: {
+    id: string;
+    name: string;
+    description?: string;
+  };
+}
+
 export interface FormResponse {
   id: string;
   formId: string;
@@ -42,6 +55,7 @@ export interface FormResponse {
   createdAt: string;
   updatedAt: string;
   formResponseFields: FormResponseField[];
+  form: Form;
 }
 
 export interface FormResponseField {
@@ -113,6 +127,10 @@ export interface UpdateFormFieldDto {
   order?: number;
   isRequired?: boolean;
   formSectionId?: string;
+}
+
+export interface CreateFormProjectDto {
+  projectId: string;
 }
 
 export interface CreateFormResponseDto {

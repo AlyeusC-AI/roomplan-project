@@ -24,13 +24,13 @@ import {
   Undo2,
 } from "lucide-react";
 import SignaturePad from "react-signature-canvas";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Form, uploadImage } from "@service-geek/api-client";
 
 interface FormPreviewProps {
   form: Form | null;
-  onSubmit?: (formData: any) => Promise<void>;
+  onSubmit?: (formData: { fieldId: string; value: string }[]) => Promise<void>;
   isSubmitting?: boolean;
   initialValues?: { [key: string]: any };
 }
@@ -46,6 +46,11 @@ export function FormPreview({
   const [formData, setFormData] = useState<{ [key: string]: any }>(
     initialValues
   );
+  useEffect(() => {
+    if (Object.keys(initialValues).length > 0) {
+      setFormData(initialValues);
+    }
+  }, [initialValues]);
   const [uploadProgress, setUploadProgress] = useState<{
     [key: string]: number;
   }>({});
@@ -140,7 +145,12 @@ export function FormPreview({
       }
     });
 
-    await onSubmit(finalFormData);
+    await onSubmit(
+      Object.entries(finalFormData).map(([fieldId, value]) => ({
+        fieldId,
+        value: value.url ? JSON.stringify(value) : value.toString(),
+      }))
+    );
   };
 
   if (!form) {

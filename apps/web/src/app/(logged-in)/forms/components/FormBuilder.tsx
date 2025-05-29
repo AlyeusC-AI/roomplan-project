@@ -351,9 +351,14 @@ export function FormBuilder({
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    const isSection = currentForm?.sections?.find(
+      (s) => s.id === event.active.id
+    );
+    console.log("🚀 ~ handleDragEnd ~ isSection:", isSection);
     if (!currentForm) return;
 
     const { active, over } = event;
+    console.log("🚀 ~ handleDragEnd ~ active:", active, over);
     if (!over) return;
 
     const activeId = active.id;
@@ -412,6 +417,15 @@ export function FormBuilder({
             order: index + 1,
           })
         );
+
+        for (const field of updatedFields) {
+          updateFormField({
+            fieldId: field.id!,
+            data: {
+              order: field.order,
+            },
+          });
+        }
 
         setCurrentForm({
           ...currentForm,
@@ -476,75 +490,94 @@ export function FormBuilder({
     const section = currentForm.sections?.find((s) => s.id === sectionId);
     if (!section) return;
 
-    const newField: Partial<FormField> = {
+    // const newField: Partial<FormField> = {
+    //   name: "New Field" + ((section.fields?.length || 0) + 1),
+    //   type: "TEXT" as FormFieldType,
+    //   isRequired: false,
+    //   // sectionId: sectionId,
+    //   formSectionId: sectionId,
+    //   order: (section.fields?.length || 0) + 1,
+    // };
+
+    createFormField({
       name: "New Field" + ((section.fields?.length || 0) + 1),
       type: "TEXT" as FormFieldType,
       isRequired: false,
       // sectionId: sectionId,
       formSectionId: sectionId,
       order: (section.fields?.length || 0) + 1,
-    };
-
-    const updatedForm: Partial<Form> = {
-      ...currentForm,
-      sections: currentForm.sections?.map((section) =>
-        section.id === sectionId
-          ? {
-              ...section,
-              fields: [...(section.fields || []), newField as FormField],
-            }
-          : section
-      ),
-    };
-    setCurrentForm(updatedForm as Form);
+    });
+    // const updatedForm: Partial<Form> = {
+    //   ...currentForm,
+    //   sections: currentForm.sections?.map((section) =>
+    //     section.id === sectionId
+    //       ? {
+    //           ...section,
+    //           fields: [...(section.fields || []), newField as FormField],
+    //         }
+    //       : section
+    //   ),
+    // };
+    // setCurrentForm(updatedForm as Form);
 
     // Auto-save after adding field
-    if (typeof currentForm.id === "string") {
-      onUpdate(updatedForm as Form);
-    } else {
-      onSave(updatedForm as Form);
-    }
+    // if (typeof currentForm.id === "string") {
+    //   onUpdate(updatedForm as Form);
+    // } else {
+    //   onSave(updatedForm as Form);
+    // }
   };
 
-  const handleUpdateField = (
+  const handleUpdateField = async (
     sectionId: string,
     fieldIndex: number | null,
     updatedField: FormField
   ) => {
+    console.log("🚀 ~ fieldIndex:", fieldIndex);
     if (!currentForm) return;
 
-    setCurrentForm({
-      ...currentForm,
-      sections: currentForm.sections?.map((section) => {
-        if (section.id === sectionId) {
-          return {
-            ...section,
-            fields: section.fields.map((field, index) => {
-              // If fieldIndex is provided, update by index
-              if (fieldIndex !== null && index === fieldIndex) {
-                return {
-                  ...field,
-                  ...updatedField,
-                  // sectionId: sectionId,
-                  formSectionId: sectionId,
-                  order: field.order || index + 1,
-                };
-              }
-              // For existing fields, update by ID
-              if (field.id && field.id === updatedField.id) {
-                return {
-                  ...field,
-                  ...updatedField,
-                  sectionId: sectionId,
-                };
-              }
-              return field;
-            }),
-          };
-        }
-        return section;
-      }),
+    await updateFormField({
+      fieldId: updatedField.id!,
+      data: {
+        name: updatedField.name,
+        type: updatedField.type,
+        isRequired: updatedField.isRequired,
+        formSectionId: sectionId,
+        order: fieldIndex || 0,
+      },
     });
+    // setCurrentForm({
+    //   ...currentForm,
+    //   sections: currentForm.sections?.map((section) => {
+    //     if (section.id === sectionId) {
+    //       return {
+    //         ...section,
+    //         fields: section.fields.map((field, index) => {
+    //           // If fieldIndex is provided, update by index
+    //           if (fieldIndex !== null && index === fieldIndex) {
+    //             return {
+    //               ...field,
+    //               ...updatedField,
+    //               // sectionId: sectionId,
+    //               formSectionId: sectionId,
+    //               order: field.order || index + 1,
+    //             };
+    //           }
+    //           // For existing fields, update by ID
+    //           if (field.id && field.id === updatedField.id) {
+    //             return {
+    //               ...field,
+    //               ...updatedField,
+    //               sectionId: sectionId,
+    //             };
+    //           }
+    //           return field;
+    //         }),
+    //       };
+    //     }
+    //     return section;
+    //   }),
+    // });
   };
 
   const handleDeleteField = (
@@ -553,24 +586,25 @@ export function FormBuilder({
     fieldIndex: number | null
   ) => {
     if (!currentForm) return;
-    setCurrentForm({
-      ...currentForm,
-      sections: currentForm.sections?.map((section) =>
-        section.id === sectionId
-          ? {
-              ...section,
-              fields: section.fields.filter((field, index) => {
-                // If we have a fieldId, filter by ID
-                if (fieldId !== null) {
-                  return field.id !== fieldId;
-                }
-                // Otherwise, filter by index
-                return index !== fieldIndex;
-              }),
-            }
-          : section
-      ),
-    });
+    deleteFormField(fieldId!);
+    // setCurrentForm({
+    //   ...currentForm,
+    //   sections: currentForm.sections?.map((section) =>
+    //     section.id === sectionId
+    //       ? {
+    //           ...section,
+    //           fields: section.fields.filter((field, index) => {
+    //             // If we have a fieldId, filter by ID
+    //             if (fieldId !== null) {
+    //               return field.id !== fieldId;
+    //             }
+    //             // Otherwise, filter by index
+    //             return index !== fieldIndex;
+    //           }),
+    //         }
+    //       : section
+    //   ),
+    // });
   };
 
   const handleSave = () => {
@@ -720,7 +754,12 @@ export function FormBuilder({
                             Fields in this section
                           </h4>
                         </div>
-
+                        {/* <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragStart={handleDragStart}
+                          onDragEnd={handleDragEnd}
+                        > */}
                         <SortableContext
                           items={
                             section.fields
@@ -741,13 +780,17 @@ export function FormBuilder({
                                   }
                                   field={{ ...field, id: field.id || "" }}
                                   sectionId={section.id!}
-                                  onUpdate={(fieldIndex, updatedField) =>
-                                    handleUpdateField(
+                                  onUpdate={async (
+                                    fieldIndex,
+                                    updatedField
+                                  ) => {
+                                    console.log("🚀 ~ fieldIndex:", fieldIndex);
+                                    await handleUpdateField(
                                       section.id!,
                                       fieldIndex,
                                       updatedField
-                                    )
-                                  }
+                                    );
+                                  }}
                                   onDelete={() =>
                                     handleDeleteField(
                                       section.id!,
@@ -812,6 +855,7 @@ export function FormBuilder({
                             </div>
                           </div>
                         </SortableContext>
+                        {/* </DndContext> */}
                       </div>
                     </SortableSection>
                   ))}

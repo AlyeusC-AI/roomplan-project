@@ -15,6 +15,8 @@ import type {
   UpdateFormSectionDto,
   CreateFormFieldDto,
   UpdateFormFieldDto,
+  FormProject,
+  CreateFormProjectDto,
 } from "../types/forms";
 import { useAuthStore } from "../services/storage";
 import { useActiveOrganization } from "./useOrganization";
@@ -80,7 +82,7 @@ export function useDeleteForm() {
 
 export function useGetFormsByProject(projectId: string) {
   return useQuery({
-    queryKey: ["forms", "project", projectId],
+    queryKey: ["forms", "project", "forms", projectId],
     queryFn: () => formsService.findFormsByProject(projectId),
     enabled: !!projectId && !!useAuthStore.getState().token,
   });
@@ -190,5 +192,85 @@ export function useGetFormResponse(id: string) {
     queryKey: ["form-responses", id],
     queryFn: () => formsService.getResponse(id),
     enabled: !!id && !!useAuthStore.getState().token,
+  });
+}
+
+export function useUpdateFormResponse() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      fields,
+    }: {
+      id: string;
+      fields: { fieldId: string; value?: string }[];
+    }) => formsService.updateResponse(id, fields),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["form-responses", data.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["form-responses", data.projectId],
+      });
+    },
+  });
+}
+
+export function useRemoveFormResponse() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => formsService.removeResponse(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["form-responses", data.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["form-responses", data.projectId],
+      });
+    },
+  });
+}
+
+export function useGenerateFormResponsesPdf(projectId: string) {
+  return useMutation({
+    mutationFn: (responseIds: string[]) =>
+      formsService.generatePdf(projectId, responseIds),
+  });
+}
+
+// Form Project hooks
+export function useAddFormToProject(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (formId: string) =>
+      formsService.addFormToProject(projectId, formId),
+    onSuccess: () => {
+      // queryClient.invalidateQueries({
+      //   queryKey: ["forms", "project", projectId],
+      // });
+      queryClient.invalidateQueries({
+        queryKey: ["forms"],
+      });
+    },
+  });
+}
+
+export function useRemoveFormFromProject(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (formId: string) =>
+      formsService.removeFormFromProject(projectId, formId),
+    onSuccess: () => {
+      // queryClient.invalidateQueries({
+      //   queryKey: ["forms", "project", projectId],
+      // });
+      queryClient.invalidateQueries({
+        queryKey: ["forms"],
+      });
+    },
+  });
+}
+
+export function useGetProjectForms(projectId: string) {
+  return useQuery({
+    queryKey: ["forms", "project", projectId],
+    queryFn: () => formsService.getProjectForms(projectId),
+    enabled: !!projectId && !!useAuthStore.getState().token,
   });
 }

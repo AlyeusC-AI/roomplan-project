@@ -9,9 +9,16 @@ import {
   UseGuards,
   Request,
   Query,
+  Res,
 } from '@nestjs/common';
 import { FormsService } from './forms.service';
-import { Form, FormResponse, FormSection, FormField } from '@prisma/client';
+import {
+  Form,
+  FormResponse,
+  FormSection,
+  FormField,
+  FormProject,
+} from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateFormDto } from './dto/create-form.dto';
 import { UpdateFormDto } from './dto/update-form.dto';
@@ -20,6 +27,7 @@ import { CreateFormSectionDto } from './dto/create-form-section.dto';
 import { UpdateFormSectionDto } from './dto/update-form-section.dto';
 import { CreateFormFieldDto } from './dto/create-form-field.dto';
 import { UpdateFormFieldDto } from './dto/update-form-field.dto';
+import { CreateFormProjectDto } from './dto/create-form-project.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -30,6 +38,8 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { RequestWithUser } from '../auth/interfaces/request-with-user';
+import { Response } from 'express';
+import { format } from 'date-fns';
 
 @ApiTags('forms')
 @ApiBearerAuth()
@@ -197,6 +207,59 @@ export class FormsController {
     return this.formsService.getResponse(id, req.user.userId);
   }
 
+  @Patch('response/:id')
+  @ApiOperation({ summary: 'Update form response' })
+  @ApiParam({ name: 'id', description: 'Form Response ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        fields: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              fieldId: { type: 'string' },
+              value: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'The form response has been successfully updated.',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Form response not found.' })
+  updateResponse(
+    @Param('id') id: string,
+    @Body('fields') fields: { fieldId: string; value?: string }[],
+    @Request() req: RequestWithUser,
+  ): Promise<FormResponse> {
+    return this.formsService.updateResponse(id, fields, req.user.userId);
+  }
+
+  @Delete('response/:id')
+  @ApiOperation({ summary: 'Delete form response' })
+  @ApiParam({ name: 'id', description: 'Form Response ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'The form response has been successfully deleted.',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Form response not found.' })
+  removeResponse(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ): Promise<FormResponse> {
+    return this.formsService.removeResponse(id, req.user.userId);
+  }
+
   // Form Section endpoints
   @Post(':formId/sections')
   @ApiOperation({ summary: 'Create a new form section' })
@@ -337,5 +400,114 @@ export class FormsController {
     @Request() req: RequestWithUser,
   ): Promise<FormField> {
     return this.formsService.deleteField(formId, fieldId, req.user.userId);
+  }
+
+  // Form Project endpoints
+  @Post('projects/:projectId/forms')
+  @ApiOperation({ summary: 'Add a form to a project' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiBody({ type: CreateFormProjectDto })
+  @ApiResponse({
+    status: 201,
+    description: 'The form has been successfully added to the project.',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Form or project not found.' })
+  addFormToProject(
+    @Param('projectId') projectId: string,
+    @Body() createFormProjectDto: CreateFormProjectDto,
+    @Request() req: RequestWithUser,
+  ): Promise<FormProject> {
+    return this.formsService.addProjectToForm(
+      createFormProjectDto.formId,
+      projectId,
+      req.user.userId,
+    );
+  }
+
+  @Delete('projects/:projectId/forms/:formId')
+  @ApiOperation({ summary: 'Remove a form from a project' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiParam({ name: 'formId', description: 'Form ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'The form has been successfully removed from the project.',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Form or project not found.' })
+  removeFormFromProject(
+    @Param('projectId') projectId: string,
+    @Param('formId') formId: string,
+    @Request() req: RequestWithUser,
+  ): Promise<FormProject> {
+    return this.formsService.removeProjectFromForm(
+      formId,
+      projectId,
+      req.user.userId,
+    );
+  }
+
+  @Get('projects/:projectId/forms')
+  @ApiOperation({ summary: 'Get all forms associated with a project' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return all forms associated with the project.',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Project not found.' })
+  getProjectForms(
+    @Param('projectId') projectId: string,
+    @Request() req: RequestWithUser,
+  ): Promise<FormProject[]> {
+    return this.formsService.getFormProjects(projectId, req.user.userId);
+  }
+
+  @Post('project/:projectId/responses/generate-pdf')
+  @ApiOperation({ summary: 'Generate PDF for form responses' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        responseIds: {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'PDF generated successfully.',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Project or responses not found.' })
+  async generatePdf(
+    @Param('projectId') projectId: string,
+    @Body('responseIds') responseIds: string[],
+    @Request() req: RequestWithUser,
+    @Res() res: Response,
+  ) {
+    const pdfBuffer = await this.formsService.generatePdf(
+      projectId,
+      responseIds,
+      req.user.userId,
+    );
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="form-responses-${format(new Date(), 'yyyy-MM-dd')}.pdf"`,
+    });
+
+    res.send(pdfBuffer);
   }
 }
