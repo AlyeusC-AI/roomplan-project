@@ -21,7 +21,6 @@ import {
   Box,
   FormControl,
 } from "native-base";
-import { useFormsStore, Form, FormField } from "@/lib/state/forms";
 import {
   Calendar,
   CheckSquare,
@@ -41,7 +40,6 @@ import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import SignatureCanvas from "react-native-signature-canvas";
 import type { SignatureViewRef } from "react-native-signature-canvas";
-import { api } from "@/lib/api";
 import DateTimePicker, {
   DateType,
   useDefaultStyles,
@@ -60,25 +58,16 @@ import { useCameraStore } from "@/lib/state/camera";
 import { useIsFocused } from "@react-navigation/native";
 import { Signature } from "@/components/ui/signature";
 import { v4 } from "uuid";
-
-interface FormResponse {
-  formId: string;
-  projectId: string;
-  data: Record<string, any>;
-  submittedAt: string;
-}
-
-interface FormSection {
-  id: string;
-  name: string;
-  description?: string;
-  fields: FormField[];
-}
-
-interface FormOption {
-  value: string;
-  name: string;
-}
+import {
+  useCreateFormResponse,
+  useUpdateFormResponse,
+  FormField,
+  FormSection as FormSectionType,
+  Form,
+  useGetProjectFormResponses,
+  FormResponseField,
+  useGetFormById,
+} from "@service-geek/api-client";
 
 const DateInput: React.FC<{
   label?: string;
@@ -148,7 +137,7 @@ const DateInput: React.FC<{
               use12Hours={true}
               mode="single"
               minDate={dayjs().toDate()}
-              maxDate={dayjs().endOf('year').toDate()}
+              maxDate={dayjs().endOf("year").toDate()}
               components={{
                 IconNext: <ChevronRight color="#1d4ed8" size={28} />,
                 IconPrev: <ChevronLeft color="#1d4ed8" size={28} />,
@@ -160,18 +149,18 @@ const DateInput: React.FC<{
                 ...defaultStyles,
                 selected: {
                   ...defaultStyles.selected,
-                  color: '#1d4ed8',
-                  backgroundColor: '#1d4ed8',
+                  color: "#1d4ed8",
+                  backgroundColor: "#1d4ed8",
                 },
                 selected_month: {
                   ...defaultStyles.selected_month,
-                  color: '#1d4ed8',
-                  backgroundColor: '#1d4ed8',
+                  color: "#1d4ed8",
+                  backgroundColor: "#1d4ed8",
                 },
                 selected_year: {
                   ...defaultStyles.selected_year,
-                  color: '#1d4ed8',
-                  backgroundColor: '#1d4ed8',
+                  color: "#1d4ed8",
+                  backgroundColor: "#1d4ed8",
                 },
               }}
               date={tempDate}
@@ -290,7 +279,7 @@ const TimeInput: React.FC<{
               mode="single"
               timePicker
               minDate={dayjs().toDate()}
-              maxDate={dayjs().endOf('day').toDate()}
+              maxDate={dayjs().endOf("day").toDate()}
               components={{
                 IconNext: <ChevronRight color="#1d4ed8" size={28} />,
                 IconPrev: <ChevronLeft color="#1d4ed8" size={28} />,
@@ -302,18 +291,18 @@ const TimeInput: React.FC<{
                 ...defaultStyles,
                 selected: {
                   ...defaultStyles.selected,
-                  color: '#1d4ed8',
-                  backgroundColor: '#1d4ed8',
+                  color: "#1d4ed8",
+                  backgroundColor: "#1d4ed8",
                 },
                 selected_month: {
                   ...defaultStyles.selected_month,
-                  color: '#1d4ed8',
-                  backgroundColor: '#1d4ed8',
+                  color: "#1d4ed8",
+                  backgroundColor: "#1d4ed8",
                 },
                 selected_year: {
                   ...defaultStyles.selected_year,
-                  color: '#1d4ed8',
-                  backgroundColor: '#1d4ed8',
+                  color: "#1d4ed8",
+                  backgroundColor: "#1d4ed8",
                 },
               }}
               date={tempTime}
@@ -364,10 +353,10 @@ const TimeInput: React.FC<{
 };
 
 const FormSection: React.FC<{
-  section: FormSection;
+  section: FormSectionType;
   formData: Record<string, any>;
   errors: Record<string, string>;
-  handleInputChange: (fieldId: number, value: any) => void;
+  handleInputChange: (fieldId: string, value: any) => void;
   renderField: (field: FormField) => React.ReactNode;
 }> = ({ section, formData, errors, handleInputChange, renderField }) => {
   return (
@@ -376,11 +365,11 @@ const FormSection: React.FC<{
         <Text fontSize="lg" fontWeight="semibold" color="gray.800">
           {section.name}
         </Text>
-        {section.description && (
+        {/* {section.description && (
           <Text color="gray.500" fontSize="sm">
             {section.description}
-          </Text>
-        )}
+          </Text> */}
+        {/* )} */}
       </VStack>
       <VStack space={8}>
         {section.fields.map((field: FormField) => (
@@ -413,9 +402,14 @@ export default function FormFillScreen() {
   const router = useRouter();
   const isFocused = useIsFocused();
   const toast = useToast();
-  const { getForm, responses } = useFormsStore();
+  const {
+    data: responses,
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useGetProjectFormResponses(projectId as string);
   const { images, clearImages } = useCameraStore();
-  const [form, setForm] = useState<Form | null>(null);
+  // const [form, setForm] = useState<Form | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<Record<string, any>>({});
@@ -424,6 +418,9 @@ export default function FormFillScreen() {
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
     {}
   );
+  const { mutate: createFormResponse } = useCreateFormResponse();
+  const { data: form } = useGetFormById(formId as string);
+  const { mutate: updateFormResponse } = useUpdateFormResponse();
   const isEditMode = !!responseId;
 
   // Handle camera results
@@ -445,25 +442,28 @@ export default function FormFillScreen() {
 
   const loadForm = async () => {
     try {
-      const formData = await getForm(projectId as string, formId as string);
-      setForm(formData);
+      // const formData = await getForm(projectId as string, formId as string);
+      // setForm(formData);
 
       // If in edit mode, load the existing response data
       if (isEditMode) {
         console.log("🚀 ~ loadForm ~ isEditMode:", isEditMode);
-        const response = responses.find(
-          (response) => response.id === parseInt(responseId as string)
+        const response = responses?.find(
+          (response) => response.id === (responseId as string)
         );
         console.log("🚀 ~ loadForm ~ response:", response);
         setFormData(
-          response?.fields.reduce((acc: Record<string, any>, field) => {
-            if (field.field.type === "FILE" || field.field.type === "IMAGE") {
-              acc[field.formFieldId.toString()] = JSON.parse(field.value);
-            } else {
-              acc[field.formFieldId.toString()] = field.value;
-            }
-            return acc;
-          }, {}) || {}
+          response?.formResponseFields.reduce(
+            (acc: Record<string, any>, field: FormResponseField) => {
+              if (field.field.type === "FILE" || field.field.type === "IMAGE") {
+                acc[field.fieldId.toString()] = JSON.parse(field.value || "");
+              } else {
+                acc[field.fieldId.toString()] = field.value;
+              }
+              return acc;
+            },
+            {}
+          ) || {}
         );
       }
 
@@ -478,12 +478,12 @@ export default function FormFillScreen() {
     }
   };
 
-  const handleInputChange = (fieldId: number, value: any) => {
+  const handleInputChange = (fieldId: string, value: any) => {
     setFormData((prev) => ({ ...prev, [fieldId]: value }));
     setErrors((prev) => ({ ...prev, [fieldId]: "" }));
   };
 
-  const handleImagePick = async (fieldId: number) => {
+  const handleImagePick = async (fieldId: string) => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -499,7 +499,7 @@ export default function FormFillScreen() {
           {
             uri: image.uri,
             type: "image/jpeg",
-            name: `${v4()+Date.now()}.jpeg`,
+            name: `${v4() + Date.now()}.jpeg`,
           },
           {
             folder: `forms/${formId}/fields/${fieldId}`,
@@ -538,7 +538,7 @@ export default function FormFillScreen() {
     }
   };
 
-  const handleDocumentPick = async (fieldId: number) => {
+  const handleDocumentPick = async (fieldId: string) => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: "*/*",
@@ -566,13 +566,13 @@ export default function FormFillScreen() {
       (key) => formData[key] === undefined
     );
     if (fieldId) {
-      handleInputChange(parseInt(fieldId), signature);
+      handleInputChange(fieldId, signature);
     }
   };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    form?.sections?.forEach((section: FormSection) => {
+    form?.sections?.forEach((section: FormSectionType) => {
       section.fields.forEach((field: FormField) => {
         if (field.isRequired && !formData[field.id]) {
           newErrors[field.id] = "This field is required";
@@ -595,7 +595,7 @@ export default function FormFillScreen() {
 
     setSubmitting(true);
     try {
-      const response: FormResponse = {
+      const response = {
         formId: formId as string,
         // projectId: projectId as string,
         data: formData,
@@ -604,12 +604,19 @@ export default function FormFillScreen() {
 
       if (isEditMode) {
         // Update existing response
-        await api.put(
-          `/api/v1/projects/${projectId}/forms/responses/${responseId}`,
-          {
-            data: formData,
-          }
-        );
+        await updateFormResponse({
+          id: responseId as string,
+          fields: Object.entries(formData).map(([fieldId, value]) => ({
+            fieldId: fieldId,
+            value: value.url ? JSON.stringify(value) : value.toString(),
+          })),
+        });
+        // await api.put(
+        //   `/api/v1/projects/${projectId}/forms/responses/${responseId}`,
+        //   {
+        //     data: formData,
+        //   }
+        // );
         toast.show({
           title: "Success",
           description: "Form response updated successfully",
@@ -617,10 +624,14 @@ export default function FormFillScreen() {
         });
       } else {
         // Create new response
-        await api.post(
-          `/api/v1/projects/${projectId}/forms/responses`,
-          response
-        );
+        const response = await createFormResponse({
+          fields: Object.entries(formData).map(([fieldId, value]) => ({
+            fieldId: fieldId,
+            value: value.url ? JSON.stringify(value) : value.toString(),
+          })),
+          formId: formId as string,
+          projectId: projectId as string,
+        });
         toast.show({
           title: "Success",
           description: "Form submitted successfully",
@@ -629,7 +640,7 @@ export default function FormFillScreen() {
       }
 
       router.back();
-    } catch (error) {
+    } catch (error: any) {
       console.log("🚀 ~ handleSubmit ~ error:", error.response);
       toast.show({
         title: "Error",
@@ -643,7 +654,7 @@ export default function FormFillScreen() {
     }
   };
 
-  const handleCameraPress = (fieldId: number) => {
+  const handleCameraPress = (fieldId: string) => {
     router.push({
       pathname: `/projects/${projectId}/camera`,
       params: {
@@ -726,23 +737,26 @@ export default function FormFillScreen() {
           <RadioGroup
             value={value || ""}
             onValueChange={(newValue) => handleInputChange(field.id, newValue)}
-            options={field.options || []}
+            options={field.options.map((option: string) => ({
+              value: option,
+              name: option,
+            }))}
           />
         );
 
       case "CHECKBOX":
         return (
           <VStack space={2}>
-            {field.options?.map((option: FormOption) => (
+            {field.options?.map((option: string) => (
               <TouchableOpacity
                 onPress={() => {
                   const currentValue = value || [];
-                  const newValue = currentValue.includes(option.value)
-                    ? currentValue.filter((v: string) => v !== option.value)
-                    : [...currentValue, option.value];
+                  const newValue = currentValue.includes(option)
+                    ? currentValue.filter((v: string) => v !== option)
+                    : [...currentValue, option];
                   handleInputChange(field.id, newValue);
                 }}
-                key={option.value}
+                key={option}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -750,17 +764,17 @@ export default function FormFillScreen() {
                 }}
               >
                 <Checkbox
-                  checked={(value || []).includes(option.value)}
+                  checked={(value || []).includes(option)}
                   onCheckedChange={(checked) => {
                     const currentValue = value || [];
                     const newValue = checked
-                      ? [...currentValue, option.value]
-                      : currentValue.filter((v: string) => v !== option.value);
+                      ? [...currentValue, option]
+                      : currentValue.filter((v: string) => v !== option);
                     handleInputChange(field.id, newValue);
                   }}
                 />
                 <Text ml={2} color="gray.700">
-                  {option.name}
+                  {option}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -773,7 +787,10 @@ export default function FormFillScreen() {
             value={value || ""}
             onValueChange={(newValue) => handleInputChange(field.id, newValue)}
             placeholder="Select option"
-            options={field.options || []}
+            options={field.options.map((option: string) => ({
+              value: option,
+              name: option,
+            }))}
           />
         );
 
@@ -973,7 +990,7 @@ export default function FormFillScreen() {
           )}
         </VStack>
 
-        {form.sections?.map((section: FormSection, index: number) => (
+        {form.sections?.map((section: FormSectionType, index: number) => (
           <React.Fragment key={section.id}>
             <FormSection
               section={section}

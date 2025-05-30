@@ -1,3 +1,4 @@
+import { Cost } from "@service-geek/api-client";
 import { useMemo } from "react";
 
 const formatter = new Intl.NumberFormat("en-US", {

@@ -3,13 +3,7 @@
 import Costs from "@components/Project/Costs";
 
 const ExpensesPage = () => {
-  const project = projectStore();
-  return (
-    <Costs
-      rcvValue={project.project?.rcvValue ?? 0}
-      actualValue={project.project?.actualValue ?? 0}
-    />
-  );
+  return <Costs />;
 };
 
 export default ExpensesPage;

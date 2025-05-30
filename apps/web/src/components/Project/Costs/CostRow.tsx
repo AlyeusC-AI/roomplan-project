@@ -7,6 +7,12 @@ import { useDebounce } from "@hooks/use-debounce";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { costsStore } from "@atoms/costs";
+import {
+  CostType,
+  Cost,
+  useUpdateCost,
+  useDeleteCost,
+} from "@service-geek/api-client";
 
 const formatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -17,12 +23,10 @@ const CostsRow = ({
   costData,
   namePlaceholder,
   costType,
-  fetchCosts,
 }: {
   costData: Cost;
   namePlaceholder: string;
   costType: CostType;
-  fetchCosts: () => void;
 }) => {
   const [newName, setNewName] = useState(costData.name ?? "");
   const [newEstimatedCost, setNewEstimatedCost] = useState(
@@ -32,27 +36,20 @@ const CostsRow = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [newActualCost, setNewActualCost] = useState(costData.actualCost);
-  const costs = costsStore();
+  const { mutate: updateCostMutation } = useUpdateCost();
+  const { mutate: deleteCostMutation } = useDeleteCost();
 
-  const updateCost = async (id: number, cost: Partial<Cost>) => {
+  const updateCost = async (id: string, cost: Partial<Cost>) => {
     try {
       setIsUpdating(true);
-      const res = await fetch(`/api/v1/projects/${projectId}/costs`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          costData: cost,
-          costId: id,
-        }),
+      const res = await updateCostMutation({
+        id,
+        data: {
+          name: debouncedName,
+          estimatedCost: debouncedEstimatedCost,
+          actualCost: debouncedActualCost,
+        },
       });
-
-      if (res.ok) {
-        const json = await res.json();
-        toast.success("Cost updated successfully");
-        costs.updateCost(id, json.cost, costType);
-        fetchCosts();
-      } else {
-        toast.error("Failed to update cost");
-      }
     } catch (error) {
       toast.error("Failed to update cost");
       console.error(error);
@@ -61,26 +58,13 @@ const CostsRow = ({
     setIsUpdating(false);
   };
 
-  const deleteCost = async (id: number) => {
+  const deleteCost = async (id: string) => {
     try {
       setIsDeleting(true);
       console.log("id", id);
-      console.log("DELETE", `/api/v1/projects/${projectId}/costs`);
-      const res = await fetch(`/api/v1/projects/${projectId}/costs`, {
-        method: "DELETE",
-        body: JSON.stringify({
-          costId: id,
-        }),
-      });
+      const res = await deleteCostMutation(id);
 
-      if (res.ok) {
-        toast.success("Cost removed successfully");
-        costs.removeCost(id, costType);
-        fetchCosts();
-      } else {
-        toast.error("Failed to removed cost");
-        console.error(res);
-      }
+      toast.success("Cost removed successfully");
     } catch (error) {
       toast.error("Failed to removed cost");
       console.error(error);

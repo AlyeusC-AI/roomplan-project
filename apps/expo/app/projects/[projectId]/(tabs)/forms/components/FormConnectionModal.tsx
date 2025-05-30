@@ -13,36 +13,47 @@ import {
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText, Link as LinkIcon, Unlink, Search, X, ChevronRight } from "lucide-react-native";
-import { connectFormToProject, disconnectFormFromProject, getFormConnections } from "../utils/formConnection";
-import { api } from "@/lib/api";
+import {
+  FileText,
+  Link as LinkIcon,
+  Unlink,
+  Search,
+  X,
+  ChevronRight,
+} from "lucide-react-native";
 
-interface Form {
-  id: number;
-  name: string;
-  desc?: string;
-}
+import { useAddFormToProject } from "@service-geek/api-client";
+import { useRemoveFormFromProject } from "@service-geek/api-client";
+import { useGetProjectForms } from "@service-geek/api-client";
+import { useGetForms, Form } from "@service-geek/api-client";
 
 interface FormConnectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConnectionChange: () => void;
   projectId: string;
 }
 
 export function FormConnectionModal({
   isOpen,
   onClose,
-  onConnectionChange,
   projectId,
 }: FormConnectionModalProps) {
-  const [forms, setForms] = useState<Form[]>([]);
-  const [connections, setConnections] = useState<{ formId: number; projectId: number }[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [forms, setForms] = useState<Form[]>([]);
+  // const [connections, setConnections] = useState<{ formId: number; projectId: number }[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isConnecting, setIsConnecting] = useState<{ [key: number]: boolean }>({});
   const [isVisible, setIsVisible] = useState(false);
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
+
+  const [isConnecting, setIsConnecting] = useState<{ [key: string]: boolean }>(
+    {}
+  );
+
+  // const { data: allForms } = useGetFormsByProject(projectId);
+  const { data: connections, isLoading } = useGetProjectForms(projectId);
+  const { data: forms } = useGetForms();
+  const { mutate: connectFormToProject } = useAddFormToProject(projectId);
+  const { mutate: disconnectFormFromProject } =
+    useRemoveFormFromProject(projectId);
 
   useEffect(() => {
     if (isOpen) {
@@ -52,8 +63,6 @@ export function FormConnectionModal({
         duration: 200,
         useNativeDriver: true,
       }).start();
-      fetchForms();
-      fetchConnections();
     } else {
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -65,56 +74,33 @@ export function FormConnectionModal({
     }
   }, [isOpen]);
 
-  const fetchForms = async () => {
-    try {
-      const response = await api.get("/api/v1/organization/forms");
-      console.log("🚀 ~ fetchForms ~ response:", JSON.stringify(response, null, 2))
-      if (response.status !== 200) throw new Error("Failed to fetch forms");
-      const data = response.data;
-      setForms(data);
-    } catch (error) {
-      console.error("Error fetching forms:", error);
-    }
-  };
-
-  const fetchConnections = async () => {
-    try {
-      const connections = await getFormConnections(projectId);
-      setConnections(connections);
-    } catch (error) {
-      console.error("Error fetching connections:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleToggleConnection = async (form: Form) => {
     if (!form.id) return;
 
-    setIsConnecting(prev => ({ ...prev, [form.id!]: true }));
+    setIsConnecting((prev) => ({ ...prev, [form.id!]: true }));
     try {
-      const isConnected = connections.some(c => c.formId === form.id);
+      const isConnected = connections?.some((c) => c.formId === form.id);
 
       if (isConnected) {
-        await disconnectFormFromProject({ formId: form.id, projectId });
+        await disconnectFormFromProject(form.id);
       } else {
-        await connectFormToProject({ formId: form.id, projectId });
+        await connectFormToProject(form.id);
       }
-
-      await fetchConnections();
-      onConnectionChange();
     } catch (error) {
       console.error("Error toggling connection:", error);
     } finally {
-      setIsConnecting(prev => ({ ...prev, [form.id!]: false }));
+      setIsConnecting((prev) => ({ ...prev, [form.id!]: false }));
     }
   };
 
-  const filteredForms = forms.filter(form => 
-    form.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (form.desc?.toLowerCase() || "").includes(searchQuery.toLowerCase())
+  const filteredForms = forms?.filter(
+    (form) =>
+      form.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (form.description?.toLowerCase() || "").includes(
+        searchQuery.toLowerCase()
+      )
   );
-  console.log("🚀 ~ filteredForms:", filteredForms)
+  console.log("🚀 ~ filteredForms:", filteredForms);
 
   if (!isOpen && !isVisible) return null;
 
@@ -126,8 +112,8 @@ export function FormConnectionModal({
       onRequestClose={onClose}
     >
       <SafeAreaView className="flex-1 bg-background">
-        <Animated.View 
-          style={{ 
+        <Animated.View
+          style={{
             flex: 1,
             opacity: fadeAnim,
           }}
@@ -141,7 +127,7 @@ export function FormConnectionModal({
                 </View>
                 <Text className="text-xl font-bold">Connect Forms</Text>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={onClose}
                 className="p-2 rounded-full hover:bg-muted"
               >
@@ -167,45 +153,63 @@ export function FormConnectionModal({
                   <View className="flex items-center justify-center h-64">
                     <ActivityIndicator size="large" color="#0000ff" />
                   </View>
-                ) : filteredForms.length === 0 ? (
+                ) : filteredForms?.length === 0 ? (
                   <View className="flex items-center justify-center h-64">
                     <View className="bg-muted/50 p-6 rounded-full mb-4">
                       <FileText className="h-8 w-8 text-muted-foreground" />
                     </View>
-                    <Text className="text-muted-foreground text-lg">No forms found</Text>
-                    <Text className="text-muted-foreground/80 text-sm mt-2">Try adjusting your search</Text>
+                    <Text className="text-muted-foreground text-lg">
+                      No forms found
+                    </Text>
+                    <Text className="text-muted-foreground/80 text-sm mt-2">
+                      Try adjusting your search
+                    </Text>
                   </View>
                 ) : (
-                  <ScrollView 
+                  <ScrollView
                     className="flex-1"
                     contentContainerStyle={{ paddingBottom: 20 }}
                     showsVerticalScrollIndicator={false}
                   >
-                    {filteredForms.map((form) => {
-                      const isConnected = connections.some(c => c.formId === form.id);
+                    {filteredForms?.map((form) => {
+                      const isConnected = connections?.some(
+                        (c) => c.formId === form.id
+                      );
                       const isProcessing = isConnecting[form.id!];
 
                       return (
                         <Card
                           key={form.id}
                           className={`p-4 flex-row items-center justify-between mb-2 ${
-                            isConnected ? "border-green-500/50 bg-green-500/5" : "border-border/50"
+                            isConnected
+                              ? "border-green-500/50 bg-green-500/5"
+                              : "border-border/50"
                           }`}
                         >
                           <View className="flex-1 mr-4">
                             <View className="flex-row items-center space-x-3">
-                              <View className={`p-2 rounded-lg ${
-                                isConnected ? "bg-green-500/10" : "bg-muted/50"
-                              }`}>
-                                <FileText className={`h-5 w-5 ${
-                                  isConnected ? "text-green-500" : "text-muted-foreground"
-                                }`} />
+                              <View
+                                className={`p-2 rounded-lg ${
+                                  isConnected
+                                    ? "bg-green-500/10"
+                                    : "bg-muted/50"
+                                }`}
+                              >
+                                <FileText
+                                  className={`h-5 w-5 ${
+                                    isConnected
+                                      ? "text-green-500"
+                                      : "text-muted-foreground"
+                                  }`}
+                                />
                               </View>
                               <View className="flex-1">
-                                <Text className="font-medium text-base mb-1">{form.name}</Text>
-                                {form.desc && (
+                                <Text className="font-medium text-base mb-1">
+                                  {form.name}
+                                </Text>
+                                {form.description && (
                                   <Text className="text-sm text-muted-foreground line-clamp-1">
-                                    {form.desc}
+                                    {form.description}
                                   </Text>
                                 )}
                               </View>
@@ -216,9 +220,7 @@ export function FormConnectionModal({
                             onPress={() => handleToggleConnection(form)}
                             disabled={isProcessing}
                             className={`flex-row items-center space-x-2 px-4 py-2 rounded-full gap-2 ${
-                              isConnected 
-                                ? "bg-green-500/10" 
-                                : "bg-muted/50"
+                              isConnected ? "bg-green-500/10" : "bg-muted/50"
                             }`}
                           >
                             {isProcessing ? (
@@ -230,9 +232,13 @@ export function FormConnectionModal({
                                 ) : (
                                   <LinkIcon className="h-4 w-4 text-muted-foreground" />
                                 )}
-                                <Text className={`font-medium ${
-                                  isConnected ? "text-green-500" : "text-muted-foreground"
-                                }`}>
+                                <Text
+                                  className={`font-medium ${
+                                    isConnected
+                                      ? "text-green-500"
+                                      : "text-muted-foreground"
+                                  }`}
+                                >
                                   {isConnected ? "Connected" : "Connect"}
                                 </Text>
                               </>
@@ -250,4 +256,4 @@ export function FormConnectionModal({
       </SafeAreaView>
     </Modal>
   );
-} 
+}

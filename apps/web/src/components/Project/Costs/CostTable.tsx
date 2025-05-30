@@ -4,9 +4,9 @@ import CostSummaryRow from "./CostSummaryRow";
 import { Button } from "@components/ui/button";
 import { LoadingSpinner } from "@components/ui/spinner";
 import { toast } from "sonner";
-import { costsStore } from "@atoms/costs";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { CostType, useCreateCost, useGetCosts } from "@service-geek/api-client";
 
 export default function CostTable({
   name,
@@ -14,37 +14,27 @@ export default function CostTable({
   costType,
   estimateName,
   actualName,
-  fetchCosts,
 }: {
   name: string;
   buttonText: string;
   costType: CostType;
   estimateName: string;
   actualName: string;
-  fetchCosts: () => void;
 }) {
-  const costs = costsStore();
   const [isCreating, setIsCreating] = useState(false);
   const { id: projectId } = useParams<{ id: string }>();
+  const { mutate: createCostMutation } = useCreateCost();
+  const { data: costs } = useGetCosts(projectId);
   const createCost = async () => {
     setIsCreating(true);
     try {
-      const res = await fetch(`/api/v1/projects/${projectId}/costs`, {
-        method: "POST",
-        body: JSON.stringify({
-          type: costType,
-        }),
+      const res = await createCostMutation({
+        type: costType,
+        projectId,
+        name: "",
       });
-      if (res.ok) {
-        const json = await res.json();
-        toast.success("Cost added successfully");
-        costs.addCost(json.cost, costType);
-        fetchCosts();
-      } else {
-        toast.error("Failed to add cost");
-      }
     } catch (error) {
-      toast.error("Failed to add cost");
+      // toast.error("Failed to add cost");
       console.error(error);
     }
     setIsCreating(false);
@@ -60,19 +50,22 @@ export default function CostTable({
           <h1 className='px-4 py-2 font-semibold'>Difference</h1>
         </div>
         <div className='divide-y divide-gray-200'>
-          {costs[`${costType}Costs`].map((cost) => (
-            <CostsRow
-              key={cost.id}
-              costData={cost}
-              namePlaceholder={name}
-              costType={costType}
-              fetchCosts={fetchCosts}
-            />
-          ))}
+          {costs
+            ?.filter((c) => c.type === costType)
+            .map((cost) => (
+              <CostsRow
+                key={cost.id}
+                costData={cost}
+                namePlaceholder={name}
+                costType={costType}
+              />
+            ))}
         </div>
-        {costs[`${costType}Costs`].length > 0 && (
-          <CostSummaryRow costs={costs[`${costType}Costs`]} />
-        )}
+        {costs?.filter((c) => c.type === costType)?.length ? (
+          <CostSummaryRow
+            costs={costs?.filter((c) => c.type === costType) || []}
+          />
+        ) : null}
         <div className='flex w-full items-center justify-center rounded-b-lg py-4'>
           <Button onClick={createCost} disabled={isCreating}>
             {isCreating ? <LoadingSpinner /> : buttonText}

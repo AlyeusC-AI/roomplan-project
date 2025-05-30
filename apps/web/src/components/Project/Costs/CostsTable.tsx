@@ -8,35 +8,22 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { costsStore } from "@atoms/costs";
 import { LoadingPlaceholder } from "@components/ui/spinner";
+import { useGetCosts, useGetProjectById } from "@service-geek/api-client";
 
-export default function CostsTable({
-  rcvValue,
-}: {
-  rcvValue: number;
-  actualValue: number;
-}) {
-  const [fetching, setFetching] = useState(true);
+export default function CostsTable() {
   const { id } = useParams<{ id: string }>();
-  const costs = costsStore();
-  const fetchCosts = async () => {
-    const res = await fetch(`/api/v1/projects/${id}/costs`);
-    const json = await res.json();
-    costs.setCosts(json.costs);
-    setFetching(false);
-  };
-  useEffect(() => {
-    setFetching(true);
-    fetchCosts();
-  }, []);
+  const { data: project } = useGetProjectById(id);
+  const rcvValue = Number(project?.data?.rcvValue || 0);
+  const { isLoading } = useGetCosts(id);
 
-  if (fetching) {
+  if (isLoading) {
     return <LoadingPlaceholder />;
   }
 
   return (
     <div className='space-y-6'>
       <div className='mt-6'>
-        <TotalsTable rcvValue={rcvValue} fetchCosts={fetchCosts} />
+        <TotalsTable rcvValue={rcvValue} />
       </div>
       <div className='space-y-6'>
         <div>
@@ -47,7 +34,7 @@ export default function CostsTable({
           </p>
         </div>
         <Separator />
-        <SubcontractorTable fetchCosts={fetchCosts} />
+        <SubcontractorTable />
       </div>
       <div className='space-y-6'>
         <div>
@@ -57,7 +44,7 @@ export default function CostsTable({
           </p>
         </div>
         <Separator />
-        <MaterialsTable fetchCosts={fetchCosts} />
+        <MaterialsTable />
       </div>
       <div className='space-y-6'>
         <div>
@@ -67,7 +54,7 @@ export default function CostsTable({
           </p>
         </div>
         <Separator />
-        <LaborTable fetchCosts={fetchCosts} />
+        <LaborTable />
       </div>
       <div className='space-y-6'>
         <div>
@@ -77,7 +64,7 @@ export default function CostsTable({
           </p>
         </div>
         <Separator />
-        <MiscellaneousTable fetchCosts={fetchCosts} />
+        <MiscellaneousTable />
       </div>
     </div>
   );

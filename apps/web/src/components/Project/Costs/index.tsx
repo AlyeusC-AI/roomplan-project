@@ -1,13 +1,7 @@
 import { Separator } from "@components/ui/separator";
 import CostsTable from "./CostsTable";
 
-export default function Costs({
-  rcvValue,
-  actualValue,
-}: {
-  rcvValue: number;
-  actualValue: number;
-}) {
+export default function Costs({}: {}) {
   return (
     <div className='space-y-6'>
       <div>
@@ -17,7 +11,7 @@ export default function Costs({
         </p>
       </div>
       <Separator />
-      <CostsTable rcvValue={rcvValue} actualValue={actualValue} />
+      <CostsTable />
     </div>
   );
 }

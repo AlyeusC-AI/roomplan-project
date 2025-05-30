@@ -8,29 +8,34 @@ import { costsStore } from "@atoms/costs";
 import { Card } from "@components/ui/card";
 import { Badge } from "@components/ui/badge";
 import { toast } from "sonner";
+import { useGetCosts, useUpdateProject } from "@service-geek/api-client";
 // Create our number formatter.
 const formatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
 });
 
-const TotalsTable = ({
-  rcvValue,
-  fetchCosts,
-}: {
-  rcvValue: number;
-  fetchCosts: () => void;
-}) => {
+const TotalsTable = ({ rcvValue }: { rcvValue: number }) => {
   const [rv, setRv] = useState<string | undefined>(
     rcvValue ? formatter.format(rcvValue) : ""
   );
-
-  const materialCosts = costsStore((state) => state.materialsCosts);
-  const subcontractorCosts = costsStore((state) => state.subcontractorCosts);
-  const miscellaneousCosts = costsStore((state) => state.miscellaneousCosts);
+  useEffect(() => {
+    setRv(rcvValue ? formatter.format(rcvValue) : "");
+  }, [rcvValue]);
+  const { id } = useParams<{ id: string }>();
+  const { data: costsData } = useGetCosts(id);
+  const { mutate: updateProject } = useUpdateProject();
+  const materialCosts = costsData?.filter((c) => c.type === "MATERIAL") || [];
+  const subcontractorCosts =
+    costsData?.filter((c) => c.type === "SUBCONTRACTOR") || [];
+  const miscellaneousCosts =
+    costsData?.filter((c) => c.type === "MISCELLANEOUS") || [];
 
   const costs = useMemo(
-    () => [...materialCosts, ...subcontractorCosts, ...miscellaneousCosts],
+    () =>
+      [...materialCosts, ...subcontractorCosts, ...miscellaneousCosts].filter(
+        Boolean
+      ),
     [materialCosts, subcontractorCosts, miscellaneousCosts]
   );
 
@@ -39,17 +44,17 @@ const TotalsTable = ({
     [costs]
   );
 
-  const { id } = useParams();
-
   const saveValue = async (rcvValue: string) => {
     const stripped = rcvValue.replaceAll(",", "").replaceAll("$", "");
     const v = stripped ? parseFloat(stripped) : 0;
     try {
-      await fetch(`/api/v1/projects/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ rcvValue: v }),
+      await updateProject({
+        id,
+        data: {
+          rcvValue: v.toString(),
+        },
       });
-      fetchCosts();
+      // fetchCosts();
       toast.success("Updated project successfully");
     } catch (error) {
       toast.error("Failed to update project");

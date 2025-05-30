@@ -19,6 +19,7 @@ import { NotesModule } from './notes/notes.module';
 import { ReadingsModule } from './readings/readings.module';
 import { DocumentsModule } from './documents/documents.module';
 import { FormsModule } from './forms/forms.module';
+import { CostsModule } from './costs/costs.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { FormsModule } from './forms/forms.module';
     ReadingsModule,
     DocumentsModule,
     FormsModule,
+    CostsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
