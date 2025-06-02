@@ -18,19 +18,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getEstimateById, updateEstimate } from "@/services/api/estimates";
-import { Estimate, estimatesStore } from "@atoms/estimates";
-import { invoicesStore, SavedLineItem } from "@atoms/invoices";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Textarea } from "@components/ui/textarea";
+import {
+  Estimate,
+  EstimateItem,
+  useGetEstimateById,
+  useGetProjects,
+  useUpdateEstimate,
+} from "@service-geek/api-client";
+import { getEstimateById } from "@services/api/estimates";
 
 const EditEstimate = () => {
   const router = useRouter();
   const params = useParams();
   const estimateId = params.id as string;
 
-  const [estimate, setEstimate] = useState<Estimate | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   const [estimateNumber, setEstimateNumber] = useState("");
@@ -44,12 +47,11 @@ const EditEstimate = () => {
   const [expiryDate, setExpiryDate] = useState<Date | undefined>(undefined);
   const [estimateItems, setEstimateItems] = useState<
     {
-      id: string;
+      // id: string;
       description: string;
       quantity: number;
       rate: number;
       amount: number;
-      publicId?: string;
     }[]
   >([]);
   const [showMarkup, setShowMarkup] = useState(false);
@@ -64,92 +66,70 @@ const EditEstimate = () => {
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("");
 
-  const { updateEstimate: updateEstimateInStore } = estimatesStore(
-    (state) => state
-  );
-  const { projects } = projectsStore((state) => state);
-  const { savedLineItems } = invoicesStore((state) => state);
-
-  // Load estimate data
+  const { data: estimate, isLoading: loading } = useGetEstimateById(estimateId);
+  const { data: projects } = useGetProjects();
+  const { mutateAsync: updateEstimate } = useUpdateEstimate();
   useEffect(() => {
-    const fetchEstimate = async () => {
-      try {
-        const result = await getEstimateById(estimateId);
-        if (result.error) {
-          console.error(result.error);
-          toast.error(result.error);
-        } else if (result.data) {
-          setEstimate(result.data);
+    if (estimate) {
+      // Populate form fields
+      setEstimateNumber(estimate.data.number);
+      setClientName(estimate.data.clientName);
+      setClientEmail(estimate.data.clientEmail || "");
+      setProjectName(estimate.data.project?.name || "");
+      setProjectId(estimate.data.project?.id || "");
+      setPoNumber(estimate.data.poNumber || "");
+      setEstimateDate(new Date(estimate.data.estimateDate));
+      setExpiryDate(new Date(estimate.data.expiryDate));
 
-          // Populate form fields
-          setEstimateNumber(result.data.number);
-          setClientName(result.data.clientName);
-          setClientEmail(result.data.clientEmail || "");
-          setProjectName(result.data.projectName || "");
-          setProjectId(result.data.projectPublicId || "");
-          setPoNumber(result.data.poNumber || "");
-          setEstimateDate(new Date(result.data.estimateDate));
-          setExpiryDate(new Date(result.data.expiryDate));
+      // Calculate days valid
+      const estimateDateObj = new Date(estimate.data.estimateDate);
+      const expiryDateObj = new Date(estimate.data.expiryDate);
+      const diffTime = Math.abs(
+        expiryDateObj.getTime() - estimateDateObj.getTime()
+      );
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      setDaysValid(diffDays.toString());
 
-          // Calculate days valid
-          const estimateDateObj = new Date(result.data.estimateDate);
-          const expiryDateObj = new Date(result.data.expiryDate);
-          const diffTime = Math.abs(
-            expiryDateObj.getTime() - estimateDateObj.getTime()
-          );
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          setDaysValid(diffDays.toString());
-
-          // Set markup if available
-          if (result.data.markup) {
-            setShowMarkup(true);
-            setMarkupPercentage(result.data.markup);
-          }
-
-          // Set discount if available
-          if (result.data.discount) {
-            setShowDiscount(true);
-            setDiscountAmount(result.data.discount);
-          }
-
-          // Set tax if available
-          if (result.data.tax) {
-            setApplyTax(true);
-            setTaxRate(result.data.tax);
-          }
-
-          // Set deposit if available
-          if (result.data.deposit) {
-            setShowDeposit(true);
-            setDepositPercentage(result.data.deposit);
-          }
-
-          // Set notes and terms
-          setNotes(result.data.notes || "");
-          setTerms(result.data.terms || "");
-
-          // Set line items
-          setEstimateItems(
-            result.data.EstimateItems.map((item) => ({
-              id: uuidv4(),
-              publicId: item.publicId,
-              description: item.description,
-              quantity: item.quantity,
-              rate: item.rate,
-              amount: item.amount,
-            }))
-          );
-        }
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to load estimate details");
-      } finally {
-        setLoading(false);
+      // Set markup if available
+      if (estimate.data.markup) {
+        setShowMarkup(true);
+        setMarkupPercentage(estimate.data.markup);
       }
-    };
 
-    fetchEstimate();
-  }, [estimateId, router]);
+      // Set discount if available
+      if (estimate.data.discount) {
+        setShowDiscount(true);
+        setDiscountAmount(estimate.data.discount);
+      }
+
+      // Set tax if available
+      if (estimate.data.tax) {
+        setApplyTax(true);
+        setTaxRate(estimate.data.tax);
+      }
+
+      // Set deposit if available
+      if (estimate.data.deposit) {
+        setShowDeposit(true);
+        setDepositPercentage(estimate.data.deposit);
+      }
+
+      // Set notes and terms
+      setNotes(estimate.data.notes || "");
+      setTerms(estimate.data.terms || "");
+
+      // Set line items
+      setEstimateItems(
+        estimate.data.items.map((item) => ({
+          // id: item.id,
+          description: item.description,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.amount,
+        }))
+      );
+    }
+  }, [estimate]);
 
   // Calculate expiry date based on days valid
   useEffect(() => {
@@ -172,24 +152,24 @@ const EditEstimate = () => {
   const addLineItem = () => {
     setEstimateItems([
       ...estimateItems,
-      { id: uuidv4(), description: "", quantity: 1, rate: 0, amount: 0 },
+      { description: "", quantity: 1, rate: 0, amount: 0 },
     ]);
   };
 
-  const removeLineItem = (id: string) => {
-    if (estimateItems.length > 1) {
-      setEstimateItems(estimateItems.filter((item) => item.id !== id));
-    }
+  const removeLineItem = (index: number) => {
+    // if (estimateItems.length > 1) {
+    setEstimateItems(estimateItems.filter((item, i) => i !== index));
+    // }
   };
 
   const updateLineItem = (
-    id: string,
+    index: number,
     field: string,
     value: string | number
   ) => {
     setEstimateItems(
-      estimateItems.map((item) =>
-        item.id === id
+      estimateItems.map((item, i) =>
+        i === index
           ? {
               ...item,
               [field]: value,
@@ -237,18 +217,18 @@ const EditEstimate = () => {
   };
 
   const handleSelectProject = (projectId: string) => {
-    const selectedProject = projects.find((p) => p.publicId === projectId);
+    const selectedProject = projects?.data?.find((p) => p.id === projectId);
     if (selectedProject) {
-      setProjectId(selectedProject.publicId);
+      setProjectId(selectedProject.id);
       setProjectName(selectedProject.name);
       setClientName(selectedProject.clientName || "");
       setClientEmail(selectedProject.clientEmail || "");
     }
   };
 
-  const handleAddSavedLineItem = (item: SavedLineItem) => {
+  const handleAddSavedLineItem = (item: EstimateItem) => {
     const newItem = {
-      id: uuidv4(),
+      // id: uuidv4(),
       description: item.description,
       quantity: 1,
       rate: item.rate,
@@ -261,7 +241,7 @@ const EditEstimate = () => {
   const handleAddBulkSavedLineItems = (itemIds: string[]) => {
     const newItems = itemIds
       .map((id) => {
-        const savedItem = savedLineItems.find((item) => item.publicId === id);
+        const savedItem = estimate?.data.items.find((item) => item.id === id);
         if (!savedItem) return null;
         return {
           id: uuidv4(),
@@ -286,7 +266,7 @@ const EditEstimate = () => {
   const saveEstimate = async () => {
     if (
       !clientName ||
-      !projectName ||
+      // !projectName ||
       estimateItems.some((item) => !item.description)
     ) {
       return toast.error("Please fill in all required fields.");
@@ -294,14 +274,14 @@ const EditEstimate = () => {
 
     setIsSaving(true);
     try {
-      // Prepare the estimate data for API
-      const estimateData = {
-        estimate: {
+      // Call the API service
+      const result = await updateEstimate({
+        id: estimateId,
+        data: {
           number: estimateNumber,
           clientName,
           clientEmail,
-          projectName,
-          projectPublicId: projectId,
+          projectId,
           poNumber,
           estimateDate: estimateDate.toISOString(),
           expiryDate: expiryDate?.toISOString() || new Date().toISOString(),
@@ -309,33 +289,23 @@ const EditEstimate = () => {
           markup: showMarkup ? markupPercentage : undefined,
           discount: showDiscount ? discountAmount : undefined,
           tax: applyTax ? taxRate : undefined,
-          amount: calculateTotal(),
+          total: calculateTotal(),
           deposit: showDeposit ? depositPercentage : undefined,
           notes,
           terms,
+
+          items: estimateItems.map((item) => ({
+            // id: item.id,
+            description: item.description,
+            quantity: item.quantity,
+            rate: item.rate,
+            amount: item.amount,
+          })),
         },
-        estimateItems: estimateItems.map((item) => ({
-          publicId: item.publicId,
-          description: item.description,
-          quantity: item.quantity,
-          rate: item.rate,
-          amount: item.amount,
-        })),
-      };
+      });
 
-      // Call the API service
-      const result = await updateEstimate(estimateId, estimateData);
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      if (result.data) {
-        // Update in local store
-        updateEstimateInStore(estimateId, result.data);
-        toast.success("Estimate updated successfully!");
-        router.push(`/estimates/${estimateId}`);
-      }
+      toast.success("Estimate updated successfully!");
+      router.push(`/estimates/${estimateId}`);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Could not update estimate"
@@ -420,7 +390,7 @@ const EditEstimate = () => {
                   Project Name
                 </Label>
                 <div className='col-span-3'>
-                  {projects.length > 0 ? (
+                  {projects?.data?.length && projects?.data?.length > 0 ? (
                     <Select
                       value={projectId}
                       onValueChange={handleSelectProject}
@@ -433,11 +403,8 @@ const EditEstimate = () => {
                         />
                       </SelectTrigger>
                       <SelectContent>
-                        {projects.map((project) => (
-                          <SelectItem
-                            key={project.publicId}
-                            value={project.publicId}
-                          >
+                        {projects?.data?.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
                             {project.name}
                           </SelectItem>
                         ))}
@@ -471,7 +438,10 @@ const EditEstimate = () => {
                   Expiry Date
                 </Label>
                 <div className='col-span-3'>
-                  <DateTimePicker date={expiryDate} setDate={setExpiryDate} />
+                  <DateTimePicker
+                    date={expiryDate || new Date()}
+                    setDate={setExpiryDate}
+                  />
                 </div>
               </div>
             </div>
@@ -585,16 +555,16 @@ const EditEstimate = () => {
                 <div className='col-span-1'></div>
               </div>
 
-              {estimateItems.map((item) => (
+              {estimateItems.map((item, index) => (
                 <div
-                  key={item.id}
+                  key={index}
                   className='mb-2 grid grid-cols-12 items-center gap-2'
                 >
                   <div className='col-span-6'>
                     <Input
                       value={item.description}
                       onChange={(e) =>
-                        updateLineItem(item.id, "description", e.target.value)
+                        updateLineItem(index, "description", e.target.value)
                       }
                       placeholder='Description'
                     />
@@ -605,7 +575,7 @@ const EditEstimate = () => {
                       value={item.rate || ""}
                       onChange={(e) =>
                         updateLineItem(
-                          item.id,
+                          index,
                           "rate",
                           parseFloat(e.target.value) || 0
                         )
@@ -619,7 +589,7 @@ const EditEstimate = () => {
                       value={item.quantity || ""}
                       onChange={(e) =>
                         updateLineItem(
-                          item.id,
+                          index,
                           "quantity",
                           parseFloat(e.target.value) || 0
                         )
@@ -636,7 +606,7 @@ const EditEstimate = () => {
                       type='button'
                       variant='ghost'
                       size='icon'
-                      onClick={() => removeLineItem(item.id)}
+                      onClick={() => removeLineItem(index)}
                     >
                       <X className='h-4 w-4' />
                     </Button>

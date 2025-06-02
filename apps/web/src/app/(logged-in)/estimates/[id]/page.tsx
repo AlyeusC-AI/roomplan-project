@@ -3,13 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { format } from "date-fns";
-import {
-  getEstimateById,
-  updateEstimateStatus,
-  convertEstimateToInvoice,
-  deleteEstimate,
-  emailEstimate,
-} from "@/services/api/estimates";
+
 import { estimatesStore } from "@atoms/estimates";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Button } from "@components/ui/button";
@@ -37,7 +31,6 @@ import {
   TableRow,
 } from "@components/ui/table";
 import Link from "next/link";
-import { Database } from "@/types/database";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import {
@@ -60,35 +53,39 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Estimate,
+  useGetEstimateById,
+  useUpdateEstimate,
+  useConvertEstimateToInvoice,
+  useDeleteEstimate,
+  useEmailEstimate,
+} from "@service-geek/api-client";
 
 const statusDisplay: Record<
   Estimate["status"],
   { label: string; color: string }
 > = {
-  draft: { label: "Draft", color: "bg-gray-400" },
-  sent: { label: "Sent", color: "bg-blue-400" },
-  approved: { label: "Approved", color: "bg-green-400" },
-  rejected: { label: "Rejected", color: "bg-red-400" },
-  cancelled: { label: "Cancelled", color: "bg-gray-400" },
-  expired: { label: "Expired", color: "bg-gray-400" },
+  DRAFT: { label: "Draft", color: "bg-gray-400" },
+  SENT: { label: "Sent", color: "bg-blue-400" },
+  APPROVED: { label: "Approved", color: "bg-green-400" },
+  REJECTED: { label: "Rejected", color: "bg-red-400" },
+  // CANCELLED: { label: "Cancelled", color: "bg-gray-400" },
+  // EXPIRED: { label: "Expired", color: "bg-gray-400" },
 };
-
-declare global {
-  type Estimate = Database["public"]["Tables"]["Estimates"]["Row"] & {
-    EstimateItems: EstimateItem[];
-  };
-  type EstimateItem = Database["public"]["Tables"]["EstimateItems"]["Row"];
-}
 
 export default function EstimateDetails() {
   const router = useRouter();
   const params = useParams();
-  const { updateEstimate: updateEstimateInStore } = estimatesStore(
-    (state) => state
-  );
+  const estimateId = params.id as string;
 
-  const [estimate, setEstimate] = useState<Estimate | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: estimate, isLoading: loading } = useGetEstimateById(estimateId);
+  const { mutate: updateEstimate } = useUpdateEstimate();
+  const { mutateAsync: convertEstimateToInvoice } =
+    useConvertEstimateToInvoice();
+  const { mutate: deleteEstimate } = useDeleteEstimate();
+  const { mutateAsync: emailEstimate } = useEmailEstimate();
+  // const [estimate, setEstimate] = useState<Estimate | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -98,40 +95,17 @@ export default function EstimateDetails() {
   const [emailMessage, setEmailMessage] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const estimateId = params.id as string;
-
-  useEffect(() => {
-    const fetchEstimate = async () => {
-      try {
-        const result = await getEstimateById(estimateId);
-        if (result.error) {
-          toast.error(result.error);
-        } else if (result.data) {
-          setEstimate(result.data);
-        }
-      } catch (error) {
-        console.error("Error fetching estimate:", error);
-        toast.error("Failed to load estimate details");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEstimate();
-  }, [estimateId]);
-
   const handleUpdateStatus = async (newStatus: Estimate["status"]) => {
     setIsUpdatingStatus(true);
     try {
-      const result = await updateEstimateStatus(estimateId, newStatus);
+      await updateEstimate({
+        id: estimateId,
+        data: {
+          status: newStatus,
+        },
+      });
 
-      if (result.error) {
-        toast.error(result.error);
-      } else if (result.data) {
-        setEstimate({ ...estimate!, status: newStatus });
-        updateEstimateInStore(estimateId, { status: newStatus });
-        toast.success(`Estimate marked as ${newStatus}`);
-      }
+      toast.success(`Estimate marked as ${newStatus}`);
     } catch (err) {
       console.error(err);
       toast.error("Failed to update estimate status");
@@ -141,18 +115,14 @@ export default function EstimateDetails() {
   };
 
   const handleConvertToInvoice = async () => {
-    if (!estimate || estimate.status !== "approved") return;
+    if (!estimate || estimate.data.status !== "APPROVED") return;
 
     setIsConverting(true);
     try {
       const result = await convertEstimateToInvoice(estimateId);
 
-      if (result.error) {
-        toast.error(result.error);
-      } else if (result.data) {
-        toast.success("Estimate converted to invoice successfully");
-        router.push(`/invoices/${result.data.invoiceId}`);
-      }
+      toast.success("Estimate converted to invoice successfully");
+      router.push(`/invoices/${result.data.invoiceId}`);
     } catch (err) {
       console.error(err);
       toast.error("Failed to convert estimate to invoice");
@@ -179,7 +149,7 @@ export default function EstimateDetails() {
         <html>
         <head>
           <meta charset="utf-8">
-          <title>Estimate #${estimate.number}</title>
+          <title>Estimate #${estimate.data.number}</title>
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -297,20 +267,20 @@ export default function EstimateDetails() {
                 <p class="company-tagline">Professional Service Management</p>
               </div>
               <div class="estimate-info">
-                <h2 class="estimate-title">Estimate #${estimate.number}</h2>
-                <div class="status-badge">${estimate.status.toUpperCase()}</div>
+                <h2 class="estimate-title">Estimate #${estimate.data.number}</h2>
+                <div class="status-badge">${estimate.data.status.toUpperCase()}</div>
                 <div class="date-info">
-                  <p>Date: ${format(new Date(estimate.estimateDate || new Date()), "MMM d, yyyy")}</p>
-                  <p>Valid Until: ${format(new Date(estimate.expiryDate || new Date()), "MMM d, yyyy")}</p>
+                  <p>Date: ${format(new Date(estimate.data.estimateDate || new Date()), "MMM d, yyyy")}</p>
+                  <p>Valid Until: ${format(new Date(estimate.data.expiryDate || new Date()), "MMM d, yyyy")}</p>
                 </div>
               </div>
             </div>
             
             <div class="client-info">
               <p class="section-title">For:</p>
-              <p class="client-name">${estimate.clientName}</p>
-              ${estimate.clientEmail ? `<p>${estimate.clientEmail}</p>` : ""}
-              ${estimate.projectName ? `<p class="project-info">Project: ${estimate.projectName}</p>` : ""}
+              <p class="client-name">${estimate.data.clientName}</p>
+              ${estimate.data.clientEmail ? `<p>${estimate.data.clientEmail}</p>` : ""}
+              ${estimate.data.project ? `<p class="project-info">Project: ${estimate.data.project.name}</p>` : ""}
             </div>
             
             <table>
@@ -323,8 +293,9 @@ export default function EstimateDetails() {
                 </tr>
               </thead>
               <tbody>
-                ${estimate.EstimateItems.map(
-                  (item) => `
+                ${estimate.data.items
+                  .map(
+                    (item) => `
                   <tr>
                     <td>${item.description}</td>
                     <td>${item.quantity}</td>
@@ -332,14 +303,15 @@ export default function EstimateDetails() {
                     <td class="amount-column">$${item.amount.toFixed(2)}</td>
                   </tr>
                 `
-                ).join("")}
+                  )
+                  .join("")}
               </tbody>
             </table>
             
             <div class="total-section">
               <div class="total-row final">
                 <span>Total</span>
-                <span>$${estimate.amount.toFixed(2)}</span>
+                <span>$${estimate.data.total.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -390,7 +362,7 @@ export default function EstimateDetails() {
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
             pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-            pdf.save(`Estimate-${estimate.number}.pdf`);
+            pdf.save(`Estimate-${estimate.data.number}.pdf`);
 
             toast.success("PDF downloaded successfully");
             setIsExporting(false);
@@ -411,7 +383,7 @@ export default function EstimateDetails() {
   };
 
   const openEmailDialog = () => {
-    if (!estimate?.clientEmail) {
+    if (!estimate?.data.clientEmail) {
       toast.error("No client email address available");
       return;
     }
@@ -423,23 +395,12 @@ export default function EstimateDetails() {
     setIsEmailDialogOpen(false);
     setIsEmailing(true);
     try {
-      const result = await emailEstimate(estimateId, emailMessage || undefined);
+      const result = await emailEstimate({
+        id: estimateId,
+        message: emailMessage || undefined,
+      });
 
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success(
-          result.message || `Estimate emailed to ${estimate!.clientEmail}`
-        );
-
-        // If the status was draft, refresh the data to get updated status
-        if (estimate!.status === "draft") {
-          const updatedData = await getEstimateById(estimateId);
-          if (updatedData.data) {
-            setEstimate(updatedData.data);
-          }
-        }
-      }
+      toast.success(`Estimate emailed to ${estimate!.data.clientEmail}`);
     } catch (error) {
       console.error("Error emailing estimate:", error);
       toast.error("Failed to email estimate");
@@ -456,14 +417,10 @@ export default function EstimateDetails() {
     setIsDeleteDialogOpen(false);
     setIsDeleting(true);
     try {
-      const result = await deleteEstimate(estimateId);
+      await deleteEstimate(estimateId);
 
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("Estimate deleted successfully");
-        router.push("/estimates");
-      }
+      toast.success("Estimate deleted successfully");
+      router.push("/estimates");
     } catch (error) {
       console.error("Error deleting estimate:", error);
       toast.error("Failed to delete estimate");
@@ -514,7 +471,7 @@ export default function EstimateDetails() {
           <Button
             variant='outline'
             onClick={openEmailDialog}
-            disabled={isEmailing || !estimate?.clientEmail}
+            disabled={isEmailing || !estimate?.data.clientEmail}
           >
             <Mail className='mr-2 size-4' />
             {isEmailing ? "Sending..." : "Email to Client"}
@@ -526,18 +483,19 @@ export default function EstimateDetails() {
             </Button>
           </Link>
 
-          {estimate.status === "draft" && (
+          {estimate.data.status === "DRAFT" && (
             <Button
-              onClick={() => handleUpdateStatus("sent")}
+              onClick={() => handleUpdateStatus("SENT")}
               disabled={isUpdatingStatus}
             >
               <SendHorizontal className='mr-2 size-4' /> Mark as Sent
             </Button>
           )}
 
-          {(estimate.status === "draft" || estimate.status === "sent") && (
+          {(estimate.data.status === "DRAFT" ||
+            estimate.data.status === "SENT") && (
             <Button
-              onClick={() => handleUpdateStatus("approved")}
+              onClick={() => handleUpdateStatus("APPROVED")}
               disabled={isUpdatingStatus}
               variant='outline'
             >
@@ -545,9 +503,10 @@ export default function EstimateDetails() {
             </Button>
           )}
 
-          {(estimate.status === "draft" || estimate.status === "sent") && (
+          {(estimate.data.status === "DRAFT" ||
+            estimate.data.status === "SENT") && (
             <Button
-              onClick={() => handleUpdateStatus("rejected")}
+              onClick={() => handleUpdateStatus("REJECTED")}
               disabled={isUpdatingStatus}
               variant='outline'
             >
@@ -555,7 +514,7 @@ export default function EstimateDetails() {
             </Button>
           )}
 
-          {estimate.status === "approved" && (
+          {estimate.data.status === "APPROVED" && (
             <Button onClick={handleConvertToInvoice} disabled={isConverting}>
               <Copy className='mr-2 size-4' /> Convert to Invoice
             </Button>
@@ -579,10 +538,10 @@ export default function EstimateDetails() {
         <CardHeader className='pb-2'>
           <div className='flex items-center justify-between'>
             <CardTitle className='text-2xl'>
-              Estimate {estimate.number}
+              Estimate {estimate.data.number}
             </CardTitle>
             <Badge className={`text-white`}>
-              {statusDisplay[estimate.status]?.label ?? "Draft"}
+              {statusDisplay[estimate.data.status]?.label ?? "Draft"}
             </Badge>
           </div>
         </CardHeader>
@@ -592,8 +551,10 @@ export default function EstimateDetails() {
             <div>
               <h3 className='mb-2 text-lg font-semibold'>Client Information</h3>
               <div className='space-y-1'>
-                <p className='font-medium'>{estimate.clientName}</p>
-                {estimate.clientEmail && <p>{estimate.clientEmail}</p>}
+                <p className='font-medium'>{estimate.data.clientName}</p>
+                {estimate.data.clientEmail && (
+                  <p>{estimate.data.clientEmail}</p>
+                )}
               </div>
             </div>
 
@@ -604,7 +565,7 @@ export default function EstimateDetails() {
                   <span>Estimate Date:</span>
                   <span>
                     {format(
-                      new Date(estimate.estimateDate ?? new Date()),
+                      new Date(estimate.data.estimateDate ?? new Date()),
                       "PPP"
                     )}
                   </span>
@@ -612,18 +573,21 @@ export default function EstimateDetails() {
                 <div className='flex justify-between'>
                   <span>Expiry Date:</span>
                   <span>
-                    {format(new Date(estimate.expiryDate ?? new Date()), "PPP")}
+                    {format(
+                      new Date(estimate.data.expiryDate ?? new Date()),
+                      "PPP"
+                    )}
                   </span>
                 </div>
-                {estimate.poNumber && (
+                {estimate.data.poNumber && (
                   <div className='flex justify-between'>
                     <span>PO Number:</span>
-                    <span>{estimate.poNumber}</span>
+                    <span>{estimate.data.poNumber}</span>
                   </div>
                 )}
                 <div className='flex justify-between'>
                   <span>Project:</span>
-                  <span>{estimate.projectName || "Not specified"}</span>
+                  <span>{estimate.data.project?.name || "Not specified"}</span>
                 </div>
               </div>
             </div>
@@ -641,8 +605,8 @@ export default function EstimateDetails() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {estimate.EstimateItems.map((item) => (
-                  <TableRow key={item.publicId}>
+                {estimate.data.items.map((item) => (
+                  <TableRow key={item.id}>
                     <TableCell>{item.description}</TableCell>
                     <TableCell>${item.rate.toFixed(2)}</TableCell>
                     <TableCell className='text-center'>
@@ -659,11 +623,11 @@ export default function EstimateDetails() {
 
           <div className='grid grid-cols-2 gap-4'>
             <div>
-              {estimate.notes && (
+              {estimate.data.notes && (
                 <div className='mb-4'>
                   <h3 className='mb-2 text-lg font-semibold'>Notes</h3>
                   <p className='text-sm text-muted-foreground'>
-                    {estimate.notes}
+                    {estimate.data.notes}
                   </p>
                 </div>
               )}
@@ -672,39 +636,40 @@ export default function EstimateDetails() {
             <div className='space-y-2'>
               <div className='flex justify-between'>
                 <span>Subtotal</span>
-                <span>${estimate.subtotal.toFixed(2)}</span>
+                <span>${estimate.data.subtotal.toFixed(2)}</span>
               </div>
 
-              {estimate.markupAmount && (
+              {estimate.data.markup && (
                 <div className='flex justify-between'>
-                  <span>Markup ({estimate.markupAmount}%)</span>
+                  <span>Markup ({estimate.data.markup}%)</span>
                   <span>
                     $
                     {(
-                      estimate.subtotal *
-                      (estimate.markupAmount / 100)
+                      estimate.data.subtotal *
+                      (estimate.data.markup / 100)
                     ).toFixed(2)}
                   </span>
                 </div>
               )}
 
-              {estimate.discountAmount && (
+              {estimate.data.discount && (
                 <div className='flex justify-between'>
                   <span>Discount</span>
-                  <span>-${estimate.discountAmount.toFixed(2)}</span>
+                  <span>-${estimate.data.discount.toFixed(2)}</span>
                 </div>
               )}
 
-              {estimate.taxAmount && (
+              {estimate.data.tax && (
                 <div className='flex justify-between'>
-                  <span>Tax ({estimate.taxAmount}%)</span>
+                  <span>Tax ({estimate.data.tax}%)</span>
                   <span>
                     $
                     {(
-                      estimate.amount -
-                      estimate.subtotal +
-                      (estimate.discountAmount || 0) -
-                      estimate.subtotal * ((estimate.markupAmount || 0) / 100)
+                      estimate.data.total -
+                      estimate.data.subtotal +
+                      (estimate.data.discount || 0) -
+                      estimate.data.subtotal *
+                        ((estimate.data.markup || 0) / 100)
                     ).toFixed(2)}
                   </span>
                 </div>
@@ -713,18 +678,18 @@ export default function EstimateDetails() {
               <div className='border-t pt-2'>
                 <div className='flex justify-between font-bold'>
                   <span>Total</span>
-                  <span>${estimate.amount.toFixed(2)}</span>
+                  <span>${estimate.data.total.toFixed(2)}</span>
                 </div>
 
-                {estimate.depositAmount && (
+                {estimate.data.deposit && (
                   <>
                     <div className='mt-2 flex justify-between'>
-                      <span>Deposit ({estimate.depositPercentage}%)</span>
+                      <span>Deposit ({estimate.data.deposit}%)</span>
                       <span>
                         $
                         {(
-                          estimate.amount *
-                          (estimate.depositPercentage ?? 0 / 100)
+                          estimate.data.total *
+                          (estimate.data.deposit ?? 0 / 100)
                         ).toFixed(2)}
                       </span>
                     </div>
@@ -733,9 +698,9 @@ export default function EstimateDetails() {
                       <span>
                         $
                         {(
-                          estimate.amount -
-                          estimate.amount *
-                            (estimate.depositPercentage ?? 0 / 100)
+                          estimate.data.total -
+                          estimate.data.total *
+                            (estimate.data.deposit ?? 0 / 100)
                         ).toFixed(2)}
                       </span>
                     </div>
@@ -753,7 +718,7 @@ export default function EstimateDetails() {
           <DialogHeader>
             <DialogTitle>Email Estimate</DialogTitle>
             <DialogDescription>
-              Send this estimate to {estimate?.clientEmail}
+              Send this estimate to {estimate?.data?.clientEmail}
             </DialogDescription>
           </DialogHeader>
           <div className='py-4'>

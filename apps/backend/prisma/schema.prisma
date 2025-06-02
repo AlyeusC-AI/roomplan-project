@@ -69,6 +69,9 @@ model Organization {
   calendarEvents  CalendarEvent[]
   projects        Project[]
   forms           Form[]
+  invoices        Invoice[]
+  estimates       Estimate[]
+  invoiceItems    InvoiceItem[]
 }
 
 enum MemberStatus {
@@ -203,6 +206,8 @@ model Project {
   documents      Document[]
   forms          FormProject[]
   formResponses  FormResponse[]
+  invoices       Invoice[]
+  Estimate       Estimate[]
 }
 
 model Room {
@@ -572,4 +577,113 @@ model Cost {
   project       Project  @relation(fields: [projectId], references: [id])
 
   @@index([projectId])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model Invoice {
+  id               String            @id @default(uuid())
+  number           String
+  clientName       String
+  clientEmail      String?
+  projectId        String?
+  poNumber         String?
+  invoiceDate      DateTime
+  dueDate          DateTime
+  subtotal         Float
+  discount         Float?
+  markup           Float?
+  tax              Float?
+  total            Float
+  deposit          Float?
+  status           InvoiceStatus     @default(DRAFT)
+  notes            String?
+  terms            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  organizationId   String
+  project          Project?          @relation(fields: [projectId], references: [id])
+  items            InvoiceItem[]
+  paymentSchedules PaymentSchedule[]
+  organization     Organization      @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@index([projectId])
+}
+
+model InvoiceItem {
+  id             String        @id @default(uuid())
+  name           String?
+  description    String
+  quantity       Int
+  rate           Float
+  amount         Float
+  notes          String?
+  category       String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  invoiceId      String?
+  isSaved        Boolean       @default(false)
+  invoice        Invoice?      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  estimate       Estimate?     @relation(fields: [estimateId], references: [id])
+  estimateId     String?
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([invoiceId])
+}
+
+model PaymentSchedule {
+  id          String   @id @default(uuid())
+  dueDate     DateTime
+  amount      Float
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+model Estimate {
+  id             String         @id @default(cuid())
+  number         String
+  clientName     String
+  clientEmail    String
+  projectId      String?
+  project        Project?       @relation(fields: [projectId], references: [id])
+  estimateDate   DateTime
+  expiryDate     DateTime
+  terms          String?
+  subtotal       Float
+  markup         Float?
+  discount       Float?
+  tax            Float?
+  total          Float
+  deposit        Float?
+  poNumber       String?
+  status         EstimateStatus @default(DRAFT)
+  notes          String?
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  items          InvoiceItem[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([organizationId])
+  @@index([projectId])
+}
+
+enum EstimateStatus {
+  DRAFT
+  SENT
+  APPROVED
+  REJECTED
 }

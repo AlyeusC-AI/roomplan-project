@@ -19,9 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Textarea } from "@components/ui/textarea";
-import { createEstimate } from "@/services/api/estimates";
-import { estimatesStore } from "@atoms/estimates";
-import { invoicesStore, SavedLineItem } from "@atoms/invoices";
+
 import {
   Dialog,
   DialogContent,
@@ -32,6 +30,12 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  useCreateEstimate,
+  useGetSavedInvoiceItems,
+  CreateInvoiceItemDto,
+} from "@service-geek/api-client";
+import { useGetProjects } from "@service-geek/api-client";
 
 interface EstimateItem {
   id: string;
@@ -74,10 +78,9 @@ const CreateEstimatePage = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   const router = useRouter();
-  const { addEstimate } = estimatesStore((state) => state);
-  const { projects } = projectsStore((state) => state);
-  const { savedLineItems } = invoicesStore((state) => state);
-
+  const { data: projects } = useGetProjects();
+  const { data: savedLineItems = [] } = useGetSavedInvoiceItems();
+  const { mutate: createEstimateMutation } = useCreateEstimate();
   // Get unique categories from saved items
   const getCategories = () => {
     const categoriesSet = new Set<string>();
@@ -189,9 +192,9 @@ const CreateEstimatePage = () => {
       return;
     }
 
-    const selectedProject = projects.find((p) => p.publicId === projectId);
+    const selectedProject = projects?.data?.find((p) => p.id === projectId);
     if (selectedProject) {
-      setProjectId(selectedProject.publicId);
+      setProjectId(selectedProject.id);
       setProjectName(selectedProject.name);
       setClientName(selectedProject.clientName || "");
       setClientEmail(selectedProject.clientEmail || "");
@@ -208,15 +211,15 @@ const CreateEstimatePage = () => {
         setAdjusterEmail(selectedProject.adjusterEmail);
       }
 
-      if (selectedProject.adjusterPhone) {
-        setAdjusterPhone(selectedProject.adjusterPhone);
+      if (selectedProject.adjusterPhoneNumber) {
+        setAdjusterPhone(selectedProject.adjusterPhoneNumber);
       }
 
       toast.success("Project details auto-filled successfully");
     }
   };
 
-  const handleAddSavedLineItem = (item: SavedLineItem) => {
+  const handleAddSavedLineItem = (item: CreateInvoiceItemDto) => {
     setEstimateItems([
       ...estimateItems,
       {
@@ -234,7 +237,7 @@ const CreateEstimatePage = () => {
     e.preventDefault();
     if (
       !clientName ||
-      !projectName ||
+      // !projectName ||
       estimateItems.some((item) => !item.description)
     ) {
       return toast.error("Please fill in all required fields.");
@@ -274,19 +277,36 @@ const CreateEstimatePage = () => {
         })),
       };
 
-      // Call the API service
-      const result = await createEstimate(estimateData);
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      if (result.data) {
-        // Add to local store
-        addEstimate(result.data);
-        toast.success("Estimate created successfully!");
-        router.push("/estimates");
-      }
+      createEstimateMutation({
+        number: `EST-${Math.floor(Math.random() * 10000)}`,
+        clientName,
+        clientEmail,
+        // projectName,
+        projectId: projectId,
+        estimateDate: estimateDate.toISOString(),
+        expiryDate: expiryDate?.toISOString() || new Date().toISOString(),
+        subtotal: calculateSubtotal(),
+        markup: showMarkup ? markupPercentage : undefined,
+        discount: showDiscount ? discountAmount : undefined,
+        tax: applyTax ? taxRate : undefined,
+        total: calculateTotal(),
+        deposit: showDeposit ? depositPercentage : undefined,
+        status: "DRAFT",
+        notes,
+        terms,
+        // adjusterName: showAdjuster ? adjusterName : undefined,
+        // adjusterEmail: showAdjuster ? adjusterEmail : undefined,
+        // adjusterPhone: showAdjuster ? adjusterPhone : undefined,
+        items: estimateItems.map((item) => ({
+          description: item.description,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.amount,
+          notes: item.detailedDescription,
+        })),
+      });
+      toast.success("Estimate created successfully");
+      router.push("/estimates");
     } catch (error) {
       console.error("Error creating estimate:", error);
       toast.error("Failed to create estimate. Please try again.");
@@ -374,7 +394,7 @@ const CreateEstimatePage = () => {
                   Project Name
                 </Label>
                 <div className='col-span-3'>
-                  {projects.length > 0 ? (
+                  {projects?.data?.length && projects?.data?.length > 0 ? (
                     <Select
                       value={projectId || "none"}
                       onValueChange={handleSelectProject}
@@ -388,11 +408,8 @@ const CreateEstimatePage = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value='none'>None</SelectItem>
-                        {projects.map((project) => (
-                          <SelectItem
-                            key={project.publicId}
-                            value={project.publicId}
-                          >
+                        {projects?.data?.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
                             {project.name}
                           </SelectItem>
                         ))}
@@ -426,7 +443,10 @@ const CreateEstimatePage = () => {
                   Expiry Date
                 </Label>
                 <div className='col-span-3'>
-                  <DateTimePicker date={expiryDate} setDate={setExpiryDate} />
+                  <DateTimePicker
+                    date={expiryDate || new Date()}
+                    setDate={setExpiryDate}
+                  />
                 </div>
               </div>
 
@@ -785,7 +805,7 @@ const CreateEstimatePage = () => {
           <ScrollArea className='max-h-[400px]'>
             <div className='space-y-2 p-1'>
               {filteredSavedItems().map((item) => (
-                <Card key={item.publicId} className='hover:bg-gray-50'>
+                <Card key={item.id} className='hover:bg-gray-50'>
                   <CardContent className='flex items-center justify-between p-4'>
                     <div>
                       <h4 className='font-medium'>

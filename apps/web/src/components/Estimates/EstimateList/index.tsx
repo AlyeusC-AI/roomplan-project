@@ -57,6 +57,11 @@ import {
 } from "@components/ui/alert-dialog";
 import { Input } from "@components/ui/input";
 import { Badge } from "@components/ui/badge";
+import {
+  useDeleteEstimate,
+  useGetEstimates,
+  useUpdateEstimate,
+} from "@service-geek/api-client";
 
 const statusDisplay = {
   draft: { label: "Draft", color: "bg-gray-400" },
@@ -74,62 +79,37 @@ const EstimateList = () => {
   const [estimateToDelete, setEstimateToDelete] = useState<string | null>(null);
   const [isConverting, setIsConverting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
-
-  const {
-    estimates,
-    setEstimates,
-    deleteEstimate: removeEstimateFromStore,
-    updateEstimate: updateEstimateInStore,
-    setLoadingEstimates,
-  } = estimatesStore((state) => state);
+  const { data: estimates, isLoading } = useGetEstimates();
+  const { mutate: deleteEstimateMutation } = useDeleteEstimate();
+  const { mutate: updateEstimateMutation } = useUpdateEstimate();
+  // const {
+  //   estimates,
+  //   setEstimates,
+  //   deleteEstimate: removeEstimateFromStore,
+  //   updateEstimate: updateEstimateInStore,
+  //   setLoadingEstimates,
+  // } = estimatesStore((state) => state);
 
   // Filtered estimates
-  const filteredEstimates = estimates.filter((estimate) => {
-    if (!searchTerm) return true;
-    const search = searchTerm.toLowerCase();
-    return (
-      estimate.number.toLowerCase().includes(search) ||
-      estimate.clientName.toLowerCase().includes(search) ||
-      (estimate.projectName &&
-        estimate.projectName.toLowerCase().includes(search))
-    );
-  });
-
-  // Load estimates when component mounts
-  useEffect(() => {
-    const loadEstimates = async () => {
-      setLoadingEstimates(true);
-      try {
-        const result = await getEstimates();
-        if (result.error) {
-          toast.error(result.error);
-        } else if (result.data) {
-          setEstimates(result.data, 0);
-        }
-      } catch (error) {
-        console.error("Error loading estimates:", error);
-        toast.error("Failed to load estimates");
-      } finally {
-        setLoadingEstimates(false);
-      }
-    };
-
-    loadEstimates();
-  }, [setEstimates, setLoadingEstimates]);
+  const filteredEstimates =
+    estimates?.filter((estimate) => {
+      if (!searchTerm) return true;
+      const search = searchTerm.toLowerCase();
+      return (
+        estimate.number.toLowerCase().includes(search) ||
+        estimate.clientName.toLowerCase().includes(search) ||
+        (estimate.project?.name &&
+          estimate.project?.name.toLowerCase().includes(search))
+      );
+    }) ?? [];
 
   // Handle deleting an estimate
   const handleDeleteEstimate = async () => {
     if (!estimateToDelete) return;
 
     try {
-      const result = await deleteEstimate(estimateToDelete);
-
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        removeEstimateFromStore(estimateToDelete);
-        toast.success("Estimate deleted successfully");
-      }
+      await deleteEstimateMutation(estimateToDelete);
+      toast.success("Estimate deleted successfully");
     } catch (error) {
       console.error("Error deleting estimate:", error);
       toast.error("Failed to delete estimate");
@@ -146,14 +126,13 @@ const EstimateList = () => {
   ) => {
     setIsUpdatingStatus(true);
     try {
-      const result = await updateEstimateStatus(estimateId, newStatus);
-
-      if (result.error) {
-        toast.error(result.error);
-      } else if (result.data) {
-        updateEstimateInStore(estimateId, { status: newStatus });
-        toast.success(`Estimate marked as ${newStatus}`);
-      }
+      await updateEstimateMutation({
+        id: estimateId,
+        data: {
+          status: newStatus,
+        },
+      });
+      toast.success(`Estimate marked as ${newStatus}`);
     } catch (error) {
       console.error("Error updating estimate status:", error);
       toast.error("Failed to update estimate status");
@@ -203,7 +182,7 @@ const EstimateList = () => {
               Manage your estimates and convert them to invoices.
             </CardDescription>
           </div>
-          <Button onClick={() => router.push('/estimates/new')}>
+          <Button onClick={() => router.push("/estimates/new")}>
             New Estimate
           </Button>
         </CardHeader>
@@ -240,13 +219,13 @@ const EstimateList = () => {
                 ) : (
                   filteredEstimates.map((estimate) => (
                     <TableRow
-                      key={estimate.publicId}
+                      key={estimate.id}
                       className='cursor-pointer'
-                      onClick={() => viewEstimate(estimate.publicId)}
+                      onClick={() => viewEstimate(estimate.id)}
                     >
                       <TableCell className='font-medium'>
                         <Link
-                          href={`/estimates/${estimate.publicId}`}
+                          href={`/estimates/${estimate.id}`}
                           className='text-blue-600 hover:underline'
                           onClick={(e) => e.stopPropagation()}
                         >
@@ -254,17 +233,23 @@ const EstimateList = () => {
                         </Link>
                       </TableCell>
                       <TableCell>{estimate.clientName}</TableCell>
-                      <TableCell>{estimate.projectName || "-"}</TableCell>
+                      <TableCell>{estimate.project?.name || "-"}</TableCell>
                       <TableCell className='text-right'>
-                        ${estimate.amount.toFixed(2)}
+                        ${estimate.total.toFixed(2)}
                       </TableCell>
                       <TableCell>
                         <Badge
                           className={`${
-                            statusDisplay[estimate.status].color
+                            statusDisplay[
+                              estimate.status.toLowerCase() as keyof typeof statusDisplay
+                            ].color
                           } text-white`}
                         >
-                          {statusDisplay[estimate.status].label}
+                          {
+                            statusDisplay[
+                              estimate.status.toLowerCase() as keyof typeof statusDisplay
+                            ].label
+                          }
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -299,7 +284,7 @@ const EstimateList = () => {
                             <DropdownMenuItem
                               onClick={(e) => {
                                 e.stopPropagation();
-                                viewEstimate(estimate.publicId);
+                                viewEstimate(estimate.id);
                               }}
                             >
                               <Eye className='mr-2 size-4' />
@@ -308,17 +293,17 @@ const EstimateList = () => {
                             <DropdownMenuItem
                               onClick={(e) => {
                                 e.stopPropagation();
-                                editEstimate(estimate.publicId);
+                                editEstimate(estimate.id);
                               }}
                             >
                               <Edit className='mr-2 size-4' />
                               Edit
                             </DropdownMenuItem>
-                            {estimate.status === "draft" && (
+                            {estimate.status === "DRAFT" && (
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleUpdateStatus(estimate.publicId, "sent");
+                                  handleUpdateStatus(estimate.id, "SENT");
                                 }}
                                 disabled={isUpdatingStatus}
                               >
@@ -326,15 +311,12 @@ const EstimateList = () => {
                                 Mark as Sent
                               </DropdownMenuItem>
                             )}
-                            {(estimate.status === "draft" ||
-                              estimate.status === "sent") && (
+                            {(estimate.status === "DRAFT" ||
+                              estimate.status === "SENT") && (
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleUpdateStatus(
-                                    estimate.publicId,
-                                    "approved"
-                                  );
+                                  handleUpdateStatus(estimate.id, "APPROVED");
                                 }}
                                 disabled={isUpdatingStatus}
                               >
@@ -342,15 +324,12 @@ const EstimateList = () => {
                                 Mark as Approved
                               </DropdownMenuItem>
                             )}
-                            {(estimate.status === "draft" ||
-                              estimate.status === "sent") && (
+                            {(estimate.status === "DRAFT" ||
+                              estimate.status === "SENT") && (
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleUpdateStatus(
-                                    estimate.publicId,
-                                    "rejected"
-                                  );
+                                  handleUpdateStatus(estimate.id, "REJECTED");
                                 }}
                                 disabled={isUpdatingStatus}
                               >
@@ -358,11 +337,11 @@ const EstimateList = () => {
                                 Mark as Rejected
                               </DropdownMenuItem>
                             )}
-                            {estimate.status === "approved" && (
+                            {estimate.status === "APPROVED" && (
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleConvertToInvoice(estimate.publicId);
+                                  handleConvertToInvoice(estimate.id);
                                 }}
                                 disabled={isConverting}
                               >
@@ -373,7 +352,7 @@ const EstimateList = () => {
                             <DropdownMenuItem
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setEstimateToDelete(estimate.publicId);
+                                setEstimateToDelete(estimate.id);
                                 setShowDeleteAlert(true);
                               }}
                               className='text-red-600'
