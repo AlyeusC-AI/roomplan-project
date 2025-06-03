@@ -8,11 +8,6 @@ import { Database } from "@/types/database";
 import { convertSvgToPng } from "@lib/utils/imagekit";
 import Stripe from "stripe";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-01-27.acacia",
-});
-
 type Organization = Database["public"]["Tables"]["Organization"]["Row"];
 
 export async function POST(
@@ -20,6 +15,11 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   let invoice: Stripe.Invoice | null = null;
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2025-01-27.acacia",
+  });
   try {
     const [_, authenticatedUser] = await user(req);
     const id = (await params).id;
@@ -47,7 +47,10 @@ export async function POST(
 
     if (orgError) {
       console.error("Error fetching organization:", orgError);
-      return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Organization not found" },
+        { status: 404 }
+      );
     }
 
     if (!organization.subscriptionId) {
@@ -70,7 +73,10 @@ export async function POST(
     }
 
     if (!room.roomPlanSVG) {
-      return NextResponse.json({ error: "Room plan SVG not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Room plan SVG not found" },
+        { status: 404 }
+      );
     }
 
     // Get the ESX price ID from environment variables
@@ -101,7 +107,7 @@ export async function POST(
     invoice = await stripe.invoices.create({
       customer: organization.customerId,
       subscription: organization.subscriptionId,
-      collection_method: 'charge_automatically',
+      collection_method: "charge_automatically",
       auto_advance: true,
     });
 
@@ -110,69 +116,85 @@ export async function POST(
     const paidInvoice = await stripe.invoices.pay(invoice.id);
 
     // Convert SVG to PNG once
-    const { url: pngUrl, buffer: pngBuffer } = await convertSvgToPng(room.roomPlanSVG);
+    const { url: pngUrl, buffer: pngBuffer } = await convertSvgToPng(
+      room.roomPlanSVG
+    );
 
     // Send room plan email using Resend
-    const { data: roomPlanEmailData, error: roomPlanEmailError } = await resend.emails.send({
-      from: "RestoreGeek <team@servicegeek.io>",
-      to: "Files@restoregeek.io",
-      subject: `Room Plan for ${project.name}`,
-      react: await RoomPlanEmailTemplate({
-        organization: {
-          name: organization.name,
-          phone: organization.phoneNumber || "Not provided",
-          email: "Files@restoregeek.io",
-          requestor: authenticatedUser.email || "Not provided",
-        },
-        project: {
-          name: project.name,
-          address: project.location || "Not provided",
-          clientName: project.clientName,
-        },
-        roomPlanImage: pngUrl,
-      }),
-      attachments: [{
-        filename: 'room-plan.png',
-        content: pngBuffer,
-      }],
-    });
+    const { data: roomPlanEmailData, error: roomPlanEmailError } =
+      await resend.emails.send({
+        from: "RestoreGeek <team@servicegeek.io>",
+        to: "Files@restoregeek.io",
+        subject: `Room Plan for ${project.name}`,
+        react: await RoomPlanEmailTemplate({
+          organization: {
+            name: organization.name,
+            phone: organization.phoneNumber || "Not provided",
+            email: "Files@restoregeek.io",
+            requestor: authenticatedUser.email || "Not provided",
+          },
+          project: {
+            name: project.name,
+            address: project.location || "Not provided",
+            clientName: project.clientName,
+          },
+          roomPlanImage: pngUrl,
+        }),
+        attachments: [
+          {
+            filename: "room-plan.png",
+            content: pngBuffer,
+          },
+        ],
+      });
 
     if (roomPlanEmailError) {
       throw new Error("Failed to send room plan email");
     }
 
     // Send payment notification email to files email
-    const { data: paymentEmailData, error: paymentEmailError } = await resend.emails.send({
-      from: "RestoreGeek <team@servicegeek.io>",
-      to: "Files@restoregeek.io",
-      subject: `ESX Analysis Payment Processed for ${project.name}`,
-      react: PaymentDetailsEmailTemplate({
-        organization: {
-          name: organization.name,
-          email: "Files@restoregeek.io",
-        },
-        project: {
-          name: project.name,
-          address: project.location || "Not provided",
-        },
-        paymentUrl: `https://dashboard.stripe.com/invoices/${invoice.id}`,
-      }),
-    });
+    const { data: paymentEmailData, error: paymentEmailError } =
+      await resend.emails.send({
+        from: "RestoreGeek <team@servicegeek.io>",
+        to: "Files@restoregeek.io",
+        subject: `ESX Analysis Payment Processed for ${project.name}`,
+        react: PaymentDetailsEmailTemplate({
+          organization: {
+            name: organization.name,
+            email: "Files@restoregeek.io",
+          },
+          project: {
+            name: project.name,
+            address: project.location || "Not provided",
+          },
+          paymentUrl: `https://dashboard.stripe.com/invoices/${invoice.id}`,
+        }),
+      });
 
     if (paymentEmailError) {
-      console.error("Error sending payment notification email:", paymentEmailError);
-      return NextResponse.json({ error: paymentEmailError?.message || "Failed to send payment notification email" }, { status: 500 });
+      console.error(
+        "Error sending payment notification email:",
+        paymentEmailError
+      );
+      return NextResponse.json(
+        {
+          error:
+            paymentEmailError?.message ||
+            "Failed to send payment notification email",
+        },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       roomPlanEmailData,
       paymentEmailData,
-      invoiceId: invoice.id
+      invoiceId: invoice.id,
     });
   } catch (err) {
     console.error("Error:", err);
-    
+
     // If we created an invoice but something went wrong, try to void it
     if (invoice) {
       try {
@@ -182,8 +204,11 @@ export async function POST(
       }
     }
 
-    return NextResponse.json({ 
-      error: err instanceof Error ? err.message : "Internal server error" 
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: err instanceof Error ? err.message : "Internal server error",
+      },
+      { status: 500 }
+    );
   }
-} 
+}
