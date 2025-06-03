@@ -310,4 +310,56 @@ export class EmailService {
       throw error;
     }
   }
+
+  async sendLidarAnalysisEmail(data: {
+    to: string;
+    roomName: string;
+    roomPlanSVG: string;
+    projectName: string;
+  }) {
+    try {
+      const { data: responseData, error } = await this.resend.emails.send({
+        from: 'RestoreGeek <team@servicegeek.io>',
+        to: [data.to],
+        subject: `ESX Analysis Request - ${data.projectName}`,
+        html: `
+          ${this.getEmailStyles()}
+          <div class="email-container">
+            <div class="email-header">
+              <img src="${this.LOGO_URL}" alt="RestoreGeek Logo" class="logo">
+              <h1 class="email-title">ESX Analysis Request</h1>
+            </div>
+            <div class="email-content">
+              <p>Hello,</p>
+              <p>An ESX analysis has been requested for the following room:</p>
+              <ul>
+                <li><strong>Project:</strong> ${data.projectName}</li>
+                <li><strong>Room:</strong> ${data.roomName}</li>
+              </ul>
+              
+              <p>The room plan is attached below:</p>
+              <div style="text-align: center; margin: 20px 0;">
+                <img src="${data.roomPlanSVG}" alt="Room Plan" style="max-width: 100%;">
+              </div>
+              
+              <p>Please process this request and provide a detailed analysis within 24 hours.</p>
+            </div>
+            <div class="email-footer">
+              <p>This is an automated message from ServiceGeek. Please do not reply to this email.</p>
+            </div>
+          </div>
+        `,
+      });
+
+      if (error) {
+        console.error('Error sending lidar analysis email:', error);
+        throw new Error('Failed to send lidar analysis email');
+      }
+
+      return responseData;
+    } catch (error) {
+      console.error('Error in sendLidarAnalysisEmail:', error);
+      throw error;
+    }
+  }
 }

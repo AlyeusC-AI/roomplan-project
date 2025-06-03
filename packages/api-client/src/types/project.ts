@@ -85,3 +85,13 @@ export interface CreateProjectDto {
 }
 
 export type UpdateProjectDto = Partial<CreateProjectDto>;
+
+export interface SendLidarEmailRequest {
+  roomId: string;
+  roomPlanSVG: string;
+}
+
+export interface SendLidarEmailResponse {
+  success: boolean;
+  message: string;
+}

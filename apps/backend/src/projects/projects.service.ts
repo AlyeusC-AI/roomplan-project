@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -9,10 +10,15 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { Project } from '@prisma/client';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
+import { EmailService } from '../email/email.service';
+import { SendLidarEmailDto } from '../lidar-analysis/dto/send-lidar-email.dto';
 
 @Injectable()
 export class ProjectsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
   async create(
     createProjectDto: CreateProjectDto,
@@ -376,5 +382,45 @@ export class ProjectsService {
     });
 
     return { status: 'ok' };
+  }
+
+  async sendLidarEmail(projectId: string, data: SendLidarEmailDto) {
+    try {
+      // Get room details
+      const room = await this.prisma.room.findFirst({
+        where: {
+          id: data.roomId,
+          projectId: projectId,
+        },
+        include: {
+          project: {
+            include: {
+              organization: true,
+            },
+          },
+        },
+      });
+
+      if (!room) {
+        throw new NotFoundException('Room not found');
+      }
+
+      // Send email using email service
+      await this.emailService.sendLidarAnalysisEmail({
+        to: room.project.organization.email,
+        roomName: room.name,
+        roomPlanSVG: data.roomPlanSVG,
+        projectName: room.project.name,
+      });
+
+      return {
+        success: true,
+        message: 'Lidar analysis email sent successfully',
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to send lidar analysis email',
+      );
+    }
   }
 }

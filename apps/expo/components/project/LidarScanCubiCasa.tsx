@@ -8,6 +8,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { roomsStore } from '@/lib/state/rooms';
 import { roomInferenceStore } from '@/lib/state/readings-image';
 import { supabaseServiceRole } from '@/app/projects/[projectId]/camera';
+import { useCreateRoom } from '@service-geek/api-client';
 
 import { RoomPlanImage } from './LidarRooms';;
 
@@ -59,6 +60,7 @@ const LidarScanCubiCasa = ({ onScanComplete, onClose, roomId, roomPlanSVG }: Lid
   const processedRoomPlanSVG = useRef<string | undefined>(roomPlanSVG);
   const [showPlanSelectionModal, setShowPlanSelectionModal] = useState<boolean>(false);
   const [scanPlan, setScanPlan] = useState<'free' | 'fast'>('free');
+  const createRoom = useCreateRoom();
 
   useEffect(() => {
     const checkSupport = async () => {
@@ -74,39 +76,36 @@ const LidarScanCubiCasa = ({ onScanComplete, onClose, roomId, roomPlanSVG }: Lid
     setShowPlanSelectionModal(false);
     if (!processedRoomId.current) {
       console.log("new room creation - projectId", projectId)
-      const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": supabaseSession?.access_token || "",
-          },
-          body: JSON.stringify({
-            name: newRoomName,
-          }),
+      try {
+        const result = await createRoom.mutateAsync({
+          name: newRoomName,
+          projectId,
+        });
+
+        if (result.status === "failed") {
+          const errorMessage = result.reason === "existing-room" ? "Room already exists" : "Failed to create room";
+          Alert.alert(
+            'Error',
+            errorMessage,
+            [{ text: 'OK', style: 'cancel' }]
+          );
+          return;
         }
-      );
 
-      const json = await res.json();
+        processedRoomId.current = result.room.id;
+        console.log("json.room.id", result.room.id);
 
-      console.log("json", json);
-
-      if (json.status === "failed") {
-        const errorMessage = json.reason === "existing-room" ? "Room already exists" : "Failed to create room";
+        roomsStore.getState().addRoom({ ...result.room, RoomReading: [] });
+        roomInferenceStore.getState().addRoom({ ...result.room, Inference: [] });
+      } catch (error) {
+        console.error("Error creating room:", error);
         Alert.alert(
           'Error',
-          errorMessage,
+          'Failed to create room',
           [{ text: 'OK', style: 'cancel' }]
         );
         return;
       }
-
-      processedRoomId.current = json.room.id;
-      console.log("json.room.id", json.room.id);
-
-      roomsStore.getState().addRoom({ ...json.room, RoomReading: [] });
-      roomInferenceStore.getState().addRoom({ ...json.room, Inference: [] });
     }
     setShowScanner(true);
   };
