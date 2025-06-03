@@ -25,6 +25,9 @@
     "migrate:supabase": "ts-node prisma/migrations/migrate-from-supabase.ts"
   },
   "dependencies": {
+    "pdfmake": "0.2.18",
+    "date-fns": "2.29.3",
+
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -64,7 +67,6 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.7",
-    "@types/stripe": "^8.0.417",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
