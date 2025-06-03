@@ -11,7 +11,7 @@ import { Project } from '@prisma/client';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { EmailService } from '../email/email.service';
-import { SendLidarEmailDto } from '../lidar-analysis/dto/send-lidar-email.dto';
+import { SendLidarEmailDto } from './dto/send-lidar-email.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -395,7 +395,19 @@ export class ProjectsService {
         include: {
           project: {
             include: {
-              organization: true,
+              organization: {
+                include: {
+                  members: {
+                    where: {
+                      status: 'ACTIVE',
+                      role: 'OWNER',
+                    },
+                    include: {
+                      user: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -407,7 +419,7 @@ export class ProjectsService {
 
       // Send email using email service
       await this.emailService.sendLidarAnalysisEmail({
-        to: room.project.organization.email,
+        to: room.project.organization.members[0].user.email,
         roomName: room.name,
         roomPlanSVG: data.roomPlanSVG,
         projectName: room.project.name,
