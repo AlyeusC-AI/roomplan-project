@@ -32,7 +32,9 @@ export default function AuthRedirect({
         !(
           pathname === "/register" ||
           pathname === "/login" ||
-          pathname === "/acceptInvite"
+          pathname === "/acceptInvite" ||
+          pathname === "/reset-password" ||
+          pathname === "/update-password"
         )
       ) {
         router.push("/login");
