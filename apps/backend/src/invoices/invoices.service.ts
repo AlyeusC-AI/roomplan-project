@@ -11,7 +11,10 @@ import {
   Role,
   MemberStatus,
 } from '@prisma/client';
-import { CreateInvoiceDto } from './dto/create-invoice.dto';
+import {
+  CreateInvoiceDto,
+  SavedLineItemsExportResponse,
+} from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import {
   CreateInvoiceItemDto,
@@ -26,7 +29,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
 import { ImageKitService } from '../imagekit/imagekit.service';
-import { SavedLineItemsExportResponse } from '@service-geek/api-client';
 import axios from 'axios';
 
 @Injectable()

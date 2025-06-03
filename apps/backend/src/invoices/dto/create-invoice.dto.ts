@@ -144,3 +144,7 @@ export class CreateInvoiceDto {
   @IsString()
   organizationId: string;
 }
+
+export interface SavedLineItemsExportResponse {
+  filePath: string;
+}

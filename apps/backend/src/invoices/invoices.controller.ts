@@ -16,7 +16,10 @@ import {
 import { InvoicesService } from './invoices.service';
 import { Invoice, InvoiceItem } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CreateInvoiceDto } from './dto/create-invoice.dto';
+import {
+  CreateInvoiceDto,
+  SavedLineItemsExportResponse,
+} from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import {
   CreateInvoiceItemDto,
@@ -36,11 +39,6 @@ import {
 import { RequestWithUser } from '../auth/interfaces/request-with-user';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
-import {
-  SavedLineItemsByCategoryResponse,
-  SavedLineItemsExportResponse,
-  SavedLineItemsImportResponse,
-} from '@service-geek/api-client';
 
 @ApiTags('invoices')
 @ApiBearerAuth()

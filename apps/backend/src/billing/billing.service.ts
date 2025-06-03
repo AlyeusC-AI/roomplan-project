@@ -6,7 +6,6 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { OrganizationService } from '../organization/organization.service';
 import Stripe from 'stripe';
-// import { CreateCheckoutSessionParams } from '@service-geek/api-client';
 @Injectable()
 export class BillingService {
   private stripe: Stripe;
