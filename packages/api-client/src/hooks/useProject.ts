@@ -9,6 +9,8 @@ import type {
   CreateProjectDto,
   UpdateProjectDto,
   Project,
+  SendLidarEmailRequest,
+  SendLidarEmailResponse,
 } from "../types/project";
 import type { PaginationParams, PaginatedResponse } from "../types/common";
 import { useAuthStore } from "../services/storage";
@@ -158,6 +160,25 @@ export function useRemoveProjectMember() {
       });
       queryClient.invalidateQueries({
         queryKey: ["projects", variables.projectId],
+      });
+    },
+  });
+}
+
+export function useSendLidarEmail() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ 
+      projectId, 
+      data 
+    }: { 
+      projectId: string; 
+      data: SendLidarEmailRequest 
+    }) => projectService.sendLidarEmail(projectId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["projects"] 
       });
     },
   });
