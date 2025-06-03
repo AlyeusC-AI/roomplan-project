@@ -35,14 +35,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: React.PropsWithChildren) {
   return (
-    <html lang='en' dir='ltr' suppressHydrationWarning>
-      <body className={clsx("h-screen bg-background")}>
-        <Providers>
-          <AuthRedirect>
-            <Suspense>{children}</Suspense>
-          </AuthRedirect>
-        </Providers>
-      </body>
-    </html>
+    <Suspense fallback={<div>Loading...</div>}>
+      <html lang='en' dir='ltr' suppressHydrationWarning>
+        <body className={clsx("h-screen bg-background")}>
+          <Providers>
+            <AuthRedirect>{children}</AuthRedirect>
+          </Providers>
+        </body>
+      </html>
+    </Suspense>
   );
 }

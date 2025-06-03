@@ -200,7 +200,6 @@
     "@types/mapbox-gl": "2.7.10",
     "@types/mjml": "~4.7.4",
     "@types/node": "22.13.1",
-    "@types/nprogress": "0.2.0",
     "@types/papaparse": "^5.3.7",
     "@types/probe-image-size": "7.2.0",
     "@types/react": "18.3.13",
