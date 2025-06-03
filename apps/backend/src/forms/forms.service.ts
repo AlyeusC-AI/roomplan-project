@@ -23,7 +23,7 @@ import { CreateFormFieldDto } from './dto/create-form-field.dto';
 import { UpdateFormFieldDto } from './dto/update-form-field.dto';
 import { CreateFormProjectDto } from './dto/create-form-project.dto';
 import { format } from 'date-fns';
-import type { TDocumentDefinitions } from 'pdfmake/interfaces';
+// import type  } from 'pdfmake/interfaces';
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 // @ts-ignore
@@ -1605,7 +1605,7 @@ export class FormsService {
       });
     }
 
-    const docDefinition: TDocumentDefinitions = {
+    const docDefinition = {
       content,
       styles: pdfStyles as any,
       defaultStyle: {
@@ -1634,7 +1634,7 @@ export class FormsService {
     };
 
     // Generate PDF
-    const pdfDoc = pdfMake.createPdf(docDefinition);
+    const pdfDoc = pdfMake.createPdf(docDefinition as any);
     const pdfBuffer = await new Promise<Buffer>((resolve) => {
       pdfDoc.getBuffer((buffer: Buffer) => {
         resolve(buffer);
