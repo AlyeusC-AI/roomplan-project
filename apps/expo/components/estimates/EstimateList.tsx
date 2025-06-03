@@ -1,4 +1,9 @@
-import React, { useEffect, useState, forwardRef, useImperativeHandle } from "react";
+import React, {
+  useEffect,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import {
   FlatList,
   TouchableOpacity,
@@ -11,21 +16,20 @@ import {
   SectionList,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { estimatesStore } from "@/lib/state/estimates";
-import { fetchEstimates } from "@/lib/api/estimates";
 import { formatDate } from "@/utils/date";
-import { 
-  CheckCircle, 
-  AlertTriangle, 
-  Send, 
-  Ban, 
-  Plus, 
+import {
+  CheckCircle,
+  AlertTriangle,
+  Send,
+  Ban,
+  Plus,
   Search,
-  Clock 
+  Clock,
 } from "lucide-react-native";
 import { showToast } from "@/utils/toast";
 import { formatCurrency } from "@/utils/formatters";
 import { format } from "date-fns";
+import { Estimate, useGetEstimates } from "@service-geek/api-client";
 
 // Status badge component
 const StatusBadge = ({ status }: { status: string }) => {
@@ -69,18 +73,26 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 // Estimate item component
-const EstimateItem = ({ estimate, onPress }: { estimate: Estimate; onPress: (id: string) => void }) => {
+const EstimateItem = ({
+  estimate,
+  onPress,
+}: {
+  estimate: Estimate;
+  onPress: (id: string) => void;
+}) => {
   return (
     <TouchableOpacity
       style={styles.estimateItem}
-      onPress={() => onPress(estimate.publicId)}
+      onPress={() => onPress(estimate.id)}
     >
       <View style={styles.estimateDetails}>
         <View style={styles.estimateMain}>
           <Text style={styles.clientName}>{estimate.clientName}</Text>
-          <Text style={styles.estimateAmount}>{formatCurrency(estimate.amount)}</Text>
+          <Text style={styles.estimateAmount}>
+            {formatCurrency(estimate.total)}
+          </Text>
         </View>
-        
+
         <View style={styles.estimateMeta}>
           <Text style={styles.estimateNumber}>
             {formatDate(estimate.createdAt ?? new Date())} • #{estimate.number}
@@ -93,16 +105,18 @@ const EstimateItem = ({ estimate, onPress }: { estimate: Estimate; onPress: (id:
 };
 
 // Export the ref type for TypeScript
-export interface EstimateListRef {
-  fetchEstimateData: () => Promise<void>;
-}
 
-const EstimateList = forwardRef<EstimateListRef, {
-  onNewEstimate: () => void;
-}>(({ onNewEstimate }, ref) => {
-  const { estimates, setEstimates } = estimatesStore((state) => state);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+const EstimateList = forwardRef<
+  { onNewEstimate: () => void },
+  { onNewEstimate: () => void }
+>(({ onNewEstimate }) => {
+  const {
+    data: estimates = [],
+    isLoading,
+    isError,
+    refetch,
+    isRefetching,
+  } = useGetEstimates();
   const [activeTab, setActiveTab] = useState("active");
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
@@ -111,28 +125,34 @@ const EstimateList = forwardRef<EstimateListRef, {
   // Group estimates by month
   const groupedEstimates = React.useMemo(() => {
     // Filter estimates based on activeTab
-    const filteredEstimates = estimates.filter(estimate => {
+    const filteredEstimates = estimates?.filter((estimate) => {
       if (activeTab === "active") {
-        return ['draft', 'sent'].includes(estimate.status);
+        return ["DRAFT", "SENT"].includes(estimate.status ?? "");
       } else {
-        return ['approved', 'rejected', 'expired', 'cancelled'].includes(estimate.status);
+        return ["APPROVED", "REJECTED", "EXPIRED", "CANCELLED"].includes(
+          estimate.status ?? ""
+        );
       }
     });
 
     // Filter by search query if present
-    const searchFilteredEstimates = searchQuery.trim() !== "" 
-      ? filteredEstimates.filter(estimate => 
-          estimate.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          estimate.number.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      : filteredEstimates;
+    const searchFilteredEstimates =
+      searchQuery.trim() !== ""
+        ? filteredEstimates.filter(
+            (estimate) =>
+              estimate.clientName
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase()) ||
+              estimate.number.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        : filteredEstimates;
 
     // Group by month
     const grouped: { [key: string]: Estimate[] } = {};
-    searchFilteredEstimates.forEach(estimate => {
+    searchFilteredEstimates.forEach((estimate) => {
       const date = new Date(estimate.createdAt ?? new Date());
       const monthYear = format(date, "MMMM yyyy");
-      
+
       if (!grouped[monthYear]) {
         grouped[monthYear] = [];
       }
@@ -140,91 +160,48 @@ const EstimateList = forwardRef<EstimateListRef, {
     });
 
     // Convert to section list format
-    return Object.keys(grouped).map(month => {
-      const estimatesInMonth = grouped[month];
-      // Calculate total amount for the month
-      const totalAmount = estimatesInMonth.reduce(
-        (sum, estimate) => sum + estimate.amount, 
-        0
-      );
+    return Object.keys(grouped)
+      .map((month) => {
+        const estimatesInMonth = grouped[month];
+        // Calculate total amount for the month
+        const totalAmount = estimatesInMonth.reduce(
+          (sum, estimate) => sum + estimate.total,
+          0
+        );
 
-      return {
-        title: month,
-        data: estimatesInMonth,
-        totalAmount,
-      };
-    }).sort((a, b) => {
-      // Sort months in descending order (most recent first)
-      const dateA = new Date(a.data[0].createdAt ?? new Date());
-      const dateB = new Date(b.data[0].createdAt ?? new Date());
-      return dateB.getTime() - dateA.getTime();
-    });
+        return {
+          title: month,
+          data: estimatesInMonth,
+          totalAmount,
+        };
+      })
+      .sort((a, b) => {
+        // Sort months in descending order (most recent first)
+        const dateA = new Date(a.data[0].createdAt ?? new Date());
+        const dateB = new Date(b.data[0].createdAt ?? new Date());
+        return dateB.getTime() - dateA.getTime();
+      });
   }, [estimates, activeTab, searchQuery]);
-
-  // Expose the fetchEstimateData method to the parent component through ref
-  useImperativeHandle(ref, () => ({
-    fetchEstimateData
-  }));
-
-  useEffect(() => {
-    fetchEstimateData();
-  }, []);
-
-  const fetchEstimateData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      console.log("EstimateList: Calling fetchEstimates");
-      const result = await fetchEstimates();
-      console.log("EstimateList: Received response:", result);
-      
-      if (result && 'data' in result && result.data) {
-        console.log("EstimateList: Setting estimates, count:", result.data.length);
-        setEstimates(result.data, result.data.length);
-      } else if (result && 'error' in result && result.error) {
-        console.error("EstimateList: Error fetching estimates:", result.error);
-        setError(result.error);
-        showToast("error", "Error", `Failed to load estimates: ${result.error}`);
-      } else {
-        console.error("EstimateList: Unexpected response format:", result);
-        setError("Invalid response from server");
-        showToast("error", "Error", "Received invalid response from server");
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
-      console.error("EstimateList: Exception fetching estimates:", errorMessage);
-      setError(errorMessage);
-      showToast("error", "Error", `Failed to load estimates: ${errorMessage}`);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const handleRefresh = () => {
-    setRefreshing(true);
-    fetchEstimateData();
-  };
 
   const handleEstimatePress = (estimateId: string) => {
     // Navigate to estimate details
     router.push(`/estimates/${estimateId}`);
   };
 
-  if (loading && !refreshing) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={styles.loadingText}>Loading estimates...</Text>
-      </View>
-    );
-  }
+  // if (isLoading && !isRefetching) {
+  //   return (
+  //     <View style={styles.loadingContainer}>
+  //       <ActivityIndicator size="large" color="#0000ff" />
+  //       <Text style={styles.loadingText}>Loading estimates...</Text>
+  //     </View>
+  //   );
+  // }
 
   if (error) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>Error: {error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchEstimateData}>
+        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
@@ -239,7 +216,9 @@ const EstimateList = forwardRef<EstimateListRef, {
           style={styles.emptyStateButton}
           onPress={onNewEstimate}
         >
-          <Text style={styles.emptyStateButtonText}>Create your first estimate</Text>
+          <Text style={styles.emptyStateButtonText}>
+            Create your first estimate
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -263,19 +242,29 @@ const EstimateList = forwardRef<EstimateListRef, {
 
       {/* Tabs */}
       <View style={styles.tabsContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tab, activeTab === "active" && styles.activeTab]}
           onPress={() => setActiveTab("active")}
         >
-          <Text style={[styles.tabText, activeTab === "active" && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "active" && styles.activeTabText,
+            ]}
+          >
             Active
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tab, activeTab === "approved" && styles.activeTab]}
           onPress={() => setActiveTab("approved")}
         >
-          <Text style={[styles.tabText, activeTab === "approved" && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "approved" && styles.activeTabText,
+            ]}
+          >
             Inactive
           </Text>
         </TouchableOpacity>
@@ -284,7 +273,7 @@ const EstimateList = forwardRef<EstimateListRef, {
       {/* Estimate list grouped by month */}
       <SectionList
         sections={groupedEstimates}
-        keyExtractor={(item) => item.publicId}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <EstimateItem estimate={item} onPress={handleEstimatePress} />
         )}
@@ -298,20 +287,22 @@ const EstimateList = forwardRef<EstimateListRef, {
         )}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={() => refetch()}
+          />
         }
         ListEmptyComponent={
           <View style={styles.emptyListContainer}>
-            <Text style={styles.emptyListText}>No {activeTab} estimates found</Text>
+            <Text style={styles.emptyListText}>
+              No {activeTab} estimates found
+            </Text>
           </View>
         }
       />
 
       {/* Floating Action Button */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={onNewEstimate}
-      >
+      <TouchableOpacity style={styles.fab} onPress={onNewEstimate}>
         <Plus size={24} color="#fff" />
       </TouchableOpacity>
     </View>
@@ -330,9 +321,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f1f5f9',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f1f5f9",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -343,87 +334,87 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#1e293b',
+    color: "#1e293b",
   },
   tabsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: "#e2e8f0",
   },
   tab: {
     flex: 1,
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: '#2563eb',
+    borderBottomColor: "#2563eb",
   },
   tabText: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#64748b',
+    fontWeight: "500",
+    color: "#64748b",
   },
   activeTabText: {
-    color: '#2563eb',
-    fontWeight: '600',
+    color: "#2563eb",
+    fontWeight: "600",
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#f8fafc',
+    backgroundColor: "#f8fafc",
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: "#e2e8f0",
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#0f172a',
+    fontWeight: "600",
+    color: "#0f172a",
   },
   sectionAmount: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#0f172a',
+    fontWeight: "700",
+    color: "#0f172a",
   },
   estimateItem: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: "#e2e8f0",
   },
   estimateDetails: {
     flex: 1,
   },
   estimateMain: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 4,
   },
   clientName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#0f172a',
+    fontWeight: "600",
+    color: "#0f172a",
   },
   estimateAmount: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#0f172a',
+    fontWeight: "700",
+    color: "#0f172a",
   },
   estimateMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 4,
   },
   estimateNumber: {
     fontSize: 14,
-    color: '#64748b',
+    color: "#64748b",
   },
   badge: {
     paddingHorizontal: 8,
@@ -432,7 +423,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   loadingContainer: {
     flex: 1,
@@ -523,4 +514,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EstimateList; 
+export default EstimateList;
