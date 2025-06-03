@@ -6,9 +6,9 @@ import { roomsStore } from '@/lib/state/rooms';
 import { useGlobalSearchParams, usePathname, useRouter } from 'expo-router';
 import { WebView } from "react-native-webview";
 import { Ionicons } from '@expo/vector-icons';
-import { api } from '@/lib/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ReactDOM from 'react-dom';
+import { useSendLidarEmail, useGetRooms } from '@service-geek/api-client';
 
 export const RoomPlanImage = ({ src, onPngReady = null }:
 { src: string, onPngReady?: ((data: string) => void) | null }) => {
@@ -106,26 +106,15 @@ export function LidarRooms() {
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const sendLidarEmail = useSendLidarEmail();
 
   useEffect(() => {
     async function fetchRooms() {
       try {
         setLoading(true);
+        const { data: rooms, isLoading, error: roomsError } = useGetRooms(projectId);
 
-        const roomsRes = await fetch(
-          `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "auth-token": supabaseSession?.access_token || "",
-            },
-          }
-        );
-
-        const roomsData = await roomsRes.json();
-        console.log("🚀 ~ refreshData ~ roomsData:", roomsData);
-        rooms.setRooms(roomsData.rooms);
+        rooms.setRooms(rooms);
       } catch (err) {
         setError('Failed to fetch rooms');
       } finally {
@@ -160,19 +149,13 @@ export function LidarRooms() {
     try {
       setSendingEmail(roomId);
       
-    
-      const response = await api.post(
-        `/api/v1/projects/${projectId}/lidar/email`,
-        {
+      await sendLidarEmail.mutateAsync({
+        projectId,
+        data: {
           roomId,
-              roomPlanSVG: roomPlanSVG, // Send PNG base64 instead of SVG
-        }
-      );
-      console.log("🚀 ~ handleSendEmail ~ response:", response)
-
-      if (response.status !== 200) {
-        throw new Error(response.data.error || 'Failed to send email');
-      }
+          roomPlanSVG,
+        },
+      });
 
       Alert.alert(
         'ESX Version Requested',
@@ -180,10 +163,10 @@ export function LidarRooms() {
         [{ text: 'OK' }]
       );
     } catch (err) {
-      console.log("🚀 ~ handleSendEmail ~ err:",  err?.response)
+      console.log("🚀 ~ handleSendEmail ~ err:", err)
       Alert.alert(
         'Error',
-        err?.response?.data?.error || 'Failed to request ESX version. Please try again later.',
+        'Failed to request ESX version. Please try again later.',
         [{ text: 'OK' }]
       );
     } finally {

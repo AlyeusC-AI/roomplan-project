@@ -27,6 +27,7 @@ import {
 import { RequestWithUser } from '../auth/interfaces/request-with-user';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
+import { SendLidarEmailDto } from './dto/send-lidar-email.dto';
 
 @ApiTags('projects')
 @ApiBearerAuth()
@@ -237,5 +238,14 @@ export class ProjectsController {
       statusId,
       paginationDto,
     );
+  }
+
+  @Post(':id/lidar/email')
+  @UseGuards(JwtAuthGuard)
+  async sendLidarEmail(
+    @Param('id') id: string,
+    @Body() data: SendLidarEmailDto,
+  ) {
+    return this.projectsService.sendLidarEmail(id, data);
   }
 }
