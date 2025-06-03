@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -22,7 +22,7 @@ export function ResetPasswordForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const resetPassword = useResetPassword();
-
+  const router = useRouter();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -39,6 +39,7 @@ export function ResetPasswordForm() {
 
     try {
       await resetPassword.mutateAsync({ token, credentials: { password } });
+      router.push("/login");
     } catch (error) {
       setError("Failed to reset password. Please try again.");
     }
