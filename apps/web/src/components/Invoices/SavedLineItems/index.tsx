@@ -22,15 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { invoicesStore, SavedLineItem } from "@/atoms/invoices";
-import {
-  fetchSavedLineItems,
-  createSavedLineItem,
-  updateSavedLineItem,
-  deleteSavedLineItem,
-  getExportCsvUrl,
-  importSavedLineItemsFromCsv,
-} from "@/lib/savedLineItems";
+
 import { Edit2, Plus, Trash2, Download, Upload } from "lucide-react";
 import { LoadingPlaceholder } from "@/components/ui/spinner";
 import { formatCurrency } from "@/lib/utils";
@@ -42,15 +34,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  useGetSavedInvoiceItems,
+  useSaveInvoiceItem,
+  useUpdateSavedLineItem,
+  useDeleteSavedLineItem,
+  useExportSavedLineItemsToCsv,
+  useImportSavedLineItemsFromCsv,
+  InvoiceItem,
+} from "@service-geek/api-client";
 
 export default function SavedLineItems() {
-  const [isLoading, setIsLoading] = useState(true);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [rate, setRate] = useState("");
   const [category, setCategory] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [editingItem, setEditingItem] = useState<SavedLineItem | null>(null);
+  const [editingItem, setEditingItem] = useState<InvoiceItem | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
@@ -61,41 +61,32 @@ export default function SavedLineItems() {
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { savedLineItems, setSavedLineItems } = invoicesStore();
+  const { data: savedLineItems, isLoading } = useGetSavedInvoiceItems();
 
+  const { mutate: saveInvoiceItem } = useSaveInvoiceItem();
+  const { mutate: updateSavedLineItem } = useUpdateSavedLineItem();
+  const { mutate: deleteSavedLineItem } = useDeleteSavedLineItem();
+  const { mutateAsync: exportSavedLineItemsToCsv } =
+    useExportSavedLineItemsToCsv();
+  const { mutateAsync: importSavedLineItemsFromCsv } =
+    useImportSavedLineItemsFromCsv();
   // Move useMemo hook here, right after useState hooks but before useEffect
   // Check if all displayed items are selected
   const filteredLineItems = useMemo(
     () =>
       selectedCategory
-        ? savedLineItems.filter((item) => item.category === selectedCategory)
+        ? savedLineItems?.filter((item) => item.category === selectedCategory)
         : savedLineItems,
     [selectedCategory, savedLineItems]
   );
 
   const allSelected = useMemo(() => {
     return (
-      filteredLineItems.length > 0 &&
-      filteredLineItems.every((item) => selectedItems.includes(item.publicId))
+      filteredLineItems?.length &&
+      filteredLineItems?.length > 0 &&
+      filteredLineItems?.every((item) => selectedItems.includes(item.id))
     );
   }, [filteredLineItems, selectedItems]);
-
-  useEffect(() => {
-    const loadSavedLineItems = async () => {
-      setIsLoading(true);
-      try {
-        const items = await fetchSavedLineItems();
-        setSavedLineItems(items);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error loading saved line items:", error);
-        toast.error("Failed to load saved line items");
-        setIsLoading(false);
-      }
-    };
-
-    loadSavedLineItems();
-  }, [setSavedLineItems]);
 
   const handleSave = async () => {
     if (!name) {
@@ -120,14 +111,15 @@ export default function SavedLineItems() {
         categoryToUse = "";
       }
 
-      const newItem = await createSavedLineItem({
+      await saveInvoiceItem({
         name,
         description,
         rate: parseFloat(rate),
         category: categoryToUse,
+        quantity: 1,
+        amount: parseFloat(rate),
       });
 
-      setSavedLineItems([...savedLineItems, newItem]);
       resetForm();
       setShowForm(false);
       toast.success("Line item saved successfully");
@@ -162,18 +154,15 @@ export default function SavedLineItems() {
         categoryToUse = "";
       }
 
-      const updatedItem = await updateSavedLineItem(editingItem.publicId, {
-        name,
-        description,
-        rate: parseFloat(rate),
-        category: categoryToUse,
+      await updateSavedLineItem({
+        id: editingItem.id,
+        data: {
+          name,
+          description,
+          rate: parseFloat(rate),
+          category: categoryToUse,
+        },
       });
-
-      setSavedLineItems(
-        savedLineItems.map((item) =>
-          item.publicId === editingItem.publicId ? updatedItem : item
-        )
-      );
 
       resetForm();
       setEditingItem(null);
@@ -185,12 +174,12 @@ export default function SavedLineItems() {
     }
   };
 
-  const handleDelete = async (item: SavedLineItem) => {
+  const handleDelete = async (item: InvoiceItem) => {
     try {
-      await deleteSavedLineItem(item.publicId);
-      setSavedLineItems(
-        savedLineItems.filter((i) => i.publicId !== item.publicId)
-      );
+      await deleteSavedLineItem(item.id);
+      // setSavedLineItems(
+      //   savedLineItems.filter((i) => i.publicId !== item.publicId)
+      // );
       toast.success("Line item deleted successfully");
     } catch (error) {
       console.error("Error deleting line item:", error);
@@ -208,7 +197,7 @@ export default function SavedLineItems() {
     }
   };
 
-  const handleEdit = (item: SavedLineItem) => {
+  const handleEdit = (item: InvoiceItem) => {
     setEditingItem(item);
     setName(item.name || "");
     setDescription(item.description);
@@ -233,18 +222,18 @@ export default function SavedLineItems() {
     setShowBulkActions(selectedItems.length > 0);
   }, [selectedItems]);
 
-  if (isLoading && savedLineItems.length === 0) {
+  if (isLoading || !savedLineItems) {
     return <LoadingPlaceholder />;
   }
 
   const categories = Array.from(
-    new Set(savedLineItems.map((item) => item.category).filter(Boolean))
+    new Set(savedLineItems?.map((item) => item.category).filter(Boolean))
   );
 
   // Add select all items function
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedItems(filteredLineItems.map((item) => item.publicId));
+      setSelectedItems(filteredLineItems?.map((item) => item.id) || []);
     } else {
       setSelectedItems([]);
     }
@@ -262,58 +251,68 @@ export default function SavedLineItems() {
   // Handle bulk add to invoice
   const handleBulkAddToInvoice = () => {
     // We'll just show a toast for now - this would integrate with invoice creation in a real implementation
-    const selectedItemsData = savedLineItems.filter((item) =>
-      selectedItems.includes(item.publicId)
+    const selectedItemsData = savedLineItems?.filter((item) =>
+      selectedItems.includes(item.id)
     );
-    toast.success(`${selectedItemsData.length} items ready to add to invoice`);
+    toast.success(`${selectedItemsData?.length} items ready to add to invoice`);
 
     // Reset selection
     setSelectedItems([]);
     setShowBulkActions(false);
   };
 
-  const handleExportCsv = () => {
-    // Get the download URL with optional category filter
-    const downloadUrl = getExportCsvUrl(selectedCategory);
-    
-    // Create a link and trigger the download
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.setAttribute('download', 'saved-line-items.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success('Export started');
+  const handleExportCsv = async () => {
+    try {
+      await exportSavedLineItemsToCsv(selectedCategory || undefined);
+      toast.success("Export completed successfully");
+    } catch (error) {
+      console.error("Error exporting CSV:", error);
+      toast.error("Failed to export CSV file");
+    }
   };
 
   const handleImportCsv = async () => {
     if (!importFile) {
-      toast.error('Please select a file to import');
+      toast.error("Please select a file to import");
       return;
     }
 
     setIsImporting(true);
     try {
       const result = await importSavedLineItemsFromCsv(importFile);
-      
-      // Refresh the list after import
-      const items = await fetchSavedLineItems();
-      setSavedLineItems(items);
-      
-      toast.success(`Successfully imported ${result.imported} of ${result.total} items`);
+      toast.success(
+        `Successfully imported ${result.data?.imported} of ${result.data?.total} items`
+      );
       setShowImportDialog(false);
       setImportFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to import items');
+      console.error("Import error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to import items"
+      );
     } finally {
       setIsImporting(false);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setImportFile(e.target.files[0]);
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        // 5MB limit
+        toast.error("File size must be less than 5MB");
+        e.target.value = "";
+        return;
+      }
+      if (!file.name.endsWith(".csv")) {
+        toast.error("Please upload a CSV file");
+        e.target.value = "";
+        return;
+      }
+      setImportFile(file);
     }
   };
 
@@ -322,21 +321,15 @@ export default function SavedLineItems() {
       <div className='mb-6 flex items-center justify-between'>
         <h1 className='text-2xl font-bold'>Saved Line Items</h1>
         <div className='flex gap-2'>
-          {showBulkActions && (
+          {/* {showBulkActions && (
             <Button onClick={handleBulkAddToInvoice} variant='secondary'>
               Add {selectedItems.length} Items to Invoice
             </Button>
-          )}
-          <Button 
-            variant='outline'
-            onClick={handleExportCsv}
-          >
+          )} */}
+          <Button variant='outline' onClick={handleExportCsv}>
             <Download className='mr-2 h-4 w-4' /> Export to CSV
           </Button>
-          <Button 
-            variant='outline'
-            onClick={() => setShowImportDialog(true)}
-          >
+          <Button variant='outline' onClick={() => setShowImportDialog(true)}>
             <Upload className='mr-2 h-4 w-4' /> Import from CSV
           </Button>
           <Button onClick={() => setShowForm(true)}>
@@ -423,7 +416,7 @@ export default function SavedLineItems() {
                     <Select
                       value={category}
                       onValueChange={setCategory}
-                      className='flex-1'
+                      // className='flex-1'
                     >
                       <SelectTrigger>
                         <SelectValue placeholder='Select category (optional)' />
@@ -502,7 +495,7 @@ export default function SavedLineItems() {
             <div className='flex items-center'>
               <Checkbox
                 id='selectAll'
-                checked={allSelected}
+                checked={allSelected || false}
                 onCheckedChange={handleSelectAll}
               />
               <Label htmlFor='selectAll' className='ml-2'>
@@ -524,21 +517,19 @@ export default function SavedLineItems() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {savedLineItems.length === 0 ? (
+              {savedLineItems?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className='h-24 text-center'>
                     No saved line items. Create one to get started.
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredLineItems.map((item) => (
-                  <TableRow key={item.publicId}>
+                filteredLineItems?.map((item) => (
+                  <TableRow key={item.id}>
                     <TableCell>
                       <Checkbox
-                        checked={selectedItems.includes(item.publicId)}
-                        onCheckedChange={() =>
-                          toggleItemSelection(item.publicId)
-                        }
+                        checked={selectedItems.includes(item.id)}
+                        onCheckedChange={() => toggleItemSelection(item.id)}
                       />
                     </TableCell>
                     <TableCell>{item.name || item.description}</TableCell>
@@ -578,7 +569,8 @@ export default function SavedLineItems() {
           <DialogHeader>
             <DialogTitle>Import Line Items from CSV</DialogTitle>
             <DialogDescription>
-              Upload a CSV file with your line items. The file must have columns for Name, Description, Rate, and Category.
+              Upload a CSV file with your line items. The file must have columns
+              for Name, Description, Rate, and Category.
             </DialogDescription>
           </DialogHeader>
 
@@ -591,15 +583,15 @@ export default function SavedLineItems() {
               ref={fileInputRef}
               onChange={handleFileChange}
             />
-            <p className='text-xs text-gray-500'>
-              Maximum file size: 5MB
-            </p>
+            <p className='text-xs text-gray-500'>Maximum file size: 5MB</p>
           </div>
 
           <div className='rounded-md bg-blue-50 p-3 text-sm text-blue-700'>
             <h4 className='font-medium'>CSV Format</h4>
             <p className='mt-1'>
-              Your CSV file should have the following columns: <code>Name</code>, <code>Description</code>, <code>Rate</code>, and <code>Category</code> (optional).
+              Your CSV file should have the following columns: <code>Name</code>
+              , <code>Description</code>, <code>Rate</code>, and{" "}
+              <code>Category</code> (optional).
             </p>
           </div>
 
@@ -612,14 +604,17 @@ export default function SavedLineItems() {
           </a>
 
           <DialogFooter>
-            <Button variant='outline' onClick={() => setShowImportDialog(false)}>
+            <Button
+              variant='outline'
+              onClick={() => setShowImportDialog(false)}
+            >
               Cancel
             </Button>
             <Button
               onClick={handleImportCsv}
               disabled={!importFile || isImporting}
             >
-              {isImporting ? 'Importing...' : 'Import'}
+              {isImporting ? "Importing..." : "Import"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -49,3 +49,45 @@ export const uploadImage = async (
 
   return response.json();
 };
+
+export const uploadCsvFile = async (
+  file: File,
+  options: ImageKitUploadOptions = {}
+): Promise<ImageKitUploadResponse> => {
+  const { token, expire, signature } = await getImageKitAuthToken();
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("token", token);
+  formData.append("expire", expire.toString());
+  formData.append("signature", signature);
+  formData.append("publicKey", "public_3P95CgUAWGTwOS3848WAhIWOjBs=");
+  formData.append("fileName", file.name);
+  formData.append("folder", options.folder || "csv");
+  formData.append("useUniqueFileName", "true");
+
+  const response = await fetch(
+    "https://upload.imagekit.io/api/v1/files/upload",
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to upload CSV file to ImageKit");
+  }
+
+  return response.json();
+};
+
+export const getFileUrl = async (fileId: string): Promise<string> => {
+  const response = await apiClient.get(`/imageKit/file/${fileId}`);
+  return response.data.url;
+};
+
+export const deleteFile = async (fileId: string): Promise<boolean> => {
+  const response = await apiClient.delete(`/imageKit/file/${fileId}`);
+  return response.data.success;
+};

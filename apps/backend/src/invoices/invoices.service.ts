@@ -25,12 +25,16 @@ import { parse } from 'csv-parse';
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
+import { ImageKitService } from '../imagekit/imagekit.service';
+import { SavedLineItemsExportResponse } from '@service-geek/api-client';
+import axios from 'axios';
 
 @Injectable()
 export class InvoicesService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
+    private imageKitService: ImageKitService,
   ) {}
 
   async create(
@@ -72,7 +76,13 @@ export class InvoicesService {
     });
   }
 
-  async findAll(organizationId: string, userId: string): Promise<Invoice[]> {
+  async findAll(
+    organizationId: string,
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+  ): Promise<{ data: Invoice[]; total: number }> {
     // Check if user is a member of the organization
     const member = await this.prisma.organizationMember.findFirst({
       where: {
@@ -88,15 +98,51 @@ export class InvoicesService {
       );
     }
 
-    return this.prisma.invoice.findMany({
-      where: {
-        organizationId,
-      },
+    // Calculate skip value for pagination
+    const skip = (page - 1) * limit;
+
+    // Build where clause
+    const where = {
+      organizationId,
+      ...(search
+        ? {
+            OR: [
+              { number: { contains: search, mode: 'insensitive' as const } },
+              {
+                clientName: { contains: search, mode: 'insensitive' as const },
+              },
+              {
+                clientEmail: { contains: search, mode: 'insensitive' as const },
+              },
+            ],
+          }
+        : {}),
+    };
+
+    // Get total count
+    const total = await this.prisma.invoice.count({ where });
+
+    // Get paginated data
+    const data = await this.prisma.invoice.findMany({
+      where,
       include: {
         items: true,
         paymentSchedules: true,
+        project: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      skip,
+      take: limit,
+      orderBy: {
+        createdAt: 'desc',
       },
     });
+
+    return { data, total };
   }
 
   async findOne(id: string, userId: string): Promise<Invoice> {
@@ -105,6 +151,7 @@ export class InvoicesService {
       include: {
         items: true,
         paymentSchedules: true,
+        project: true,
       },
     });
 
@@ -161,7 +208,22 @@ export class InvoicesService {
 
     return this.prisma.invoice.update({
       where: { id },
-      data: updateInvoiceDto,
+      data: {
+        ...updateInvoiceDto,
+        projectId: updateInvoiceDto.projectId || invoice.projectId,
+        items: {
+          deleteMany: {},
+          create: updateInvoiceDto.items?.map((item) => ({
+            amount: item.amount || 0,
+            description: item.description || '',
+            quantity: item.quantity || 0,
+            rate: item.rate || 0,
+            name: item.name || '',
+            notes: item.notes || '',
+            category: item.category || '',
+          })),
+        },
+      },
       include: {
         items: true,
         paymentSchedules: true,
@@ -541,7 +603,7 @@ export class InvoicesService {
     category: string | null,
     organizationId: string,
     userId: string,
-  ): Promise<string> {
+  ): Promise<SavedLineItemsExportResponse> {
     // Check if user is a member of the organization
     const member = await this.prisma.organizationMember.findFirst({
       where: {
@@ -575,17 +637,16 @@ export class InvoicesService {
       ? `saved-line-items-${category}-${timestamp}.csv`
       : `saved-line-items-${timestamp}.csv`;
 
-    // Create exports directory if it doesn't exist
-    const exportDir = path.join(process.cwd(), 'exports');
-    if (!fs.existsSync(exportDir)) {
-      fs.mkdirSync(exportDir, { recursive: true });
+    // Create temporary file
+    const tempFilePath = path.join(process.cwd(), 'temp', filename);
+    const tempDir = path.dirname(tempFilePath);
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
     }
-
-    const filePath = path.join(exportDir, filename);
 
     // Create CSV writer
     const csvWriter = createObjectCsvWriter({
-      path: filePath,
+      path: tempFilePath,
       header: [
         { id: 'name', title: 'Name' },
         { id: 'description', title: 'Description' },
@@ -604,12 +665,25 @@ export class InvoicesService {
       })),
     );
 
-    // Return the file path
-    return filePath;
+    // Upload to ImageKit
+    const fileBuffer = fs.readFileSync(tempFilePath);
+    const uploadResult = await this.imageKitService.uploadFile(
+      fileBuffer,
+      filename,
+      'csv',
+    );
+
+    // Clean up temporary file
+    fs.unlinkSync(tempFilePath);
+
+    // Return the file URL
+    return {
+      filePath: uploadResult.url,
+    };
   }
 
   async importSavedLineItemsFromCsv(
-    file: Express.Multer.File,
+    fileUrl: string,
     organizationId: string,
     userId: string,
   ): Promise<{ imported: number; total: number }> {
@@ -629,39 +703,72 @@ export class InvoicesService {
       );
     }
 
-    if (!file) {
-      throw new BadRequestException('No file uploaded');
+    if (!fileUrl) {
+      throw new BadRequestException('No file URL provided');
     }
 
     const records: any[] = [];
     let imported = 0;
     let total = 0;
 
-    // Create a promise-based parser
-    const parser = parse({
-      columns: true,
-      skip_empty_lines: true,
-    });
-
-    // Process the file
-    const processFile = promisify((callback: (error?: Error) => void) => {
-      fs.createReadStream(file.path)
-        .pipe(parser)
-        .on('data', (record) => {
-          records.push(record);
-          total++;
-        })
-        .on('end', () => {
-          callback();
-        })
-        .on('error', (error) => {
-          callback(error);
-        });
-    });
-
     try {
-      // Parse the CSV file
-      await processFile();
+      // Download the file from ImageKit
+      const response = await axios.get(fileUrl, {
+        responseType: 'arraybuffer',
+      });
+      const csvContent = Buffer.from(response.data).toString('utf-8');
+
+      // Create a promise-based parser with more robust configuration
+      const parser = parse({
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+        relax_quotes: true,
+        relax_column_count: true,
+        skip_records_with_empty_values: true,
+        delimiter: [',', ';', '\t'], // Try multiple delimiters
+        quote: '"',
+        escape: '"',
+        ltrim: true,
+        rtrim: true,
+      });
+
+      // Process the CSV content
+      const processCsv = promisify((callback: (error?: Error) => void) => {
+        parser
+          .on('data', (record) => {
+            console.log('🚀 ~ InvoicesService ~ .on ~ record:', record);
+            // Clean up the record
+            const cleanedRecord = Object.entries(record).reduce(
+              (acc, [key, value]) => {
+                // Remove BOM and trim
+                const cleanValue =
+                  typeof value === 'string'
+                    ? value.replace(/^\uFEFF/, '').trim()
+                    : value;
+                acc[key.trim().toLowerCase()] = cleanValue;
+                return acc;
+              },
+              {},
+            );
+
+            records.push(cleanedRecord);
+            total++;
+          })
+          .on('end', () => {
+            callback();
+          })
+          .on('error', (error) => {
+            console.error('CSV parsing error:', error);
+            callback(error);
+          });
+
+        parser.write(csvContent);
+        parser.end();
+      });
+
+      // Parse the CSV content
+      await processCsv();
 
       // Process each record
       for (const record of records) {
@@ -671,7 +778,14 @@ export class InvoicesService {
             continue;
           }
 
-          const rate = parseFloat(record.rate);
+          const rate = parseFloat(
+            record.rate.toString().replace(/[^0-9.-]+/g, ''),
+          );
+          if (isNaN(rate)) {
+            console.warn('Invalid rate value:', record.rate);
+            continue;
+          }
+
           const quantity = 1; // Default quantity for saved items
 
           // Create the saved line item
@@ -695,16 +809,110 @@ export class InvoicesService {
         }
       }
 
-      // Clean up the uploaded file
-      fs.unlinkSync(file.path);
-
       return { imported, total };
     } catch (error) {
-      // Clean up the uploaded file in case of error
-      if (file.path && fs.existsSync(file.path)) {
-        fs.unlinkSync(file.path);
-      }
-      throw new BadRequestException('Failed to process CSV file');
+      console.error('Error processing CSV file:', error);
+      throw new BadRequestException(
+        'Failed to process CSV file: ' + error.message,
+      );
     }
+  }
+
+  async updateSavedLineItem(
+    id: string,
+    updates: {
+      description?: string;
+      quantity?: number;
+      rate?: number;
+      amount?: number;
+      notes?: string;
+      category?: string;
+      name?: string;
+    },
+    userId: string,
+  ): Promise<InvoiceItem> {
+    const item = await this.prisma.invoiceItem.findUnique({
+      where: { id },
+      include: {
+        invoice: true,
+      },
+    });
+
+    if (!item) {
+      throw new NotFoundException('Saved line item not found');
+    }
+
+    if (!item.organizationId) {
+      throw new BadRequestException(
+        'Line item is not associated with an organization',
+      );
+    }
+
+    // Check if user is a member of the organization with appropriate role
+    const member = await this.prisma.organizationMember.findFirst({
+      where: {
+        organizationId: item.organizationId,
+        userId,
+        status: MemberStatus.ACTIVE,
+        role: { in: [Role.OWNER, Role.ADMIN, Role.PROJECT_MANAGER] },
+      },
+    });
+
+    if (!member) {
+      throw new BadRequestException(
+        'You do not have permission to update saved line items in this organization',
+      );
+    }
+
+    // Calculate amount if rate or quantity is updated
+    if (updates.rate !== undefined || updates.quantity !== undefined) {
+      const newRate = updates.rate ?? item.rate;
+      const newQuantity = updates.quantity ?? item.quantity;
+      updates.amount = newRate * newQuantity;
+    }
+
+    return this.prisma.invoiceItem.update({
+      where: { id },
+      data: updates,
+    });
+  }
+
+  async deleteSavedLineItem(id: string, userId: string): Promise<InvoiceItem> {
+    const item = await this.prisma.invoiceItem.findUnique({
+      where: { id },
+      include: {
+        invoice: true,
+      },
+    });
+
+    if (!item) {
+      throw new NotFoundException('Saved line item not found');
+    }
+
+    if (!item.organizationId) {
+      throw new BadRequestException(
+        'Line item is not associated with an organization',
+      );
+    }
+
+    // Check if user is a member of the organization with appropriate role
+    const member = await this.prisma.organizationMember.findFirst({
+      where: {
+        organizationId: item.organizationId,
+        userId,
+        status: MemberStatus.ACTIVE,
+        role: { in: [Role.OWNER, Role.ADMIN, Role.PROJECT_MANAGER] },
+      },
+    });
+
+    if (!member) {
+      throw new BadRequestException(
+        'You do not have permission to delete saved line items in this organization',
+      );
+    }
+
+    return this.prisma.invoiceItem.delete({
+      where: { id },
+    });
   }
 }

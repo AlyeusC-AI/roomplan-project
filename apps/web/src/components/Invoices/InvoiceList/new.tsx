@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { LoadingPlaceholder } from "@components/ui/spinner";
-import { invoicesStore } from "@atoms/invoices";
 import {
   Select,
   SelectContent,
@@ -32,8 +31,12 @@ import {
 import { cn } from "@/lib/utils";
 import { v4 as uuidv4 } from "uuid";
 import { Switch } from "@/components/ui/switch";
-import { createInvoice } from "@/services/api/invoices";
-import { Database } from "@/types/database";
+import {
+  useCreateInvoice,
+  useGetProjects,
+  useGetSavedInvoiceItems,
+  InvoiceItem,
+} from "@service-geek/api-client";
 
 const CreateNewInvoice = ({
   open,
@@ -56,9 +59,12 @@ const CreateNewInvoice = ({
   const [isCreating, setIsCreating] = useState(false);
   const [invoiceDate, setInvoiceDate] = useState<Date>(new Date());
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
-  const [lineItems, setLineItems] = useState<
-    Database["public"]["Tables"]["InvoiceItems"]["Insert"][]
-  >([{ id: uuidv4(), description: "", quantity: 1, rate: 0, amount: 0 }]);
+  const [lineItems, setLineItems] = useState<InvoiceItem[]>([
+    { id: uuidv4(), description: "", quantity: 1, rate: 0, amount: 0 },
+  ]);
+  const { mutateAsync: createInvoice } = useCreateInvoice();
+  const { data: projects } = useGetProjects();
+  const { data: savedLineItems } = useGetSavedInvoiceItems();
   const [showMarkup, setShowMarkup] = useState(false);
   const [markupPercentage, setMarkupPercentage] = useState(0);
   const [showDiscount, setShowDiscount] = useState(false);
@@ -75,9 +81,6 @@ const CreateNewInvoice = ({
   const [adjusterPhone, setAdjusterPhone] = useState("");
 
   const router = useRouter();
-  const { addInvoice } = invoicesStore((state) => state);
-  const { projects } = projectsStore((state) => state);
-  const { savedLineItems } = invoicesStore((state) => state);
 
   useEffect(() => {
     // Calculate due date based on days to pay
@@ -179,12 +182,12 @@ const CreateNewInvoice = ({
   };
 
   const handleProjectSelect = (selectedProjectId: string) => {
-    const selectedProject = projects.find(
-      (p) => p.publicId === selectedProjectId
+    const selectedProject = projects?.data?.find(
+      (p) => p.id === selectedProjectId
     );
     if (selectedProject) {
       // Auto-fill project information
-      setProjectId(selectedProject.publicId);
+      setProjectId(selectedProject.id);
       setProjectName(selectedProject.name);
 
       // Auto-fill client information
@@ -206,9 +209,9 @@ const CreateNewInvoice = ({
         setAdjusterEmail(selectedProject.adjusterEmail);
       }
 
-      if (selectedProject.adjusterPhone) {
-        setAdjusterPhone(selectedProject.adjusterPhone);
-      }
+      // if (selectedProject.adjusterPhone) {
+      //   setAdjusterPhone(selectedProject.adjusterPhone);
+      // }
 
       // Attempt to auto-fill line items if this is a new invoice with empty descriptions
       if (lineItems.length === 1 && !lineItems[0].description) {
@@ -272,19 +275,30 @@ const CreateNewInvoice = ({
       };
 
       // Call the API service
-      const result = await createInvoice(invoiceData);
+      const result = await createInvoice({
+        number: invoiceNumber,
+        clientName,
+        clientEmail,
+        projectId,
+        poNumber,
+        invoiceDate: invoiceDate.toISOString(),
+        dueDate: dueDate?.toISOString() || new Date().toISOString(),
+        subtotal: calculateSubtotal(),
+        markup: showMarkup ? markupPercentage : undefined,
+        discount: showDiscount ? discountAmount : undefined,
+        tax: applyTax ? taxRate : undefined,
+        total: calculateTotal(),
+        deposit: showDeposit ? depositPercentage : undefined,
+        status: "DRAFT" as const,
+        items: lineItems.map((item) => ({
+          description: item.description,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.amount,
+        })),
+      });
 
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      if (result.data) {
-        // Add to local store
-        addInvoice(result.data);
-        toast.success("Invoice created successfully!");
-        setOpen(false);
-        router.refresh();
-      }
+      setOpen(false);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Could not create invoice"
@@ -294,7 +308,7 @@ const CreateNewInvoice = ({
     setIsCreating(false);
   };
 
-  const handleAddSavedLineItem = (item: SavedLineItem) => {
+  const handleAddSavedLineItem = (item: InvoiceItem) => {
     const newItem: InvoiceItem = {
       description: item.description,
       quantity: 1,
@@ -308,7 +322,7 @@ const CreateNewInvoice = ({
   const handleAddBulkSavedLineItems = (itemIds: string[]) => {
     const newItems: InvoiceItem[] = itemIds
       .map((id) => {
-        const savedItem = savedLineItems.find((item) => item.publicId === id);
+        const savedItem = savedLineItems?.find((item) => item.id === id);
         if (!savedItem) return null;
         return {
           description: savedItem.description,
@@ -403,11 +417,8 @@ const CreateNewInvoice = ({
                           <SelectValue placeholder='Select a project' />
                         </SelectTrigger>
                         <SelectContent>
-                          {projects.map((project) => (
-                            <SelectItem
-                              key={project.publicId}
-                              value={project.publicId}
-                            >
+                          {projects?.data?.map((project) => (
+                            <SelectItem key={project.id} value={project.id}>
                               {project.name}
                             </SelectItem>
                           ))}
@@ -875,7 +886,7 @@ const CreateNewInvoice = ({
                       onClick={() => {
                         const itemsInCategory = savedLineItems
                           .filter((item) => item.category === category)
-                          .map((item) => item.publicId);
+                          .map((item) => item.id);
                         handleAddBulkSavedLineItems(itemsInCategory);
                       }}
                       className='justify-start overflow-hidden'
@@ -897,7 +908,7 @@ const CreateNewInvoice = ({
               <div className='space-y-2'>
                 {savedLineItems.map((item) => (
                   <div
-                    key={item.publicId}
+                    key={item.id}
                     className='flex items-center justify-between rounded-md border p-3 hover:bg-muted'
                   >
                     <div>

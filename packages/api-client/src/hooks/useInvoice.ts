@@ -10,17 +10,20 @@ import type {
   UpdateInvoiceDto,
   Invoice,
   SaveInvoiceItemDto,
+  UpdateSavedLineItemDto,
   InvoiceItem,
+  PaginatedInvoicesResponse,
 } from "../types/invoice";
 import { useAuthStore } from "../services/storage";
 import { useActiveOrganization } from "./useOrganization";
+import { uploadCsvFile } from "../services/imagekit";
 
 export function useCreateInvoice() {
   const queryClient = useQueryClient();
   const org = useActiveOrganization();
 
   return useMutation({
-    mutationFn: (data: CreateInvoiceDto) =>
+    mutationFn: (data: Omit<CreateInvoiceDto, "organizationId">) =>
       invoiceService.create({
         ...data,
         organizationId: org?.id ?? "",
@@ -42,12 +45,17 @@ export function useUpdateInvoice() {
   });
 }
 
-export function useGetInvoices() {
+export function useGetInvoices(page?: number, limit?: number, search?: string) {
   const org = useActiveOrganization();
-  const options: UseQueryOptions<Invoice[], Error> = {
-    queryKey: ["invoices", org?.id],
+  const options: UseQueryOptions<PaginatedInvoicesResponse, Error> = {
+    queryKey: ["invoices", org?.id, page, limit, search],
     queryFn: async () => {
-      const response = await invoiceService.findAll(org?.id ?? "");
+      const response = await invoiceService.findAll(
+        org?.id ?? "",
+        page,
+        limit,
+        search
+      );
       return response.data;
     },
     enabled: !!org?.id && !!useAuthStore.getState().token,
@@ -155,8 +163,23 @@ export function useGetSavedLineItemsByCategory(category: string) {
 export function useExportSavedLineItemsToCsv() {
   const org = useActiveOrganization();
   return useMutation({
-    mutationFn: (category?: string) =>
-      invoiceService.exportSavedLineItemsToCsv(org?.id ?? "", category),
+    mutationFn: async (category?: string) => {
+      const response = await invoiceService.exportSavedLineItemsToCsv(
+        org?.id ?? "",
+        category
+      );
+      // Download the file automatically
+      const blob = await invoiceService.downloadCsvFile(response.filePath);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `saved-line-items${category ? `-${category}` : ""}-${new Date().toISOString()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      return response;
+    },
   });
 }
 
@@ -165,8 +188,40 @@ export function useImportSavedLineItemsFromCsv() {
   const org = useActiveOrganization();
 
   return useMutation({
-    mutationFn: (file: File) =>
-      invoiceService.importSavedLineItemsFromCsv(org?.id ?? "", file),
+    mutationFn: async (file: File) => {
+      // First upload to ImageKit
+      const uploadResult = await uploadCsvFile(file, {
+        folder: "csv/imports",
+        useUniqueFileName: true,
+      });
+
+      // Then import using the file URL
+      return invoiceService.importSavedLineItemsFromCsv(
+        org?.id ?? "",
+        uploadResult.url
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices", "saved-items"] });
+    },
+  });
+}
+
+export function useUpdateSavedLineItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateSavedLineItemDto }) =>
+      invoiceService.updateSavedLineItem(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices", "saved-items"] });
+    },
+  });
+}
+
+export function useDeleteSavedLineItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => invoiceService.deleteSavedLineItem(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices", "saved-items"] });
     },

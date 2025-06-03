@@ -67,7 +67,7 @@ export class CreateInvoiceDto {
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
-  projectPublicId?: string;
+  projectId?: string;
 
   @ApiProperty({ required: false })
   @IsString()

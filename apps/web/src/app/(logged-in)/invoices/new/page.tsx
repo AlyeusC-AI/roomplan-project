@@ -17,8 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createInvoice } from "@/services/api/invoices";
-import { invoicesStore } from "@atoms/invoices";
+import {
+  useGetSavedInvoiceItems,
+  useGetProjects,
+  useCreateInvoice,
+} from "@service-geek/api-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Textarea } from "@components/ui/textarea";
 import {
@@ -67,15 +70,16 @@ const CreateInvoicePage = () => {
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("");
 
+  const { data: savedLineItems } = useGetSavedInvoiceItems();
+  const { data: projects } = useGetProjects();
+  const { mutateAsync: createInvoice } = useCreateInvoice();
+
   const router = useRouter();
-  const { addInvoice } = invoicesStore((state) => state);
-  const { projects } = projectsStore((state) => state);
-  const { savedLineItems } = invoicesStore((state) => state);
 
   // Get unique categories from saved items
   const getCategories = () => {
     const categoriesSet = new Set<string>();
-    savedLineItems.forEach((item) => {
+    savedLineItems?.forEach((item) => {
       if (item.category) {
         categoriesSet.add(item.category);
       }
@@ -88,7 +92,7 @@ const CreateInvoicePage = () => {
     if (selectedCategory === "all") {
       return savedLineItems;
     }
-    return savedLineItems.filter((item) => item.category === selectedCategory);
+    return savedLineItems?.filter((item) => item.category === selectedCategory);
   };
 
   useEffect(() => {
@@ -197,12 +201,12 @@ const CreateInvoicePage = () => {
       return;
     }
 
-    const selectedProject = projects.find(
-      (p) => p.publicId === selectedProjectId
+    const selectedProject = projects?.data?.find(
+      (p) => p.id === selectedProjectId
     );
     if (selectedProject) {
       // Auto-fill project information
-      setProjectId(selectedProject.publicId);
+      setProjectId(selectedProject.id);
       setProjectName(selectedProject.name);
 
       // Auto-fill client information
@@ -292,18 +296,27 @@ const CreateInvoicePage = () => {
       };
 
       // Call the API service
-      const result = await createInvoice(invoiceData);
+      const result = await createInvoice({
+        number: invoiceNumber,
+        clientName,
+        clientEmail,
+        projectId,
+        poNumber,
+        invoiceDate: invoiceDate.toISOString(),
+        dueDate: dueDate?.toISOString() || new Date().toISOString(),
+        subtotal: calculateSubtotal(),
+        total: calculateTotal(),
+        status: "DRAFT" as const,
+        items: lineItems.map((item) => ({
+          description: item.description,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.amount,
+        })),
+      });
 
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      if (result.data) {
-        // Add to local store
-        addInvoice(result.data);
-        toast.success("Invoice created successfully!");
-        router.push("/invoices");
-      }
+      toast.success("Invoice created successfully!");
+      router.push("/invoices");
     } catch (error) {
       console.error("Error creating invoice:", error);
       toast.error("Failed to create invoice. Please try again.");
@@ -367,7 +380,7 @@ const CreateInvoicePage = () => {
                   Project Name
                 </Label>
                 <div className='col-span-3'>
-                  {projects.length > 0 ? (
+                  {projects?.data?.length && projects?.data?.length > 0 ? (
                     <Select
                       value={projectId || "none"}
                       onValueChange={handleProjectSelect}
@@ -381,11 +394,8 @@ const CreateInvoicePage = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value='none'>None</SelectItem>
-                        {projects.map((project) => (
-                          <SelectItem
-                            key={project.publicId}
-                            value={project.publicId}
-                          >
+                        {projects?.data?.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
                             {project.name}
                           </SelectItem>
                         ))}
@@ -791,8 +801,8 @@ const CreateInvoicePage = () => {
           </Tabs>
           <ScrollArea className='max-h-[400px]'>
             <div className='space-y-2 p-1'>
-              {filteredSavedItems().map((item) => (
-                <Card key={item.publicId} className='hover:bg-gray-50'>
+              {filteredSavedItems()?.map((item) => (
+                <Card key={item.id} className='hover:bg-gray-50'>
                   <CardContent className='flex items-center justify-between p-4'>
                     <div>
                       <h4 className='font-medium'>
@@ -822,7 +832,7 @@ const CreateInvoicePage = () => {
                   </CardContent>
                 </Card>
               ))}
-              {filteredSavedItems().length === 0 && (
+              {filteredSavedItems()?.length === 0 && (
                 <div className='py-4 text-center text-gray-500'>
                   No saved items found in this category.
                 </div>

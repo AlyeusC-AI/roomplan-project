@@ -5,9 +5,12 @@ import {
   IsOptional,
   IsDate,
   IsEnum,
+  IsArray,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { InvoiceStatus } from '@prisma/client';
+import { CreateInvoiceItemDto } from './invoice-item.dto';
 
 export class UpdateInvoiceDto {
   @ApiProperty({ required: false })
@@ -28,7 +31,7 @@ export class UpdateInvoiceDto {
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
-  projectPublicId?: string;
+  projectId?: string;
 
   @ApiProperty({ required: false })
   @IsString()
@@ -91,4 +94,10 @@ export class UpdateInvoiceDto {
   @IsString()
   @IsOptional()
   terms?: string;
+
+  @ApiProperty({ type: [CreateInvoiceItemDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateInvoiceItemDto)
+  items: CreateInvoiceItemDto[];
 }

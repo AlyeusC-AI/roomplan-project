@@ -616,7 +616,7 @@ export class EmailService {
                     ? `
                   <div class="total-row">
                     <span>Tax:</span>
-                    <span>${formatCurrency(invoice.tax)}</span>
+                    <span>${invoice.tax / 100}% (${formatCurrency((invoice.tax / 100) * invoice.subtotal)})</span>
                   </div>
                 `
                     : ''
@@ -896,7 +896,7 @@ export class EmailService {
                       ? `
                     <div class="total-row">
                       <span class="total-label">Markup:</span>
-                      <span class="total-value">${formatCurrency(estimate.markup)}</span>
+                      <span class="total-value">${estimate.markup}% (${formatCurrency((estimate.markup / 100) * estimate.subtotal)})</span>
                     </div>
                   `
                       : ''
@@ -916,7 +916,7 @@ export class EmailService {
                       ? `
                     <div class="total-row">
                       <span class="total-label">Tax:</span>
-                      <span class="total-value">${formatCurrency(estimate.tax)}</span>
+                      <span class="total-value">${estimate.tax}% (${formatCurrency((estimate.tax / 100) * estimate.subtotal)})</span>
                     </div>
                   `
                       : ''
@@ -947,7 +947,7 @@ export class EmailService {
 
               <div class="footer">
                 <p>This estimate was sent by ${estimate.organization.name}</p>
-                <p>If you have any questions, please contact us at ${estimate.organization.email}</p>
+                <p>If you have any questions, please contact us at ${estimate.organization.email || 'noreply@servicegeek.io'}</p>
               </div>
             </div>
           </div>
@@ -957,7 +957,7 @@ export class EmailService {
 
     try {
       await this.resend.emails.send({
-        from: 'Service Geek <noreply@servicegeek.com>',
+        from: 'Service Geek <noreply@servicegeek.io>',
         to,
         subject: `Estimate #${estimate.number} from ${estimate.organization.name}`,
         html,

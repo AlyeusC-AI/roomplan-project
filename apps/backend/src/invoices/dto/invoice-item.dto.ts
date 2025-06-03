@@ -61,6 +61,10 @@ export class CreateInvoiceItemDto {
 }
 
 export class UpdateInvoiceItemDto {
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  name?: string;
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
@@ -93,6 +97,10 @@ export class UpdateInvoiceItemDto {
 }
 
 export class SaveInvoiceItemDto {
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  name?: string;
   @ApiProperty()
   @IsString()
   description: string;

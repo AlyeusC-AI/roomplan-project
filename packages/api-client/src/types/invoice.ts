@@ -108,6 +108,11 @@ export interface InvoicesResponse {
   data?: Invoice[];
 }
 
+export interface PaginatedInvoicesResponse {
+  data: Invoice[];
+  total: number;
+}
+
 export interface SaveInvoiceItemDto {
   description: string;
   quantity: number;
@@ -116,6 +121,17 @@ export interface SaveInvoiceItemDto {
   notes?: string;
   category?: string;
   organizationId: string;
+  name?: string;
+}
+
+export interface UpdateSavedLineItemDto {
+  description?: string;
+  quantity?: number;
+  rate?: number;
+  amount?: number;
+  notes?: string;
+  category?: string;
+  name?: string;
 }
 
 export interface SavedLineItemsExportResponse {

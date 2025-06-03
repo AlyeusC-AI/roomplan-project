@@ -2,12 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  fetchInvoiceById,
-  deleteInvoice,
-  emailInvoice,
-} from "@/services/api/invoices";
-import { invoicesStore } from "@/atoms/invoices";
+
 import { Button } from "@/components/ui/button";
 import { LoadingPlaceholder } from "@/components/ui/spinner";
 import { toast } from "sonner";
@@ -40,7 +35,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Database } from "@/types/database";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import {
@@ -65,17 +59,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import Link from "next/link";
 import { format } from "date-fns";
-
-declare global {
-  type Invoice = Database["public"]["Tables"]["Invoices"]["Row"] & {
-    InvoiceItems: InvoiceItem[];
-  };
-  type InvoiceItem = Database["public"]["Tables"]["InvoiceItems"]["Row"];
-}
+import {
+  Invoice,
+  InvoiceItem,
+  useDeleteInvoice,
+  useEmailInvoice,
+  useGetInvoiceById,
+  useUpdateInvoice,
+  useUpdateInvoiceStatus,
+} from "@service-geek/api-client";
 
 export default function InvoicePage() {
-  const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -84,32 +78,13 @@ export default function InvoicePage() {
   const [emailMessage, setEmailMessage] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const router = useRouter();
-  const { handleUpdateStatus } = invoicesStore();
   const params = useParams<{ publicId: string }>();
-
-  useEffect(() => {
-    async function loadInvoice() {
-      setLoading(true);
-      try {
-        const result = await fetchInvoiceById(params.publicId);
-
-        if (result.error) {
-          setError(result.error);
-        } else if (result.data) {
-          setInvoice(result.data);
-        } else {
-          setError("Invoice not found");
-        }
-      } catch (err) {
-        setError("Failed to load invoice details");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadInvoice();
-  }, [params.publicId]);
+  const { mutateAsync: updateStatus } = useUpdateInvoiceStatus();
+  const { data: invoiceData, isLoading } = useGetInvoiceById(params.publicId);
+  const invoice = invoiceData?.data;
+  const { mutateAsync: deleteInvoice } = useDeleteInvoice();
+  const { mutateAsync: emailInvoice } = useEmailInvoice();
+  const { mutateAsync: updateInvoice } = useUpdateInvoice();
 
   const handleDeleteClick = () => {
     setIsDeleteDialogOpen(true);
@@ -119,14 +94,10 @@ export default function InvoicePage() {
     setIsDeleteDialogOpen(false);
     setIsDeleting(true);
     try {
-      const result = await deleteInvoice(params.publicId);
+      await deleteInvoice(params.publicId);
 
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("Invoice deleted successfully");
-        router.push("/invoices");
-      }
+      toast.success("Invoice deleted successfully");
+      router.push("/invoices");
     } catch (err) {
       toast.error("Failed to delete invoice");
       console.error(err);
@@ -135,16 +106,9 @@ export default function InvoicePage() {
     }
   };
 
-  const handleStatusUpdate = async (
-    newStatus: "draft" | "sent" | "paid" | "overdue" | "cancelled"
-  ) => {
-    await handleUpdateStatus(params.publicId, newStatus);
-    if (invoice) {
-      setInvoice({
-        ...invoice,
-        status: newStatus,
-      });
-    }
+  const handleStatusUpdate = async (newStatus: Invoice["status"]) => {
+    await updateStatus({ id: invoice?.id ?? "", status: newStatus });
+    toast.success("Invoice status updated successfully");
   };
 
   const printInvoice = () => {
@@ -165,7 +129,7 @@ export default function InvoicePage() {
         <html>
         <head>
           <meta charset="utf-8">
-          <title>Invoice #${invoice.number}</title>
+          <title>Invoice #${invoice?.number}</title>
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -296,7 +260,7 @@ export default function InvoicePage() {
               <p class="section-title">For:</p>
               <p class="client-name">${invoice.clientName}</p>
               ${invoice.clientEmail ? `<p>${invoice.clientEmail}</p>` : ""}
-              ${invoice.projectName ? `<p class="project-info">Project: ${invoice.projectName}</p>` : ""}
+              ${invoice.project?.name ? `<p class="project-info">Project: ${invoice.project.name}</p>` : ""}
             </div>
             
             <table>
@@ -309,8 +273,9 @@ export default function InvoicePage() {
                 </tr>
               </thead>
               <tbody>
-                ${invoice.InvoiceItems.map(
-                  (item) => `
+                ${invoice.items
+                  .map(
+                    (item) => `
                   <tr>
                     <td>${item.description}</td>
                     <td>${item.quantity}</td>
@@ -318,7 +283,8 @@ export default function InvoicePage() {
                     <td class="amount-column">$${item.amount.toFixed(2)}</td>
                   </tr>
                 `
-                ).join("")}
+                  )
+                  .join("")}
               </tbody>
             </table>
             
@@ -329,22 +295,22 @@ export default function InvoicePage() {
               </div>
               
               ${
-                invoice.taxRate && invoice.taxRate > 0
+                invoice.tax && invoice.tax > 0
                   ? `
                 <div class="total-row">
-                  <span>Tax (${invoice.taxRate}%)</span>
-                  <span>$${(invoice.taxAmount || 0).toFixed(2)}</span>
+                  <span>Tax (${invoice.tax}%)</span>
+                  <span>$${((invoice.tax / 100) * invoice.subtotal || 0).toFixed(2)}</span>
                 </div>
               `
                   : ""
               }
               
               ${
-                invoice.discountAmount && invoice.discountAmount > 0
+                invoice.discount && invoice.discount > 0
                   ? `
                 <div class="total-row">
                   <span>Discount</span>
-                  <span>-$${invoice.discountAmount.toFixed(2)}</span>
+                  <span>-$${invoice.discount.toFixed(2)}</span>
                 </div>
               `
                   : ""
@@ -352,19 +318,19 @@ export default function InvoicePage() {
               
               <div class="total-row final">
                 <span>Total</span>
-                <span>$${invoice.amount.toFixed(2)}</span>
+                <span>$${invoice.total.toFixed(2)}</span>
               </div>
               
               ${
-                invoice.depositAmount && invoice.depositAmount > 0
+                invoice.deposit && invoice.deposit > 0
                   ? `
                 <div class="total-row">
                   <span>Deposit Paid</span>
-                  <span>$${invoice.depositAmount.toFixed(2)}</span>
+                  <span>$${invoice.deposit.toFixed(2)}</span>
                 </div>
                 <div class="total-row">
                   <span>Balance Due</span>
-                  <span>$${(invoice.amount - invoice.depositAmount).toFixed(2)}</span>
+                  <span>$${(invoice.total - invoice.deposit).toFixed(2)}</span>
                 </div>
               `
                   : ""
@@ -451,26 +417,14 @@ export default function InvoicePage() {
     setIsEmailDialogOpen(false);
     setIsEmailing(true);
     try {
-      const result = await emailInvoice(
-        params.publicId as string,
-        emailMessage || undefined
+      const result = await emailInvoice({
+        id: params.publicId as string,
+        message: emailMessage,
+      });
+
+      toast.success(
+        result.data?.message || `Invoice emailed to ${invoice?.clientEmail}`
       );
-
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success(
-          result.data?.message || `Invoice emailed to ${invoice!.clientEmail}`
-        );
-
-        // If the status was draft, refresh the data to get updated status
-        if (invoice!.status === "draft") {
-          const updatedData = await fetchInvoiceById(params.publicId as string);
-          if (updatedData.data) {
-            setInvoice(updatedData.data);
-          }
-        }
-      }
     } catch (error) {
       console.error("Error emailing invoice:", error);
       toast.error("Failed to email invoice");
@@ -503,7 +457,7 @@ export default function InvoicePage() {
     }).format(amount);
   };
 
-  if (loading) {
+  if (isLoading) {
     return <LoadingPlaceholder />;
   }
 
@@ -549,7 +503,10 @@ export default function InvoicePage() {
                 Status:
                 <Badge
                   variant='outline'
-                  className={cn("ml-2 text-xs", getStatusColor(invoice.status))}
+                  className={cn(
+                    "ml-2 text-xs",
+                    getStatusColor(invoice.status.toLowerCase())
+                  )}
                 >
                   {invoice.status.charAt(0).toUpperCase() +
                     invoice.status.slice(1)}
@@ -558,35 +515,35 @@ export default function InvoicePage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem
-                onClick={() => handleStatusUpdate("draft")}
-                disabled={invoice.status === "draft"}
+                onClick={() => handleStatusUpdate("DRAFT")}
+                disabled={invoice.status === "DRAFT"}
               >
                 Mark as Draft
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleStatusUpdate("sent")}
-                disabled={invoice.status === "sent"}
+                onClick={() => handleStatusUpdate("SENT")}
+                disabled={invoice.status === "SENT"}
               >
                 <Send className='mr-2 size-4' />
                 Mark as Sent
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleStatusUpdate("paid")}
-                disabled={invoice.status === "paid"}
+                onClick={() => handleStatusUpdate("PAID")}
+                disabled={invoice.status === "PAID"}
               >
                 <CheckCircle className='mr-2 size-4' />
                 Mark as Paid
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleStatusUpdate("overdue")}
-                disabled={invoice.status === "overdue"}
+                onClick={() => handleStatusUpdate("OVERDUE")}
+                disabled={invoice.status === "OVERDUE"}
               >
                 <AlertTriangle className='mr-2 size-4' />
                 Mark as Overdue
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleStatusUpdate("cancelled")}
-                disabled={invoice.status === "cancelled"}
+                onClick={() => handleStatusUpdate("CANCELLED")}
+                disabled={invoice.status === "CANCELLED"}
               >
                 <Ban className='mr-2 size-4' />
                 Mark as Cancelled
@@ -650,7 +607,7 @@ export default function InvoicePage() {
             <div className='text-right'>
               <p className='text-lg font-semibold'>Total Amount</p>
               <p className='text-2xl font-bold'>
-                {formatCurrency(invoice.amount)}
+                {formatCurrency(invoice.total)}
               </p>
             </div>
           </div>
@@ -671,7 +628,7 @@ export default function InvoicePage() {
               </div>
               <div className='flex justify-between'>
                 <p>Project:</p>
-                <p className='font-medium'>{invoice.projectName}</p>
+                <p className='font-medium'>{invoice.project?.name}</p>
               </div>
               <div className='flex justify-between'>
                 <p>Issue Date:</p>
@@ -697,7 +654,7 @@ export default function InvoicePage() {
               <div className='col-span-2 text-right'>Amount</div>
             </div>
 
-            {invoice.InvoiceItems.map((item: InvoiceItem) => (
+            {invoice.items.map((item: InvoiceItem) => (
               <div
                 key={item.id}
                 className='grid grid-cols-10 gap-4 border-b py-3'
@@ -720,17 +677,14 @@ export default function InvoicePage() {
                 <p>Subtotal:</p>
                 <p className='font-medium'>
                   {formatCurrency(
-                    invoice.InvoiceItems.reduce(
-                      (sum, item) => sum + item.amount,
-                      0
-                    )
+                    invoice.items.reduce((sum, item) => sum + item.amount, 0)
                   )}
                 </p>
               </div>
               <Separator />
               <div className='flex justify-between py-2'>
                 <p className='font-semibold'>Total:</p>
-                <p className='font-bold'>{formatCurrency(invoice.amount)}</p>
+                <p className='font-bold'>{formatCurrency(invoice.total)}</p>
               </div>
             </div>
           </div>

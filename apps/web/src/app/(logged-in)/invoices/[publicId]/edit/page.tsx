@@ -18,8 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { fetchInvoiceById, updateInvoice } from "@/services/api/invoices";
-import { invoicesStore, SavedLineItem } from "@atoms/invoices";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Textarea } from "@components/ui/textarea";
 import {
@@ -32,6 +30,13 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  InvoiceItem,
+  useGetInvoiceById,
+  useGetProjects,
+  useGetSavedInvoiceItems,
+  useUpdateInvoice,
+} from "@service-geek/api-client";
 
 const EditInvoice = () => {
   const router = useRouter();
@@ -39,8 +44,8 @@ const EditInvoice = () => {
   const invoiceId = params.publicId as string;
 
   // We can use '_invoice' for future enhancements
-  const [, setInvoice] = useState<Invoice | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: invoiceData, isLoading } = useGetInvoiceById(invoiceId);
+  const invoice = invoiceData?.data;
   const [isSaving, setIsSaving] = useState(false);
 
   const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -54,12 +59,10 @@ const EditInvoice = () => {
   const [dueDate, setDueDate] = useState<Date>(new Date());
   const [invoiceItems, setInvoiceItems] = useState<
     {
-      id: string;
       description: string;
       quantity: number;
       rate: number;
       amount: number;
-      publicId?: string;
     }[]
   >([]);
   const [showMarkup, setShowMarkup] = useState(false);
@@ -75,13 +78,16 @@ const EditInvoice = () => {
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("");
 
-  const { projects } = projectsStore((state) => state);
-  const { savedLineItems } = invoicesStore((state) => state);
+  const { data: projectsData } = useGetProjects();
+  const { data: savedInvoiceItemsData } = useGetSavedInvoiceItems();
+  const { mutateAsync: updateInvoice } = useUpdateInvoice();
+  const projects = projectsData?.data || [];
+  const savedInvoiceItems = savedInvoiceItemsData || [];
 
   // Get unique categories from saved items
   const getCategories = () => {
     const categoriesSet = new Set<string>();
-    savedLineItems.forEach((item) => {
+    savedInvoiceItems.forEach((item) => {
       if (item.category) {
         categoriesSet.add(item.category);
       }
@@ -92,102 +98,85 @@ const EditInvoice = () => {
   // Filter saved items by category
   const filteredSavedItems = () => {
     if (selectedCategory === "all") {
-      return savedLineItems;
+      return savedInvoiceItems;
     }
-    return savedLineItems.filter((item) => item.category === selectedCategory);
+    return savedInvoiceItems.filter(
+      (item) => item.category === selectedCategory
+    );
   };
 
   // Load invoice data
   useEffect(() => {
-    const fetchInvoice = async () => {
-      try {
-        const result = await fetchInvoiceById(invoiceId);
-        if (result.error) {
-          console.error(result.error);
-          toast.error(result.error);
-        } else if (result.data) {
-          setInvoice(result.data);
+    if (invoice) {
+      // Populate form fields
+      setInvoiceNumber(invoice.number);
+      setClientName(invoice.clientName);
+      setClientEmail(invoice.clientEmail || "");
+      setProjectName(invoice.project?.name || "");
+      setProjectId(invoice.project?.id || "");
+      setPoNumber(invoice.poNumber || "");
 
-          // Populate form fields
-          setInvoiceNumber(result.data.number);
-          setClientName(result.data.clientName);
-          setClientEmail(result.data.clientEmail || "");
-          setProjectName(result.data.projectName || "");
-          setProjectId(result.data.projectPublicId || "");
-          setPoNumber(result.data.poNumber || "");
-
-          // Handle dates safely
-          if (result.data.invoiceDate) {
-            setInvoiceDate(new Date(result.data.invoiceDate));
-          }
-
-          if (result.data.dueDate) {
-            setDueDate(new Date(result.data.dueDate));
-          }
-
-          // Calculate days until due
-          if (result.data.invoiceDate && result.data.dueDate) {
-            const invoiceDateObj = new Date(result.data.invoiceDate);
-            const dueDateObj = new Date(result.data.dueDate);
-            const diffTime = Math.abs(
-              dueDateObj.getTime() - invoiceDateObj.getTime()
-            );
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            setDaysUntilDue(diffDays.toString());
-          }
-
-          // Set markup if available
-          if (result.data.markupPercentage) {
-            setShowMarkup(true);
-            setMarkupPercentage(result.data.markupPercentage);
-          }
-
-          // Set discount if available
-          if (result.data.discountAmount) {
-            setShowDiscount(true);
-            setDiscountAmount(result.data.discountAmount);
-          }
-
-          // Set tax if available
-          if (result.data.taxRate) {
-            setApplyTax(true);
-            setTaxRate(result.data.taxRate);
-          }
-
-          // Set deposit if available
-          if (result.data.depositAmount) {
-            setShowDeposit(true);
-            setDepositAmount(result.data.depositAmount);
-          }
-
-          // Set notes and terms
-          setNotes(result.data.notes || "");
-          // TypeScript might complain about 'terms' not being on Invoice type
-          // but we handle it safely here
-          setTerms(result.data.terms || "");
-
-          // Set line items
-          setInvoiceItems(
-            result.data.InvoiceItems.map((item) => ({
-              id: uuidv4(),
-              publicId: item.publicId,
-              description: item.description,
-              quantity: item.quantity,
-              rate: item.rate,
-              amount: item.amount,
-            }))
-          );
-        }
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to load invoice details");
-      } finally {
-        setLoading(false);
+      // Handle dates safely
+      if (invoice.invoiceDate) {
+        setInvoiceDate(new Date(invoice.invoiceDate));
       }
-    };
 
-    fetchInvoice();
-  }, [invoiceId]);
+      if (invoice.dueDate) {
+        setDueDate(new Date(invoice.dueDate));
+      }
+
+      // Calculate days until due
+      if (invoice.invoiceDate && invoice.dueDate) {
+        const invoiceDateObj = new Date(invoice.invoiceDate);
+        const dueDateObj = new Date(invoice.dueDate);
+        const diffTime = Math.abs(
+          dueDateObj.getTime() - invoiceDateObj.getTime()
+        );
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        setDaysUntilDue(diffDays.toString());
+      }
+
+      // Set markup if available
+      if (invoice.markup) {
+        setShowMarkup(true);
+        setMarkupPercentage(invoice.markup);
+      }
+
+      // Set discount if available
+      if (invoice.discount) {
+        setShowDiscount(true);
+        setDiscountAmount(invoice.discount);
+      }
+
+      // Set tax if available
+      if (invoice.tax) {
+        setApplyTax(true);
+        setTaxRate(invoice.tax);
+      }
+
+      // Set deposit if available
+      if (invoice.deposit) {
+        setShowDeposit(true);
+        setDepositAmount(invoice.deposit);
+      }
+
+      // Set notes and terms
+      setNotes(invoice.notes || "");
+      // TypeScript might complain about 'terms' not being on Invoice type
+      // but we handle it safely here
+      setTerms(invoice.terms || "");
+
+      // Set line items
+      setInvoiceItems(
+        invoice.items.map((item) => ({
+          description: item.description,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.amount,
+        }))
+      );
+    }
+  }, [invoice]);
 
   // Calculate due date based on days until due
   useEffect(() => {
@@ -199,35 +188,35 @@ const EditInvoice = () => {
   }, [invoiceDate, daysUntilDue]);
 
   // Update line item amounts when rate or quantity changes
-  useEffect(() => {
-    const updated = invoiceItems.map((item) => ({
-      ...item,
-      amount: item.rate * item.quantity,
-    }));
-    setInvoiceItems(updated);
-  }, [invoiceItems.map((item) => item.rate + item.quantity).join(",")]);
+  // useEffect(() => {
+  //   const updated = invoiceItems.map((item) => ({
+  //     ...item,
+  //     amount: item.rate * item.quantity,
+  //   }));
+  //   setInvoiceItems(updated);
+  // }, [invoiceItems.map((item) => item.rate + item.quantity).join(",")]);
 
   const addLineItem = () => {
     setInvoiceItems([
       ...invoiceItems,
-      { id: uuidv4(), description: "", quantity: 1, rate: 0, amount: 0 },
+      { description: "", quantity: 1, rate: 0, amount: 0 },
     ]);
   };
 
-  const removeLineItem = (id: string) => {
+  const removeLineItem = (index: number) => {
     if (invoiceItems.length > 1) {
-      setInvoiceItems(invoiceItems.filter((item) => item.id !== id));
+      setInvoiceItems(invoiceItems.filter((_, i) => i !== index));
     }
   };
 
   const updateLineItem = (
-    id: string,
+    index: number,
     field: string,
     value: string | number
   ) => {
     setInvoiceItems(
       invoiceItems.map((item) =>
-        item.id === id
+        index === invoiceItems.indexOf(item)
           ? {
               ...item,
               [field]: value,
@@ -281,20 +270,19 @@ const EditInvoice = () => {
       return;
     }
 
-    const project = projects.find((p) => p.publicId === projectId);
+    const project = projects.find((p) => p.id === projectId);
     if (project) {
-      setProjectId(project.publicId);
+      setProjectId(project.id);
       setProjectName(project.name);
       setClientName(project.clientName || "");
       setClientEmail(project.clientEmail || "");
     }
   };
 
-  const handleAddSavedLineItem = (item: SavedLineItem) => {
+  const handleAddSavedLineItem = (item: InvoiceItem) => {
     setInvoiceItems([
       ...invoiceItems,
       {
-        id: uuidv4(),
         description: item.description,
         quantity: 1,
         rate: item.rate,
@@ -318,35 +306,36 @@ const EditInvoice = () => {
 
     try {
       // Update the invoice with new data
-      const updates = {
-        number: invoiceNumber,
-        clientName,
-        clientEmail,
-        projectName,
-        projectPublicId: projectId,
-        poNumber,
-        invoiceDate: invoiceDate.toISOString(),
-        dueDate: dueDate.toISOString(),
-        subtotal: calculateSubtotal(),
-        markupPercentage: showMarkup ? markupPercentage : undefined,
-        markupAmount: calculateMarkup(),
-        discountAmount: calculateDiscount(),
-        taxRate: applyTax ? taxRate : undefined,
-        taxAmount: calculateTax(),
-        depositAmount: calculateDeposit(),
-        amount: calculateTotal(),
-        notes,
-        terms,
-      };
+      await updateInvoice({
+        id: invoiceId,
+        data: {
+          number: invoiceNumber,
+          clientName,
+          clientEmail,
+          projectId,
+          poNumber,
+          invoiceDate: invoiceDate.toISOString(),
+          dueDate: dueDate.toISOString(),
+          subtotal: calculateSubtotal(),
+          markup: showMarkup ? markupPercentage : undefined,
+          tax: applyTax ? taxRate : undefined,
+          deposit: calculateDeposit(),
+          notes,
+          terms,
+          items: invoiceItems.map((item) => ({
+            amount: item.rate * item.quantity,
+            description: item.description,
+            quantity: item.quantity,
+            rate: item.rate,
+            name: "",
+            notes: "",
+            category: "",
+          })),
+        },
+      });
 
-      const result = await updateInvoice(invoiceId, updates);
-
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("Invoice updated successfully");
-        router.push(`/invoices/${invoiceId}`);
-      }
+      toast.success("Invoice updated successfully");
+      router.push(`/invoices/${invoiceId}`);
     } catch (error) {
       console.error(error);
       toast.error("Failed to update invoice");
@@ -355,7 +344,7 @@ const EditInvoice = () => {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return <LoadingPlaceholder />;
   }
 
@@ -445,10 +434,7 @@ const EditInvoice = () => {
                       <SelectContent>
                         <SelectItem value='none'>None</SelectItem>
                         {projects.map((project) => (
-                          <SelectItem
-                            key={project.publicId}
-                            value={project.publicId}
-                          >
+                          <SelectItem key={project.id} value={project.id}>
                             {project.name}
                           </SelectItem>
                         ))}
@@ -593,16 +579,16 @@ const EditInvoice = () => {
                 <div className='col-span-1'></div>
               </div>
 
-              {invoiceItems.map((item) => (
+              {invoiceItems.map((item, index) => (
                 <div
-                  key={item.id}
+                  key={index}
                   className='mb-2 grid grid-cols-12 items-center gap-2'
                 >
                   <div className='col-span-6'>
                     <Input
                       value={item.description}
                       onChange={(e) =>
-                        updateLineItem(item.id, "description", e.target.value)
+                        updateLineItem(index, "description", e.target.value)
                       }
                       placeholder='Description'
                     />
@@ -613,7 +599,7 @@ const EditInvoice = () => {
                       value={item.rate || ""}
                       onChange={(e) =>
                         updateLineItem(
-                          item.id,
+                          index,
                           "rate",
                           parseFloat(e.target.value) || 0
                         )
@@ -627,7 +613,7 @@ const EditInvoice = () => {
                       value={item.quantity || ""}
                       onChange={(e) =>
                         updateLineItem(
-                          item.id,
+                          index,
                           "quantity",
                           parseFloat(e.target.value) || 0
                         )
@@ -644,7 +630,7 @@ const EditInvoice = () => {
                       type='button'
                       variant='ghost'
                       size='icon'
-                      onClick={() => removeLineItem(item.id)}
+                      onClick={() => removeLineItem(index)}
                     >
                       <X className='size-4' />
                     </Button>
@@ -799,7 +785,7 @@ const EditInvoice = () => {
           <ScrollArea className='max-h-[400px]'>
             <div className='space-y-2 p-1'>
               {filteredSavedItems().map((item) => (
-                <Card key={item.publicId} className='hover:bg-gray-50'>
+                <Card key={item.id} className='hover:bg-gray-50'>
                   <CardContent className='flex items-center justify-between p-4'>
                     <div>
                       <h4 className='font-medium'>

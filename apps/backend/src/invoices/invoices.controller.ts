@@ -11,6 +11,7 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
+  Res,
 } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import { Invoice, InvoiceItem } from '@prisma/client';
@@ -34,6 +35,12 @@ import {
 } from '@nestjs/swagger';
 import { RequestWithUser } from '../auth/interfaces/request-with-user';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
+import {
+  SavedLineItemsByCategoryResponse,
+  SavedLineItemsExportResponse,
+  SavedLineItemsImportResponse,
+} from '@service-geek/api-client';
 
 @ApiTags('invoices')
 @ApiBearerAuth()
@@ -62,17 +69,39 @@ export class InvoicesController {
   @Get('organization/:organizationId')
   @ApiOperation({ summary: 'Get all invoices for an organization' })
   @ApiParam({ name: 'organizationId', description: 'Organization ID' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
+  @ApiQuery({ name: 'search', required: false, description: 'Search query' })
   @ApiResponse({
     status: 200,
     description: 'Return all invoices for the organization.',
+    schema: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/Invoice' },
+        },
+        total: { type: 'number' },
+      },
+    },
   })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   findAll(
-    @Param('organizationId') organizationId: string,
     @Request() req: RequestWithUser,
-  ): Promise<Invoice[]> {
-    return this.invoicesService.findAll(organizationId, req.user.userId);
+    @Param('organizationId') organizationId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ): Promise<{ data: Invoice[]; total: number }> {
+    return this.invoicesService.findAll(
+      organizationId,
+      req.user.userId,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 10,
+      search,
+    );
   }
 
   @Get(':id')
@@ -320,6 +349,42 @@ export class InvoicesController {
     );
   }
 
+  @Patch('items/saved/:id')
+  @UseGuards(JwtAuthGuard)
+  async updateSavedLineItem(
+    @Param('id') id: string,
+    @Body()
+    updates: {
+      description?: string;
+      quantity?: number;
+      rate?: number;
+      amount?: number;
+      notes?: string;
+      category?: string;
+      name?: string;
+    },
+    @Request() req,
+  ): Promise<InvoiceItem> {
+    return this.invoicesService.updateSavedLineItem(id, updates, req.user.id);
+  }
+
+  @Delete('items/saved/:id')
+  @ApiOperation({ summary: 'Delete a saved line item' })
+  @ApiParam({ name: 'id', description: 'Saved Line Item ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'The saved line item has been successfully deleted.',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Saved line item not found.' })
+  async deleteSavedLineItem(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ): Promise<InvoiceItem> {
+    return this.invoicesService.deleteSavedLineItem(id, req.user.userId);
+  }
+
   @Get('items/saved/export/:organizationId')
   @ApiOperation({ summary: 'Export saved line items to CSV' })
   @ApiParam({ name: 'organizationId', description: 'Organization ID' })
@@ -338,7 +403,7 @@ export class InvoicesController {
     @Param('organizationId') organizationId: string,
     @Query('category') category: string | null,
     @Request() req: RequestWithUser,
-  ): Promise<string> {
+  ): Promise<SavedLineItemsExportResponse> {
     return this.invoicesService.exportSavedLineItemsToCsv(
       category,
       organizationId,
@@ -347,37 +412,28 @@ export class InvoicesController {
   }
 
   @Post('items/saved/import/:organizationId')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Import saved line items from CSV' })
-  @ApiParam({ name: 'organizationId', description: 'Organization ID' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully imported line items',
     schema: {
       type: 'object',
       properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
+        imported: { type: 'number' },
+        total: { type: 'number' },
       },
     },
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Return the import results.',
-  })
-  @ApiResponse({ status: 400, description: 'Bad request.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  @ApiResponse({ status: 403, description: 'Forbidden.' })
-  @UseInterceptors(FileInterceptor('file'))
-  importSavedLineItemsFromCsv(
+  async importSavedLineItemsFromCsv(
     @Param('organizationId') organizationId: string,
-    @UploadedFile() file: any,
-    @Request() req: RequestWithUser,
+    @Body() body: { fileUrl: string },
+    @Request() req: any,
   ): Promise<{ imported: number; total: number }> {
     return this.invoicesService.importSavedLineItemsFromCsv(
-      file,
+      body.fileUrl,
       organizationId,
-      req.user.userId,
+      req.user.id,
     );
   }
 }

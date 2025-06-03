@@ -3,9 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@components/ui/tabs";
-
 import { useDebouncedCallback } from "use-debounce";
-import { invoicesStore } from "@atoms/invoices";
 import { Button } from "@components/ui/button";
 import { Card } from "@components/ui/card";
 import {
@@ -40,7 +38,11 @@ import { LoadingPlaceholder } from "@components/ui/spinner";
 import { Input } from "@components/ui/input";
 import { cn } from "@lib/utils";
 import { toast } from "sonner";
-import { fetchInvoices } from "@/lib/invoices";
+import {
+  useGetInvoices,
+  useUpdateInvoiceStatus,
+} from "@service-geek/api-client";
+import { Invoice } from "@service-geek/api-client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,50 +51,44 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function InvoiceList() {
-  const { totalInvoices, setInvoices } = invoicesStore((state) => state);
-  const { user } = userInfoStore((state) => state);
-  const [loading, setLoading] = useState(true);
   const search = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const page = parseInt(search.get("page") || "1");
+  const searchQuery = search.get("query") || undefined;
 
-  useEffect(() => {
-    // Fetch invoices from the API
-    const status = search.get("status") || undefined;
-    const fetchData = async () => {
-      setLoading(true);
-
-      try {
-        const result = await fetchInvoices(status);
-
-        setInvoices(result, result.length);
-      } catch (error) {
-        console.error("Error fetching invoices:", error);
-        toast.error("Failed to load invoices. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [search.get("query"), search.get("page"), search.get("status")]);
+  const { data, isLoading } = useGetInvoices(page, 10, searchQuery);
+  const updateStatus = useUpdateInvoiceStatus();
 
   const handleSearch = useDebouncedCallback((term) => {
-    console.log(`Searching... ${term}`);
     const params = new URLSearchParams(search);
     if (term) {
       params.set("query", term);
     } else {
       params.delete("query");
     }
+    params.set("page", "1"); // Reset to first page on search
     router.replace(`${pathname}?${params.toString()}`);
   }, 300);
 
-  const page = parseInt(search.get("page") || "1");
+  const totalPages = data?.total ? Math.ceil(data.total / 10) : 0;
 
   // Add a function to handle invoice row clicks
   const handleViewInvoice = (invoiceId: string) => {
     router.push(`/invoices/${invoiceId}`);
+  };
+
+  const handleUpdateStatus = async (
+    invoiceId: string,
+    status: Invoice["status"]
+  ) => {
+    try {
+      await updateStatus.mutateAsync({ id: invoiceId, status: status });
+      toast.success("Invoice status updated successfully");
+    } catch (error) {
+      console.error("Error updating invoice status:", error);
+      toast.error("Failed to update invoice status");
+    }
   };
 
   return (
@@ -121,49 +117,49 @@ export default function InvoiceList() {
             placeholder='Search invoices...'
             onChange={(e) => handleSearch(e.target.value)}
             className='w-full lg:max-w-96'
-            defaultValue={search.get("query") ?? ""}
+            defaultValue={searchQuery ?? ""}
           />
-          <Tabs
-            defaultValue={user?.savedDashboardView || "listView"}
-            className='hidden lg:block'
-          >
+          {/* <Tabs defaultValue='listView' className='hidden lg:block'>
             <TabsList>
-              <TabsTrigger value={"listView"}>List View</TabsTrigger>
-              <TabsTrigger value={"boardView"}>Board View</TabsTrigger>
+              <TabsTrigger value='listView'>List View</TabsTrigger>
+              <TabsTrigger value='boardView'>Board View</TabsTrigger>
             </TabsList>
-          </Tabs>
+          </Tabs> */}
         </div>
       </div>
 
       <div className='mt-40'>
-        {loading ? (
+        {isLoading ? (
           <LoadingPlaceholder />
         ) : (
           <div className='flex flex-col justify-start'>
             <Card>
-              <Table onRowClick={handleViewInvoice} />
+              <Table
+                data={data?.data || []}
+                onRowClick={handleViewInvoice}
+                onStatusUpdate={handleUpdateStatus}
+              />
             </Card>
             <Pagination className='mt-5'>
               <PaginationContent>
                 <PaginationItem>
-                  {page !== 1 && (
+                  {page > 1 && (
                     <PaginationPrevious href={`/invoices?page=${page - 1}`} />
                   )}
                 </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink isActive>{page}</PaginationLink>
-                </PaginationItem>
-                {totalInvoices > 10 * page && (
-                  <PaginationItem>
-                    <PaginationLink
-                      href={`/invoices?page=${page + 1}`}
-                      isActive
-                    >
-                      {page + 1}
-                    </PaginationLink>
-                  </PaginationItem>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (pageNum) => (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        href={`/invoices?page=${pageNum}`}
+                        isActive={pageNum === page}
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
                 )}
-                {totalInvoices > 10 * page && (
+                {page < totalPages && (
                   <PaginationItem>
                     <PaginationNext href={`/invoices?page=${page + 1}`} />
                   </PaginationItem>
@@ -178,12 +174,14 @@ export default function InvoiceList() {
 }
 
 export const Table = ({
+  data,
   onRowClick,
+  onStatusUpdate,
 }: {
+  data: Invoice[];
   onRowClick?: (invoiceId: string) => void;
+  onStatusUpdate?: (invoiceId: string, status: Invoice["status"]) => void;
 }) => {
-  const { invoices } = invoicesStore((state) => state);
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "draft":
@@ -212,7 +210,7 @@ export const Table = ({
           <div>
             <span className='font-medium'>{row.original.number}</span>
             <div className='hidden items-center gap-1 text-xs text-muted-foreground lg:flex'>
-              <span>{row.original.projectName}</span>
+              <span>{row.original.project?.name}</span>
               <ChevronRightIcon size={12} />
               <span>{row.original.clientName}</span>
             </div>
@@ -221,7 +219,7 @@ export const Table = ({
       ),
     },
     {
-      accessorKey: "amount",
+      accessorKey: "total",
       header: ({ column }) => (
         <TableColumnHeader column={column} title='Amount' />
       ),
@@ -229,7 +227,7 @@ export const Table = ({
         new Intl.NumberFormat("en-US", {
           style: "currency",
           currency: "USD",
-        }).format(row.original.amount),
+        }).format(row.original.total),
     },
     {
       accessorKey: "createdAt",
@@ -239,7 +237,7 @@ export const Table = ({
       cell: ({ row }) =>
         new Intl.DateTimeFormat("en-US", {
           dateStyle: "medium",
-        }).format(new Date(row.original.createdAt ?? new Date())),
+        }).format(new Date(row.original.createdAt)),
     },
     {
       accessorKey: "dueDate",
@@ -249,7 +247,7 @@ export const Table = ({
       cell: ({ row }) =>
         new Intl.DateTimeFormat("en-US", {
           dateStyle: "medium",
-        }).format(new Date(row.original.dueDate ?? new Date())),
+        }).format(new Date(row.original.dueDate)),
     },
     {
       accessorKey: "status",
@@ -264,7 +262,7 @@ export const Table = ({
               variant='outline'
               className={cn(
                 "px-2 py-1 text-xs",
-                getStatusColor(invoice.status)
+                getStatusColor(invoice.status.toLowerCase())
               )}
             >
               {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
@@ -278,55 +276,35 @@ export const Table = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent align='end'>
                 <DropdownMenuItem
-                  onClick={() =>
-                    invoicesStore
-                      .getState()
-                      .handleUpdateStatus(invoice.publicId, "draft")
-                  }
-                  disabled={invoice.status === "draft"}
+                  onClick={() => onStatusUpdate?.(invoice.id, "DRAFT")}
+                  disabled={invoice.status === "DRAFT"}
                 >
                   Mark as Draft
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() =>
-                    invoicesStore
-                      .getState()
-                      .handleUpdateStatus(invoice.publicId, "sent")
-                  }
-                  disabled={invoice.status === "sent"}
+                  onClick={() => onStatusUpdate?.(invoice.id, "SENT")}
+                  disabled={invoice.status === "SENT"}
                 >
                   <Send className='mr-2 size-4' />
                   Mark as Sent
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() =>
-                    invoicesStore
-                      .getState()
-                      .handleUpdateStatus(invoice.publicId, "paid")
-                  }
-                  disabled={invoice.status === "paid"}
+                  onClick={() => onStatusUpdate?.(invoice.id, "PAID")}
+                  disabled={invoice.status === "PAID"}
                 >
                   <CheckCircle className='mr-2 size-4' />
                   Mark as Paid
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() =>
-                    invoicesStore
-                      .getState()
-                      .handleUpdateStatus(invoice.publicId, "overdue")
-                  }
-                  disabled={invoice.status === "overdue"}
+                  onClick={() => onStatusUpdate?.(invoice.id, "OVERDUE")}
+                  disabled={invoice.status === "OVERDUE"}
                 >
                   <AlertTriangle className='mr-2 size-4' />
                   Mark as Overdue
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() =>
-                    invoicesStore
-                      .getState()
-                      .handleUpdateStatus(invoice.publicId, "cancelled")
-                  }
-                  disabled={invoice.status === "cancelled"}
+                  onClick={() => onStatusUpdate?.(invoice.id, "CANCELLED")}
+                  disabled={invoice.status === "CANCELLED"}
                 >
                   <Ban className='mr-2 size-4' />
                   Mark as Cancelled
@@ -349,7 +327,7 @@ export const Table = ({
               size='icon'
               onClick={(e) => {
                 e.stopPropagation(); // Prevent row click
-                onRowClick && onRowClick(invoice.publicId);
+                onRowClick && onRowClick(invoice.id);
               }}
             >
               <ChevronRightIcon className='size-4' />
@@ -362,7 +340,7 @@ export const Table = ({
   ];
 
   return (
-    <TableProvider columns={columns} data={invoices}>
+    <TableProvider columns={columns} data={data}>
       <TableHeader>
         {({ headerGroup }) => (
           <TableHeaderGroup key={headerGroup.id} headerGroup={headerGroup}>
@@ -376,9 +354,16 @@ export const Table = ({
             key={row.id}
             row={row}
             className='cursor-pointer hover:bg-muted'
-            onClick={() => onRowClick && onRowClick(row.original.publicId)}
           >
-            {({ cell }) => <TableCell key={cell.id} cell={cell} />}
+            {({ cell }) => (
+              <TableCell
+                key={cell.id}
+                cell={cell}
+                onClick={() =>
+                  onRowClick && onRowClick((row.original as Invoice).id)
+                }
+              />
+            )}
           </TableRow>
         )}
       </TableBody>

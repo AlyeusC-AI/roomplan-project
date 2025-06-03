@@ -5,10 +5,12 @@ import type {
   InvoiceResponse,
   InvoicesResponse,
   SaveInvoiceItemDto,
+  UpdateSavedLineItemDto,
   InvoiceItem,
   SavedLineItemsExportResponse,
   SavedLineItemsImportResponse,
   SavedLineItemsByCategoryResponse,
+  PaginatedInvoicesResponse,
 } from "../types/invoice";
 import { apiClient } from "./client";
 
@@ -17,8 +19,21 @@ class InvoiceService {
     return apiClient.post<Invoice>("/invoices", data);
   }
 
-  async findAll(organizationId: string) {
-    return apiClient.get<Invoice[]>(`/invoices/organization/${organizationId}`);
+  async findAll(
+    organizationId: string,
+    page?: number,
+    limit?: number,
+    search?: string
+  ) {
+    const params = new URLSearchParams();
+    if (page) params.append("page", page.toString());
+    if (limit) params.append("limit", limit.toString());
+    if (search) params.append("search", search);
+
+    const queryString = params.toString();
+    const url = `/invoices/organization/${organizationId}${queryString ? `?${queryString}` : ""}`;
+
+    return apiClient.get<PaginatedInvoicesResponse>(url);
   }
 
   async findOne(id: string) {
@@ -73,21 +88,31 @@ class InvoiceService {
     const url = category
       ? `/invoices/items/saved/export/${organizationId}?category=${encodeURIComponent(category)}`
       : `/invoices/items/saved/export/${organizationId}`;
-    return apiClient.get<SavedLineItemsExportResponse>(url);
+    const response = await apiClient.get<SavedLineItemsExportResponse>(url);
+    return response.data;
   }
 
-  async importSavedLineItemsFromCsv(organizationId: string, file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
+  async importSavedLineItemsFromCsv(organizationId: string, fileUrl: string) {
     return apiClient.post<SavedLineItemsImportResponse>(
       `/invoices/items/saved/import/${organizationId}`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
+      { fileUrl }
     );
+  }
+
+  async downloadCsvFile(url: string): Promise<Blob> {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("Failed to download CSV file");
+    }
+    return response.blob();
+  }
+
+  async updateSavedLineItem(id: string, data: UpdateSavedLineItemDto) {
+    return apiClient.patch<InvoiceItem>(`/invoices/items/saved/${id}`, data);
+  }
+
+  async deleteSavedLineItem(id: string) {
+    return apiClient.delete<InvoiceItem>(`/invoices/items/saved/${id}`);
   }
 }
 
