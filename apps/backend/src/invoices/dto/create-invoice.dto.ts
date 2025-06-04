@@ -10,29 +10,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { InvoiceStatus } from '@prisma/client';
-
-export class CreateInvoiceItemDto {
-  @ApiProperty()
-  @IsString()
-  description: string;
-
-  @ApiProperty()
-  @IsNumber()
-  quantity: number;
-
-  @ApiProperty()
-  @IsNumber()
-  rate: number;
-
-  @ApiProperty()
-  @IsNumber()
-  amount: number;
-
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  notes?: string;
-}
+import { CreateInvoiceItemDto } from './invoice-item.dto';
 
 export class CreatePaymentScheduleDto {
   @ApiProperty()
