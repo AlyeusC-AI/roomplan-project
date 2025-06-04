@@ -8,7 +8,11 @@ interface ClientConfig {
 
 export const createClient = (config: ClientConfig) => {
   const instance = axios.create({
-    baseURL: config.baseURL || process.env.API_URL || "http://localhost:3000",
+    baseURL:
+      config.baseURL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.API_URL ||
+      "http://localhost:3000",
   });
 
   instance.interceptors.request.use(async (axiosConfig) => {
