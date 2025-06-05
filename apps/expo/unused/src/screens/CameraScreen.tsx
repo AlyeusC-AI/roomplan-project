@@ -74,8 +74,10 @@ export default function CameraScreen({
         name: fileName,
       };
       const formData = new FormData();
-      // @ts-expect-error maaaaan react-native sucks
-      formData.append("file", p);
+      if (p) {
+        // @ts-expect-error maaaaan react-native sucks
+        formData.append("file", p);
+      }
 
       const { data, error } = await supabaseServiceRole.storage
         .from("media")

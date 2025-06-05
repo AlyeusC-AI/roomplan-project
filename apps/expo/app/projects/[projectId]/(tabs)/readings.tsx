@@ -92,7 +92,7 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
           )}
         </Button>
       </HStack>
-      <VStack w="100%" space={2}>
+      <VStack w="100%" space={0}>
         {isLoadingRoomReadings ? (
           <Center w="full" py={4}>
             <ActivityIndicator />

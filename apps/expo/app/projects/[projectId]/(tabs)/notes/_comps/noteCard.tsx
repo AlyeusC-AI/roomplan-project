@@ -883,8 +883,10 @@ const uploadImageToSupabase = async (
   };
 
   const formData = new FormData();
-  // @ts-expect-error react-native form data typing issue
-  formData.append("file", p);
+  if (p) {
+    // @ts-expect-error react-native form data typing issue
+    formData.append("file", p);
+  }
 
   try {
     // Upload to Supabase storage

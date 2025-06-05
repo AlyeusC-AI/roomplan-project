@@ -10,15 +10,19 @@ import {
   ViewStyle,
 } from "react-native";
 import { ChevronDown } from "lucide-react-native";
+import { LossType } from "@service-geek/api-client";
 
-export declare type DamageType = "fire" | "water" | "mold" | "other";
+export declare type DamageType = LossType;
 
 export const DAMAGE_TYPES = [
-  { label: "Fire Damage", value: "fire" },
-  { label: "Water Damage", value: "water" },
-  { label: "Mold Damage", value: "mold" },
-  { label: "Other", value: "other" },
-] as const;
+  { label: "Fire Damage", value: LossType.FIRE },
+  { label: "Water Damage", value: LossType.WATER },
+  { label: "Mold Damage", value: LossType.MOLD },
+
+  { label: "Wind Damage", value: LossType.WIND },
+
+  { label: "Other", value: LossType.OTHER },
+] as { label: string; value: DamageType }[];
 
 interface DamageTypeSelectorProps {
   value?: DamageType;
@@ -46,11 +50,21 @@ export function DamageTypeSelector({
 
       <View style={styles.sectionBody}>
         <TouchableOpacity
-          style={[styles.selectorInput, style, disabled && styles.disabledInput]}
+          style={[
+            styles.selectorInput,
+            style,
+            disabled && styles.disabledInput,
+          ]}
           onPress={() => !disabled && setModalVisible(true)}
           disabled={disabled}
         >
-          <Text style={[styles.inputText, !value && styles.placeholderText, disabled && styles.disabledText]}>
+          <Text
+            style={[
+              styles.inputText,
+              !value && styles.placeholderText,
+              disabled && styles.disabledText,
+            ]}
+          >
             {selectedLabel}
           </Text>
           {!disabled && <ChevronDown size={20} color="#1d1d1d" />}
@@ -116,7 +130,6 @@ const styles = StyleSheet.create({
   },
   sectionBody: {
     borderRadius: 12,
- 
   },
   selectorInput: {
     backgroundColor: "transparent",

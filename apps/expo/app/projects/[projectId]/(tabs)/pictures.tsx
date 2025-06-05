@@ -491,13 +491,13 @@ export default function ProjectPhotos() {
         </View>
       )}
 
-      {isUploading && (
+      {/* {isUploading && (
         <View style={styles.uploadProgress}>
           <Text style={styles.uploadProgressText}>
             Uploading {uploadProgress} images...
           </Text>
         </View>
-      )}
+      )} */}
 
       <Modal
         visible={showRoomSelection}

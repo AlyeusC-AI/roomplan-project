@@ -8,6 +8,7 @@ import Papa from "papaparse";
 import "react-datepicker/dist/react-datepicker.css";
 import { Ellipsis } from "lucide-react";
 import { Tabs } from "@components/ui/tabs";
+import { useGetProjectById } from "@service-geek/api-client";
 
 export type HailReportItem = {
   Time?: string;
@@ -22,12 +23,11 @@ export type HailReportItem = {
 const ResponsiveWrapper = () => {
   const [hail, setHail] = useState<HailReportItem[]>([]);
   const satelliteView = useRef<HTMLDivElement>(null);
-  const projectInfo = projectStore((state) => state.project);
   const [view, setView] = useState<"list" | "map">("list");
   const [isCreating, setIsCreating] = useState(false);
-  const params = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>();
   const [date, setDate] = useState(new Date());
-
+  const { data: projectInfo } = useGetProjectById(id);
   // const allWeatherReports = trpc.weatherReportItems.getAll.useQuery({
   //   projectPublicId: params.id,
   // });
@@ -113,8 +113,8 @@ const ResponsiveWrapper = () => {
       const map = new google.maps.Map(satelliteView?.current, {
         zoom: 10,
         center: {
-          lat: Number(projectInfo?.lat),
-          lng: Number(projectInfo?.lng),
+          lat: Number(projectInfo?.data?.lat),
+          lng: Number(projectInfo?.data?.lng),
         },
         streetViewControl: false,
         rotateControl: false,

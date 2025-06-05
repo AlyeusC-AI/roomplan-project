@@ -183,8 +183,10 @@ export const uploadImageToStorage = async (
     console.log("🚀 ~ Compressed image:", p);
 
     const formData = new FormData();
-    // @ts-expect-error react-native form data typing issue
-    formData.append("file", p);
+    if (p) {
+      // @ts-expect-error react-native form data typing issue
+      formData.append("file", p);
+    }
 
     // Upload to Supabase storage
     const path = pathPrefix

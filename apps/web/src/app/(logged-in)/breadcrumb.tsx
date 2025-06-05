@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 
 import {
   Breadcrumb,
@@ -12,6 +12,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { validate } from "uuid";
+import { useGetProjectById } from "@service-geek/api-client";
 
 type TBreadCrumbProps = {
   capitalizeLinks?: boolean;
@@ -19,7 +20,8 @@ type TBreadCrumbProps = {
 
 const NextBreadcrumb = ({ capitalizeLinks }: TBreadCrumbProps) => {
   const paths = usePathname();
-  const { project } = projectStore();
+  const { id } = useParams<{ id: string }>();
+  const { data: projectInfo } = useGetProjectById(id);
   const pathNames = paths.split("/").filter((path) => path);
 
   function capitalizeFirstLetter(word: string) {
@@ -41,7 +43,7 @@ const NextBreadcrumb = ({ capitalizeLinks }: TBreadCrumbProps) => {
                 <BreadcrumbItem className='hidden md:block'>
                   <BreadcrumbLink href={href}>
                     {validate(itemLink)
-                      ? (project?.name ?? "")
+                      ? (projectInfo?.data?.clientName ?? "")
                       : capitalizeFirstLetter(itemLink)}
                   </BreadcrumbLink>
                 </BreadcrumbItem>

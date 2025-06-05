@@ -129,17 +129,17 @@ import {
   DamageType,
   DamageTypeSelector,
 } from "@/components/project/damageSelector";
+import { useCreateProject } from "@service-geek/api-client";
 
 export default function NewProject() {
   const [projectName, setProjectName] = useState("");
   const [damageType, setDamageType] = useState<DamageType | undefined>();
   const { address, setAddress } = addressPickerStore((state) => state);
-  const projects = projectsStore();
-  const { session } = userStore();
   const [currentAddress, setCurrentAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [clientPhoneNumber, setClientPhoneNumber] = useState("");
   const [clientEmail, setClientEmail] = useState("");
+  const { mutateAsync: createProjectMutation } = useCreateProject();
 
   const submit = async () => {
     console.log("🚀 ~ submit ~ projectName:", projectName, address);
@@ -156,30 +156,19 @@ export default function NewProject() {
         return;
       }
 
-      const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "auth-token": `${session?.access_token}`,
-          },
-          body: JSON.stringify({
-            name: projectName,
-            location: address,
-            clientPhoneNumber: clientPhoneNumber,
-            clientEmail: clientEmail,
-            damageType,
-          }),
-        }
-      );
-      console.log("🚀 ~ submit ~ res:", res);
+      const json = await createProjectMutation({
+        name: projectName,
+        clientName: projectName,
+        location: address.formattedAddress,
+        clientPhoneNumber: clientPhoneNumber,
+        clientEmail: clientEmail,
+        lossType: damageType,
+        lat: address.lat.toString(),
+        lng: address.lng.toString(),
+      });
 
-      const json = await res.json();
-
-      projects.addProject(json.project);
       router.replace({
-        pathname: `/projects/${json.projectId}`,
+        pathname: `/projects/${json.data.id}`,
         params: { projectName },
       });
     } catch (e) {
@@ -231,13 +220,13 @@ export default function NewProject() {
               style={styles.sectionInput}
               bodyStyle={{
                 shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
+                shadowOffset: {
+                  width: 0,
+                  height: 1,
+                },
+                shadowOpacity: 0.2,
+                shadowRadius: 1.41,
+                elevation: 2,
               }}
             />
 
@@ -297,14 +286,14 @@ export default function NewProject() {
                 />
               </View>
             </View>
-        
+
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Client Phone Number</Text>
               <View style={styles.sectionBody}>
                 <TextInput
                   onChangeText={setClientPhoneNumber}
                   placeholder="Enter client phone number"
-                  style={styles.sectionInput} 
+                  style={styles.sectionInput}
                   value={clientPhoneNumber}
                 />
               </View>
@@ -318,10 +307,9 @@ export default function NewProject() {
                   placeholder="Enter client email"
                   style={styles.sectionInput}
                   value={clientEmail}
-                  />
+                />
               </View>
             </View>
-
           </View>
 
           <TouchableOpacity

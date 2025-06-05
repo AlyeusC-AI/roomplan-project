@@ -16,6 +16,7 @@ import { cn } from "@lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@components/ui/tabs";
 import { Separator } from "@components/ui/separator";
 import { Card } from "@components/ui/card";
+import { useGetProjectById } from "@service-geek/api-client";
 
 import mapboxgl from "mapbox-gl";
 
@@ -40,6 +41,7 @@ const ResponsiveWrapper = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [date, setDate] = useState(new Date());
   const { id } = useParams<{ id: string }>();
+  const { data: projectInfo } = useGetProjectById(id);
 
   // const allWeatherReports = trpc.weatherReportItems.getAll.useQuery({
   //   projectPublicId: id,

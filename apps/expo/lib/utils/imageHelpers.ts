@@ -5,22 +5,28 @@ import { toast } from "sonner-native";
 
 // Constants for different storage buckets
 export const STORAGE_BUCKETS = {
-  NOTES: 'note-images',
-  PROJECT: 'project-images',
-  PROFILE: 'profile-images'
+  NOTES: "note-images",
+  PROJECT: "project-images",
+  PROFILE: "profile-images",
 };
 
 // URLs for different storage buckets
 export const STORAGE_URLS = {
-  [STORAGE_BUCKETS.NOTES]: 'https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/note-images',
-  [STORAGE_BUCKETS.PROJECT]: 'https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/project-images',
-  [STORAGE_BUCKETS.PROFILE]: 'https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/profile-images'
+  [STORAGE_BUCKETS.NOTES]:
+    "https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/note-images",
+  [STORAGE_BUCKETS.PROJECT]:
+    "https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/project-images",
+  [STORAGE_BUCKETS.PROFILE]:
+    "https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/profile-images",
 };
 
 /**
  * Function to get a storage URL for a given image key and bucket
  */
-export const getStorageUrl = (imageKey: string, bucket = STORAGE_BUCKETS.PROJECT): string => {
+export const getStorageUrl = (
+  imageKey: string,
+  bucket = STORAGE_BUCKETS.PROJECT
+): string => {
   return `${STORAGE_URLS[bucket]}/${imageKey}`;
 };
 
@@ -28,8 +34,8 @@ export const getStorageUrl = (imageKey: string, bucket = STORAGE_BUCKETS.PROJECT
  * Function to optimize image URLs with different sizes
  */
 export const getOptimizedImageUrl = (
-  imageKey: string, 
-  size: 'small' | 'medium' | 'large' = 'medium',
+  imageKey: string,
+  size: "small" | "medium" | "large" = "medium",
   bucket = STORAGE_BUCKETS.PROJECT
 ): string => {
   const baseUrl = getStorageUrl(imageKey, bucket);
@@ -40,19 +46,19 @@ export const getOptimizedImageUrl = (
  * Function to generate a placeholder color based on the image key
  */
 export function generatePlaceholderColor(imageKey: string): string {
-  if (!imageKey) return '#f0f0f0'; // Default light gray
-  
+  if (!imageKey) return "#f0f0f0"; // Default light gray
+
   // Simple hash function to generate a consistent color from the image key
   let hash = 0;
   for (let i = 0; i < imageKey.length; i++) {
     hash = imageKey.charCodeAt(i) + ((hash << 5) - hash);
   }
-  
+
   // Convert to RGB format with some pastel-ing to make it lighter
-  const r = ((hash & 0xFF0000) >> 16) * 0.7 + 75;
-  const g = ((hash & 0x00FF00) >> 8) * 0.7 + 75;
-  const b = (hash & 0x0000FF) * 0.7 + 75;
-  
+  const r = ((hash & 0xff0000) >> 16) * 0.7 + 75;
+  const g = ((hash & 0x00ff00) >> 8) * 0.7 + 75;
+  const b = (hash & 0x0000ff) * 0.7 + 75;
+
   return `rgb(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)})`;
 }
 
@@ -73,26 +79,27 @@ export const uploadImageToStorage = async (
 ): Promise<string | undefined> => {
   const {
     bucket = STORAGE_BUCKETS.PROJECT,
-    pathPrefix = '',
+    pathPrefix = "",
     tableName,
     idField,
-    imageKeyField = 'imageKey',
-    onSuccess
+    imageKeyField = "imageKey",
+    onSuccess,
   } = options;
 
   const p = {
     uri: photo.uri,
     name: photo.fileName || `${v4()}.jpeg`,
-    type: photo.mimeType || 'image/jpeg',
+    type: photo.mimeType || "image/jpeg",
   };
-  
-  const formData = new FormData();
-  // @ts-expect-error react-native form data typing issue
-  formData.append("file", p);
 
+  const formData = new FormData();
+  if (p) {
+    // @ts-expect-error react-native form data typing issue
+    formData.append("file", p);
+  }
   try {
     // Upload to Supabase storage
-    const path = pathPrefix 
+    const path = pathPrefix
       ? `/${pathPrefix}/${entityId}/${v4()}.jpeg`
       : `/${entityId}/${v4()}.jpeg`;
 
@@ -118,7 +125,10 @@ export const uploadImageToStorage = async (
         .insert(record);
 
       if (error) {
-        console.error(`Failed to add image to ${tableName} table`, JSON.stringify(error, null, 2));
+        console.error(
+          `Failed to add image to ${tableName} table`,
+          JSON.stringify(error, null, 2)
+        );
         toast.error(`Failed to add image to ${tableName} table`);
         return undefined;
       }
@@ -128,7 +138,7 @@ export const uploadImageToStorage = async (
     if (onSuccess) {
       await onSuccess();
     }
-    
+
     return res.data.path;
   } catch (error) {
     console.error("Upload error:", error);
@@ -149,7 +159,7 @@ export const uploadNoteImage = async (
     tableName: "NoteImage",
     idField: "noteId",
     imageKeyField: "imageKey",
-    onSuccess
+    onSuccess,
   });
 };
 
@@ -163,7 +173,7 @@ export const uploadProjectImage = async (
 ): Promise<string | undefined> => {
   return uploadImageToStorage(photo, projectId, {
     bucket: STORAGE_BUCKETS.PROJECT,
-    onSuccess
+    onSuccess,
   });
 };
 
@@ -183,12 +193,12 @@ export const takePhoto = async (
 ): Promise<void> => {
   // Request camera permissions
   const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-  
-  if (cameraPermission.status !== 'granted') {
+
+  if (cameraPermission.status !== "granted") {
     toast.error("Camera permission is required to take photos");
     return;
   }
-  
+
   let isUploading = true;
   try {
     toast("Preparing camera...");
@@ -200,14 +210,14 @@ export const takePhoto = async (
 
     if (!result.canceled && result.assets?.[0]) {
       toast("Capturing image...");
-      
+
       await uploadImageToStorage(result.assets[0], entityId, options);
-      
+
       // Explicitly refresh the UI to show the new image
       if (options.onRefresh) {
         await options.onRefresh();
       }
-      
+
       toast.success("Image uploaded successfully");
     }
   } catch (error) {
@@ -243,29 +253,29 @@ export const pickMultipleImages = async (
 
     if (!result.canceled && result.assets?.length > 0) {
       const imageCount = result.assets.length;
-      
+
       // Show appropriate loading message based on number of images
       if (imageCount === 1) {
         toast("Uploading image...");
       } else {
         toast(`Uploading ${imageCount} images...`);
       }
-      
+
       // Process and upload each image
-      const uploadPromises = result.assets.map(asset => 
+      const uploadPromises = result.assets.map((asset) =>
         uploadImageToStorage(asset, entityId, options)
       );
-      
+
       await Promise.all(uploadPromises);
-      
+
       // Always call refresh to update the UI
       if (options.onRefresh) {
         await options.onRefresh();
       }
-      
+
       // Also call onSuccess if provided (for compatibility)
       if (options.onSuccess) options.onSuccess();
-      
+
       // Show appropriate success message
       if (imageCount === 1) {
         toast.success("Image uploaded successfully");
@@ -296,22 +306,17 @@ export const deleteImage = async (
   const {
     bucket = STORAGE_BUCKETS.PROJECT,
     tableName,
-    keyField = 'imageKey',
-    onRefresh
+    keyField = "imageKey",
+    onRefresh,
   } = options;
 
   try {
     // Delete from storage
-    await supabaseServiceRole.storage
-      .from(bucket)
-      .remove([imageKey]);
+    await supabaseServiceRole.storage.from(bucket).remove([imageKey]);
 
     // Delete from database if table is specified
     if (tableName) {
-      await supabaseServiceRole
-        .from(tableName)
-        .delete()
-        .eq(keyField, imageKey);
+      await supabaseServiceRole.from(tableName).delete().eq(keyField, imageKey);
     }
 
     // Fetch fresh data after deletion
@@ -337,6 +342,6 @@ export const deleteNoteImage = async (
     bucket: STORAGE_BUCKETS.NOTES,
     tableName: "NoteImage",
     keyField: "imageKey",
-    onRefresh
+    onRefresh,
   });
-}; 
+};
