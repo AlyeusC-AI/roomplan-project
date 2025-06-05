@@ -1,4 +1,9 @@
-import React, { useEffect, useState, forwardRef, useImperativeHandle } from "react";
+import React, {
+  useEffect,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import {
   FlatList,
   TouchableOpacity,
@@ -11,21 +16,20 @@ import {
   SectionList,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Invoice, invoicesStore } from "@/lib/state/invoices";
-import { fetchInvoices } from "@/lib/api/invoices";
-import { formatDate  } from "@/utils/date";
-import { 
-  CheckCircle, 
-  AlertTriangle, 
-  Send, 
-  Ban, 
-  Plus, 
+import { formatDate } from "@/utils/date";
+import {
+  CheckCircle,
+  AlertTriangle,
+  Send,
+  Ban,
+  Plus,
   Search,
-  Clock 
+  Clock,
 } from "lucide-react-native";
 import { showToast } from "@/utils/toast";
 import { formatCurrency } from "@/utils/formatters";
 import { format } from "date-fns";
+import { Invoice, useGetInvoices } from "@service-geek/api-client";
 
 // Status badge component
 const StatusBadge = ({ status }: { status: string }) => {
@@ -69,18 +73,26 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 // Invoice item component
-const InvoiceItem = ({ invoice, onPress }: { invoice: Invoice; onPress: (id: string) => void }) => {
+const InvoiceItem = ({
+  invoice,
+  onPress,
+}: {
+  invoice: Invoice;
+  onPress: (id: string) => void;
+}) => {
   return (
     <TouchableOpacity
       style={styles.invoiceItem}
-      onPress={() => onPress(invoice.publicId)}
+      onPress={() => onPress(invoice.id)}
     >
       <View style={styles.invoiceDetails}>
         <View style={styles.invoiceMain}>
           <Text style={styles.clientName}>{invoice.clientName}</Text>
-          <Text style={styles.invoiceAmount}>{formatCurrency(invoice.amount / 100)}</Text>
+          <Text style={styles.invoiceAmount}>
+            {formatCurrency(invoice.total)}
+          </Text>
         </View>
-        
+
         <View style={styles.invoiceMeta}>
           <Text style={styles.invoiceNumber}>
             {formatDate(invoice.createdAt)} • #{invoice.number}
@@ -97,43 +109,49 @@ export interface InvoiceListRef {
   fetchInvoiceData: () => Promise<void>;
 }
 
-const InvoiceList = forwardRef<InvoiceListRef, {
-  onNewInvoice: () => void;
-}>(({ onNewInvoice }, ref) => {
-  const { invoices, setInvoices } = invoicesStore((state) => state);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+const InvoiceList = ({ onNewInvoice }: { onNewInvoice: () => void }) => {
   const [activeTab, setActiveTab] = useState("active");
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: invoicesData,
+    isLoading: isLoadingInvoices,
+    error: errorInvoices,
+    isRefetching,
+    refetch,
+  } = useGetInvoices();
+  const invoices = invoicesData?.data || [];
 
   // Group invoices by month
   const groupedInvoices = React.useMemo(() => {
     // Filter invoices based on activeTab
-    const filteredInvoices = invoices.filter(invoice => {
+    const filteredInvoices = invoices.filter((invoice) => {
       if (activeTab === "active") {
-        return invoice.status !== "paid" && invoice.status !== "cancelled";
+        return invoice.status !== "PAID" && invoice.status !== "CANCELLED";
       } else if (activeTab === "paid") {
-        return invoice.status === "paid";
+        return invoice.status === "PAID";
       }
       return true;
     });
 
     // Filter by search query if present
-    const searchFilteredInvoices = searchQuery.trim() !== "" 
-      ? filteredInvoices.filter(invoice => 
-          invoice.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          invoice.number.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      : filteredInvoices;
+    const searchFilteredInvoices =
+      searchQuery.trim() !== ""
+        ? filteredInvoices.filter(
+            (invoice) =>
+              invoice.clientName
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase()) ||
+              invoice.number.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        : filteredInvoices;
 
     // Group by month
     const grouped: { [key: string]: Invoice[] } = {};
-    searchFilteredInvoices.forEach(invoice => {
+    searchFilteredInvoices.forEach((invoice) => {
       const date = new Date(invoice.createdAt);
       const monthYear = format(date, "MMMM yyyy");
-      
+
       if (!grouped[monthYear]) {
         grouped[monthYear] = [];
       }
@@ -141,78 +159,35 @@ const InvoiceList = forwardRef<InvoiceListRef, {
     });
 
     // Convert to section list format
-    return Object.keys(grouped).map(month => {
-      const invoicesInMonth = grouped[month];
-      // Calculate total amount for the month
-      const totalAmount = invoicesInMonth.reduce(
-        (sum, invoice) => sum + invoice.amount, 
-        0
-      );
+    return Object.keys(grouped)
+      .map((month) => {
+        const invoicesInMonth = grouped[month];
+        // Calculate total amount for the month
+        const totalAmount = invoicesInMonth.reduce(
+          (sum, invoice) => sum + invoice.total,
+          0
+        );
 
-      return {
-        title: month,
-        data: invoicesInMonth,
-        totalAmount,
-      };
-    }).sort((a, b) => {
-      // Sort months in descending order (most recent first)
-      const dateA = new Date(a.data[0].createdAt);
-      const dateB = new Date(b.data[0].createdAt);
-      return dateB.getTime() - dateA.getTime();
-    });
+        return {
+          title: month,
+          data: invoicesInMonth,
+          totalAmount,
+        };
+      })
+      .sort((a, b) => {
+        // Sort months in descending order (most recent first)
+        const dateA = new Date(a.data[0].createdAt);
+        const dateB = new Date(b.data[0].createdAt);
+        return dateB.getTime() - dateA.getTime();
+      });
   }, [invoices, activeTab, searchQuery]);
-
-  // Expose the fetchInvoiceData method to the parent component through ref
-  useImperativeHandle(ref, () => ({
-    fetchInvoiceData
-  }));
-
-  useEffect(() => {
-    fetchInvoiceData();
-  }, []);
-
-  const fetchInvoiceData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      console.log("InvoiceList: Calling fetchInvoices");
-      const result = await fetchInvoices();
-      console.log("InvoiceList: Received response:", result);
-      
-      if (result && 'data' in result && result.data) {
-        console.log("InvoiceList: Setting invoices, count:", result.data.length);
-        setInvoices(result.data, result.data.length);
-      } else if (result && 'error' in result && result.error) {
-        console.error("InvoiceList: Error fetching invoices:", result.error);
-        setError(result.error);
-        showToast("error", "Error", `Failed to load invoices: ${result.error}`);
-      } else {
-        console.error("InvoiceList: Unexpected response format:", result);
-        setError("Invalid response from server");
-        showToast("error", "Error", "Received invalid response from server");
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
-      console.error("InvoiceList: Exception fetching invoices:", errorMessage);
-      setError(errorMessage);
-      showToast("error", "Error", `Failed to load invoices: ${errorMessage}`);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const handleRefresh = () => {
-    setRefreshing(true);
-    fetchInvoiceData();
-  };
 
   const handleInvoicePress = (invoiceId: string) => {
     // Navigate to invoice details
     router.push(`/invoices/${invoiceId}`);
   };
 
-  if (loading && !refreshing) {
+  if (isLoadingInvoices) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
@@ -221,11 +196,14 @@ const InvoiceList = forwardRef<InvoiceListRef, {
     );
   }
 
-  if (error) {
+  if (errorInvoices) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Error: {error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchInvoiceData}>
+        <Text style={styles.errorText}>Error: {errorInvoices.message}</Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => refetch({ throwOnError: true })}
+        >
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
@@ -240,7 +218,9 @@ const InvoiceList = forwardRef<InvoiceListRef, {
           style={styles.emptyStateButton}
           onPress={onNewInvoice}
         >
-          <Text style={styles.emptyStateButtonText}>Create your first invoice</Text>
+          <Text style={styles.emptyStateButtonText}>
+            Create your first invoice
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -264,19 +244,29 @@ const InvoiceList = forwardRef<InvoiceListRef, {
 
       {/* Tabs */}
       <View style={styles.tabsContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tab, activeTab === "active" && styles.activeTab]}
           onPress={() => setActiveTab("active")}
         >
-          <Text style={[styles.tabText, activeTab === "active" && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "active" && styles.activeTabText,
+            ]}
+          >
             Active
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tab, activeTab === "paid" && styles.activeTab]}
           onPress={() => setActiveTab("paid")}
         >
-          <Text style={[styles.tabText, activeTab === "paid" && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "paid" && styles.activeTabText,
+            ]}
+          >
             Paid
           </Text>
         </TouchableOpacity>
@@ -285,7 +275,7 @@ const InvoiceList = forwardRef<InvoiceListRef, {
       {/* Invoice list grouped by month */}
       <SectionList
         sections={groupedInvoices}
-        keyExtractor={(item) => item.publicId}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <InvoiceItem invoice={item} onPress={handleInvoicePress} />
         )}
@@ -293,31 +283,34 @@ const InvoiceList = forwardRef<InvoiceListRef, {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
             <Text style={styles.sectionAmount}>
-              {formatCurrency(section.totalAmount / 100)}
+              {formatCurrency(section.totalAmount)}
             </Text>
           </View>
         )}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            enabled={!isLoadingInvoices}
+          />
         }
         ListEmptyComponent={
           <View style={styles.emptyListContainer}>
-            <Text style={styles.emptyListText}>No {activeTab} invoices found</Text>
+            <Text style={styles.emptyListText}>
+              No {activeTab} invoices found
+            </Text>
           </View>
         }
       />
 
       {/* Floating Action Button */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={onNewInvoice}
-      >
+      <TouchableOpacity style={styles.fab} onPress={onNewInvoice}>
         <Plus size={24} color="#fff" />
       </TouchableOpacity>
     </View>
   );
-});
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -331,9 +324,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f1f5f9',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f1f5f9",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -344,87 +337,87 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#1e293b',
+    color: "#1e293b",
   },
   tabsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: "#e2e8f0",
   },
   tab: {
     flex: 1,
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: '#2563eb',
+    borderBottomColor: "#2563eb",
   },
   tabText: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#64748b',
+    fontWeight: "500",
+    color: "#64748b",
   },
   activeTabText: {
-    color: '#2563eb',
-    fontWeight: '600',
+    color: "#2563eb",
+    fontWeight: "600",
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#f8fafc',
+    backgroundColor: "#f8fafc",
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: "#e2e8f0",
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#0f172a',
+    fontWeight: "600",
+    color: "#0f172a",
   },
   sectionAmount: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#0f172a',
+    fontWeight: "700",
+    color: "#0f172a",
   },
   invoiceItem: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: "#e2e8f0",
   },
   invoiceDetails: {
     flex: 1,
   },
   invoiceMain: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 4,
   },
   clientName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#0f172a',
+    fontWeight: "600",
+    color: "#0f172a",
   },
   invoiceAmount: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#0f172a',
+    fontWeight: "700",
+    color: "#0f172a",
   },
   invoiceMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 4,
   },
   invoiceNumber: {
     fontSize: 14,
-    color: '#64748b',
+    color: "#64748b",
   },
   badge: {
     paddingHorizontal: 8,
@@ -433,7 +426,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   loadingContainer: {
     flex: 1,
@@ -524,4 +517,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default InvoiceList; 
+export default InvoiceList;

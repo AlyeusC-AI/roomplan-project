@@ -234,7 +234,13 @@ export class EstimatesService {
 
   async updateStatus(
     id: string,
-    status: 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED',
+    status:
+      | 'DRAFT'
+      | 'SENT'
+      | 'APPROVED'
+      | 'REJECTED'
+      | 'CANCELLED'
+      | 'EXPIRED',
     userId: string,
   ): Promise<Estimate> {
     const estimate = await this.prisma.estimate.findUnique({

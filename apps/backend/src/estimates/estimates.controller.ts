@@ -144,7 +144,14 @@ export class EstimatesController {
       properties: {
         status: {
           type: 'string',
-          enum: ['DRAFT', 'SENT', 'APPROVED', 'REJECTED'],
+          enum: [
+            'DRAFT',
+            'SENT',
+            'APPROVED',
+            'REJECTED',
+            'CANCELLED',
+            'EXPIRED',
+          ],
         },
       },
     },

@@ -28,12 +28,13 @@ import {
 import { showToast } from "@/utils/toast";
 import { formatCurrency } from "@/utils/formatters";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import {
   CreateInvoiceItemDto,
   EstimateItem,
   InvoiceItem,
   Project,
+  useCreateEstimate,
   useGetProjects,
   useGetSavedInvoiceItems,
 } from "@service-geek/api-client";
@@ -44,23 +45,23 @@ interface NewEstimateProps {
 }
 
 // Add action types data
-const ACTION_TYPES = [
-  { id: "1", name: "Add Vents" },
-  { id: "2", name: "Add Shoemolding" },
-  { id: "3", name: "Additional Landing" },
-  { id: "4", name: "Repair Drywall" },
-  { id: "5", name: "Install Flooring" },
-  { id: "6", name: "Replace Baseboards" },
-  { id: "7", name: "Paint Walls" },
-  { id: "8", name: "Replace Ceiling" },
-  { id: "9", name: "Remove Water Damage" },
-  { id: "10", name: "Mold Remediation" },
-  { id: "11", name: "Install Carpet" },
-  { id: "12", name: "Replace Fixtures" },
-  { id: "13", name: "Plumbing Repairs" },
-  { id: "14", name: "Electrical Work" },
-  { id: "15", name: "HVAC Service" },
-];
+// const ACTION_TYPES = [
+//   { id: "1", name: "Add Vents" },
+//   { id: "2", name: "Add Shoemolding" },
+//   { id: "3", name: "Additional Landing" },
+//   { id: "4", name: "Repair Drywall" },
+//   { id: "5", name: "Install Flooring" },
+//   { id: "6", name: "Replace Baseboards" },
+//   { id: "7", name: "Paint Walls" },
+//   { id: "8", name: "Replace Ceiling" },
+//   { id: "9", name: "Remove Water Damage" },
+//   { id: "10", name: "Mold Remediation" },
+//   { id: "11", name: "Install Carpet" },
+//   { id: "12", name: "Replace Fixtures" },
+//   { id: "13", name: "Plumbing Repairs" },
+//   { id: "14", name: "Electrical Work" },
+//   { id: "15", name: "HVAC Service" },
+// ];
 
 export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
   const router = useRouter();
@@ -78,6 +79,8 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
   const [adjusterName, setAdjusterName] = useState("");
   const [adjusterPhone, setAdjusterPhone] = useState("");
   const [adjusterEmail, setAdjusterEmail] = useState("");
+  const { mutate: createEstimate, isPending: isCreatingEstimate } =
+    useCreateEstimate();
 
   // Add state for confirmation modal
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
@@ -85,9 +88,17 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
 
   const [projectSearchTerm, setProjectSearchTerm] = useState("");
 
-  const [items, setItems] = useState<CreateInvoiceItemDto[]>([
-    { description: "", quantity: 1, rate: 0, amount: 0 },
-  ]);
+  const [items, setItems] = useState<(CreateInvoiceItemDto & { id: string })[]>(
+    [
+      {
+        id: uuidv4(),
+        description: "",
+        quantity: 1,
+        rate: 0,
+        amount: 0,
+      },
+    ]
+  );
   const subtotal = items.reduce(
     (sum, item) => sum + item.quantity * item.rate,
     0
@@ -109,24 +120,25 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
     (tax.show ? subtotal * (tax.value / 100) : 0);
 
   // Add state for new line item flow
-  const [showActionSelection, setShowActionSelection] = useState(false);
+  // const [showActionSelection, setShowActionSelection] = useState(false);
   const [showItemDetails, setShowItemDetails] = useState(false);
-  const [actionSearchTerm, setActionSearchTerm] = useState("");
-  const [filteredActions, setFilteredActions] = useState(ACTION_TYPES);
-  const [selectedAction, setSelectedAction] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
+  // const [actionSearchTerm, setActionSearchTerm] = useState("");
+  // const [filteredActions, setFilteredActions] = useState(ACTION_TYPES);
+  // const [selectedAction, setSelectedAction] = useState<{
+  //   id: string;
+  //   name: string;
+  // } | null>(null);
   const [newItemDetails, setNewItemDetails] = useState({
+    id: uuidv4(),
     description: "",
     quantity: "1",
     rate: "0",
   });
   // Add state for editing existing line items
   const [showEditItemModal, setShowEditItemModal] = useState(false);
-  const [editingItem, setEditingItem] = useState<CreateInvoiceItemDto | null>(
-    null
-  );
+  const [editingItem, setEditingItem] = useState<
+    (CreateInvoiceItemDto & { id: string }) | null
+  >(null);
   const { data: savedLineItems = [], isLoading: isLoadingSavedItems } =
     useGetSavedInvoiceItems();
   const { data: projectsData } = useGetProjects();
@@ -134,32 +146,35 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
 
   const handleAddItem = () => {
     // Reset all values
-    setActionSearchTerm("");
-    setFilteredActions(ACTION_TYPES);
-    setSelectedAction(null);
+    // setActionSearchTerm("");
+    // setFilteredActions(ACTION_TYPES);
+    // setSelectedAction(null);
     setNewItemDetails({
+      id: uuidv4(),
       description: "",
       quantity: "1",
       rate: "0",
     });
 
     // Show action selection modal
-    setShowActionSelection(true);
+    // setShowActionSelection(true);
+    setShowItemDetails(true);
   };
 
   const handleSelectAction = (action: { id: string; name: string }) => {
-    setSelectedAction(action);
+    // setSelectedAction(action);
     setNewItemDetails({
       ...newItemDetails,
       description: action.name,
     });
-    setShowActionSelection(false);
+    // setShowActionSelection(false);
     setShowItemDetails(true);
   };
 
   const handleSaveNewItem = () => {
     // Create new item with entered details
     const newItem = {
+      id: uuidv4(),
       description: newItemDetails.description,
       quantity: parseFloat(newItemDetails.quantity) || 1,
       rate: parseFloat(newItemDetails.rate) || 0,
@@ -178,9 +193,9 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
     showToast("success", "Success", "Line item added to estimate");
   };
 
-  const handleRemoveItem = (index: number) => {
+  const handleRemoveItem = (id: string) => {
     if (items.length > 1) {
-      setItems(items.filter((_, i) => i !== index));
+      setItems(items.filter((item) => item.id !== id));
     } else {
       showToast("info", "Cannot Remove", "You need at least one line item");
     }
@@ -190,7 +205,7 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
     onClose();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validate required fields
     if (!projectName) {
       showToast("error", "Missing Project", "Please select a project");
@@ -201,6 +216,35 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
       showToast("error", "Incomplete Items", "Please complete all line items");
       return;
     }
+
+    await createEstimate({
+      number: `EST-${Math.floor(Math.random() * 10000)}`,
+      clientName,
+      clientEmail,
+      // projectName,
+      projectId: projectId,
+      estimateDate: estimateDate.toISOString(),
+      expiryDate: addDays(estimateDate, parseInt(daysValid)).toISOString(),
+      subtotal: subtotal,
+      markup: markup.show ? markup.value : undefined,
+      discount: discount.show ? discount.value : undefined,
+      tax: tax.show ? tax.value : undefined,
+      total: total,
+      deposit: deposit.show ? deposit.value : undefined,
+      status: "DRAFT",
+      notes,
+      // terms,
+      // adjusterName: showAdjuster ? adjusterName : undefined,
+      // adjusterEmail: showAdjuster ? adjusterEmail : undefined,
+      // adjusterPhone: showAdjuster ? adjusterPhone : undefined,
+      items: items.map((item) => ({
+        description: item.description,
+        quantity: item.quantity,
+        rate: item.rate,
+        amount: item.amount,
+        notes: "",
+      })),
+    });
 
     // Save logic would go here
     showToast("success", "Success", "Estimate created successfully");
@@ -247,36 +291,46 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
   };
 
   // Add saved line item to estimate
-  const handleAddSavedLineItem = (item: CreateInvoiceItemDto) => {
+  const handleAddSavedLineItem = (
+    item: CreateInvoiceItemDto & { id: string }
+  ) => {
     // Instead of immediately adding the item, pre-populate the edit screen
-    setNewItemDetails({
-      description: item.description,
-      quantity: "1",
-      rate: item.rate.toString(),
-    });
+    setItems([
+      ...items,
+      {
+        id: uuidv4(),
+        description: item.description,
+        quantity: 1,
+        rate: item.rate,
+        amount: item.rate * 1,
+      },
+    ]);
 
     // Close the saved items modal
     setShowSavedItems(false);
 
     // Show the item details confirmation modal
-    setShowItemDetails(true);
+    // setShowItemDetails(true);
   };
 
   // Add all items from a category
   const handleAddAllFromCategory = (category: string) => {
     const itemsToAdd = savedLineItems.filter(
-      (item: CreateInvoiceItemDto) =>
+      (item: CreateInvoiceItemDto & { id: string }) =>
         (item.category || "Uncategorized") === category
     );
 
     if (itemsToAdd.length === 0) return;
 
-    const newItems = itemsToAdd.map((item: CreateInvoiceItemDto) => ({
-      description: item.description || "",
-      quantity: 1,
-      rate: item.rate || 0,
-      amount: item.rate || 0,
-    }));
+    const newItems = itemsToAdd.map(
+      (item: CreateInvoiceItemDto & { id: string }) => ({
+        id: uuidv4(),
+        description: item.description || "",
+        quantity: 1,
+        rate: item.rate || 0,
+        amount: item.rate || 0,
+      })
+    );
 
     setItems([...items, ...newItems]);
     setShowSavedItems(false);
@@ -332,22 +386,22 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
   };
 
   // Add action search filter effect
-  useEffect(() => {
-    if (actionSearchTerm.trim() === "") {
-      setFilteredActions(ACTION_TYPES);
-      return;
-    }
+  // useEffect(() => {
+  //   if (actionSearchTerm.trim() === "") {
+  //     setFilteredActions(ACTION_TYPES);
+  //     return;
+  //   }
 
-    const searchTermLower = actionSearchTerm.toLowerCase();
-    const filtered = ACTION_TYPES.filter((action) =>
-      action.name.toLowerCase().includes(searchTermLower)
-    );
+  //   const searchTermLower = actionSearchTerm.toLowerCase();
+  //   const filtered = ACTION_TYPES.filter((action) =>
+  //     action.name.toLowerCase().includes(searchTermLower)
+  //   );
 
-    setFilteredActions(filtered);
-  }, [actionSearchTerm]);
+  //   setFilteredActions(filtered);
+  // }, [actionSearchTerm]);
 
   // Add function to handle line item click for editing
-  const handleEditItem = (item: CreateInvoiceItemDto) => {
+  const handleEditItem = (item: CreateInvoiceItemDto & { id: string }) => {
     setEditingItem(item);
     setShowEditItemModal(true);
   };
@@ -358,7 +412,9 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
 
     // Update the item in the items array
     setItems(
-      items.map((item, i) => (i === items.indexOf(item) ? editingItem : item))
+      items.map((item) =>
+        item.id === editingItem.id ? { ...editingItem } : item
+      )
     );
 
     // Close the modal
@@ -1102,7 +1158,7 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
                 <TouchableOpacity
                   onPress={() => {
                     setShowItemDetails(false);
-                    setShowActionSelection(true);
+                    // setShowActionSelection(true);
                   }}
                   style={styles.headerButton}
                 >
@@ -1120,7 +1176,7 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
               </View>
 
               <View style={styles.itemDetailsContainer}>
-                <View style={styles.itemDetailsSection}>
+                {/* <View style={styles.itemDetailsSection}>
                   <Text style={styles.itemDetailsSectionTitle}>
                     Action Type
                   </Text>
@@ -1129,7 +1185,7 @@ export default function NewEstimate({ visible, onClose }: NewEstimateProps) {
                       {selectedAction?.name || "No action selected"}
                     </Text>
                   </View>
-                </View>
+                </View> */}
 
                 <View style={styles.itemDetailsSection}>
                   <Text style={styles.itemDetailsSectionTitle}>Details</Text>

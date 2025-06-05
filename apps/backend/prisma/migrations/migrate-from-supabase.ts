@@ -1262,17 +1262,17 @@ async function main() {
     console.log('Starting migration from Supabase...');
 
     // Run migrations in sequence
-    // await migrateUsers();
-    // await migrateOrganizations();
-    // await migrateOrganizationMemberships();
-    // await migrateProjects();
-    // await migrateCalendarEvents();
-    // await migrateCalendarEventReminders();
-    // await migrateRooms();
-    // await migrateNotes();
-    // await migrateReading();
+    await migrateUsers();
+    await migrateOrganizations();
+    await migrateOrganizationMemberships();
+    await migrateProjects();
+    await migrateCalendarEvents();
+    await migrateCalendarEventReminders();
+    await migrateRooms();
+    await migrateNotes();
+    await migrateReading();
 
-    // await migrateInferences();
+    await migrateInferences();
     await migrateDocuments();
     console.log('Migration completed successfully!');
   } catch (error) {

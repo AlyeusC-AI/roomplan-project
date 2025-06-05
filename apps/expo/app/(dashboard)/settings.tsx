@@ -19,6 +19,11 @@ import { supabase } from "@/lib/supabase";
 import { getConstants } from "@/utils/constants";
 import RBSheet from "react-native-raw-bottom-sheet";
 import { router } from "expo-router";
+import {
+  useAuthStore,
+  useCurrentUser,
+  useLogout,
+} from "@service-geek/api-client";
 
 export interface RBSheetRef {
   /**
@@ -33,17 +38,14 @@ export interface RBSheetRef {
 }
 
 export default function Settings() {
-  const { session } = userStore((state) => state);
+  const { mutate: logoutMutate } = useLogout();
+  const { data: user } = useCurrentUser();
   const [form, setForm] = useState({
     emailNotifications: true,
     pushNotifications: false,
   });
 
-  const [imageUrl, setImageUrl] = useState(
-    `https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/profile-pictures/${
-      session?.user.id ?? ""
-    }/avatar.png`
-  );
+  const [imageUrl, setImageUrl] = useState(user?.avatar ?? "");
 
   const [modalType, setModalType] = useState<"logout" | "delete" | null>(null);
   const deleteSheet = React.useRef<RBSheetRef | null>(null);
@@ -51,35 +53,9 @@ export default function Settings() {
 
   const logout = async () => {
     setLoading(true);
-    await supabase.auth.signOut();
+    logoutMutate();
     setLoading(false);
-    router.replace("/");
-  };
-
-  const onDelete = async () => {
-    try {
-      setLoading(true);
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const accessToken = session?.access_token;
-      const servicegeekUrl = getConstants().servicegeekUrl!;
-
-      const res = await fetch(`${servicegeekUrl}/api/v1/user`, {
-        method: "DELETE",
-        headers: {
-          "auth-token": accessToken || "",
-        },
-      });
-      if (res.ok) {
-        await supabase.auth.signOut();
-      }
-    } catch (error) {
-      await supabase.auth.signOut();
-    } finally {
-      setLoading(false);
-      router.replace("/");
-    }
+    router.replace("/login");
   };
 
   return (
@@ -114,7 +90,7 @@ export default function Settings() {
                 }}
                 onError={() =>
                   setImageUrl(
-                    `https://eu.ui-avatars.com/api/?name=${session?.user.user_metadata.firstName}+${session?.user.user_metadata.lastName}&size=250`
+                    `https://eu.ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&size=250`
                   )
                 }
                 style={styles.profileAvatar}
@@ -123,11 +99,9 @@ export default function Settings() {
               <View style={styles.profileBody}>
                 <Text
                   style={styles.profileName}
-                >{`${session?.user.user_metadata.firstName} ${session?.user.user_metadata.lastName}`}</Text>
+                >{`${user?.firstName} ${user?.lastName}`}</Text>
 
-                <Text style={styles.profileHandle}>
-                  {session?.user.user_metadata.email}
-                </Text>
+                <Text style={styles.profileHandle}>{user?.email}</Text>
               </View>
 
               <ChevronRight color="#bcbcbc" size={22} />
@@ -308,7 +282,7 @@ export default function Settings() {
           </View>
         </View>
 
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <View style={styles.sectionBody}>
             <View
               style={[
@@ -331,7 +305,7 @@ export default function Settings() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </View> */}
 
         <Text style={styles.contentFooter}>
           App Version {Application.nativeApplicationVersion} #

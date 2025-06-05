@@ -21,64 +21,33 @@ import {
   FileText,
   MoreHorizontal,
 } from "lucide-react-native";
-import {
-  getEstimateById,
-  updateEstimateStatus,
-  convertEstimateToInvoice,
-} from "@/lib/api/estimates";
+
 import { formatDate } from "@/utils/date";
 import { formatCurrency } from "@/utils/formatters";
 import { showToast } from "@/utils/toast";
-import * as Print from "expo-print";
-import * as FileSystem from "expo-file-system";
-import * as Sharing from "expo-sharing";
-import { invoicesStore } from "@/lib/state/invoices";
+import {
+  useConvertEstimateToInvoice,
+  useGetEstimateById,
+  useUpdateEstimateStatus,
+  InvoiceItem,
+  EstimateItem,
+} from "@service-geek/api-client";
 
 export default function EstimateDetailsScreen() {
   const { publicId } = useLocalSearchParams<{ publicId: string }>();
-  const [estimate, setEstimate] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeView, setActiveView] = useState("mobile");
   const [showStatusPicker, setShowStatusPicker] = useState(false);
   const [isChangingStatus, setIsChangingStatus] = useState(false);
   const router = useRouter();
-
-  useEffect(() => {
-    if (!publicId) {
-      setError("Estimate ID is missing");
-      setLoading(false);
-      return;
-    }
-
-    const loadEstimate = async () => {
-      try {
-        const result = await getEstimateById(publicId);
-        if (result && "data" in result && result.data) {
-          setEstimate(result.data);
-        } else if (result && "error" in result && result.error) {
-          setError(result.error);
-          showToast(
-            "error",
-            "Error",
-            `Failed to load estimate: ${result.error}`
-          );
-        } else {
-          setError("Invalid response from server");
-          showToast("error", "Error", "Received invalid response from server");
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Unknown error occurred";
-        setError(errorMessage);
-        showToast("error", "Error", `Failed to load estimate: ${errorMessage}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadEstimate();
-  }, [publicId]);
+  const {
+    data: estimateData,
+    isLoading: isLoadingEstimate,
+    isError: isErrorEstimate,
+  } = useGetEstimateById(publicId);
+  const estimate = estimateData?.data;
+  const { mutate: updateEstimateStatus } = useUpdateEstimateStatus();
+  const { mutateAsync: convertEstimateToInvoice } =
+    useConvertEstimateToInvoice();
 
   const handleStatusChange = async (newStatus: string) => {
     if (!estimate || newStatus === estimate.status) {
@@ -88,22 +57,11 @@ export default function EstimateDetailsScreen() {
 
     setIsChangingStatus(true);
     try {
-      const result = await updateEstimateStatus(
-        estimate.publicId,
-        newStatus as
-          | "draft"
-          | "sent"
-          | "approved"
-          | "rejected"
-          | "cancelled"
-          | "expired"
-      );
-      if (result && "data" in result && result.data) {
-        setEstimate({ ...estimate, status: newStatus });
-        showToast("success", "Success", `Estimate marked as ${newStatus}`);
-      } else if (result && "error" in result && result.error) {
-        showToast("error", "Error", `Failed to update status: ${result.error}`);
-      }
+      const result = await updateEstimateStatus({
+        id: estimate.id,
+        status: newStatus as "DRAFT" | "SENT" | "APPROVED" | "REJECTED",
+      });
+      showToast("success", "Success", `Estimate marked as ${newStatus}`);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Unknown error occurred";
@@ -118,29 +76,15 @@ export default function EstimateDetailsScreen() {
     if (!estimate) return;
 
     try {
-      const result = await convertEstimateToInvoice(estimate.publicId);
-      if (result && "data" in result && result.data) {
-        showToast("success", "Success", "Estimate converted to invoice");
-        router.push(`/invoices/${result.data.invoiceId}`);
-      } else if (result && "error" in result && result.error) {
-        showToast(
-          "error",
-          "Error",
-          `Failed to convert estimate: ${result.error}`
-        );
-      }
+      const result = await convertEstimateToInvoice(estimate.id);
+      showToast("success", "Success", "Estimate converted to invoice");
+      router.push(`/invoices/${result.data.invoiceId}`);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Unknown error occurred";
-      showToast(
-        "error",
-        "Error",
-        `Failed to convert estimate: ${errorMessage}`
-      );
+      showToast("error", "Error", `Failed to convert estimate`);
     }
   };
 
-  if (loading) {
+  if (isLoadingEstimate) {
     return (
       <SafeAreaView style={styles.container}>
         <Stack.Screen
@@ -165,7 +109,7 @@ export default function EstimateDetailsScreen() {
     );
   }
 
-  if (error) {
+  if (isErrorEstimate) {
     return (
       <SafeAreaView style={styles.container}>
         <Stack.Screen
@@ -183,7 +127,7 @@ export default function EstimateDetailsScreen() {
           }}
         />
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Error: {error}</Text>
+          <Text style={styles.errorText}>Error: {isErrorEstimate}</Text>
           <TouchableOpacity style={styles.button} onPress={() => router.back()}>
             <Text style={styles.buttonText}>Go Back</Text>
           </TouchableOpacity>
@@ -252,7 +196,9 @@ export default function EstimateDetailsScreen() {
         style={styles.statusBar}
         onPress={() => setShowStatusPicker(true)}
       >
-        <Text style={styles.statusText}>PENDING</Text>
+        <Text style={styles.statusText}>
+          {estimate?.status.toUpperCase() || "DRAFT"}
+        </Text>
         <ChevronDown size={16} color="#fff" />
       </TouchableOpacity>
 
@@ -349,16 +295,19 @@ export default function EstimateDetailsScreen() {
               <Text style={styles.totalHeader}>Total</Text>
             </View>
 
-            {estimate?.EstimateItems?.map((item: any, index: number) => (
-              <View key={item.id || index} style={styles.lineItem}>
-                <Text style={styles.descriptionText}>{item.description}</Text>
-                <Text style={styles.rateText}>{formatCurrency(item.rate)}</Text>
-                <Text style={styles.quantityText}>{item.quantity}</Text>
-                <Text style={styles.totalText}>
-                  {formatCurrency(item.amount)}
-                </Text>
-              </View>
-            ))}
+            {estimate?.items &&
+              estimate?.items.map((item: EstimateItem, index: number) => (
+                <View key={item.id || index} style={styles.lineItem}>
+                  <Text style={styles.descriptionText}>{item.description}</Text>
+                  <Text style={styles.rateText}>
+                    {formatCurrency(item.rate)}
+                  </Text>
+                  <Text style={styles.quantityText}>{item.quantity}</Text>
+                  <Text style={styles.totalText}>
+                    {formatCurrency(item.amount)}
+                  </Text>
+                </View>
+              ))}
 
             <View style={styles.subtotalSection}>
               <View style={styles.subtotalRow}>
@@ -370,7 +319,7 @@ export default function EstimateDetailsScreen() {
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>Total</Text>
                 <Text style={styles.totalValue}>
-                  {formatCurrency(estimate?.amount || 0)}
+                  {formatCurrency(estimate?.total || 0)}
                 </Text>
               </View>
             </View>
@@ -458,12 +407,12 @@ export default function EstimateDetailsScreen() {
             ) : (
               <FlatList
                 data={[
-                  "draft",
-                  "sent",
-                  "approved",
-                  "rejected",
-                  "cancelled",
-                  "expired",
+                  "DRAFT",
+                  "SENT",
+                  "APPROVED",
+                  "REJECTED",
+                  "CANCELLED",
+                  "EXPIRED",
                 ]}
                 keyExtractor={(item) => item}
                 renderItem={({ item }) => (

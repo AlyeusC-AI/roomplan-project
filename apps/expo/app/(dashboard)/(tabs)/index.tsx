@@ -43,10 +43,11 @@ export default function Dashboard() {
   // State
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
-  const [orgModalVisible, setOrgModalVisible] = useState(false);
+  // const [orgModalVisible, setOrgModalVisible] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const limit = 20;
   const { data: user, isLoading: isLoadingUser } = useCurrentUser();
+  console.log("🚀 ~ Dashboard ~ user:", user);
   const activeOrganization = useActiveOrganization();
   const result = useGetProjects({
     pagination: {
@@ -82,132 +83,132 @@ export default function Dashboard() {
   }, [result]);
 
   // Reset pagination when organization changes
-  useEffect(() => {
-    if (activeOrganization) {
-      resetAndFetch();
-    }
-  }, [activeOrganization]);
+  // useEffect(() => {
+  //   if (activeOrganization) {
+  //     resetAndFetch();
+  //   }
+  // }, [activeOrganization]);
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= (data?.meta?.totalPages || 1)) {
-      setPage(newPage);
-    }
-  };
+  // const handlePageChange = (newPage: number) => {
+  //   if (newPage >= 1 && newPage <= (data?.meta?.totalPages || 1)) {
+  //     setPage(newPage);
+  //   }
+  // };
 
   const renderItem = ({ item: project }: { item: Project }) => (
     <ProjectCell project={project} />
   );
 
-  const renderPaginationControls = () => {
-    if (!data?.meta || data.meta.totalPages <= 1) return null;
+  // const renderPaginationControls = () => {
+  //   if (!data?.meta || data.meta.totalPages <= 1) return null;
 
-    const { page: currentPage, totalPages, total } = data.meta;
-    const startItem = (currentPage - 1) * limit + 1;
-    const endItem = Math.min(currentPage * limit, total);
+  //   const { page: currentPage, totalPages, total } = data.meta;
+  //   const startItem = (currentPage - 1) * limit + 1;
+  //   const endItem = Math.min(currentPage * limit, total);
 
-    return (
-      <View style={styles.paginationWrapper}>
-        <View style={styles.paginationContent}>
-          <Text style={styles.paginationInfoText}>
-            {startItem}-{endItem} of {total}
-          </Text>
+  //   return (
+  //     <View style={styles.paginationWrapper}>
+  //       <View style={styles.paginationContent}>
+  //         <Text style={styles.paginationInfoText}>
+  //           {startItem}-{endItem} of {total}
+  //         </Text>
 
-          <View style={styles.paginationControls}>
-            <TouchableOpacity
-              onPress={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1 || isLoading}
-              style={[
-                styles.pageButton,
-                styles.pageButtonCompact,
-                currentPage === 1 && styles.pageButtonDisabled,
-              ]}
-            >
-              <ChevronLeft
-                size={16}
-                color={currentPage === 1 ? "#9CA3AF" : "#2563eb"}
-              />
-            </TouchableOpacity>
+  //         <View style={styles.paginationControls}>
+  //           <TouchableOpacity
+  //             onPress={() => handlePageChange(currentPage - 1)}
+  //             disabled={currentPage === 1 || isLoading}
+  //             style={[
+  //               styles.pageButton,
+  //               styles.pageButtonCompact,
+  //               currentPage === 1 && styles.pageButtonDisabled,
+  //             ]}
+  //           >
+  //             <ChevronLeft
+  //               size={16}
+  //               color={currentPage === 1 ? "#9CA3AF" : "#2563eb"}
+  //             />
+  //           </TouchableOpacity>
 
-            {totalPages <= 3 ? (
-              // Show all pages if 3 or fewer
-              Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (pageNum) => (
-                  <TouchableOpacity
-                    key={pageNum}
-                    onPress={() => handlePageChange(pageNum)}
-                    style={[
-                      styles.pageButton,
-                      styles.pageButtonCompact,
-                      pageNum === currentPage && styles.pageButtonActive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.pageButtonText,
-                        pageNum === currentPage && styles.pageButtonTextActive,
-                      ]}
-                    >
-                      {pageNum}
-                    </Text>
-                  </TouchableOpacity>
-                )
-              )
-            ) : (
-              // Smart pagination for more than 3 pages
-              <>
-                {currentPage > 1 && (
-                  <TouchableOpacity
-                    onPress={() => handlePageChange(currentPage - 1)}
-                    style={[styles.pageButton, styles.pageButtonCompact]}
-                  >
-                    <Text style={styles.pageButtonText}>{currentPage - 1}</Text>
-                  </TouchableOpacity>
-                )}
+  //           {totalPages <= 3 ? (
+  //             // Show all pages if 3 or fewer
+  //             Array.from({ length: totalPages }, (_, i) => i + 1).map(
+  //               (pageNum) => (
+  //                 <TouchableOpacity
+  //                   key={pageNum}
+  //                   onPress={() => handlePageChange(pageNum)}
+  //                   style={[
+  //                     styles.pageButton,
+  //                     styles.pageButtonCompact,
+  //                     pageNum === currentPage && styles.pageButtonActive,
+  //                   ]}
+  //                 >
+  //                   <Text
+  //                     style={[
+  //                       styles.pageButtonText,
+  //                       pageNum === currentPage && styles.pageButtonTextActive,
+  //                     ]}
+  //                   >
+  //                     {pageNum}
+  //                   </Text>
+  //                 </TouchableOpacity>
+  //               )
+  //             )
+  //           ) : (
+  //             // Smart pagination for more than 3 pages
+  //             <>
+  //               {currentPage > 1 && (
+  //                 <TouchableOpacity
+  //                   onPress={() => handlePageChange(currentPage - 1)}
+  //                   style={[styles.pageButton, styles.pageButtonCompact]}
+  //                 >
+  //                   <Text style={styles.pageButtonText}>{currentPage - 1}</Text>
+  //                 </TouchableOpacity>
+  //               )}
 
-                <TouchableOpacity
-                  style={[
-                    styles.pageButton,
-                    styles.pageButtonCompact,
-                    styles.pageButtonActive,
-                  ]}
-                >
-                  <Text
-                    style={[styles.pageButtonText, styles.pageButtonTextActive]}
-                  >
-                    {currentPage}
-                  </Text>
-                </TouchableOpacity>
+  //               <TouchableOpacity
+  //                 style={[
+  //                   styles.pageButton,
+  //                   styles.pageButtonCompact,
+  //                   styles.pageButtonActive,
+  //                 ]}
+  //               >
+  //                 <Text
+  //                   style={[styles.pageButtonText, styles.pageButtonTextActive]}
+  //                 >
+  //                   {currentPage}
+  //                 </Text>
+  //               </TouchableOpacity>
 
-                {currentPage < totalPages && (
-                  <TouchableOpacity
-                    onPress={() => handlePageChange(currentPage + 1)}
-                    style={[styles.pageButton, styles.pageButtonCompact]}
-                  >
-                    <Text style={styles.pageButtonText}>{currentPage + 1}</Text>
-                  </TouchableOpacity>
-                )}
-              </>
-            )}
+  //               {currentPage < totalPages && (
+  //                 <TouchableOpacity
+  //                   onPress={() => handlePageChange(currentPage + 1)}
+  //                   style={[styles.pageButton, styles.pageButtonCompact]}
+  //                 >
+  //                   <Text style={styles.pageButtonText}>{currentPage + 1}</Text>
+  //                 </TouchableOpacity>
+  //               )}
+  //             </>
+  //           )}
 
-            <TouchableOpacity
-              onPress={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages || isLoading}
-              style={[
-                styles.pageButton,
-                styles.pageButtonCompact,
-                currentPage === totalPages && styles.pageButtonDisabled,
-              ]}
-            >
-              <ChevronRight
-                size={16}
-                color={currentPage === totalPages ? "#9CA3AF" : "#2563eb"}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    );
-  };
+  //           <TouchableOpacity
+  //             onPress={() => handlePageChange(currentPage + 1)}
+  //             disabled={currentPage === totalPages || isLoading}
+  //             style={[
+  //               styles.pageButton,
+  //               styles.pageButtonCompact,
+  //               currentPage === totalPages && styles.pageButtonDisabled,
+  //             ]}
+  //           >
+  //             <ChevronRight
+  //               size={16}
+  //               color={currentPage === totalPages ? "#9CA3AF" : "#2563eb"}
+  //             />
+  //           </TouchableOpacity>
+  //         </View>
+  //       </View>
+  //     </View>
+  //   );
+  // };
 
   if (isLoadingUser) {
     return (
@@ -268,7 +269,7 @@ export default function Dashboard() {
             style={styles.headerTitle}
             className="mb-4 pt-4 flex flex-row items-center "
           >
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() => setOrgModalVisible(true)}
               style={styles.orgButton}
             >
@@ -281,14 +282,14 @@ export default function Dashboard() {
                 color="#2563eb"
                 style={{ marginLeft: 2 }}
               />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <Text className="font-bold text-3xl mx-2">Projects</Text>
           </View>
         </View>
-        <OrganizationSwitcher
+        {/* <OrganizationSwitcher
           visible={orgModalVisible}
           onClose={() => setOrgModalVisible(false)}
-        />
+        /> */}
         <SubscriptionStatus />
 
         <View style={styles.mainContainer}>
@@ -311,7 +312,7 @@ export default function Dashboard() {
             ListEmptyComponent={renderEmpty}
             showsVerticalScrollIndicator={false}
           />
-          {renderPaginationControls()}
+          {/* {renderPaginationControls()} */}
         </View>
 
         <TouchableOpacity

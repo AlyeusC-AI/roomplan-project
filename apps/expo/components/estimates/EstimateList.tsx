@@ -188,14 +188,14 @@ const EstimateList = forwardRef<
     router.push(`/estimates/${estimateId}`);
   };
 
-  // if (isLoading && !isRefetching) {
-  //   return (
-  //     <View style={styles.loadingContainer}>
-  //       <ActivityIndicator size="large" color="#0000ff" />
-  //       <Text style={styles.loadingText}>Loading estimates...</Text>
-  //     </View>
-  //   );
-  // }
+  if (isLoading && !isRefetching) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.loadingText}>Loading estimates...</Text>
+      </View>
+    );
+  }
 
   if (error) {
     return (

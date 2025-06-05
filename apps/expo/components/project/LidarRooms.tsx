@@ -1,27 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, Image, Alert } from 'react-native';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  ScrollView,
+  Image,
+  Alert,
+} from "react-native";
 import { userStore } from "@/lib/state/user";
-import { Button } from '@/components/ui/button';
-import { roomsStore } from '@/lib/state/rooms';
-import { useGlobalSearchParams, usePathname, useRouter } from 'expo-router';
+import { Button } from "@/components/ui/button";
+import { roomsStore } from "@/lib/state/rooms";
+import { useGlobalSearchParams, usePathname, useRouter } from "expo-router";
 import { WebView } from "react-native-webview";
-import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import ReactDOM from 'react-dom';
-import { useSendLidarEmail, useGetRooms } from '@service-geek/api-client';
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSendLidarEmail, useGetRooms } from "@service-geek/api-client";
 
-export const RoomPlanImage = ({ src, onPngReady = null }:
-{ src: string, onPngReady?: ((data: string) => void) | null }) => {
+export const RoomPlanImage = ({
+  src,
+  onPngReady = null,
+}: {
+  src: string;
+  onPngReady?: ((data: string) => void) | null;
+}) => {
   if (src.startsWith("http")) {
     return (
       <Image source={{ uri: src }} style={{ width: "100%", height: "100%" }} />
-    )
+    );
   }
 
-  const re = /<svg viewBox="[\d\.\-]*\s[\d\.\-]*\s([\d\.\-]*)\s([\d\.\-]*)">/
-  let [_, w, h] = src.match(re) || []
-  w = Math.floor(parseFloat(w) * 1.5)
-  h = Math.floor(parseFloat(h) * 1.5)
+  const re = /<svg viewBox="[\d\.\-]*\s[\d\.\-]*\s([\d\.\-]*)\s([\d\.\-]*)">/;
+  let [_, w, h] = src.match(re) || [];
+  w = Math.floor(parseFloat(w) * 1.5);
+  h = Math.floor(parseFloat(h) * 1.5);
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -73,20 +85,20 @@ export const RoomPlanImage = ({ src, onPngReady = null }:
     svgToPngBase64(${w}, ${h}, (pngBase64) => {
       window.ReactNativeWebView.postMessage(pngBase64);
     });
-  `
+  `;
 
   return (
     <WebView
       className="h-full w-full"
       source={{ html: htmlContent }}
       javaScriptEnabled={!!onPngReady}
-      injectedJavaScript={onPngReady ? script : ''}
-      onMessage={(ev => {
-        onPngReady && onPngReady(ev.nativeEvent.data)
-      })}
+      injectedJavaScript={onPngReady ? script : ""}
+      onMessage={(ev) => {
+        onPngReady && onPngReady(ev.nativeEvent.data);
+      }}
     />
-  )
-}
+  );
+};
 
 const PLACEHOLDER_SVG = `
 <svg width="99" height="99" viewBox="0 0 99 99" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -98,34 +110,12 @@ export function LidarRooms() {
   const { projectId } = useGlobalSearchParams<{
     projectId: string;
   }>();
-  const { session: supabaseSession } = userStore((state) => state);
-  const rooms = roomsStore();
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const sendLidarEmail = useSendLidarEmail();
-
-  useEffect(() => {
-    async function fetchRooms() {
-      try {
-        setLoading(true);
-        const { data: rooms, isLoading, error: roomsError } = useGetRooms(projectId);
-
-        rooms.setRooms(rooms);
-      } catch (err) {
-        setError('Failed to fetch rooms');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (pathname === `/projects/${projectId}/lidar/rooms`) {
-      fetchRooms();
-    }
-  }, [projectId, pathname]);
+  const { data: rooms, isLoading, error: roomsError } = useGetRooms(projectId);
 
   const handleAddRoom = () => {
     router.push({
@@ -137,7 +127,7 @@ export function LidarRooms() {
     });
   };
 
-  const handleRoomPress = (roomId: number, roomPlanSVG: string) => {
+  const handleRoomPress = (roomId: string, roomPlanSVG: string) => {
     router.push({
       pathname: `/projects/${projectId}/lidar/scan`,
       params: { roomId, roomPlanSVG },
@@ -145,10 +135,10 @@ export function LidarRooms() {
   };
 
   const handleSendEmail = async (roomId: string, roomPlanSVG: string) => {
-    console.log("🚀 ~ handleSendEmail ~ roomId:", roomId)
+    console.log("🚀 ~ handleSendEmail ~ roomId:", roomId);
     try {
       setSendingEmail(roomId);
-      
+
       await sendLidarEmail.mutateAsync({
         projectId,
         data: {
@@ -158,23 +148,23 @@ export function LidarRooms() {
       });
 
       Alert.alert(
-        'ESX Version Requested',
-        'Your room plan has been sent to ESX for professional analysis. You will receive a detailed report within 24 hours.',
-        [{ text: 'OK' }]
+        "ESX Version Requested",
+        "Your room plan has been sent to ESX for professional analysis. You will receive a detailed report within 24 hours.",
+        [{ text: "OK" }]
       );
     } catch (err) {
-      console.log("🚀 ~ handleSendEmail ~ err:", err)
+      console.log("🚀 ~ handleSendEmail ~ err:", err);
       Alert.alert(
-        'Error',
-        'Failed to request ESX version. Please try again later.',
-        [{ text: 'OK' }]
+        "Error",
+        "Failed to request ESX version. Please try again later.",
+        [{ text: "OK" }]
       );
     } finally {
       setSendingEmail(null);
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" />
@@ -182,11 +172,21 @@ export function LidarRooms() {
     );
   }
 
-  if (error) {
+  if (roomsError) {
     return (
       <View className="flex-1 items-center justify-center p-4">
-        <Text className="text-destructive text-center">{error}</Text>
-        <Button variant="outline" className="mt-4" onPress={() => setLoading(true)}>
+        <Text className="text-destructive text-center">
+          {roomsError.message || "Failed to fetch rooms"}
+        </Text>
+        <Button
+          variant="outline"
+          className="mt-4"
+          onPress={() => {
+            router.push({
+              pathname: `/projects/${projectId}/lidar/rooms`,
+            });
+          }}
+        >
           Retry
         </Button>
       </View>
@@ -210,27 +210,37 @@ export function LidarRooms() {
           </View>
 
           {/* Room Cards */}
-          {rooms.rooms?.map((room) => (
+          {rooms?.map((room) => (
             <View key={room.id} className="w-1/2 p-2 h-44">
               <View className="h-full border border-muted-foreground/40 rounded-lg">
-                <TouchableOpacity onPress={() => handleRoomPress(room.id, room.roomPlanSVG)}>
+                <TouchableOpacity
+                  onPress={() =>
+                    handleRoomPress(room.id, room.roomPlanSVG || "")
+                  }
+                >
                   <View className="h-32 overflow-hidden">
                     <RoomPlanImage src={room.roomPlanSVG || PLACEHOLDER_SVG} />
                   </View>
                 </TouchableOpacity>
                 <View className="h-8 justify-center pl-2 bg-muted-foreground/10">
-                  <Text className="font-semibold" numberOfLines={1}>{room.name}</Text>
+                  <Text className="font-semibold" numberOfLines={1}>
+                    {room.name}
+                  </Text>
                 </View>
                 {room.roomPlanSVG && (
                   <View className="absolute top-2 right-2">
                     <TouchableOpacity
-                      onPress={() => handleSendEmail(room.publicId, room.roomPlanSVG)}
-                      disabled={sendingEmail === room.publicId}
+                      onPress={() =>
+                        handleSendEmail(room.id, room.roomPlanSVG || "")
+                      }
+                      disabled={sendingEmail === room.id}
                       className="bg-primary/90 px-3 py-1 rounded-full flex-row items-center"
                     >
                       <Ionicons name="analytics" size={14} color="white" />
                       <Text className="text-white text-xs ml-1 font-medium">
-                        {sendingEmail === room.publicId ? 'Sending...' : 'Get ESX Version'}
+                        {sendingEmail === room.id
+                          ? "Sending..."
+                          : "Get ESX Version"}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -242,12 +252,16 @@ export function LidarRooms() {
       </ScrollView>
 
       {/* Cost Information Banner */}
-      <View 
+      <View
         className="bg-primary/10 p-3 border-t border-muted"
         style={{ paddingBottom: insets.bottom }}
       >
         <View className="flex-row items-center justify-center">
-          <Ionicons name="information-circle" size={16} color="hsl(var(--primary))" />
+          <Ionicons
+            name="information-circle"
+            size={16}
+            color="hsl(var(--primary))"
+          />
           <Text className="text-primary text-sm ml-2 font-medium">
             ESX Version Analysis: $5.50 per room
           </Text>

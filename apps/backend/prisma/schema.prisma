@@ -686,4 +686,6 @@ enum EstimateStatus {
   SENT
   APPROVED
   REJECTED
+  CANCELLED
+  EXPIRED
 }

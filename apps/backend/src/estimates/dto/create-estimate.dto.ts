@@ -103,10 +103,10 @@ export class CreateEstimateDto {
 
   @ApiProperty({
     description: 'Estimate status',
-    enum: ['DRAFT', 'SENT', 'APPROVED', 'REJECTED'],
+    enum: ['DRAFT', 'SENT', 'APPROVED', 'REJECTED', 'CANCELLED', 'EXPIRED'],
   })
-  @IsEnum(['DRAFT', 'SENT', 'APPROVED', 'REJECTED'])
-  status: 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED';
+  @IsEnum(['DRAFT', 'SENT', 'APPROVED', 'REJECTED', 'CANCELLED', 'EXPIRED'])
+  status: 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED';
 
   @ApiProperty({ description: 'Notes', required: false })
   @IsOptional()

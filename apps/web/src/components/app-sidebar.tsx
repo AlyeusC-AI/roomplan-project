@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/sidebar";
 import Image from "next/image";
 import { SidebarSubscriptionStatus } from "./sidebar-subscription-status";
-import { OrganizationSelector } from "./organization-selector";
+// import { OrganizationSelector } from "./organization-selector";
 
 // This is sample data.
 const data = {
@@ -160,7 +160,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </div>
           </SidebarHeader>
 
-          {state === "expanded" && (
+          {/* {state === "expanded" && (
             <div className='px-4 py-2'>
               <OrganizationSelector
                 showLabel={false}
@@ -168,7 +168,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 dropdownClassName='w-56'
               />
             </div>
-          )}
+          )} */}
 
           <SidebarContent>
             <NavMain items={data.navMain} />
