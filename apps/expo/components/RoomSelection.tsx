@@ -1,6 +1,7 @@
 import { Center, Select, View } from "native-base";
 import React from "react";
-import { Check } from "lucide-react-native"
+import { Check } from "lucide-react-native";
+import { Room } from "@service-geek/api-client";
 
 const RoomSelection = ({
   rooms,
@@ -15,7 +16,7 @@ const RoomSelection = ({
     onChange(v);
   };
 
-  const room = rooms.find((r) => r.publicId === selectedRoom);
+  const room = rooms.find((r) => r.id === selectedRoom);
 
   return (
     <Center>
@@ -39,11 +40,7 @@ const RoomSelection = ({
           onValueChange={(itemValue) => onValueChange(itemValue)}
         >
           {rooms.map((room) => (
-            <Select.Item
-              key={room.publicId}
-              label={room.name}
-              value={room.publicId}
-            />
+            <Select.Item key={room.id} label={room.name} value={room.id} />
           ))}
         </Select>
       </View>

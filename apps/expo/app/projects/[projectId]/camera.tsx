@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
 import {
   Image,
   View,
@@ -11,11 +10,9 @@ import {
 import { Camera, PhotoFile, useCameraDevice } from "react-native-vision-camera";
 import { getConstants } from "@/utils/constants";
 import RoomSelection from "@/components/RoomSelection";
-import { createClient } from "@supabase/supabase-js";
 import uuid from "react-native-uuid";
 import { userStore } from "@/lib/state/user";
 import { useFocusEffect, useGlobalSearchParams, useRouter } from "expo-router";
-import { roomsStore } from "@/lib/state/rooms";
 import Reanimated, {
   Extrapolate,
   interpolate,
@@ -48,11 +45,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { uploadImage } from "@/lib/imagekit";
 import { useCameraStore } from "@/lib/state/camera";
 import { toast } from "sonner-native";
-import { api } from "@/lib/api";
-export const supabaseServiceRole = createClient(
-  getConstants().supabaseUrl,
-  getConstants().serviceRoleJwt
-);
+import { useAddImage, useGetRooms } from "@service-geek/api-client";
 
 const AnimatedCamera = Reanimated.createAnimatedComponent(Camera);
 Reanimated.addWhitelistedNativeProps({
@@ -87,7 +80,8 @@ export default function CameraScreen() {
     fieldId?: string;
     mode?: string;
   }>();
-  const rooms = roomsStore();
+  const { data: rooms = [] } = useGetRooms(projectId);
+  const { mutate: addImageMutation } = useAddImage();
   const isFormMode = mode === "form";
   const {
     addImage,
@@ -120,27 +114,6 @@ export default function CameraScreen() {
   const [uploadQueue, setUploadQueue] = useState<UploadItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
-  const refetchRooms = async () => {
-    try {
-      const roomsRes = await api.get(`/api/v1/projects/${projectId}/room`, {
-      
-      }
-    );
-
-      const roomsData = await roomsRes.data;
-      rooms.setRooms(roomsData.rooms);
-    } catch (error) {
-      console.error("Error fetching rooms:", error);
-    }
-  };
-  useEffect(() => {
-    console.log(
-      "🚀 ~ CameraScreen ~ rooms:",
-      JSON.stringify(rooms.rooms, null, 2)
-    );
-    refetchRooms();
-  }, []);
-
   const onRoomSelect = (r: string) => {
     setRoomId(r);
   };
@@ -172,9 +145,8 @@ export default function CameraScreen() {
       );
 
       // Convert PhotoFile to Blob for ImageKit upload
-   
-    
-        setUploadQueue((prev) =>
+
+      setUploadQueue((prev) =>
         prev.map((item) =>
           item.id === uploadItem.id
             ? { ...item, progress: 0.4, message: "Uploading..." }
@@ -211,16 +183,25 @@ export default function CameraScreen() {
       if (!isFormMode && !cameraFieldId) {
         try {
           // Save image reference to your backend for room photos
-         await api.post(`/api/v1/projects/${projectId}/image`, {
-            roomId: selectedRoomId,
-            imageId: uploadResult.url,
+          // await api.post(`/api/v1/projects/${projectId}/image`, {
+          //   roomId: selectedRoomId,
+          //   imageId: uploadResult.url,
+          // });
+
+          addImageMutation({
+            data: {
+              roomId: selectedRoomId,
+              url: uploadResult.url,
+              projectId,
+              name: "photo.jpg",
+              type: "ROOM",
+            },
           });
-        
-      } catch (error) {
-        console.error("Error saving image:", error);
-        toast.error("Error saving image");
+        } catch (error) {
+          console.error("Error saving image:", error);
+          toast.error("Error saving image");
+        }
       }
-    }
 
       setUploadQueue((prev) =>
         prev.map((item) =>
@@ -245,9 +226,9 @@ export default function CameraScreen() {
           url: uploadResult.url,
           name: "photo.jpg",
           type: "image/jpeg",
-          size: uploadResult.size,
-          fileId: uploadResult.fileId,
-          filePath: uploadResult.filePath,
+          size: uploadResult.size || 0,
+          fileId: uploadResult.fileId || "",
+          filePath: uploadResult.filePath || "",
           // fileId: uploadResult.fileId,
           // filePath: uploadResult.filePath,
         });
@@ -420,20 +401,20 @@ export default function CameraScreen() {
     try {
       console.log("TAKING PICTURE");
       const params: {
-        enableShutterSound: boolean,
-        flash?: "off" | "on" | "auto" | undefined
+        enableShutterSound: boolean;
+        flash?: "off" | "on" | "auto" | undefined;
       } = {
         enableShutterSound: false,
-      }
+      };
       if (device?.hasFlash) {
-        params.flash = flash
+        params.flash = flash;
       }
       const photo = await camera.current.takePhoto(params);
       processImage(photo);
     } catch (error) {
       console.error("Caught error");
       console.error(error);
-      Alert.alert('photo error! ' + error)
+      Alert.alert("photo error! " + error);
     }
     setIsProcessing(false); // Hide processing indicator immediately after capture
     setDisabled(false);
@@ -477,7 +458,7 @@ export default function CameraScreen() {
           {!isFormMode && !cameraFieldId && (
             <View className="flex-1 mx-2">
               <RoomSelection
-                rooms={rooms.rooms}
+                rooms={rooms}
                 selectedRoom={selectedRoomId}
                 onChange={onRoomSelect}
               />
