@@ -127,13 +127,7 @@ export function NavUser() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem>
-                      <Sparkles size={16} />
-                      Upgrade to Pro
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                  <DropdownMenuSeparator />
+
                   <DropdownMenuGroup>
                     <DropdownMenuItem
                       onClick={() => navigate.push("/settings/account")}
@@ -148,10 +142,10 @@ export function NavUser() {
                       />
                       Billing
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    {/* <DropdownMenuItem>
                       <Bell size={16} />
                       Notifications
-                    </DropdownMenuItem>
+                    </DropdownMenuItem> */}
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>

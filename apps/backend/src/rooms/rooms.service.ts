@@ -283,6 +283,18 @@ export class RoomsService {
           data: {
             name: 'Untitled Room',
             projectId: data.projectId,
+            walls: {
+              create: [
+                {
+                  name: 'Wall',
+                  type: 'WALL',
+                },
+                {
+                  name: 'Floor',
+                  type: 'FLOOR',
+                },
+              ],
+            },
           },
         });
         roomId = newRoom.id;

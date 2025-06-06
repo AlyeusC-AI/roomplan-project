@@ -328,7 +328,7 @@ const FileUploader = () => {
         </div>
       </div>
 
-      {files && files.length > 0 && (
+      {/* {files && files.length > 0 && (
         <Alert>
           <Check className='size-4' />
           <AlertTitle>Roof report ordered!</AlertTitle>
@@ -338,7 +338,7 @@ const FileUploader = () => {
             it&apos;s ready
           </AlertDescription>
         </Alert>
-      )}
+      )} */}
 
       <Tabs defaultValue='documents' onValueChange={setActiveTab}>
         <TabsList>
@@ -353,7 +353,7 @@ const FileUploader = () => {
         </TabsList>
 
         <TabsContent value='files' className='mt-4'>
-          <div className='mx-auto max-w-6xl'>
+          <div className='mx-auto'>
             {files && files.length === 0 ? (
               <FileEmptyState onChange={onUpload} isUploading={isUploading} />
             ) : (
@@ -367,7 +367,7 @@ const FileUploader = () => {
         </TabsContent>
 
         <TabsContent value='documents' className='mt-4'>
-          <div className='mx-auto max-w-6xl'>
+          <div className='mx-auto'>
             {documents.length === 0 ? (
               <div className='mt-20 flex flex-col items-center justify-center text-center'>
                 <FileText className='mb-3 h-12 w-12 text-gray-400' />

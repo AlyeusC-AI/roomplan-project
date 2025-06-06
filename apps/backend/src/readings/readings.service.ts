@@ -24,6 +24,7 @@ export class ReadingsService {
     return this.prisma.roomReading.create({
       data: {
         ...data,
+
         genericRoomReading: {
           create: {
             humidity: 0,
