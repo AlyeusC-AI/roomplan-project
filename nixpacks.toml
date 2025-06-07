@@ -1,0 +1,32 @@
+[phases.setup]
+nixPkgs = [
+  "bzip2",
+  "gcc",
+  "glibc",
+  "zlib",
+  "openssl",
+  "yarn",
+  "nodejs_20"
+]
+
+[phases.install]
+cmds = ["yarn install"]
+
+[phases.build]
+cmds = ["yarn build"]
+
+[start]
+cmd = "yarn start"
+
+[pack]
+packageManager = "yarn"
+
+[variables]
+NODE_VERSION = "20"
+NEXT_TELEMETRY_DISABLED = "1"
+
+[build]
+cache = [
+  "node_modules/.cache",
+  ".next/cache"
+] 

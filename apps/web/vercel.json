@@ -1,0 +1,12 @@
+{
+  "github": {
+    "enabled": false
+  },
+  "crons": [
+  
+    {
+      "path": "/api/v1/projects/calendar-events/cron/send-reminders",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+import {
+  AreaAffected,
+  Room,
+  useGetAreaAffected,
+} from "@service-geek/api-client";
+import PDFTableTd from "./PDFTable/PDFTableTd";
+import PDFTableTh from "./PDFTable/PDFTableTh";
+
+const AffectedAreas = ({ room }: { room: Room }) => {
+  const { data: areasAffectedData } = useGetAreaAffected(room.id);
+  const areasAffected = areasAffectedData;
+  areasAffectedData;
+  if (!areasAffected || areasAffected.length === 0) return null;
+  const affectedAreas = [
+    {
+      ...areasAffected.floorAffected,
+      type: "floor",
+    },
+    {
+      ...areasAffected.wallsAffected,
+      type: "wall",
+    },
+    {
+      ...areasAffected.ceilingAffected,
+      type: "ceiling",
+    },
+  ].filter((affectedArea) => affectedArea.isVisible);
+  if (affectedAreas.length === 0) return null;
+  return (
+    <div className='pdf new-page'>
+      <h2 className='pdf room-section-subtitle subtitle-spacing minor-break'>
+        {room.name}: Affected Areas
+      </h2>
+      {affectedAreas.map((affectedArea) => (
+        <div key={affectedArea.id}>
+          <h4 className='pdf room-section-minortitle minor-break title-spacing'>
+            {affectedArea.type}
+          </h4>
+          <table className='pdf room-section-dimensions-details-table'>
+            <thead>
+              <tr>
+                <PDFTableTh>Description</PDFTableTh>
+                <PDFTableTh>Value</PDFTableTh>
+                <PDFTableTh>Unit</PDFTableTh>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <PDFTableTd>Total Area Removed</PDFTableTd>
+                <PDFTableTd>{affectedArea.totalAreaRemoved || "--"}</PDFTableTd>
+                <PDFTableTd>sqft</PDFTableTd>
+              </tr>
+              <tr>
+                <PDFTableTd>Total Area Anti-Microbial Applied</PDFTableTd>
+                <PDFTableTd>
+                  {affectedArea.totalAreaMicrobialApplied || "--"}
+                </PDFTableTd>
+                <PDFTableTd>sqft</PDFTableTd>
+              </tr>
+              {affectedArea.type !== "ceiling" && (
+                <tr>
+                  <PDFTableTd>Wall Material</PDFTableTd>
+                  <PDFTableTd>{affectedArea.material || "--"}</PDFTableTd>
+                  <PDFTableTd>--</PDFTableTd>
+                </tr>
+              )}
+              {affectedArea.type === "wall" && (
+                <tr>
+                  <PDFTableTd>Cabinetry Removed</PDFTableTd>
+                  <PDFTableTd>
+                    {affectedArea.cabinetryRemoved || "--"}
+                  </PDFTableTd>
+                  <PDFTableTd>--</PDFTableTd>
+                </tr>
+              )}
+              {/* Extra Fields */}
+              {affectedArea.extraFields &&
+                Object.entries(affectedArea.extraFields).map(
+                  ([fieldId, field]: [string, any]) => (
+                    <tr key={fieldId}>
+                      <PDFTableTd>{field.label}</PDFTableTd>
+                      <PDFTableTd>{field.value || "--"}</PDFTableTd>
+                      <PDFTableTd>{field.unit || "--"}</PDFTableTd>
+                    </tr>
+                  )
+                )}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default AffectedAreas;

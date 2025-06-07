@@ -1,0 +1,63 @@
+{
+  "cli": {
+    "version": ">= 3.3.0",
+    "appVersionSource": "remote"
+  },
+  "build": { 
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "gradleCommand": ":app:assembleDebug",
+        "buildType": "apk",
+        "env": {
+          "KOTLIN_VERSION": "1.9.25"
+        }
+      },
+      "node": "20.11.1",
+      "channel": "development"
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": true,
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "apk",
+        "env": {
+          "KOTLIN_VERSION": "1.9.25"
+        }
+      },
+      "node": "20.11.1",
+      "channel": "preview"
+    },
+    "production": {
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "env": {
+          "KOTLIN_VERSION": "1.9.25"
+        }
+      },
+      "autoIncrement": true,
+      "node": "20.11.1",
+      "channel": "production"
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {        
+        "ascAppId": "6738036531"
+      },
+      "android": {
+        "track": "production"
+      }
+    }
+  }
+}

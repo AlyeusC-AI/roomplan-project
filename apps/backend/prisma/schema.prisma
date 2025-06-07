@@ -1,0 +1,691 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  password          String
+  firstName         String
+  lastName          String
+  phone             String?
+  referralCode      String?   @unique
+  referralSource    String?
+  acceptReminders   Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  isEmailVerified   Boolean   @default(false)
+  verificationToken String?
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  supabaseId        String?   @unique
+  avatar            String?
+
+  // Organization relationships
+  organizationMemberships OrganizationMember[]
+  calendarEvents          CalendarEvent[]
+  calendarEventReminders  CalendarEventReminder[]
+
+  // Add direct many-to-many relationship with Project
+  projects Project[] @relation("ProjectMembers")
+  comments Comment[]
+}
+
+model Organization {
+  id                      String    @id @default(uuid())
+  name                    String
+  phoneNumber             String?
+  address                 String?
+  formattedAddress        String?
+  city                    String?
+  region                  String?
+  postalCode              String?
+  country                 String?
+  faxNumber               String?
+  size                    Int?      @default(10)
+  isDeleted               Boolean   @default(false)
+  logo                    String?
+  lat                     Float?
+  lng                     Float?
+  subscriptionId          String?
+  subscriptionPlan        String?
+  customerId              String?
+  maxUsersForSubscription Int?      @default(0)
+  freeTrialEndsAt         DateTime?
+  subscriptionStatus      String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  supabaseId              String?   @unique
+
+  // Relationships
+  members         OrganizationMember[]
+  projectStatuses ProjectStatus[]
+  equipments      Equipment[]
+  calendarEvents  CalendarEvent[]
+  projects        Project[]
+  forms           Form[]
+  invoices        Invoice[]
+  estimates       Estimate[]
+  invoiceItems    InvoiceItem[]
+}
+
+enum MemberStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+  PROJECT_MANAGER
+  ACCOUNT_MANAGER
+  CONTRACTOR
+}
+
+model OrganizationMember {
+  id             String       @id @default(uuid())
+  organizationId String
+  userId         String
+  role           Role         @default(MEMBER) // Can be: owner, admin, member
+  status         MemberStatus @default(PENDING) // Can be: pending, active, rejected
+  invitedAt      DateTime     @default(now())
+  joinedAt       DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@unique([organizationId, userId])
+}
+
+model ProjectStatus {
+  id             String       @id @default(uuid())
+  label          String
+  description    String?
+  color          String?
+  isDefault      Boolean      @default(false)
+  isDeleted      Boolean      @default(false)
+  order          Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  supabaseId     String?      @unique
+  projects       Project[]
+
+  @@index([organizationId])
+}
+
+enum LossType {
+  FIRE
+  WATER
+  WIND
+  HAIL
+  MOLD
+  OTHER
+}
+
+model Equipment {
+  id               String             @id @default(uuid())
+  name             String
+  description      String?
+  quantity         Int
+  image            String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  organizationId   String
+  organization     Organization       @relation(fields: [organizationId], references: [id])
+  EquipmentProject EquipmentProject[]
+
+  @@index([organizationId])
+}
+
+model Project {
+  id                  String             @id @default(uuid())
+  name                String
+  supabaseId          String?            @unique
+  description         String?
+  adjusterEmail       String?
+  adjusterPhoneNumber String?
+  clientEmail         String?
+  clientPhoneNumber   String?
+  clientName          String?
+  adjusterName        String?
+  location            String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  equipmentProject    EquipmentProject[]
+  calendarEvents      CalendarEvent[]
+  costs               Cost[]
+
+  // Add direct many-to-many relationship with User
+  members User[] @relation("ProjectMembers")
+
+  closedAt         DateTime?
+  assignmentNumber String?
+
+  companyName String?
+  managerName String?
+
+  insuranceCompanyName String?
+  insuranceClaimId     String?
+  lossType             LossType?
+  catCode              String?
+  humidity             String?
+
+  temperature  String?
+  wind         String?
+  lat          String?
+  lng          String?
+  forecast     String?
+  claimSummary String?
+
+  roofSegments String[]
+  roofSpecs    String?
+  rcvValue     String?
+  actualValue  String?
+  status       ProjectStatus? @relation(fields: [statusId], references: [id])
+  statusId     String?
+  mainImage    String?
+  policyNumber String?
+  dateOfLoss   DateTime?
+
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  organizationId String
+  rooms          Room[]
+  images         Image[]
+  documents      Document[]
+  forms          FormProject[]
+  formResponses  FormResponse[]
+  invoices       Invoice[]
+  Estimate       Estimate[]
+}
+
+model Room {
+  id              String             @id @default(uuid())
+  name            String
+  projectId       String
+  supabaseId      String?            @unique
+  project         Project            @relation(fields: [projectId], references: [id])
+  images          Image[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  notes           Note[]
+  walls           Wall[]
+  roomReading     RoomReading[]
+  humidity        Float?
+  dehuReading     Float?
+  temperature     Float?
+  length          Float?
+  width           Float?
+  height          Float?
+  totalSqft       Float?
+  windows         Int?
+  doors           Int?
+  equipmentsUsed  EquipmentProject[]
+  roomPlanSVG     String?
+  scannedFileKey  String?
+  cubiTicketId    String?
+  cubiModelId     String?
+  cubiRoomPlan    String?
+  floorAffected   AreaAffected?      @relation("FloorAffected", fields: [floorRoomId], references: [id])
+  floorRoomId     String?            @unique
+  wallsAffected   AreaAffected?      @relation("WallsAffected", fields: [wallsRoomId], references: [id])
+  wallsRoomId     String?            @unique
+  ceilingAffected AreaAffected?      @relation("CeilingAffected", fields: [ceilingRoomId], references: [id])
+  ceilingRoomId   String?            @unique
+
+  @@index([projectId])
+}
+
+model AreaAffected {
+  id String @id @default(uuid())
+
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+  material                  String?
+  totalAreaRemoved          String?
+  totalAreaMicrobialApplied String?
+  cabinetryRemoved          String?
+  isVisible                 Boolean  @default(true)
+
+  floorAffected   Room? @relation("FloorAffected")
+  wallsAffected   Room? @relation("WallsAffected")
+  ceilingAffected Room? @relation("CeilingAffected")
+
+  extraFields Json?
+}
+
+enum WallType {
+  WALL
+  CEILING
+  FLOOR
+}
+
+model Wall {
+  id          String        @id @default(uuid())
+  roomId      String
+  room        Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  name        String
+  type        WallType
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  wallReading WallReading[]
+
+  @@index([roomId])
+}
+
+model RoomReading {
+  id                 String               @id @default(uuid())
+  roomId             String
+  room               Room                 @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  wallReadings       WallReading[]
+  genericRoomReading GenericRoomReading[]
+  date               DateTime
+  humidity           Float?
+  temperature        Float?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+}
+
+model GenericRoomReading {
+  id            String      @id @default(uuid())
+  value         String
+  humidity      Float
+  images        String[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  temperature   Float
+  roomReadingId String
+  roomReading   RoomReading @relation(fields: [roomReadingId], references: [id], onDelete: Cascade)
+}
+
+model WallReading {
+  id            String       @id @default(uuid())
+  wallId        String
+  wall          Wall         @relation(fields: [wallId], references: [id], onDelete: Cascade)
+  reading       Int
+  images        String[]
+  roomReading   RoomReading? @relation(fields: [roomReadingId], references: [id])
+  roomReadingId String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([wallId, roomReadingId])
+}
+
+model Image {
+  id           String     @id @default(uuid())
+  url          String
+  name         String?
+  description  String?
+  roomId       String?
+  room         Room?      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  comments     Comment[]
+  showInReport Boolean    @default(false)
+  order        Int        @default(0)
+  projectId    String
+  project      Project    @relation(fields: [projectId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  supabaseId   String?    @unique
+  Note         Note?      @relation(fields: [noteId], references: [id])
+  noteId       String?
+  type         ImageType? @default(ROOM)
+
+  @@index([roomId])
+}
+
+enum ImageType {
+  ROOM
+  IMAGE
+  FILE
+  NOTE
+}
+
+model Note {
+  id         String   @id @default(uuid())
+  body       String
+  roomId     String
+  room       Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  images     Image[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  supabaseId String?  @unique
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  imageId   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  image     Image    @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  @@index([imageId])
+  @@index([userId])
+}
+
+model EquipmentProject {
+  id          String    @id @default(uuid())
+  equipmentId String
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  quantity    Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  roomId      String?
+  room        Room?     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([equipmentId])
+  @@index([projectId])
+}
+
+model CalendarEvent {
+  id          String   @id @default(uuid())
+  subject     String
+  supabaseId  String?  @unique
+  description String?
+  date        DateTime
+  start       DateTime
+  end         DateTime
+
+  remindClient        Boolean  @default(false)
+  remindProjectOwners Boolean  @default(false)
+  reminderTime        String?
+  isDeleted           Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relationships
+  projectId      String?
+  project        Project?                @relation(fields: [projectId], references: [id])
+  organizationId String
+  organization   Organization            @relation(fields: [organizationId], references: [id])
+  usersToRemind  User[]
+  reminders      CalendarEventReminder[]
+
+  @@index([projectId])
+  @@index([organizationId])
+}
+
+model CalendarEventReminder {
+  id             String         @id @default(uuid())
+  supabaseId     String?        @unique
+  date           DateTime
+  reminderTarget ReminderTarget // client, projectCreator, allAssigned
+  sendEmail      Boolean        @default(false)
+  sendText       Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  textSentAt     DateTime?
+  emailSentAt    DateTime?
+
+  // Relationships
+  calendarEventId String
+  calendarEvent   CalendarEvent @relation(fields: [calendarEventId], references: [id])
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id])
+
+  @@index([calendarEventId])
+  @@index([userId])
+}
+
+enum ReminderTarget {
+  CLIENT
+  PROJECT_CREATOR
+  USERS
+}
+
+model Document {
+  id        String       @id @default(uuid())
+  name      String?
+  type      DocumentType
+  json      Json?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  projectId String
+  project   Project      @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+}
+
+enum DocumentType {
+  AUTH
+  COS
+}
+
+model Form {
+  id             String         @id @default(uuid())
+  name           String
+  description    String?
+  lossTypes      LossType[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  fields         FormField[]
+  sections       FormSection[]
+  projects       FormProject[]
+  formResponses  FormResponse[]
+}
+
+model FormSection {
+  id        String      @id @default(uuid())
+  name      String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  formId    String
+  form      Form        @relation(fields: [formId], references: [id])
+  fields    FormField[]
+  order     Int
+}
+
+model FormField {
+  id                 String              @id @default(uuid())
+  name               String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  formId             String
+  form               Form                @relation(fields: [formId], references: [id])
+  type               FormFieldType
+  options            String[]
+  order              Int
+  isRequired         Boolean             @default(false)
+  formSection        FormSection?        @relation(fields: [formSectionId], references: [id])
+  formSectionId      String?
+  formResponseFields FormResponseField[]
+}
+
+model FormProject {
+  id        String   @id @default(uuid())
+  formId    String
+  form      Form     @relation(fields: [formId], references: [id])
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([formId, projectId])
+}
+
+model FormResponse {
+  id                 String              @id @default(uuid())
+  formId             String
+  form               Form                @relation(fields: [formId], references: [id])
+  projectId          String
+  project            Project             @relation(fields: [projectId], references: [id])
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  formResponseFields FormResponseField[]
+}
+
+model FormResponseField {
+  id             String       @id @default(uuid())
+  formResponseId String
+  formResponse   FormResponse @relation(fields: [formResponseId], references: [id])
+  fieldId        String
+  field          FormField    @relation(fields: [fieldId], references: [id])
+  value          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+enum FormFieldType {
+  TEXT
+  TEXTAREA
+  NUMBER
+  DATE
+  RADIO
+  CHECKBOX
+  SELECT
+  FILE
+  IMAGE
+  RATING
+  SIGNATURE
+  TIME
+}
+
+enum CostType {
+  LABOR
+  MATERIAL
+  MISCELLANEOUS
+  SUBCONTRACTOR
+}
+
+model Cost {
+  id            String   @id @default(uuid())
+  name          String
+  estimatedCost Float?
+  actualCost    Float?
+  type          CostType
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model Invoice {
+  id               String            @id @default(uuid())
+  number           String
+  clientName       String
+  clientEmail      String?
+  projectId        String?
+  poNumber         String?
+  invoiceDate      DateTime
+  dueDate          DateTime
+  subtotal         Float
+  discount         Float?
+  markup           Float?
+  tax              Float?
+  total            Float
+  deposit          Float?
+  status           InvoiceStatus     @default(DRAFT)
+  notes            String?
+  terms            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  organizationId   String
+  project          Project?          @relation(fields: [projectId], references: [id])
+  items            InvoiceItem[]
+  paymentSchedules PaymentSchedule[]
+  organization     Organization      @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@index([projectId])
+}
+
+model InvoiceItem {
+  id             String        @id @default(uuid())
+  name           String?
+  description    String
+  quantity       Int
+  rate           Float
+  amount         Float
+  notes          String?
+  category       String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  invoiceId      String?
+  isSaved        Boolean       @default(false)
+  invoice        Invoice?      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  estimate       Estimate?     @relation(fields: [estimateId], references: [id])
+  estimateId     String?
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([invoiceId])
+}
+
+model PaymentSchedule {
+  id          String   @id @default(uuid())
+  dueDate     DateTime
+  amount      Float
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+model Estimate {
+  id             String         @id @default(cuid())
+  number         String
+  clientName     String
+  clientEmail    String
+  projectId      String?
+  project        Project?       @relation(fields: [projectId], references: [id])
+  estimateDate   DateTime
+  expiryDate     DateTime
+  terms          String?
+  subtotal       Float
+  markup         Float?
+  discount       Float?
+  tax            Float?
+  total          Float
+  deposit        Float?
+  poNumber       String?
+  status         EstimateStatus @default(DRAFT)
+  notes          String?
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  items          InvoiceItem[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([organizationId])
+  @@index([projectId])
+}
+
+enum EstimateStatus {
+  DRAFT
+  SENT
+  APPROVED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}

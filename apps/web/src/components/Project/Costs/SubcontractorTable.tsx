@@ -1,0 +1,16 @@
+"use client";
+
+import { CostType } from "@service-geek/api-client";
+import CostTable from "./CostTable";
+
+export default function SubcontractorTable() {
+  return (
+    <CostTable
+      estimateName='Estimate Amount'
+      actualName='Contracted Amount'
+      name='Subcontractor Name'
+      buttonText='Add Subcontractor Cost'
+      costType={CostType.SUBCONTRACTOR}
+    />
+  );
+}

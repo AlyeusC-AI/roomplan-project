@@ -1,0 +1,33 @@
+{
+  "name": "newMononrepo",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build --filter=@servicegeek/web...",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5",
+    "prettier": "^3.5.0",
+    "turbo": "^2.4.4",
+    "typescript": "5.7.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "packageManager": "yarn@1.22.22",
+  "dependencies": {
+    "@radix-ui/react-progress": "^1.1.4",
+    "@resvg/resvg-js": "^2.6.2",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
+    "sharp": "^0.34.1",
+    "svg2png": "^4.1.1"
+  }
+}
