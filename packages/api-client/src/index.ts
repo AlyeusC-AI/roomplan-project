@@ -49,3 +49,4 @@ export * from "./services/forms";
 export * from "./services/costs";
 export * from "./services/estimate";
 export * from "./services/invoice";
+export * from "./services/space";

@@ -5,7 +5,11 @@ import { api } from "./api";
 import { STORAGE_BUCKETS } from "./utils/imageHelpers";
 import { supabaseServiceRole } from "@/unused/screens/CameraScreen";
 import { v4 } from "uuid";
-import { getImageKitAuthToken } from "@service-geek/api-client";
+import {
+  getImageKitAuthToken,
+  getUploadUrl,
+  uploadFile,
+} from "@service-geek/api-client";
 import * as ImagePicker from "expo-image-picker";
 export const imagekit = new ImageKit({
   publicKey: "public_3P95CgUAWGTwOS3848WAhIWOjBs=",
@@ -98,78 +102,108 @@ export const uploadImage = async (
     };
     console.log("🚀 ~ finalFile:", finalFile);
     onProgress?.(40);
+    // Convert the manipulated image to a Blob
+    const response = await fetch(manipResult.uri);
+    const blob = await response.blob();
+    const { signedUrl, publicUrl, key } = await uploadFile(
+      blob,
+      finalFile.name || `${v4() + Date.now()}.jpeg`
+    );
+    console.log("🚀 ~ signedUrl:", signedUrl);
+    console.log("🚀 ~ publicUrl:", publicUrl);
+    console.log("🚀 ~ key:", key);
+    return {
+      url: publicUrl,
+      fileId: key,
+      height: finalFile.height,
+      width: finalFile.width,
+      size: finalFile.uri.length,
+      name: finalFile.name,
+      filePath: publicUrl,
+      //   //           url: "https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/" + uploadData.fullPath,
+      //   //           fileId: uploadData.path,
+      //   //           height: finalFile.height,
+      //   //           width: finalFile.width,
+      //   //           size: finalFile.uri.length,
+      //   //           name: finalFile.name,
+      //   //           filePath: uploadData.path,
+    };
 
-    return new Promise(async (resolve, reject) => {
-      const p = {
-        uri: finalFile.uri,
-        name:
-          // finalFile.name ||
-          `${v4() + Date.now()}.jpeg`,
-        type: finalFile.type || "image/jpeg",
-      };
+    // return new Promise(async (resolve, reject) => {
+    //   const p = {
+    //     uri: finalFile.uri,
+    //     name:
+    //       // finalFile.name ||
+    //       `${v4() + Date.now()}.jpeg`,
+    //     type: finalFile.type || "image/jpeg",
+    //   };
 
-      //       const formData = new FormData();
-      //       // @ts-expect-error react-native form data typing issue
-      //       formData.append("file", p);
-      // const { data: uploadData, error: uploadError } = await supabaseServiceRole.storage
-      //         .from(STORAGE_BUCKETS.PROJECT)
-      //         .upload((options.folder || "uploads/")+p.name+Date.now(), formData, {
-      //           contentType: 'image/jpeg',
-      //           upsert: false,
-      //         });
-      //         console.log("🚀 ~ returnnewPromise ~ uploadData:", uploadData)
-      //         console.log("🚀 ~ returnnewPromise ~ uploadError:", uploadError)
-      //         if (uploadError) {
-      //           reject(uploadError);
-      //           return;
-      //         }
+    //   //       const formData = new FormData();
+    //   //       // @ts-expect-error react-native form data typing issue
+    //   //       formData.append("file", p);
+    //   // const { data: uploadData, error: uploadError } = await supabaseServiceRole.storage
+    //   //         .from(STORAGE_BUCKETS.PROJECT)
+    //   //         .upload((options.folder || "uploads/")+p.name+Date.now(), formData, {
+    //   //           contentType: 'image/jpeg',
+    //   //           upsert: false,
+    //   //         });
+    //   //         console.log("🚀 ~ returnnewPromise ~ uploadData:", uploadData)
+    //   //         console.log("🚀 ~ returnnewPromise ~ uploadError:", uploadError)
+    //   //         if (uploadError) {
+    //   //           reject(uploadError);
+    //   //           return;
+    //   //         }
 
-      //         const result = {
-      //           url: "https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/" + uploadData.fullPath,
-      //           fileId: uploadData.path,
-      //           height: finalFile.height,
-      //           width: finalFile.width,
-      //           size: finalFile.uri.length,
-      //           name: finalFile.name,
-      //           filePath: uploadData.path,
-      //         };
-      //         resolve(result);
-      const { token, expire, signature } = await getImageKitAuthToken();
+    //   //         const result = {
+    //   //           url: "https://zmvdimcemmhesgabixlf.supabase.co/storage/v1/object/public/" + uploadData.fullPath,
+    //   //           fileId: uploadData.path,
+    //   //           height: finalFile.height,
+    //   //           width: finalFile.width,
+    //   //           size: finalFile.uri.length,
+    //   //           name: finalFile.name,
+    //   //           filePath: uploadData.path,
+    //   //         };
+    //   //         resolve(result);
+    //   const { token, expire, signature } = await getImageKitAuthToken();
 
-      imagekit.upload(
-        {
-          file: finalFile,
-          fileName: options.useUniqueFileName
-            ? `${Date.now()}_${file.name || "image.jpg"}`
-            : file.name || `${Date.now()}_${file.name || "image.jpg"}`,
-          folder: options.folder || "uploads",
-          tags: options.tags || [],
-          responseFields: options.responseFields || ["tags"],
-          isPrivateFile: options.isPrivateFile || false,
-          token,
-          expire,
-          signature,
-        },
-        (err: Error | null, result: ImageKitUploadResponse | null) => {
-          console.log("🚀 ~ returnnewPromise ~ result:", err, result);
+    //   imagekit.upload(
+    //     {
+    //       file: finalFile,
+    //       fileName: options.useUniqueFileName
+    //         ? `${Date.now()}_${file.name || "image.jpg"}`
+    //         : file.name || `${Date.now()}_${file.name || "image.jpg"}`,
+    //       folder: options.folder || "uploads",
+    //       tags: options.tags || [],
+    //       responseFields: options.responseFields || ["tags"],
+    //       isPrivateFile: options.isPrivateFile || false,
+    //       token,
+    //       expire,
+    //       signature,
+    //     },
+    //     (err: Error | null, result: ImageKitUploadResponse | null) => {
+    //       console.log("🚀 ~ returnnewPromise ~ result:", err, result);
 
-          if (err) {
-            reject(err);
-            return;
-          }
+    //       if (err) {
+    //         reject(err);
+    //         return;
+    //       }
 
-          if (!result) {
-            reject("No result from ImageKit upload");
-            return;
-          }
-          onProgress?.(100);
-          resolve(result);
-        }
-      );
-    });
+    //       if (!result) {
+    //         reject("No result from ImageKit upload");
+    //         return;
+    //       }
+    //       onProgress?.(100);
+    //       resolve(result);
+    //     }
+    //   );
+    // });
   } catch (error) {
-    console.error("ImageKit upload error:", error);
-    toast.error("Failed to upload image");
+    console.log("🚀 ~ error:", error?.data);
+    console.error(
+      "ImageKit upload error:",
+      error?.response?.data?.message || error
+    );
+    toast.error(error?.response?.data?.message || error);
     // throw error;
   }
 };

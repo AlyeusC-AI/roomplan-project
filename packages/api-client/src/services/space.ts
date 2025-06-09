@@ -9,8 +9,13 @@ interface SpaceUploadResponse {
 export const getUploadUrl = async (
   fileName: string
 ): Promise<SpaceUploadResponse> => {
-  const response = await apiClient.get("/space", { data: { fileName } });
-  return response.data;
+  try {
+    const response = await apiClient.get(`/space?fileName=${fileName}`);
+    return response.data;
+  } catch (error) {
+    console.log("🚀 ~ eraasssror:", error);
+    throw error;
+  }
 };
 
 export const uploadFile = async (
@@ -19,6 +24,7 @@ export const uploadFile = async (
 ): Promise<SpaceUploadResponse> => {
   // First get the signed URL
   const { signedUrl, publicUrl, key } = await getUploadUrl(fileName);
+  console.log("🚀 ~ signedUrl:", signedUrl);
 
   // Upload the file using the signed URL
   const response = await fetch(signedUrl, {

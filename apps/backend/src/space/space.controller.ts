@@ -1,4 +1,4 @@
-import { Controller, Get, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Body, UseGuards, Query } from '@nestjs/common';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -17,7 +17,7 @@ export class SpaceController {
   }
 
   @Get()
-  async getAuthToken(@Body('fileName') fileName: string) {
+  async getAuthToken(@Query('fileName') fileName: string) {
     try {
       // Generate a unique key for the file
       const key = `whatsapp/${Date.now()}-${Math.random()
