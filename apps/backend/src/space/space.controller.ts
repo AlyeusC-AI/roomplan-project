@@ -24,16 +24,25 @@ export class SpaceController {
         .toString(36)
         .substring(7)}.${fileName.split('.').pop()}`;
 
+      const fileExtension = fileName.split('.').pop()?.toLowerCase();
+      const contentType =
+        fileExtension === 'jpg' || fileExtension === 'jpeg'
+          ? 'image/jpeg'
+          : `image/${fileExtension}`;
+
       // Create the command to upload the file
       const command = new PutObjectCommand({
         Bucket: 'smartclinic',
         Key: key,
-        ContentType: `image/${fileName.split('.').pop() === 'jpg' ? 'jpeg' : fileName.split('.').pop()}`,
+        ContentType: contentType,
         ACL: 'public-read',
-        // Expires: 60 * 5, // 5 minutes
+        CacheControl: 'max-age=31536000',
+        Metadata: {
+          'x-amz-meta-originalname': fileName,
+        },
       });
 
-      // Generate a signed URL
+      // Generate a signed URL with specific parameters
       const signedUrl = await getSignedUrl(this.s3Client, command, {
         expiresIn: 3600, // URL expires in 1 hour
       });
@@ -42,6 +51,7 @@ export class SpaceController {
       return {
         signedUrl,
         publicUrl: `https://fra1.digitaloceanspaces.com/smartclinic/${key}`,
+        key,
       };
     } catch (error) {
       console.error('Error generating signed URL:', error);
