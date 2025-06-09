@@ -25,6 +25,16 @@ export const createClient = (config: ClientConfig) => {
     return axiosConfig;
   });
 
+  instance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      console.log("🚀 ~axios error:", error.response.data.message);
+      // if (error.response.status === 401) {
+      //   useAuthStore.getState().logout();
+      // }
+      return Promise.reject(error);
+    }
+  );
   return instance;
 };
 

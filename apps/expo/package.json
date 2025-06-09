@@ -28,8 +28,7 @@
     "gen:types": "npx supabase gen types typescript --project-id \"zmvdimcemmhesgabixlf\" --schema public > types/database.ts"
   },
   "dependencies": {
-    "@service-geek/api-client": "*",
-    "@tanstack/react-query": "^5.75.5",
+    "@aws-sdk/client-s3": "^3.826.0",
     "@expo/config-plugins": "^9.0.17",
     "@expo/vector-icons": "^14.0.2",
     "@react-native-async-storage/async-storage": "1.23.1",
@@ -46,7 +45,9 @@
     "@rn-primitives/separator": "^1.1.0",
     "@rn-primitives/slot": "^1.1.0",
     "@rn-primitives/types": "^1.1.0",
+    "@service-geek/api-client": "*",
     "@supabase/supabase-js": "2.46.2",
+    "@tanstack/react-query": "^5.75.5",
     "axios": "^1.8.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -122,7 +123,8 @@
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.1.0",
     "yarn": "^1.22.22",
-    "zustand": "^5.0.2"
+    "zustand": "^5.0.2",
+    "@babel/plugin-transform-class-static-block": "^7.27.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

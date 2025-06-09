@@ -11,12 +11,23 @@ import {
   uploadFile,
 } from "@service-geek/api-client";
 import * as ImagePicker from "expo-image-picker";
-export const imagekit = new ImageKit({
-  publicKey: "public_3P95CgUAWGTwOS3848WAhIWOjBs=",
-  urlEndpoint: "https://ik.imagekit.io/wzgdjvwfm",
-  //   authenticationEndpoint: `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/imageKit`,
-});
-
+import * as FileSystem from "expo-file-system";
+// import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+// export const imagekit = new ImageKit({
+//   publicKey: "public_3P95CgUAWGTwOS3848WAhIWOjBs=",
+//   urlEndpoint: "https://ik.imagekit.io/wzgdjvwfm",
+//   //   authenticationEndpoint: `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/imageKit`,
+// });
+// const s3Client = new S3Client({
+//   endpoint: "https://digitaloceanspaces.com",
+//   forcePathStyle: false,
+//   region: "fra1",
+//   credentials: {
+//     accessKeyId: "key-1746353526787",
+//     secretAccessKey: "tleJB61i+yShqLlh6l77DK2PZUPPtUt/NEB9bjlk0FM",
+//   },
+// });
+// smartclinic;
 export interface ImageKitUploadOptions {
   folder?: string;
   tags?: string[];
@@ -50,7 +61,11 @@ interface ExpoImageAsset {
   type: string;
   name: string;
 }
-
+const getImageBlob = async (uri: string) => {
+  const response = await fetch(uri);
+  const blob = await response.blob();
+  return blob;
+};
 /**
  * Uploads an image to ImageKit
  * @param file - File to upload (can be File object, Blob, or base64 string)
@@ -102,16 +117,41 @@ export const uploadImage = async (
     };
     console.log("🚀 ~ finalFile:", finalFile);
     onProgress?.(40);
+
+    const blob = await getImageBlob(finalFile.uri);
+    console.log("these happened without error");
+    console.log(blob);
+
+    // const params = {
+    //   Bucket: "smartclinic",
+    //   Key: finalFile.name || `${v4() + Date.now()}.jpeg`,
+    //   Body: blob,
+    //   ACL: "public-read",
+    //   ContentType: "multipart/form-data",
+    // };
+
+    // const data = await s3Client.send(new PutObjectCommand(params));
+    // console.log(data);
+
+    // const imageUrl =
+    //   "https://digitaloceanspaces.com/smartclinic/" + finalFile.name ||
+    //   `${v4() + Date.now()}.jpeg`;
+    // const fileInfo = await FileSystem.getInfoAsync(finalFile.uri);
+    // Read the file content
+    // const fileContent = await FileSystem.readAsStringAsync(finalFile.uri, {
+    //   encoding: FileSystem.EncodingType.Base64,
+    // });
     // Convert the manipulated image to a Blob
-    const response = await fetch(manipResult.uri);
-    const blob = await response.blob();
+    // const response = await fetch(manipResult.uri);
+    // const blob = await response.blob();
     const { signedUrl, publicUrl, key } = await uploadFile(
+      // Buffer.from(fileContent, "base64"),
       blob,
       finalFile.name || `${v4() + Date.now()}.jpeg`
     );
-    console.log("🚀 ~ signedUrl:", signedUrl);
-    console.log("🚀 ~ publicUrl:", publicUrl);
-    console.log("🚀 ~ key:", key);
+    // console.log("🚀 ~ signedUrl:", signedUrl);
+    // console.log("🚀 ~ publicUrl:", publicUrl);
+    // console.log("🚀 ~ key:", key);
     return {
       url: publicUrl,
       fileId: key,
