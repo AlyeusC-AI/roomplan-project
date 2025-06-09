@@ -26,30 +26,40 @@ export const uploadFile = async (
   // First get the signed URL
   const { signedUrl, publicUrl, key } = await getUploadUrl(fileName);
   console.log("🚀 ~ signedUrl:", signedUrl);
+  const signedUrlWithoutChecksum = signedUrl.replace(
+    /&x-amz-checksum-crc32=[^&]*/,
+    ""
+  );
+  const signedUrlWithoutAlgorithm = signedUrlWithoutChecksum.replace(
+    /&x-amz-sdk-checksum-algorithm=[^&]*/,
+    ""
+  );
 
   // Determine the correct content type
   const fileExtension = fileName.split(".").pop()?.toLowerCase();
   console.log("🚀 ~ fileExtension:", fileExtension);
   const contentType =
-    fileExtension === "jpg" || fileExtension === "jpeg"
-      ? "image/jpeg"
-      : fileExtension === "png"
-        ? "image/png"
-        : fileExtension === "gif"
-          ? "image/gif"
-          : fileExtension === "webp"
-            ? "image/webp"
-            : "application/octet-stream";
+    fileExtension === "jpg"
+      ? "image/jpg"
+      : fileExtension === "jpeg"
+        ? "image/jpeg"
+        : fileExtension === "png"
+          ? "image/png"
+          : fileExtension === "gif"
+            ? "image/gif"
+            : fileExtension === "webp"
+              ? "image/webp"
+              : "application/octet-stream";
 
   // Upload the file using the signed URL
-  const response = await fetch(signedUrl, {
+  const response = await fetch(signedUrlWithoutAlgorithm, {
     method: "PUT",
     body: file,
     headers: {
       "Content-Type": contentType,
-      "x-amz-acl": "public-read",
-      "Cache-Control": "max-age=31536000",
-      "x-amz-content-sha256": "UNSIGNED-PAYLOAD",
+      // "x-amz-acl": "public-read",
+      // "Cache-Control": "max-age=31536000",
+      // "x-amz-content-sha256": "UNSIGNED-PAYLOAD",
     },
   });
 
