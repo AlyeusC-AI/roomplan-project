@@ -91,31 +91,32 @@ export const uploadImage = async (
 
     // Optimize image before upload
     // const optimizedFile = await optimizeImage(file);
-    const manipResult = await ImageManipulator.manipulateAsync(
-      file.path || file.uri,
-      [
-        // {
-        //   resize: {
-        //     width: 1200,
-        //     height: 1200,
-        //   },
-        // },
-      ],
-      {
-        compress: 0.7,
-        format: ImageManipulator.SaveFormat.JPEG,
+    // const manipResult = await ImageManipulator.manipulateAsync(
+    //   file.path || file.uri,
+    //   [
+    //     // {
+    //     //   resize: {
+    //     //     width: 1200,
+    //     //     height: 1200,
+    //     //   },
+    //     // },
+    //   ],
+    //   {
+    //     compress: 0.7,
+    //     format: ImageManipulator.SaveFormat.JPEG,
 
-        // base64: true,
-        // base64: true,
-      }
-    );
-    console.log("🚀 ~ manipResult:", manipResult);
+    //     // base64: true,
+    //     // base64: true,
+    //   }
+    // );
+    // console.log("🚀 ~ manipResult:", manipResult);
     console.log("🚀 ~ returnnewPromise ~ file:", file);
     const finalFile = {
       ...file,
+      uri: file.path || file.uri,
       name: file.name || file.fileName,
       type: "image/jpeg",
-      ...manipResult,
+      // ...manipResult,
     };
     console.log("🚀 ~ finalFile:", finalFile);
     onProgress?.(40);
@@ -158,11 +159,16 @@ export const uploadImage = async (
     // });
     const blob = await (await fetch(finalFile.uri)).blob();
     console.log("🚀 ~ blob:", blob);
+    const fileName = finalFile.name || `${v4() + Date.now()}.jpeg`;
+
+    let picture: Response | Blob = await fetch(finalFile.uri);
+    picture = await picture.blob();
+    const imageData = new File([picture], `${fileName}`);
 
     const { signedUrl, publicUrl, key } = await uploadFile(
-      blob,
+      imageData,
       // await (await fetch(fileInfo.uri)).blob(),
-      finalFile.name || `${v4() + Date.now()}.jpeg`
+      fileName
     );
     // console.log("🚀 ~ signedUrl:", signedUrl);
     // console.log("🚀 ~ publicUrl:", publicUrl);

@@ -20,7 +20,7 @@ export class SpaceController {
   async getAuthToken(@Query('fileName') fileName: string) {
     try {
       // Generate a unique key for the file
-      const key = `whatsapp/${Date.now()}-${Math.random()
+      const key = `${Date.now()}-${Math.random()
         .toString(36)
         .substring(7)}.${fileName.split('.').pop()}`;
 
