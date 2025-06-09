@@ -28,7 +28,7 @@ export class SpaceController {
       const command = new PutObjectCommand({
         Bucket: 'smartclinic',
         Key: key,
-        ContentType: `image/${fileName.split('.').pop()}`,
+        ContentType: `image/${fileName.split('.').pop() === 'jpg' ? 'jpeg' : fileName.split('.').pop()}`,
         ACL: 'public-read',
         // Expires: 60 * 5, // 5 minutes
       });
