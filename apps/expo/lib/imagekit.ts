@@ -12,6 +12,8 @@ import {
 } from "@service-geek/api-client";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
+import { Buffer } from "buffer";
+global.Buffer = global.Buffer || Buffer;
 // import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 // export const imagekit = new ImageKit({
 //   publicKey: "public_3P95CgUAWGTwOS3848WAhIWOjBs=",
@@ -118,9 +120,9 @@ export const uploadImage = async (
     console.log("🚀 ~ finalFile:", finalFile);
     onProgress?.(40);
 
-    const blob = await getImageBlob(finalFile.uri);
-    console.log("these happened without error");
-    console.log(blob);
+    // const blob = await getImageBlob(finalFile.uri);
+    // console.log("these happened without error");
+    // console.log(blob);
 
     // const params = {
     //   Bucket: "smartclinic",
@@ -144,9 +146,22 @@ export const uploadImage = async (
     // Convert the manipulated image to a Blob
     // const response = await fetch(manipResult.uri);
     // const blob = await response.blob();
+    const fileInfo = await FileSystem.getInfoAsync(finalFile.uri);
+    console.log("🚀 ~ fileInfo:", fileInfo);
+    if (!fileInfo.exists) {
+      throw new Error("File does not exist at " + finalFile.uri);
+    }
+
+    // Read the file content
+    // const fileContent = await FileSystem.readAsStringAsync(finalFile.uri, {
+    //   encoding: FileSystem.EncodingType.Base64,
+    // });
+    const blob = await (await fetch(finalFile.uri)).blob();
+    console.log("🚀 ~ blob:", blob);
+
     const { signedUrl, publicUrl, key } = await uploadFile(
-      // Buffer.from(fileContent, "base64"),
       blob,
+      // await (await fetch(fileInfo.uri)).blob(),
       finalFile.name || `${v4() + Date.now()}.jpeg`
     );
     // console.log("🚀 ~ signedUrl:", signedUrl);

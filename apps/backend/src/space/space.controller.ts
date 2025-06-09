@@ -29,7 +29,7 @@ export class SpaceController {
         Bucket: 'smartclinic',
         Key: key,
         ContentType: `image/${fileName.split('.').pop() === 'jpg' ? 'jpeg' : fileName.split('.').pop()}`,
-        // ACL: 'public-read',
+        ACL: 'public-read',
         // Expires: 60 * 5, // 5 minutes
       });
 
