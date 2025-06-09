@@ -1,0 +1,66 @@
+import { Controller, Get, Body, UseGuards } from '@nestjs/common';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+@Controller('/space')
+export class SpaceController {
+  private s3Client: S3Client;
+  constructor() {
+    this.s3Client = new S3Client({
+      endpoint: 'https://fra1.digitaloceanspaces.com',
+      region: 'fra1',
+      credentials: {
+        accessKeyId: process.env.DIGITALOCEAN_SPACES_KEY || '',
+        secretAccessKey: process.env.DIGITALOCEAN_SPACES_SECRET || '',
+      },
+    });
+  }
+
+  @Get()
+  async getAuthToken(@Body('fileName') fileName: string) {
+    try {
+      // Generate a unique key for the file
+      const key = `whatsapp/${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(7)}.${fileName.split('.').pop()}`;
+
+      // Create the command to upload the file
+      const command = new PutObjectCommand({
+        Bucket: 'smartclinic',
+        Key: key,
+        ContentType: `image/${fileName.split('.').pop()}`,
+        ACL: 'public-read',
+      });
+
+      // Generate a signed URL
+      const signedUrl = await getSignedUrl(this.s3Client, command, {
+        expiresIn: 3600, // URL expires in 1 hour
+      });
+
+      // Return both the signed URL and the public URL
+      return {
+        signedUrl,
+        publicUrl: `https://fra1.digitaloceanspaces.com/smartclinic/${key}`,
+      };
+    } catch (error) {
+      console.error('Error generating signed URL:', error);
+      throw error;
+    }
+  }
+}
+
+// import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+// import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+// import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+// import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+// @Controller('file')
+// export class FileController {
+//   private s3Client: S3Client;
+
+//   @UseGuards(JwtAuthGuard)
+//   @Post('get-upload-url')
+//   async getUploadUrl(@Body('fileName') fileName: string) {
+
+//   }
+// }

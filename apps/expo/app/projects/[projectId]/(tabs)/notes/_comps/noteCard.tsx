@@ -417,9 +417,7 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
       });
 
       clearImages();
-      refreshNotes().then(() => {
-        // setExpandedImageGrid(true);
-      });
+      refreshNotes();
 
       // Add to NoteImage table
       //   supabaseServiceRole

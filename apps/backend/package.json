@@ -25,9 +25,8 @@
     "migrate:supabase": "ts-node prisma/migrations/migrate-from-supabase.ts"
   },
   "dependencies": {
-    "pdfmake": "0.2.18",
-    "date-fns": "2.29.3",
-
+    "@aws-sdk/client-s3": "^3.802.0",
+    "@aws-sdk/s3-request-presigner": "^3.802.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -45,10 +44,12 @@
     "cookie-parser": "^1.4.7",
     "csv-parse": "^5.6.0",
     "csv-writer": "^1.6.0",
+    "date-fns": "2.29.3",
     "dayjs": "^1.11.13",
     "imagekit": "^6.0.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
+    "pdfmake": "0.2.18",
     "reflect-metadata": "^0.2.2",
     "resend": "^4.5.1",
     "rxjs": "^7.8.1",
