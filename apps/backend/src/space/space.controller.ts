@@ -38,7 +38,7 @@ export class SpaceController {
 
       // Create the command to upload the file
       const command = new PutObjectCommand({
-        Bucket: 'pcloud',
+        Bucket: 'restoregeek',
         Key: key,
         ContentType: contentType,
         ACL: 'public-read',
@@ -53,7 +53,7 @@ export class SpaceController {
       // Return both the signed URL and the public URL
       return {
         signedUrl,
-        publicUrl: `https://nyc3.digitaloceanspaces.com/pcloud/${key}`,
+        publicUrl: `https://nyc3.digitaloceanspaces.com/restoregeek/${key}`,
         key,
       };
     } catch (error) {
