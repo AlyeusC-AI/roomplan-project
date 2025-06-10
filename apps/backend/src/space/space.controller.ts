@@ -1,7 +1,6 @@
 import { Controller, Get, Body, UseGuards, Query } from '@nestjs/common';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-// https://pcloud.nyc3.digitaloceanspaces.com
 @Controller('/space')
 export class SpaceController {
   private s3Client: S3Client;
