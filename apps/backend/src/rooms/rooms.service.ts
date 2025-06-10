@@ -46,7 +46,11 @@ export class RoomsService {
     });
 
     if (room) {
-      throw new Error('Room already exists');
+      throw new BadRequestException({
+        status: 'failed',
+        reason: 'existing-room',
+        message: 'Room already exists for this project.',
+      });
     }
 
     return this.prisma.room.create({
