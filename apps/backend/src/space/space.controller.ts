@@ -10,8 +10,8 @@ export class SpaceController {
       endpoint: 'https://nyc3.digitaloceanspaces.com',
       region: 'nyc3',
       credentials: {
-        accessKeyId: 'DO801Z3YVJ9ZHHF3YTDP',
-        secretAccessKey: 'FZCt9407cEzF6OQzGCMcdjR7QhO79aUwJg+F2VB/3ro',
+        accessKeyId: process.env.DIGITALOCEAN_SPACES_KEY || '',
+        secretAccessKey: process.env.DIGITALOCEAN_SPACES_SECRET || '',
       },
     });
   }
