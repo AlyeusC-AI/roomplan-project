@@ -35,11 +35,6 @@ export class SpaceController {
         Bucket: 'smartclinic',
         Key: key,
         ContentType: contentType,
-        ACL: 'public-read',
-        CacheControl: 'max-age=31536000',
-        Metadata: {
-          'x-amz-meta-originalname': fileName,
-        },
       });
 
       // Generate a signed URL with specific parameters
