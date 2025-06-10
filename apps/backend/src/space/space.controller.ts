@@ -1,6 +1,7 @@
 import { Controller, Get, Body, UseGuards, Query } from '@nestjs/common';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
 @Controller('/space')
 export class SpaceController {
   private s3Client: S3Client;
@@ -27,7 +28,13 @@ export class SpaceController {
       const contentType =
         fileExtension === 'jpg' || fileExtension === 'jpeg'
           ? 'image/jpeg'
-          : `image/${fileExtension}`;
+          : fileExtension === 'png'
+            ? 'image/png'
+            : fileExtension === 'gif'
+              ? 'image/gif'
+              : fileExtension === 'webp'
+                ? 'image/webp'
+                : 'application/octet-stream';
 
       // Create the command to upload the file
       const command = new PutObjectCommand({
@@ -35,6 +42,7 @@ export class SpaceController {
         Key: key,
         ContentType: contentType,
         ACL: 'public-read',
+        CacheControl: 'public, max-age=31536000',
       });
 
       // Generate a signed URL with specific parameters
