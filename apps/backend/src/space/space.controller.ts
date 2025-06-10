@@ -8,7 +8,7 @@ export class SpaceController {
   constructor() {
     this.s3Client = new S3Client({
       endpoint: 'https://fra1.digitaloceanspaces.com',
-      region: 'fra1',
+      // region: 'fra1',
       credentials: {
         accessKeyId: process.env.DIGITALOCEAN_SPACES_KEY || '',
         secretAccessKey: process.env.DIGITALOCEAN_SPACES_SECRET || '',
