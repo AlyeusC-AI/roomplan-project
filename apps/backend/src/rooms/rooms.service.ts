@@ -331,22 +331,13 @@ export class RoomsService {
       }
     }
 
-    const lastOrder = await this.prisma.image.findFirst({
-      where: {
-        roomId: roomId,
-      },
-      orderBy: {
-        order: 'desc',
-      },
-    });
-
     // Create the image
     const image = await this.prisma.image.create({
       data: {
         ...data,
         url: data.url,
         showInReport: data.showInReport ?? false,
-        order: data.order ?? (lastOrder?.order ?? 0) + 1,
+        order: 1,
         projectId: data.projectId,
         roomId: roomId,
         noteId: data.noteId,
@@ -356,6 +347,15 @@ export class RoomsService {
       },
       include: {
         comments: true,
+      },
+    });
+
+    await this.prisma.image.updateMany({
+      where: {
+        roomId: roomId,
+      },
+      data: {
+        order: { increment: 1 },
       },
     });
 
@@ -490,7 +490,7 @@ export class RoomsService {
   // Advanced image search with filters, sorting, and pagination
   async findImages(
     filters: ImageFilters,
-    sort: ImageSortOptions = { field: 'order', direction: 'desc' },
+    sort: ImageSortOptions = { field: 'createdAt', direction: 'desc' },
     pagination: PaginationOptions = { page: 1, limit: 20 },
   ): Promise<{
     data: Prisma.ImageGetPayload<{ include: { comments: true; room: true } }>[];
