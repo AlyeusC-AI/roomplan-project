@@ -34,6 +34,7 @@ export class SpaceController {
         Bucket: 'pcloud',
         Key: key,
         ContentType: contentType,
+        ACL: 'public-read',
       });
 
       // Generate a signed URL with specific parameters
