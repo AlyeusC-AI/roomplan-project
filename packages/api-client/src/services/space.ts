@@ -49,7 +49,6 @@ export const uploadFile = async (
     body: file,
     headers: {
       "Content-Type": contentType,
-      "Content-Length": file instanceof Blob ? file.size.toString() : "0",
     },
   });
 

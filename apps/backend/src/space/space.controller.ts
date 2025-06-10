@@ -1,17 +1,17 @@
 import { Controller, Get, Body, UseGuards, Query } from '@nestjs/common';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-
+// https://pcloud.nyc3.digitaloceanspaces.com
 @Controller('/space')
 export class SpaceController {
   private s3Client: S3Client;
   constructor() {
     this.s3Client = new S3Client({
-      endpoint: 'https://fra1.digitaloceanspaces.com',
-      region: 'fra1',
+      endpoint: 'https://nyc3.digitaloceanspaces.com',
+      region: 'nyc3',
       credentials: {
-        accessKeyId: process.env.DIGITALOCEAN_SPACES_KEY || '',
-        secretAccessKey: process.env.DIGITALOCEAN_SPACES_SECRET || '',
+        accessKeyId: 'key-1749520062282',
+        secretAccessKey: 'FZCt9407cEzF6OQzGCMcdjR7QhO79aUwJg+F2VB/3ro',
       },
     });
   }
@@ -32,7 +32,7 @@ export class SpaceController {
 
       // Create the command to upload the file
       const command = new PutObjectCommand({
-        Bucket: 'smartclinic',
+        Bucket: 'pcloud',
         Key: key,
         ContentType: contentType,
       });
@@ -45,7 +45,7 @@ export class SpaceController {
       // Return both the signed URL and the public URL
       return {
         signedUrl,
-        publicUrl: `https://fra1.digitaloceanspaces.com/smartclinic/${key}`,
+        publicUrl: `https://nyc3.digitaloceanspaces.com/pcloud/${key}`,
         key,
       };
     } catch (error) {
