@@ -40,6 +40,9 @@ import Animated, {
   withSpring,
   runOnJS,
   useAnimatedGestureHandler,
+  withRepeat,
+  withSequence,
+  withTiming,
 } from "react-native-reanimated";
 import ModalImagesWithNotes from "../pictures/modalImagesWithNotes";
 import { api } from "@/lib/api";
@@ -108,6 +111,7 @@ const GridItem = React.memo(
     handleImagePress,
     toggleImageSelection,
     selectable,
+    isReorderMode,
   }: {
     image: Image | null;
     index: number;
@@ -122,34 +126,61 @@ const GridItem = React.memo(
     handleImagePress: (index: number) => void;
     toggleImageSelection: (imageKey: string) => void;
     selectable: boolean;
+    isReorderMode: boolean;
   }) => {
+    const shakeAnimation = useSharedValue(0);
+
+    useEffect(() => {
+      if (isReorderMode) {
+        shakeAnimation.value = withRepeat(
+          withSequence(
+            withTiming(1, { duration: 100 }),
+            withTiming(-1, { duration: 100 }),
+            withTiming(0, { duration: 100 })
+          ),
+          -1,
+          true
+        );
+      } else {
+        shakeAnimation.value = 0;
+      }
+    }, [isReorderMode]);
+
     const gestureHandler = useAnimatedStyle(() => {
       const { x, y } = positions.value[index] || { x: 0, y: 0 };
+      const rotate = isReorderMode ? `${shakeAnimation.value * 2}deg` : "0deg";
+
       return {
-        transform: [{ translateX: x }, { translateY: y }],
+        transform: [{ translateX: x }, { translateY: y }, { rotate }],
         zIndex: isDragging && draggedIndex === index ? 1 : 0,
-      } as const;
+      };
     });
 
     const onGestureEvent = useAnimatedGestureHandler({
       onStart: () => {
-        runOnJS(handleDragStart)(index);
+        if (isReorderMode) {
+          runOnJS(handleDragStart)(index);
+        }
       },
       onActive: (event) => {
-        positions.value = positions.value.map(
-          (pos: { x: number; y: number }, i: number) => {
-            if (i === index) {
-              return {
-                x: event.translationX,
-                y: event.translationY,
-              };
+        if (isReorderMode) {
+          positions.value = positions.value.map(
+            (pos: { x: number; y: number }, i: number) => {
+              if (i === index) {
+                return {
+                  x: event.translationX,
+                  y: event.translationY,
+                };
+              }
+              return pos;
             }
-            return pos;
-          }
-        );
+          );
+        }
       },
       onEnd: () => {
-        runOnJS(handleDragEnd)(index);
+        if (isReorderMode) {
+          runOnJS(handleDragEnd)(index);
+        }
       },
     });
 
@@ -174,13 +205,22 @@ const GridItem = React.memo(
               resizeMode="cover"
               isSelected={isSelected}
               imageKey={imageKey}
-              onLongPress={() => handleDragStart(index)}
+              onLongPress={() => {
+                if (!isReorderMode) {
+                  handleDragStart(index);
+                }
+              }}
               onPress={
                 selectable
                   ? () => toggleImageSelection(imageKey)
                   : () => handleImagePress(index)
               }
             />
+            {isReorderMode && (
+              <View style={styles.reorderIndicator}>
+                <View style={styles.reorderHandle} />
+              </View>
+            )}
           </Animated.View>
         </PanGestureHandler>
       </Animated.View>
@@ -202,6 +242,7 @@ export default function ImageGallery({
   // Add state for drag and drop
   const [isDragging, setIsDragging] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [isReorderMode, setIsReorderMode] = useState(false);
   const itemsPerRow = 3;
   const [images, setImages] = useState<Image[]>(imagesProp);
   // const { mutate: removeImage } = useRemoveImage();
@@ -214,7 +255,7 @@ export default function ImageGallery({
   useEffect(() => {
     console.log("🚀 ~ images:", JSON.stringify(imagesProp, null, 2));
 
-    setImages(imagesProp.sort((a, b) => (b.order || 0) - (a.order || 0)));
+    setImages(imagesProp.sort((a, b) => (a.order || 0) - (b.order || 0)));
   }, [imagesProp]);
   // useEffect(() => {
   //   console.log("🚀 ~ inferences:", JSON.stringify(inferences, null, 2));
@@ -238,6 +279,9 @@ export default function ImageGallery({
 
   // Handle drag start
   const handleDragStart = (index: number) => {
+    if (!isReorderMode) {
+      setIsReorderMode(true);
+    }
     setIsDragging(true);
     setDraggedIndex(index);
   };
@@ -313,6 +357,17 @@ export default function ImageGallery({
     }
   };
 
+  // Add a function to exit reorder mode
+  const exitReorderMode = () => {
+    setIsReorderMode(false);
+    setIsDragging(false);
+    setDraggedIndex(null);
+    positions.value = positions.value.map((_, i) => ({
+      x: 0,
+      y: 0,
+    }));
+  };
+
   // Replace the renderGridItem function with this:
   const renderGridItem = (image: Image | null, index: number) => {
     if (!image) {
@@ -339,6 +394,7 @@ export default function ImageGallery({
         handleImagePress={handleImagePress}
         toggleImageSelection={toggleImageSelection}
         selectable={selectable}
+        isReorderMode={isReorderMode}
       />
     );
   };
@@ -355,6 +411,14 @@ export default function ImageGallery({
 
   return (
     <GestureHandlerRootView style={styles.container}>
+      {isReorderMode && (
+        <TouchableOpacity
+          style={styles.exitReorderButton}
+          onPress={exitReorderMode}
+        >
+          <Text style={styles.exitReorderText}>Done</Text>
+        </TouchableOpacity>
+      )}
       {/* Grid Gallery */}
       <View style={styles.galleryGrid}>
         {rows.map((row, rowIndex) => (
@@ -655,4 +719,36 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-});
+  reorderIndicator: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 24,
+    height: 24,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  reorderHandle: {
+    width: 12,
+    height: 12,
+    backgroundColor: "#fff",
+    borderRadius: 6,
+  },
+  exitReorderButton: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    backgroundColor: "#1e40af",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    zIndex: 1000,
+  },
+  exitReorderText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+} as const);

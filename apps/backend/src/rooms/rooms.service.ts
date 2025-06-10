@@ -337,7 +337,7 @@ export class RoomsService {
         ...data,
         url: data.url,
         showInReport: data.showInReport ?? false,
-        order: 1,
+        order: 0,
         projectId: data.projectId,
         roomId: roomId,
         noteId: data.noteId,
