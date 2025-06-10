@@ -15,7 +15,6 @@ export const getUploadUrl = async (
   } catch (error) {
     console.log("🚀 ~ eraasssror:", error);
     throw error;
-    screen;
   }
 };
 
@@ -49,6 +48,8 @@ export const uploadFile = async (
     body: file,
     headers: {
       "Content-Type": contentType,
+      "x-amz-acl": "public-read",
+      "Cache-Control": "public, max-age=31536000",
     },
   });
 

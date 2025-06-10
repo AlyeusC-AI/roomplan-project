@@ -214,7 +214,7 @@ export default function ImageGallery({
   useEffect(() => {
     console.log("🚀 ~ images:", JSON.stringify(imagesProp, null, 2));
 
-    setImages(imagesProp.sort((a, b) => (a.order || 0) - (b.order || 0)));
+    setImages(imagesProp.sort((a, b) => (b.order || 0) - (a.order || 0)));
   }, [imagesProp]);
   // useEffect(() => {
   //   console.log("🚀 ~ inferences:", JSON.stringify(inferences, null, 2));

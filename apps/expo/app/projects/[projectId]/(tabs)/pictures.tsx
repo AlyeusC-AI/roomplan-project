@@ -101,11 +101,12 @@ export default function ProjectPhotos() {
       type: "ROOM",
     },
     {
-      direction: "asc",
+      direction: "desc",
       field: "order",
     },
     { page: 1, limit: 100 }
   );
+  console.log("🚀 ~ ProjectPhotos ~ images:", images);
 
   // useFocusEffect(
   //   useCallback(() => {
