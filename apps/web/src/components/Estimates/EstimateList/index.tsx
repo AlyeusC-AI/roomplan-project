@@ -14,13 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
-import { estimatesStore } from "@atoms/estimates";
-import {
-  getEstimates,
-  convertEstimateToInvoice,
-  updateEstimateStatus,
-  deleteEstimate,
-} from "@/services/api/estimates";
+
 import { Button } from "@components/ui/button";
 import {
   Card,
@@ -58,6 +52,8 @@ import {
 import { Input } from "@components/ui/input";
 import { Badge } from "@components/ui/badge";
 import {
+  Estimate,
+  useConvertEstimateToInvoice,
   useDeleteEstimate,
   useGetEstimates,
   useUpdateEstimate,
@@ -82,6 +78,8 @@ const EstimateList = () => {
   const { data: estimates, isLoading } = useGetEstimates();
   const { mutate: deleteEstimateMutation } = useDeleteEstimate();
   const { mutate: updateEstimateMutation } = useUpdateEstimate();
+  const { mutateAsync: convertEstimateToInvoice } =
+    useConvertEstimateToInvoice();
   // const {
   //   estimates,
   //   setEstimates,
@@ -147,13 +145,9 @@ const EstimateList = () => {
     try {
       const result = await convertEstimateToInvoice(estimateId);
 
-      if (result.error) {
-        toast.error(result.error);
-      } else if (result.data) {
-        toast.success("Estimate converted to invoice successfully");
-        // Navigate to the new invoice
-        router.push(`/invoices/${result.data.invoiceId}`);
-      }
+      toast.success("Estimate converted to invoice successfully");
+      // Navigate to the new invoice
+      router.push(`/invoices/${result.data.invoiceId}`);
     } catch (error) {
       console.error("Error converting estimate to invoice:", error);
       toast.error("Failed to convert estimate to invoice");
