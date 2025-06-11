@@ -2,7 +2,6 @@ import FilterLabel from "./FilterLabel";
 import { Button } from "@components/ui/button";
 import { Calendar, Home } from "lucide-react";
 import { userPreferenceStore } from "@state/user-prefrence";
-import { user } from "@lib/supabase/get-user";
 
 export default function GroupByPicker() {
   const { savedPhotoGroupBy, updatePreference } = userPreferenceStore();

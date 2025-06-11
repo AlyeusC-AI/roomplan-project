@@ -2,13 +2,11 @@
 
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@lib/supabase/client";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
 import { LoadingPlaceholder } from "@components/ui/spinner";
 import { Label } from "@components/ui/label";
 import { toast } from "sonner";
-import { AuthApiError } from "@supabase/supabase-js";
 
 function UpdatePasswordForm() {
   const [loading, setLoading] = useState(false);
@@ -17,20 +15,6 @@ function UpdatePasswordForm() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClient();
-
-  useEffect(() => {
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event == "PASSWORD_RECOVERY" && session) {
-        console.log("SETTING SESSION");
-        await supabase.auth.setSession({
-          access_token: session.access_token,
-          refresh_token: session.refresh_token,
-        });
-      }
-    });
-  }, []);
-
   const handlePasswordReset = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -42,37 +26,6 @@ function UpdatePasswordForm() {
       return;
     }
 
-    try {
-      setLoading(true);
-      if (searchParams.get("token")) {
-        console.log("SET TOKEN");
-        await supabase.auth.verifyOtp({
-          token_hash: searchParams.get("token")!,
-          type: "recovery",
-        });
-      }
-      const { error } = await supabase.auth.updateUser({
-        password,
-      });
-      if (error) throw error;
-      router.push(searchParams.get("/redirect") ?? "/login");
-    } catch (error) {
-      if (error instanceof AuthApiError && error.status === 422) {
-        setLoading(false);
-        return toast.error(
-          "Password must be different from your old password",
-          {
-            description:
-              "Your new password must be different from your old password. Please choose a new password.",
-          }
-        );
-      }
-      console.error(error);
-      toast.error("An Error Occurred", {
-        description:
-          "There was an error resetting your password. Please try again. If the issue persists, resend the amil containing your password reset link.",
-      });
-    }
     setLoading(false);
   };
 

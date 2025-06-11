@@ -12,7 +12,6 @@ import NextBreadcrumb from "./breadcrumb";
 import { Search } from "./performance/components/search";
 import { UserNav } from "./user-nav";
 import { cn } from "@lib/utils";
-import { createClient } from "@lib/supabase/client";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";

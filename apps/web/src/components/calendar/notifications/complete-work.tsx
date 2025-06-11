@@ -13,7 +13,8 @@ import { Textarea } from "@components/ui/textarea";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle } from "lucide-react";
-import { createClient } from "@lib/supabase/client";
+import { Project, useActiveOrganization } from "@service-geek/api-client";
+import { CalendarEvent } from "@service-geek/api-client";
 
 const createCompleteWorkMessageTemplate = (
   projectName: string,
@@ -22,46 +23,35 @@ const createCompleteWorkMessageTemplate = (
   return `Hi, this is ${projectName}. I've completed the work on your project. You can reach me at ${phoneNumber} if you need anything.`;
 };
 
-export function CompleteWorkNotification({ onClose,project,event }: { onClose: () => void,project:Project,event:CalendarEvent }) {
+export function CompleteWorkNotification({
+  onClose,
+  project,
+  event,
+}: {
+  onClose: () => void;
+  project: Project;
+  event: CalendarEvent;
+}) {
   const [isOpen, setIsOpen] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
-  const [org, setOrg] = useState<any | null>(null);
   const [charCount, setCharCount] = useState(0);
   const MAX_CHARS = 300;
+  const org = useActiveOrganization();
 
   useEffect(() => {
     !isOpen && onClose();
   }, [isOpen]);
 
-  
   useEffect(() => {
-    const fetchOrg = async () => {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.user_metadata?.organizationId) return;
-
-      const { data, error } = await supabase
-        .from("Organization")
-        .select("*")
-        .eq("publicId", session.user.user_metadata.organizationId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching organization:", error);
-      } else {
-        setOrg(data);
-        // Initialize default message
-        const defaultMessage = createCompleteWorkMessageTemplate(
-          data?.name || "Service Geek",
-          data?.phoneNumber || "(your phone number)"
-        );
-        setMessage(defaultMessage);
-        setCharCount(defaultMessage.length);
-      }
-    };
-    fetchOrg();
-  }, []);
+    // Initialize default message
+    const defaultMessage = createCompleteWorkMessageTemplate(
+      org?.name || "Service Geek",
+      org?.phoneNumber || "(your phone number)"
+    );
+    setMessage(defaultMessage);
+    setCharCount(defaultMessage.length);
+  }, [org]);
 
   const handleMessageChange = (text: string) => {
     setMessage(text);
@@ -86,26 +76,31 @@ export function CompleteWorkNotification({ onClose,project,event }: { onClose: (
 
     try {
       setIsSubmitting(true);
-      const response = await fetch("/api/v1/projects/calendar-events/notifications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          projectId: project.id,
-          eventId: event.id,
-          message,
-          phoneNumber: project.clientPhoneNumber,
-          notificationType: "complete_work",
-        }),
-      });
+      const response = await fetch(
+        "/api/v1/projects/calendar-events/notifications",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            projectId: project.id,
+            eventId: event.id,
+            message,
+            phoneNumber: project.clientPhoneNumber,
+            notificationType: "complete_work",
+          }),
+        }
+      );
 
       if (response.ok) {
         toast.success("Complete work notification sent successfully");
         setIsOpen(false);
       } else {
         const data = await response.json();
-        toast.error(data.message || "Failed to send complete work notification");
+        toast.error(
+          data.message || "Failed to send complete work notification"
+        );
       }
     } catch (error) {
       console.error("Error sending notification:", error);
@@ -119,31 +114,31 @@ export function CompleteWorkNotification({ onClose,project,event }: { onClose: (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
+          <DialogTitle className='flex items-center gap-2'>
+            <CheckCircle className='h-5 w-5 text-green-600' />
             Send Complete Work Notification
           </DialogTitle>
           <DialogDescription>
             Send a notification to inform about completing work on the project.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="message">Message</Label>
+        <div className='space-y-4 py-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='message'>Message</Label>
             <Textarea
-              id="message"
-              placeholder="Enter your complete work message..."
+              id='message'
+              placeholder='Enter your complete work message...'
               value={message}
               onChange={(e) => handleMessageChange(e.target.value)}
-              className="min-h-[100px]"
+              className='min-h-[100px]'
             />
-            <div className="text-sm text-muted-foreground">
+            <div className='text-sm text-muted-foreground'>
               {charCount}/{MAX_CHARS} characters
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
+          <Button variant='outline' onClick={() => setIsOpen(false)}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
@@ -153,4 +148,4 @@ export function CompleteWorkNotification({ onClose,project,event }: { onClose: (
       </DialogContent>
     </Dialog>
   );
-} 
+}
