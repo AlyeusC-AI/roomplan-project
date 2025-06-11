@@ -16,6 +16,7 @@ import type {
   PaginationOptions,
   AddImageDto,
   AddCommentDto,
+  ImageType,
 } from "../types/room";
 
 // Room CRUD hooks
@@ -83,6 +84,30 @@ export function useRemoveImage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (imageId: string) => roomsService.removeImage(imageId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["images"] });
+    },
+  });
+}
+
+export function useUpdateImage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      imageId,
+      data,
+    }: {
+      imageId: string;
+      data: {
+        url?: string;
+        showInReport?: boolean;
+        order?: number;
+        name?: string;
+        description?: string;
+        type?: ImageType;
+      };
+    }) => roomsService.updateImage(imageId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
       queryClient.invalidateQueries({ queryKey: ["images"] });

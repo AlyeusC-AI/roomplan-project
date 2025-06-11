@@ -18,6 +18,22 @@ export const getUploadUrl = async (
   }
 };
 
+const base64ToBlob = (base64: string, contentType: string): Blob => {
+  const base64Data = base64.split(",")[1];
+  if (!base64Data) {
+    throw new Error("Invalid base64 string format");
+  }
+  const byteString = atob(base64Data);
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+
+  return new Blob([ab], { type: contentType });
+};
+
 export const uploadFile = async (
   file: File | Blob | string,
   fileName: string
@@ -42,10 +58,14 @@ export const uploadFile = async (
             ? "image/webp"
             : "application/octet-stream";
 
+  // Convert base64 to Blob if the input is a string
+  const fileToUpload =
+    typeof file === "string" ? base64ToBlob(file, contentType) : file;
+
   // Upload the file using the signed URL
   const response = await fetch(signedUrl, {
     method: "PUT",
-    body: file,
+    body: fileToUpload,
     headers: {
       "Content-Type": contentType,
       "x-amz-acl": "public-read",

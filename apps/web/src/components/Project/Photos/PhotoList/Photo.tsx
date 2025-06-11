@@ -3,7 +3,7 @@ import { format, formatDistance } from "date-fns";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Check, Star, Loader2, GripVertical } from "lucide-react";
+import { Check, Star, Loader2, GripVertical, Pencil } from "lucide-react";
 import { Button } from "@components/ui/button";
 import {
   Tooltip,
@@ -18,8 +18,13 @@ import {
   Image,
   useCurrentUser,
   useBulkUpdateImages,
+  useUpdateImagesOrder,
+  useUpdateImage,
+  uploadImage,
+  uploadFile,
 } from "@service-geek/api-client";
 import { userPreferenceStore } from "@state/user-prefrence";
+import ImageEditorModal from "./ImageEditorModal";
 
 const Photo = ({
   photo,
@@ -40,7 +45,9 @@ const Photo = ({
   const { savedPhotoView, savedPhotoGroupBy } = userPreferenceStore();
   const { id: projectId } = useParams<{ id: string }>();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const bulkUpdateImages = useBulkUpdateImages();
+  const updateImage = useUpdateImage();
 
   const {
     attributes,
@@ -68,6 +75,7 @@ const Photo = ({
         projectId,
         filters: {
           ids: [photo.id],
+          type: "ROOM",
         },
         updates: {
           showInReport: !photo.showInReport,
@@ -86,6 +94,34 @@ const Photo = ({
   const handleSelect = (e: React.MouseEvent) => {
     e.stopPropagation();
     onSelectPhoto(photo);
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = async (editedImageUrl: string) => {
+    try {
+      setIsUpdating(true);
+      await bulkUpdateImages.mutateAsync({
+        projectId,
+        filters: {
+          ids: [photo.id],
+          type: "ROOM",
+        },
+        updates: {
+          showInReport: photo.showInReport,
+          order: photo.order,
+        },
+      });
+      toast.success("Image updated successfully");
+    } catch (error) {
+      console.error("Error updating image:", error);
+      toast.error("Failed to update image");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const StarButton = ({ className = "" }: { className?: string }) => (
@@ -141,6 +177,14 @@ const Photo = ({
                 isSelected && "opacity-100"
               )}
             >
+              <Button
+                size='icon'
+                variant='outline'
+                className='bg-white'
+                onClick={handleEdit}
+              >
+                <Pencil className='h-4 w-4' />
+              </Button>
               <StarButton />
               <Button
                 size='icon'
@@ -204,6 +248,27 @@ const Photo = ({
             </div>
           </div>
         </div>
+
+        <ImageEditorModal
+          isOpen={isEditing}
+          onClose={() => setIsEditing(false)}
+          imageUrl={supabaseUrl}
+          onSave={async (base64Image) => {
+            const { signedUrl, publicUrl, key } = await uploadFile(
+              base64Image,
+              photo.id + ".png"
+            );
+            console.log("🚀 ~ onSave ~ signedUrl:", signedUrl);
+            console.log("🚀 ~ onSave ~ publicUrl:", publicUrl);
+            console.log("🚀 ~ onSave ~ key:", key);
+            updateImage.mutate({
+              imageId: photo.id,
+              data: {
+                url: publicUrl,
+              },
+            });
+          }}
+        />
       </div>
     );
   }
@@ -253,19 +318,31 @@ const Photo = ({
                 })}
               </div>
             </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <StarButton className='group flex size-10 cursor-pointer' />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Toggle to show image in final report.</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div className='flex items-center gap-2'>
+              <Button size='icon' variant='outline' onClick={handleEdit}>
+                <Pencil className='h-4 w-4' />
+              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <StarButton className='group flex size-10 cursor-pointer' />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Toggle to show image in final report.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
         </div>
       </Card>
+
+      <ImageEditorModal
+        isOpen={isEditing}
+        onClose={() => setIsEditing(false)}
+        imageUrl={supabaseUrl}
+        onSave={handleSaveEdit}
+      />
     </div>
   );
 };

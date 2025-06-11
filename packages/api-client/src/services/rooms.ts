@@ -12,6 +12,7 @@ import type {
   AddCommentDto,
   AreaAffected,
   RoomAreaAffected,
+  ImageType,
 } from "../types/room";
 import { apiClient } from "./client";
 
@@ -49,6 +50,24 @@ class RoomsService {
 
   async removeImage(imageId: string): Promise<Image> {
     const response = await apiClient.delete<Image>(`/rooms/images/${imageId}`);
+    return response.data;
+  }
+
+  async updateImage(
+    imageId: string,
+    data: {
+      url?: string;
+      showInReport?: boolean;
+      order?: number;
+      name?: string;
+      description?: string;
+      type?: ImageType;
+    }
+  ): Promise<Image> {
+    const response = await apiClient.put<Image>(
+      `/rooms/images/${imageId}`,
+      data
+    );
     return response.data;
   }
 

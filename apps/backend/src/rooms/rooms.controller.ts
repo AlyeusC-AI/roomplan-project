@@ -110,6 +110,22 @@ export class RoomsController {
     return this.roomsService.removeImage(imageId);
   }
 
+  @Put('images/:imageId')
+  async updateImage(
+    @Param('imageId') imageId: string,
+    @Body()
+    data: {
+      url?: string;
+      showInReport?: boolean;
+      order?: number;
+      name?: string;
+      description?: string;
+      type?: ImageType;
+    },
+  ): Promise<Prisma.ImageGetPayload<{ include: { comments: true } }>> {
+    return this.roomsService.updateImage(imageId, data);
+  }
+
   // Comment endpoints
   @Post('images/:imageId/comments')
   async addComment(

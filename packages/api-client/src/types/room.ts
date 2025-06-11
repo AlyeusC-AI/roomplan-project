@@ -2,7 +2,7 @@ import { User } from "./auth";
 import { Wall } from "./reading";
 import { Equipment, EquipmentProject } from "./equipment";
 
-type ImageType = "ROOM" | "FILE" | "NOTE";
+export type ImageType = "ROOM" | "FILE" | "NOTE";
 export interface AreaAffected {
   id: string;
   createdAt: string;

@@ -25,8 +25,8 @@
     "migrate:supabase": "ts-node prisma/migrations/migrate-from-supabase.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.802.0",
-    "@aws-sdk/s3-request-presigner": "^3.802.0",
+    "@aws-sdk/client-s3": "3.802.0",
+    "@aws-sdk/s3-request-presigner": "3.802.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",

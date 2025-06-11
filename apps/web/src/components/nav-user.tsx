@@ -35,7 +35,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "./ui/button";
-import { createClient } from "@lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { LoadingPlaceholder } from "./ui/spinner";
@@ -43,7 +42,6 @@ import { useCurrentUser, useLogout } from "@service-geek/api-client";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
-  const client = createClient();
   const navigate = useRouter();
 
   const { data: user, isLoading } = useCurrentUser();

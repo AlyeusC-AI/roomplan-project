@@ -377,6 +377,27 @@ export class RoomsService {
     });
   }
 
+  // Update image
+  async updateImage(
+    imageId: string,
+    data: {
+      url?: string;
+      showInReport?: boolean;
+      order?: number;
+      name?: string;
+      description?: string;
+      type?: ImageType;
+    },
+  ): Promise<Prisma.ImageGetPayload<{ include: { comments: true } }>> {
+    return this.prisma.image.update({
+      where: { id: imageId },
+      data,
+      include: {
+        comments: true,
+      },
+    });
+  }
+
   // Add comment to image
   async addComment(
     imageId: string,
