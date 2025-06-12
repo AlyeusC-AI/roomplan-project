@@ -46,6 +46,8 @@ import {
 import { toast } from "sonner-native";
 import { useRouter } from "next/router";
 import { useGlobalSearchParams } from "expo-router";
+import { Pencil } from "@/lib/icons/ImageEditorIcons";
+// import ImageEditorModal from "../project/ImageEditorModal";
 // Get screen dimensions for responsive sizing
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -329,6 +331,7 @@ const ModalItem = ({
 
   // Animation values
   const notesSheetAnim = useRef(new Animated.Value(0)).current;
+  const [editorOpen, setEditorOpen] = useState(false);
 
   // Handle image deletion
   const handleDeleteImage = async (id: string) => {
@@ -455,7 +458,13 @@ const ModalItem = ({
         >
           <Trash2 size={24} color="#fff" opacity={isDeleting ? 0.5 : 1} />
         </TouchableOpacity>
-
+        {/* Edit Icon */}
+        {/* <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => setEditorOpen(true)}
+        >
+          <Pencil size={24} color="#fff" />
+        </TouchableOpacity> */}
         <TouchableOpacity
           style={[
             styles.actionButton,
@@ -474,7 +483,6 @@ const ModalItem = ({
             />
           )}
         </TouchableOpacity>
-
         <TouchableOpacity style={styles.actionButton} onPress={toggleNotes}>
           <MessageCircle size={24} color="#fff" />
           {noteCount > 0 && (
@@ -484,6 +492,16 @@ const ModalItem = ({
           )}
         </TouchableOpacity>
       </View>
+
+      {/* Image Editor Modal */}
+      {/* {editorOpen && (
+        <ImageEditorModal
+          isOpen={editorOpen}
+          onClose={() => setEditorOpen(false)}
+          imageUrl={imageUrl}
+          onSave={() => setEditorOpen(false)}
+        />
+      )} */}
 
       {/* Notes Bottom Sheet */}
       {showNotes && (

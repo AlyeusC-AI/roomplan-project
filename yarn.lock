@@ -7301,6 +7301,11 @@
   dependencies:
     invariant "^2.2.4"
 
+"@react-native-community/slider@^4.5.7":
+  version "4.5.7"
+  resolved "https://registry.yarnpkg.com/@react-native-community/slider/-/slider-4.5.7.tgz#523178779f302aa162b0d57211842f81522e8ece"
+  integrity sha512-WMDDZjNF2Bd8M8TrSqKf5xhM9ikdfCHtSPur64Ow3bB/OVrKufUQZ59NmYdNZNeGPvcHHTsafuYTY8zfZfbchQ==
+
 "@react-native-picker/picker@2.9.0":
   version "2.9.0"
   resolved "https://registry.npmjs.org/@react-native-picker/picker/-/picker-2.9.0.tgz"
@@ -8342,6 +8347,14 @@
   dependencies:
     domhandler "^5.0.3"
     selderee "^0.11.0"
+
+"@shopify/react-native-skia@1.12.4":
+  version "1.12.4"
+  resolved "https://registry.yarnpkg.com/@shopify/react-native-skia/-/react-native-skia-1.12.4.tgz#35684082438895aa6a39c52c86128995d6185e3d"
+  integrity sha512-8QDIBKSU7XB3Lc1kAv4jSFddTQK8AE+1AEoJnQLNllsiex1gufLQ8kN7rs9zii+iboSY8tYKT7ocV+5cE2Exdw==
+  dependencies:
+    canvaskit-wasm "0.40.0"
+    react-reconciler "0.27.0"
 
 "@sinclair/typebox@0.25.24":
   version "0.25.24"
@@ -10859,6 +10872,11 @@
     "@webassemblyjs/ast" "1.14.1"
     "@xtuc/long" "4.2.2"
 
+"@webgpu/types@0.1.21":
+  version "0.1.21"
+  resolved "https://registry.yarnpkg.com/@webgpu/types/-/types-0.1.21.tgz#b181202daec30d66ccd67264de23814cfd176d3a"
+  integrity sha512-pUrWq3V5PiSGFLeLxoGqReTZmiiXwY3jRkIG5sLLKjyqNxrwm/04b4nw7LSmGWJcKk59XOM/YRTUwOzo4MMlow==
+
 "@xhmikosr/archive-type@^7.0.0":
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/@xhmikosr/archive-type/-/archive-type-7.0.0.tgz#74746a210b59d7d8a77aa69a422f0dae025b3798"
@@ -12225,6 +12243,13 @@ canvas@^3.0.0-rc2:
   dependencies:
     node-addon-api "^7.0.0"
     prebuild-install "^7.1.1"
+
+canvaskit-wasm@0.40.0:
+  version "0.40.0"
+  resolved "https://registry.yarnpkg.com/canvaskit-wasm/-/canvaskit-wasm-0.40.0.tgz#61a77657259fddfc0025ad1c3f57ac8d4d5850ff"
+  integrity sha512-Od2o+ZmoEw9PBdN/yCGvzfu0WVqlufBPEWNG452wY7E9aT8RBE+ChpZF526doOlg7zumO4iCS+RAeht4P0Gbpw==
+  dependencies:
+    "@webgpu/types" "0.1.21"
 
 canvg@^3.0.11:
   version "3.0.11"
@@ -22471,6 +22496,14 @@ react-promise-suspense@0.3.4:
   dependencies:
     fast-deep-equal "^2.0.1"
 
+react-reconciler@0.27.0:
+  version "0.27.0"
+  resolved "https://registry.yarnpkg.com/react-reconciler/-/react-reconciler-0.27.0.tgz#360124fdf2d76447c7491ee5f0e04503ed9acf5b"
+  integrity sha512-HmMDKciQjYmBRGuuhIaKA1ba/7a+UsM5FzOZsMO2JYHt9Jh8reCb7j1eDC95NOyUlKM9KRyvdx0flBuDvYSBoA==
+  dependencies:
+    loose-envify "^1.1.0"
+    scheduler "^0.21.0"
+
 react-refresh@^0.14.0, react-refresh@^0.14.2:
   version "0.14.2"
   resolved "https://registry.npmjs.org/react-refresh/-/react-refresh-0.14.2.tgz"
@@ -23269,6 +23302,13 @@ scheduler@0.25.0-rc-603e6108-20241029:
   version "0.25.0-rc-603e6108-20241029"
   resolved "https://registry.npmjs.org/scheduler/-/scheduler-0.25.0-rc-603e6108-20241029.tgz"
   integrity sha512-pFwF6H1XrSdYYNLfOcGlM28/j8CGLu8IvdrxqhjWULe2bPcKiKW4CV+OWqR/9fT52mywx65l7ysNkjLKBda7eA==
+
+scheduler@^0.21.0:
+  version "0.21.0"
+  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.21.0.tgz#6fd2532ff5a6d877b6edb12f00d8ab7e8f308820"
+  integrity sha512-1r87x5fz9MXqswA2ERLo0EbOAU74DpIUO090gIasYTqlVoJeMcl+Z1Rg7WHz+qtPujhS/hGIt9kxZOYBV3faRQ==
+  dependencies:
+    loose-envify "^1.1.0"
 
 scheduler@^0.23.2:
   version "0.23.2"

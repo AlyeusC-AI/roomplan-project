@@ -165,7 +165,7 @@ const Photo = ({
             </button>
           )}
           <div
-            className='group relative block size-56 cursor-pointer overflow-hidden rounded-lg'
+            className='group relative block size-44 cursor-pointer overflow-hidden rounded-lg'
             onClick={(e) => {
               e.stopPropagation();
               onPhotoClick(photo.id);
@@ -173,7 +173,7 @@ const Photo = ({
           >
             <div
               className={clsx(
-                "absolute inset-0 z-10 flex items-start justify-end gap-2 bg-black/40 p-2 opacity-0 transition-opacity group-hover:opacity-100",
+                "absolute inset-0 z-10 flex flex-col items-end justify-start gap-1 bg-black/40 p-2 opacity-0 transition-opacity group-hover:opacity-100",
                 isSelected && "opacity-100"
               )}
             >
@@ -183,7 +183,7 @@ const Photo = ({
                 className='bg-white'
                 onClick={handleEdit}
               >
-                <Pencil className='h-4 w-4' />
+                <Pencil />
               </Button>
               <StarButton />
               <Button
@@ -204,7 +204,12 @@ const Photo = ({
                 </div>
               </Button>
             </div>
-            <img src={supabaseUrl} alt='' className='w-full' />
+            <img
+              src={supabaseUrl}
+              alt=''
+              className='h-full w-full object-cover'
+              // style={{ width: "100%", height: "100%" }}
+            />
           </div>
           <div
             className={clsx(
@@ -235,7 +240,7 @@ const Photo = ({
                   )}
                 </div>
               </div>
-              <TooltipProvider>
+              {/* <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <StarButton className='group flex size-10 cursor-pointer' />
@@ -244,7 +249,7 @@ const Photo = ({
                     <p>Toggle to show image in final report.</p>
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
+              </TooltipProvider> */}
             </div>
           </div>
         </div>

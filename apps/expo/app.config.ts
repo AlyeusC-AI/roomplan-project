@@ -1,7 +1,6 @@
 import { ExpoConfig } from "@expo/config";
 import withLidar from "./plugins/withLidar";
 
-
 const config: ExpoConfig = {
   name: "Restoregeek",
   slug: "sevicegeek-mobile",

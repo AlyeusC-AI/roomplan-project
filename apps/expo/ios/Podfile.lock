@@ -1449,6 +1449,50 @@ PODS:
     - Yoga
   - react-native-safe-area-context (4.12.0):
     - React-Core
+  - react-native-skia (1.12.4):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.10.14.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React
+    - React-callinvoker
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
+  - react-native-slider (4.5.7):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.10.14.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - react-native-webview (13.12.5):
     - DoubleConversion
     - glog
@@ -1773,6 +1817,53 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNImageCropPicker (0.50.1):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.10.14.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-RCTImage
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - RNImageCropPicker/QBImagePickerController (= 0.50.1)
+    - TOCropViewController (~> 2.7.4)
+    - Yoga
+  - RNImageCropPicker/QBImagePickerController (0.50.1):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.10.14.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-RCTImage
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - TOCropViewController (~> 2.7.4)
+    - Yoga
   - RNReanimated (3.16.7):
     - DoubleConversion
     - glog
@@ -1896,6 +1987,7 @@ PODS:
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.17)
   - SocketRocket (0.7.1)
+  - TOCropViewController (2.7.4)
   - VisionCamera (4.6.4):
     - VisionCamera/Core (= 4.6.4)
     - VisionCamera/React (= 4.6.4)
@@ -1980,6 +2072,8 @@ DEPENDENCIES:
   - react-native-get-random-values (from `../../../node_modules/react-native-get-random-values`)
   - react-native-keyboard-controller (from `../../../node_modules/react-native-keyboard-controller`)
   - react-native-safe-area-context (from `../../../node_modules/react-native-safe-area-context`)
+  - "react-native-skia (from `../../../node_modules/@shopify/react-native-skia`)"
+  - "react-native-slider (from `../../../node_modules/@react-native-community/slider`)"
   - react-native-webview (from `../../../node_modules/react-native-webview`)
   - React-nativeconfig (from `../../../node_modules/react-native/ReactCommon`)
   - React-NativeModulesApple (from `../../../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -2014,6 +2108,7 @@ DEPENDENCIES:
   - "RNCPicker (from `../../../node_modules/@react-native-picker/picker`)"
   - "RNDateTimePicker (from `../../../node_modules/@react-native-community/datetimepicker`)"
   - RNGestureHandler (from `../../../node_modules/react-native-gesture-handler`)
+  - RNImageCropPicker (from `../../../node_modules/react-native-image-crop-picker`)
   - RNReanimated (from `../../../node_modules/react-native-reanimated`)
   - RNScreens (from `../../../node_modules/react-native-screens`)
   - RNSVG (from `../../../node_modules/react-native-svg`)
@@ -2031,6 +2126,7 @@ SPEC REPOS:
     - SDWebImageSVGCoder
     - SDWebImageWebPCoder
     - SocketRocket
+    - TOCropViewController
 
 EXTERNAL SOURCES:
   boost:
@@ -2180,6 +2276,10 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native-keyboard-controller"
   react-native-safe-area-context:
     :path: "../../../node_modules/react-native-safe-area-context"
+  react-native-skia:
+    :path: "../../../node_modules/@shopify/react-native-skia"
+  react-native-slider:
+    :path: "../../../node_modules/@react-native-community/slider"
   react-native-webview:
     :path: "../../../node_modules/react-native-webview"
   React-nativeconfig:
@@ -2248,6 +2348,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/@react-native-community/datetimepicker"
   RNGestureHandler:
     :path: "../../../node_modules/react-native-gesture-handler"
+  RNImageCropPicker:
+    :path: "../../../node_modules/react-native-image-crop-picker"
   RNReanimated:
     :path: "../../../node_modules/react-native-reanimated"
   RNScreens:
@@ -2337,6 +2439,8 @@ SPEC CHECKSUMS:
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
   react-native-keyboard-controller: 7b1202afc77ba2f4750d5fadf692d20f27998e00
   react-native-safe-area-context: 8b8404e70b0cbf2a56428a17017c14c1dcc16448
+  react-native-skia: 9b9cbdd3d62aa3a39d4e3331e2571577721e61ce
+  react-native-slider: 17b95cfd8f73820eb494e05cfc7416922b14bde5
   react-native-webview: 69a5462ca94921ff695e1b52b12fffe62af7d312
   React-nativeconfig: 8efdb1ef1e9158c77098a93085438f7e7b463678
   React-NativeModulesApple: cebca2e5320a3d66e123cade23bd90a167ffce5e
@@ -2371,6 +2475,7 @@ SPEC CHECKSUMS:
   RNCPicker: 0e683a85cae99a8a739e97a49f269a4630de0a01
   RNDateTimePicker: 818460dc31b0dc5ec58289003e27dd8d022fb79c
   RNGestureHandler: 32336458ef842088a459ccfcc10b583186de2633
+  RNImageCropPicker: 67035f598b8894fee90e3b1518fd4ea37df775c2
   RNReanimated: 82bf292e3c590d2d9886039f83e1baf0c1b2cdc4
   RNScreens: 295d9c0aaeb7f680d03d7e9b476569a4959aae89
   RNSVG: 8542aa11770b27563714bbd8494a8436385fc85f
@@ -2379,6 +2484,7 @@ SPEC CHECKSUMS:
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
+  TOCropViewController: 80b8985ad794298fb69d3341de183f33d1853654
   VisionCamera: f56eaedde0d3fa095143b78374d29e89e71735f9
   Yoga: feb4910aba9742cfedc059e2b2902e22ffe9954a
 
