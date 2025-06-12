@@ -1,5 +1,5 @@
+import "ts-node/register";
 import { ExpoConfig } from "@expo/config";
-import withLidar from "./plugins/withLidar";
 
 const config: ExpoConfig = {
   name: "Restoregeek",
@@ -56,7 +56,7 @@ const config: ExpoConfig = {
     ["expo-asset"],
     ["expo-font"],
     "expo-router",
-    withLidar,
+    ["./plugins/withLidar"],
     [
       "react-native-vision-camera",
       {
