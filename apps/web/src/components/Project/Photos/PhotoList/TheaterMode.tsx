@@ -402,8 +402,8 @@ export default function TheaterMode({
 
         <DialogContent
           className={cn(
-            "h-5/6 max-w-[90vw]",
-            isFullWidth && "max-w-[100vw] p-0"
+            "h-screen w-screen max-w-none p-0",
+            isFullWidth && "max-w-none"
           )}
         >
           <div className='size-full overflow-y-auto rounded-lg bg-background'>
@@ -423,7 +423,7 @@ export default function TheaterMode({
                   <div className='group relative size-full'>
                     <div
                       ref={containerRef}
-                      className='relative size-full overflow-y-auto'
+                      className='relative size-full overflow-y-auto bg-black'
                       onMouseDown={handleMouseDown}
                       onMouseMove={handleMouseMove}
                       onMouseUp={handleMouseUp}
@@ -462,7 +462,7 @@ export default function TheaterMode({
                       <Button
                         variant='ghost'
                         size='icon'
-                        className='h-8 w-8 rounded-full bg-black/20 text-white backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-black/40 disabled:opacity-0 disabled:hover:scale-100 disabled:hover:bg-black/20'
+                        className='h-8 w-8 rounded-full bg-white/90 text-black backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white disabled:opacity-0 disabled:hover:scale-100 disabled:hover:bg-white/90'
                         onClick={() =>
                           setTheaterModeIndex((prev) =>
                             prev - 1 < 0 ? 0 : prev - 1
@@ -470,12 +470,12 @@ export default function TheaterMode({
                         }
                         disabled={theaterModeIndex === 0}
                       >
-                        <ChevronLeft className='h-5 w-5 text-white transition-transform duration-300 group-hover:translate-x-[-2px]' />
+                        <ChevronLeft className='h-5 w-5 text-black transition-transform duration-300 group-hover:translate-x-[-2px]' />
                       </Button>
                       <Button
                         variant='ghost'
                         size='icon'
-                        className='h-8 w-8 rounded-full bg-black/20 text-white backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-black/40 disabled:opacity-0 disabled:hover:scale-100 disabled:hover:bg-black/20'
+                        className='h-8 w-8 rounded-full bg-white/90 text-black backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white disabled:opacity-0 disabled:hover:scale-100 disabled:hover:bg-white/90'
                         onClick={() =>
                           setTheaterModeIndex((prev) =>
                             prev + 1 > photos.length - 1
@@ -485,17 +485,17 @@ export default function TheaterMode({
                         }
                         disabled={theaterModeIndex === photos.length - 1}
                       >
-                        <ChevronRight className='h-5 w-5 text-white transition-transform duration-300 group-hover:translate-x-[2px]' />
+                        <ChevronRight className='h-5 w-5 text-black transition-transform duration-300 group-hover:translate-x-[2px]' />
                       </Button>
                     </div>
 
                     {/* Utility Controls */}
-                    <div className='absolute right-4 top-0 flex flex-col gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100'>
-                      <div className='flex flex-col gap-1.5 rounded-lg bg-black/20 p-1.5 backdrop-blur-sm'>
+                    <div className='absolute left-4 top-4 flex flex-col gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100'>
+                      <div className='flex flex-col gap-1.5 rounded-lg bg-white/90 p-1.5 backdrop-blur-sm'>
                         <Button
                           variant='ghost'
                           size='icon'
-                          className='h-7 w-7 rounded-full bg-white/10 text-white transition-all duration-300 hover:scale-110 hover:bg-white/20'
+                          className='h-7 w-7 rounded-full bg-white/10 text-black transition-all duration-300 hover:scale-110 hover:bg-white/20'
                           onClick={handleZoomIn}
                           title='Zoom In'
                           disabled={scale >= MAX_ZOOM}
@@ -505,7 +505,7 @@ export default function TheaterMode({
                         <Button
                           variant='ghost'
                           size='icon'
-                          className='h-7 w-7 rounded-full bg-white/10 text-white transition-all duration-300 hover:scale-110 hover:bg-white/20'
+                          className='h-7 w-7 rounded-full bg-white/10 text-black transition-all duration-300 hover:scale-110 hover:bg-white/20'
                           onClick={handleZoomOut}
                           title='Zoom Out'
                           disabled={scale <= MIN_ZOOM}
@@ -515,7 +515,7 @@ export default function TheaterMode({
                         <Button
                           variant='ghost'
                           size='icon'
-                          className='h-7 w-7 rounded-full bg-white/10 text-white transition-all duration-300 hover:scale-110 hover:bg-white/20'
+                          className='h-7 w-7 rounded-full bg-white/10 text-black transition-all duration-300 hover:scale-110 hover:bg-white/20'
                           onClick={handleFullWidth}
                           title='Reset Zoom'
                           disabled={scale === 1}
@@ -523,11 +523,11 @@ export default function TheaterMode({
                           <Maximize2 className='h-3.5 w-3.5' />
                         </Button>
                       </div>
-                      <div className='flex flex-col gap-1.5 rounded-lg bg-black/20 p-1.5 backdrop-blur-sm'>
+                      <div className='flex flex-col gap-1.5 rounded-lg bg-white/90 p-1.5 backdrop-blur-sm'>
                         <Button
                           variant='ghost'
                           size='icon'
-                          className='h-7 w-7 rounded-full bg-white/10 text-white transition-all duration-300 hover:scale-110 hover:bg-white/20'
+                          className='h-7 w-7 rounded-full bg-white/10 text-black transition-all duration-300 hover:scale-110 hover:bg-white/20'
                           onClick={() => setIsFullWidth(!isFullWidth)}
                           title={
                             isFullWidth ? "Exit Full Width" : "Enter Full Width"
@@ -543,7 +543,7 @@ export default function TheaterMode({
                         <Button
                           variant='ghost'
                           size='icon'
-                          className='h-7 w-7 rounded-full bg-white/10 text-white transition-all duration-300 hover:scale-110 hover:bg-white/20'
+                          className='h-7 w-7 rounded-full bg-white/10 text-black transition-all duration-300 hover:scale-110 hover:bg-white/20'
                           onClick={handleEdit}
                           title='Edit Image'
                         >
@@ -552,7 +552,7 @@ export default function TheaterMode({
                         <Button
                           variant='ghost'
                           size='icon'
-                          className='h-7 w-7 rounded-full bg-white/10 text-white transition-all duration-300 hover:scale-110 hover:bg-white/20'
+                          className='h-7 w-7 rounded-full bg-white/10 text-black transition-all duration-300 hover:scale-110 hover:bg-white/20'
                           onClick={handleDownload}
                           title='Download'
                         >
@@ -561,7 +561,7 @@ export default function TheaterMode({
                         <Button
                           variant='ghost'
                           size='icon'
-                          className='h-7 w-7 rounded-full bg-white/10 text-white transition-all duration-300 hover:scale-110 hover:bg-red-500/20'
+                          className='h-7 w-7 rounded-full bg-white/10 text-black transition-all duration-300 hover:scale-110 hover:bg-red-500/20'
                           onClick={handleDelete}
                           title='Delete'
                         >
@@ -757,13 +757,6 @@ export default function TheaterMode({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <ImageEditorModal
-        isOpen={isEditing}
-        onClose={() => setIsEditing(false)}
-        imageUrl={photos[theaterModeIndex].url}
-        onSave={handleSaveEdit}
-      />
     </>
   );
 }

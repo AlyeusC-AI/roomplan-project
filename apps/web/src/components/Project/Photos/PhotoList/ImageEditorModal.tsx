@@ -48,6 +48,16 @@ export default function ImageEditorModal({
   const [isCropMode, setIsCropMode] = useState(false);
   const [cropRect, setCropRect] = useState<fabric.Rect | null>(null);
 
+  const colors = [
+    "#000000", // Black
+    "#FFFFFF", // White
+    "#FF0000", // Red
+    "#00FF00", // Green
+    "#0000FF", // Blue
+    "#FFFF00", // Yellow
+    "#FF00FF", // Magenta
+  ];
+
   // Initialize canvas
   useEffect(() => {
     if (!canvasRef.current || !isOpen) return;
@@ -423,7 +433,7 @@ export default function ImageEditorModal({
       <div className='flex h-screen w-screen flex-col bg-white'>
         {/* Header */}
         <div className='flex items-center justify-between border-b p-4'>
-          <h2 className='text-xl font-semibold'>Image Editor</h2>
+          <h2 className='text-xl font-semibold text-black'>Image Editor</h2>
           <div className='flex items-center gap-2'>
             <Button variant='ghost' size='sm' onClick={onClose}>
               Cancel
@@ -445,7 +455,7 @@ export default function ImageEditorModal({
                   size='icon'
                   onClick={() => setSelectedTool("select")}
                   title='Select'
-                  className='h-10 w-10'
+                  className='h-10 w-10 rounded-full bg-white/90 text-black backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white'
                 >
                   <Move className='h-5 w-5' />
                 </Button>
@@ -454,7 +464,7 @@ export default function ImageEditorModal({
                   size='icon'
                   onClick={() => setSelectedTool("draw")}
                   title='Draw'
-                  className='h-10 w-10'
+                  className='h-10 w-10 rounded-full bg-white/90 text-black backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white'
                 >
                   <Pencil className='h-5 w-5' />
                 </Button>
@@ -466,7 +476,7 @@ export default function ImageEditorModal({
                     handleAddText();
                   }}
                   title='Add Text'
-                  className='h-10 w-10'
+                  className='h-10 w-10 rounded-full bg-white/90 text-black backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white'
                 >
                   <Type className='h-5 w-5' />
                 </Button>
@@ -478,7 +488,7 @@ export default function ImageEditorModal({
                     handleAddShape("rectangle");
                   }}
                   title='Add Rectangle'
-                  className='h-10 w-10'
+                  className='h-10 w-10 rounded-full bg-white/90 text-black backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white'
                 >
                   <Square className='h-5 w-5' />
                 </Button>
@@ -490,7 +500,7 @@ export default function ImageEditorModal({
                     handleAddShape("circle");
                   }}
                   title='Add Circle'
-                  className='h-10 w-10'
+                  className='h-10 w-10 rounded-full bg-white/90 text-black backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white'
                 >
                   <CircleIcon className='h-5 w-5' />
                 </Button>
@@ -505,26 +515,16 @@ export default function ImageEditorModal({
                   onClick={handleUndo}
                   disabled={!canUndo}
                   title='Undo'
-                  className='h-10 w-10'
+                  className='h-10 w-10 rounded-full bg-white/90 text-black backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white disabled:opacity-50 disabled:hover:scale-100'
                 >
                   <Undo2 className='h-5 w-5' />
                 </Button>
-                {/* <Button
-                  variant='ghost'
-                  size='icon'
-                  onClick={handleRedo}
-                  disabled={!canRedo}
-                  title='Redo'
-                  className='h-10 w-10'
-                >
-                  <Redo2 className='h-5 w-5' />
-                </Button> */}
                 <Button
                   variant='ghost'
                   size='icon'
                   onClick={handleDelete}
                   title='Delete Selected'
-                  className='h-10 w-10'
+                  className='h-10 w-10 rounded-full bg-white/90 text-black backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white'
                 >
                   <Trash2 className='h-5 w-5' />
                 </Button>
@@ -534,15 +534,22 @@ export default function ImageEditorModal({
 
               {/* Color and Size Controls */}
               <div className='flex flex-col items-center gap-2'>
-                <Input
-                  type='color'
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className='h-8 w-8 cursor-pointer p-1'
-                  title='Color'
-                />
+                <div className='grid grid-cols-2 gap-1 rounded-lg bg-white/90 p-1.5 backdrop-blur-sm'>
+                  {colors.map((colorValue) => (
+                    <button
+                      key={colorValue}
+                      onClick={() => setColor(colorValue)}
+                      className={cn(
+                        "h-6 w-6 rounded-full transition-all duration-300 hover:scale-110",
+                        color === colorValue && "ring-2 ring-black"
+                      )}
+                      style={{ backgroundColor: colorValue }}
+                      title={colorValue}
+                    />
+                  ))}
+                </div>
                 {selectedTool === "draw" && (
-                  <div className='flex flex-col items-center gap-1'>
+                  <div className='flex flex-col items-center gap-1 rounded-full bg-white/90 p-2 backdrop-blur-sm'>
                     <Input
                       type='range'
                       min='1'
@@ -552,31 +559,31 @@ export default function ImageEditorModal({
                       className='w-12'
                       title='Brush Size'
                     />
-                    <span className='text-xs'>{brushSize}px</span>
+                    <span className='text-xs text-black'>{brushSize}px</span>
                   </div>
                 )}
                 {selectedTool === "text" && (
-                  <Input
-                    type='number'
-                    min='8'
-                    max='72'
-                    value={fontSize}
-                    onChange={(e) => setFontSize(Number(e.target.value))}
-                    className='w-12'
-                    title='Font Size'
-                  />
+                  <div className='rounded-full bg-white/90 p-2 backdrop-blur-sm'>
+                    <Input
+                      type='number'
+                      min='8'
+                      max='72'
+                      value={fontSize}
+                      onChange={(e) => setFontSize(Number(e.target.value))}
+                      className='w-12'
+                      title='Font Size'
+                    />
+                  </div>
                 )}
               </div>
             </div>
           </div>
           {/* Canvas */}
-          <div className='flex-1 overflow-auto bg-gray-50 p-4'>
+          <div className='flex-1 overflow-auto bg-black p-4'>
             <div className='mx-auto max-w-[1200px]'>
               <canvas ref={canvasRef} />
             </div>
           </div>
-
-          {/* Tools Sidebar */}
         </div>
       </div>
     </div>
