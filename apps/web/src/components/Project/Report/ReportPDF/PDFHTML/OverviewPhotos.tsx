@@ -17,16 +17,12 @@ const OverviewPhoto = ({ imageKey }: { imageKey: string }) => {
   );
 };
 
-const PhotoNote = ({ notes }: { notes: Comment[] }) => {
-  if (!notes || notes.length === 0) return null;
+const PhotoNote = ({ description }: { description?: string }) => {
+  if (!description) return null;
 
   return (
     <div className='photo-note'>
-      {notes.map((note) => (
-        <div key={note.id} className='note-content'>
-          {note.content}
-        </div>
-      ))}
+      <div className='note-content'>{description}</div>
     </div>
   );
 };
@@ -59,7 +55,7 @@ const OverviewPhotos = ({ room }: { room: Room }) => {
             {row.map((image) => (
               <div key={image.id} className='photo-item'>
                 <OverviewPhoto imageKey={image.url!} />
-                <PhotoNote notes={image.comments || []} />
+                <PhotoNote description={image.description} />
               </div>
             ))}
             {/* Add empty items to maintain grid if row has less than 3 items */}

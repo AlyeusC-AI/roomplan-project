@@ -419,180 +419,164 @@ export default function ImageEditorModal({
   if (!isOpen) return null;
 
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4'>
-      <div className='flex flex-col items-center justify-center overflow-hidden rounded-lg bg-white p-6 shadow-xl'>
-        <div className='mb-4 flex w-full items-center justify-between'>
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50'>
+      <div className='flex h-screen w-screen flex-col bg-white'>
+        {/* Header */}
+        <div className='flex items-center justify-between border-b p-4'>
           <h2 className='text-xl font-semibold'>Image Editor</h2>
-          <Button variant='ghost' size='icon' onClick={onClose}>
-            <X className='h-4 w-4' />
-          </Button>
+          <div className='flex items-center gap-2'>
+            <Button variant='ghost' size='sm' onClick={onClose}>
+              Cancel
+            </Button>
+            <Button size='sm' onClick={handleSave}>
+              <Save className='mr-2 h-4 w-4' />
+              Save Changes
+            </Button>
+          </div>
         </div>
 
-        <div className='flex h-[600px] gap-4'>
-          <div className='flex w-48 flex-col gap-4 border-r pr-4'>
-            <div className='space-y-2'>
-              <Label>Tools</Label>
-              <div className='grid grid-cols-2 gap-2'>
+        {/* Main Content */}
+        <div className='flex flex-1 overflow-hidden'>
+          <div className='w-16 border-l bg-white p-2'>
+            <div className='flex flex-col items-center gap-4'>
+              <div className='flex flex-col gap-2'>
                 <Button
-                  variant={selectedTool === "select" ? "default" : "outline"}
-                  size='sm'
+                  variant={selectedTool === "select" ? "default" : "ghost"}
+                  size='icon'
                   onClick={() => setSelectedTool("select")}
                   title='Select'
+                  className='h-10 w-10'
                 >
-                  <Move className='h-4 w-4' />
+                  <Move className='h-5 w-5' />
                 </Button>
                 <Button
-                  variant={selectedTool === "draw" ? "default" : "outline"}
-                  size='sm'
+                  variant={selectedTool === "draw" ? "default" : "ghost"}
+                  size='icon'
                   onClick={() => setSelectedTool("draw")}
                   title='Draw'
+                  className='h-10 w-10'
                 >
-                  <Pencil className='h-4 w-4' />
+                  <Pencil className='h-5 w-5' />
                 </Button>
                 <Button
-                  variant={selectedTool === "text" ? "default" : "outline"}
-                  size='sm'
+                  variant={selectedTool === "text" ? "default" : "ghost"}
+                  size='icon'
                   onClick={() => {
                     setSelectedTool("text");
                     handleAddText();
                   }}
                   title='Add Text'
+                  className='h-10 w-10'
                 >
-                  <Type className='h-4 w-4' />
+                  <Type className='h-5 w-5' />
                 </Button>
                 <Button
-                  variant={selectedTool === "rectangle" ? "default" : "outline"}
-                  size='sm'
+                  variant={selectedTool === "rectangle" ? "default" : "ghost"}
+                  size='icon'
                   onClick={() => {
                     setSelectedTool("rectangle");
                     handleAddShape("rectangle");
                   }}
                   title='Add Rectangle'
+                  className='h-10 w-10'
                 >
-                  <Square className='h-4 w-4' />
+                  <Square className='h-5 w-5' />
                 </Button>
                 <Button
-                  variant={selectedTool === "circle" ? "default" : "outline"}
-                  size='sm'
+                  variant={selectedTool === "circle" ? "default" : "ghost"}
+                  size='icon'
                   onClick={() => {
                     setSelectedTool("circle");
                     handleAddShape("circle");
                   }}
                   title='Add Circle'
+                  className='h-10 w-10'
                 >
-                  <CircleIcon className='h-4 w-4' />
+                  <CircleIcon className='h-5 w-5' />
+                </Button>
+              </div>
+
+              <div className='h-px w-full bg-gray-200' />
+
+              <div className='flex flex-col gap-2'>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  onClick={handleUndo}
+                  disabled={!canUndo}
+                  title='Undo'
+                  className='h-10 w-10'
+                >
+                  <Undo2 className='h-5 w-5' />
                 </Button>
                 {/* <Button
-                  variant={selectedTool === "crop" ? "default" : "outline"}
-                  size='sm'
-                  onClick={() => setSelectedTool("crop")}
-                  title='Crop'
+                  variant='ghost'
+                  size='icon'
+                  onClick={handleRedo}
+                  disabled={!canRedo}
+                  title='Redo'
+                  className='h-10 w-10'
                 >
-                  <Scissors className='h-4 w-4' />
+                  <Redo2 className='h-5 w-5' />
                 </Button> */}
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  onClick={handleDelete}
+                  title='Delete Selected'
+                  className='h-10 w-10'
+                >
+                  <Trash2 className='h-5 w-5' />
+                </Button>
               </div>
-            </div>
 
-            <div className='space-y-2'>
-              <Label>Color</Label>
-              <div className='flex items-center gap-2'>
+              <div className='h-px w-full bg-gray-200' />
+
+              {/* Color and Size Controls */}
+              <div className='flex flex-col items-center gap-2'>
                 <Input
                   type='color'
                   value={color}
                   onChange={(e) => setColor(e.target.value)}
-                  className='h-8 w-8 p-1'
+                  className='h-8 w-8 cursor-pointer p-1'
+                  title='Color'
                 />
-                <Input
-                  type='text'
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className='h-8'
-                />
+                {selectedTool === "draw" && (
+                  <div className='flex flex-col items-center gap-1'>
+                    <Input
+                      type='range'
+                      min='1'
+                      max='20'
+                      value={brushSize}
+                      onChange={(e) => setBrushSize(Number(e.target.value))}
+                      className='w-12'
+                      title='Brush Size'
+                    />
+                    <span className='text-xs'>{brushSize}px</span>
+                  </div>
+                )}
+                {selectedTool === "text" && (
+                  <Input
+                    type='number'
+                    min='8'
+                    max='72'
+                    value={fontSize}
+                    onChange={(e) => setFontSize(Number(e.target.value))}
+                    className='w-12'
+                    title='Font Size'
+                  />
+                )}
               </div>
             </div>
-
-            {selectedTool === "draw" && (
-              <div className='space-y-2'>
-                <Label>Brush Size</Label>
-                <Input
-                  type='range'
-                  min='1'
-                  max='20'
-                  value={brushSize}
-                  onChange={(e) => setBrushSize(Number(e.target.value))}
-                />
-                <div className='text-center text-sm'>{brushSize}px</div>
-              </div>
-            )}
-
-            {selectedTool === "text" && (
-              <div className='space-y-2'>
-                <Label>Font Size</Label>
-                <Input
-                  type='number'
-                  min='8'
-                  max='72'
-                  value={fontSize}
-                  onChange={(e) => setFontSize(Number(e.target.value))}
-                />
-              </div>
-            )}
-
-            <div className='flex gap-2'>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={handleUndo}
-                disabled={!canUndo}
-                title='Undo'
-              >
-                <Undo2 className='h-4 w-4' />
-              </Button>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={handleRedo}
-                disabled={!canRedo}
-                title='Redo'
-              >
-                <Redo2 className='h-4 w-4' />
-              </Button>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={handleDelete}
-                title='Delete Selected'
-              >
-                <Trash2 className='h-4 w-4' />
-              </Button>
+          </div>
+          {/* Canvas */}
+          <div className='flex-1 overflow-auto bg-gray-50 p-4'>
+            <div className='mx-auto max-w-[1200px]'>
+              <canvas ref={canvasRef} />
             </div>
-
-            {isCropMode && (
-              <Button
-                variant='default'
-                size='sm'
-                onClick={handleApplyCrop}
-                className='mt-2'
-              >
-                <Check className='mr-2 h-4 w-4' />
-                Apply Crop
-              </Button>
-            )}
           </div>
 
-          <div className='flex-1 rounded-lg border bg-gray-50'>
-            <canvas ref={canvasRef} />
-          </div>
-        </div>
-
-        <div className='mt-4 flex justify-end gap-2'>
-          <Button variant='outline' onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave}>
-            <Save className='mr-2 h-4 w-4' />
-            Save Changes
-          </Button>
+          {/* Tools Sidebar */}
         </div>
       </div>
     </div>
