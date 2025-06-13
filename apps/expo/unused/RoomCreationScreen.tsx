@@ -46,7 +46,7 @@ export default function RoomCreationScreen() {
             {/* <MaterialIcons name="error" size={24} color="red" /> */}
             <Text color="white">
               Could not create room. If this error persits, please contact
-              support@servicegeek.com
+              support@restoregeek.app
             </Text>
           </HStack>
         ),

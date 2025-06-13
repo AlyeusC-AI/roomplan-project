@@ -97,7 +97,7 @@ export default function RoomCreationScreen() {
       router.dismiss();
     } catch {
       toast.error(
-        "Could not delete room. If this error persists, please contact support@servicegeek.com"
+        "Could not delete room. If this error persists, please contact support@restoregeek.app"
       );
     }
 
@@ -119,7 +119,7 @@ export default function RoomCreationScreen() {
       router.dismiss();
     } catch {
       toast.error(
-        "Could not create room. If this error persists, please contact support@servicegeek.com"
+        "Could not create room. If this error persists, please contact support@restoregeek.app"
       );
     }
 

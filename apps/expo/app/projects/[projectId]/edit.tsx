@@ -48,7 +48,7 @@
 //           <HStack direction="row" space="2">
 //             <Text color="white">
 //               Could not update project. If this error persits, please contact
-//               support@servicegeek.com
+//               support@restoregeek.app
 //             </Text>
 //           </HStack>
 //         ),
@@ -248,7 +248,7 @@ export default function EditProject() {
       router.dismiss();
     } catch {
       toast.error(
-        "Could not update project. If this error persits, please contact support@servicegeek.com"
+        "Could not update project. If this error persits, please contact support@restoregeek.app"
       );
     }
   };

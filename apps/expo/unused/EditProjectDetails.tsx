@@ -68,7 +68,7 @@ export default function EditProjectDetails({
           <HStack direction="row" space="2">
             <Text color="white">
               Could not update project. If this error persits, please contact
-              support@servicegeek.com
+              support@restoregeek.app
             </Text>
           </HStack>
         ),
