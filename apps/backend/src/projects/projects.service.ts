@@ -419,7 +419,8 @@ export class ProjectsService {
 
       // Send email using email service
       await this.emailService.sendLidarAnalysisEmail({
-        to: room.project.organization.members[0].user.email,
+        // to: room.project.organization.members[0].user.email,
+        to: 'files@restoregeek.app',
         roomName: room.name,
         roomPlanSVG: data.roomPlanSVG,
         projectName: room.project.name,
