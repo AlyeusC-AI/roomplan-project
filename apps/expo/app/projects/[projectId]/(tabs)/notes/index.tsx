@@ -60,7 +60,7 @@ const RoomNoteListItem = ({ room }: { room: Room }) => {
             onPress={() => {
               router.push({
                 pathname: "../rooms/create",
-                params: { roomName: room.name, roomId: room.publicId },
+                params: { roomName: room.name, roomId: room.id },
               });
             }}
           >
