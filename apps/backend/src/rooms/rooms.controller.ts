@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Query,
+  Req,
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 import { ImageType, Prisma } from '@prisma/client';
@@ -88,6 +89,7 @@ export class RoomsController {
   // Image endpoints
   @Post('images')
   async addImage(
+    @Req() req: any,
     @Body()
     data: {
       url: string;
@@ -100,7 +102,8 @@ export class RoomsController {
       type?: ImageType;
     },
   ): Promise<Prisma.ImageGetPayload<{ include: { comments: true } }>> {
-    return this.roomsService.addImage(data);
+    const user = req.user;
+    return this.roomsService.addImage(data, user);
   }
 
   @Delete('images/:imageId')

@@ -34,6 +34,7 @@ model User {
   // Add direct many-to-many relationship with Project
   projects Project[] @relation("ProjectMembers")
   comments Comment[]
+  images   Image[]
 }
 
 model Organization {
@@ -341,6 +342,8 @@ model Image {
   Note         Note?      @relation(fields: [noteId], references: [id])
   noteId       String?
   type         ImageType? @default(ROOM)
+  byUserId     String?
+  byUser       User?      @relation(fields: [byUserId], references: [id])
 
   @@index([roomId])
 }

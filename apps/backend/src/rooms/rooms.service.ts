@@ -259,17 +259,20 @@ export class RoomsService {
   }
 
   // Add image to room
-  async addImage(data: {
-    url: string;
-    showInReport?: boolean;
-    order?: number;
-    projectId: string;
-    roomId?: string;
-    noteId?: string;
-    name?: string;
-    description?: string;
-    type?: ImageType;
-  }): Promise<
+  async addImage(
+    data: {
+      url: string;
+      showInReport?: boolean;
+      order?: number;
+      projectId: string;
+      roomId?: string;
+      noteId?: string;
+      name?: string;
+      description?: string;
+      type?: ImageType;
+    },
+    user,
+  ): Promise<
     Prisma.ImageGetPayload<{
       include: { comments: true };
     }>
@@ -344,6 +347,7 @@ export class RoomsService {
         type: data.type ?? (data.noteId ? 'NOTE' : 'ROOM'),
         name: data.name,
         description: data.description,
+        byUserId: user.id,
       },
       include: {
         comments: true,
@@ -433,6 +437,7 @@ export class RoomsService {
       },
       include: {
         comments: true,
+        byUser: true,
       },
       orderBy: {
         order: 'asc',
@@ -486,6 +491,7 @@ export class RoomsService {
       },
       include: {
         comments: true,
+        byUser: true,
       },
       orderBy: {
         order: 'asc',
@@ -577,6 +583,7 @@ export class RoomsService {
       include: {
         comments: true,
         room: true,
+        byUser: true,
       },
       orderBy: {
         [sort.field]: sort.direction,
