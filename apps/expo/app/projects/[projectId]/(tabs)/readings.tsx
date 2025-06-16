@@ -257,6 +257,15 @@ export default function RoomReadings() {
             showsVerticalScrollIndicator={false}
             w="full"
             h="full"
+            // nestedScrollEnabled={true}
+            // scrollEnabled={true}
+            // removeClippedSubviews={false}
+            // bounces={true}
+            // overScrollMode="always"
+            // scrollEventThrottle={16}
+            // onScrollBeginDrag={() => {
+            //   Keyboard.dismiss();
+            // }}
           />
         </Box>
       </TouchableWithoutFeedback>

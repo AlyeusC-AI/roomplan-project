@@ -244,7 +244,9 @@ export default function ImageGallery({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
   const itemsPerRow = 3;
-  const [images, setImages] = useState<Image[]>(imagesProp);
+  const [images, setImages] = useState<Image[]>(
+    imagesProp.sort((a, b) => (a.order || 0) - (b.order || 0))
+  );
   // const { mutate: removeImage } = useRemoveImage();
   // const { mutate: bulkUpdateImages } = useBulkUpdateImages();
   // const { mutate: bulkRemoveImages } = useBulkRemoveImages();
@@ -253,9 +255,8 @@ export default function ImageGallery({
 
   const positions = useSharedValue(images.map((_, index) => ({ x: 0, y: 0 })));
   useEffect(() => {
-    console.log("🚀 ~ images:", JSON.stringify(imagesProp, null, 2));
-
-    setImages(imagesProp.sort((a, b) => (a.order || 0) - (b.order || 0)));
+    // console.log("🚀 ~ images:", JSON.stringify(imagesProp, null, 2));
+    // setImages(imagesProp.sort((a, b) => (a.order || 0) - (b.order || 0)));
   }, [imagesProp]);
   // useEffect(() => {
   //   console.log("🚀 ~ inferences:", JSON.stringify(inferences, null, 2));

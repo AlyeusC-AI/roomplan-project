@@ -85,17 +85,17 @@ const RoomReading: React.FC<RoomReadingProps> = ({ room, reading }) => {
         </View>
       </Button>
 
-      <Collapsible collapsed={isCollapsed}>
-        {!isCollapsed && (
-          <RoomReadingItem
-            room={room}
-            reading={reading}
-            pickImage={pickImage}
-            openImageViewer={openImageViewer}
-            setWall={(wall) => setWall(wall)}
-          />
-        )}
-      </Collapsible>
+      {/* <Collapsible collapsed={isCollapsed}> */}
+      {!isCollapsed && (
+        <RoomReadingItem
+          room={room}
+          reading={reading}
+          pickImage={pickImage}
+          openImageViewer={openImageViewer}
+          setWall={(wall) => setWall(wall)}
+        />
+      )}
+      {/* </Collapsible> */}
       {/* Date Picker Modal */}
       <FormControl>
         <Modal isOpen={showDatePicker} onClose={() => setShowDatePicker(false)}>

@@ -271,7 +271,7 @@ export class RoomsService {
       description?: string;
       type?: ImageType;
     },
-    user,
+    userId: string,
   ): Promise<
     Prisma.ImageGetPayload<{
       include: { comments: true };
@@ -347,7 +347,7 @@ export class RoomsService {
         type: data.type ?? (data.noteId ? 'NOTE' : 'ROOM'),
         name: data.name,
         description: data.description,
-        byUserId: user.id,
+        byUserId: userId,
       },
       include: {
         comments: true,

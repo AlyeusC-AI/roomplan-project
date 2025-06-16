@@ -9,6 +9,7 @@ import {
   Patch,
   Query,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 import { ImageType, Prisma } from '@prisma/client';
@@ -17,8 +18,14 @@ import {
   ImageSortOptions,
   PaginationOptions,
 } from './rooms.service';
+import { RequestWithUser } from 'src/auth/interfaces/request-with-user';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
+@ApiTags('rooms')
+@ApiBearerAuth()
 @Controller('rooms')
+@UseGuards(JwtAuthGuard)
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
 
@@ -89,7 +96,7 @@ export class RoomsController {
   // Image endpoints
   @Post('images')
   async addImage(
-    @Req() req: any,
+    @Req() req: RequestWithUser,
     @Body()
     data: {
       url: string;
@@ -102,8 +109,8 @@ export class RoomsController {
       type?: ImageType;
     },
   ): Promise<Prisma.ImageGetPayload<{ include: { comments: true } }>> {
-    const user = req.user;
-    return this.roomsService.addImage(data, user);
+    const userId = req.user.userId;
+    return this.roomsService.addImage(data, userId);
   }
 
   @Delete('images/:imageId')

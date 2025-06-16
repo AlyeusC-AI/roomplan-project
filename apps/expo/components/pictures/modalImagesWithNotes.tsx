@@ -42,11 +42,13 @@ import {
   useGetProjectById,
   useRemoveImage,
   useUpdateProject,
+  useUpdateImage,
 } from "@service-geek/api-client";
 import { toast } from "sonner-native";
 import { useRouter } from "next/router";
 import { useGlobalSearchParams } from "expo-router";
 import { Pencil } from "@/lib/icons/ImageEditorIcons";
+import dayjs from "dayjs";
 // import ImageEditorModal from "../project/ImageEditorModal";
 // Get screen dimensions for responsive sizing
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -233,7 +235,7 @@ export default function ModalImagesWithNotes({
             </View>
 
             {/* Thumbnails */}
-            <View style={styles.thumbnailContainer}>
+            {/* <View style={styles.thumbnailContainer}>
               <ScrollView
                 ref={thumbnailScrollRef}
                 horizontal
@@ -283,7 +285,7 @@ export default function ModalImagesWithNotes({
                   );
                 })}
               </ScrollView>
-            </View>
+            </View> */}
           </SafeAreaView>
         </Animated.View>
       </Modal>
@@ -294,7 +296,6 @@ export default function ModalImagesWithNotes({
 // Render image in the modal
 const ModalItem = ({
   item,
-
   modalVisible,
   activeImageIndex,
   handleCloseModal,
@@ -302,7 +303,6 @@ const ModalItem = ({
 }: {
   item: Image;
   images: Image[];
-
   modalVisible: boolean;
   activeImageIndex: number;
   handleCloseModal: () => void;
@@ -311,14 +311,18 @@ const ModalItem = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [isUpdatingReport, setIsUpdatingReport] = useState(false);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [description, setDescription] = useState(item.description || "");
   const { mutate: deleteImage } = useRemoveImage();
   const imageUrl = item.url;
   const { data: comments } = useGetComments(item.id);
   const noteCount = comments?.length || 0;
   const currentNoteText = useRef("");
   const noteInputRef = useRef<TextInput>(null);
+  const descriptionInputRef = useRef<TextInput>(null);
   const { mutate: removeImage } = useRemoveImage();
   const { mutate: bulkUpdateImages } = useBulkUpdateImages();
+  const { mutate: updateImage } = useUpdateImage();
   const { data: user } = useCurrentUser();
   const { mutate: addComment } = useAddComment();
 
@@ -412,6 +416,7 @@ const ModalItem = ({
         projectId,
         filters: {
           ids: [image.id],
+          type: "ROOM",
         },
         updates: {
           showInReport: !image?.showInReport,
@@ -423,6 +428,22 @@ const ModalItem = ({
       Alert.alert("Error", "Failed to update image");
     } finally {
       setIsUpdatingReport(false);
+    }
+  };
+
+  const handleUpdateDescription = async () => {
+    try {
+      await updateImage({
+        imageId: item.id,
+        data: {
+          description: description,
+        },
+      });
+      setIsEditingDescription(false);
+      toast.success("Description updated successfully");
+    } catch (error) {
+      console.error("Error updating description:", error);
+      toast.error("Failed to update description");
     }
   };
 
@@ -493,15 +514,60 @@ const ModalItem = ({
         </TouchableOpacity>
       </View>
 
-      {/* Image Editor Modal */}
-      {/* {editorOpen && (
-        <ImageEditorModal
-          isOpen={editorOpen}
-          onClose={() => setEditorOpen(false)}
-          imageUrl={imageUrl}
-          onSave={() => setEditorOpen(false)}
-        />
-      )} */}
+      {/* Image Metadata */}
+      <View style={styles.imageMetadata}>
+        <View style={styles.uploaderInfo}>
+          <Text style={styles.uploaderName}>
+            By {item.byUser?.firstName || "Unknown"}{" "}
+            {item.byUser?.lastName || "User"}
+          </Text>
+          <Text style={styles.uploadDate}>
+            {dayjs(item.createdAt).format("MM/DD/YYYY hh:mm A")}
+          </Text>
+        </View>
+        {isEditingDescription ? (
+          <View style={styles.descriptionEditContainer}>
+            <TextInput
+              ref={descriptionInputRef}
+              style={styles.descriptionInput}
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Add a description..."
+              placeholderTextColor="#999"
+              multiline
+              autoFocus
+            />
+            <View style={styles.descriptionEditActions}>
+              <TouchableOpacity
+                style={[styles.descriptionButton, styles.cancelButton]}
+                onPress={() => {
+                  setDescription(item.description || "");
+                  setIsEditingDescription(false);
+                }}
+              >
+                <Text style={styles.descriptionButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.descriptionButton, styles.saveButton]}
+                onPress={handleUpdateDescription}
+              >
+                <Text style={styles.descriptionButtonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.descriptionContainer}
+            onPress={() => setIsEditingDescription(true)}
+          >
+            {description ? (
+              <Text style={styles.descriptionText}>{description}</Text>
+            ) : (
+              <Text style={styles.addDescriptionText}>Add description...</Text>
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
 
       {/* Notes Bottom Sheet */}
       {showNotes && (
@@ -864,5 +930,77 @@ const styles = StyleSheet.create({
   gestureContainer: {
     width: "100%",
     height: "100%",
+  },
+  imageMetadata: {
+    position: "absolute",
+    bottom: 35,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    padding: 16,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  descriptionContainer: {
+    marginBottom: 8,
+  },
+  descriptionText: {
+    color: "#fff",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  addDescriptionText: {
+    color: "#999",
+    fontSize: 14,
+    fontStyle: "italic",
+  },
+  descriptionEditContainer: {
+    marginBottom: 8,
+  },
+  descriptionInput: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 8,
+    padding: 8,
+    color: "#fff",
+    fontSize: 14,
+    minHeight: 40,
+    marginBottom: 8,
+  },
+  descriptionEditActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 8,
+  },
+  descriptionButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  cancelButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+  },
+  saveButton: {
+    backgroundColor: "#1e40af",
+  },
+  descriptionButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  uploaderInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  uploaderName: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  uploadDate: {
+    color: "#999",
+    fontSize: 12,
   },
 });

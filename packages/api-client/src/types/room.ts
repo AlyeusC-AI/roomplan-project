@@ -67,6 +67,7 @@ export interface Image {
   name?: string;
   description?: string;
   type?: ImageType;
+  byUser?: User;
 }
 
 export interface Comment {
