@@ -7,7 +7,10 @@ import {
   ScrollView,
   Dimensions,
   Platform,
+  StatusBar,
+  TextInput,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Canvas,
   Path,
@@ -21,6 +24,7 @@ import {
   Circle,
   useCanvasRef,
   Image as SkiaImage,
+  useFont,
 } from "@shopify/react-native-skia";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
@@ -37,8 +41,10 @@ import {
   Redo2,
   Save,
   Trash2,
+  ArrowRight,
 } from "@/lib/icons/ImageEditorIcons";
 import { Slider } from "@/components/ui/slider";
+import { runOnJS } from "react-native-reanimated";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -49,11 +55,11 @@ interface ImageEditorModalProps {
   onSave: (editedImageUrl: string) => void;
 }
 
-type Tool = "select" | "draw" | "text" | "rectangle" | "circle" | "crop";
+type Tool = "select" | "draw" | "text" | "rectangle" | "circle" | "arrow";
 
 interface DrawingElement {
   id: string;
-  type: "path" | "text" | "rectangle" | "circle";
+  type: "path" | "text" | "rectangle" | "circle" | "arrow";
   path?: SkPath;
   text?: string;
   x?: number;
@@ -70,6 +76,7 @@ export default function ImageEditorModal({
   imageUrl,
   onSave,
 }: ImageEditorModalProps) {
+  const insets = useSafeAreaInsets();
   const [selectedTool, setSelectedTool] = useState<Tool>("select");
   const [color, setColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(5);
@@ -84,10 +91,35 @@ export default function ImageEditorModal({
   const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(
     null
   );
+  const [previewShape, setPreviewShape] = useState<DrawingElement | null>(null);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [textInput, setTextInput] = useState("");
+  const [textPosition, setTextPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
+    null
+  );
 
   const canvasRef = useCanvasRef();
   const image = useImage(imageUrl);
+
+  const colors = [
+    "#000000", // Black
+    "#FFFFFF", // White
+    "#FF0000", // Red
+    "#00FF00", // Green
+    "#0000FF", // Blue
+    "#FFFF00", // Yellow
+    "#FF00FF", // Magenta
+    "#00FFFF", // Cyan
+    "#FFA500", // Orange
+    "#800080", // Purple
+  ];
+
+  const font = useFont(require("../../assets/Roboto-Medium.ttf"), fontSize);
 
   // Initialize history
   useEffect(() => {
@@ -100,34 +132,159 @@ export default function ImageEditorModal({
     }
   }, [isOpen]);
 
-  // Handle drawing
+  // Save to history
+  const saveToHistory = useCallback(() => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push([...elements]);
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+    setCanUndo(true);
+    setCanRedo(false);
+  }, [history, historyIndex, elements]);
+
+  // Helper: check if point is inside an element
+  function isPointInElement(x: number, y: number, element: DrawingElement) {
+    switch (element.type) {
+      case "text":
+        // Assume text is 10px high and width is 8px per char (rough estimate)
+        return (
+          x >= element.x! &&
+          x <= element.x! + (element.text?.length || 1) * element.size * 0.6 &&
+          y >= element.y! - element.size &&
+          y <= element.y!
+        );
+      case "rectangle":
+        return (
+          x >= element.x! &&
+          x <= element.x! + element.width! &&
+          y >= element.y! &&
+          y <= element.y! + element.height!
+        );
+      case "circle":
+        const cx = element.x! + element.width! / 2;
+        const cy = element.y! + element.height! / 2;
+        const r = Math.max(element.width!, element.height!) / 2;
+        return (x - cx) ** 2 + (y - cy) ** 2 <= r ** 2;
+      case "arrow":
+        return (
+          x >= element.x! &&
+          x <= element.x! + element.width! &&
+          y >= element.y! &&
+          y <= element.y! + element.height!
+        );
+      case "path":
+        // For simplicity, use bounding box
+        if (!element.path) return false;
+        const bounds = element.path.getBounds();
+        return (
+          x >= bounds.x &&
+          x <= bounds.x + bounds.width &&
+          y >= bounds.y &&
+          y <= bounds.y + bounds.height
+        );
+      default:
+        return false;
+    }
+  }
+
+  // Update handleStartDrawing for select tool
   const handleStartDrawing = useCallback(
     (x: number, y: number) => {
-      if (selectedTool === "draw") {
+      if (selectedTool === "select") {
+        // Find topmost element under the touch
+        for (let i = elements.length - 1; i >= 0; i--) {
+          const el = elements[i];
+          if (isPointInElement(x, y, el)) {
+            setSelectedElement(el.id);
+            setDragOffset({ x: x - (el.x || 0), y: y - (el.y || 0) });
+            return;
+          }
+        }
+        setSelectedElement(null);
+        setDragOffset(null);
+      } else if (selectedTool === "draw") {
         setIsDrawing(true);
         const path = Skia.Path.Make();
         path.moveTo(x, y);
         setCurrentPath(path);
-      } else if (selectedTool === "rectangle" || selectedTool === "circle") {
+      } else if (
+        selectedTool === "rectangle" ||
+        selectedTool === "circle" ||
+        selectedTool === "arrow"
+      ) {
+        setIsDrawing(true);
         setStartPoint({ x, y });
+        setPreviewShape({
+          id: "preview",
+          type: selectedTool,
+          x,
+          y,
+          width: 0,
+          height: 0,
+          color,
+          size: brushSize,
+        });
+      } else if (selectedTool === "text") {
+        setTextInput("");
+        setTextPosition({ x, y });
       }
     },
-    [selectedTool]
+    [selectedTool, color, brushSize, elements]
   );
 
+  // Update handleDrawing for select tool
   const handleDrawing = useCallback(
     (x: number, y: number) => {
-      if (isDrawing && selectedTool === "draw" && currentPath) {
+      if (selectedTool === "select" && selectedElement && dragOffset) {
+        setElements((prev) =>
+          prev.map((el) =>
+            el.id === selectedElement
+              ? { ...el, x: x - dragOffset.x, y: y - dragOffset.y }
+              : el
+          )
+        );
+      } else if (isDrawing && selectedTool === "draw" && currentPath) {
         currentPath.lineTo(x, y);
         setCurrentPath(currentPath.copy());
+      } else if (
+        isDrawing &&
+        (selectedTool === "rectangle" ||
+          selectedTool === "circle" ||
+          selectedTool === "arrow") &&
+        startPoint
+      ) {
+        setPreviewShape({
+          id: "preview",
+          type: selectedTool,
+          x: startPoint.x,
+          y: startPoint.y,
+          width: x - startPoint.x,
+          height: y - startPoint.y,
+          color,
+          size: brushSize,
+        });
       }
     },
-    [isDrawing, selectedTool, currentPath]
+    [
+      selectedTool,
+      selectedElement,
+      dragOffset,
+      isDrawing,
+      currentPath,
+      startPoint,
+      color,
+      brushSize,
+    ]
   );
 
+  // Update handleEndDrawing for select tool
   const handleEndDrawing = useCallback(
     (x: number, y: number) => {
-      if (selectedTool === "draw" && currentPath) {
+      if (selectedTool === "select" && selectedElement) {
+        setSelectedElement(null);
+        setDragOffset(null);
+        saveToHistory();
+      } else if (selectedTool === "draw" && currentPath) {
         const newElement: DrawingElement = {
           id: Date.now().toString(),
           type: "path",
@@ -139,36 +296,61 @@ export default function ImageEditorModal({
         setCurrentPath(null);
         setIsDrawing(false);
         saveToHistory();
-      } else if (selectedTool === "rectangle" || selectedTool === "circle") {
-        if (startPoint) {
+      } else if (
+        (selectedTool === "rectangle" ||
+          selectedTool === "circle" ||
+          selectedTool === "arrow") &&
+        startPoint
+      ) {
+        const newElement: DrawingElement = {
+          id: Date.now().toString(),
+          type: selectedTool,
+          x: startPoint.x,
+          y: startPoint.y,
+          width: x - startPoint.x,
+          height: y - startPoint.y,
+          color,
+          size: brushSize,
+        };
+        setElements((prev) => [...prev, newElement]);
+        setStartPoint(null);
+        setPreviewShape(null);
+        setIsDrawing(false);
+        saveToHistory();
+      } else if (selectedTool === "text" && textPosition && textInput.trim()) {
+        try {
           const newElement: DrawingElement = {
             id: Date.now().toString(),
-            type: selectedTool,
-            x: startPoint.x,
-            y: startPoint.y,
-            width: x - startPoint.x,
-            height: y - startPoint.y,
+            type: "text",
+            x: textPosition.x,
+            y: textPosition.y,
+            text: textInput.trim(),
             color,
-            size: brushSize,
+            size: fontSize,
           };
           setElements((prev) => [...prev, newElement]);
-          setStartPoint(null);
+          setTextPosition(null);
+          setTextInput("");
           saveToHistory();
+        } catch (error) {
+          console.error("Error adding text:", error);
+          toast.error("Failed to add text");
         }
       }
     },
-    [selectedTool, currentPath, startPoint, color, brushSize]
+    [
+      selectedTool,
+      selectedElement,
+      currentPath,
+      startPoint,
+      color,
+      brushSize,
+      textPosition,
+      textInput,
+      fontSize,
+      saveToHistory,
+    ]
   );
-
-  // Save to history
-  const saveToHistory = useCallback(() => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push([...elements]);
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-    setCanUndo(true);
-    setCanRedo(false);
-  }, [history, historyIndex, elements]);
 
   // Handle undo
   const handleUndo = useCallback(() => {
@@ -206,6 +388,61 @@ export default function ImageEditorModal({
     }
   }, [canvasRef, onSave, onClose]);
 
+  const handleSizeChange = useCallback(
+    (newValue: number) => {
+      if (selectedTool === "text") {
+        setFontSize(newValue);
+      } else {
+        setBrushSize(newValue);
+      }
+    },
+    [selectedTool]
+  );
+
+  const onSliderChange = useCallback(
+    (value: number[]) => {
+      "worklet";
+      runOnJS(handleSizeChange)(value[0]);
+    },
+    [handleSizeChange]
+  );
+
+  // Add text input handler
+  const handleTextInput = useCallback((text: string) => {
+    setTextInput(text);
+  }, []);
+
+  const handleTextInputComplete = useCallback(() => {
+    if (!textPosition || !textInput.trim()) {
+      setTextPosition(null);
+      setTextInput("");
+      return;
+    }
+
+    const newElement: DrawingElement = {
+      id: Date.now().toString(),
+      type: "text",
+      x: textPosition.x,
+      y: textPosition.y,
+      text: textInput.trim(),
+      color,
+      size: fontSize,
+    };
+
+    setElements((prev) => [...prev, newElement]);
+    setTextPosition(null);
+    setTextInput("");
+    saveToHistory();
+  }, [textPosition, textInput, color, fontSize, saveToHistory]);
+
+  // Clean up text input state when tool changes
+  useEffect(() => {
+    if (selectedTool !== "text") {
+      setTextPosition(null);
+      setTextInput("");
+    }
+  }, [selectedTool]);
+
   if (!isOpen || !image) return null;
 
   return (
@@ -216,11 +453,16 @@ export default function ImageEditorModal({
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+        <View
+          style={[
+            styles.modalContent,
+            { paddingTop: insets.top, paddingBottom: insets.bottom },
+          ]}
+        >
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Image Editor</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <X size={24} color="#64748b" />
+              <X size={24} color="#ffffff" />
             </TouchableOpacity>
           </View>
 
@@ -229,48 +471,68 @@ export default function ImageEditorModal({
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View style={styles.toolGroup}>
                   <Button
-                    variant={selectedTool === "select" ? "default" : "outline"}
+                    variant={selectedTool === "select" ? "secondary" : "ghost"}
                     size="sm"
                     onPress={() => setSelectedTool("select")}
                   >
-                    <Move size={20} color="#000" />
+                    <Move
+                      size={20}
+                      color={selectedTool === "select" ? "#000000" : "#ffffff"}
+                    />
                   </Button>
                   <Button
-                    variant={selectedTool === "draw" ? "default" : "outline"}
+                    variant={selectedTool === "draw" ? "secondary" : "ghost"}
                     size="sm"
                     onPress={() => setSelectedTool("draw")}
                   >
-                    <Pencil size={20} color="#000" />
+                    <Pencil
+                      size={20}
+                      color={selectedTool === "draw" ? "#000000" : "#ffffff"}
+                    />
                   </Button>
                   <Button
-                    variant={selectedTool === "text" ? "default" : "outline"}
+                    variant={selectedTool === "text" ? "secondary" : "ghost"}
                     size="sm"
                     onPress={() => setSelectedTool("text")}
                   >
-                    <Type size={20} color="#000" />
+                    <Type
+                      size={20}
+                      color={selectedTool === "text" ? "#000000" : "#ffffff"}
+                    />
                   </Button>
                   <Button
                     variant={
-                      selectedTool === "rectangle" ? "default" : "outline"
+                      selectedTool === "rectangle" ? "secondary" : "ghost"
                     }
                     size="sm"
                     onPress={() => setSelectedTool("rectangle")}
                   >
-                    <Square size={20} color="#000" />
+                    <Square
+                      size={20}
+                      color={
+                        selectedTool === "rectangle" ? "#000000" : "#ffffff"
+                      }
+                    />
                   </Button>
                   <Button
-                    variant={selectedTool === "circle" ? "default" : "outline"}
+                    variant={selectedTool === "circle" ? "secondary" : "ghost"}
                     size="sm"
                     onPress={() => setSelectedTool("circle")}
                   >
-                    <CircleIcon size={20} color="#000" />
+                    <CircleIcon
+                      size={20}
+                      color={selectedTool === "circle" ? "#000000" : "#ffffff"}
+                    />
                   </Button>
                   <Button
-                    variant={selectedTool === "crop" ? "default" : "outline"}
+                    variant={selectedTool === "arrow" ? "secondary" : "ghost"}
                     size="sm"
-                    onPress={() => setSelectedTool("crop")}
+                    onPress={() => setSelectedTool("arrow")}
                   >
-                    <Scissors size={20} color="#000" />
+                    <ArrowRight
+                      size={20}
+                      color={selectedTool === "arrow" ? "#000000" : "#ffffff"}
+                    />
                   </Button>
                 </View>
               </ScrollView>
@@ -280,13 +542,10 @@ export default function ImageEditorModal({
                   style={[styles.colorButton, { backgroundColor: color }]}
                   onPress={() => setShowColorPicker(!showColorPicker)}
                 />
-                {/* {renderColorPicker()} */}
                 <View style={styles.sizeControl}>
-                  <Text>Size:</Text>
+                  <Text style={{ color: "#ffffff" }}>Size:</Text>
                   <Slider
-                    defaultValue={[
-                      selectedTool === "text" ? fontSize : brushSize,
-                    ]}
+                    value={[selectedTool === "text" ? fontSize : brushSize]}
                     onValueChange={(value) => {
                       const newValue = value[0];
                       if (selectedTool === "text") {
@@ -300,6 +559,24 @@ export default function ImageEditorModal({
                     step={1}
                   />
                 </View>
+                {showColorPicker && (
+                  <View style={styles.colorPicker}>
+                    {colors.map((c) => (
+                      <TouchableOpacity
+                        key={c}
+                        style={[
+                          styles.colorOption,
+                          { backgroundColor: c },
+                          color === c && styles.selectedColor,
+                        ]}
+                        onPress={() => {
+                          setColor(c);
+                          setShowColorPicker(false);
+                        }}
+                      />
+                    ))}
+                  </View>
+                )}
               </View>
             </View>
 
@@ -307,22 +584,25 @@ export default function ImageEditorModal({
               <Canvas
                 ref={canvasRef}
                 style={styles.canvas}
-                onTouchStart={(e) =>
-                  handleStartDrawing(e.nativeEvent.x, e.nativeEvent.y)
-                }
-                onTouchMove={(e) =>
-                  handleDrawing(e.nativeEvent.x, e.nativeEvent.y)
-                }
-                onTouchEnd={(e) =>
-                  handleEndDrawing(e.nativeEvent.x, e.nativeEvent.y)
-                }
+                onTouchStart={(e) => {
+                  const touch = e.nativeEvent.touches[0];
+                  handleStartDrawing(touch.locationX, touch.locationY);
+                }}
+                onTouchMove={(e) => {
+                  const touch = e.nativeEvent.touches[0];
+                  handleDrawing(touch.locationX, touch.locationY);
+                }}
+                onTouchEnd={(e) => {
+                  const touch = e.nativeEvent.changedTouches[0];
+                  handleEndDrawing(touch.locationX, touch.locationY);
+                }}
               >
                 <SkiaImage
                   image={image}
-                  fit="contain"
+                  fit="cover"
                   x={0}
                   y={0}
-                  width={SCREEN_WIDTH * 0.9}
+                  width={SCREEN_WIDTH}
                   height={SCREEN_HEIGHT * 0.6}
                 />
                 <Group>
@@ -346,7 +626,7 @@ export default function ImageEditorModal({
                             y={element.y!}
                             text={element.text!}
                             color={element.color}
-                            size={element.size}
+                            font={font}
                           />
                         );
                       case "rectangle":
@@ -374,6 +654,43 @@ export default function ImageEditorModal({
                             strokeWidth={element.size}
                           />
                         );
+                      case "arrow":
+                        const arrowPath = Skia.Path.Make();
+                        const startX = element.x!;
+                        const startY = element.y!;
+                        const endX = element.x! + element.width!;
+                        const endY = element.y! + element.height!;
+
+                        // Draw the main line
+                        arrowPath.moveTo(startX, startY);
+                        arrowPath.lineTo(endX, endY);
+
+                        // Calculate arrow head
+                        const angle = Math.atan2(endY - startY, endX - startX);
+                        const arrowLength = element.size * 4;
+                        const arrowAngle = Math.PI / 6; // 30 degrees
+
+                        // Draw arrow head
+                        arrowPath.moveTo(endX, endY);
+                        arrowPath.lineTo(
+                          endX - arrowLength * Math.cos(angle - arrowAngle),
+                          endY - arrowLength * Math.sin(angle - arrowAngle)
+                        );
+                        arrowPath.moveTo(endX, endY);
+                        arrowPath.lineTo(
+                          endX - arrowLength * Math.cos(angle + arrowAngle),
+                          endY - arrowLength * Math.sin(angle + arrowAngle)
+                        );
+
+                        return (
+                          <Path
+                            key={element.id}
+                            path={arrowPath}
+                            color={element.color}
+                            style="stroke"
+                            strokeWidth={element.size}
+                          />
+                        );
                     }
                   })}
                   {currentPath && (
@@ -384,37 +701,126 @@ export default function ImageEditorModal({
                       strokeWidth={brushSize}
                     />
                   )}
+                  {previewShape &&
+                    (previewShape.type === "rectangle" ? (
+                      <Rect
+                        x={previewShape.x!}
+                        y={previewShape.y!}
+                        width={previewShape.width!}
+                        height={previewShape.height!}
+                        color={previewShape.color}
+                        style="stroke"
+                        strokeWidth={previewShape.size}
+                      />
+                    ) : previewShape.type === "circle" ? (
+                      <Circle
+                        cx={previewShape.x! + previewShape.width! / 2}
+                        cy={previewShape.y! + previewShape.height! / 2}
+                        r={
+                          Math.max(previewShape.width!, previewShape.height!) /
+                          2
+                        }
+                        color={previewShape.color}
+                        style="stroke"
+                        strokeWidth={previewShape.size}
+                      />
+                    ) : previewShape.type === "arrow" ? (
+                      (() => {
+                        const arrowPath = Skia.Path.Make();
+                        const startX = previewShape.x!;
+                        const startY = previewShape.y!;
+                        const endX = previewShape.x! + previewShape.width!;
+                        const endY = previewShape.y! + previewShape.height!;
+
+                        // Draw the main line
+                        arrowPath.moveTo(startX, startY);
+                        arrowPath.lineTo(endX, endY);
+
+                        // Calculate arrow head
+                        const angle = Math.atan2(endY - startY, endX - startX);
+                        const arrowLength = previewShape.size * 4;
+                        const arrowAngle = Math.PI / 6; // 30 degrees
+
+                        // Draw arrow head
+                        arrowPath.moveTo(endX, endY);
+                        arrowPath.lineTo(
+                          endX - arrowLength * Math.cos(angle - arrowAngle),
+                          endY - arrowLength * Math.sin(angle - arrowAngle)
+                        );
+                        arrowPath.moveTo(endX, endY);
+                        arrowPath.lineTo(
+                          endX - arrowLength * Math.cos(angle + arrowAngle),
+                          endY - arrowLength * Math.sin(angle + arrowAngle)
+                        );
+
+                        return (
+                          <Path
+                            path={arrowPath}
+                            color={previewShape.color}
+                            style="stroke"
+                            strokeWidth={previewShape.size}
+                          />
+                        );
+                      })()
+                    ) : null)}
                 </Group>
               </Canvas>
             </View>
 
+            {selectedTool === "text" && textPosition && (
+              <View
+                style={[
+                  styles.textInputContainer,
+                  {
+                    position: "absolute",
+                    top: textPosition.y,
+                    left: textPosition.x,
+                    zIndex: 1000,
+                  },
+                ]}
+              >
+                <TextInput
+                  style={styles.textInput}
+                  value={textInput}
+                  onChangeText={handleTextInput}
+                  placeholder="Enter text..."
+                  placeholderTextColor="#666"
+                  autoFocus
+                  onSubmitEditing={handleTextInputComplete}
+                  onBlur={handleTextInputComplete}
+                  returnKeyType="done"
+                  blurOnSubmit={true}
+                />
+              </View>
+            )}
+
             <View style={styles.actionBar}>
               <View style={styles.historyButtons}>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onPress={handleUndo}
                   disabled={!canUndo}
                 >
-                  <Undo2 size={20} color="#000" />
+                  <Undo2 size={20} color="#ffffff" />
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onPress={handleRedo}
                   disabled={!canRedo}
                 >
-                  <Redo2 size={20} color="#000" />
+                  <Redo2 size={20} color="#ffffff" />
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onPress={() => {
                     setElements([]);
                     saveToHistory();
                   }}
                 >
-                  <Trash2 size={20} color="#000" />
+                  <Trash2 size={20} color="#ffffff" />
                 </Button>
               </View>
 
@@ -437,16 +843,14 @@ export default function ImageEditorModal({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
     justifyContent: "center",
     alignItems: "center",
   },
   modalContent: {
-    width: SCREEN_WIDTH * 0.9,
-    height: SCREEN_HEIGHT * 0.9,
-    backgroundColor: "white",
-    borderRadius: 12,
-    overflow: "hidden",
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+    backgroundColor: "#1a1a1a",
     display: "flex",
     flexDirection: "column",
   },
@@ -455,12 +859,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 16,
+    // paddingTop:
+    //   Platform.OS === "ios" ? 50 : (StatusBar.currentHeight || 0) + 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: "#333333",
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: "600",
+    color: "#ffffff",
   },
   closeButton: {
     padding: 4,
@@ -474,7 +881,9 @@ const styles = StyleSheet.create({
   toolbar: {
     padding: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: "#333333",
+    backgroundColor: "#242424",
+    zIndex: 1,
   },
   toolGroup: {
     flexDirection: "row",
@@ -485,19 +894,55 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 8,
     gap: 16,
+    position: "relative",
+    zIndex: 9999,
+    flexWrap: "wrap",
   },
   colorButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: "#e5e7eb",
+    borderColor: "#404040",
+  },
+  sizeControl: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    minWidth: 200,
+  },
+  canvasContainer: {
+    flex: 1,
+    backgroundColor: "#1a1a1a",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 0,
+    marginTop: 0,
+  },
+  canvas: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT * 0.6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionBar: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#333333",
+    gap: 16,
+    backgroundColor: "#242424",
+  },
+  historyButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  saveButtons: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 8,
   },
   colorPicker: {
-    position: "absolute",
-    top: 48,
-    left: 8,
-    backgroundColor: "white",
+    backgroundColor: "#242424",
     padding: 8,
     borderRadius: 8,
     flexDirection: "row",
@@ -508,48 +953,27 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    zIndex: 1000,
   },
   colorOption: {
     width: 24,
     height: 24,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: "#404040",
   },
   selectedColor: {
     borderWidth: 2,
-    borderColor: "#000",
+    borderColor: "#ffffff",
   },
-  sizeControl: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  textInputContainer: {
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    borderRadius: 4,
+    padding: 4,
+    minWidth: 100,
   },
-  canvasContainer: {
-    flex: 1,
-    backgroundColor: "#f8fafc",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  canvas: {
-    width: SCREEN_WIDTH * 0.9,
-    height: SCREEN_HEIGHT * 0.6,
-  },
-  actionBar: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
-    gap: 16,
-  },
-  historyButtons: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  saveButtons: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 8,
+  textInput: {
+    color: "#ffffff",
+    fontSize: 16,
+    padding: 4,
   },
 });

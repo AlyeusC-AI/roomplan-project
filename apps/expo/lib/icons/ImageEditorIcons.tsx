@@ -10,6 +10,7 @@ import {
   Redo2,
   Save,
   Trash2,
+  ArrowRight,
 } from "lucide-react-native";
 import { iconWithClassName } from "./iconWithClassName";
 
@@ -25,6 +26,7 @@ iconWithClassName(Undo2);
 iconWithClassName(Redo2);
 iconWithClassName(Save);
 iconWithClassName(Trash2);
+iconWithClassName(ArrowRight);
 
 export {
   X,
@@ -38,4 +40,5 @@ export {
   Redo2,
   Save,
   Trash2,
+  ArrowRight,
 };

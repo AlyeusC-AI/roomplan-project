@@ -252,11 +252,15 @@ export default function ImageGallery({
   // const { mutate: bulkRemoveImages } = useBulkRemoveImages();
   const { mutate: updateImagesOrder } = useUpdateImagesOrder();
   // const { mutate: updateProject } = useUpdateProject();
-
+  const [notUpdateImages, setNotUpdateImages] = useState(false);
   const positions = useSharedValue(images.map((_, index) => ({ x: 0, y: 0 })));
   useEffect(() => {
     // console.log("🚀 ~ images:", JSON.stringify(imagesProp, null, 2));
-    // setImages(imagesProp.sort((a, b) => (a.order || 0) - (b.order || 0)));
+    if (!notUpdateImages) {
+      setImages(imagesProp.sort((a, b) => (a.order || 0) - (b.order || 0)));
+    } else {
+      setNotUpdateImages(false);
+    }
   }, [imagesProp]);
   // useEffect(() => {
   //   console.log("🚀 ~ inferences:", JSON.stringify(inferences, null, 2));
@@ -323,6 +327,7 @@ export default function ImageGallery({
       const [movedItem] = newOrder.splice(index, 1);
       newOrder.splice(newIndex, 0, movedItem);
       setImages(newOrder);
+      setNotUpdateImages(true);
 
       // Update order in backend
       const orderUpdates = newOrder.map((image, idx) => ({

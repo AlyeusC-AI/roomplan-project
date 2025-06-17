@@ -1,16 +1,18 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  runOnJS,
 } from "react-native-reanimated";
 
 interface SliderProps {
   min: number;
   max: number;
   step?: number;
+  value?: number[];
   defaultValue?: number[];
   onValueChange?: (value: number[]) => void;
   vertical?: boolean;
@@ -20,13 +22,28 @@ export function Slider({
   min,
   max,
   step = 1,
+  value,
   defaultValue = [min],
   onValueChange,
   vertical = false,
 }: SliderProps) {
-  const position = useSharedValue(defaultValue[0]);
+  const position = useSharedValue(value ? value[0] : defaultValue[0]);
   const width = useSharedValue(0);
   const height = useSharedValue(0);
+
+  // Sync position with value prop
+  useEffect(() => {
+    if (value && value[0] !== position.value) {
+      position.value = value[0];
+    }
+  }, [value]);
+
+  // Also update on defaultValue change (for uncontrolled usage)
+  useEffect(() => {
+    if (!value && defaultValue[0] !== position.value) {
+      position.value = defaultValue[0];
+    }
+  }, [defaultValue, value]);
 
   const gesture = Gesture.Pan().onUpdate((e) => {
     const size = vertical ? height.value : width.value;
@@ -38,7 +55,9 @@ export function Slider({
     );
     const steppedValue = Math.round(newValue / step) * step;
     position.value = steppedValue;
-    onValueChange?.([steppedValue]);
+    if (onValueChange) {
+      runOnJS(onValueChange)([steppedValue]);
+    }
   });
 
   const thumbStyle = useAnimatedStyle(() => {
@@ -52,14 +71,14 @@ export function Slider({
   });
 
   const trackStyle = vertical
-    ? "w-1 bg-gray-600 rounded-full overflow-visible"
-    : "h-1 bg-gray-600 rounded-full overflow-visible";
+    ? "w-12 h-12 bg-blue-200 rounded-full overflow-visible border border-blue-400"
+    : "w-40 h-1 bg-blue-200 rounded-full overflow-visible border border-blue-400";
 
   const activeTrackStyle = useAnimatedStyle(() => {
     const percentage = (position.value - min) / (max - min);
     return {
       [vertical ? "height" : "width"]: `${percentage * 100}%`,
-      backgroundColor: "white",
+      backgroundColor: "#2563eb",
     };
   });
 
@@ -83,8 +102,8 @@ export function Slider({
         />
         <View className="absolute w-full h-full">
           <Animated.View
-            className="absolute top-1/2 -mt-2 -ml-2 w-4 h-4 rounded-full bg-white shadow"
-            style={thumbStyle}
+            className="absolute top-1/2 -mt-4 -ml-4 w-8 h-8 rounded-full shadow"
+            style={[{ backgroundColor: "#2563eb" }, thumbStyle]}
           />
         </View>
       </View>

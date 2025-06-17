@@ -18,7 +18,6 @@ import {
 import { OptimizedImage } from "@/lib/utils/imageModule";
 import { Text } from "@/components/ui/text";
 import {
-  X,
   ChevronLeft,
   ChevronRight,
   Trash2,
@@ -43,15 +42,34 @@ import {
   useRemoveImage,
   useUpdateProject,
   useUpdateImage,
+  uploadFile,
 } from "@service-geek/api-client";
 import { toast } from "sonner-native";
 import { useRouter } from "next/router";
 import { useGlobalSearchParams } from "expo-router";
 import { Pencil } from "@/lib/icons/ImageEditorIcons";
 import dayjs from "dayjs";
-// import ImageEditorModal from "../project/ImageEditorModal";
+import ImageEditorModal from "../project/ImageEditorModal";
+import { uploadAsync } from "expo-file-system";
+import * as FileSystem from "expo-file-system";
 // Get screen dimensions for responsive sizing
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+// Add base64 to file conversion function
+const base64ToFile = async (base64: string): Promise<string> => {
+  // Remove the data URL prefix if present
+  const base64Data = base64.replace(/^data:image\/\w+;base64,/, "");
+
+  // Create a temporary file path
+  const fileUri = FileSystem.documentDirectory + "temp_image.png";
+
+  // Write the base64 data to the file
+  await FileSystem.writeAsStringAsync(fileUri, base64Data, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+
+  return fileUri;
+};
 
 interface ImageGalleryProps {
   images: Image[];
@@ -72,590 +90,6 @@ interface ImageGalleryProps {
   setActiveImageIndex: (index: number) => void;
 }
 
-export default function ModalImagesWithNotes({
-  images,
-
-  roomName,
-
-  setModalVisible,
-  modalVisible,
-  activeImageIndex,
-  setActiveImageIndex,
-}: ImageGalleryProps) {
-  // Refs for scrolling and input
-  const modalScrollRef = useRef<FlatList>(null);
-  const thumbnailScrollRef = useRef<ScrollView>(null);
-  const currentNoteText = useRef("");
-  const noteInputRef = useRef<TextInput>(null);
-
-  // Animation values
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const notesSheetAnim = useRef(new Animated.Value(0)).current;
-
-  // Add effect to handle modal visibility changes
-  useEffect(() => {
-    if (modalVisible) {
-      fadeAnim.setValue(0);
-      Animated.spring(fadeAnim, {
-        toValue: 1,
-        damping: 20,
-        stiffness: 90,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [modalVisible]);
-
-  // Handle modal close
-  const handleCloseModal = () => {
-    Animated.spring(fadeAnim, {
-      toValue: 0,
-      damping: 20,
-      stiffness: 90,
-      useNativeDriver: true,
-    }).start(() => {
-      setModalVisible(false);
-    });
-  };
-
-  // Navigate to previous image in modal
-  const goToPreviousImage = () => {
-    if (activeImageIndex > 0) {
-      const newIndex = activeImageIndex - 1;
-      setActiveImageIndex(newIndex);
-      modalScrollRef.current?.scrollToIndex({
-        index: newIndex,
-        animated: true,
-      });
-    }
-  };
-
-  // Navigate to next image in modal
-  const goToNextImage = () => {
-    if (activeImageIndex < images.length - 1) {
-      const newIndex = activeImageIndex + 1;
-      setActiveImageIndex(newIndex);
-      modalScrollRef.current?.scrollToIndex({
-        index: newIndex,
-        animated: true,
-      });
-    }
-  };
-
-  // Handle scroll end in modal
-  const handleScrollEnd = (e: any) => {
-    const contentOffset = e.nativeEvent.contentOffset;
-    const index = Math.round(contentOffset.x / SCREEN_WIDTH);
-    setActiveImageIndex(index);
-  };
-
-  return (
-    <View style={styles.container}>
-      {/* Full Screen Modal */}
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType="none"
-        onRequestClose={handleCloseModal}
-      >
-        <Animated.View style={[styles.modalContainer, { opacity: fadeAnim }]}>
-          <SafeAreaView style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <TouchableOpacity
-                onPress={handleCloseModal}
-                style={styles.closeButton}
-              >
-                <X size={24} color="#fff" />
-              </TouchableOpacity>
-              <Text style={styles.modalTitle}>
-                {roomName || "Image Gallery"}
-              </Text>
-              <View style={{ width: 40 }} />
-            </View>
-
-            <FlatList
-              ref={modalScrollRef}
-              data={images as any}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              initialScrollIndex={activeImageIndex}
-              getItemLayout={(_, index) => ({
-                length: SCREEN_WIDTH,
-                offset: SCREEN_WIDTH * index,
-                index,
-              })}
-              renderItem={({ item }) => (
-                <ModalItem
-                  item={item}
-                  modalVisible={modalVisible}
-                  activeImageIndex={activeImageIndex}
-                  handleCloseModal={handleCloseModal}
-                  images={images}
-                />
-              )}
-              keyExtractor={(item) => item.id}
-              onMomentumScrollEnd={handleScrollEnd}
-            />
-
-            <View style={styles.navigationContainer}>
-              <TouchableOpacity
-                onPress={goToPreviousImage}
-                style={[
-                  styles.navButton,
-                  activeImageIndex === 0 && styles.navButtonDisabled,
-                ]}
-                disabled={activeImageIndex === 0}
-              >
-                <ChevronLeft
-                  size={30}
-                  color={activeImageIndex === 0 ? "#666" : "#fff"}
-                />
-              </TouchableOpacity>
-
-              <Text style={styles.pageIndicator}>
-                {activeImageIndex + 1} / {images.length}
-              </Text>
-
-              <TouchableOpacity
-                onPress={goToNextImage}
-                style={[
-                  styles.navButton,
-                  activeImageIndex === images.length - 1 &&
-                    styles.navButtonDisabled,
-                ]}
-                disabled={activeImageIndex === images.length - 1}
-              >
-                <ChevronRight
-                  size={30}
-                  color={
-                    activeImageIndex === images.length - 1 ? "#666" : "#fff"
-                  }
-                />
-              </TouchableOpacity>
-            </View>
-
-            {/* Thumbnails */}
-            {/* <View style={styles.thumbnailContainer}>
-              <ScrollView
-                ref={thumbnailScrollRef}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.thumbnailScroll}
-                scrollEventThrottle={16}
-                bounces={false}
-                decelerationRate="fast"
-                snapToInterval={70}
-                snapToAlignment="start"
-              >
-                {images.map((image, index) => {
-                  const imageUrl = image.url;
-
-                  return (
-                    <TouchableOpacity
-                      key={image.id}
-                      activeOpacity={0.7}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      onPress={() => {
-                        const newIndex = index;
-                        setActiveImageIndex(newIndex);
-                        modalScrollRef.current?.scrollToIndex({
-                          index: newIndex,
-                          animated: true,
-                          viewPosition: 0.5,
-                        });
-                        thumbnailScrollRef.current?.scrollTo({
-                          x: newIndex * 70,
-                          animated: true,
-                        });
-                      }}
-                      style={[
-                        styles.thumbnail,
-                        index === activeImageIndex && styles.activeThumbnail,
-                      ]}
-                    >
-                      <OptimizedImage
-                        uri={imageUrl}
-                        style={styles.thumbnailImage}
-                        size="small"
-                        imageKey={image.id}
-                        disabled={true}
-                        backgroundColor="#000000"
-                      />
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View> */}
-          </SafeAreaView>
-        </Animated.View>
-      </Modal>
-    </View>
-  );
-}
-
-// Render image in the modal
-const ModalItem = ({
-  item,
-  modalVisible,
-  activeImageIndex,
-  handleCloseModal,
-  images,
-}: {
-  item: Image;
-  images: Image[];
-  modalVisible: boolean;
-  activeImageIndex: number;
-  handleCloseModal: () => void;
-}) => {
-  const [showNotes, setShowNotes] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isAddingNote, setIsAddingNote] = useState(false);
-  const [isUpdatingReport, setIsUpdatingReport] = useState(false);
-  const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [description, setDescription] = useState(item.description || "");
-  const { mutate: deleteImage } = useRemoveImage();
-  const imageUrl = item.url;
-  const { data: comments } = useGetComments(item.id);
-  const noteCount = comments?.length || 0;
-  const currentNoteText = useRef("");
-  const noteInputRef = useRef<TextInput>(null);
-  const descriptionInputRef = useRef<TextInput>(null);
-  const { mutate: removeImage } = useRemoveImage();
-  const { mutate: bulkUpdateImages } = useBulkUpdateImages();
-  const { mutate: updateImage } = useUpdateImage();
-  const { data: user } = useCurrentUser();
-  const { mutate: addComment } = useAddComment();
-
-  const { projectId } = useGlobalSearchParams<{
-    projectId: string;
-    projectName: string;
-  }>();
-
-  const { data: project } = useGetProjectById(projectId as string);
-
-  // Animation values
-  const notesSheetAnim = useRef(new Animated.Value(0)).current;
-  const [editorOpen, setEditorOpen] = useState(false);
-
-  // Handle image deletion
-  const handleDeleteImage = async (id: string) => {
-    Alert.alert("Delete Image", "Are you sure you want to delete this image?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            setIsDeleting(true);
-            await deleteImage(item.id);
-            toast.success("Images deleted successfully");
-
-            if (modalVisible && images[activeImageIndex]?.id === item.id) {
-              handleCloseModal();
-            }
-          } finally {
-            setIsDeleting(false);
-          }
-        },
-      },
-    ]);
-  };
-
-  // Add function to toggle notes
-  const toggleNotes = () => {
-    if (showNotes) {
-      Animated.spring(notesSheetAnim, {
-        toValue: 0,
-        damping: 20,
-        stiffness: 90,
-        useNativeDriver: true,
-      }).start(() => setShowNotes(false));
-    } else {
-      setShowNotes(true);
-      Animated.spring(notesSheetAnim, {
-        toValue: 1,
-        damping: 20,
-        stiffness: 90,
-        useNativeDriver: true,
-      }).start();
-    }
-  };
-
-  const handleAddNote = async (imageId: string, note: string) => {
-    console.log("🚀 ~ handleAddNote ~ imageId:", imageId);
-    console.log("🚀 ~ handleAddNote ~ note:", note);
-    if (note.trim()) {
-      try {
-        setIsAddingNote(true);
-        const response = await addComment({
-          imageId: imageId,
-          data: {
-            content: note,
-            userId: user?.id!,
-          },
-        });
-        console.log("🚀 ~ handleAddNote ~ response:", response);
-
-        toast.success("Note added successfully");
-        currentNoteText.current = "";
-        noteInputRef.current?.clear();
-      } finally {
-        setIsAddingNote(false);
-      }
-    }
-  };
-
-  // Add toggleIncludeInReport function
-  const handleToggleIncludeInReport = async (image: Image) => {
-    try {
-      setIsUpdatingReport(true);
-      const response = await bulkUpdateImages({
-        projectId,
-        filters: {
-          ids: [image.id],
-          type: "ROOM",
-        },
-        updates: {
-          showInReport: !image?.showInReport,
-        },
-      });
-      toast.success("Image updated successfully");
-    } catch (error) {
-      console.error("Error updating image:", error);
-      Alert.alert("Error", "Failed to update image");
-    } finally {
-      setIsUpdatingReport(false);
-    }
-  };
-
-  const handleUpdateDescription = async () => {
-    try {
-      await updateImage({
-        imageId: item.id,
-        data: {
-          description: description,
-        },
-      });
-      setIsEditingDescription(false);
-      toast.success("Description updated successfully");
-    } catch (error) {
-      console.error("Error updating description:", error);
-      toast.error("Failed to update description");
-    }
-  };
-
-  // Add this near the top of the file
-  const notesSheetStyle = {
-    transform: [
-      {
-        translateY: notesSheetAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [600, 0],
-        }),
-      },
-    ],
-  };
-
-  return (
-    <View style={styles.modalImageContainer}>
-      <OptimizedImage
-        uri={imageUrl}
-        style={styles.modalImage}
-        resizeMode="contain"
-        imageKey={item.id}
-        showInfo={true}
-        backgroundColor="#000000"
-      />
-
-      {/* Action Buttons */}
-      <View style={styles.actionButtons}>
-        <TouchableOpacity
-          style={[styles.actionButton, isDeleting && styles.disabledButton]}
-          onPress={() => handleDeleteImage(item.id)}
-          disabled={isDeleting}
-        >
-          <Trash2 size={24} color="#fff" opacity={isDeleting ? 0.5 : 1} />
-        </TouchableOpacity>
-        {/* Edit Icon */}
-        {/* <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => setEditorOpen(true)}
-        >
-          <Pencil size={24} color="#fff" />
-        </TouchableOpacity> */}
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            isUpdatingReport && styles.disabledButton,
-          ]}
-          onPress={() => handleToggleIncludeInReport(item)}
-          disabled={isUpdatingReport}
-        >
-          {isUpdatingReport ? (
-            <Loader size={24} color="#fff" />
-          ) : (
-            <Star
-              size={24}
-              color="#fff"
-              fill={item.showInReport ? "#FBBF24" : "transparent"}
-            />
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={toggleNotes}>
-          <MessageCircle size={24} color="#fff" />
-          {noteCount > 0 && (
-            <View style={styles.noteBadge}>
-              <Text style={styles.noteBadgeText}>{noteCount}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* Image Metadata */}
-      <View style={styles.imageMetadata}>
-        <View style={styles.uploaderInfo}>
-          <Text style={styles.uploaderName}>
-            By {item.byUser?.firstName || "Unknown"}{" "}
-            {item.byUser?.lastName || "User"}
-          </Text>
-          <Text style={styles.uploadDate}>
-            {dayjs(item.createdAt).format("MM/DD/YYYY hh:mm A")}
-          </Text>
-        </View>
-        {isEditingDescription ? (
-          <View style={styles.descriptionEditContainer}>
-            <TextInput
-              ref={descriptionInputRef}
-              style={styles.descriptionInput}
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Add a description..."
-              placeholderTextColor="#999"
-              multiline
-              autoFocus
-            />
-            <View style={styles.descriptionEditActions}>
-              <TouchableOpacity
-                style={[styles.descriptionButton, styles.cancelButton]}
-                onPress={() => {
-                  setDescription(item.description || "");
-                  setIsEditingDescription(false);
-                }}
-              >
-                <Text style={styles.descriptionButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.descriptionButton, styles.saveButton]}
-                onPress={handleUpdateDescription}
-              >
-                <Text style={styles.descriptionButtonText}>Save</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.descriptionContainer}
-            onPress={() => setIsEditingDescription(true)}
-          >
-            {description ? (
-              <Text style={styles.descriptionText}>{description}</Text>
-            ) : (
-              <Text style={styles.addDescriptionText}>Add description...</Text>
-            )}
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Notes Bottom Sheet */}
-      {showNotes && (
-        <Animated.View style={[styles.notesSheet, notesSheetStyle]}>
-          <View style={styles.notesHeader}>
-            <Text style={styles.notesHeaderText}>Notes</Text>
-            <TouchableOpacity
-              onPress={toggleNotes}
-              style={styles.closeNotesButton}
-            >
-              <X size={24} color="#fff" />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.notesList}>
-            {comments?.map((note) => (
-              <View key={note.id} style={styles.noteItem}>
-                <View style={styles.noteHeader}>
-                  <View style={styles.noteAvatar}>
-                    <Text style={styles.noteAvatarText}>
-                      {note.user?.firstName?.charAt(0) || "N"} +
-                      {note.user?.lastName?.charAt(0) || "N"}
-                    </Text>
-                  </View>
-                  <View style={styles.noteMetadata}>
-                    <Text style={styles.noteAuthor}>
-                      {note.user?.firstName} {note.user?.lastName}
-                    </Text>
-                    <Text style={styles.noteDate}>
-                      {new Date(note.createdAt).toLocaleDateString()}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.noteText}>{note.content}</Text>
-              </View>
-            ))}
-          </ScrollView>
-
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 240 : 20}
-            style={styles.addNoteContainer}
-          >
-            <TextInput
-              ref={noteInputRef}
-              style={styles.noteInput}
-              placeholder="Add a note..."
-              placeholderTextColor="#999"
-              multiline
-              numberOfLines={3}
-              returnKeyType="done"
-              blurOnSubmit={true}
-              onChangeText={(text) => {
-                currentNoteText.current = text;
-              }}
-              onSubmitEditing={async (e) => {
-                if (item.id) {
-                  await handleAddNote(item.id, currentNoteText.current);
-                }
-              }}
-            />
-            <TouchableOpacity
-              style={[
-                styles.submitNoteButton,
-                isAddingNote && styles.disabledButton,
-              ]}
-              onPress={async () => {
-                if (item.id) {
-                  await handleAddNote(item.id, currentNoteText.current);
-                }
-              }}
-              disabled={isAddingNote}
-            >
-              <Text
-                style={[
-                  styles.submitNoteButtonText,
-                  isAddingNote && styles.disabledButtonText,
-                ]}
-              >
-                {isAddingNote ? "Posting..." : "Post"}
-              </Text>
-            </TouchableOpacity>
-          </KeyboardAvoidingView>
-        </Animated.View>
-      )}
-    </View>
-  );
-};
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -932,18 +366,18 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   imageMetadata: {
-    position: "absolute",
-    bottom: 35,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    backgroundColor: "rgba(0, 0, 0, 1)",
     padding: 16,
+    // paddingBottom: 250,
     borderTopWidth: 1,
     borderBottomWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.1)",
   },
   descriptionContainer: {
     marginBottom: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderRadius: 8,
+    padding: 12,
   },
   descriptionText: {
     color: "#fff",
@@ -1003,4 +437,816 @@ const styles = StyleSheet.create({
     color: "#999",
     fontSize: 12,
   },
+  descriptionModalContainer: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  descriptionModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.1)",
+  },
+  descriptionModalCloseButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+  },
+  descriptionModalTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  descriptionModalSaveButton: {
+    backgroundColor: "#1e40af",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  descriptionModalSaveText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  descriptionModalInput: {
+    flex: 1,
+    color: "#fff",
+    fontSize: 16,
+    padding: 16,
+    textAlignVertical: "top",
+  },
+  readMoreButton: {
+    marginTop: 4,
+  },
+  readMoreText: {
+    color: "#1e40af",
+    fontSize: 14,
+    fontWeight: "500",
+  },
 });
+
+// Custom Close Icon Component
+const CloseIcon = ({ size = 24, color = "#fff" }) => (
+  <View style={{ width: size, height: size }}>
+    <View
+      style={{
+        position: "absolute",
+        width: size,
+        height: 2,
+        backgroundColor: color,
+        transform: [{ rotate: "45deg" }],
+        top: size / 2 - 1,
+      }}
+    />
+    <View
+      style={{
+        position: "absolute",
+        width: size,
+        height: 2,
+        backgroundColor: color,
+        transform: [{ rotate: "-45deg" }],
+        top: size / 2 - 1,
+      }}
+    />
+  </View>
+);
+
+// Add DescriptionEditModal component after styles
+const DescriptionEditModal = ({
+  isVisible,
+  onClose,
+  initialDescription,
+  onSave,
+}: {
+  isVisible: boolean;
+  onClose: () => void;
+  initialDescription: string;
+  onSave: (description: string) => void;
+}) => {
+  const [description, setDescription] = useState(initialDescription);
+  const inputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    if (isVisible) {
+      // Focus input when modal becomes visible
+      setDescription(initialDescription);
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [isVisible]);
+
+  return (
+    <Modal
+      visible={isVisible}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={onClose}
+    >
+      <SafeAreaView style={styles.descriptionModalContainer}>
+        <View style={styles.descriptionModalHeader}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.descriptionModalCloseButton}
+          >
+            <CloseIcon size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.descriptionModalTitle}>Edit Description</Text>
+          <TouchableOpacity
+            onPress={() => onSave(description)}
+            style={styles.descriptionModalSaveButton}
+          >
+            <Text style={styles.descriptionModalSaveText}>Save</Text>
+          </TouchableOpacity>
+        </View>
+        <TextInput
+          ref={inputRef}
+          style={styles.descriptionModalInput}
+          value={description}
+          onChangeText={setDescription}
+          placeholder="Add a description..."
+          placeholderTextColor="#999"
+          multiline
+          autoFocus
+        />
+      </SafeAreaView>
+    </Modal>
+  );
+};
+
+// Add CollapsibleDescription component
+const CollapsibleDescription = ({
+  text,
+  onPress,
+}: {
+  text: string;
+  onPress: () => void;
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const maxLength = 100; // Maximum characters to show when collapsed
+
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const shouldShowReadMore = text.length > maxLength;
+
+  return (
+    <TouchableOpacity
+      style={styles.descriptionContainer}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <Text
+        style={styles.descriptionText}
+        numberOfLines={isExpanded ? undefined : 2}
+      >
+        {text}
+      </Text>
+      {shouldShowReadMore && (
+        <TouchableOpacity onPress={toggleExpand} style={styles.readMoreButton}>
+          <Text style={styles.readMoreText}>
+            {isExpanded ? "Show less" : "Read more"}
+          </Text>
+        </TouchableOpacity>
+      )}
+    </TouchableOpacity>
+  );
+};
+
+export default function ModalImagesWithNotes({
+  images,
+  roomName,
+  setModalVisible,
+  modalVisible,
+  activeImageIndex,
+  setActiveImageIndex,
+}: ImageGalleryProps) {
+  // Refs for scrolling and input
+  const modalScrollRef = useRef<FlatList>(null);
+  const thumbnailScrollRef = useRef<ScrollView>(null);
+  const currentNoteText = useRef("");
+  const noteInputRef = useRef<TextInput>(null);
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const notesSheetAnim = useRef(new Animated.Value(0)).current;
+
+  // Add effect to handle modal visibility changes
+  useEffect(() => {
+    if (modalVisible) {
+      fadeAnim.setValue(0);
+      Animated.spring(fadeAnim, {
+        toValue: 1,
+        damping: 20,
+        stiffness: 90,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [modalVisible]);
+
+  // Handle modal close
+  const handleCloseModal = () => {
+    Animated.spring(fadeAnim, {
+      toValue: 0,
+      damping: 20,
+      stiffness: 90,
+      useNativeDriver: true,
+    }).start(() => {
+      setModalVisible(false);
+    });
+  };
+
+  // Handle scroll end in modal
+  const handleScrollEnd = (e: any) => {
+    const contentOffset = e.nativeEvent.contentOffset;
+    const index = Math.round(contentOffset.x / SCREEN_WIDTH);
+    setActiveImageIndex(index);
+  };
+  const activeImage = images[activeImageIndex];
+
+  return (
+    <View style={styles.container}>
+      {/* Full Screen Modal */}
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="none"
+        onRequestClose={handleCloseModal}
+      >
+        <Animated.View style={[styles.modalContainer, { opacity: fadeAnim }]}>
+          <SafeAreaView style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity
+                onPress={handleCloseModal}
+                style={styles.closeButton}
+              >
+                <CloseIcon size={24} color="#fff" />
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>
+                {roomName || "Image Gallery"}
+              </Text>
+              <View style={{ width: 40 }} />
+            </View>
+
+            <FlatList
+              ref={modalScrollRef}
+              data={images as any}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              initialScrollIndex={activeImageIndex}
+              getItemLayout={(_, index) => ({
+                length: SCREEN_WIDTH,
+                offset: SCREEN_WIDTH * index,
+                index,
+              })}
+              renderItem={({ item }) => (
+                <ModalItem
+                  item={item}
+                  modalVisible={modalVisible}
+                  activeImageIndex={activeImageIndex}
+                  handleCloseModal={handleCloseModal}
+                  images={images}
+                />
+              )}
+              keyExtractor={(item) => item.id}
+              onMomentumScrollEnd={handleScrollEnd}
+            />
+
+            <ModalItemMetadata
+              item={activeImage}
+              activeImageIndex={activeImageIndex}
+              setActiveImageIndex={setActiveImageIndex}
+              modalScrollRef={modalScrollRef}
+              images={images}
+            />
+
+            {/* Thumbnails */}
+            {/* <View style={styles.thumbnailContainer}>
+              <ScrollView
+                ref={thumbnailScrollRef}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.thumbnailScroll}
+                scrollEventThrottle={16}
+                bounces={false}
+                decelerationRate="fast"
+                snapToInterval={70}
+                snapToAlignment="start"
+              >
+                {images.map((image, index) => {
+                  const imageUrl = image.url;
+
+                  return (
+                    <TouchableOpacity
+                      key={image.id}
+                      activeOpacity={0.7}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      onPress={() => {
+                        const newIndex = index;
+                        setActiveImageIndex(newIndex);
+                        modalScrollRef.current?.scrollToIndex({
+                          index: newIndex,
+                          animated: true,
+                          viewPosition: 0.5,
+                        });
+                        thumbnailScrollRef.current?.scrollTo({
+                          x: newIndex * 70,
+                          animated: true,
+                        });
+                      }}
+                      style={[
+                        styles.thumbnail,
+                        index === activeImageIndex && styles.activeThumbnail,
+                      ]}
+                    >
+                      <OptimizedImage
+                        uri={imageUrl}
+                        style={styles.thumbnailImage}
+                        size="small"
+                        imageKey={image.id}
+                        disabled={true}
+                        backgroundColor="#000000"
+                      />
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View> */}
+          </SafeAreaView>
+        </Animated.View>
+      </Modal>
+    </View>
+  );
+}
+
+// Render image in the modal
+const ModalItem = ({
+  item,
+  modalVisible,
+  activeImageIndex,
+  handleCloseModal,
+  images,
+}: {
+  item: Image;
+  images: Image[];
+  modalVisible: boolean;
+  activeImageIndex: number;
+  handleCloseModal: () => void;
+}) => {
+  const [showNotes, setShowNotes] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [isUpdatingReport, setIsUpdatingReport] = useState(false);
+  const { mutate: deleteImage } = useRemoveImage();
+  const imageUrl = item.url;
+  const { data: comments } = useGetComments(item.id);
+  const noteCount = comments?.length || 0;
+  const currentNoteText = useRef("");
+  const noteInputRef = useRef<TextInput>(null);
+  const { mutate: removeImage } = useRemoveImage();
+  const { mutate: bulkUpdateImages } = useBulkUpdateImages();
+  const { mutate: updateImage } = useUpdateImage();
+  const { data: user } = useCurrentUser();
+  const { mutate: addComment } = useAddComment();
+
+  const { projectId } = useGlobalSearchParams<{
+    projectId: string;
+    projectName: string;
+  }>();
+
+  const { data: project } = useGetProjectById(projectId as string);
+
+  // Animation values
+  const notesSheetAnim = useRef(new Animated.Value(0)).current;
+  const [editorOpen, setEditorOpen] = useState(false);
+
+  // Handle image deletion
+  const handleDeleteImage = async (id: string) => {
+    Alert.alert("Delete Image", "Are you sure you want to delete this image?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            setIsDeleting(true);
+            await deleteImage(item.id);
+            toast.success("Images deleted successfully");
+
+            if (modalVisible && images[activeImageIndex]?.id === item.id) {
+              handleCloseModal();
+            }
+          } finally {
+            setIsDeleting(false);
+          }
+        },
+      },
+    ]);
+  };
+
+  // Add function to toggle notes
+  const toggleNotes = () => {
+    if (showNotes) {
+      Animated.spring(notesSheetAnim, {
+        toValue: 0,
+        damping: 20,
+        stiffness: 90,
+        useNativeDriver: true,
+      }).start(() => setShowNotes(false));
+    } else {
+      setShowNotes(true);
+      Animated.spring(notesSheetAnim, {
+        toValue: 1,
+        damping: 20,
+        stiffness: 90,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+
+  const handleAddNote = async (imageId: string, note: string) => {
+    console.log("🚀 ~ handleAddNote ~ imageId:", imageId);
+    console.log("🚀 ~ handleAddNote ~ note:", note);
+    if (note.trim()) {
+      try {
+        setIsAddingNote(true);
+        const response = await addComment({
+          imageId: imageId,
+          data: {
+            content: note,
+            userId: user?.id!,
+          },
+        });
+        console.log("🚀 ~ handleAddNote ~ response:", response);
+
+        toast.success("Note added successfully");
+        currentNoteText.current = "";
+        noteInputRef.current?.clear();
+      } finally {
+        setIsAddingNote(false);
+      }
+    }
+  };
+
+  // Add toggleIncludeInReport function
+  const handleToggleIncludeInReport = async (image: Image) => {
+    try {
+      setIsUpdatingReport(true);
+      const response = await bulkUpdateImages({
+        projectId,
+        filters: {
+          ids: [image.id],
+          type: "ROOM",
+        },
+        updates: {
+          showInReport: !image?.showInReport,
+        },
+      });
+      toast.success("Image updated successfully");
+    } catch (error) {
+      console.error("Error updating image:", error);
+      Alert.alert("Error", "Failed to update image");
+    } finally {
+      setIsUpdatingReport(false);
+    }
+  };
+
+  // Add this near the top of the file
+  const notesSheetStyle = {
+    transform: [
+      {
+        translateY: notesSheetAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [600, 0],
+        }),
+      },
+    ],
+  };
+
+  return (
+    <View style={styles.modalImageContainer}>
+      <OptimizedImage
+        uri={imageUrl}
+        style={styles.modalImage}
+        resizeMode="contain"
+        imageKey={item.id}
+        showInfo={true}
+        backgroundColor="#000000"
+      />
+
+      {/* Action Buttons */}
+      <View style={styles.actionButtons}>
+        <TouchableOpacity
+          style={[styles.actionButton, isDeleting && styles.disabledButton]}
+          onPress={() => handleDeleteImage(item.id)}
+          disabled={isDeleting}
+        >
+          <Trash2 size={24} color="#fff" opacity={isDeleting ? 0.5 : 1} />
+        </TouchableOpacity>
+        {/* Edit Icon */}
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => setEditorOpen(true)}
+        >
+          <Pencil size={24} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.actionButton,
+            isUpdatingReport && styles.disabledButton,
+          ]}
+          onPress={() => handleToggleIncludeInReport(item)}
+          disabled={isUpdatingReport}
+        >
+          {isUpdatingReport ? (
+            <Loader size={24} color="#fff" />
+          ) : (
+            <Star
+              size={24}
+              color="#fff"
+              fill={item.showInReport ? "#FBBF24" : "transparent"}
+            />
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton} onPress={toggleNotes}>
+          <MessageCircle size={24} color="#fff" />
+          {noteCount > 0 && (
+            <View style={styles.noteBadge}>
+              <Text style={styles.noteBadgeText}>{noteCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Notes Bottom Sheet */}
+      {showNotes && (
+        <Animated.View style={[styles.notesSheet, notesSheetStyle]}>
+          <View style={styles.notesHeader}>
+            <Text style={styles.notesHeaderText}>Notes</Text>
+            <TouchableOpacity
+              onPress={toggleNotes}
+              style={styles.closeNotesButton}
+            >
+              <CloseIcon size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.notesList}>
+            {comments?.map((note) => (
+              <View key={note.id} style={styles.noteItem}>
+                <View style={styles.noteHeader}>
+                  <View style={styles.noteAvatar}>
+                    <Text style={styles.noteAvatarText}>
+                      {note.user?.firstName?.charAt(0) || "N"} +
+                      {note.user?.lastName?.charAt(0) || "N"}
+                    </Text>
+                  </View>
+                  <View style={styles.noteMetadata}>
+                    <Text style={styles.noteAuthor}>
+                      {note.user?.firstName} {note.user?.lastName}
+                    </Text>
+                    <Text style={styles.noteDate}>
+                      {new Date(note.createdAt).toLocaleDateString()}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.noteText}>{note.content}</Text>
+              </View>
+            ))}
+          </ScrollView>
+
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 240 : 20}
+            style={styles.addNoteContainer}
+          >
+            <TextInput
+              ref={noteInputRef}
+              style={styles.noteInput}
+              placeholder="Add a note..."
+              placeholderTextColor="#999"
+              multiline
+              numberOfLines={3}
+              returnKeyType="done"
+              blurOnSubmit={true}
+              onChangeText={(text) => {
+                currentNoteText.current = text;
+              }}
+              onSubmitEditing={async (e) => {
+                if (item.id) {
+                  await handleAddNote(item.id, currentNoteText.current);
+                }
+              }}
+            />
+            <TouchableOpacity
+              style={[
+                styles.submitNoteButton,
+                isAddingNote && styles.disabledButton,
+              ]}
+              onPress={async () => {
+                if (item.id) {
+                  await handleAddNote(item.id, currentNoteText.current);
+                }
+              }}
+              disabled={isAddingNote}
+            >
+              <Text
+                style={[
+                  styles.submitNoteButtonText,
+                  isAddingNote && styles.disabledButtonText,
+                ]}
+              >
+                {isAddingNote ? "Posting..." : "Post"}
+              </Text>
+            </TouchableOpacity>
+          </KeyboardAvoidingView>
+        </Animated.View>
+      )}
+      <ImageEditorModal
+        isOpen={editorOpen}
+        onClose={() => setEditorOpen(false)}
+        imageUrl={imageUrl}
+        onSave={async (base64) => {
+          try {
+            // Convert base64 to file
+            const fileUri = await base64ToFile(base64);
+
+            // Upload the file
+            const { publicUrl } = await uploadFile(
+              {
+                uri: fileUri,
+                path: fileUri,
+                size: 100,
+
+                name: "image.png",
+                type: "image/png",
+              },
+              "image.png"
+            );
+
+            // Update the image URL
+            await updateImage({
+              imageId: item.id,
+              data: {
+                url: publicUrl,
+              },
+            });
+
+            // Clean up the temporary file
+            await FileSystem.deleteAsync(fileUri);
+
+            toast.success("Image updated successfully");
+          } catch (error) {
+            console.error("Error updating image:", error);
+            toast.error("Failed to update image");
+          }
+        }}
+      />
+    </View>
+  );
+};
+
+// Render image in the modal
+const ModalItemMetadata = ({
+  item,
+  activeImageIndex,
+  setActiveImageIndex,
+  modalScrollRef,
+  images,
+}: {
+  item: Image;
+  activeImageIndex: number;
+  setActiveImageIndex: (index: number) => void;
+  modalScrollRef: React.RefObject<FlatList<Image>>;
+  images: Image[];
+}) => {
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [description, setDescription] = useState(item.description || "");
+
+  const { mutate: updateImage } = useUpdateImage();
+  useEffect(() => {
+    setDescription(item.description || "");
+  }, [item.description]);
+
+  const handleUpdateDescription = async (newDescription: string) => {
+    try {
+      await updateImage({
+        imageId: item.id,
+        data: {
+          description: newDescription,
+        },
+      });
+      setDescription(newDescription);
+      setIsEditingDescription(false);
+      toast.success("Description updated successfully");
+    } catch (error) {
+      console.error("Error updating description:", error);
+      toast.error("Failed to update description");
+    }
+  };
+  // Navigate to previous image in modal
+  const goToPreviousImage = () => {
+    if (activeImageIndex > 0) {
+      const newIndex = activeImageIndex - 1;
+      setActiveImageIndex(newIndex);
+      modalScrollRef.current?.scrollToIndex({
+        index: newIndex,
+        animated: true,
+      });
+    }
+  };
+
+  // Navigate to next image in modal
+  const goToNextImage = () => {
+    if (activeImageIndex < images.length - 1) {
+      const newIndex = activeImageIndex + 1;
+      setActiveImageIndex(newIndex);
+      modalScrollRef.current?.scrollToIndex({
+        index: newIndex,
+        animated: true,
+      });
+    }
+  };
+
+  return (
+    <>
+      <View style={styles.navigationContainer}>
+        <TouchableOpacity
+          onPress={goToPreviousImage}
+          style={[
+            styles.navButton,
+            activeImageIndex === 0 && styles.navButtonDisabled,
+          ]}
+          disabled={activeImageIndex === 0}
+        >
+          <ChevronLeft
+            size={30}
+            color={activeImageIndex === 0 ? "#666" : "#fff"}
+          />
+        </TouchableOpacity>
+
+        <Text style={styles.pageIndicator}>
+          {activeImageIndex + 1} / {images.length}
+        </Text>
+
+        <TouchableOpacity
+          onPress={goToNextImage}
+          style={[
+            styles.navButton,
+            activeImageIndex === images.length - 1 && styles.navButtonDisabled,
+          ]}
+          disabled={activeImageIndex === images.length - 1}
+        >
+          <ChevronRight
+            size={30}
+            color={activeImageIndex === images.length - 1 ? "#666" : "#fff"}
+          />
+        </TouchableOpacity>
+      </View>
+      {/* Image Metadata */}
+      <View style={styles.imageMetadata} className="flex-col w-full ">
+        <View style={styles.uploaderInfo}>
+          <Text style={styles.uploaderName}>
+            By {item.byUser?.firstName || "Unknown"}{" "}
+            {item.byUser?.lastName || "User"}
+          </Text>
+          <Text style={styles.uploadDate}>
+            {dayjs(item.createdAt).format("MM/DD/YYYY hh:mm A")}
+          </Text>
+        </View>
+
+        {description ? (
+          <CollapsibleDescription
+            text={description}
+            onPress={() => setIsEditingDescription(true)}
+          />
+        ) : (
+          <TouchableOpacity
+            style={styles.descriptionContainer}
+            onPress={() => setIsEditingDescription(true)}
+          >
+            <Text style={styles.addDescriptionText}>Add description...</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Description Edit Modal */}
+      <DescriptionEditModal
+        isVisible={isEditingDescription}
+        onClose={() => setIsEditingDescription(false)}
+        initialDescription={description}
+        onSave={handleUpdateDescription}
+      />
+    </>
+  );
+};
