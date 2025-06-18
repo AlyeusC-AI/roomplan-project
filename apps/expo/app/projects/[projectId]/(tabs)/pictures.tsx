@@ -80,13 +80,9 @@ export default function ProjectPhotos() {
   const [mainImage, setMainImage] = useState<string | null>(null);
   const [showCoverModal, setShowCoverModal] = useState(false);
   const { mutate: addImage } = useAddImage();
-  const { mutate: addComment } = useAddComment();
 
   const { data: rooms } = useGetRooms(projectId);
-  const { mutate: removeImage } = useRemoveImage();
   const { mutate: bulkUpdateImages } = useBulkUpdateImages();
-  const { mutate: bulkRemoveImages } = useBulkRemoveImages();
-  const { mutate: updateImagesOrder } = useUpdateImagesOrder();
   const { mutate: updateProject } = useUpdateProject();
 
   const {
@@ -223,7 +219,7 @@ export default function ProjectPhotos() {
   const includeAllInReport = async () => {
     try {
       setIsUpdatingAll(true);
-      const response = await bulkUpdateImages({
+      await bulkUpdateImages({
         projectId,
         filters: {
           ids: images?.data?.map((image) => image.id) || [],

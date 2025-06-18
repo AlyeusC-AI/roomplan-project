@@ -188,41 +188,51 @@ const GridItem = React.memo(
       return <View key={`empty-${index}`} style={styles.galleryItem} />;
     }
 
+    const content = (
+      <Animated.View style={styles.gestureContainer}>
+        <OptimizedImage
+          uri={imageUrl}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode="cover"
+          isSelected={isSelected}
+          imageKey={imageKey}
+          onLongPress={() => {
+            if (!isReorderMode) {
+              handleDragStart(index);
+            }
+          }}
+          onPress={
+            selectable
+              ? () => toggleImageSelection(imageKey)
+              : () => handleImagePress(index)
+          }
+          disabled={isReorderMode}
+        />
+        {isReorderMode && (
+          <View style={styles.reorderIndicator}>
+            <View style={styles.reorderHandle} />
+          </View>
+        )}
+      </Animated.View>
+    );
+
     return (
       <Animated.View
         key={imageKey}
         style={[styles.galleryItem, gestureHandler]}
       >
-        <PanGestureHandler
-          onGestureEvent={onGestureEvent}
-          activeOffsetX={[-5, 5]}
-          activeOffsetY={[-5, 5]}
-        >
-          <Animated.View style={styles.gestureContainer}>
-            <OptimizedImage
-              uri={imageUrl}
-              style={{ width: "100%", height: "100%" }}
-              resizeMode="cover"
-              isSelected={isSelected}
-              imageKey={imageKey}
-              onLongPress={() => {
-                if (!isReorderMode) {
-                  handleDragStart(index);
-                }
-              }}
-              onPress={
-                selectable
-                  ? () => toggleImageSelection(imageKey)
-                  : () => handleImagePress(index)
-              }
-            />
-            {isReorderMode && (
-              <View style={styles.reorderIndicator}>
-                <View style={styles.reorderHandle} />
-              </View>
-            )}
-          </Animated.View>
-        </PanGestureHandler>
+        {isReorderMode ? (
+          <PanGestureHandler
+            onGestureEvent={onGestureEvent}
+            activeOffsetX={[-5, 5]}
+            activeOffsetY={[-5, 5]}
+            enabled={true}
+          >
+            <Animated.View style={{ flex: 1 }}>{content}</Animated.View>
+          </PanGestureHandler>
+        ) : (
+          content
+        )}
       </Animated.View>
     );
   }
