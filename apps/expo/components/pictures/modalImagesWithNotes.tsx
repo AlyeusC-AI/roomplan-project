@@ -14,6 +14,9 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Alert,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Pressable,
 } from "react-native";
 import { OptimizedImage } from "@/lib/utils/imageModule";
 import { Text } from "@/components/ui/text";
@@ -278,7 +281,7 @@ const styles = StyleSheet.create({
   },
   notesList: {
     padding: 20,
-    maxHeight: SCREEN_HEIGHT * 0.4,
+    // maxHeight: SCREEN_HEIGHT * 0.4,
   },
   noteItem: {
     marginBottom: 20,
@@ -330,7 +333,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     gap: 10,
-    marginBottom: Platform.OS === "ios" ? 20 : 0,
+    // marginBottom: Platform.OS === "ios" ? 20 : 0,
   },
   noteInput: {
     flex: 1,
@@ -579,6 +582,144 @@ const DescriptionEditModal = ({
   );
 };
 
+// Add NotesModal component after DescriptionEditModal
+const NotesModal = ({
+  isVisible,
+  onClose,
+  imageId,
+  comments,
+}: {
+  isVisible: boolean;
+  onClose: () => void;
+  imageId: string;
+  comments: any[];
+}) => {
+  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const noteInputRef = useRef<TextInput>(null);
+  const { mutate: addComment } = useAddComment();
+  const { data: user } = useCurrentUser();
+
+  const handleAddNote = async () => {
+    if (noteText.trim() && !isAddingNote) {
+      try {
+        setIsAddingNote(true);
+        await addComment({
+          imageId: imageId,
+          data: {
+            content: noteText.trim(),
+            userId: user?.id!,
+          },
+        });
+        toast.success("Note added successfully");
+        setNoteText("");
+        noteInputRef.current?.clear();
+        noteInputRef.current?.blur();
+      } finally {
+        setIsAddingNote(false);
+      }
+    }
+  };
+
+  return (
+    <Modal
+      visible={isVisible}
+      animationType="slide"
+      transparent={false}
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      {/* <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 20}
+      > */}
+      {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}> */}
+      <SafeAreaView
+        style={[styles.descriptionModalContainer, { backgroundColor: "#000" }]}
+      >
+        <View style={styles.descriptionModalHeader}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.descriptionModalCloseButton}
+          >
+            <CloseIcon size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.descriptionModalTitle}>Notes</Text>
+          <View style={{ width: 40 }} />
+        </View>
+
+        <ScrollView style={styles.notesList}>
+          {comments?.map((note) => (
+            <View key={note.id} style={styles.noteItem}>
+              <View style={styles.noteHeader}>
+                <View style={styles.noteAvatar}>
+                  <Text style={styles.noteAvatarText}>
+                    {note.user?.firstName?.charAt(0) || "N"}
+                    {note.user?.lastName?.charAt(0) || "N"}
+                  </Text>
+                </View>
+                <View style={styles.noteMetadata}>
+                  <Text style={styles.noteAuthor}>
+                    {note.user?.firstName} {note.user?.lastName}
+                  </Text>
+                  <Text style={styles.noteDate}>
+                    {new Date(note.createdAt).toLocaleDateString()}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.noteText}>{note.content}</Text>
+            </View>
+          ))}
+        </ScrollView>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 30 : 20}
+          style={styles.addNoteContainer}
+        >
+          {/* <View style={styles.addNoteContainer}> */}
+          <TextInput
+            ref={noteInputRef}
+            style={styles.noteInput}
+            placeholder="Add a note..."
+            placeholderTextColor="#999"
+            // multiline
+            // numberOfLines={3}
+            returnKeyType="send"
+            value={noteText}
+            onChangeText={setNoteText}
+            onSubmitEditing={handleAddNote}
+            blurOnSubmit={true}
+          />
+          <TouchableOpacity
+            style={[
+              styles.submitNoteButton,
+              isAddingNote && styles.disabledButton,
+            ]}
+            onPress={() => {
+              handleAddNote();
+              // Keyboard.dismiss();
+            }}
+            disabled={isAddingNote || !noteText.trim()}
+          >
+            <Text
+              style={[
+                styles.submitNoteButtonText,
+                isAddingNote && styles.disabledButtonText,
+              ]}
+            >
+              {isAddingNote ? "Posting..." : "Post"}
+            </Text>
+          </TouchableOpacity>
+          {/* </View> */}
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+      {/* </TouchableWithoutFeedback> */}
+      {/* </KeyboardAvoidingView> */}
+    </Modal>
+  );
+};
+
 // Add CollapsibleDescription component
 const CollapsibleDescription = ({
   text,
@@ -802,19 +943,16 @@ const ModalItem = ({
 }) => {
   const [showNotes, setShowNotes] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isAddingNote, setIsAddingNote] = useState(false);
   const [isUpdatingReport, setIsUpdatingReport] = useState(false);
   const { mutate: deleteImage } = useRemoveImage();
   const imageUrl = item.url;
   const { data: comments } = useGetComments(item.id);
   const noteCount = comments?.length || 0;
-  const currentNoteText = useRef("");
-  const noteInputRef = useRef<TextInput>(null);
   const { mutate: removeImage } = useRemoveImage();
   const { mutate: bulkUpdateImages } = useBulkUpdateImages();
   const { mutate: updateImage } = useUpdateImage();
   const { data: user } = useCurrentUser();
-  const { mutate: addComment } = useAddComment();
+  const [editorOpen, setEditorOpen] = useState(false);
 
   const { projectId } = useGlobalSearchParams<{
     projectId: string;
@@ -825,7 +963,6 @@ const ModalItem = ({
 
   // Animation values
   const notesSheetAnim = useRef(new Animated.Value(0)).current;
-  const [editorOpen, setEditorOpen] = useState(false);
 
   // Handle image deletion
   const handleDeleteImage = async (id: string) => {
@@ -852,50 +989,6 @@ const ModalItem = ({
         },
       },
     ]);
-  };
-
-  // Add function to toggle notes
-  const toggleNotes = () => {
-    if (showNotes) {
-      Animated.spring(notesSheetAnim, {
-        toValue: 0,
-        damping: 20,
-        stiffness: 90,
-        useNativeDriver: true,
-      }).start(() => setShowNotes(false));
-    } else {
-      setShowNotes(true);
-      Animated.spring(notesSheetAnim, {
-        toValue: 1,
-        damping: 20,
-        stiffness: 90,
-        useNativeDriver: true,
-      }).start();
-    }
-  };
-
-  const handleAddNote = async (imageId: string, note: string) => {
-    console.log("🚀 ~ handleAddNote ~ imageId:", imageId);
-    console.log("🚀 ~ handleAddNote ~ note:", note);
-    if (note.trim()) {
-      try {
-        setIsAddingNote(true);
-        const response = await addComment({
-          imageId: imageId,
-          data: {
-            content: note,
-            userId: user?.id!,
-          },
-        });
-        console.log("🚀 ~ handleAddNote ~ response:", response);
-
-        toast.success("Note added successfully");
-        currentNoteText.current = "";
-        noteInputRef.current?.clear();
-      } finally {
-        setIsAddingNote(false);
-      }
-    }
   };
 
   // Add toggleIncludeInReport function
@@ -953,7 +1046,6 @@ const ModalItem = ({
         >
           <Trash2 size={24} color="#fff" opacity={isDeleting ? 0.5 : 1} />
         </TouchableOpacity>
-        {/* Edit Icon */}
         <TouchableOpacity
           style={styles.actionButton}
           onPress={() => setEditorOpen(true)}
@@ -978,7 +1070,10 @@ const ModalItem = ({
             />
           )}
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={toggleNotes}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => setShowNotes(true)}
+        >
           <MessageCircle size={24} color="#fff" />
           {noteCount > 0 && (
             <View style={styles.noteBadge}>
@@ -988,123 +1083,37 @@ const ModalItem = ({
         </TouchableOpacity>
       </View>
 
-      {/* Notes Bottom Sheet */}
-      {showNotes && (
-        <Animated.View style={[styles.notesSheet, notesSheetStyle]}>
-          <View style={styles.notesHeader}>
-            <Text style={styles.notesHeaderText}>Notes</Text>
-            <TouchableOpacity
-              onPress={toggleNotes}
-              style={styles.closeNotesButton}
-            >
-              <CloseIcon size={24} color="#fff" />
-            </TouchableOpacity>
-          </View>
+      <NotesModal
+        isVisible={showNotes}
+        onClose={() => setShowNotes(false)}
+        imageId={item.id}
+        comments={comments || []}
+      />
 
-          <ScrollView style={styles.notesList}>
-            {comments?.map((note) => (
-              <View key={note.id} style={styles.noteItem}>
-                <View style={styles.noteHeader}>
-                  <View style={styles.noteAvatar}>
-                    <Text style={styles.noteAvatarText}>
-                      {note.user?.firstName?.charAt(0) || "N"} +
-                      {note.user?.lastName?.charAt(0) || "N"}
-                    </Text>
-                  </View>
-                  <View style={styles.noteMetadata}>
-                    <Text style={styles.noteAuthor}>
-                      {note.user?.firstName} {note.user?.lastName}
-                    </Text>
-                    <Text style={styles.noteDate}>
-                      {new Date(note.createdAt).toLocaleDateString()}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.noteText}>{note.content}</Text>
-              </View>
-            ))}
-          </ScrollView>
-
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 240 : 20}
-            style={styles.addNoteContainer}
-          >
-            <TextInput
-              ref={noteInputRef}
-              style={styles.noteInput}
-              placeholder="Add a note..."
-              placeholderTextColor="#999"
-              multiline
-              numberOfLines={3}
-              returnKeyType="done"
-              blurOnSubmit={true}
-              onChangeText={(text) => {
-                currentNoteText.current = text;
-              }}
-              onSubmitEditing={async (e) => {
-                if (item.id) {
-                  await handleAddNote(item.id, currentNoteText.current);
-                }
-              }}
-            />
-            <TouchableOpacity
-              style={[
-                styles.submitNoteButton,
-                isAddingNote && styles.disabledButton,
-              ]}
-              onPress={async () => {
-                if (item.id) {
-                  await handleAddNote(item.id, currentNoteText.current);
-                }
-              }}
-              disabled={isAddingNote}
-            >
-              <Text
-                style={[
-                  styles.submitNoteButtonText,
-                  isAddingNote && styles.disabledButtonText,
-                ]}
-              >
-                {isAddingNote ? "Posting..." : "Post"}
-              </Text>
-            </TouchableOpacity>
-          </KeyboardAvoidingView>
-        </Animated.View>
-      )}
       <ImageEditorModal
         isOpen={editorOpen}
         onClose={() => setEditorOpen(false)}
         imageUrl={imageUrl}
         onSave={async (base64) => {
           try {
-            // Convert base64 to file
             const fileUri = await base64ToFile(base64);
-
-            // Upload the file
             const { publicUrl } = await uploadFile(
               {
                 uri: fileUri,
                 path: fileUri,
                 size: 100,
-
                 name: "image.png",
                 type: "image/png",
               },
               "image.png"
             );
-
-            // Update the image URL
             await updateImage({
               imageId: item.id,
               data: {
                 url: publicUrl,
               },
             });
-
-            // Clean up the temporary file
             await FileSystem.deleteAsync(fileUri);
-
             toast.success("Image updated successfully");
           } catch (error) {
             console.error("Error updating image:", error);
@@ -1180,39 +1189,6 @@ const ModalItemMetadata = ({
 
   return (
     <>
-      <View style={styles.navigationContainer}>
-        <TouchableOpacity
-          onPress={goToPreviousImage}
-          style={[
-            styles.navButton,
-            activeImageIndex === 0 && styles.navButtonDisabled,
-          ]}
-          disabled={activeImageIndex === 0}
-        >
-          <ChevronLeft
-            size={30}
-            color={activeImageIndex === 0 ? "#666" : "#fff"}
-          />
-        </TouchableOpacity>
-
-        <Text style={styles.pageIndicator}>
-          {activeImageIndex + 1} / {images.length}
-        </Text>
-
-        <TouchableOpacity
-          onPress={goToNextImage}
-          style={[
-            styles.navButton,
-            activeImageIndex === images.length - 1 && styles.navButtonDisabled,
-          ]}
-          disabled={activeImageIndex === images.length - 1}
-        >
-          <ChevronRight
-            size={30}
-            color={activeImageIndex === images.length - 1 ? "#666" : "#fff"}
-          />
-        </TouchableOpacity>
-      </View>
       {/* Image Metadata */}
       <View style={styles.imageMetadata} className="flex-col w-full ">
         <View style={styles.uploaderInfo}>
@@ -1223,6 +1199,40 @@ const ModalItemMetadata = ({
           <Text style={styles.uploadDate}>
             {dayjs(item.createdAt).format("MM/DD/YYYY hh:mm A")}
           </Text>
+        </View>
+        <View style={styles.navigationContainer}>
+          <TouchableOpacity
+            onPress={goToPreviousImage}
+            style={[
+              styles.navButton,
+              activeImageIndex === 0 && styles.navButtonDisabled,
+            ]}
+            disabled={activeImageIndex === 0}
+          >
+            <ChevronLeft
+              size={30}
+              color={activeImageIndex === 0 ? "#666" : "#fff"}
+            />
+          </TouchableOpacity>
+
+          <Text style={styles.pageIndicator}>
+            {activeImageIndex + 1} / {images.length}
+          </Text>
+
+          <TouchableOpacity
+            onPress={goToNextImage}
+            style={[
+              styles.navButton,
+              activeImageIndex === images.length - 1 &&
+                styles.navButtonDisabled,
+            ]}
+            disabled={activeImageIndex === images.length - 1}
+          >
+            <ChevronRight
+              size={30}
+              color={activeImageIndex === images.length - 1 ? "#666" : "#fff"}
+            />
+          </TouchableOpacity>
         </View>
 
         {description ? (

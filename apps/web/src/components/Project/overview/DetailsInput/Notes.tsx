@@ -61,7 +61,7 @@ export default function Notes({
   };
 
   return (
-    <div className='max-h-[500px] overflow-y-auto pb-20'>
+    <div className='pb-20'>
       {title && (
         <div className='mt-2 bg-background px-4 py-5'>
           <h3 className='text-lg font-medium leading-6 text-foreground'>

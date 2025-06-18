@@ -415,8 +415,7 @@ export default function TheaterMode({
             >
               <div
                 className={cn(
-                  "relative flex size-full items-center justify-center overflow-y-auto align-middle",
-                  isFullWidth ? "w-full" : "w-2/3"
+                  "relative flex size-full items-center justify-center overflow-y-auto align-middle"
                 )}
               >
                 {size && photos[theaterModeIndex].url && (
@@ -490,8 +489,8 @@ export default function TheaterMode({
                     </div>
 
                     {/* Utility Controls */}
-                    <div className='absolute left-4 top-4 flex flex-col gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100'>
-                      <div className='flex flex-col gap-1.5 rounded-lg bg-white/90 p-1.5 backdrop-blur-sm'>
+                    <div className='absolute left-4 top-4 flex flex-row gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100'>
+                      <div className='flex flex-row gap-1.5 rounded-lg bg-white/90 p-1.5 backdrop-blur-sm'>
                         <Button
                           variant='ghost'
                           size='icon'
@@ -523,7 +522,7 @@ export default function TheaterMode({
                           <Maximize2 className='h-3.5 w-3.5' />
                         </Button>
                       </div>
-                      <div className='flex flex-col gap-1.5 rounded-lg bg-white/90 p-1.5 backdrop-blur-sm'>
+                      <div className='flex flex-row gap-1.5 rounded-lg bg-white/90 p-1.5 backdrop-blur-sm'>
                         <Button
                           variant='ghost'
                           size='icon'
@@ -582,10 +581,10 @@ export default function TheaterMode({
 
               {/* Side Panel */}
               {!isFullWidth && (
-                <div className='w-1/3'>
+                <div className='w-full max-w-[350px] overflow-y-auto'>
                   <div className=''>
                     {/* Header */}
-                    <div className='px-4 py-6 sm:px-6'>
+                    <div className='sticky top-0 bg-background px-4 py-6 sm:px-6'>
                       <div className='flex items-start justify-between space-x-3'>
                         <div className='space-y-1'>
                           <DialogTitle className='text-base font-semibold leading-6 text-foreground'>
