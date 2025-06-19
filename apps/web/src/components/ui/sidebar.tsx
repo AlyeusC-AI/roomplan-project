@@ -210,7 +210,7 @@ const Sidebar = React.forwardRef<
         >
           <div
             data-sidebar='sidebar'
-            className='flex size-full flex-col bg-gray-900'
+            className='flex size-full flex-col bg-[#192d43]'
           >
             {children}
           </div>

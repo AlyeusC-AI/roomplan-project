@@ -120,7 +120,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar className='w-56 border-r border-gray-800 bg-gray-900' {...props}>
+    <Sidebar className='w-56 border-r border-gray-800 bg-[#192d43]' {...props}>
       <div className='flex h-full flex-col'>
         <div className='flex-1'>
           <SidebarHeader className='flex items-center justify-center border-b border-gray-100 bg-gray-200 py-4'>
@@ -150,7 +150,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         <SidebarSubscriptionStatus />
 
-        <SidebarFooter className='border-t border-gray-700 bg-gray-800/50 px-3 pb-4'>
+        <SidebarFooter className='border-t border-gray-700 bg-[#192d43]/50 px-3 pb-4'>
           <NavUser />
         </SidebarFooter>
       </div>

@@ -218,6 +218,7 @@ export class RoomsController {
     @Query('createdBefore') createdBefore?: string,
     @Query('roomIds') roomIds?: string,
     @Query('searchTerm') searchTerm?: string,
+    @Query('tagNames') tagNames?: string,
     @Query('sortField') sortField?: 'createdAt' | 'order' | 'url',
     @Query('sortDirection') sortDirection?: 'asc' | 'desc',
     @Query('page') page?: string,
@@ -244,7 +245,16 @@ export class RoomsController {
       limit: limit ? parseInt(limit) : 20,
     };
 
-    return this.roomsService.findImages(filters, sort, pagination);
+    const tagNamesArray = tagNames
+      ? tagNames.split(',').map((tag) => tag.trim())
+      : undefined;
+
+    return this.roomsService.findImages(
+      filters,
+      sort,
+      pagination,
+      tagNamesArray,
+    );
   }
 
   // Get image statistics for a project

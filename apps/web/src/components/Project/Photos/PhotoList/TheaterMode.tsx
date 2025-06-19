@@ -402,7 +402,7 @@ export default function TheaterMode({
 
         <DialogContent
           className={cn(
-            "h-screen w-screen max-w-none p-0",
+            "h-[calc(100vh-40px)] w-[calc(100vw-40px)] max-w-none p-0",
             isFullWidth && "max-w-none"
           )}
         >
@@ -442,10 +442,10 @@ export default function TheaterMode({
                           transform: `translate(-50%, -50%) scale(${scale}) translate(${position.x}px, ${position.y}px)`,
                         }}
                       >
-                        <Image
+                        <img
                           src={photos[theaterModeIndex].url}
-                          width={size.width}
-                          height={size.height}
+                          width={size?.width || 0}
+                          height={size?.height || 0}
                           alt=''
                           className='h-full w-full object-contain'
                           style={{
@@ -461,7 +461,7 @@ export default function TheaterMode({
                       <Button
                         variant='ghost'
                         size='icon'
-                        className='h-8 w-8 rounded-full bg-white/90 text-black backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white disabled:opacity-0 disabled:hover:scale-100 disabled:hover:bg-white/90'
+                        className='h-12 w-12 rounded-full bg-white/90 text-black backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white disabled:opacity-0 disabled:hover:scale-100 disabled:hover:bg-white/90'
                         onClick={() =>
                           setTheaterModeIndex((prev) =>
                             prev - 1 < 0 ? 0 : prev - 1
@@ -469,12 +469,12 @@ export default function TheaterMode({
                         }
                         disabled={theaterModeIndex === 0}
                       >
-                        <ChevronLeft className='h-5 w-5 text-black transition-transform duration-300 group-hover:translate-x-[-2px]' />
+                        <ChevronLeft className='h-10 w-10 text-black transition-transform duration-300 group-hover:translate-x-[-2px]' />
                       </Button>
                       <Button
                         variant='ghost'
                         size='icon'
-                        className='h-8 w-8 rounded-full bg-white/90 text-black backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white disabled:opacity-0 disabled:hover:scale-100 disabled:hover:bg-white/90'
+                        className='h-12 w-12 rounded-full bg-white/90 text-black backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white disabled:opacity-0 disabled:hover:scale-100 disabled:hover:bg-white/90'
                         onClick={() =>
                           setTheaterModeIndex((prev) =>
                             prev + 1 > photos.length - 1
@@ -484,7 +484,7 @@ export default function TheaterMode({
                         }
                         disabled={theaterModeIndex === photos.length - 1}
                       >
-                        <ChevronRight className='h-5 w-5 text-black transition-transform duration-300 group-hover:translate-x-[2px]' />
+                        <ChevronRight className='h-10 w-10 text-black transition-transform duration-300 group-hover:translate-x-[2px]' />
                       </Button>
                     </div>
 

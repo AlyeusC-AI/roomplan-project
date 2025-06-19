@@ -83,7 +83,7 @@ export class RoomsService {
     Prisma.RoomGetPayload<{
       include: {
         walls: true;
-        images: { include: { comments: true } };
+        images: { include: { comments: true; tags: true } };
       };
     }>[]
   > {
@@ -109,6 +109,7 @@ export class RoomsService {
           },
           include: {
             comments: true,
+            tags: true,
           },
         },
       },
@@ -120,7 +121,7 @@ export class RoomsService {
 
   async findOne(id: string): Promise<Prisma.RoomGetPayload<{
     include: {
-      images: { include: { comments: true } };
+      images: { include: { comments: true; tags: true } };
       equipmentsUsed: true;
       walls: true;
     };
@@ -144,6 +145,7 @@ export class RoomsService {
         images: {
           include: {
             comments: true,
+            tags: true,
           },
         },
       },
@@ -519,6 +521,7 @@ export class RoomsService {
     filters: ImageFilters,
     sort: ImageSortOptions = { field: 'createdAt', direction: 'desc' },
     pagination: PaginationOptions = { page: 1, limit: 20 },
+    tagNames?: string[],
   ): Promise<{
     data: Prisma.ImageGetPayload<{ include: { comments: true; room: true } }>[];
     total: number;
@@ -565,6 +568,18 @@ export class RoomsService {
               },
             }
           : {},
+
+        // Tag filtering
+        tagNames && tagNames.length > 0
+          ? {
+              tags: {
+                some: {
+                  name: { in: tagNames },
+                  type: 'IMAGE',
+                },
+              },
+            }
+          : {},
       ],
     };
 
@@ -584,6 +599,7 @@ export class RoomsService {
         comments: true,
         room: true,
         byUser: true,
+        tags: true,
       },
       orderBy: {
         [sort.field]: sort.direction,

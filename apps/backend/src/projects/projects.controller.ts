@@ -57,6 +57,12 @@ export class ProjectsController {
   @ApiOperation({ summary: 'Get all projects for an organization' })
   @ApiParam({ name: 'organizationId', description: 'Organization ID' })
   @ApiQuery({ type: PaginationDto })
+  @ApiQuery({
+    name: 'tagNames',
+    description: 'Filter by tag names (comma-separated)',
+    required: false,
+    type: String,
+  })
   @ApiResponse({
     status: 200,
     description: 'Return all projects for the organization.',
@@ -68,11 +74,17 @@ export class ProjectsController {
     @Param('organizationId') organizationId: string,
     @Request() req: RequestWithUser,
     @Query() paginationDto: PaginationDto,
+    @Query('tagNames') tagNames?: string,
   ): Promise<PaginatedResponse<Project>> {
+    const tagNamesArray = tagNames
+      ? tagNames.split(',').map((tag) => tag.trim())
+      : undefined;
+
     return this.projectsService.findAll(
       organizationId,
       req.user.userId,
       paginationDto,
+      tagNamesArray,
     );
   }
 

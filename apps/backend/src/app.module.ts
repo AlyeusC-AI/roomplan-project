@@ -23,6 +23,7 @@ import { CostsModule } from './costs/costs.module';
 import { InvoicesModule } from './invoices/invoices.module';
 import { EstimatesModule } from './estimates/estimates.module';
 import { SpaceModule } from './space/space.module';
+import { TagsModule } from './tags/tags.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { SpaceModule } from './space/space.module';
     InvoicesModule,
     EstimatesModule,
     SpaceModule,
+    TagsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

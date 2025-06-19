@@ -402,28 +402,17 @@ export default function ImageEditorModal({
 
     // Add back the objects from the previous state
     previousState.objects.forEach((objData: any) => {
-      try {
-        fabric.util.enlivenObjects(
-          [objData],
-          (enlivenedObjects: fabric.Object[]) => {
-            enlivenedObjects.forEach((obj) => {
-              canvas.add(obj);
-            });
-            canvas.renderAll();
-          }
-        );
-      } catch (e) {
-        // fallback for basic shapes
-        let obj: fabric.Object | null = null;
-        if (objData.type === "path")
-          obj = new fabric.Path(objData.path, objData);
-        else if (objData.type === "i-text")
-          obj = new fabric.IText(objData.text, objData);
-        else if (objData.type === "rect") obj = new fabric.Rect(objData);
-        else if (objData.type === "circle") obj = new fabric.Circle(objData);
-        if (obj) canvas.add(obj);
-      }
+      // Create objects directly based on type
+      let obj: fabric.Object | null = null;
+      if (objData.type === "path") obj = new fabric.Path(objData.path, objData);
+      else if (objData.type === "i-text")
+        obj = new fabric.IText(objData.text, objData);
+      else if (objData.type === "rect") obj = new fabric.Rect(objData);
+      else if (objData.type === "circle") obj = new fabric.Circle(objData);
+      if (obj) canvas.add(obj);
     });
+
+    canvas.renderAll();
 
     setHistoryIndex(newIndex);
     setCanUndo(newIndex > 0);
@@ -446,28 +435,17 @@ export default function ImageEditorModal({
 
     // Add back the objects from the next state
     nextState.objects.forEach((objData: any) => {
-      try {
-        fabric.util.enlivenObjects(
-          [objData],
-          (enlivenedObjects: fabric.Object[]) => {
-            enlivenedObjects.forEach((obj) => {
-              canvas.add(obj);
-            });
-            canvas.renderAll();
-          }
-        );
-      } catch (e) {
-        // fallback for basic shapes
-        let obj: fabric.Object | null = null;
-        if (objData.type === "path")
-          obj = new fabric.Path(objData.path, objData);
-        else if (objData.type === "i-text")
-          obj = new fabric.IText(objData.text, objData);
-        else if (objData.type === "rect") obj = new fabric.Rect(objData);
-        else if (objData.type === "circle") obj = new fabric.Circle(objData);
-        if (obj) canvas.add(obj);
-      }
+      // Create objects directly based on type
+      let obj: fabric.Object | null = null;
+      if (objData.type === "path") obj = new fabric.Path(objData.path, objData);
+      else if (objData.type === "i-text")
+        obj = new fabric.IText(objData.text, objData);
+      else if (objData.type === "rect") obj = new fabric.Rect(objData);
+      else if (objData.type === "circle") obj = new fabric.Circle(objData);
+      if (obj) canvas.add(obj);
     });
+
+    canvas.renderAll();
 
     setHistoryIndex(newIndex);
     setCanUndo(true);
@@ -545,11 +523,21 @@ export default function ImageEditorModal({
   // Handle save
   const handleSave = () => {
     if (!canvas) return;
+
+    // Get the original image dimensions to calculate the appropriate multiplier
+    const originalWidth = baseImage?.width || 800;
+    const originalHeight = baseImage?.height || 600;
+
+    // Calculate a multiplier to get close to original resolution
+    // The canvas is 800x600, so we need to scale up to match original dimensions
+    const multiplier = Math.max(originalWidth / 800, originalHeight / 600, 1);
+
     const dataUrl = canvas.toDataURL({
       format: "png",
       quality: 1,
-      multiplier: 1,
+      multiplier: multiplier,
     });
+
     console.log("🚀 ~ handleSave ~ dataUrl:", dataUrl);
     onSave(dataUrl);
     onClose();
@@ -575,11 +563,7 @@ export default function ImageEditorModal({
     tempCanvas.height = cropHeight;
 
     // Get the current canvas data
-    const canvasData = canvas.toDataURL({
-      format: "png",
-      quality: 1,
-      multiplier: 1,
-    });
+    const canvasData = canvas.toDataURL();
 
     // Create an image element to draw the cropped portion
     const img = new Image();

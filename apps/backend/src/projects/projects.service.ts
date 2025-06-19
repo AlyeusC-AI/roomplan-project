@@ -75,6 +75,7 @@ export class ProjectsService {
     organizationId: string,
     userId: string,
     paginationDto: PaginationDto,
+    tagNames?: string[],
   ): Promise<PaginatedResponse<Project>> {
     // Verify user has access to the organization
     const membership = await this.prisma.organizationMember.findFirst({
@@ -100,41 +101,53 @@ export class ProjectsService {
     } = paginationDto;
     const skip = (page - 1) * limit;
 
+    // Build where clause
+    const whereClause: any = {
+      organizationId,
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' as const } },
+              {
+                clientName: {
+                  contains: search,
+                  mode: 'insensitive' as const,
+                },
+              },
+              {
+                location: {
+                  contains: search,
+                  mode: 'insensitive' as const,
+                },
+              },
+              {
+                description: {
+                  contains: search,
+                  mode: 'insensitive' as const,
+                },
+              },
+            ],
+          }
+        : {}),
+    };
+
+    // Add tag filtering if tagNames are provided
+    if (tagNames && tagNames.length > 0) {
+      whereClause.tags = {
+        some: {
+          name: { in: tagNames },
+          type: 'PROJECT',
+          organizationId,
+        },
+      };
+    }
+
     const [total, projects] = await Promise.all([
       this.prisma.project.count({
-        where: {
-          organizationId,
-        },
+        where: whereClause,
       }),
       this.prisma.project.findMany({
-        where: {
-          organizationId,
-          ...(search
-            ? {
-                OR: [
-                  { name: { contains: search, mode: 'insensitive' as const } },
-                  {
-                    clientName: {
-                      contains: search,
-                      mode: 'insensitive' as const,
-                    },
-                  },
-                  {
-                    location: {
-                      contains: search,
-                      mode: 'insensitive' as const,
-                    },
-                  },
-                  {
-                    description: {
-                      contains: search,
-                      mode: 'insensitive' as const,
-                    },
-                  },
-                ],
-              }
-            : {}),
-        },
+        where: whereClause,
         skip,
         take: limit,
         orderBy: {
@@ -142,6 +155,7 @@ export class ProjectsService {
         },
         include: {
           status: true,
+          tags: true,
         },
       }),
     ]);
@@ -162,6 +176,7 @@ export class ProjectsService {
       where: { id },
       include: {
         status: true,
+        tags: true,
         equipmentProject: {
           include: {
             equipment: true,

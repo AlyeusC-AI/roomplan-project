@@ -73,6 +73,7 @@ model Organization {
   invoices        Invoice[]
   estimates       Estimate[]
   invoiceItems    InvoiceItem[]
+  Tag             Tag[]
 }
 
 enum MemberStatus {
@@ -209,6 +210,7 @@ model Project {
   formResponses  FormResponse[]
   invoices       Invoice[]
   Estimate       Estimate[]
+  tags           Tag[]
 }
 
 model Room {
@@ -344,6 +346,7 @@ model Image {
   type         ImageType? @default(ROOM)
   byUserId     String?
   byUser       User?      @relation(fields: [byUserId], references: [id])
+  tags         Tag[]
 
   @@index([roomId])
 }
@@ -691,4 +694,28 @@ enum EstimateStatus {
   REJECTED
   CANCELLED
   EXPIRED
+}
+
+enum TagType {
+  PROJECT
+  IMAGE
+}
+
+model Tag {
+  id             String       @id @default(uuid())
+  name           String
+  type           TagType
+  color          String?      @default("#3B82F6")
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Many-to-many relationships
+  projects Project[]
+  images   Image[]
+
+  @@unique([name, type, organizationId])
+  @@index([organizationId])
+  @@index([type])
 }
