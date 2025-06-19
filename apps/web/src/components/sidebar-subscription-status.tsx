@@ -13,7 +13,6 @@ import {
 import { SubscriptionWarningModal } from "./subscription-warning-modal";
 import { useRouter, usePathname } from "next/navigation";
 import { useGetSubscriptionInfo } from "@service-geek/api-client";
-import { useSidebar } from "./ui/sidebar";
 
 export function SidebarSubscriptionStatus() {
   const [showWarningModal, setShowWarningModal] = useState(false);
@@ -21,7 +20,6 @@ export function SidebarSubscriptionStatus() {
   const pathname = usePathname();
   const { data: subscriptionInfo, isLoading: isLoadingSubscriptionInfo } =
     useGetSubscriptionInfo();
-  const { toggleSidebar, state } = useSidebar();
 
   useEffect(() => {
     if (pathname === "/settings/billing") {
@@ -86,12 +84,12 @@ export function SidebarSubscriptionStatus() {
     return (
       <div className='space-y-1'>
         <div className='flex items-center justify-between text-xs'>
-          <span className='flex items-center gap-1 text-muted-foreground'>
+          <span className='flex items-center gap-1 text-gray-400'>
             <Clock className='h-3 w-3' />
             {daysLeft}d left
           </span>
         </div>
-        <Progress value={progress} className='h-1' />
+        <Progress value={progress} className='h-1 bg-gray-700' />
       </div>
     );
   };
@@ -113,62 +111,15 @@ export function SidebarSubscriptionStatus() {
 
   if (!showWarning) return null;
 
-  if (state === "collapsed") {
-    return (
-      <>
-        <Card className='mx-2 mt-2 border-none bg-background/50 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
-          <CardContent className='p-2'>
-            <div className='flex flex-col items-center gap-2'>
-              <div className='flex flex-col items-center gap-1'>
-                {isTrial ? (
-                  <div className='flex items-center gap-1 text-muted-foreground'>
-                    <Clock className='h-4 w-4' />
-                    <span className='text-[10px]'>
-                      {Math.ceil(
-                        (new Date(subscriptionInfo.freeTrialEndsAt!).getTime() -
-                          new Date().getTime()) /
-                          (1000 * 60 * 60 * 24)
-                      )}
-                    </span>
-                  </div>
-                ) : (
-                  <AlertTriangle
-                    className={`h-4 w-4 ${isInactive ? "text-destructive" : "text-yellow-500"}`}
-                  />
-                )}
-              </div>
-              <Button
-                variant={isInactive ? "destructive" : "ghost"}
-                size='sm'
-                className='h-7 w-7 p-0 hover:bg-primary/10'
-                onClick={handleManageSubscription}
-                title={isInactive ? "Upgrade" : "Manage subscription"}
-              >
-                <Crown className='h-4 w-4' />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <SubscriptionWarningModal
-          isOpen={showWarningModal}
-          onClose={() => setShowWarningModal(false)}
-          onUpgrade={handleManageSubscription}
-          status={subscriptionInfo.status}
-        />
-      </>
-    );
-  }
-
   return (
     <>
-      <Card className='mx-2 mt-2'>
-        <CardContent className='p-2'>
-          <div className='space-y-2'>
+      <Card className='mx-3 mb-3 border-gray-700 bg-gray-800/50'>
+        <CardContent className='p-3'>
+          <div className='space-y-3'>
             <div className='flex items-center justify-between'>
               <div className='space-y-0.5'>
                 <div className='flex items-center gap-2'>
-                  <span className='text-xs font-medium'>
+                  <span className='text-xs font-medium text-gray-200'>
                     {subscriptionInfo.plan?.name || "No Plan"}
                   </span>
                   {getStatusBadge(subscriptionInfo.status)}
@@ -178,10 +129,10 @@ export function SidebarSubscriptionStatus() {
 
             {showWarning && (
               <div
-                className={`flex items-center gap-1 rounded-md p-1 text-xs ${
+                className={`flex items-center gap-1 rounded-md p-2 text-xs ${
                   isInactive
-                    ? "bg-destructive text-destructive-foreground"
-                    : "bg-destructive/10 text-destructive"
+                    ? "border border-red-600/30 bg-red-600/20 text-red-400"
+                    : "border border-yellow-600/30 bg-yellow-600/20 text-yellow-400"
                 }`}
               >
                 <AlertCircle className='h-3 w-3' />
@@ -198,9 +149,9 @@ export function SidebarSubscriptionStatus() {
             {getTrialProgress()}
 
             <Button
-              variant={isInactive ? "destructive" : "ghost"}
+              variant={isInactive ? "destructive" : "outline"}
               size='sm'
-              className='h-7 w-full text-xs'
+              className='h-8 w-full border-gray-600 text-xs text-gray-200 hover:bg-gray-700 hover:text-white'
               onClick={handleManageSubscription}
             >
               {isInactive ? "Upgrade Now" : isTrial ? "Upgrade" : "Manage Plan"}

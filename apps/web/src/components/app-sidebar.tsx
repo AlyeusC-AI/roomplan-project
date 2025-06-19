@@ -11,8 +11,6 @@ import {
   GalleryVerticalEnd,
   Map,
   Settings,
-  PanelLeftClose,
-  PanelLeftOpen,
   Receipt,
 } from "lucide-react";
 import { NavMain } from "@/components/nav-main";
@@ -22,8 +20,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarRail,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
 import { SidebarSubscriptionStatus } from "./sidebar-subscription-status";
@@ -123,41 +119,18 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { toggleSidebar, state } = useSidebar();
-
   return (
-    <Sidebar collapsible='icon' className='overflow-y-auto border-r' {...props}>
+    <Sidebar className='w-56 border-r border-gray-800 bg-gray-900' {...props}>
       <div className='flex h-full flex-col'>
         <div className='flex-1'>
-          <SidebarHeader className='flex items-center'>
-            <div
-              className={`flex ${state === "collapsed" ? "flex-col" : "items-center gap-2"}`}
-            >
-              <Image
-                src={
-                  state === "collapsed"
-                    ? "/images/brand/servicegeek-no-bg-icon.png"
-                    : "/images/brand/servicegeek-no-bg.png"
-                }
-                alt='logo'
-                className='my-4'
-                width={state === "collapsed" ? 40 : 140}
-                height={state === "collapsed" ? 40 : 30}
-              />
-              <button
-                onClick={toggleSidebar}
-                className='mt-3 rounded-lg p-2 transition-colors duration-200 ease-in-out hover:bg-gray-100 dark:hover:bg-gray-800'
-                title={
-                  state === "collapsed" ? "Expand sidebar" : "Collapse sidebar"
-                }
-              >
-                {state === "collapsed" ? (
-                  <PanelLeftOpen className='size-5 text-gray-600 dark:text-gray-400' />
-                ) : (
-                  <PanelLeftClose className='size-5 text-gray-600 dark:text-gray-400' />
-                )}
-              </button>
-            </div>
+          <SidebarHeader className='flex items-center justify-center border-b border-gray-100 bg-gray-200 py-4'>
+            <Image
+              src='/images/brand/servicegeek-no-bg.png'
+              alt='logo'
+              width={180}
+              height={40}
+              className='h-12 w-auto'
+            />
           </SidebarHeader>
 
           {/* {state === "expanded" && (
@@ -170,14 +143,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </div>
           )} */}
 
-          <SidebarContent>
+          <SidebarContent className='px-3'>
             <NavMain items={data.navMain} />
           </SidebarContent>
-
-          <SidebarRail />
         </div>
+
         <SidebarSubscriptionStatus />
-        <SidebarFooter>
+
+        <SidebarFooter className='border-t border-gray-700 bg-gray-800/50 px-3 pb-4'>
           <NavUser />
         </SidebarFooter>
       </div>

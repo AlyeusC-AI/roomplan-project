@@ -17,10 +17,7 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav
-      className={cn("flex space-x-2 overflow-x-auto pb-2", className)}
-      {...props}
-    >
+    <nav className={cn("flex overflow-x-auto pb-2", className)} {...props}>
       {items.map((item) => (
         <Link
           key={item.href}
@@ -30,7 +27,7 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
             pathname === item.href
               ? "bg-muted hover:bg-muted"
               : "hover:bg-transparent hover:underline",
-            "whitespace-nowrap"
+            "whitespace-nowrap px-4"
           )}
         >
           {item.title}

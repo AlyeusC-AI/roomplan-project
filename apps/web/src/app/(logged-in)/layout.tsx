@@ -87,7 +87,9 @@ export default function Layout({ children }: React.PropsWithChildren) {
       <AppSidebar />
       <SidebarInset>
         {/* <SidebarHeader /> */}
-        <div className='flex flex-1 flex-col gap-4 p-4 pt-0'>{children}</div>
+        <div className='flex flex-1 flex-col gap-4 bg-gray-200/50 p-2 pt-0'>
+          {children}
+        </div>
       </SidebarInset>
       {/* <SubscriptionAlert /> */}
     </SidebarProvider>
