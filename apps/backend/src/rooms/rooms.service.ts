@@ -17,6 +17,7 @@ export interface ImageFilters {
   searchTerm?: string;
   ids?: string[];
   type: ImageType;
+  tagNames?: string[];
 }
 
 export interface ImageSortOptions {
@@ -694,6 +695,17 @@ export class RoomsService {
               },
             }
           : {},
+        // Tag filtering
+        filter.tagNames && filter.tagNames.length > 0
+          ? {
+              tags: {
+                some: {
+                  name: { in: filter.tagNames },
+                  type: 'IMAGE',
+                },
+              },
+            }
+          : {},
       ],
     };
 
@@ -728,7 +740,17 @@ export class RoomsService {
               },
             }
           : {},
-        filter.ids?.length ? { id: { in: filter.ids } } : {},
+        // Tag filtering
+        filter.tagNames && filter.tagNames.length > 0
+          ? {
+              tags: {
+                some: {
+                  name: { in: filter.tagNames },
+                  type: 'IMAGE',
+                },
+              },
+            }
+          : {},
       ],
     };
 

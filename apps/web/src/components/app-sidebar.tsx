@@ -110,6 +110,10 @@ const data = {
           url: "/settings/workflow",
         },
         {
+          title: "Tags",
+          url: "/settings/tags",
+        },
+        {
           title: "Equipment",
           url: "/settings/equipment",
         },

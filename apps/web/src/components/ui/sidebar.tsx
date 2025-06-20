@@ -202,7 +202,7 @@ const Sidebar = React.forwardRef<
       >
         <div
           className={cn(
-            "sticky inset-y-0 z-10 hidden h-svh w-[--sidebar-width] md:flex",
+            "sticky inset-y-0 z-10 hidden h-svh w-[--sidebar-width] overflow-y-auto md:flex",
             "left-0 border-r border-gray-800",
             className
           )}

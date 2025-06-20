@@ -273,10 +273,18 @@ export class RoomsController {
       updates: { showInReport?: boolean; order?: number };
     },
   ) {
-    const filters = {
+    const filters: any = {
       ...data.filters,
       projectId,
     };
+
+    // Convert tagNames string to array if provided
+    if (filters.tagNames && typeof filters.tagNames === 'string') {
+      filters.tagNames = filters.tagNames
+        .split(',')
+        .map((tag: string) => tag.trim());
+    }
+
     return this.roomsService.bulkUpdateImages(filters, data.updates);
   }
 
@@ -286,10 +294,18 @@ export class RoomsController {
     @Param('projectId') projectId: string,
     @Body() data: { filters: Omit<ImageFilters, 'projectId'> },
   ) {
-    const filters = {
+    const filters: any = {
       ...data.filters,
       projectId,
     };
+
+    // Convert tagNames string to array if provided
+    if (filters.tagNames && typeof filters.tagNames === 'string') {
+      filters.tagNames = filters.tagNames
+        .split(',')
+        .map((tag: string) => tag.trim());
+    }
+
     return this.roomsService.bulkRemoveImages(filters);
   }
 

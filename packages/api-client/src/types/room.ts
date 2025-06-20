@@ -126,6 +126,7 @@ export interface ImageFilters {
   searchTerm?: string;
   ids?: string[];
   type: ImageType;
+  tagNames?: string[];
 }
 
 export interface ImageSortOptions {
