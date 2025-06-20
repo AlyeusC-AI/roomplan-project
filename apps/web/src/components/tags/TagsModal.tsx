@@ -23,6 +23,15 @@
  *   open={isOpen}
  *   onOpenChange={setIsOpen}
  * />
+ *
+ * // For assigning tags to images
+ * <TagsModal
+ *   tagType="IMAGE"
+ *   open={isOpen}
+ *   onOpenChange={setIsOpen}
+ *   onAssignTags={handleAssignTags}
+ *   isAssignMode={true}
+ * />
  */
 
 import { useState } from "react";
@@ -35,9 +44,10 @@ import {
   DialogTrigger,
 } from "@components/ui/dialog";
 import { Button } from "@components/ui/button";
-import { Tag as TagIcon } from "lucide-react";
+import { Tag as TagIcon, Check } from "lucide-react";
 import TagsPage from "../../app/(logged-in)/settings/tags/main";
 import TagsManagment from "./tagsManagment";
+import TagSelector from "./TagSelector";
 
 interface TagsModalProps {
   trigger?: React.ReactNode;
@@ -46,6 +56,8 @@ interface TagsModalProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   tagType?: "PROJECT" | "IMAGE";
+  onAssignTags?: (tagNames: string[]) => void;
+  isAssignMode?: boolean;
 }
 
 export default function TagsModal({
@@ -55,6 +67,8 @@ export default function TagsModal({
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   tagType = "PROJECT",
+  onAssignTags,
+  isAssignMode = false,
 }: TagsModalProps) {
   const [internalOpen, setInternalOpen] = useState(false);
 
@@ -72,22 +86,31 @@ export default function TagsModal({
   const modalTitle = title || defaultTitle;
   const modalDescription = description || defaultDescription;
 
+  const handleAssignTags = (tagNames: string[]) => {
+    onAssignTags?.(tagNames);
+    handleOpenChange(false);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
+      {/* <DialogTrigger asChild>
         {trigger || (
           <Button variant='outline' size='sm'>
             <TagIcon className='mr-2 h-4 w-4' />
             {tagType === "PROJECT" ? "Manage Labels" : "Manage Tags"}
           </Button>
         )}
-      </DialogTrigger>
+      </DialogTrigger> */}
       <DialogContent className='max-h-[90vh] max-w-4xl overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>{modalTitle}</DialogTitle>
           <DialogDescription>{modalDescription}</DialogDescription>
         </DialogHeader>
-        <TagsManagment initialTagType={tagType} />
+        {isAssignMode ? (
+          <TagSelector tagType={tagType} onAssignTags={handleAssignTags} />
+        ) : (
+          <TagsManagment initialTagType={tagType} />
+        )}
       </DialogContent>
     </Dialog>
   );

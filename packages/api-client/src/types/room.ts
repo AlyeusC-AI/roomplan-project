@@ -1,6 +1,7 @@
 import { User } from "./auth";
 import { Wall } from "./reading";
 import { Equipment, EquipmentProject } from "./equipment";
+import { Tag } from "./tags";
 
 export type ImageType = "ROOM" | "FILE" | "NOTE";
 export interface AreaAffected {
@@ -68,6 +69,7 @@ export interface Image {
   description?: string;
   type?: ImageType;
   byUser?: User;
+  tags: Tag[];
 }
 
 export interface Comment {

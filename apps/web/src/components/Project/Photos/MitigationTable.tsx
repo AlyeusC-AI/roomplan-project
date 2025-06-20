@@ -38,7 +38,11 @@ export default function MitigationTable() {
 
   // React Query hooks
   const { data: roomList = [] } = useGetRooms(id);
-  const { data: imagesData, isLoading: isLoadingImages } = useSearchImages(
+  const {
+    data: imagesData,
+    isLoading: isLoadingImages,
+    refetch,
+  } = useSearchImages(
     id,
     {
       type: "ROOM",
@@ -228,7 +232,7 @@ export default function MitigationTable() {
             description='Once uploaded, we will sort your photos by room as well as identify items within each picture.'
           />
         ) : (
-          <PhotoList photos={imagesData?.data} />
+          <PhotoList photos={imagesData?.data} refetch={refetch} />
         )}
       </div>
     </div>

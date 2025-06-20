@@ -719,6 +719,7 @@ export class RoomsService {
   async bulkRemoveImages(filter: ImageFilters): Promise<Prisma.BatchPayload> {
     const where: Prisma.ImageWhereInput = {
       AND: [
+        filter.ids?.length ? { id: { in: filter.ids } } : {},
         // Reuse the same filter logic from findImages
         filter.showInReport !== undefined
           ? { showInReport: filter.showInReport }

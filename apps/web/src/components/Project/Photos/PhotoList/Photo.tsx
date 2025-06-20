@@ -173,18 +173,18 @@ const Photo = ({
           >
             <div
               className={clsx(
-                "absolute inset-0 z-10 flex flex-col items-end justify-start gap-1 bg-black/40 p-2 opacity-0 transition-opacity group-hover:opacity-100",
+                "absolute inset-0 z-10 flex items-start justify-end gap-1 bg-black/40 p-2 opacity-0 transition-opacity group-hover:opacity-100",
                 isSelected && "opacity-100"
               )}
             >
-              <Button
+              {/* <Button
                 size='icon'
                 variant='outline'
                 className='bg-white'
                 onClick={handleEdit}
               >
                 <Pencil />
-              </Button>
+              </Button> */}
               <StarButton />
               <Button
                 size='icon'

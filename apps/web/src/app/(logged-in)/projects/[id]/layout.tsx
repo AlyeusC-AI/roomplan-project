@@ -121,7 +121,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
         {/* Main Content */}
         <div className='col-span-17'>
           {/* Project Header */}
-          <div className='sticky top-0 z-20 w-full space-y-6 bg-background bg-white p-4'>
+          <div className='top-0 z-20 w-full space-y-6 bg-background bg-white p-4'>
             <div className='space-y-4'>
               <div className='flex items-center justify-between'>
                 {/* Main Project Info with Image */}
