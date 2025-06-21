@@ -33,7 +33,6 @@ const PhotoList = ({
   photos?: Image[];
   refetch: () => void;
 }) => {
-  console.log("🚀 ~ PhotoList ~ photos:", photos);
   const { id } = useParams<{ id: string }>();
   const [theaterModeIndex, setTheaterModeIndex] = useState(0);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
@@ -47,7 +46,7 @@ const PhotoList = ({
   const [selectedPhotos, setSelectedPhotos] = useState<Image[]>([]);
   const { mutate: bulkUpdateImages } = useBulkUpdateImages();
   const { mutate: bulkRemoveImages } = useBulkRemoveImages();
-  const { mutate: addImageTags } = useAddImageTags();
+  const { mutateAsync: addImageTags } = useAddImageTags();
   const savedPhotoGroupBy = userPreferenceStore(
     (state) => state.savedPhotoGroupBy
   );
@@ -296,11 +295,12 @@ const PhotoList = ({
   const onAssignTags = async (tagNames: string[]) => {
     try {
       // Add tags to all selected images
-      const promises = selectedPhotos.map((photo) =>
-        addImageTags({
-          imageId: photo.id,
-          tagNames,
-        })
+      const promises = selectedPhotos.map(
+        async (photo) =>
+          await addImageTags({
+            imageId: photo.id,
+            tagNames,
+          })
       );
 
       await Promise.all(promises);

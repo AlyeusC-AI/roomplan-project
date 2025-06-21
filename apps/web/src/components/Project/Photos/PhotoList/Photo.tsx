@@ -165,7 +165,7 @@ const Photo = ({
             </button>
           )}
           <div
-            className='group relative block size-40 cursor-pointer overflow-hidden rounded-lg'
+            className='group relative block size-40 cursor-pointer rounded-lg border border-black p-1'
             onClick={(e) => {
               e.stopPropagation();
               onPhotoClick(photo.id);
@@ -207,7 +207,7 @@ const Photo = ({
             <img
               src={supabaseUrl}
               alt=''
-              className='h-full w-full object-cover'
+              className='h-full w-full'
               // style={{ width: "100%", height: "100%" }}
             />
           </div>
@@ -219,37 +219,15 @@ const Photo = ({
           >
             <div className='flex items-center justify-between'>
               <div className='flex flex-1 flex-col justify-between'>
-                {savedPhotoGroupBy === "room" && (
-                  <div className='text-xs font-semibold'>
-                    <p>
-                      {format(
-                        new Date(photo.createdAt),
-                        "eee, MMM d, yyyy 'at' h:mm a"
-                      )}
-                    </p>
-                  </div>
-                )}
-                <div className='text-xs'>
-                  {formatDistance(new Date(photo.createdAt), Date.now(), {
-                    addSuffix: true,
-                  })}
-                  {photo?.comments?.length > 0 && (
-                    <div className='text-xs'>
-                      {photo?.comments?.length} comments
+                <div className='flex items-center justify-center gap-2 text-xs text-gray-500'>
+                  <div>{format(new Date(photo.createdAt), "h:mm a")}</div>.
+                  {photo.byUser && (
+                    <div className='font-medium text-gray-500'>
+                      {photo.byUser.firstName} {photo.byUser.lastName}
                     </div>
                   )}
                 </div>
               </div>
-              {/* <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <StarButton className='group flex size-10 cursor-pointer' />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Toggle to show image in final report.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider> */}
             </div>
           </div>
         </div>
@@ -312,15 +290,14 @@ const Photo = ({
           <div className='flex w-full flex-1 items-center justify-between'>
             <div className='flex flex-col justify-start pl-8'>
               <div className='text-sm font-semibold text-foreground'>
-                {format(
-                  new Date(photo.createdAt),
-                  "eee, MMM d, yyyy 'at' h:mm a"
+                {photo.byUser && (
+                  <div>
+                    {photo.byUser.firstName} {photo.byUser.lastName}
+                  </div>
                 )}
               </div>
               <div className='text-sm text-muted-foreground'>
-                {formatDistance(new Date(photo.createdAt), Date.now(), {
-                  addSuffix: true,
-                })}
+                {format(new Date(photo.createdAt), "MMM d, h:mm a")}
               </div>
             </div>
             <div className='flex items-center gap-2'>

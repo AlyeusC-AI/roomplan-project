@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { Check } from "lucide-react";
 import { Button } from "@components/ui/button";
-import RoomActions from "@components/Project/rooms/RoomActions";
+import RoomActionsModal from "@components/Project/rooms/RoomActionsModal";
 import { useParams } from "next/navigation";
 import {
   DndContext,
@@ -48,6 +48,8 @@ const PhotoGroup = ({
   const { data: rooms } = useGetRooms(id);
   const { mutate: updateImagesOrder } = useUpdateImagesOrder();
   const [images, setImages] = useState<Image[]>(photos);
+  const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
+
   useEffect(() => {
     setImages(photos);
   }, [photos]);
@@ -189,8 +191,21 @@ const PhotoGroup = ({
           )}
         </Button>
         <div className='ml-4 flex items-center gap-4'>
-          <h2 className='text-xl font-bold'>{day}</h2>
-          {isRoomGroup && room && <RoomActions room={room} />}
+          <h2
+            className={clsx(
+              "text-xl font-bold",
+              isRoomGroup &&
+                room &&
+                "cursor-pointer transition-colors hover:text-primary"
+            )}
+            onClick={() => {
+              if (isRoomGroup && room) {
+                setIsRoomModalOpen(true);
+              }
+            }}
+          >
+            {day}
+          </h2>
         </div>
       </div>
       {isRoomGroup ? (
@@ -208,6 +223,14 @@ const PhotoGroup = ({
         </DndContext>
       ) : (
         renderPhotos()
+      )}
+
+      {isRoomGroup && room && (
+        <RoomActionsModal
+          isOpen={isRoomModalOpen}
+          setOpen={setIsRoomModalOpen}
+          room={room}
+        />
       )}
     </div>
   );
