@@ -4,21 +4,21 @@ import { useState } from "react";
 import { Button } from "@components/ui/button";
 import { Badge } from "@components/ui/badge";
 import { LoadingPlaceholder } from "@components/ui/spinner";
-import { Tag as TagIcon, Plus } from "lucide-react";
+import { Tag as TagIcon, Check } from "lucide-react";
 import { useGetTags } from "@service-geek/api-client";
-import TagsModal from "./TagsModal";
 
 interface TagSelectorProps {
   tagType: "PROJECT" | "IMAGE";
   onAssignTags: (tagNames: string[]) => void;
+  currentTags?: Array<{ id: string; name: string; color?: string }>;
 }
 
 export default function TagSelector({
   tagType,
   onAssignTags,
+  currentTags = [],
 }: TagSelectorProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
 
   const { data: tags = [], isLoading } = useGetTags({ type: tagType });
 
@@ -36,9 +36,8 @@ export default function TagSelector({
     }
   };
 
-  const handleManageTags = () => {
-    setIsManageTagsOpen(true);
-  };
+  // Get current tag names for easy comparison
+  const currentTagNames = currentTags.map((tag) => tag.name);
 
   if (isLoading) {
     return <LoadingPlaceholder />;
@@ -46,10 +45,38 @@ export default function TagSelector({
 
   return (
     <div className='space-y-6'>
-      {/* Selected Tags Display */}
+      {/* Current Tags Display */}
+      {currentTags.length > 0 && (
+        <div className='space-y-3'>
+          <h3 className='text-sm font-medium text-gray-900'>Current Tags:</h3>
+          <div className='flex flex-wrap gap-2'>
+            {currentTags.map((tag) => (
+              <Badge
+                key={tag.id}
+                variant='secondary'
+                className='cursor-default'
+                style={
+                  tagType === "PROJECT" && tag.color
+                    ? {
+                        backgroundColor: `${tag.color}15`,
+                        borderColor: tag.color,
+                        color: tag.color,
+                      }
+                    : {}
+                }
+              >
+                {tag.name}
+                <Check className='ml-1 h-3 w-3' />
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Selected New Tags Display */}
       {selectedTags.length > 0 && (
         <div className='space-y-3'>
-          <h3 className='text-sm font-medium text-gray-900'>Selected Tags:</h3>
+          <h3 className='text-sm font-medium text-gray-900'>Tags to Add:</h3>
           <div className='flex flex-wrap gap-2'>
             {selectedTags.map((tagName) => {
               const tag = tags.find((t) => t.name === tagName);
@@ -57,7 +84,8 @@ export default function TagSelector({
                 <Badge
                   key={tagName}
                   variant='secondary'
-                  className='cursor-pointer'
+                  className='cursor-pointer bg-blue-100 text-blue-800 hover:bg-blue-200'
+                  onClick={() => handleTagToggle(tagName)}
                   style={
                     tagType === "PROJECT" && tag?.color
                       ? {
@@ -67,7 +95,6 @@ export default function TagSelector({
                         }
                       : {}
                   }
-                  onClick={() => handleTagToggle(tagName)}
                 >
                   {tagName}
                   <span className='ml-1 text-xs'>×</span>
@@ -84,15 +111,6 @@ export default function TagSelector({
           <h3 className='text-sm font-medium text-gray-900'>
             Available {tagType === "PROJECT" ? "Labels" : "Tags"}:
           </h3>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={handleManageTags}
-            className='flex items-center gap-2'
-          >
-            <Plus className='h-4 w-4' />
-            Manage {tagType === "PROJECT" ? "Labels" : "Tags"}
-          </Button>
         </div>
 
         {tags.length === 0 ? (
@@ -101,45 +119,55 @@ export default function TagSelector({
             <p className='text-sm'>
               No {tagType === "PROJECT" ? "labels" : "tags"} found
             </p>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleManageTags}
-              className='mt-2'
-            >
-              Create {tagType === "PROJECT" ? "Label" : "Tag"}
-            </Button>
+            <p className='text-xs text-muted-foreground'>
+              Create tags in the settings to assign them here
+            </p>
           </div>
         ) : (
           <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4'>
-            {tags.map((tag) => (
-              <Button
-                key={tag.id}
-                variant={
-                  selectedTags.includes(tag.name) ? "default" : "outline"
-                }
-                size='sm'
-                className='justify-start'
-                onClick={() => handleTagToggle(tag.name)}
-                style={
-                  tagType === "PROJECT" && tag.color
-                    ? selectedTags.includes(tag.name)
-                      ? {
-                          backgroundColor: tag.color,
-                          borderColor: tag.color,
-                          color: "white",
-                        }
-                      : {
-                          backgroundColor: `${tag.color}15`,
-                          borderColor: tag.color,
-                          color: tag.color,
-                        }
-                    : {}
-                }
-              >
-                {tag.name}
-              </Button>
-            ))}
+            {tags.map((tag) => {
+              const isCurrentTag = currentTagNames.includes(tag.name);
+              const isSelected = selectedTags.includes(tag.name);
+
+              return (
+                <Button
+                  key={tag.id}
+                  variant={
+                    isCurrentTag
+                      ? "default"
+                      : isSelected
+                        ? "default"
+                        : "outline"
+                  }
+                  size='sm'
+                  className={`justify-start ${
+                    isCurrentTag
+                      ? "cursor-default opacity-60"
+                      : "cursor-pointer"
+                  }`}
+                  onClick={() => !isCurrentTag && handleTagToggle(tag.name)}
+                  disabled={isCurrentTag}
+                  style={
+                    tagType === "PROJECT" && tag.color
+                      ? isCurrentTag || isSelected
+                        ? {
+                            backgroundColor: tag.color,
+                            borderColor: tag.color,
+                            color: "white",
+                          }
+                        : {
+                            backgroundColor: `${tag.color}15`,
+                            borderColor: tag.color,
+                            color: tag.color,
+                          }
+                      : {}
+                  }
+                >
+                  {tag.name}
+                  {isCurrentTag && <Check className='ml-1 h-3 w-3' />}
+                </Button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -154,18 +182,10 @@ export default function TagSelector({
           Clear Selection
         </Button>
         <Button onClick={handleAssign} disabled={selectedTags.length === 0}>
-          Assign {selectedTags.length > 0 ? `(${selectedTags.length})` : ""}{" "}
+          Add {selectedTags.length > 0 ? `(${selectedTags.length})` : ""}{" "}
           {tagType === "PROJECT" ? "Labels" : "Tags"}
         </Button>
       </div>
-
-      {/* Manage Tags Modal */}
-      <TagsModal
-        tagType={tagType}
-        open={isManageTagsOpen}
-        onOpenChange={setIsManageTagsOpen}
-        isAssignMode={false}
-      />
     </div>
   );
 }

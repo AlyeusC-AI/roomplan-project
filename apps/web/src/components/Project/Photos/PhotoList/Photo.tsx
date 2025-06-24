@@ -165,7 +165,7 @@ const Photo = ({
             </button>
           )}
           <div
-            className='group relative block size-40 cursor-pointer rounded-lg border border-black p-1'
+            className='group relative block size-40 cursor-pointer rounded-lg'
             onClick={(e) => {
               e.stopPropagation();
               onPhotoClick(photo.id);

@@ -6,7 +6,6 @@ import produce from "immer";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-
 import PhotoGroup from "./PhotoGroup";
 import RoomReassignModal from "./RoomReassignModal";
 import TheaterMode from "./TheaterMode";
@@ -14,7 +13,6 @@ import { LoadingPlaceholder } from "@components/ui/spinner";
 import { Button } from "@components/ui/button";
 import { Badge } from "@components/ui/badge";
 import TagsModal from "@components/tags/TagsModal";
-
 import { Trash2, FolderInput, X, Loader2, Star, Tag } from "lucide-react";
 import {
   Image,
@@ -529,6 +527,7 @@ const PhotoList = ({
           photos={filteredPhotos}
           theaterModeIndex={theaterModeIndex}
           setTheaterModeIndex={setTheaterModeIndex}
+          refetch={refetch}
         />
       )}
 

@@ -11,6 +11,7 @@ import probe from "probe-image-size";
 import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Pencil,
   Save,
@@ -24,6 +25,8 @@ import {
   Download,
   Trash2,
   AlertTriangle,
+  Tag as TagIcon,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,10 +40,14 @@ import {
   useGetProjectById,
   useRemoveImage,
   useUpdateImage,
+  useAddImageTags,
+  useRemoveImageTags,
+  useGetTags,
 } from "@service-geek/api-client";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import ImageEditorModal from "./ImageEditorModal";
+import TagsModal from "@components/tags/TagsModal";
 
 // const TheaterModeSlideImage = ({
 //   photo,
@@ -84,18 +91,24 @@ export default function TheaterMode({
   photos,
   theaterModeIndex,
   setTheaterModeIndex,
+  refetch,
 }: {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
   photos: ImageType[];
   theaterModeIndex: number;
   setTheaterModeIndex: Dispatch<SetStateAction<number>>;
+  refetch: () => void;
 }) {
   const { id } = useParams<{ id: string }>();
   const { data: project } = useGetProjectById(id);
   const { mutate: createImageNote } = useAddComment();
   const { mutate: deleteImage } = useRemoveImage();
   const { mutate: updateImage, isPending: isUpdating } = useUpdateImage();
+  const { mutate: addImageTags, isPending: isAddingTags } = useAddImageTags();
+  const { mutate: removeImageTags, isPending: isRemovingTags } =
+    useRemoveImageTags();
+  const { data: availableTags = [] } = useGetTags({ type: "IMAGE" });
   const [size, setSize] = useState<probe.ProbeResult | null>(null);
   const { data: user } = useCurrentUser();
   const [isEditing, setIsEditing] = useState(false);
@@ -108,6 +121,7 @@ export default function TheaterMode({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isTagsModalOpen, setIsTagsModalOpen] = useState(false);
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -117,6 +131,9 @@ export default function TheaterMode({
   const MIN_ZOOM = 0.5;
   const MAX_ZOOM = 3;
   const ZOOM_DURATION = 200;
+
+  const currentImage = photos[theaterModeIndex];
+  const currentImageTags = currentImage?.tags || [];
 
   useEffect(() => {
     setDescription(photos[theaterModeIndex]?.description || "");
@@ -375,6 +392,46 @@ export default function TheaterMode({
     }
   };
 
+  const handleAddTags = (tagNames: string[]) => {
+    if (!currentImage) return;
+
+    addImageTags(
+      {
+        imageId: currentImage.id,
+        tagNames,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Tags added successfully");
+          refetch();
+        },
+        onError: () => {
+          toast.error("Failed to add tags");
+        },
+      }
+    );
+  };
+
+  const handleRemoveTag = (tagName: string) => {
+    if (!currentImage) return;
+
+    removeImageTags(
+      {
+        imageId: currentImage.id,
+        tagNames: [tagName],
+      },
+      {
+        onSuccess: () => {
+          toast.success("Tag removed successfully");
+          refetch();
+        },
+        onError: () => {
+          toast.error("Failed to remove tag");
+        },
+      }
+    );
+  };
+
   if (isEditing)
     return (
       <ImageEditorModal
@@ -597,6 +654,70 @@ export default function TheaterMode({
                       </div>
                     </div>
 
+                    {/* Tags Section */}
+                    <div className='px-4 py-4'>
+                      <div className='mb-2 flex items-center justify-between'>
+                        <h3 className='text-sm font-medium text-foreground'>
+                          Tags
+                        </h3>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => setIsTagsModalOpen(true)}
+                          className='h-8 w-8 p-0 hover:bg-muted/50'
+                          disabled={isAddingTags || isRemovingTags}
+                        >
+                          <Plus className='h-4 w-4' />
+                        </Button>
+                      </div>
+
+                      {currentImageTags.length === 0 ? (
+                        <div className='py-4 text-center text-muted-foreground'>
+                          <TagIcon className='mx-auto mb-2 h-6 w-6 opacity-50' />
+                          <p className='text-sm'>No tags assigned</p>
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={() => setIsTagsModalOpen(true)}
+                            className='mt-2'
+                            disabled={isAddingTags || isRemovingTags}
+                          >
+                            Add Tags
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className='flex flex-wrap gap-2'>
+                          {currentImageTags.map((tag) => (
+                            <Badge
+                              key={tag.id}
+                              variant='secondary'
+                              className='cursor-pointer transition-all hover:bg-destructive/10 hover:text-destructive'
+                              onClick={() => handleRemoveTag(tag.name)}
+                              style={
+                                tag.color
+                                  ? {
+                                      backgroundColor: `${tag.color}15`,
+                                      borderColor: tag.color,
+                                      color: tag.color,
+                                    }
+                                  : {}
+                              }
+                            >
+                              {tag.name}
+                              <X className='ml-1 h-3 w-3' />
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+
+                      {(isAddingTags || isRemovingTags) && (
+                        <div className='mt-2 flex items-center gap-2 text-sm text-muted-foreground'>
+                          <Loader2 className='h-4 w-4 animate-spin' />
+                          Updating tags...
+                        </div>
+                      )}
+                    </div>
+
                     {/* Description Section */}
                     <div className='px-4 py-4'>
                       <div className='mb-2 flex items-center justify-between'>
@@ -692,6 +813,18 @@ export default function TheaterMode({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Tags Modal */}
+      <TagsModal
+        tagType='IMAGE'
+        open={isTagsModalOpen}
+        onOpenChange={setIsTagsModalOpen}
+        title='Add Tags to Image'
+        description='Select tags to add to this image'
+        onAssignTags={handleAddTags}
+        isAssignMode={true}
+        currentTags={currentImageTags}
+      />
 
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent className='sm:max-w-[425px]'>

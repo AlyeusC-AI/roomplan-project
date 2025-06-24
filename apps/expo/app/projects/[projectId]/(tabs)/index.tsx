@@ -227,7 +227,7 @@ export default function ProjectOverview() {
             </Text>
             <ChevronDown size={20} className="ml-2 text-foreground" />
           </TouchableOpacity>
-          <View className="flex-row overflow-hidden rounded-full border border-border">
+          {/* <View className="flex-row overflow-hidden rounded-full border border-border">
             <TouchableOpacity
               className={`px-4 py-2 flex-row items-center ${
                 projectViewMode === "list" ? "bg-primary" : "bg-transparent"
@@ -268,7 +268,7 @@ export default function ProjectOverview() {
                 Grid
               </Text>
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
       </View>
 

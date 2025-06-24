@@ -44,10 +44,10 @@ import {
   DialogTrigger,
 } from "@components/ui/dialog";
 import { Button } from "@components/ui/button";
-import { Tag as TagIcon, Check } from "lucide-react";
+import { Tag as TagIcon, Check, Plus } from "lucide-react";
 import TagsPage from "../../app/(logged-in)/settings/tags/main";
 import TagsManagment from "./tagsManagment";
-import TagSelector from "./TagSelector";
+import TagSelector from "@components/tags/TagSelector";
 
 interface TagsModalProps {
   trigger?: React.ReactNode;
@@ -58,6 +58,7 @@ interface TagsModalProps {
   tagType?: "PROJECT" | "IMAGE";
   onAssignTags?: (tagNames: string[]) => void;
   isAssignMode?: boolean;
+  currentTags?: Array<{ id: string; name: string; color?: string }>;
 }
 
 export default function TagsModal({
@@ -69,8 +70,10 @@ export default function TagsModal({
   tagType = "PROJECT",
   onAssignTags,
   isAssignMode = false,
+  currentTags = [],
 }: TagsModalProps) {
   const [internalOpen, setInternalOpen] = useState(false);
+  const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
 
   // Use controlled state if provided, otherwise use internal state
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
@@ -92,26 +95,61 @@ export default function TagsModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      {/* <DialogTrigger asChild>
-        {trigger || (
-          <Button variant='outline' size='sm'>
-            <TagIcon className='mr-2 h-4 w-4' />
-            {tagType === "PROJECT" ? "Manage Labels" : "Manage Tags"}
-          </Button>
-        )}
-      </DialogTrigger> */}
-      <DialogContent className='max-h-[90vh] max-w-4xl overflow-y-auto'>
-        <DialogHeader>
-          <DialogTitle>{modalTitle}</DialogTitle>
-          <DialogDescription>{modalDescription}</DialogDescription>
-        </DialogHeader>
-        {isAssignMode ? (
-          <TagSelector tagType={tagType} onAssignTags={handleAssignTags} />
-        ) : (
+    <>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+        {/* <DialogTrigger asChild>
+          {trigger || (
+            <Button variant='outline' size='sm'>
+              <TagIcon className='mr-2 h-4 w-4' />
+              {tagType === "PROJECT" ? "Manage Labels" : "Manage Tags"}
+            </Button>
+          )}
+        </DialogTrigger> */}
+        <DialogContent className='max-h-[90vh] max-w-4xl overflow-y-auto'>
+          <DialogHeader>
+            <DialogTitle>{modalTitle}</DialogTitle>
+            <DialogDescription>{modalDescription}</DialogDescription>
+          </DialogHeader>
+          {isAssignMode ? (
+            <div className='space-y-6'>
+              <div className='flex justify-end'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => setIsManageTagsOpen(true)}
+                  className='flex items-center gap-2'
+                >
+                  <Plus className='h-4 w-4' />
+                  Manage {tagType === "PROJECT" ? "Labels" : "Tags"}
+                </Button>
+              </div>
+              <TagSelector
+                tagType={tagType}
+                onAssignTags={handleAssignTags}
+                currentTags={currentTags}
+              />
+            </div>
+          ) : (
+            <TagsManagment initialTagType={tagType} />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Tags Modal */}
+      <Dialog open={isManageTagsOpen} onOpenChange={setIsManageTagsOpen}>
+        <DialogContent className='max-h-[90vh] max-w-4xl overflow-y-auto'>
+          <DialogHeader>
+            <DialogTitle>
+              Manage {tagType === "PROJECT" ? "Labels" : "Tags"}
+            </DialogTitle>
+            <DialogDescription>
+              Create and manage your{" "}
+              {tagType === "PROJECT" ? "project labels" : "image tags"}
+            </DialogDescription>
+          </DialogHeader>
           <TagsManagment initialTagType={tagType} />
-        )}
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
