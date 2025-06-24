@@ -117,7 +117,7 @@ export class EmailService {
   ) {
     try {
       const { data, error } = await this.resend.emails.send({
-        from: 'RestoreGeek <team@restoregeek.app>',
+        from: 'RestoreGeek <team@restoregeek.io>',
         to: [to],
         subject: `You've been invited to join ${organizationName}`,
         html: `
@@ -160,7 +160,7 @@ export class EmailService {
   async sendVerificationEmail(to: string, verificationLink: string) {
     try {
       const { data, error } = await this.resend.emails.send({
-        from: 'RestoreGeek <team@restoregeek.app>',
+        from: 'RestoreGeek <team@restoregeek.io>',
         to: [to],
         subject: 'Verify your email address',
         html: `
@@ -202,7 +202,7 @@ export class EmailService {
   async sendPasswordResetEmail(to: string, resetLink: string) {
     try {
       const { data, error } = await this.resend.emails.send({
-        from: 'RestoreGeek <team@restoregeek.app>',
+        from: 'RestoreGeek <team@restoregeek.io>',
         to: [to],
         subject: 'Reset your password',
         html: `
@@ -245,7 +245,7 @@ export class EmailService {
   async sendWelcomeEmail(to: string, firstName: string) {
     try {
       const { data, error } = await this.resend.emails.send({
-        from: 'RestoreGeek <team@restoregeek.app>',
+        from: 'RestoreGeek <team@restoregeek.io>',
         to: [to],
         subject: 'Welcome to RestoreGeek!',
         html: `
@@ -296,7 +296,7 @@ export class EmailService {
   }: SendDocumentEmailParams) {
     try {
       const { data, error } = await this.resend.emails.send({
-        from: 'RestoreGeek <team@restoregeek.app>',
+        from: 'RestoreGeek <team@restoregeek.io>',
         to: [to],
         subject: `Document: ${documentName}`,
         html:
@@ -686,7 +686,7 @@ export class EmailService {
       `;
 
       const { data, error } = await this.resend.emails.send({
-        from: 'RestoreGeek <team@restoregeek.app>',
+        from: 'RestoreGeek <team@restoregeek.io>',
         to: [to],
         subject: `Invoice #${invoice.number} from ${invoice.organization.name}`,
         html: emailHtml,
@@ -947,7 +947,7 @@ export class EmailService {
 
               <div class="footer">
                 <p>This estimate was sent by ${estimate.organization.name}</p>
-                <p>If you have any questions, please contact us at ${estimate.organization.email || 'noreply@restoregeek.app'}</p>
+                <p>If you have any questions, please contact us at ${estimate.organization.email || 'noreply@restoregeek.io'}</p>
               </div>
             </div>
           </div>
@@ -957,7 +957,7 @@ export class EmailService {
 
     try {
       await this.resend.emails.send({
-        from: 'Service Geek <noreply@restoregeek.app>',
+        from: 'Service Geek <noreply@restoregeek.io>',
         to,
         subject: `Estimate #${estimate.number} from ${estimate.organization.name}`,
         html,
@@ -976,7 +976,7 @@ export class EmailService {
   }) {
     try {
       const { data: responseData, error } = await this.resend.emails.send({
-        from: 'RestoreGeek <team@restoregeek.app>',
+        from: 'RestoreGeek <team@restoregeek.io>',
         to: [data.to],
         subject: `ESX Analysis Request - ${data.projectName}`,
         html: `

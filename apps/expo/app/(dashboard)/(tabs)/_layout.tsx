@@ -1,5 +1,12 @@
 import { router, Tabs } from "expo-router";
-import { Calendar, CircleHelp, Cog, House, Receipt, FileText } from "lucide-react-native";
+import {
+  Calendar,
+  CircleHelp,
+  Cog,
+  House,
+  Receipt,
+  FileText,
+} from "lucide-react-native";
 import { TouchableOpacity, View } from "react-native";
 
 export default function Layout() {
@@ -33,6 +40,7 @@ export default function Layout() {
         options={{
           title: "Estimates",
           tabBarIcon: ({ color }) => <FileText size={24} color={color} />,
+          href: null,
         }}
       />
       <Tabs.Screen
@@ -40,6 +48,7 @@ export default function Layout() {
         options={{
           title: "Invoices",
           tabBarIcon: ({ color }) => <Receipt size={24} color={color} />,
+          href: null,
         }}
       />
       <Tabs.Screen

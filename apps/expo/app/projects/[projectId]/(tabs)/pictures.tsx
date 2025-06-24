@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -22,6 +22,8 @@ import {
   Loader,
   Home,
   XCircle,
+  Filter,
+  CheckSquare,
 } from "lucide-react-native";
 import { useFocusEffect, useGlobalSearchParams, useRouter } from "expo-router";
 import { toast } from "sonner-native";
@@ -55,8 +57,13 @@ import {
   useBulkUpdateImages,
   useRemoveImage,
   useUpdateProject,
+  useGetTags,
+  useAddImageTags,
 } from "@service-geek/api-client";
 import { uploadImage } from "@/lib/imagekit";
+import FilterModal from "@/components/pictures/FilterModal";
+import SelectionMode from "@/components/pictures/SelectionMode";
+import BulkActionsModal from "@/components/pictures/BulkActionsModal";
 
 export default function ProjectPhotos() {
   const { projectId } = useGlobalSearchParams<{
@@ -74,6 +81,20 @@ export default function ProjectPhotos() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [isUpdatingAll, setIsUpdatingAll] = useState(false);
+  const [selectedRoomFilter, setSelectedRoomFilter] = useState<string | "all">(
+    "all"
+  );
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [selectedTagFilters, setSelectedTagFilters] = useState<string[]>([]);
+
+  // Selection mode state
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedPhotos, setSelectedPhotos] = useState<any[]>([]);
+  const [showBulkActionsModal, setShowBulkActionsModal] = useState(false);
+  const [bulkActionType, setBulkActionType] = useState<"room" | "tags">("room");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isAssigningRoom, setIsAssigningRoom] = useState(false);
+  const [isAssigningTags, setIsAssigningTags] = useState(false);
 
   const router = useRouter();
   const [isUploadingMainImage, setIsUploadingMainImage] = useState(false);
@@ -82,8 +103,11 @@ export default function ProjectPhotos() {
   const { mutate: addImage } = useAddImage();
 
   const { data: rooms } = useGetRooms(projectId);
+  const { data: tags } = useGetTags({ type: "IMAGE" });
   const { mutate: bulkUpdateImages } = useBulkUpdateImages();
+  const { mutate: bulkRemoveImages } = useBulkRemoveImages();
   const { mutate: updateProject } = useUpdateProject();
+  const { mutateAsync: addImageTags } = useAddImageTags();
 
   const {
     data: images,
@@ -103,11 +127,149 @@ export default function ProjectPhotos() {
     { page: 1, limit: 100 }
   );
 
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     refreshData();
-  //   }, [])
-  // );
+  // Filter rooms based on selection
+  const filteredRooms =
+    selectedRoomFilter === "all"
+      ? rooms
+      : rooms?.filter((room) => room.id === selectedRoomFilter);
+
+  // Filter photos based on room and tag filters (same logic as web)
+  const filteredPhotos = useMemo(() => {
+    if (!images?.data) return [];
+
+    let filtered = images.data;
+
+    // Apply room filter
+    if (selectedRoomFilter !== "all") {
+      filtered = filtered.filter(
+        (photo) => photo.roomId === selectedRoomFilter
+      );
+    }
+
+    // Apply tag filters
+    if (selectedTagFilters.length > 0) {
+      const hasUntaggedFilter = selectedTagFilters.includes("untagged");
+      const hasOtherFilters = selectedTagFilters.some(
+        (tag) => tag !== "untagged"
+      );
+
+      filtered = filtered.filter((photo) => {
+        const hasTags = photo.tags && photo.tags.length > 0;
+        const photoTagNames = hasTags
+          ? photo.tags.map((tag: any) => tag.name)
+          : [];
+
+        // If only "untagged" is selected
+        if (hasUntaggedFilter && !hasOtherFilters) {
+          return !hasTags;
+        }
+
+        // If "untagged" and other tags are selected
+        if (hasUntaggedFilter && hasOtherFilters) {
+          const otherSelectedTags = selectedTagFilters.filter(
+            (tag) => tag !== "untagged"
+          );
+          return (
+            !hasTags ||
+            otherSelectedTags.some((tag) => photoTagNames.includes(tag))
+          );
+        }
+
+        // If only other tags are selected
+        return selectedTagFilters.some((tag) => photoTagNames.includes(tag));
+      });
+    }
+
+    return filtered;
+  }, [images?.data, selectedRoomFilter, selectedTagFilters]);
+
+  // Selection mode handlers
+  const handleSelectionChange = (selectedKeys: string[]) => {
+    const selectedImages = filteredPhotos.filter((photo) =>
+      selectedKeys.includes(photo.id)
+    );
+    setSelectedPhotos(selectedImages);
+  };
+
+  const clearSelection = () => {
+    setSelectedPhotos([]);
+    setIsSelectionMode(false);
+  };
+
+  const handleAssignRoom = async (roomId: string) => {
+    try {
+      setIsAssigningRoom(true);
+      await bulkUpdateImages({
+        projectId,
+        filters: {
+          type: "ROOM",
+          ids: selectedPhotos.map((p) => p.id),
+        },
+        updates: { roomId },
+      });
+      toast.success("Room assigned successfully");
+      clearSelection();
+      setShowBulkActionsModal(false);
+    } catch (error) {
+      console.error("Error assigning room:", error);
+      toast.error("Failed to assign room");
+    } finally {
+      setIsAssigningRoom(false);
+    }
+  };
+
+  const handleAssignTags = async (tagNames: string[]) => {
+    try {
+      setIsAssigningTags(true);
+      // Add tags to all selected images
+      const promises = selectedPhotos.map(
+        async (photo) =>
+          await addImageTags({
+            imageId: photo.id,
+            tagNames,
+          })
+      );
+
+      await Promise.all(promises);
+      await refetch();
+      toast.success("Tags assigned successfully");
+      clearSelection();
+      setShowBulkActionsModal(false);
+    } catch (error) {
+      console.error("Error assigning tags:", error);
+      toast.error("Failed to assign tags");
+    } finally {
+      setIsAssigningTags(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await bulkRemoveImages({
+        projectId,
+        filters: {
+          type: "ROOM",
+          ids: selectedPhotos.map((p) => p.id),
+        },
+      });
+      toast.success("Images deleted successfully");
+      clearSelection();
+    } catch (error) {
+      console.error("Error deleting images:", error);
+      toast.error("Failed to delete images");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const onCreateRoom = async () => {
+    router.navigate({
+      pathname: "../rooms/create",
+      params: { projectId, projectName: project?.name },
+    });
+  };
+
   useEffect(() => {
     if (selectedRoom) {
       if (shouldOpenCamera) {
@@ -222,6 +384,7 @@ export default function ProjectPhotos() {
       await bulkUpdateImages({
         projectId,
         filters: {
+          type: "ROOM",
           ids: images?.data?.map((image) => image.id) || [],
         },
         updates: {
@@ -259,14 +422,14 @@ export default function ProjectPhotos() {
         }
 
         result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ["images"],
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: true,
           aspect: [16, 9],
           quality: 0.8,
         });
       } else {
         result = await launchImageLibraryAsync({
-          mediaTypes: ["images"],
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: true,
           aspect: [16, 9],
           quality: 0.8,
@@ -311,7 +474,7 @@ export default function ProjectPhotos() {
   if (loading && !rooms?.length) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1e40af" />
+        <ActivityIndicator size="large" color="#1e88e5" />
       </View>
     );
   }
@@ -328,102 +491,124 @@ export default function ProjectPhotos() {
           <CameraIcon height={20} width={20} color="#fff" className="ml-4" />
         }
         // onPress={() => router.push("../camera")}
-        onPress={() =>
-          router.push({
-            pathname: "../rooms/create",
-            params: { projectName: project?.name },
-          })
-        }
+        onPress={onCreateRoom}
       />
     );
   }
 
   return (
     <View style={styles.container}>
+      {/* Selection Mode UI */}
+      {isSelectionMode && selectedPhotos.length > 0 && (
+        <SelectionMode
+          selectedPhotos={selectedPhotos}
+          onClearSelection={clearSelection}
+          onAssignRoom={() => {
+            setBulkActionType("room");
+            setShowBulkActionsModal(true);
+          }}
+          onAssignTags={() => {
+            setBulkActionType("tags");
+            setShowBulkActionsModal(true);
+          }}
+          onDelete={handleDelete}
+          isDeleting={isDeleting}
+          isAssigningRoom={isAssigningRoom}
+        />
+      )}
+
       <ScrollView
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          isSelectionMode && selectedPhotos.length > 0 && { paddingTop: 60 },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Project Photos</Text>
-          <View className="flex-row gap-2 justify-between">
-            <TouchableOpacity
-              style={[
-                {
-                  width: 40,
-                  height: 40,
-                },
-                styles.actionButton,
-                isUploadingMainImage && styles.actionButtonDisabled,
-              ]}
-              onPress={() => setShowCoverModal(true)}
-              disabled={isUploadingMainImage}
-              className="ml-2 bg-accent rounded-full border border-gray-200"
-            >
-              {isUploadingMainImage ? (
-                <View>
-                  <Loader size={20} color="#1e40af" />
-                </View>
-              ) : (
-                <View>
-                  <Home size={20} color="#1e40af" />
-                </View>
-              )}
-            </TouchableOpacity>
+          <View style={styles.headerTop}>
+            <Text style={styles.headerTitle}>Project Photos</Text>
+            <AddRoomButton showText={false} size="sm" />
+          </View>
+
+          <View style={styles.headerBottom}>
             <View style={styles.actionButtons}>
               <TouchableOpacity
                 style={[
-                  {
-                    width: 40,
-                    height: 40,
-                  },
+                  styles.actionButton,
+                  isUploadingMainImage && styles.actionButtonDisabled,
+                ]}
+                onPress={() => setShowCoverModal(true)}
+                disabled={isUploadingMainImage}
+              >
+                {isUploadingMainImage ? (
+                  <Loader size={20} color="#1e88e5" />
+                ) : (
+                  <Home size={20} color="#1e88e5" />
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
                   styles.actionButton,
                   isUpdatingAll && styles.actionButtonDisabled,
                 ]}
                 onPress={includeAllInReport}
                 disabled={isUpdatingAll || !rooms?.length}
-                className="ml-2 bg-accent rounded-full border border-gray-200"
               >
                 {isUpdatingAll ? (
-                  <View>
-                    <Loader size={20} color="#1e40af" />
-                  </View>
+                  <Loader size={20} color="#1e88e5" />
                 ) : (
-                  <View>
-                    <Star
-                      size={20}
-                      color={areAllImagesIncluded ? "#FBBF24" : "#1e40af"}
-                      fill={areAllImagesIncluded ? "#FBBF24" : "transparent"}
-                    />
-                  </View>
+                  <Star
+                    size={20}
+                    color={areAllImagesIncluded ? "#FBBF24" : "#1e88e5"}
+                    fill={areAllImagesIncluded ? "#FBBF24" : "transparent"}
+                  />
                 )}
               </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={handlePickImages}
+              >
+                <ImagePlus size={20} color="#1e88e5" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.filterButtons}>
               <TouchableOpacity
                 style={[
-                  {
-                    width: 40,
-                    height: 40,
-                  },
                   styles.actionButton,
+                  isSelectionMode && styles.actionButtonActive,
                 ]}
-                onPress={handlePickImages}
-                className="mx-2 bg-accent rounded-full border border-gray-200"
+                onPress={() => {
+                  setIsSelectionMode(!isSelectionMode);
+                  if (isSelectionMode) {
+                    setSelectedPhotos([]);
+                  }
+                }}
               >
-                <View>
-                  <ImagePlus size={20} color="#1e40af" />
-                </View>
+                <CheckSquare
+                  size={18}
+                  color={isSelectionMode ? "#fff" : "#1e88e5"}
+                />
               </TouchableOpacity>
-              <AddRoomButton variant="outline" />
+
+              <TouchableOpacity
+                style={styles.filterButton}
+                onPress={() => setShowFilterModal(true)}
+              >
+                <Filter size={18} color="#1e88e5" />
+              </TouchableOpacity>
             </View>
           </View>
         </View>
 
         <View style={styles.roomsContainer}>
-          {rooms?.map((room) => {
-            const imagePerRoom = images?.data?.filter(
+          {filteredRooms?.map((room) => {
+            const imagePerRoom = filteredPhotos?.filter(
               (image) => image.roomId === room.id
             );
             const previewImageUrl = imagePerRoom?.[0]?.url;
@@ -465,6 +650,9 @@ export default function ProjectPhotos() {
                       images={imagePerRoom || []}
                       // onRefresh={refreshData}
                       room={room}
+                      selectable={isSelectionMode}
+                      onSelectionChange={handleSelectionChange}
+                      initialSelectedKeys={selectedPhotos.map((p) => p.id)}
                     />
                   </View>
                 )}
@@ -491,13 +679,30 @@ export default function ProjectPhotos() {
         </View>
       )}
 
-      {/* {isUploading && (
-        <View style={styles.uploadProgress}>
-          <Text style={styles.uploadProgressText}>
-            Uploading {uploadProgress} images...
-          </Text>
-        </View>
-      )} */}
+      {/* Filter Modal */}
+      <FilterModal
+        visible={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        selectedRoomFilter={selectedRoomFilter}
+        setSelectedRoomFilter={setSelectedRoomFilter}
+        selectedTagFilters={selectedTagFilters}
+        setSelectedTagFilters={setSelectedTagFilters}
+        rooms={rooms || []}
+        tags={tags || []}
+        photos={images?.data || []}
+      />
+
+      {/* Bulk Actions Modal */}
+      <BulkActionsModal
+        visible={showBulkActionsModal}
+        onClose={() => setShowBulkActionsModal(false)}
+        action={bulkActionType}
+        selectedPhotos={selectedPhotos}
+        onAssignRoom={handleAssignRoom}
+        onAssignTags={handleAssignTags}
+        isAssigningRoom={isAssigningRoom}
+        isAssigningTags={isAssigningTags}
+      />
 
       <Modal
         visible={showRoomSelection}
@@ -509,7 +714,7 @@ export default function ProjectPhotos() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
-                <Building2 size={24} color="#1e40af" />
+                <Building2 size={24} color="#1e88e5" />
                 <Text style={styles.modalTitle}>Select Room</Text>
               </View>
               <TouchableOpacity
@@ -567,7 +772,7 @@ export default function ProjectPhotos() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
-                <Home size={24} color="#1e40af" />
+                <Home size={24} color="#1e88e5" />
                 <Text style={styles.modalTitle}>Project Cover</Text>
               </View>
               <TouchableOpacity
@@ -663,6 +868,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
   },
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   headerTitle: {
     paddingTop: 8,
     fontSize: 24,
@@ -670,24 +880,35 @@ const styles = StyleSheet.create({
     color: "#1e293b",
     marginBottom: 16,
   },
+  headerBottom: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 12,
+  },
+  filterButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  filterButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f1f5f9",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
   actionButtons: {
     flexDirection: "row",
-    gap: 2,
-    justifyContent: "flex-end",
+    gap: 8,
+    justifyContent: "flex-start",
   },
-  // actionButton: {
-  //   // width: 44,
-  //   // height: 44,
-  //   borderRadius: 22,
-  //   justifyContent: "center",
-  //   alignItems: "center",
-  //   margin: 0,
-  // },
   iconContainer: {
     width: 26,
     height: 26,
     borderRadius: 13,
-    // backgroundColor: "#f8fafc",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
@@ -703,6 +924,9 @@ const styles = StyleSheet.create({
   },
   actionButtonDisabled: {
     opacity: 0.5,
+  },
+  actionButtonActive: {
+    backgroundColor: "#1e88e5",
   },
   roomsContainer: {
     padding: 12,
@@ -764,7 +988,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#1e40af",
+    backgroundColor: "#1e88e5",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -867,27 +1091,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: "center",
-    padding: 8,
-    borderRadius: 24,
-    // width: 40,
-    // height: 40,
-    // borderColor: "#e2e8f0",
-
-    // backgroundColor: "hsl(var(--destructive))",
-    // shadowColor: "#000",
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 2,
-    // },
-    // shadowOpacity: 0.1,
-    // shadowRadius: 3,
-    // elevation: 2,
+    alignItems: "center",
+    backgroundColor: "#f1f5f9",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    marginHorizontal: 2,
   },
   cameraButton: {
-    backgroundColor: "#1e40af",
+    backgroundColor: "#1e88e5",
   },
   libraryButton: {
     backgroundColor: "#3b82f6",
@@ -911,14 +1126,23 @@ const styles = StyleSheet.create({
   roomList: {
     marginBottom: 20,
   },
+  roomSelector: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginTop: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
   roomOption: {
     padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: "#f1f5f9",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
   },
   selectedRoom: {
-    backgroundColor: "#1e40af",
+    backgroundColor: "#1e88e5",
   },
   roomOptionText: {
     fontSize: 16,
@@ -926,6 +1150,7 @@ const styles = StyleSheet.create({
   },
   selectedRoomText: {
     color: "#fff",
+    fontWeight: "600",
   },
   modalFooter: {
     flexDirection: "row",
@@ -938,7 +1163,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 90,
     right: 20,
-    backgroundColor: "#1e40af",
+    backgroundColor: "#1e88e5",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -1009,7 +1234,7 @@ const styles = StyleSheet.create({
   mainImagePlaceholderText: {
     marginTop: 8,
     fontSize: 16,
-    color: "#1e40af",
+    color: "#1e88e5",
     fontWeight: "500",
   },
 });

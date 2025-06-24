@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   },
   activeThumbnail: {
     borderWidth: 2,
-    borderColor: "#1e40af",
+    borderColor: "#1e88e5",
   },
   thumbnailImage: {
     width: "100%",
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -5,
     right: -5,
-    backgroundColor: "#1e40af",
+    backgroundColor: "#1e88e5",
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#1e40af",
+    backgroundColor: "#1e88e5",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
     minHeight: 40,
   },
   submitNoteButton: {
-    backgroundColor: "#1e40af",
+    backgroundColor: "#1e88e5",
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     // paddingBottom: 250,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "#1e88e5",
   },
   descriptionContainer: {
     marginBottom: 8,
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   saveButton: {
-    backgroundColor: "#1e40af",
+    backgroundColor: "#1e88e5",
   },
   descriptionButtonText: {
     color: "#fff",
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   descriptionModalSaveButton: {
-    backgroundColor: "#1e40af",
+    backgroundColor: "#1e88e5",
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   readMoreText: {
-    color: "#1e40af",
+    color: "#1e88e5",
     fontSize: 14,
     fontWeight: "500",
   },
