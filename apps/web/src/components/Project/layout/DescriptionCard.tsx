@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Button } from "@components/ui/button";
 import { FileText, Edit2, Copy, Check } from "lucide-react";
 import {
@@ -83,13 +82,14 @@ export default function DescriptionCard({ projectData }: { projectData: any }) {
 
   return (
     <>
-      <Card>
-        <CardHeader className='flex flex-row items-center justify-between pb-2'>
-          <CardTitle className='flex items-center gap-2 text-base'>
-            <FileText className='h-5 w-5 text-purple-600' /> Description
-          </CardTitle>
+      <div className="flex flex-col bg-background shadow-sm">
+        <div className='flex flex-row items-center justify-between pb-2'>
+          <div className='flex items-center gap-2 text-base font-semibold'>
+            {/* <FileText className='h-5 w-5 text-purple-600' />  */}
+            Description
+          </div>
           <div className='flex gap-1'>
-            {hasDescription && (
+            {/* {hasDescription && (
               <Button
                 variant='ghost'
                 size='icon'
@@ -104,7 +104,7 @@ export default function DescriptionCard({ projectData }: { projectData: any }) {
                   <Copy className='h-4 w-4 text-gray-400 hover:text-gray-600' />
                 )}
               </Button>
-            )}
+            )} */}
             <Button
               variant='ghost'
               size='icon'
@@ -113,15 +113,15 @@ export default function DescriptionCard({ projectData }: { projectData: any }) {
               <Edit2 className='h-4 w-4 text-gray-400' />
             </Button>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className='p-4 pt-2'>
           <div className='min-h-[48px] whitespace-pre-line text-sm text-gray-700'>
             {projectData?.description || (
               <span className='text-gray-400'>No description</span>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className='max-w-2xl'>

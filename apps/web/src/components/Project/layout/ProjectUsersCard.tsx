@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Button } from "@components/ui/button";
 import {
   Users,
@@ -80,12 +79,14 @@ export default function ProjectUsersCard({
     };
   }, []);
 
+  
   return (
-    <Card>
-      <CardHeader className='flex flex-row items-center justify-between pb-2'>
-        <CardTitle className='flex items-center gap-2 text-base'>
-          <Users className='h-5 w-5 text-indigo-600' /> Project Users
-        </CardTitle>
+    <div className="flex flex-col bg-background shadow-sm">
+      <div className='flex flex-row items-center justify-between pb-2'>
+        <div className='flex items-center gap-2 text-base font-semibold'>
+          {/* <Users className='h-5 w-5 text-indigo-600' />  */}
+          Project Users
+        </div>
         <div className='relative' ref={ref}>
           <Button
             variant='ghost'
@@ -98,7 +99,7 @@ export default function ProjectUsersCard({
             <UserPlus className='h-4 w-4 text-gray-400' />
           </Button>
           {isOpen && (
-            <div className='absolute right-0 top-full z-50 w-80 rounded-md border border-gray-300 bg-white shadow-md'>
+            <div className='absolute right-0 top-full z-50 w-80 rounded-md border bg-background shadow-md'>
               <div className='border-b p-2 text-xs text-gray-500'>
                 Click to assign team members
               </div>
@@ -125,6 +126,7 @@ export default function ProjectUsersCard({
                         firstName={member.user?.firstName}
                         lastName={member.user?.lastName}
                         email={member.user?.email}
+                        textSize="text-xs"
                       />
                     </div>
                     <div className='col-span-4 flex h-full flex-col justify-start overflow-hidden'>
@@ -154,8 +156,8 @@ export default function ProjectUsersCard({
             </div>
           )}
         </div>
-      </CardHeader>
-      <CardContent className='space-y-2'>
+      </div>
+      <div className='flex flex-col space-y-2 p-4 pt-2'>
         {projectMembers.length === 0 ? (
           <div className='flex items-center gap-2 text-sm text-gray-400'>
             <User className='h-4 w-4' />
@@ -169,6 +171,7 @@ export default function ProjectUsersCard({
                   firstName={member.firstName}
                   lastName={member.lastName}
                   email={member.email}
+                  textSize="text-xs"
                 />
                 <div className='flex flex-col'>
                   <span className='font-medium'>
@@ -197,7 +200,7 @@ export default function ProjectUsersCard({
             </div>
           ))
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

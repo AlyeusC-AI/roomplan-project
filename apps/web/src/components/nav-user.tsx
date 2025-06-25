@@ -39,7 +39,7 @@ import { useEffect } from "react";
 import { LoadingPlaceholder } from "./ui/spinner";
 import { useCurrentUser, useLogout } from "@service-geek/api-client";
 
-export function NavUser() {
+export function NavUser({withAvatar = true}: {withAvatar?: boolean}) {
   const navigate = useRouter();
 
   const { data: user, isLoading } = useCurrentUser();
@@ -73,6 +73,7 @@ export function NavUser() {
                           .join("")}
                       </AvatarFallback>
                     </Avatar>
+                    {withAvatar ? <>
                     <div className='grid flex-1 text-left text-sm leading-tight'>
                       <span className='truncate font-semibold text-gray-200'>
                         {user.firstName} {user.lastName}
@@ -85,6 +86,7 @@ export function NavUser() {
                       size={16}
                       className='ml-auto text-gray-400'
                     />
+                    </> : null}
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent

@@ -12,6 +12,9 @@ import {
   Map,
   Settings,
   Receipt,
+  MapPin,
+  CirclePlus,
+  Bell,
 } from "lucide-react";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -23,6 +26,7 @@ import {
 } from "@/components/ui/sidebar";
 import Image from "next/image";
 import { SidebarSubscriptionStatus } from "./sidebar-subscription-status";
+import { Input } from "./ui/input";
 // import { OrganizationSelector } from "./organization-selector";
 
 // This is sample data.
@@ -48,7 +52,7 @@ const data = {
     {
       title: "Projects",
       url: "/projects",
-      icon: FolderKanban,
+      icon: MapPin,
     },
     {
       title: "Calendar",
@@ -123,11 +127,32 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [searchQuery, setSearchQuery] = React.useState("");
+
+  // Filter navigation items based on search query
+  const filteredNavItems = React.useMemo(() => {
+    if (!searchQuery.trim()) {
+      return data.navMain;
+    }
+
+    return data.navMain.filter((item) => {
+      // Check if main item title matches
+      const titleMatch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Check if any sub-items match
+      const subItemsMatch = item.items?.some((subItem) =>
+        subItem.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      return titleMatch || subItemsMatch;
+    });
+  }, [searchQuery]);
+
   return (
     <Sidebar className='w-56 border-r border-gray-800 bg-[#192d43]' {...props}>
       <div className='flex h-full flex-col'>
         <div className='flex-1'>
-          <SidebarHeader className='flex items-center justify-center border-b border-gray-100 bg-gray-200 py-4'>
+        <SidebarHeader className='flex items-center justify-center border-b border-gray-100 bg-gray-200 py-4'>
             <Image
               src='/images/brand/servicegeek-no-bg.png'
               alt='logo'
@@ -135,6 +160,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               height={40}
               className='h-12 w-auto'
             />
+            
+            {/* <div className="flex items-center gap-2">
+              <CirclePlus size={30} />
+              <Bell size={30} />
+              <NavUser withAvatar={false} />
+            </div> */}
+
           </SidebarHeader>
 
           {/* {state === "expanded" && (
@@ -148,7 +180,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           )} */}
 
           <SidebarContent className='px-3'>
-            <NavMain items={data.navMain} />
+            <Input
+              placeholder='Search'
+              className='bg-muted mt-2 border text-foreground'
+              style={{
+                border: "1px solid rgba(255, 255, 255, .22)",
+              }}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <NavMain items={filteredNavItems} />
           </SidebarContent>
         </div>
 

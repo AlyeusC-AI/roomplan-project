@@ -80,9 +80,9 @@ export default function AssignStakeholders() {
   }, []);
 
   return (
-    <div className='flex flex-col border border-gray-300 shadow-md sm:rounded-md'>
+    <div className='flex flex-col border shadow-md sm:rounded-md'>
       <div className='px-4 py-5'>
-        <h3 className='text-lg font-medium leading-6 text-gray-900'>
+        <h3 className='text-lg font-medium leading-6'>
           Project Assignees
         </h3>
         <p className='my-1 text-sm text-gray-600'>

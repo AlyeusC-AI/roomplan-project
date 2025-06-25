@@ -28,10 +28,13 @@ import {
   Phone,
   Mail,
   MoreHorizontal,
+  ArrowLeft,
+  ChevronLeft,
 } from "lucide-react";
 import { format } from "date-fns";
 import InfoSidebar from "@components/Project/layout/infoSidebar";
 import { Button } from "@components/ui/button";
+import Link from "next/link";
 
 export default function Layout({ children }: React.PropsWithChildren) {
   const { id } = useParams();
@@ -120,8 +123,12 @@ export default function Layout({ children }: React.PropsWithChildren) {
       <div className='relative grid grid-cols-[24fr_7fr] gap-5 pb-16 pl-5 pt-4'>
         {/* Main Content */}
         <div className='col-span-17'>
+          <Link href='/projects' className='flex items-center gap-2'>
+            <ChevronLeft size={24} />
+            <span className=' font-medium'>Projects</span>
+          </Link>
           {/* Project Header */}
-          <div className='top-0 z-20 w-full space-y-6 bg-background bg-white p-4'>
+          <div className='top-0 z-20 w-full space-y-6 bg-background p-4'>
             <div className='space-y-4'>
               <div className='flex items-center justify-between'>
                 {/* Main Project Info with Image */}
@@ -211,7 +218,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
           </div>
 
           {/* Page Content */}
-          <div className='mt-8 bg-white p-4'>{children}</div>
+          <div className='mt-8 bg-background p-4'>{children}</div>
         </div>
 
         {/* Right Sidebar */}

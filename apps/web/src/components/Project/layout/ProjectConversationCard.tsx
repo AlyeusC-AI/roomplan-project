@@ -1,17 +1,16 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Badge } from "@components/ui/badge";
 import { MessageCircle } from "lucide-react";
 
 export default function ProjectConversationCard() {
   return (
-    <Card>
-      <CardHeader className='flex flex-row items-center justify-between pb-2'>
-        <CardTitle className='flex items-center gap-2 text-base'>
+    <div className="flex flex-col bg-background shadow-sm">
+      <div className='flex flex-row items-center justify-between pb-2'>
+        <div className='flex items-center gap-2 text-base font-semibold'>
           <MessageCircle className='h-5 w-5 text-gray-600' /> Project
           Conversation
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </div>
+      </div>
+      <div className='p-4 pt-2'>
         <div className='max-h-32 space-y-2 overflow-y-auto'>
           {/* Mock messages */}
           <div className='flex items-start gap-2'>
@@ -31,7 +30,7 @@ export default function ProjectConversationCard() {
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

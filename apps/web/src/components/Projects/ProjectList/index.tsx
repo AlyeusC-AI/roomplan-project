@@ -100,8 +100,8 @@ export default function ProjectList() {
     <>
       <div
         className={cn(
-          "fixed z-10 bg-background lg:pr-10",
-          "lg:w-[calc(100vw-var(--sidebar-width))]"
+          "fixed z-10 bg-background lg:pr-6",
+          "lg:w-[calc(100vw-var(--sidebar-width)-48px)]"
         )}
       >
         <div className='mt-3 flex w-full justify-between space-x-6'>
