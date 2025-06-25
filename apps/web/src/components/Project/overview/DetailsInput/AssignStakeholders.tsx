@@ -98,13 +98,13 @@ export default function AssignStakeholders() {
               e.stopPropagation();
               setIsOpen((p) => !p);
             }}
-            className='relative flex w-full cursor-pointer items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-left shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm'
+            className='relative flex w-full cursor-pointer items-center justify-between rounded-md border border-gray-300 bg-background px-3 py-2 text-left shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm'
           >
             <div>Click to Assign Team Members</div>
             <ChevronUpIcon className='h-6 text-gray-500' />
           </button>
           {isOpen && (
-            <div className='absolute left-0 top-full z-50 w-full rounded-md border border-gray-300 bg-white shadow-md'>
+            <div className='absolute left-0 top-full z-50 w-full rounded-md border border-gray-300 bg-background shadow-md'>
               {teamMembers.map((member: OrganizationMembership) => {
                 const selected = projectMembers.some(
                   (pm: User) => pm.id === member.user?.id
@@ -121,7 +121,7 @@ export default function AssignStakeholders() {
                         onAdd(member.user?.id || "");
                       }
                     }}
-                    className='grid w-full grid-cols-7 gap-2 px-4 py-3 text-sm hover:bg-blue-50 sm:text-base'
+                    className='grid w-full grid-cols-7 gap-2 px-4 py-3 text-sm hover:bg-accent sm:text-base'
                   >
                     <div className='col-span-1 flex h-full items-center justify-center'>
                       <UserAvatar

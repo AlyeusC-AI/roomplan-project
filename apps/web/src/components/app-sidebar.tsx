@@ -152,7 +152,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar className='w-56 border-r border-gray-800 bg-[#192d43]' {...props}>
       <div className='flex h-full flex-col'>
         <div className='flex-1'>
-        <SidebarHeader className='flex items-center justify-center border-b border-gray-100 bg-gray-200 py-4'>
+        <SidebarHeader className='flex items-center justify-center border-b border-gray-100 bg-white py-4'>
             <Image
               src='/images/brand/servicegeek-no-bg.png'
               alt='logo'
