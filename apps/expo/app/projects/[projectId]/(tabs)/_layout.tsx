@@ -44,53 +44,58 @@ export default function Layout() {
         headerStyle: {
           backgroundColor: "#1e88e5",
         },
-        header: ({ navigation, route, options }) => (
-          <SafeAreaView style={{ backgroundColor: "#1e88e5" }}>
-            <StatusBar barStyle="light-content" backgroundColor="#1e88e5" />
-            <View
-              style={{
-                paddingTop:
-                  Platform.OS === "android" ? StatusBar.currentHeight : 0,
-                backgroundColor: "#1e88e5",
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 3,
-                elevation: 5,
-              }}
-            >
-              <View className="px-4 py-3 flex-row items-center justify-between">
-                <View className="flex-row items-center">
-                  <TouchableOpacity
-                    onPress={() => router.back()}
-                    className="mr-4 p-2 bg-white/10 rounded-full"
-                  >
-                    <ArrowLeft color="white" size={20} />
-                  </TouchableOpacity>
-                  <Text className="text-white text-lg font-semibold">
-                    {route.name === "scope"
-                      ? "Scope"
-                      : project?.data.clientName || "Project"}
-                  </Text>
+        header: ({ navigation, route, options }) =>
+          route.name === "chat" ? (
+            <SafeAreaView style={{ backgroundColor: "#fff" }}>
+              <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+            </SafeAreaView>
+          ) : (
+            <SafeAreaView style={{ backgroundColor: "#1e88e5" }}>
+              <StatusBar barStyle="light-content" backgroundColor="#1e88e5" />
+              <View
+                style={{
+                  paddingTop:
+                    Platform.OS === "android" ? StatusBar.currentHeight : 0,
+                  backgroundColor: "#1e88e5",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 3,
+                  elevation: 5,
+                }}
+              >
+                <View className="px-4 py-3 flex-row items-center justify-between">
+                  <View className="flex-row items-center">
+                    <TouchableOpacity
+                      onPress={() => router.back()}
+                      className="mr-4 p-2 bg-white/10 rounded-full"
+                    >
+                      <ArrowLeft color="white" size={20} />
+                    </TouchableOpacity>
+                    <Text className="text-white text-lg font-semibold">
+                      {route.name === "scope"
+                        ? "Scope"
+                        : project?.data.clientName || "Project"}
+                    </Text>
+                  </View>
+                  {route.name === "index" && (
+                    <TouchableOpacity
+                      // onPress={() => router.push({ pathname: "./edit" })}
+                      onPress={() =>
+                        router.push({
+                          pathname: "./details",
+                          params: { activeTab: "loss" },
+                        })
+                      }
+                      className="bg-white/10 px-4 py-2 rounded-full"
+                    >
+                      <Text className="text-white font-medium">Edit</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
-                {route.name === "index" && (
-                  <TouchableOpacity
-                    // onPress={() => router.push({ pathname: "./edit" })}
-                    onPress={() =>
-                      router.push({
-                        pathname: "./details",
-                        params: { activeTab: "loss" },
-                      })
-                    }
-                    className="bg-white/10 px-4 py-2 rounded-full"
-                  >
-                    <Text className="text-white font-medium">Edit</Text>
-                  </TouchableOpacity>
-                )}
               </View>
-            </View>
-          </SafeAreaView>
-        ),
+            </SafeAreaView>
+          ),
         tabBarIcon: ({ color }) => {
           if (route.name === "index") {
             return <House size={24} color={color} />;
@@ -176,6 +181,13 @@ export default function Layout() {
         name="documents"
         options={{
           title: "Documents",
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: "Chat",
           href: null,
         }}
       />
