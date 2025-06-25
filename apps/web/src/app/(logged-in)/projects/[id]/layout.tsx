@@ -47,6 +47,10 @@ export default function Layout({ children }: React.PropsWithChildren) {
       href: `/projects/${id}/overview`,
     },
     {
+      title: "Chat",
+      href: `/projects/${id}/chat`,
+    },
+    {
       title: "Files",
       href: `/projects/${id}/files`,
     },
@@ -125,7 +129,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
         <div className='col-span-17'>
           <Link href='/projects' className='flex items-center gap-2 mb-4'>
             <ChevronLeft size={24} />
-            <span className=' font-medium'>Projects</span>
+            <span className='font-medium'>Projects</span>
           </Link>
           {/* Project Header */}
           <div className='top-0 z-20 w-full space-y-6 bg-background py-4'>

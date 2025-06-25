@@ -9,6 +9,15 @@ export enum LossType {
   OTHER = "OTHER",
 }
 
+export interface ProjectImage {
+  id: string;
+  url: string;
+  name?: string;
+  description?: string;
+  createdAt: Date;
+  roomId?: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -48,6 +57,11 @@ export interface Project {
   dateOfLoss?: Date;
   organizationId: string;
   status: ProjectStatus;
+  images?: ProjectImage[];
+  _count?: {
+    images: number;
+    documents: number;
+  };
 }
 
 export interface CreateProjectDto {
@@ -85,6 +99,18 @@ export interface CreateProjectDto {
 }
 
 export type UpdateProjectDto = Partial<CreateProjectDto>;
+
+export interface FilterProjectsParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  assigneeIds?: string[];
+  tagNames?: string[];
+}
 
 export interface SendLidarEmailRequest {
   roomId: string;
