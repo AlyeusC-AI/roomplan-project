@@ -40,7 +40,7 @@ export default function ProjectConversationCard({
     connected,
     typingUsers,
     hasMoreMessages,
-  } = useChat({ projectId, autoConnect: true });
+  } = useChat({ projectId, autoConnect: true, enableNotifications: true });
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
@@ -199,7 +199,7 @@ export default function ProjectConversationCard({
                 <div className='min-w-0 flex-1'>
                   <div className='mb-1 flex items-center justify-between'>
                     <div className='flex items-center gap-2'>
-                      <div className='text-sm font-medium text-gray-900'>
+                      <div className='text-xs font-medium text-gray-900'>
                         {msg.user.firstName} {msg.user.lastName}
                       </div>
                       <div className='text-xs text-gray-400'>

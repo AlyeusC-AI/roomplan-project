@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { chatService } from "../services/chat";
 import { useAuthStore } from "../services/storage";
+import { useCurrentUser } from "./useAuth";
 import type {
   ChatMessage,
   CreateChatMessageDto,
@@ -14,6 +15,7 @@ import { baseURL } from "../services/client";
 interface UseChatOptions {
   projectId: string;
   autoConnect?: boolean;
+  enableNotifications?: boolean;
 }
 
 interface UseChatReturn {
@@ -33,6 +35,7 @@ interface UseChatReturn {
 export const useChat = ({
   projectId,
   autoConnect = true,
+  enableNotifications = true,
 }: UseChatOptions): UseChatReturn => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,6 +47,51 @@ export const useChat = ({
 
   const socketRef = useRef<any>(null);
   const token = useAuthStore((state) => state.token);
+  const { data: currentUser } = useCurrentUser();
+
+  // Notification function
+  const showNotification = useCallback(
+    (message: WebSocketChatMessage) => {
+      if (
+        !enableNotifications ||
+        !currentUser ||
+        message.user.id === currentUser.id
+      ) {
+        return; // Don't show notification for own messages
+      }
+
+      // Check if browser supports notifications
+      if (!("Notification" in window)) {
+        return;
+      }
+
+      // Request permission if not granted
+      if (Notification.permission === "default") {
+        Notification.requestPermission().then((permission) => {
+          if (permission === "granted") {
+            new Notification(
+              `New message from ${message.user.firstName} ${message.user.lastName}`,
+              {
+                body: message.content,
+                icon: "/favicon.ico",
+                tag: `chat-${projectId}`,
+              }
+            );
+          }
+        });
+      } else if (Notification.permission === "granted") {
+        new Notification(
+          `New message from ${message.user.firstName} ${message.user.lastName}`,
+          {
+            body: message.content,
+            icon: "/favicon.ico",
+            tag: `chat-${projectId}`,
+          }
+        );
+      }
+    },
+    [enableNotifications, currentUser, projectId]
+  );
 
   const connectSocket = useCallback(async () => {
     if (!token || !projectId) return;
@@ -73,7 +121,8 @@ export const useChat = ({
       });
 
       socketRef.current.on("newMessage", (message: WebSocketChatMessage) => {
-        setMessages((prev) => [message, ...prev]);
+        setMessages((prev) => [...prev, message]); // Add to end for chronological display
+        showNotification(message);
       });
 
       socketRef.current.on("userJoined", (event: WebSocketUserEvent) => {
@@ -160,9 +209,16 @@ export const useChat = ({
         }
 
         if (page === 1) {
-          setMessages(chatData);
+          setMessages(chatData.reverse()); // Reverse to show oldest first
         } else {
-          setMessages((prev) => [...prev, ...chatData]);
+          setMessages((prev) =>
+            [...chatData, ...prev].sort((a, b) => {
+              return (
+                new Date(a.createdAt).getTime() -
+                new Date(b.createdAt).getTime()
+              );
+            })
+          ); // Add older messages at top
         }
 
         setCurrentPage(page);
@@ -189,7 +245,7 @@ export const useChat = ({
           const newMessage = await chatService.createMessage(projectId, {
             content,
           });
-          setMessages((prev) => [newMessage, ...prev]);
+          setMessages((prev) => [...prev, newMessage]); // Add to end for chronological display
         } catch (err) {
           setError(
             err instanceof Error ? err.message : "Failed to send message"

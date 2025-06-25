@@ -27,7 +27,7 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
             pathname === item.href
               ? "bg-muted hover:bg-muted"
               : "hover:bg-transparent hover:underline",
-            "whitespace-nowrap px-4"
+            "whitespace-nowrap px-3"
           )}
         >
           {item.title}
