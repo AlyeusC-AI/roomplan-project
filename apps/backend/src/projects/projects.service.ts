@@ -60,15 +60,29 @@ export class ProjectsService {
       }
     }
 
-    return this.prisma.project.create({
-      data: {
-        ...createProjectDto,
-        statusId,
-        dateOfLoss: createProjectDto.dateOfLoss
-          ? new Date(createProjectDto.dateOfLoss)
-          : undefined,
-      },
+    // Create project and chat in a transaction
+    const project = await this.prisma.$transaction(async (prisma) => {
+      const newProject = await prisma.project.create({
+        data: {
+          ...createProjectDto,
+          statusId,
+          dateOfLoss: createProjectDto.dateOfLoss
+            ? new Date(createProjectDto.dateOfLoss)
+            : undefined,
+        },
+      });
+
+      // Create chat for the project
+      await prisma.chat.create({
+        data: {
+          projectId: newProject.id,
+        },
+      });
+
+      return newProject;
     });
+
+    return project;
   }
 
   async findAll(

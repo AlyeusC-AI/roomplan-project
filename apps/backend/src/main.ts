@@ -5,11 +5,15 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { MemberStatus, Role } from '@prisma/client';
 import { PrismaService } from './prisma/prisma.service';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     rawBody: true,
   });
+
+  // Enable WebSocket support
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   // Swagger configuration
   const config = new DocumentBuilder()

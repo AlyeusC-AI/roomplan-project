@@ -40,7 +40,7 @@ export default function InfoSidebar() {
             <TasksCard />
           </div>
           <div>
-            <ProjectConversationCard />
+            <ProjectConversationCard projectId={projectData.id} />
           </div>
         </div>
       </CardContent>

@@ -24,6 +24,7 @@ import { InvoicesModule } from './invoices/invoices.module';
 import { EstimatesModule } from './estimates/estimates.module';
 import { SpaceModule } from './space/space.module';
 import { TagsModule } from './tags/tags.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { TagsModule } from './tags/tags.module';
     EstimatesModule,
     SpaceModule,
     TagsModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
