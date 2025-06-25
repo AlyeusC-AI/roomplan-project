@@ -312,7 +312,7 @@ const PhotoList = ({
   };
 
   return (
-    <div className='mt-4 flex flex-col gap-6'>
+    <div className='flex flex-col gap-4'>
       <div className='flex justify-end'>
         <Button
           size='sm'

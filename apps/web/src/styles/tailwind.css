@@ -138,7 +138,7 @@ a.fc-col-header-cell-cushion {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-  .dark {
+  /* .dark {
     --sidebar-width: 16rem;
 
     --background: 0 0% 3.9%;
@@ -154,7 +154,7 @@ a.fc-col-header-cell-cushion {
     --popover-foreground: 0 0% 98%;
 
     --primary: 221 83% 53%;
-    /* --primary: 0 0% 98%; */
+    
 
     --primary-foreground: 0 0% 98%;
 
@@ -197,7 +197,7 @@ a.fc-col-header-cell-cushion {
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+  } */
 }
 
 @layer base {

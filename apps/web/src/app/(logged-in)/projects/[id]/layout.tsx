@@ -1,6 +1,5 @@
 "use client";
 
-import { SidebarNav } from "@/components/ui/sidebar-nav";
 import { Separator } from "@components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +29,7 @@ import {
   MoreHorizontal,
   ArrowLeft,
   ChevronLeft,
+  FileImage,
 } from "lucide-react";
 import { format } from "date-fns";
 import InfoSidebar from "@components/Project/layout/infoSidebar";
@@ -120,22 +120,22 @@ export default function Layout({ children }: React.PropsWithChildren) {
 
   return (
     <>
-      <div className='relative grid grid-cols-[24fr_7fr] gap-5 pb-16 pl-5 pt-4'>
+      <div className='relative grid grid-cols-[24fr_7fr] gap-5 '>
         {/* Main Content */}
         <div className='col-span-17'>
-          <Link href='/projects' className='flex items-center gap-2'>
+          <Link href='/projects' className='flex items-center gap-2 mb-4'>
             <ChevronLeft size={24} />
             <span className=' font-medium'>Projects</span>
           </Link>
           {/* Project Header */}
-          <div className='top-0 z-20 w-full space-y-6 bg-background p-4'>
+          <div className='top-0 z-20 w-full space-y-6 bg-background py-4'>
             <div className='space-y-4'>
               <div className='flex items-center justify-between'>
                 {/* Main Project Info with Image */}
-                <div className='flex items-start gap-6'>
+                <div className='flex items-center gap-6'>
                   {/* Project Image */}
-                  {projectData?.mainImage && (
-                    <div className='relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl border-2 border-border shadow-sm'>
+                  {projectData?.mainImage ? (
+                    <div className='relative h-36 w-36 flex-shrink-0 overflow-hidden rounded-xl border-2 border-border shadow-sm'>
                       <img
                         src={projectData.mainImage}
                         alt={projectData.name}
@@ -145,15 +145,19 @@ export default function Layout({ children }: React.PropsWithChildren) {
                         }}
                       />
                     </div>
+                  ) : (
+                    <div className='flex items-center justify-center relative h-36 w-36 flex-shrink-0 overflow-hidden rounded-xl border-2 border-border shadow-sm bg-gray-100' >
+                      <FileImage size={45} />
+                      </div>
                   )}
 
                   {/* Project Details */}
                   <div className='flex-1 space-y-3'>
                     <div className='flex items-center gap-3'>
-                      <h1 className='text-3xl font-bold tracking-tight'>
+                      <h1 className='text-3xl font-bold tracking-tight capitalize'>
                         {projectData?.name}
                       </h1>
-                      {projectData?.status && (
+                      {/* {projectData?.status && (
                         <Badge
                           variant='outline'
                           className='border px-2 py-0.5 text-xs font-medium'
@@ -165,7 +169,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
                         >
                           {projectData.status.label}
                         </Badge>
-                      )}
+                      )} */}
                     </div>
 
                     {/* Key Project Info */}
@@ -189,7 +193,32 @@ export default function Layout({ children }: React.PropsWithChildren) {
                           </span>
                         </div>
                       )}
-                      {projectData?.lossType && (
+                      
+                      {/* {projectData?.lossType && (
+                        <Badge
+                          variant='secondary'
+                          className='border-red-200 bg-red-100 text-xs text-red-700'
+                        >
+                          <AlertTriangle className='mr-1 h-3 w-3' />
+                          {projectData.lossType}
+                        </Badge>
+                      )} */}
+                    </div>
+                    <div className='flex items-center gap-2'>
+                       {projectData?.status && (
+                        <Badge
+                          variant='outline'
+                          className='border px-2 py-0.5 text-xs font-medium'
+                          style={{
+                            borderColor: projectData.status.color,
+                            backgroundColor: projectData.status.color,
+                            color: "white",
+                          }}
+                        >
+                          {projectData.status.label}
+                        </Badge>
+                      )}
+                        {projectData?.lossType && (
                         <Badge
                           variant='secondary'
                           className='border-red-200 bg-red-100 text-xs text-red-700'
@@ -210,15 +239,34 @@ export default function Layout({ children }: React.PropsWithChildren) {
               </div>
 
               {/* Navigation */}
-              <div className='pt-4'>
-                <SidebarNav items={sidebarNavItems()} />
+              <div className="pt-4">
+              {/* <SidebarNav items={sidebarNavItems()} /> */}
+                <div className="flex border-b border-gray-200">
+                  {sidebarNavItems().map((item) => {
+                    const isActive = typeof window !== 'undefined' && window.location.pathname.startsWith(item.href);
+                    return (
+                      <Link
+                        key={item.title}
+                        href={item.href}
+                        className={`px-4 py-2 -mb-px text-sm font-medium border-b-2 transition-colors duration-150 ${
+                          isActive
+                            ? 'border-black text-black'
+                            : 'border-gray-200 text-gray-500 hover:text-black hover:border-gray-400'
+                        }`}
+                        prefetch={false}
+                      >
+                        {item.title}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-              <Separator />
+              {/* <Separator /> */}
             </div>
           </div>
 
           {/* Page Content */}
-          <div className='mt-8 bg-background p-4'>{children}</div>
+          <div className='bg-background p-4'>{children}</div>
         </div>
 
         {/* Right Sidebar */}

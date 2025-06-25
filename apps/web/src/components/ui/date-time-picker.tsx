@@ -18,16 +18,14 @@ export function DateTimePicker({
   date,
   setDate,
 }: {
-  date: Date;
-  setDate: (date: Date) => void;
+  date: Date | null;
+  setDate: (date: Date | null) => void;
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
 
   const hours = Array.from({ length: 12 }, (_, i) => i + 1);
   const handleDateSelect = (selectedDate: Date | undefined) => {
-    if (selectedDate) {
-      setDate(selectedDate);
-    }
+    setDate(selectedDate ?? null);
   };
 
   const handleTimeChange = (
@@ -74,7 +72,7 @@ export function DateTimePicker({
         <div className='sm:flex'>
           <Calendar
             mode='single'
-            selected={date}
+            selected={date ?? undefined}
             onSelect={handleDateSelect}
             initialFocus
           />
@@ -92,6 +90,7 @@ export function DateTimePicker({
                     }
                     className='aspect-square shrink-0 sm:w-full'
                     onClick={() => handleTimeChange("hour", hour.toString())}
+                    disabled={!date}
                   >
                     {hour}
                   </Button>
@@ -112,6 +111,7 @@ export function DateTimePicker({
                     onClick={() =>
                       handleTimeChange("minute", minute.toString())
                     }
+                    disabled={!date}
                   >
                     {minute}
                   </Button>
@@ -134,6 +134,7 @@ export function DateTimePicker({
                     }
                     className='aspect-square shrink-0 sm:w-full'
                     onClick={() => handleTimeChange("ampm", ampm)}
+                    disabled={!date}
                   >
                     {ampm}
                   </Button>
