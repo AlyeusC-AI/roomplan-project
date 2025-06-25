@@ -5,6 +5,7 @@ import type {
   Project,
   SendLidarEmailRequest,
   SendLidarEmailResponse,
+  FilterProjectsParams,
 } from "../types/project";
 import type { PaginationParams, PaginatedResponse } from "../types/common";
 import type { User } from "../types/auth";
@@ -13,12 +14,17 @@ export const projectService = {
   create: (data: CreateProjectDto & { organizationId: string }) =>
     apiClient.post<Project>("/projects", data),
 
-  findAll: (organizationId: string, params?: PaginationParams) => {
+  findAll: (organizationId: string, params?: FilterProjectsParams) => {
     const queryParams: any = { ...params };
 
     // Convert tagNames array to comma-separated string for backend
     if (params?.tagNames && Array.isArray(params.tagNames)) {
       queryParams.tagNames = params.tagNames.join(",");
+    }
+
+    // Convert assigneeIds array to comma-separated string for backend
+    if (params?.assigneeIds && Array.isArray(params.assigneeIds)) {
+      queryParams.assigneeIds = params.assigneeIds.join(",");
     }
 
     return apiClient.get<PaginatedResponse<Project>>(
@@ -39,11 +45,23 @@ export const projectService = {
   findAllByStatus: async (
     organizationId: string,
     statusId: string,
-    params?: PaginationParams
+    params?: FilterProjectsParams
   ): Promise<PaginatedResponse<Project>> => {
+    const queryParams: any = { ...params };
+
+    // Convert tagNames array to comma-separated string for backend
+    if (params?.tagNames && Array.isArray(params.tagNames)) {
+      queryParams.tagNames = params.tagNames.join(",");
+    }
+
+    // Convert assigneeIds array to comma-separated string for backend
+    if (params?.assigneeIds && Array.isArray(params.assigneeIds)) {
+      queryParams.assigneeIds = params.assigneeIds.join(",");
+    }
+
     const response = await apiClient.get<PaginatedResponse<Project>>(
       `/projects/organization/${organizationId}/status/${statusId}`,
-      { params }
+      { params: queryParams }
     );
     return response.data;
   },

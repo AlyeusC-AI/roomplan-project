@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { FilterProjectsDto } from './dto/filter-projects.dto';
 import { Project } from '@prisma/client';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
@@ -88,9 +89,13 @@ export class ProjectsService {
   async findAll(
     organizationId: string,
     userId: string,
-    paginationDto: PaginationDto,
+    filterDto: FilterProjectsDto,
     tagNames?: string[],
-  ): Promise<PaginatedResponse<Project>> {
+  ): Promise<
+    PaginatedResponse<
+      Project & { _count: { images: number; documents: number } }
+    >
+  > {
     // Verify user has access to the organization
     const membership = await this.prisma.organizationMember.findFirst({
       where: {
@@ -112,7 +117,10 @@ export class ProjectsService {
       sortBy = 'createdAt',
       sortOrder = 'desc',
       search,
-    } = paginationDto;
+      startDate,
+      endDate,
+      assigneeIds,
+    } = filterDto;
     const skip = (page - 1) * limit;
 
     // Build where clause
@@ -145,6 +153,26 @@ export class ProjectsService {
         : {}),
     };
 
+    // Add date range filtering
+    if (startDate || endDate) {
+      whereClause.createdAt = {};
+      if (startDate) {
+        whereClause.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        whereClause.createdAt.lte = new Date(endDate);
+      }
+    }
+
+    // Add assignee filtering
+    if (assigneeIds && assigneeIds.length > 0) {
+      whereClause.members = {
+        some: {
+          id: { in: assigneeIds },
+        },
+      };
+    }
+
     // Add tag filtering if tagNames are provided
     if (tagNames && tagNames.length > 0) {
       whereClause.tags = {
@@ -170,6 +198,24 @@ export class ProjectsService {
         include: {
           status: true,
           tags: true,
+          members: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+          _count: {
+            select: {
+              images: {
+                where: {
+                  type: 'ROOM',
+                },
+              },
+              documents: true,
+            },
+          },
         },
       }),
     ]);
@@ -185,7 +231,10 @@ export class ProjectsService {
     };
   }
 
-  async findOne(id: string, userId: string): Promise<Project> {
+  async findOne(
+    id: string,
+    userId: string,
+  ): Promise<Project & { _count: { images: number; documents: number } }> {
     const project = await this.prisma.project.findUnique({
       where: { id },
       include: {
@@ -194,6 +243,16 @@ export class ProjectsService {
         equipmentProject: {
           include: {
             equipment: true,
+          },
+        },
+        _count: {
+          select: {
+            images: {
+              where: {
+                type: 'ROOM',
+              },
+            },
+            documents: true,
           },
         },
       },
@@ -252,8 +311,12 @@ export class ProjectsService {
     organizationId: string,
     userId: string,
     statusId: string,
-    paginationDto: PaginationDto,
-  ): Promise<PaginatedResponse<Project>> {
+    filterDto: FilterProjectsDto,
+  ): Promise<
+    PaginatedResponse<
+      Project & { _count: { images: number; documents: number } }
+    >
+  > {
     // Verify user has access to the organization
     const membership = await this.prisma.organizationMember.findFirst({
       where: {
@@ -275,10 +338,13 @@ export class ProjectsService {
       sortBy = 'createdAt',
       sortOrder = 'desc',
       search,
-    } = paginationDto;
+      startDate,
+      endDate,
+      assigneeIds,
+    } = filterDto;
     const skip = (page - 1) * limit;
 
-    const whereClause = {
+    const whereClause: any = {
       organizationId,
       statusId,
       ...(search
@@ -297,6 +363,26 @@ export class ProjectsService {
         : {}),
     };
 
+    // Add date range filtering
+    if (startDate || endDate) {
+      whereClause.createdAt = {};
+      if (startDate) {
+        whereClause.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        whereClause.createdAt.lte = new Date(endDate);
+      }
+    }
+
+    // Add assignee filtering
+    if (assigneeIds && assigneeIds.length > 0) {
+      whereClause.members = {
+        some: {
+          id: { in: assigneeIds },
+        },
+      };
+    }
+
     const [total, projects] = await Promise.all([
       this.prisma.project.count({
         where: whereClause,
@@ -310,6 +396,24 @@ export class ProjectsService {
         },
         include: {
           status: true,
+          members: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+          _count: {
+            select: {
+              images: {
+                where: {
+                  type: 'ROOM',
+                },
+              },
+              documents: true,
+            },
+          },
         },
       }),
     ]);

@@ -48,6 +48,10 @@ export interface Project {
   dateOfLoss?: Date;
   organizationId: string;
   status: ProjectStatus;
+  _count?: {
+    images: number;
+    documents: number;
+  };
 }
 
 export interface CreateProjectDto {
@@ -85,6 +89,18 @@ export interface CreateProjectDto {
 }
 
 export type UpdateProjectDto = Partial<CreateProjectDto>;
+
+export interface FilterProjectsParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  assigneeIds?: string[];
+  tagNames?: string[];
+}
 
 export interface SendLidarEmailRequest {
   roomId: string;

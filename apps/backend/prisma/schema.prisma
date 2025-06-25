@@ -354,7 +354,6 @@ model Image {
 
 enum ImageType {
   ROOM
-  IMAGE
   FILE
   NOTE
 }

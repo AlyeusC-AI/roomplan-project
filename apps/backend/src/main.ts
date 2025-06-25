@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
-import { MemberStatus, Role } from '@prisma/client';
+import { ImageType, MemberStatus, Role } from '@prisma/client';
 import { PrismaService } from './prisma/prisma.service';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 
@@ -57,11 +57,11 @@ async function bootstrap() {
   );
 
   // const prisma = app.get(PrismaService);
-  // await prisma.user.updateMany({
-  //   // where: {
-  //   //   status: MemberStatus.PENDING,
-  //   // },
-  //   data: { acceptReminders: true, isEmailVerified: true },
+  // await prisma.image.updateMany({
+  //   where: {
+  //     type: ImageType.IMAGE,
+  //   },
+  //   data: { type: ImageType.ROOM },
   // });
 }
 bootstrap();
