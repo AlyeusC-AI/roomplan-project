@@ -206,6 +206,15 @@ export class ProjectsService {
               email: true,
             },
           },
+          images: {
+            where: {
+              type: 'ROOM',
+            },
+            orderBy: {
+              createdAt: 'desc',
+            },
+            take: 5,
+          },
           _count: {
             select: {
               images: {
@@ -244,6 +253,15 @@ export class ProjectsService {
           include: {
             equipment: true,
           },
+        },
+        images: {
+          where: {
+            type: 'ROOM',
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 5,
         },
         _count: {
           select: {
@@ -403,6 +421,15 @@ export class ProjectsService {
               lastName: true,
               email: true,
             },
+          },
+          images: {
+            where: {
+              type: 'ROOM',
+            },
+            orderBy: {
+              createdAt: 'desc',
+            },
+            take: 5,
           },
           _count: {
             select: {
