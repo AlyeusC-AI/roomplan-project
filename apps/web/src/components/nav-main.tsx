@@ -64,6 +64,11 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
                     isActive={
                       openItems[item.title] || pathname.includes(item.url)
                     }
+                    className={cn(
+                      "relative",
+                      (openItems[item.title] || pathname.includes(item.url)) &&
+                        "bg-muted/50 after:absolute after:left-0 after:top-0 after:h-full after:w-1 after:bg-primary"
+                    )}
                   >
                     {item.icon && <item.icon size={16} />}
                     <span>{item.title}</span>
@@ -75,7 +80,13 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
                 </CollapsibleTrigger>
               ) : (
                 <Link href={item.url}>
-                  <SidebarMenuButton isActive={pathname === item.url}>
+                  <SidebarMenuButton 
+                    isActive={pathname === item.url}
+                    className={cn(
+                      "relative",
+                      pathname === item.url && "bg-muted/50 after:absolute after:left-0 after:top-0 after:h-full after:w-1 after:bg-primary"
+                    )}
+                  >
                     {item.icon && <item.icon size={16} />}
                     <span>{item.title}</span>
                   </SidebarMenuButton>
@@ -89,7 +100,13 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
                     isActive={pathname.includes(subItem.url)}
                   >
                     <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton asChild>
+                      <SidebarMenuSubButton 
+                        asChild
+                        className={cn(
+                          "relative",
+                          pathname.includes(subItem.url) && "bg-muted/50 after:absolute after:left-0 after:top-0 after:h-full after:w-1 after:bg-primary"
+                        )}
+                      >
                         <Link href={subItem.url}>
                           <span>{subItem.title}</span>
                         </Link>

@@ -27,6 +27,7 @@ import {
 import Image from "next/image";
 import { SidebarSubscriptionStatus } from "./sidebar-subscription-status";
 import { Input } from "./ui/input";
+import ActionOptionsSidebar from "./action-options-sidebar";
 // import { OrganizationSelector } from "./organization-selector";
 
 // This is sample data.
@@ -152,14 +153,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar className='w-56 border-r border-gray-800 bg-[#192d43]' {...props}>
       <div className='flex h-full flex-col'>
         <div className='flex-1'>
-        <SidebarHeader className='flex items-center justify-center border-b border-gray-100 bg-white py-4'>
+        <SidebarHeader className='flex flex-row items-center justify-between py-3'>
+          <div className="flex items-center bg-white rounded-full ms-4" title="Service Geek">
+
             <Image
-              src='/images/brand/servicegeek-no-bg.png'
+              src='/images/brand/servicegeek-no-bg-icon.png'
               alt='logo'
-              width={180}
-              height={40}
-              className='h-12 w-auto'
-            />
+              width={32}
+              height={32}
+              className='size-8 w-auto'
+              />
+              </div>
+              <ActionOptionsSidebar />
             
             {/* <div className="flex items-center gap-2">
               <CirclePlus size={30} />
@@ -195,9 +200,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         <SidebarSubscriptionStatus />
 
-        <SidebarFooter className='border-t border-gray-700 bg-[#192d43]/50 px-3 pb-4'>
+        {/* <SidebarFooter className='border-t border-gray-700 bg-[#192d43]/50 px-3 pb-4'>
           <NavUser />
-        </SidebarFooter>
+        </SidebarFooter> */}
       </div>
     </Sidebar>
   );
