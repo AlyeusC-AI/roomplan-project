@@ -64,6 +64,8 @@ import { uploadImage } from "@/lib/imagekit";
 import FilterModal from "@/components/pictures/FilterModal";
 import SelectionMode from "@/components/pictures/SelectionMode";
 import BulkActionsModal from "@/components/pictures/BulkActionsModal";
+import FilteredImagesGallery from "@/components/pictures/FilteredImagesGallery";
+import SaveToPhoneModal from "@/components/pictures/SaveToPhoneModal";
 
 export default function ProjectPhotos() {
   const { projectId } = useGlobalSearchParams<{
@@ -95,6 +97,9 @@ export default function ProjectPhotos() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAssigningRoom, setIsAssigningRoom] = useState(false);
   const [isAssigningTags, setIsAssigningTags] = useState(false);
+
+  // Save to phone state
+  const [showSaveToPhoneModal, setShowSaveToPhoneModal] = useState(false);
 
   const router = useRouter();
   const [isUploadingMainImage, setIsUploadingMainImage] = useState(false);
@@ -182,6 +187,13 @@ export default function ProjectPhotos() {
 
     return filtered;
   }, [images?.data, selectedRoomFilter, selectedTagFilters]);
+
+  // Check if filters are active
+  const hasActiveFilters =
+    selectedRoomFilter !== "all" || selectedTagFilters.length > 0;
+
+  // Check if we should show filtered view
+  const shouldShowFilteredView = hasActiveFilters || isSelectionMode;
 
   // Selection mode handlers
   const handleSelectionChange = (selectedKeys: string[]) => {
@@ -471,6 +483,15 @@ export default function ProjectPhotos() {
     }
   };
 
+  const handleSaveToPhone = () => {
+    setShowSaveToPhoneModal(true);
+  };
+
+  const handleSaveToPhoneComplete = () => {
+    // Optionally clear selection after saving
+    // clearSelection();
+  };
+
   if (loading && !rooms?.length) {
     return (
       <View style={styles.loadingContainer}>
@@ -512,6 +533,7 @@ export default function ProjectPhotos() {
             setShowBulkActionsModal(true);
           }}
           onDelete={handleDelete}
+          onSaveToPhone={handleSaveToPhone}
           isDeleting={isDeleting}
           isAssigningRoom={isAssigningRoom}
         />
@@ -606,60 +628,92 @@ export default function ProjectPhotos() {
           </View>
         </View>
 
-        <View style={styles.roomsContainer}>
-          {filteredRooms?.map((room) => {
-            const imagePerRoom = filteredPhotos?.filter(
-              (image) => image.roomId === room.id
-            );
-            const previewImageUrl = imagePerRoom?.[0]?.url;
-            const imageCount = imagePerRoom?.length || 0;
+        {/* Show filtered view when filters are active or in selection mode */}
+        {shouldShowFilteredView ? (
+          <FilteredImagesGallery
+            images={filteredPhotos}
+            selectable={isSelectionMode}
+            onSelectionChange={handleSelectionChange}
+            initialSelectedKeys={selectedPhotos.map((p) => p.id)}
+            activeFilters={{
+              roomFilter:
+                selectedRoomFilter !== "all" ? selectedRoomFilter : undefined,
+              tagFilters:
+                selectedTagFilters.length > 0 ? selectedTagFilters : undefined,
+            }}
+            onClearFilters={() => {
+              setSelectedRoomFilter("all");
+              setSelectedTagFilters([]);
+            }}
+            onClearTagFilter={(tagToRemove) => {
+              if (tagToRemove === "room") {
+                setSelectedRoomFilter("all");
+              } else {
+                setSelectedTagFilters((prev) =>
+                  prev.filter((tag) => tag !== tagToRemove)
+                );
+              }
+            }}
+            rooms={rooms || []}
+          />
+        ) : (
+          /* Show room-grouped view when no filters are active */
+          <View style={styles.roomsContainer}>
+            {filteredRooms?.map((room) => {
+              const imagePerRoom = filteredPhotos?.filter(
+                (image) => image.roomId === room.id
+              );
+              const previewImageUrl = imagePerRoom?.[0]?.url;
+              const imageCount = imagePerRoom?.length || 0;
 
-            return (
-              <TouchableOpacity
-                key={room.name}
-                style={styles.roomCard}
-                onPress={() => {
-                  setExpandedValue(
-                    expandedValue === room.name ? undefined : room.name
-                  );
-                }}
-              >
-                <View style={styles.roomCardContent}>
-                  <View style={styles.roomInfo}>
-                    <Text style={styles.roomName}>{room.name}</Text>
-                    <Text style={styles.imageCount}>
-                      {imageCount} {imageCount === 1 ? "image" : "images"}
-                    </Text>
+              return (
+                <TouchableOpacity
+                  key={room.name}
+                  style={styles.roomCard}
+                  onPress={() => {
+                    setExpandedValue(
+                      expandedValue === room.name ? undefined : room.name
+                    );
+                  }}
+                >
+                  <View style={styles.roomCardContent}>
+                    <View style={styles.roomInfo}>
+                      <Text style={styles.roomName}>{room.name}</Text>
+                      <Text style={styles.imageCount}>
+                        {imageCount} {imageCount === 1 ? "image" : "images"}
+                      </Text>
+                    </View>
+
+                    {previewImageUrl ? (
+                      <Image
+                        source={{ uri: previewImageUrl }}
+                        style={styles.roomPreviewImage}
+                      />
+                    ) : (
+                      <View style={styles.roomPreviewPlaceholder}>
+                        <ImageIcon size={24} color="#9CA3AF" />
+                      </View>
+                    )}
                   </View>
 
-                  {previewImageUrl ? (
-                    <Image
-                      source={{ uri: previewImageUrl }}
-                      style={styles.roomPreviewImage}
-                    />
-                  ) : (
-                    <View style={styles.roomPreviewPlaceholder}>
-                      <ImageIcon size={24} color="#9CA3AF" />
+                  {expandedValue === room.name && (
+                    <View style={styles.galleryContainer}>
+                      <ImageGallery
+                        images={imagePerRoom || []}
+                        // onRefresh={refreshData}
+                        room={room}
+                        selectable={isSelectionMode}
+                        onSelectionChange={handleSelectionChange}
+                        initialSelectedKeys={selectedPhotos.map((p) => p.id)}
+                        refetch={refetch}
+                      />
                     </View>
                   )}
-                </View>
-
-                {expandedValue === room.name && (
-                  <View style={styles.galleryContainer}>
-                    <ImageGallery
-                      images={imagePerRoom || []}
-                      // onRefresh={refreshData}
-                      room={room}
-                      selectable={isSelectionMode}
-                      onSelectionChange={handleSelectionChange}
-                      initialSelectedKeys={selectedPhotos.map((p) => p.id)}
-                    />
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
       </ScrollView>
 
       {(rooms?.length || 0) > 0 && (
@@ -845,6 +899,13 @@ export default function ProjectPhotos() {
           </View>
         </View>
       </Modal>
+
+      <SaveToPhoneModal
+        visible={showSaveToPhoneModal}
+        onClose={() => setShowSaveToPhoneModal(false)}
+        selectedPhotos={selectedPhotos}
+        onComplete={handleSaveToPhoneComplete}
+      />
     </View>
   );
 }

@@ -91,7 +91,7 @@ interface ImageGalleryProps {
   selectable?: boolean;
   onSelectionChange?: (selectedKeys: string[]) => void;
   initialSelectedKeys?: string[];
-
+  refetch: () => void;
   onReorder?: (newOrder: Inference[]) => void;
 }
 
@@ -244,6 +244,7 @@ export default function ImageGallery({
   selectable = false,
   onSelectionChange,
   initialSelectedKeys = [],
+  refetch,
 }: ImageGalleryProps) {
   const [selectedKeys, setSelectedKeys] =
     useState<string[]>(initialSelectedKeys);
@@ -458,6 +459,7 @@ export default function ImageGallery({
         modalVisible={modalVisible}
         activeImageIndex={activeImageIndex}
         setActiveImageIndex={setActiveImageIndex}
+        refetch={refetch}
       />
     </GestureHandlerRootView>
   );

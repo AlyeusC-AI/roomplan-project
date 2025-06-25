@@ -7,7 +7,7 @@ import {
   Alert,
 } from "react-native";
 import { Text } from "@/components/ui/text";
-import { X, FolderInput, Tag, Trash2 } from "lucide-react-native";
+import { X, FolderInput, Tag, Trash2, Download } from "lucide-react-native";
 
 interface SelectionModeProps {
   selectedPhotos: any[];
@@ -15,6 +15,7 @@ interface SelectionModeProps {
   onAssignRoom: () => void;
   onAssignTags: () => void;
   onDelete: () => void;
+  onSaveToPhone: () => void;
   isDeleting?: boolean;
   isAssigningRoom?: boolean;
 }
@@ -25,6 +26,7 @@ export default function SelectionMode({
   onAssignRoom,
   onAssignTags,
   onDelete,
+  onSaveToPhone,
   isDeleting = false,
   isAssigningRoom = false,
 }: SelectionModeProps) {
@@ -67,6 +69,10 @@ export default function SelectionMode({
 
           <TouchableOpacity style={styles.actionButton} onPress={onAssignTags}>
             <Tag size={16} color="#fff" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButton} onPress={onSaveToPhone}>
+            <Download size={16} color="#fff" />
           </TouchableOpacity>
 
           <TouchableOpacity
