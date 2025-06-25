@@ -348,20 +348,18 @@ export const Table = ({ projects }: { projects: any[] }) => {
           <div className="flex divide-x divide-gray-200">
             <div className="flex flex-col items-center gap-2 px-2">
               <span className="text-muted-foreground text-xs">Images</span>
-              <span className="text-lg">10</span>
+              <span className="text-lg">{row.original.images?.length || 0}</span>
             </div>
             <div className="flex flex-col items-center gap-2 px-2">
               <span className="text-muted-foreground text-xs">Docs</span>
-              <span className="text-lg">10</span>
+              <span className="text-lg">{row.original.documents?.length || 0}</span>
             </div>
           </div>
           <div className="grow flex items-center  gap-2">
-            {/* {row.original.images?.map((image:any)=>
-            <img src={image} alt={row.original.clientName} className='md:size-24 size-16 rounded-full' />
-          )} */}
-            {["https://via.placeholder.com/150", "https://via.placeholder.com/150", "https://via.placeholder.com/150"].map((image: any) =>
-              <img src={image} alt={row.original.clientName} className='md:size-24 size-16 rounded-xl border-2 border-border' />
-            )}
+            {row.original.images?.map((image:any)=>
+            <img src={image.url} alt={row.original.name || "image"} className='md:size-24 size-16 rounded-xl border-2 border-border'/>
+          )}
+            
 
           </div>
         </div>
