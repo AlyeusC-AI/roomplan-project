@@ -349,7 +349,7 @@ export default function NewChatScreen() {
           {member.user.firstName} {member.user.lastName}
         </Text>
         <Text style={styles.memberEmail}>{member.user.email}</Text>
-        <Text style={styles.memberStatus}>Available</Text>
+        {/* <Text style={styles.memberStatus}>Available</Text> */}
       </View>
       <Text style={styles.chevronIcon}>›</Text>
     </TouchableOpacity>
