@@ -56,12 +56,11 @@ async function bootstrap() {
     `Swagger is running on http://localhost:${process.env.PORT ?? 3000}/api`,
   );
 
-  // const prisma = app.get(PrismaService);
-  // await prisma.image.updateMany({
+  const prisma = app.get(PrismaService);
+  // await prisma.chat.deleteMany({
   //   where: {
-  //     type: ImageType.IMAGE,
+  //     // type: ChatType.PROJECT,
   //   },
-  //   data: { type: ImageType.ROOM },
   // });
 }
 bootstrap();

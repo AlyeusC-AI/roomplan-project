@@ -92,3 +92,9 @@ export const uploadFile = async (
 
   return { signedUrl, publicUrl, key };
 };
+
+// Export the service object for consistency with other services
+export const spaceService = {
+  getUploadUrl,
+  uploadFile,
+};

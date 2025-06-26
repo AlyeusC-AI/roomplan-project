@@ -1,4 +1,4 @@
-import "ts-node/register";
+// import "ts-node/register";
 import { ExpoConfig } from "@expo/config";
 
 const config: ExpoConfig = {
@@ -54,7 +54,8 @@ const config: ExpoConfig = {
           NSPrivacyAccessedAPITypeReasons: ["E174.1", "85F4.1"],
         },
         {
-          NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategorySystemBootTime",
+          NSPrivacyAccessedAPIType:
+            "NSPrivacyAccessedAPICategorySystemBootTime",
           NSPrivacyAccessedAPITypeReasons: ["35F9.1"],
         },
       ],
@@ -78,7 +79,7 @@ const config: ExpoConfig = {
     ["expo-asset"],
     ["expo-font"],
     "expo-router",
-    ["./plugins/withLidar"],
+    // ["./plugins/withLidar"],
     [
       "react-native-vision-camera",
       {

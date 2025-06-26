@@ -26,27 +26,28 @@ export class ChatService {
   ) {
     const { type, name, projectId, participantIds } = createChatDto;
 
-    // Validate participants are in the same organization
-    const participants = await this.prisma.user.findMany({
-      where: {
-        id: { in: participantIds },
-        organizationMemberships: {
-          some: {
-            organizationId,
-            status: 'ACTIVE',
+    // For project chats, automatically get all project members
+    let finalParticipantIds = participantIds;
+    console.log('🚀 ~ ChatService ~ finalParticipantIds:', finalParticipantIds);
+
+    if (type === ChatType.PROJECT && projectId) {
+      const projectMembers = await this.prisma.user.findMany({
+        where: {
+          projects: {
+            some: {
+              id: projectId,
+            },
           },
         },
-      },
-    });
-
-    if (participants.length !== participantIds.length) {
-      throw new BadRequestException(
-        'Some participants are not in your organization',
-      );
+      });
+      finalParticipantIds = projectMembers.map((member) => member.id);
     }
+    console.log('🚀 ~ ChatService ~ finalParticipantIds:', finalParticipantIds);
+
+    // Validate participants are in the same organization
 
     // For private chats, ensure exactly 2 participants
-    if (type === ChatType.PRIVATE && participantIds.length !== 2) {
+    if (type === ChatType.PRIVATE && finalParticipantIds.length !== 2) {
       throw new BadRequestException(
         'Private chats must have exactly 2 participants',
       );
@@ -62,10 +63,10 @@ export class ChatService {
       const project = await this.prisma.project.findFirst({
         where: {
           id: projectId,
-          organizationId,
+          // organizationId,
           members: {
             some: {
-              id: { in: participantIds },
+              id: { in: finalParticipantIds },
             },
           },
         },
@@ -84,7 +85,7 @@ export class ChatService {
           organizationId,
           participants: {
             every: {
-              userId: { in: participantIds },
+              userId: { in: finalParticipantIds },
             },
           },
         },
@@ -97,6 +98,19 @@ export class ChatService {
         return existingChat;
       }
     }
+    if (type === ChatType.PROJECT) {
+      const isChatExists = await this.prisma.chat.findFirst({
+        where: {
+          type,
+          projectId,
+          // organizationId,
+        },
+      });
+
+      if (isChatExists) {
+        return isChatExists;
+      }
+    }
 
     // Create the chat
     const chat = await this.prisma.chat.create({
@@ -106,7 +120,7 @@ export class ChatService {
         projectId,
         organizationId,
         participants: {
-          create: participantIds.map((participantId) => ({
+          create: finalParticipantIds.map((participantId) => ({
             userId: participantId,
           })),
         },
@@ -644,21 +658,11 @@ export class ChatService {
     });
 
     if (!chat) {
-      // Get project members
-      const projectMembers = await this.prisma.user.findMany({
-        where: {
-          projects: {
-            some: {
-              id: projectId,
-            },
-          },
-        },
-      });
-
+      // Create project chat - createChat will automatically add all project members
       chat = await this.createChat(project.organizationId, userId, {
         type: ChatType.PROJECT,
         projectId,
-        participantIds: projectMembers.map((member) => member.id),
+        participantIds: [], // Will be automatically populated with all project members
       });
     }
 

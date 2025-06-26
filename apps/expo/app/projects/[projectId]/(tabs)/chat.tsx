@@ -1,243 +1,108 @@
 import React, { useEffect, useState, useRef } from "react";
 import {
   View,
-  ScrollView,
   ActivityIndicator,
-  TouchableOpacity,
-  RefreshControl,
+  Alert,
   StyleSheet,
   TextInput,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Dimensions,
+  TouchableOpacity,
 } from "react-native";
 import { Text } from "@/components/ui/text";
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import { toast } from "sonner-native";
-import { Empty } from "@/components/ui/empty";
-import {
-  MessageCircle,
-  Send,
-  Trash2,
-  Loader2,
-  ChevronLeft,
-} from "lucide-react-native";
 import {
   useChat,
   useCurrentUser,
   useGetProjectById,
+  chatService,
+  MessageType,
+  spaceService,
 } from "@service-geek/api-client";
-import { format, isToday, isYesterday } from "date-fns";
-
-const { width: screenWidth } = Dimensions.get("window");
+import {
+  ChatHeader,
+  MessageList,
+  MessageListRef,
+  ChatInput,
+  TypingIndicator,
+  ImageViewer,
+} from "@/components/project/chat";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
+import { uploadImage } from "@/lib/imagekit";
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f8fafc",
   },
-  navigationHeader: {
-    backgroundColor: "#ffffff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e2e8f0",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  backButton: {
-    marginRight: 12,
-    padding: 4,
-  },
-  headerContent: {
+  loadingContainer: {
     flex: 1,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1e293b",
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    color: "#64748b",
-    marginTop: 2,
-  },
-  connectionStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: "#ffffff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e2e8f0",
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  messagesContainer: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  messageGroup: {
-    marginBottom: 16,
-  },
-  messageDate: {
-    textAlign: "center",
-    fontSize: 12,
-    color: "#94a3b8",
-    marginVertical: 16,
-    backgroundColor: "#f8fafc",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: "center",
-  },
-  messageBubble: {
-    maxWidth: screenWidth * 0.75,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginBottom: 4,
-  },
-  messageBubbleSent: {
-    backgroundColor: "#3b82f6",
-    alignSelf: "flex-end",
-    borderBottomRightRadius: 4,
-  },
-  messageBubbleReceived: {
-    backgroundColor: "#ffffff",
-    alignSelf: "flex-start",
-    borderBottomLeftRadius: 4,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-  messageText: {
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  messageTextSent: {
-    color: "#ffffff",
-  },
-  messageTextReceived: {
-    color: "#1e293b",
-  },
-  messageTime: {
-    fontSize: 11,
-    marginTop: 4,
-  },
-  messageTimeSent: {
-    color: "rgba(255, 255, 255, 0.7)",
-    textAlign: "right",
-  },
-  messageTimeReceived: {
-    color: "#94a3b8",
-    textAlign: "left",
-  },
-  messageActions: {
-    position: "absolute",
-    top: -8,
-    right: -8,
-    backgroundColor: "#ef4444",
-    borderRadius: 12,
-    width: 24,
-    height: 24,
     justifyContent: "center",
     alignItems: "center",
-    opacity: 0,
-  },
-  messageActionsVisible: {
-    opacity: 1,
-  },
-  typingIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: "#ffffff",
-    borderTopWidth: 1,
-    borderTopColor: "#e2e8f0",
-  },
-  typingBubble: {
-    backgroundColor: "#f1f5f9",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderBottomLeftRadius: 4,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    maxWidth: screenWidth * 0.6,
-  },
-  typingDots: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  typingDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#94a3b8",
-    marginRight: 4,
-  },
-  inputContainer: {
-    backgroundColor: "#ffffff",
-    borderTopWidth: 1,
-    borderTopColor: "#e2e8f0",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: "row",
-    alignItems: "flex-end",
-  },
-  textInput: {
-    flex: 1,
     backgroundColor: "#f8fafc",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    marginRight: 8,
-    maxHeight: 100,
-    minHeight: 44,
-  },
-  sendButton: {
-    backgroundColor: "#3b82f6",
-    borderRadius: 20,
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sendButtonDisabled: {
-    backgroundColor: "#cbd5e1",
-  },
-  loadMoreButton: {
-    backgroundColor: "#ffffff",
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    alignSelf: "center",
   },
   errorContainer: {
+    flex: 1,
+    backgroundColor: "#f8fafc",
+  },
+  errorContent: {
     backgroundColor: "#fef2f2",
     borderWidth: 1,
     borderColor: "#fecaca",
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
     margin: 16,
   },
   errorText: {
     color: "#dc2626",
     fontSize: 14,
+    textAlign: "center",
+  },
+  editContainer: {
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 12,
+    padding: 12,
+    margin: 16,
+  },
+  editInput: {
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    marginBottom: 12,
+    backgroundColor: "#f8fafc",
+  },
+  editButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  editButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  saveButton: {
+    backgroundColor: "#3b82f6",
+  },
+  cancelButton: {
+    backgroundColor: "#f1f5f9",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+  buttonText: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  saveButtonText: {
+    color: "#ffffff",
+  },
+  cancelButtonText: {
+    color: "#64748b",
   },
 });
 
@@ -245,32 +110,155 @@ export default function ChatScreen() {
   const { projectId } = useGlobalSearchParams<{ projectId: string }>();
   const [message, setMessage] = useState("");
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const [editMessageId, setEditMessageId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [replyingTo, setReplyingTo] = useState<any>(null);
+  const [selectedImage, setSelectedImage] = useState<any>(null);
+  const [chatId, setChatId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [downloadingFiles, setDownloadingFiles] = useState<Set<string>>(
+    new Set()
+  );
+  const messageListRef = useRef<MessageListRef>(null);
   const router = useRouter();
   const { data: currentUser } = useCurrentUser();
   const { data: project } = useGetProjectById(projectId);
 
+  // Initialize project chat
+  useEffect(() => {
+    const initializeProjectChat = async () => {
+      try {
+        setLoading(true);
+        const projectChat = await chatService.createProjectChat(projectId);
+        setChatId(projectChat.id);
+      } catch (err) {
+        console.error("Failed to initialize project chat:", err);
+        setError("Failed to load project chat");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (projectId) {
+      initializeProjectChat();
+    }
+  }, [projectId]);
+
   const {
     messages,
-    loading,
-    error,
+    loading: messagesLoading,
+    error: chatError,
     sendMessage,
+    updateMessage,
     deleteMessage,
     loadMoreMessages,
     connected,
     typingUsers,
     hasMoreMessages,
-  } = useChat({ projectId, autoConnect: true, enableNotifications: true });
+  } = useChat({
+    chatId: chatId || "",
+    autoConnect: true,
+    enableNotifications: true,
+  });
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
 
     try {
-      await sendMessage(message.trim());
+      await sendMessage(message.trim(), MessageType.TEXT, [], replyingTo?.id);
       setMessage("");
+      setReplyingTo(null);
+
+      // Scroll to bottom after sending message
+      setTimeout(() => {
+        messageListRef.current?.scrollToBottom(true);
+      }, 100);
     } catch (error) {
       console.error("Failed to send message:", error);
       toast.error("Failed to send message");
+    }
+  };
+
+  const uploadFileToSpace = async (file: any): Promise<any> => {
+    try {
+      // Upload to space
+      const uploadResult = await uploadImage(file, {
+        folder: "chat",
+        useUniqueFileName: true,
+      });
+      return {
+        fileUrl: uploadResult.url,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+      };
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      throw new Error("Failed to upload file");
+    }
+  };
+
+  const handleSendFile = async (file: any) => {
+    try {
+      toast.loading("Uploading file...");
+
+      // Upload file to space
+      const attachment = await uploadFileToSpace(file);
+
+      // Send message with attachment
+      await sendMessage("", MessageType.FILE, [attachment], replyingTo?.id);
+      setReplyingTo(null);
+
+      toast.dismiss();
+      toast.success("File sent successfully");
+
+      // Scroll to bottom after sending file
+      setTimeout(() => {
+        messageListRef.current?.scrollToBottom(true);
+      }, 100);
+    } catch (error) {
+      console.error("Failed to send file:", error);
+      toast.dismiss();
+      toast.error("Failed to send file");
+    }
+  };
+
+  const handleSendImage = async (image: any) => {
+    try {
+      toast.loading("Uploading image...");
+
+      // Upload image to space
+      const attachment = await uploadFileToSpace(image);
+
+      // Send message with attachment
+      await sendMessage("", MessageType.IMAGE, [attachment], replyingTo?.id);
+      setReplyingTo(null);
+
+      toast.dismiss();
+      toast.success("Image sent successfully");
+
+      // Scroll to bottom after sending image
+      setTimeout(() => {
+        messageListRef.current?.scrollToBottom(true);
+      }, 100);
+    } catch (error) {
+      console.error("Failed to send image:", error);
+      toast.dismiss();
+      toast.error("Failed to send image");
+    }
+  };
+
+  const handleEditMessage = async () => {
+    if (!editContent.trim() || editContent === editMessageId) return;
+
+    try {
+      await updateMessage(editMessageId!, editContent.trim());
+      setEditMessageId(null);
+      setEditContent("");
+    } catch (error) {
+      console.error("Failed to edit message:", error);
+      toast.error("Failed to edit message");
     }
   };
 
@@ -298,23 +286,112 @@ export default function ChatScreen() {
     );
   };
 
-  const getUserInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  const handleReplyClick = (message: any) => {
+    setReplyingTo(message);
+    setSelectedMessage(null);
   };
 
-  const formatMessageTime = (date: Date) => {
-    const messageDate = new Date(date);
-    return format(messageDate, "h:mm a");
+  const handleEditClick = (message: any) => {
+    setEditMessageId(message.id);
+    setEditContent(message.content);
+    setSelectedMessage(null);
   };
 
-  const formatMessageDate = (date: Date) => {
-    const messageDate = new Date(date);
-    if (isToday(messageDate)) {
-      return "Today";
-    } else if (isYesterday(messageDate)) {
-      return "Yesterday";
-    } else {
-      return format(messageDate, "MMM d, yyyy");
+  const handleImageClick = (attachment: any) => {
+    setSelectedImage(attachment);
+  };
+
+  const handleDownload = async (fileUrl: string, fileName: string) => {
+    const fileId = `${fileUrl}_${fileName}`;
+
+    // Prevent multiple downloads of the same file
+    if (downloadingFiles.has(fileId)) {
+      return;
+    }
+
+    try {
+      setDownloadingFiles((prev) => new Set(prev).add(fileId));
+      toast.loading("Downloading file...");
+
+      // Create a unique filename with timestamp
+      const timestamp = Date.now();
+      const fileExtension = fileName.split(".").pop() || "";
+      const baseName = fileName.replace(`.${fileExtension}`, "");
+      const uniqueFileName = `${baseName}_${timestamp}.${fileExtension}`;
+
+      // Download directory
+      const downloadDir = `${FileSystem.documentDirectory}downloads/`;
+
+      // Ensure download directory exists
+      const dirInfo = await FileSystem.getInfoAsync(downloadDir);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(downloadDir, {
+          intermediates: true,
+        });
+      }
+
+      const localUri = `${downloadDir}${uniqueFileName}`;
+
+      // Download the file
+      const downloadResult = await FileSystem.downloadAsync(fileUrl, localUri);
+
+      if (downloadResult.status === 200) {
+        toast.dismiss();
+
+        // Check if sharing is available
+        const isSharingAvailable = await Sharing.isAvailableAsync();
+
+        if (isSharingAvailable) {
+          // Share the file
+          await Sharing.shareAsync(localUri, {
+            mimeType: getMimeType(fileName),
+            dialogTitle: `Share ${fileName}`,
+          });
+          toast.success("File ready to share!");
+        } else {
+          // Fallback: show success message with file location
+          toast.success(`File downloaded to: ${localUri}`);
+        }
+      } else {
+        throw new Error(
+          `Download failed with status: ${downloadResult.status}`
+        );
+      }
+    } catch (error) {
+      console.error("Failed to download file:", error);
+      toast.dismiss();
+      toast.error("Failed to download file");
+    } finally {
+      setDownloadingFiles((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(fileId);
+        return newSet;
+      });
+    }
+  };
+
+  const getMimeType = (fileName: string): string => {
+    const extension = fileName.split(".").pop()?.toLowerCase();
+    switch (extension) {
+      case "jpg":
+      case "jpeg":
+        return "image/jpeg";
+      case "png":
+        return "image/png";
+      case "gif":
+        return "image/gif";
+      case "webp":
+        return "image/webp";
+      case "pdf":
+        return "application/pdf";
+      case "doc":
+        return "application/msword";
+      case "docx":
+        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      case "txt":
+        return "text/plain";
+      default:
+        return "application/octet-stream";
     }
   };
 
@@ -322,245 +399,120 @@ export default function ChatScreen() {
     return currentUser?.id === messageUserId;
   };
 
-  const groupMessagesByDate = (messages: any[]) => {
-    const groups: { [key: string]: any[] } = {};
-
-    messages.forEach((message) => {
-      const date = formatMessageDate(new Date(message.createdAt));
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(message);
-    });
-
-    return groups;
-  };
-
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    if (scrollViewRef.current && messages.length > 0) {
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }
-  }, [messages]);
-
   // Ensure messages is always an array
   const safeMessages = Array.isArray(messages) ? messages : [];
-  const messageGroups = groupMessagesByDate(safeMessages);
 
-  if (loading && safeMessages.length === 0) {
+  if (loading || !chatId) {
     return (
-      <View className="flex items-center justify-center h-full w-full">
+      <View style={styles.loadingContainer}>
         <ActivityIndicator color="#3b82f6" size="large" />
       </View>
     );
   }
 
-  return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
-    >
-      <View style={styles.container}>
-        {/* Navigation Header */}
-        <View style={styles.navigationHeader}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            {/* @ts-ignore - Known issue with Lucide icon types */}
-            <ChevronLeft size={24} color="#1e293b" />
-          </TouchableOpacity>
-          <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>
-              {project?.data?.clientName || "Project Chat"}
-            </Text>
-            <Text style={styles.headerSubtitle}>
-              {connected ? "Live" : "Offline"}
-            </Text>
-          </View>
-        </View>
-
-        {/* Connection Status */}
-        <View style={styles.connectionStatus}>
-          <View
-            style={[
-              styles.statusDot,
-              { backgroundColor: connected ? "#10b981" : "#ef4444" },
-            ]}
-          />
-          <Text className="text-sm text-muted-foreground">
-            {connected ? "Connected" : "Disconnected"}
+  if (error || chatError) {
+    return (
+      <View style={styles.errorContainer}>
+        <ChatHeader
+          title="Project Chat"
+          connected={false}
+          onBack={() => router.back()}
+        />
+        <View style={styles.errorContent}>
+          <Text style={styles.errorText}>
+            {error || chatError || "Failed to load chat"}
           </Text>
         </View>
-
-        {/* Error Message */}
-        {error && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>
-              {error}
-              {!connected && " Trying to reconnect..."}
-            </Text>
-          </View>
-        )}
-
-        {/* Messages */}
-        <ScrollView
-          ref={scrollViewRef}
-          style={styles.messagesContainer}
-          refreshControl={
-            <RefreshControl
-              refreshing={loading}
-              onRefresh={loadMoreMessages}
-              colors={["#3b82f6"]}
-            />
-          }
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Load More Messages Button */}
-          {hasMoreMessages && (
-            <TouchableOpacity
-              style={styles.loadMoreButton}
-              onPress={loadMoreMessages}
-              disabled={loading}
-            >
-              <View className="flex-row items-center justify-center">
-                {loading ? (
-                  <>
-                    {/* @ts-ignore - Known issue with Lucide icon types */}
-                    <Loader2 size={14} color="#64748b" />
-                    <Text className="text-sm text-muted-foreground ml-2">
-                      Loading...
-                    </Text>
-                  </>
-                ) : (
-                  <Text className="text-sm text-muted-foreground">
-                    Load More Messages
-                  </Text>
-                )}
-              </View>
-            </TouchableOpacity>
-          )}
-
-          {/* Message Groups */}
-          {safeMessages.length === 0 ? (
-            <View className="flex-1 justify-center items-center py-16">
-              <Empty
-                title="No messages yet"
-                description="Start the conversation!"
-                icon={MessageCircle}
-              />
-            </View>
-          ) : (
-            Object.entries(messageGroups).map(([date, dateMessages]) => (
-              <View key={date} style={styles.messageGroup}>
-                <Text style={styles.messageDate}>{date}</Text>
-                {dateMessages.map((msg) => {
-                  const isSent = isMessageSender(msg.user.id);
-                  return (
-                    <View key={msg.id} style={{ position: "relative" }}>
-                      <TouchableOpacity
-                        onLongPress={() => isSent && setSelectedMessage(msg.id)}
-                        onPress={() => setSelectedMessage(null)}
-                        activeOpacity={0.8}
-                      >
-                        <View
-                          style={[
-                            styles.messageBubble,
-                            isSent
-                              ? styles.messageBubbleSent
-                              : styles.messageBubbleReceived,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.messageText,
-                              isSent
-                                ? styles.messageTextSent
-                                : styles.messageTextReceived,
-                            ]}
-                          >
-                            {msg.content}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.messageTime,
-                              isSent
-                                ? styles.messageTimeSent
-                                : styles.messageTimeReceived,
-                            ]}
-                          >
-                            {formatMessageTime(new Date(msg.createdAt))}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-
-                      {/* Delete Button */}
-                      {isSent && selectedMessage === msg.id && (
-                        <TouchableOpacity
-                          style={[
-                            styles.messageActions,
-                            styles.messageActionsVisible,
-                          ]}
-                          onPress={() => handleDeleteMessage(msg.id)}
-                        >
-                          {/* @ts-ignore - Known issue with Lucide icon types */}
-                          <Trash2 size={12} color="#ffffff" />
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  );
-                })}
-              </View>
-            ))
-          )}
-        </ScrollView>
-
-        {/* Typing Indicator */}
-        {typingUsers.length > 0 && (
-          <View style={styles.typingIndicator}>
-            <View style={styles.typingBubble}>
-              <View style={styles.typingDots}>
-                <View style={[styles.typingDot, { animationDelay: "0ms" }]} />
-                <View style={[styles.typingDot, { animationDelay: "150ms" }]} />
-                <View style={[styles.typingDot, { animationDelay: "300ms" }]} />
-              </View>
-              <Text className="text-xs text-muted-foreground ml-2">
-                {typingUsers.length === 1
-                  ? "Someone is typing..."
-                  : `${typingUsers.length} people are typing...`}
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {/* Message Input */}
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.textInput}
-            value={message}
-            onChangeText={setMessage}
-            placeholder="Type a message..."
-            placeholderTextColor="#94a3b8"
-            multiline
-            maxLength={1000}
-            editable={connected}
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              (!message.trim() || !connected) && styles.sendButtonDisabled,
-            ]}
-            onPress={handleSendMessage}
-            disabled={!message.trim() || !connected}
-          >
-            {/* @ts-ignore - Known issue with Lucide icon types */}
-            <Send size={18} color="#ffffff" />
-          </TouchableOpacity>
-        </View>
       </View>
-    </KeyboardAvoidingView>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <ChatHeader
+        title={project?.data?.clientName || "Project Chat"}
+        subtitle={connected ? "Live" : "Offline"}
+        connected={connected}
+        onBack={() => router.back()}
+      />
+
+      {/* Message List */}
+      <MessageList
+        ref={messageListRef}
+        messages={safeMessages}
+        loading={messagesLoading}
+        hasMoreMessages={hasMoreMessages}
+        selectedMessage={selectedMessage}
+        onLoadMore={loadMoreMessages}
+        onMessageSelect={setSelectedMessage}
+        onMessageReply={handleReplyClick}
+        onMessageEdit={handleEditClick}
+        onMessageDelete={handleDeleteMessage}
+        onImagePress={handleImageClick}
+        onDownload={handleDownload}
+        isMessageSender={isMessageSender}
+        downloadingFiles={downloadingFiles}
+      />
+
+      {/* Edit Message Modal */}
+      {editMessageId && (
+        <View style={styles.editContainer}>
+          <TextInput
+            style={styles.editInput}
+            value={editContent}
+            onChangeText={setEditContent}
+            multiline
+            autoFocus
+            placeholder="Edit your message..."
+          />
+          <View style={styles.editButtons}>
+            <TouchableOpacity
+              style={[styles.editButton, styles.saveButton]}
+              onPress={handleEditMessage}
+            >
+              <Text style={[styles.buttonText, styles.saveButtonText]}>
+                Save
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.editButton, styles.cancelButton]}
+              onPress={() => {
+                setEditMessageId(null);
+                setEditContent("");
+              }}
+            >
+              <Text style={[styles.buttonText, styles.cancelButtonText]}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Typing Indicator */}
+      <TypingIndicator typingUsers={typingUsers} />
+
+      {/* Message Input */}
+      <ChatInput
+        message={message}
+        onMessageChange={setMessage}
+        onSend={handleSendMessage}
+        onSendFile={handleSendFile}
+        onSendImage={handleSendImage}
+        replyingTo={replyingTo}
+        onCancelReply={() => setReplyingTo(null)}
+        connected={connected}
+      />
+
+      {/* Image Viewer Modal */}
+      <ImageViewer
+        visible={!!selectedImage}
+        image={selectedImage}
+        onClose={() => setSelectedImage(null)}
+        onDownload={handleDownload}
+        downloadingFiles={downloadingFiles}
+      />
+    </View>
   );
 }

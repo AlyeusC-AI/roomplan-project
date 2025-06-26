@@ -21,7 +21,7 @@ export default function InfoSidebar() {
   if (!projectData) return null;
 
   return (
-    <Card className='right-4 top-4 z-30 w-full space-y-4'>
+    <Card className='right-4 top-4 z-30 w-full max-w-md space-y-4'>
       <CardContent className='p-4'>
         <div className='space-y-4'>
           <div className='border-b border-gray-200 pb-4'>

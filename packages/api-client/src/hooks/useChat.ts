@@ -9,11 +9,15 @@ import type {
   WebSocketChatMessage,
   WebSocketUserEvent,
   WebSocketTypingEvent,
+  WebSocketMessageUpdateEvent,
+  WebSocketMessageDeleteEvent,
+  ChatMessageAttachment,
 } from "../types/chat";
+import { MessageType } from "../types/chat";
 import { baseURL } from "../services/client";
 
 interface UseChatOptions {
-  projectId: string;
+  chatId: string;
   autoConnect?: boolean;
   enableNotifications?: boolean;
 }
@@ -22,18 +26,24 @@ interface UseChatReturn {
   messages: ChatMessage[];
   loading: boolean;
   error: string | null;
-  sendMessage: (content: string) => Promise<void>;
+  sendMessage: (
+    content: string,
+    type?: MessageType,
+    attachments?: Omit<ChatMessageAttachment, "id" | "createdAt">[],
+    replyToId?: string
+  ) => Promise<void>;
+  updateMessage: (messageId: string, content: string) => Promise<void>;
   deleteMessage: (messageId: string) => Promise<void>;
   loadMoreMessages: () => Promise<void>;
   connected: boolean;
   typingUsers: string[];
-  joinProject: () => void;
-  leaveProject: () => void;
+  joinChat: () => void;
+  leaveChat: () => void;
   hasMoreMessages: boolean;
 }
 
 export const useChat = ({
-  projectId,
+  chatId,
   autoConnect = true,
   enableNotifications = true,
 }: UseChatOptions): UseChatReturn => {
@@ -75,7 +85,7 @@ export const useChat = ({
               {
                 body: message.content,
                 icon: "/favicon.ico",
-                tag: `chat-${projectId}`,
+                tag: `chat-${chatId}`,
               }
             );
           }
@@ -86,16 +96,16 @@ export const useChat = ({
           {
             body: message.content,
             icon: "/favicon.ico",
-            tag: `chat-${projectId}`,
+            tag: `chat-${chatId}`,
           }
         );
       }
     },
-    [enableNotifications, currentUser, projectId]
+    [enableNotifications, currentUser, chatId]
   );
 
   const connectSocket = useCallback(async () => {
-    if (!token || !projectId) return;
+    if (!token || !chatId) return;
 
     try {
       const { io } = await import("socket.io-client");
@@ -113,8 +123,8 @@ export const useChat = ({
         setError(null);
         console.log("Connected to chat server");
 
-        // Join the project room
-        socketRef.current?.emit("joinProject", { projectId });
+        // Join the chat room
+        socketRef.current?.emit("joinChat", { chatId });
       });
 
       socketRef.current.on("disconnect", () => {
@@ -123,9 +133,38 @@ export const useChat = ({
       });
 
       socketRef.current.on("newMessage", (message: WebSocketChatMessage) => {
-        setMessages((prev) => [...prev, message]); // Add to end for chronological display
+        // Convert WebSocket message to ChatMessage format
+        const chatMessage: ChatMessage = {
+          ...message,
+          isDeleted: false,
+        };
+        setMessages((prev) => [...prev, chatMessage]); // Add to end for chronological display
         showNotification(message);
       });
+
+      socketRef.current.on(
+        "messageUpdated",
+        (message: WebSocketMessageUpdateEvent) => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === message.id ? { ...msg, ...message } : msg
+            )
+          );
+        }
+      );
+
+      socketRef.current.on(
+        "messageDeleted",
+        (event: WebSocketMessageDeleteEvent) => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === event.messageId
+                ? { ...msg, isDeleted: true, content: "[Message deleted]" }
+                : msg
+            )
+          );
+        }
+      );
 
       socketRef.current.on("userJoined", (event: WebSocketUserEvent) => {
         console.log("User joined:", event.userId);
@@ -159,18 +198,18 @@ export const useChat = ({
         setError(null);
         console.log("Reconnected to chat server");
 
-        // Rejoin the project room after reconnection
-        socketRef.current?.emit("joinProject", { projectId });
+        // Rejoin the chat room after reconnection
+        socketRef.current?.emit("joinChat", { chatId });
       });
     } catch (err) {
       console.error("Failed to initialize WebSocket:", err);
       setError("Failed to initialize chat connection");
     }
-  }, [token, projectId]);
+  }, [token, chatId]);
 
   const disconnectSocket = useCallback(() => {
     if (socketRef.current) {
-      socketRef.current.emit("leaveProject");
+      socketRef.current.emit("leaveChat");
       socketRef.current.disconnect();
       socketRef.current = null;
     }
@@ -183,7 +222,7 @@ export const useChat = ({
         setLoading(true);
         setError(null);
 
-        const response = await chatService.getMessages(projectId, {
+        const response = await chatService.getMessages(chatId, {
           page,
           limit: 50,
           sortBy: "createdAt",
@@ -245,16 +284,24 @@ export const useChat = ({
         setLoading(false);
       }
     },
-    [projectId]
+    [chatId]
   );
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (
+      content: string,
+      type: MessageType = MessageType.TEXT,
+      attachments?: Omit<ChatMessageAttachment, "id" | "createdAt">[],
+      replyToId?: string
+    ) => {
       if (!socketRef.current || !connected) {
         // Fallback to HTTP if WebSocket is not connected
         try {
-          const newMessage = await chatService.createMessage(projectId, {
+          const newMessage = await chatService.createMessage(chatId, {
             content,
+            type,
+            attachments,
+            replyToId,
           });
           setMessages((prev) => [...prev, newMessage]); // Add to end for chronological display
         } catch (err) {
@@ -267,24 +314,87 @@ export const useChat = ({
       }
 
       try {
-        socketRef.current.emit("sendMessage", { projectId, content });
+        socketRef.current.emit("sendMessage", {
+          chatId,
+          content,
+          type,
+          attachments,
+          replyToId,
+        });
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to send message");
         throw err;
       }
     },
-    [projectId, connected]
+    [chatId, connected]
   );
 
-  const deleteMessage = useCallback(async (messageId: string) => {
-    try {
-      await chatService.deleteMessage(messageId);
-      setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete message");
-      throw err;
-    }
-  }, []);
+  const updateMessage = useCallback(
+    async (messageId: string, content: string) => {
+      if (!socketRef.current || !connected) {
+        // Fallback to HTTP if WebSocket is not connected
+        try {
+          const updatedMessage = await chatService.updateMessage(
+            messageId,
+            content
+          );
+          setMessages((prev) =>
+            prev.map((msg) => (msg.id === messageId ? updatedMessage : msg))
+          );
+        } catch (err) {
+          setError(
+            err instanceof Error ? err.message : "Failed to update message"
+          );
+          throw err;
+        }
+        return;
+      }
+
+      try {
+        socketRef.current.emit("updateMessage", { messageId, content });
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to update message"
+        );
+        throw err;
+      }
+    },
+    [connected]
+  );
+
+  const deleteMessage = useCallback(
+    async (messageId: string) => {
+      if (!socketRef.current || !connected) {
+        // Fallback to HTTP if WebSocket is not connected
+        try {
+          await chatService.deleteMessage(messageId);
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === messageId
+                ? { ...msg, isDeleted: true, content: "[Message deleted]" }
+                : msg
+            )
+          );
+        } catch (err) {
+          setError(
+            err instanceof Error ? err.message : "Failed to delete message"
+          );
+          throw err;
+        }
+        return;
+      }
+
+      try {
+        socketRef.current.emit("deleteMessage", { messageId });
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to delete message"
+        );
+        throw err;
+      }
+    },
+    [connected]
+  );
 
   const loadMoreMessages = useCallback(async () => {
     if (hasMoreMessages && !loading) {
@@ -292,33 +402,33 @@ export const useChat = ({
     }
   }, [hasMoreMessages, loading, currentPage, loadMessages]);
 
-  const joinProject = useCallback(() => {
-    if (token && projectId) {
+  const joinChat = useCallback(() => {
+    if (token && chatId) {
       connectSocket();
     }
-  }, [token, projectId, connectSocket]);
+  }, [token, chatId, connectSocket]);
 
-  const leaveProject = useCallback(() => {
+  const leaveChat = useCallback(() => {
     disconnectSocket();
   }, [disconnectSocket]);
 
   // Auto-connect when component mounts
   useEffect(() => {
-    if (autoConnect && token && projectId) {
+    if (autoConnect && token && chatId) {
       connectSocket();
     }
 
     return () => {
       disconnectSocket();
     };
-  }, [autoConnect, token, projectId, connectSocket, disconnectSocket]);
+  }, [autoConnect, token, chatId, connectSocket, disconnectSocket]);
 
   // Load initial messages
   useEffect(() => {
-    if (projectId) {
+    if (chatId) {
       loadMessages(1);
     }
-  }, [projectId, loadMessages]);
+  }, [chatId, loadMessages]);
 
   // Clear error when connection is restored
   const clearErrorOnConnection = useCallback(() => {
@@ -334,7 +444,7 @@ export const useChat = ({
     }
 
     connectionCheckRef.current = setInterval(async () => {
-      if (!connected && token && projectId) {
+      if (!connected && token && chatId) {
         try {
           const { connected: isConnected } =
             await chatService.checkConnection();
@@ -348,7 +458,7 @@ export const useChat = ({
         }
       }
     }, 10000); // Check every 10 seconds
-  }, [connected, token, projectId, connectSocket]);
+  }, [connected, token, chatId, connectSocket]);
 
   // Stop connection check
   const stopConnectionCheck = useCallback(() => {
@@ -381,12 +491,13 @@ export const useChat = ({
     loading,
     error,
     sendMessage,
+    updateMessage,
     deleteMessage,
     loadMoreMessages,
     connected,
     typingUsers,
-    joinProject,
-    leaveProject,
+    joinChat,
+    leaveChat,
     hasMoreMessages,
   };
 };

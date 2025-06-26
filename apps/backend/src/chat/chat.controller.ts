@@ -50,6 +50,7 @@ export class ChatController {
     @Body() createChatDto: CreateChatDto,
     @Request() req: RequestWithUser,
   ) {
+    console.log('🚀 ~ ChatController ~ req:', req.user);
     return this.chatService.createChat(
       req.user.organizationId,
       req.user.userId,
