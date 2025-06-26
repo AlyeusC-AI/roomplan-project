@@ -2,9 +2,15 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateChatMessageDto } from './dto/create-chat-message.dto';
+import {
+  CreateChatMessageDto,
+  MessageType,
+} from './dto/create-chat-message.dto';
+import { CreateChatDto, ChatType } from './dto/create-chat.dto';
+import { UpdateChatDto } from './dto/update-chat.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 
@@ -12,58 +18,345 @@ import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 export class ChatService {
   constructor(private prisma: PrismaService) {}
 
-  async getOrCreateChat(projectId: string, userId: string) {
-    // Verify user has access to the project
-    const project = await this.prisma.project.findFirst({
+  // Chat Management
+  async createChat(
+    organizationId: string,
+    userId: string,
+    createChatDto: CreateChatDto,
+  ) {
+    const { type, name, projectId, participantIds } = createChatDto;
+
+    // Validate participants are in the same organization
+    const participants = await this.prisma.user.findMany({
       where: {
-        id: projectId,
-        members: {
+        id: { in: participantIds },
+        organizationMemberships: {
           some: {
-            id: userId,
+            organizationId,
+            status: 'ACTIVE',
           },
         },
       },
+    });
+
+    if (participants.length !== participantIds.length) {
+      throw new BadRequestException(
+        'Some participants are not in your organization',
+      );
+    }
+
+    // For private chats, ensure exactly 2 participants
+    if (type === ChatType.PRIVATE && participantIds.length !== 2) {
+      throw new BadRequestException(
+        'Private chats must have exactly 2 participants',
+      );
+    }
+
+    // For group chats, ensure name is provided
+    if (type === ChatType.GROUP && !name) {
+      throw new BadRequestException('Group chats must have a name');
+    }
+
+    // For project chats, validate project access
+    if (type === ChatType.PROJECT && projectId) {
+      const project = await this.prisma.project.findFirst({
+        where: {
+          id: projectId,
+          organizationId,
+          members: {
+            some: {
+              id: { in: participantIds },
+            },
+          },
+        },
+      });
+
+      if (!project) {
+        throw new ForbiddenException('Project not found or access denied');
+      }
+    }
+
+    // Check if private chat already exists
+    if (type === ChatType.PRIVATE) {
+      const existingChat = await this.prisma.chat.findFirst({
+        where: {
+          type: ChatType.PRIVATE,
+          organizationId,
+          participants: {
+            every: {
+              userId: { in: participantIds },
+            },
+          },
+        },
+        include: {
+          participants: true,
+        },
+      });
+
+      if (existingChat && existingChat.participants.length === 2) {
+        return existingChat;
+      }
+    }
+
+    // Create the chat
+    const chat = await this.prisma.chat.create({
+      data: {
+        type,
+        name,
+        projectId,
+        organizationId,
+        participants: {
+          create: participantIds.map((participantId) => ({
+            userId: participantId,
+          })),
+        },
+      },
       include: {
-        organization: {
+        participants: {
           include: {
-            members: {
-              where: {
-                userId,
-                status: 'ACTIVE',
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                avatar: true,
               },
             },
           },
         },
+        project: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
-    if (!project) {
-      throw new ForbiddenException('You do not have access to this project');
-    }
+    return chat;
+  }
 
-    // Get or create chat for the project
-    let chat = await this.prisma.chat.findUnique({
-      where: { projectId },
+  async getUserChats(organizationId: string, userId: string) {
+    const chats = await this.prisma.chat.findMany({
+      where: {
+        organizationId,
+        participants: {
+          some: {
+            userId,
+            isActive: true,
+          },
+        },
+      },
+      include: {
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+        project: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        messages: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1,
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            messages: true,
+          },
+        },
+      },
+      orderBy: {
+        lastMessageAt: 'desc',
+      },
+    });
+
+    return chats;
+  }
+
+  async getChatById(chatId: string, userId: string) {
+    const chat = await this.prisma.chat.findFirst({
+      where: {
+        id: chatId,
+        participants: {
+          some: {
+            userId,
+            isActive: true,
+          },
+        },
+      },
+      include: {
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+        project: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
 
     if (!chat) {
-      chat = await this.prisma.chat.create({
-        data: {
-          projectId,
-        },
-      });
+      throw new NotFoundException('Chat not found');
     }
 
     return chat;
   }
 
+  async updateChat(
+    chatId: string,
+    userId: string,
+    updateChatDto: UpdateChatDto,
+  ) {
+    const chat = await this.getChatById(chatId, userId);
+
+    // Only group chats can be updated
+    if (chat.type !== ChatType.GROUP) {
+      throw new BadRequestException('Only group chats can be updated');
+    }
+
+    const updateData: any = {};
+
+    if (updateChatDto.name) {
+      updateData.name = updateChatDto.name;
+    }
+
+    if (updateChatDto.addParticipantIds?.length) {
+      // Validate new participants are in the same organization
+      const newParticipants = await this.prisma.user.findMany({
+        where: {
+          id: { in: updateChatDto.addParticipantIds },
+          organizationMemberships: {
+            some: {
+              organizationId: chat.organizationId
+                ? {
+                    equals: chat.organizationId,
+                  }
+                : undefined,
+              status: 'ACTIVE',
+            },
+          },
+        },
+      });
+
+      if (newParticipants.length !== updateChatDto.addParticipantIds.length) {
+        throw new BadRequestException(
+          'Some participants are not in your organization',
+        );
+      }
+    }
+
+    const updatedChat = await this.prisma.chat.update({
+      where: { id: chatId },
+      data: {
+        ...updateData,
+        ...(updateChatDto.addParticipantIds?.length && {
+          participants: {
+            create: updateChatDto.addParticipantIds.map((participantId) => ({
+              userId: participantId,
+            })),
+          },
+        }),
+        ...(updateChatDto.removeParticipantIds?.length && {
+          participants: {
+            updateMany: {
+              where: {
+                userId: { in: updateChatDto.removeParticipantIds },
+              },
+              data: {
+                isActive: false,
+                leftAt: new Date(),
+              },
+            },
+          },
+        }),
+      },
+      include: {
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+        project: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    return updatedChat;
+  }
+
+  async leaveChat(chatId: string, userId: string) {
+    const chat = await this.getChatById(chatId, userId);
+
+    await this.prisma.chatParticipant.updateMany({
+      where: {
+        chatId,
+        userId,
+      },
+      data: {
+        isActive: false,
+        leftAt: new Date(),
+      },
+    });
+
+    return { success: true };
+  }
+
+  // Message Management
   async getMessages(
-    projectId: string,
+    chatId: string,
     userId: string,
     paginationDto: PaginationDto,
   ): Promise<PaginatedResponse<any>> {
-    // Verify access and get chat
-    const chat = await this.getOrCreateChat(projectId, userId);
+    // Verify access to chat
+    await this.getChatById(chatId, userId);
 
     const {
       page = 1,
@@ -75,10 +368,16 @@ export class ChatService {
 
     const [total, messages] = await Promise.all([
       this.prisma.chatMessage.count({
-        where: { chatId: chat.id },
+        where: {
+          chatId,
+          isDeleted: false,
+        },
       }),
       this.prisma.chatMessage.findMany({
-        where: { chatId: chat.id },
+        where: {
+          chatId,
+          isDeleted: false,
+        },
         skip,
         take: limit,
         orderBy: {
@@ -94,6 +393,18 @@ export class ChatService {
               avatar: true,
             },
           },
+          replyTo: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+          attachments: true,
         },
       }),
     ]);
@@ -110,19 +421,54 @@ export class ChatService {
   }
 
   async createMessage(
-    projectId: string,
+    chatId: string,
     userId: string,
     createChatMessageDto: CreateChatMessageDto,
   ) {
-    // Verify access and get chat
-    const chat = await this.getOrCreateChat(projectId, userId);
+    // Verify access to chat
+    await this.getChatById(chatId, userId);
+
+    const {
+      content,
+      type = MessageType.TEXT,
+      replyToId,
+      attachments,
+    } = createChatMessageDto;
+
+    // Validate reply message exists and is in the same chat
+    if (replyToId) {
+      const replyMessage = await this.prisma.chatMessage.findFirst({
+        where: {
+          id: replyToId,
+          chatId,
+          isDeleted: false,
+        },
+      });
+
+      if (!replyMessage) {
+        throw new NotFoundException('Reply message not found');
+      }
+    }
 
     // Create the message
     const message = await this.prisma.chatMessage.create({
       data: {
-        content: createChatMessageDto.content,
-        chatId: chat.id,
+        content,
+        type,
+        chatId,
         userId,
+        replyToId,
+        ...(attachments?.length && {
+          attachments: {
+            create: attachments.map((attachment) => ({
+              fileName: attachment.fileName,
+              fileUrl: attachment.fileUrl,
+              fileSize: attachment.fileSize,
+              mimeType: attachment.mimeType,
+              thumbnailUrl: attachment.thumbnailUrl,
+            })),
+          },
+        }),
       },
       include: {
         user: {
@@ -134,19 +480,37 @@ export class ChatService {
             avatar: true,
           },
         },
+        replyTo: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+        attachments: true,
       },
+    });
+
+    // Update chat's lastMessageAt
+    await this.prisma.chat.update({
+      where: { id: chatId },
+      data: { lastMessageAt: new Date() },
     });
 
     return message;
   }
 
-  async deleteMessage(messageId: string, userId: string) {
+  async updateMessage(messageId: string, userId: string, content: string) {
     const message = await this.prisma.chatMessage.findUnique({
       where: { id: messageId },
       include: {
         chat: {
           include: {
-            project: true,
+            participants: true,
           },
         },
       },
@@ -156,29 +520,166 @@ export class ChatService {
       throw new NotFoundException('Message not found');
     }
 
-    // Check if user is the message author or has access to the project
+    // Check if user is the message author
     if (message.userId !== userId) {
-      // Verify user has access to the project
-      const project = await this.prisma.project.findFirst({
+      throw new ForbiddenException('You can only edit your own messages');
+    }
+
+    // Check if user is still in the chat
+    const isParticipant = message.chat.participants.some(
+      (p) => p.userId === userId && p.isActive,
+    );
+
+    if (!isParticipant) {
+      throw new ForbiddenException(
+        'You are no longer a participant in this chat',
+      );
+    }
+
+    const updatedMessage = await this.prisma.chatMessage.update({
+      where: { id: messageId },
+      data: {
+        content,
+        isEdited: true,
+        updatedAt: new Date(),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatar: true,
+          },
+        },
+        replyTo: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+        attachments: true,
+      },
+    });
+
+    return updatedMessage;
+  }
+
+  async deleteMessage(messageId: string, userId: string) {
+    const message = await this.prisma.chatMessage.findUnique({
+      where: { id: messageId },
+      include: {
+        chat: {
+          include: {
+            participants: true,
+          },
+        },
+      },
+    });
+
+    if (!message) {
+      throw new NotFoundException('Message not found');
+    }
+
+    // Check if user is the message author or has admin access
+    if (message.userId !== userId) {
+      // Check if user has admin access to the organization
+      const userMembership = await this.prisma.organizationMember.findFirst({
         where: {
-          id: message.chat.projectId,
-          members: {
+          userId,
+          organizationId: message.chat.organizationId
+            ? {
+                equals: message.chat.organizationId,
+              }
+            : undefined,
+          status: 'ACTIVE',
+          role: { in: ['OWNER', 'ADMIN'] },
+        },
+      });
+
+      if (!userMembership) {
+        throw new ForbiddenException('You can only delete your own messages');
+      }
+    }
+
+    // Soft delete the message
+    await this.prisma.chatMessage.update({
+      where: { id: messageId },
+      data: {
+        isDeleted: true,
+        content: '[Message deleted]',
+      },
+    });
+
+    return { success: true };
+  }
+
+  // Project-specific methods (for backward compatibility)
+  async getOrCreateProjectChat(projectId: string, userId: string) {
+    // Verify user has access to the project
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id: projectId,
+        members: {
+          some: {
+            id: userId,
+          },
+        },
+      },
+    });
+
+    if (!project) {
+      throw new ForbiddenException('You do not have access to this project');
+    }
+
+    // Get or create chat for the project
+    let chat = await this.prisma.chat.findUnique({
+      where: { projectId },
+    });
+
+    if (!chat) {
+      // Get project members
+      const projectMembers = await this.prisma.user.findMany({
+        where: {
+          projects: {
             some: {
-              id: userId,
+              id: projectId,
             },
           },
         },
       });
 
-      if (!project) {
-        throw new ForbiddenException('You can only delete your own messages');
-      }
+      chat = await this.createChat(project.organizationId, userId, {
+        type: ChatType.PROJECT,
+        projectId,
+        participantIds: projectMembers.map((member) => member.id),
+      });
     }
 
-    await this.prisma.chatMessage.delete({
-      where: { id: messageId },
-    });
+    return chat;
+  }
 
-    return { success: true };
+  async getProjectMessages(
+    projectId: string,
+    userId: string,
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponse<any>> {
+    const chat = await this.getOrCreateProjectChat(projectId, userId);
+    return this.getMessages(chat.id, userId, paginationDto);
+  }
+
+  async createProjectMessage(
+    projectId: string,
+    userId: string,
+    createChatMessageDto: CreateChatMessageDto,
+  ) {
+    const chat = await this.getOrCreateProjectChat(projectId, userId);
+    return this.createMessage(chat.id, userId, createChatMessageDto);
   }
 }

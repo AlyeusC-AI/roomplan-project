@@ -46,6 +46,7 @@ export const useChat = ({
   const [currentPage, setCurrentPage] = useState(1);
 
   const socketRef = useRef<any>(null);
+  const connectionCheckRef = useRef<NodeJS.Timeout | null>(null);
   const token = useAuthStore((state) => state.token);
   const { data: currentUser } = useCurrentUser();
 
@@ -109,6 +110,7 @@ export const useChat = ({
 
       socketRef.current.on("connect", () => {
         setConnected(true);
+        setError(null);
         console.log("Connected to chat server");
 
         // Join the project room
@@ -150,6 +152,15 @@ export const useChat = ({
       socketRef.current.on("connect_error", (error: any) => {
         console.error("WebSocket connection error:", error);
         setError("Failed to connect to chat server");
+      });
+
+      socketRef.current.on("reconnect", () => {
+        setConnected(true);
+        setError(null);
+        console.log("Reconnected to chat server");
+
+        // Rejoin the project room after reconnection
+        socketRef.current?.emit("joinProject", { projectId });
       });
     } catch (err) {
       console.error("Failed to initialize WebSocket:", err);
@@ -308,6 +319,62 @@ export const useChat = ({
       loadMessages(1);
     }
   }, [projectId, loadMessages]);
+
+  // Clear error when connection is restored
+  const clearErrorOnConnection = useCallback(() => {
+    if (connected) {
+      setError(null);
+    }
+  }, [connected]);
+
+  // Periodic connection check
+  const startConnectionCheck = useCallback(() => {
+    if (connectionCheckRef.current) {
+      clearInterval(connectionCheckRef.current);
+    }
+
+    connectionCheckRef.current = setInterval(async () => {
+      if (!connected && token && projectId) {
+        try {
+          const { connected: isConnected } =
+            await chatService.checkConnection();
+
+          if (isConnected) {
+            // Try to reconnect if we detect the server is available
+            connectSocket();
+          }
+        } catch (error) {
+          console.log("Connection check failed:", error);
+        }
+      }
+    }, 10000); // Check every 10 seconds
+  }, [connected, token, projectId, connectSocket]);
+
+  // Stop connection check
+  const stopConnectionCheck = useCallback(() => {
+    if (connectionCheckRef.current) {
+      clearInterval(connectionCheckRef.current);
+      connectionCheckRef.current = null;
+    }
+  }, []);
+
+  // Clear error when connection is restored
+  useEffect(() => {
+    clearErrorOnConnection();
+  }, [clearErrorOnConnection]);
+
+  // Start/stop connection checking
+  useEffect(() => {
+    if (!connected) {
+      startConnectionCheck();
+    } else {
+      stopConnectionCheck();
+    }
+
+    return () => {
+      stopConnectionCheck();
+    };
+  }, [connected, startConnectionCheck, stopConnectionCheck]);
 
   return {
     messages,

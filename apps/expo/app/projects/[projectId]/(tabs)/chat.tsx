@@ -370,6 +370,7 @@ export default function ChatScreen() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
+            {/* @ts-ignore - Known issue with Lucide icon types */}
             <ChevronLeft size={24} color="#1e293b" />
           </TouchableOpacity>
           <View style={styles.headerContent}>
@@ -398,7 +399,10 @@ export default function ChatScreen() {
         {/* Error Message */}
         {error && (
           <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={styles.errorText}>
+              {error}
+              {!connected && " Trying to reconnect..."}
+            </Text>
           </View>
         )}
 

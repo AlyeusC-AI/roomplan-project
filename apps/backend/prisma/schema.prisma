@@ -32,10 +32,11 @@ model User {
   calendarEventReminders  CalendarEventReminder[]
 
   // Add direct many-to-many relationship with Project
-  projects     Project[]     @relation("ProjectMembers")
-  comments     Comment[]
-  images       Image[]
-  chatMessages ChatMessage[]
+  projects         Project[]         @relation("ProjectMembers")
+  comments         Comment[]
+  images           Image[]
+  chatMessages     ChatMessage[]
+  chatParticipants ChatParticipant[]
 }
 
 model Organization {
@@ -75,6 +76,7 @@ model Organization {
   estimates       Estimate[]
   invoiceItems    InvoiceItem[]
   Tag             Tag[]
+  chats           Chat[]
 }
 
 enum MemberStatus {
@@ -720,27 +722,84 @@ model Tag {
   @@index([type])
 }
 
-model Chat {
-  id        String        @id @default(uuid())
-  projectId String        @unique
-  project   Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  messages  ChatMessage[]
+enum ChatType {
+  PRIVATE
+  GROUP
+  PROJECT
+}
 
+model Chat {
+  id             String            @id @default(uuid())
+  type           ChatType          @default(PRIVATE)
+  name           String? // For group chats
+  projectId      String?           @unique // Only for project chats
+  project        Project?          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organizationId String?
+  organization   Organization?     @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  messages       ChatMessage[]
+  participants   ChatParticipant[]
+  lastMessageAt  DateTime?
+
+  @@index([organizationId])
   @@index([projectId])
 }
 
+model ChatParticipant {
+  id       String    @id @default(uuid())
+  chatId   String
+  chat     Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User      @relation(fields: [userId], references: [id])
+  joinedAt DateTime  @default(now())
+  leftAt   DateTime?
+  isActive Boolean   @default(true)
+
+  @@unique([chatId, userId])
+  @@index([chatId])
+  @@index([userId])
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+}
+
 model ChatMessage {
-  id        String   @id @default(uuid())
-  content   String
-  chatId    String
-  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String                  @id @default(uuid())
+  content     String
+  type        MessageType             @default(TEXT)
+  chatId      String
+  chat        Chat                    @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User                    @relation(fields: [userId], references: [id])
+  replyToId   String?
+  replyTo     ChatMessage?            @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies     ChatMessage[]           @relation("MessageReplies")
+  attachments ChatMessageAttachment[]
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  isEdited    Boolean                 @default(false)
+  isDeleted   Boolean                 @default(false)
 
   @@index([chatId])
   @@index([userId])
+  @@index([replyToId])
+}
+
+model ChatMessageAttachment {
+  id           String      @id @default(uuid())
+  messageId    String
+  message      ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  fileName     String
+  fileUrl      String
+  fileSize     Int?
+  mimeType     String?
+  thumbnailUrl String?
+  createdAt    DateTime    @default(now())
+
+  @@index([messageId])
 }

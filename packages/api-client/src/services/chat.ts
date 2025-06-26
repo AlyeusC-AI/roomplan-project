@@ -25,7 +25,12 @@ export const chatService = {
     const queryString = searchParams.toString();
     const url = `/chat/project/${projectId}/messages${queryString ? `?${queryString}` : ""}`;
 
-    return apiClient.get(url);
+    try {
+      return await apiClient.get(url);
+    } catch (error) {
+      console.error("Failed to fetch chat messages:", error);
+      throw error;
+    }
   },
 
   // Create a new chat message
@@ -33,11 +38,31 @@ export const chatService = {
     projectId: string,
     data: CreateChatMessageDto
   ): Promise<ChatMessage> => {
-    return apiClient.post(`/chat/project/${projectId}/messages`, data);
+    try {
+      return await apiClient.post(`/chat/project/${projectId}/messages`, data);
+    } catch (error) {
+      console.error("Failed to create chat message:", error);
+      throw error;
+    }
   },
 
   // Delete a chat message
   deleteMessage: async (messageId: string): Promise<{ success: boolean }> => {
-    return apiClient.delete(`/chat/messages/${messageId}`);
+    try {
+      return await apiClient.delete(`/chat/messages/${messageId}`);
+    } catch (error) {
+      console.error("Failed to delete chat message:", error);
+      throw error;
+    }
+  },
+
+  // Check connection status
+  checkConnection: async (): Promise<{ connected: boolean }> => {
+    try {
+      await apiClient.get("/health");
+      return { connected: true };
+    } catch (error) {
+      return { connected: false };
+    }
   },
 };

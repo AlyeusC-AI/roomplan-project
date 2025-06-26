@@ -10,13 +10,16 @@ import {
 import { UseGuards } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
-import { CreateChatMessageDto } from './dto/create-chat-message.dto';
+import {
+  CreateChatMessageDto,
+  MessageType,
+} from './dto/create-chat-message.dto';
 import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
 import { JwtService } from '@nestjs/jwt';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
-  projectId?: string;
+  chatId?: string;
   data: {
     user: {
       userId: string;
@@ -25,7 +28,6 @@ interface AuthenticatedSocket extends Socket {
       lastName?: string;
       role?: string;
       organizationId?: string;
-      projectId?: string;
     };
   };
 }
@@ -62,7 +64,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           lastName: payload.lastName,
           role: payload.role,
           organizationId: payload.organizationId,
-          projectId: payload.projectId,
         };
         client.userId = client.data.user.userId;
         console.log('User authenticated on connection:', client.userId);
@@ -95,62 +96,70 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleDisconnect(client: AuthenticatedSocket) {
     console.log(`Client disconnected: ${client.id}`);
-    if (client.projectId) {
-      client.leave(`project:${client.projectId}`);
+    if (client.chatId) {
+      client.leave(`chat:${client.chatId}`);
     }
   }
 
-  @SubscribeMessage('joinProject')
+  @SubscribeMessage('joinChat')
   @UseGuards(WsJwtGuard)
-  async handleJoinProject(
-    @MessageBody() data: { projectId: string },
+  async handleJoinChat(
+    @MessageBody() data: { chatId: string },
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
-    console.log('🚀 ~ ChatGateway ~ client:', client.data);
     try {
-      // User is already authenticated by WsJwtGuard
       if (!client.userId) {
         throw new Error('User not authenticated');
       }
 
-      // Join the project room
-      client.projectId = data.projectId;
-      await client.join(`project:${data.projectId}`);
+      // Verify user has access to the chat
+      await this.chatService.getChatById(data.chatId, client.userId);
+
+      // Join the chat room
+      client.chatId = data.chatId;
+      await client.join(`chat:${data.chatId}`);
 
       // Notify others that user joined
-      client.to(`project:${data.projectId}`).emit('userJoined', {
+      client.to(`chat:${data.chatId}`).emit('userJoined', {
         userId: client.userId,
         timestamp: new Date(),
       });
 
-      return { success: true, message: 'Joined project chat' };
+      return { success: true, message: 'Joined chat' };
     } catch (error) {
       client.emit('error', { message: error.message });
       return { success: false, message: error.message };
     }
   }
 
-  @SubscribeMessage('leaveProject')
+  @SubscribeMessage('leaveChat')
   @UseGuards(WsJwtGuard)
-  async handleLeaveProject(@ConnectedSocket() client: AuthenticatedSocket) {
-    if (client.projectId) {
-      await client.leave(`project:${client.projectId}`);
+  async handleLeaveChat(@ConnectedSocket() client: AuthenticatedSocket) {
+    if (client.chatId) {
+      await client.leave(`chat:${client.chatId}`);
 
       // Notify others that user left
-      client.to(`project:${client.projectId}`).emit('userLeft', {
+      client.to(`chat:${client.chatId}`).emit('userLeft', {
         userId: client.userId,
         timestamp: new Date(),
       });
 
-      client.projectId = undefined;
+      client.chatId = undefined;
     }
-    return { success: true, message: 'Left project chat' };
+    return { success: true, message: 'Left chat' };
   }
 
   @SubscribeMessage('sendMessage')
   @UseGuards(WsJwtGuard)
   async handleSendMessage(
-    @MessageBody() data: { projectId: string; content: string },
+    @MessageBody()
+    data: {
+      chatId: string;
+      content: string;
+      type?: MessageType;
+      replyToId?: string;
+      attachments?: any[];
+    },
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     try {
@@ -161,17 +170,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // Create message using the service
       const createMessageDto = new CreateChatMessageDto();
       createMessageDto.content = data.content;
+      createMessageDto.type = data.type || MessageType.TEXT;
+      createMessageDto.replyToId = data.replyToId;
+      createMessageDto.attachments = data.attachments;
 
       const message = await this.chatService.createMessage(
-        data.projectId,
+        data.chatId,
         client.userId,
         createMessageDto,
       );
 
-      // Broadcast message to all users in the project
-      this.server.to(`project:${data.projectId}`).emit('newMessage', {
+      // Broadcast message to all users in the chat
+      this.server.to(`chat:${data.chatId}`).emit('newMessage', {
         id: message.id,
         content: message.content,
+        type: message.type,
         userId: message.user.id,
         user: {
           id: message.user.id,
@@ -180,8 +193,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           email: message.user.email,
           avatar: message.user.avatar,
         },
+        replyTo: message.replyTo,
+        attachments: message.attachments,
         createdAt: message.createdAt,
         updatedAt: message.updatedAt,
+        isEdited: message.isEdited,
       });
 
       return { success: true, message: 'Message sent' };
@@ -191,14 +207,87 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage('updateMessage')
+  @UseGuards(WsJwtGuard)
+  async handleUpdateMessage(
+    @MessageBody() data: { messageId: string; content: string },
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ) {
+    try {
+      if (!client.userId) {
+        throw new Error('User not authenticated');
+      }
+
+      const updatedMessage = await this.chatService.updateMessage(
+        data.messageId,
+        client.userId,
+        data.content,
+      );
+
+      // Broadcast updated message to all users in the chat
+      this.server.to(`chat:${updatedMessage.chatId}`).emit('messageUpdated', {
+        id: updatedMessage.id,
+        content: updatedMessage.content,
+        type: updatedMessage.type,
+        userId: updatedMessage.user.id,
+        user: {
+          id: updatedMessage.user.id,
+          firstName: updatedMessage.user.firstName,
+          lastName: updatedMessage.user.lastName,
+          email: updatedMessage.user.email,
+          avatar: updatedMessage.user.avatar,
+        },
+        replyTo: updatedMessage.replyTo,
+        attachments: updatedMessage.attachments,
+        createdAt: updatedMessage.createdAt,
+        updatedAt: updatedMessage.updatedAt,
+        isEdited: updatedMessage.isEdited,
+      });
+
+      return { success: true, message: 'Message updated' };
+    } catch (error) {
+      client.emit('error', { message: error.message });
+      return { success: false, message: error.message };
+    }
+  }
+
+  @SubscribeMessage('deleteMessage')
+  @UseGuards(WsJwtGuard)
+  async handleDeleteMessage(
+    @MessageBody() data: { messageId: string },
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ) {
+    try {
+      if (!client.userId) {
+        throw new Error('User not authenticated');
+      }
+
+      const result = await this.chatService.deleteMessage(
+        data.messageId,
+        client.userId,
+      );
+
+      // Broadcast message deletion to all users in the chat
+      this.server.emit('messageDeleted', {
+        messageId: data.messageId,
+        timestamp: new Date(),
+      });
+
+      return { success: true, message: 'Message deleted' };
+    } catch (error) {
+      client.emit('error', { message: error.message });
+      return { success: false, message: error.message };
+    }
+  }
+
   @SubscribeMessage('typing')
   @UseGuards(WsJwtGuard)
   async handleTyping(
-    @MessageBody() data: { projectId: string; isTyping: boolean },
+    @MessageBody() data: { chatId: string; isTyping: boolean },
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
-    if (client.userId && data.projectId) {
-      client.to(`project:${data.projectId}`).emit('userTyping', {
+    if (client.userId && data.chatId) {
+      client.to(`chat:${data.chatId}`).emit('userTyping', {
         userId: client.userId,
         isTyping: data.isTyping,
       });
@@ -208,14 +297,66 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('stopTyping')
   @UseGuards(WsJwtGuard)
   async handleStopTyping(
-    @MessageBody() data: { projectId: string },
+    @MessageBody() data: { chatId: string },
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
-    if (client.userId && data.projectId) {
-      client.to(`project:${data.projectId}`).emit('userTyping', {
+    if (client.userId && data.chatId) {
+      client.to(`chat:${data.chatId}`).emit('userTyping', {
         userId: client.userId,
         isTyping: false,
       });
     }
+  }
+
+  // Project-specific methods (for backward compatibility)
+  @SubscribeMessage('joinProject')
+  @UseGuards(WsJwtGuard)
+  async handleJoinProject(
+    @MessageBody() data: { projectId: string },
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ) {
+    try {
+      if (!client.userId) {
+        throw new Error('User not authenticated');
+      }
+
+      // Get or create project chat
+      const chat = await this.chatService.getOrCreateProjectChat(
+        data.projectId,
+        client.userId,
+      );
+
+      // Join the chat room
+      client.chatId = chat.id;
+      await client.join(`chat:${chat.id}`);
+
+      // Notify others that user joined
+      client.to(`chat:${chat.id}`).emit('userJoined', {
+        userId: client.userId,
+        timestamp: new Date(),
+      });
+
+      return { success: true, message: 'Joined project chat', chatId: chat.id };
+    } catch (error) {
+      client.emit('error', { message: error.message });
+      return { success: false, message: error.message };
+    }
+  }
+
+  @SubscribeMessage('leaveProject')
+  @UseGuards(WsJwtGuard)
+  async handleLeaveProject(@ConnectedSocket() client: AuthenticatedSocket) {
+    if (client.chatId) {
+      await client.leave(`chat:${client.chatId}`);
+
+      // Notify others that user left
+      client.to(`chat:${client.chatId}`).emit('userLeft', {
+        userId: client.userId,
+        timestamp: new Date(),
+      });
+
+      client.chatId = undefined;
+    }
+    return { success: true, message: 'Left project chat' };
   }
 }
