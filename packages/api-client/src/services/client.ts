@@ -10,8 +10,8 @@ export const baseURL =
   process.env.NEXT_PUBLIC_API_URL ||
   process.env.API_URL ||
   process.env.EXPO_PUBLIC_API_URL ||
-  "http://localhost:3000";
-// "https://api.restoregeek.io";
+  // "http://localhost:3000";
+  "https://api.restoregeek.io";
 
 export const createClient = (config: ClientConfig) => {
   const instance = axios.create({
