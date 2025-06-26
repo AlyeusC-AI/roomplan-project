@@ -35,7 +35,7 @@ import {
   KanbanHeader,
   KanbanProvider,
 } from "@/components/ui/kibo-ui/kanban";
-import { AlertTriangle, ChevronRightIcon, CirclePlus, FileImage } from "lucide-react";
+import { AlertTriangle, ChevronRightIcon, CirclePlus, FileImage, CalendarIcon, X } from "lucide-react";
 import { ColumnDef, Row } from "@tanstack/react-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
 import { Badge } from "@components/ui/badge";
@@ -61,7 +61,9 @@ import {
   SelectItem,
   SelectValue,
 } from "@components/ui/select";
-import { DateTimePicker } from "@components/ui/date-time-picker";
+import { Popover, PopoverContent, PopoverTrigger } from "@components/ui/popover";
+import { Calendar } from "@components/ui/calendar";
+import { format } from "date-fns";
 
 export default function ProjectList() {
   const [isCreatingNewProject, setIsCreatingNewProject] = useState(false);
@@ -120,8 +122,8 @@ export default function ProjectList() {
     <>
       <div
         className={cn(
-          "fixed z-10 bg-background lg:pr-6",
-          "lg:w-[calc(100vw-var(--sidebar-width)-48px)]"
+          "z-10 bg-background lg:pr-6",
+          "w-[calc(100vw-var(--sidebar-width)-48px)]"
         )}
       >
         <div className='flex w-full justify-between space-x-6'>
@@ -149,55 +151,123 @@ export default function ProjectList() {
             <ToggleFilter
               filterTitle='Filter Projects'
               onApply={() => {
-                handleSearch(
-                  [
-                    filterObj.search,
-                    filterObj.startDate ? filterObj.startDate.toISOString() : "",
-                    filterObj.endDate ? filterObj.endDate.toISOString() : "",
-                    filterObj.user,
-                  ].filter(Boolean)
-                    .join(" ")
-                );
+                // handleSearch(
+                //   [
+                //     filterObj.search,
+                //     filterObj.startDate ? filterObj.startDate.toISOString() : "",
+                //     filterObj.endDate ? filterObj.endDate.toISOString() : "",
+                //     filterObj.user,
+                //   ].filter(Boolean)
+                //     .join(" ")
+                // );
               }}
             >
               <div className='flex flex-col gap-4'>
-                <div className="flex gap-4">
-
-                  <div>
-
+                <div className="grid grid-cols-2 gap-4">
+                  <div >
                     <label className='text-sm font-medium mb-2'>Start Date</label>
-                    <DateTimePicker
-                      date={filterObj.startDate}
-                      setDate={date => setFilterObj(obj => ({ ...obj, startDate: date }))}
-                    />
+                    <div className="relative">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal pr-8",
+                              !filterObj.startDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {filterObj.startDate ? format(filterObj.startDate, "PPP") : <span>Pick a date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={filterObj.startDate || undefined}
+                            onSelect={(date) => setFilterObj(obj => ({ ...obj, startDate: date }))}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      {filterObj.startDate && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+                          onClick={() => setFilterObj(obj => ({ ...obj, startDate: null }))}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <div>
-
                     <label className='text-sm font-medium mb-2'>End Date</label>
-                    <DateTimePicker
-                      date={filterObj.endDate}
-                      setDate={date => setFilterObj(obj => ({ ...obj, endDate: date }))}
-                    />
+                    <div className="relative">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal pr-8",
+                              !filterObj.endDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {filterObj.endDate ? format(filterObj.endDate, "PPP") : <span>Pick a date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={filterObj.endDate || undefined}
+                            onSelect={(date) => setFilterObj(obj => ({ ...obj, endDate: date }))}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      {filterObj.endDate && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+                          onClick={() => setFilterObj(obj => ({ ...obj, endDate: null }))}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div>
-
                   <label className='text-sm font-medium mb-2'>User</label>
-                  <Select
-                    value={filterObj.user}
-                    onValueChange={val => setFilterObj(obj => ({ ...obj, user: val }))}
-                  >
-                    <SelectTrigger className='w-full'>
-                      <SelectValue placeholder='Select user' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {organizationMembers?.data?.map((member: any) => (
-                        <SelectItem key={member.user?.id} value={member.user?.id}>
-                          {member.user?.firstName} {member.user?.lastName} ({member.user?.email})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="relative">
+                    <Select
+                      value={filterObj.user}
+                      onValueChange={val => setFilterObj(obj => ({ ...obj, user: val }))}
+                    >
+                      <SelectTrigger className='w-full pr-8'>
+                        <SelectValue placeholder='Select user' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {organizationMembers?.data?.map((member: any) => (
+                          <SelectItem key={member.user?.id} value={member.user?.id}>
+                            {member.user?.firstName} {member.user?.lastName} ({member.user?.email})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {filterObj.user && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+                        onClick={() => setFilterObj(obj => ({ ...obj, user: "" }))}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </ToggleFilter>
@@ -214,7 +284,7 @@ export default function ProjectList() {
         </div>
       </div>
 
-      <div className='mt-40'>
+      <div className='mt-10'>
         {isLoading ? (
           <LoadingPlaceholder />
         ) : (
@@ -348,16 +418,16 @@ export const Table = ({ projects }: { projects: any[] }) => {
           <div className="flex divide-x divide-gray-200">
             <div className="flex flex-col items-center gap-2 px-2">
               <span className="text-muted-foreground text-xs">Images</span>
-              <span className="text-lg">{row.original.images?.length || 0}</span>
+              <span className="text-lg">{row.original._count.images}</span>
             </div>
             <div className="flex flex-col items-center gap-2 px-2">
               <span className="text-muted-foreground text-xs">Docs</span>
-              <span className="text-lg">{row.original.documents?.length || 0}</span>
+              <span className="text-lg">{row.original._count.documents?.length || 0}</span>
             </div>
           </div>
           <div className="grow flex items-center  gap-2">
             {row.original.images?.map((image:any)=>
-            <img src={image.url} alt={row.original.name || "image"} className='md:size-24 size-16 rounded-xl border-2 border-border'/>
+            <img src={image.url} alt={row.original.name || "image"} height={64} width={64} className='md:size-24 size-16 rounded-xl border-2 border-border'/>
           )}
             
 

@@ -61,12 +61,12 @@ export function NavUser({withAvatar = true}: {withAvatar?: boolean}) {
                     size='lg'
                     className='data-[state=open]:bg-gray-800 data-[state=open]:text-gray-200'
                   >
-                    <Avatar className='size-8 rounded-lg'>
+                    <Avatar className='size-8 rounded-lg p-1'>
                       <AvatarImage
                         src={user?.avatar || ""}
                         alt={`${user?.firstName} ${user?.lastName}`}
                       />
-                      <AvatarFallback className='rounded-lg bg-gray-700 text-gray-200'>
+                      <AvatarFallback className='rounded-lg bg-gray-700 text-gray-200' >
                         {`${user.firstName} ${user.lastName}`
                           .split(" ")
                           .map((word) => word[0]?.toUpperCase())
