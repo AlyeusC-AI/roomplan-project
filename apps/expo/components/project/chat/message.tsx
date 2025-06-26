@@ -137,6 +137,7 @@ export function Message({
                       <TouchableOpacity
                         onPress={() => onImagePress(attachment)}
                         style={styles.imageContainer}
+                        onLongPress={onLongPress}
                       >
                         <RNImage
                           source={{ uri: attachment.fileUrl }}
@@ -184,7 +185,7 @@ export function Message({
                             attachment.fileUrl,
                             attachment.fileName
                           ) ? (
-                            <ActivityIndicator size="small" color="#3b82f6" />
+                            <ActivityIndicator size="small" color="#1e88e5" />
                           ) : (
                             <Text style={styles.downloadIcon}>↓</Text>
                           )}
@@ -223,7 +224,7 @@ export function Message({
           {isSent && (
             <>
               <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
-                <Text style={[styles.actionIcon, { color: "#3b82f6" }]}>
+                <Text style={[styles.actionIcon, { color: "#1e88e5" }]}>
                   ✏
                 </Text>
               </TouchableOpacity>
@@ -373,7 +374,7 @@ const styles = StyleSheet.create({
   fileIcon: {
     width: 40,
     height: 40,
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#1e88e5",
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
@@ -411,7 +412,7 @@ const styles = StyleSheet.create({
   },
   downloadIcon: {
     fontSize: 16,
-    color: "#3b82f6",
+    color: "#1e88e5",
     fontWeight: "600",
   },
   actionButtons: {

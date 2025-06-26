@@ -12,6 +12,7 @@ import type {
   WebSocketMessageUpdateEvent,
   WebSocketMessageDeleteEvent,
   ChatMessageAttachment,
+  Chat,
 } from "../types/chat";
 import { MessageType } from "../types/chat";
 import { baseURL } from "../services/client";
@@ -499,5 +500,36 @@ export const useChat = ({
     joinChat,
     leaveChat,
     hasMoreMessages,
+  };
+};
+
+export const useGetUserChats = () => {
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchChats = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await chatService.getUserChats();
+      setChats(response.data || []);
+    } catch (err) {
+      console.error("Error fetching user chats:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch chats");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchChats();
+  }, [fetchChats]);
+
+  return {
+    data: { data: chats },
+    isLoading: loading,
+    error,
+    refetch: fetchChats,
   };
 };

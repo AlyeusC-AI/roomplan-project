@@ -12,11 +12,11 @@ import { useGlobalSearchParams, useRouter } from "expo-router";
 import { toast } from "sonner-native";
 import {
   useChat,
-  useCurrentUser,
-  useGetProjectById,
   chatService,
   MessageType,
-  spaceService,
+  useCurrentUser,
+  useGetUserChats,
+  ChatType,
 } from "@service-geek/api-client";
 import {
   ChatHeader,
@@ -106,44 +106,49 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function ChatScreen() {
-  const { projectId } = useGlobalSearchParams<{ projectId: string }>();
+export default function ChatDetailScreen() {
+  const { chatId } = useGlobalSearchParams<{ chatId: string }>();
   const [message, setMessage] = useState("");
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
   const [editMessageId, setEditMessageId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<any>(null);
   const [selectedImage, setSelectedImage] = useState<any>(null);
-  const [chatId, setChatId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [downloadingFiles, setDownloadingFiles] = useState<Set<string>>(
     new Set()
   );
+  const [chatInfo, setChatInfo] = useState<any>(null);
   const messageListRef = useRef<MessageListRef>(null);
   const router = useRouter();
   const { data: currentUser } = useCurrentUser();
-  const { data: project } = useGetProjectById(projectId);
+  const { data: chats } = useGetUserChats();
 
-  // Initialize project chat
+  // Get chat info for header
   useEffect(() => {
-    const initializeProjectChat = async () => {
-      try {
-        setLoading(true);
-        const projectChat = await chatService.createProjectChat(projectId);
-        setChatId(projectChat.id);
-      } catch (err) {
-        console.error("Failed to initialize project chat:", err);
-        setError("Failed to load project chat");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (projectId) {
-      initializeProjectChat();
+    if (chats?.data && chatId) {
+      const chat = chats.data.find((c: any) => c.id === chatId);
+      setChatInfo(chat);
     }
-  }, [projectId]);
+  }, [chats, chatId]);
+
+  const getChatName = (chat: any) => {
+    if (!chat) return "Chat";
+
+    if (chat.type === ChatType.PRIVATE) {
+      const otherParticipant = chat.participants?.find(
+        (p: any) => p.user.id !== currentUser?.id
+      );
+      return otherParticipant
+        ? `${otherParticipant.user.firstName} ${otherParticipant.user.lastName}`
+        : "Private Chat";
+    }
+
+    if (chat.type === ChatType.GROUP) {
+      return chat.name || "Group Chat";
+    }
+
+    return chat.name || "Chat";
+  };
 
   const {
     messages,
@@ -402,7 +407,7 @@ export default function ChatScreen() {
   // Ensure messages is always an array
   const safeMessages = Array.isArray(messages) ? messages : [];
 
-  if (loading || messagesLoading || !chatId) {
+  if (messagesLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator color="#1e88e5" size="large" />
@@ -410,17 +415,17 @@ export default function ChatScreen() {
     );
   }
 
-  if (error || chatError) {
+  if (chatError) {
     return (
       <View style={styles.errorContainer}>
         <ChatHeader
-          title="Project Chat"
+          title={getChatName(chatInfo)}
           connected={false}
           onBack={() => router.back()}
         />
         <View style={styles.errorContent}>
           <Text style={styles.errorText}>
-            {error || chatError || "Failed to load chat"}
+            {chatError || "Failed to load chat"}
           </Text>
         </View>
       </View>
@@ -431,7 +436,7 @@ export default function ChatScreen() {
     <View style={styles.container}>
       {/* Header */}
       <ChatHeader
-        title={project?.data?.clientName || "Project Chat"}
+        title={getChatName(chatInfo)}
         subtitle={connected ? "Live" : "Offline"}
         connected={connected}
         onBack={() => router.back()}

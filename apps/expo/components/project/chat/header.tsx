@@ -29,7 +29,7 @@ export function ChatHeader({
       </View>
 
       {/* Connection Status */}
-      <View style={styles.connectionStatus}>
+      {/* <View style={styles.connectionStatus}>
         <View
           style={[
             styles.statusDot,
@@ -39,16 +39,16 @@ export function ChatHeader({
         <Text style={styles.statusText}>
           {connected ? "Connected" : "Disconnected"}
         </Text>
-      </View>
+      </View> */}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#1e88e5",
     borderBottomWidth: 1,
-    borderBottomColor: "#e2e8f0",
+    borderBottomColor: "#1976d2",
   },
   navigationHeader: {
     paddingHorizontal: 16,
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
     padding: 4,
     borderRadius: 8,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     width: 32,
     height: 32,
     justifyContent: "center",
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   },
   backIcon: {
     fontSize: 18,
-    color: "#1e293b",
+    color: "#ffffff",
     fontWeight: "600",
   },
   headerContent: {
@@ -77,11 +77,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#1e293b",
+    color: "#ffffff",
   },
   headerSubtitle: {
     fontSize: 13,
-    color: "#64748b",
+    color: "rgba(255, 255, 255, 0.8)",
     marginTop: 2,
   },
   connectionStatus: {
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   statusDot: {
     width: 8,
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    color: "#64748b",
+    color: "rgba(255, 255, 255, 0.9)",
     fontWeight: "500",
   },
 });

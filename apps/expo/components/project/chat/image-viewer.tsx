@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   downloadButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#1e88e5",
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   downloadButtonLoading: {
-    backgroundColor: "#1d4ed8",
+    backgroundColor: "#1976d2",
   },
   downloadIcon: {
     fontSize: 16,

@@ -72,9 +72,11 @@ export interface Chat {
   project?: {
     id: string;
     name: string;
+    clientName?: string;
   };
   participants: ChatParticipant[];
   lastMessageAt?: string;
+  lastMessage?: ChatMessage | null;
   createdAt: string;
   updatedAt: string;
   _count?: {
