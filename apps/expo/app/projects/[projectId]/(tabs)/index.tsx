@@ -36,6 +36,7 @@ import {
   Ruler,
   File,
   MessageSquare,
+  MessageCircle,
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -166,6 +167,12 @@ export default function ProjectOverview() {
         Linking.openURL(
           `${process.env.EXPO_PUBLIC_BASE_URL}/projects/${projectId}/report`
         ),
+    },
+    {
+      path: "./chat",
+      Icon: MessageCircle,
+      title: "Chat",
+      description: "Project conversation",
     },
   ];
 
