@@ -1,45 +1,59 @@
 import React from "react";
-import { View } from "react-native";
-import { Image } from "expo-image";
-import { cn } from "@/lib/utils";
+import { View, StyleSheet, Image } from "react-native";
 
 interface AvatarProps {
   children: React.ReactNode;
-  className?: string;
+  style?: any;
 }
 
 interface AvatarImageProps {
   source: { uri: string };
-  className?: string;
+  style?: any;
 }
 
 interface AvatarFallbackProps {
   children: React.ReactNode;
-  className?: string;
+  style?: any;
 }
 
-export function Avatar({ children, className }: AvatarProps) {
-  return (
-    <View className={cn("relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full", className)}>
-      {children}
-    </View>
-  );
+const styles = StyleSheet.create({
+  avatar: {
+    position: "relative",
+    flexDirection: "row",
+    height: 40,
+    width: 40,
+    flexShrink: 0,
+    overflow: "hidden",
+    borderRadius: 20,
+  },
+  avatarImage: {
+    height: "100%",
+    width: "100%",
+  },
+  avatarFallback: {
+    flexDirection: "row",
+    height: "100%",
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#e2e8f0",
+  },
+});
+
+export function Avatar({ children, style }: AvatarProps) {
+  return <View style={[styles.avatar, style]}>{children}</View>;
 }
 
-export function AvatarImage({ source, className }: AvatarImageProps) {
+export function AvatarImage({ source, style }: AvatarImageProps) {
   return (
     <Image
       source={source}
-      className={cn("h-full w-full", className)}
-      contentFit="cover"
+      style={[styles.avatarImage, style]}
+      resizeMode="cover"
     />
   );
 }
 
-export function AvatarFallback({ children, className }: AvatarFallbackProps) {
-  return (
-    <View className={cn("flex h-full w-full items-center justify-center bg-muted", className)}>
-      {children}
-    </View>
-  );
-} 
+export function AvatarFallback({ children, style }: AvatarFallbackProps) {
+  return <View style={[styles.avatarFallback, style]}>{children}</View>;
+}

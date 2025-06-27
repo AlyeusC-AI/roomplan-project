@@ -27,8 +27,15 @@ export class ChatService {
     const { type, name, projectId, participantIds } = createChatDto;
 
     // For project chats, automatically get all project members
-    let finalParticipantIds = participantIds;
+    let finalParticipantIds = participantIds || [];
     console.log('🚀 ~ ChatService ~ finalParticipantIds:', finalParticipantIds);
+
+    // Auto-add current user to participants for private and group chats
+    if (type === ChatType.PRIVATE || type === ChatType.GROUP) {
+      if (!finalParticipantIds.includes(userId)) {
+        finalParticipantIds = [userId, ...finalParticipantIds];
+      }
+    }
 
     if (type === ChatType.PROJECT && projectId) {
       const projectMembers = await this.prisma.user.findMany({
@@ -46,7 +53,7 @@ export class ChatService {
 
     // Validate participants are in the same organization
 
-    // For private chats, ensure exactly 2 participants
+    // For private chats, ensure exactly 2 participants (current user + 1 other)
     if (type === ChatType.PRIVATE && finalParticipantIds.length !== 2) {
       throw new BadRequestException(
         'Private chats must have exactly 2 participants',
@@ -90,7 +97,26 @@ export class ChatService {
           },
         },
         include: {
-          participants: true,
+          participants: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  avatar: true,
+                },
+              },
+            },
+          },
+          project: {
+            select: {
+              id: true,
+              name: true,
+              clientName: true,
+            },
+          },
         },
       });
 
@@ -104,6 +130,28 @@ export class ChatService {
           type,
           projectId,
           // organizationId,
+        },
+        include: {
+          participants: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  avatar: true,
+                },
+              },
+            },
+          },
+          project: {
+            select: {
+              id: true,
+              name: true,
+              clientName: true,
+            },
+          },
         },
       });
 
@@ -143,12 +191,46 @@ export class ChatService {
           select: {
             id: true,
             name: true,
+            clientName: true,
+          },
+        },
+        messages: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1,
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                avatar: true,
+              },
+            },
+            replyTo: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+            attachments: true,
           },
         },
       },
     });
 
-    return chat;
+    // Transform the response to include lastMessage field for easier access
+    return {
+      ...chat,
+      lastMessage: chat.messages[0] || null,
+    };
   }
 
   async getUserChats(organizationId: string, userId: string) {
@@ -180,6 +262,7 @@ export class ChatService {
           select: {
             id: true,
             name: true,
+            clientName: true,
           },
         },
         messages: {
@@ -193,8 +276,22 @@ export class ChatService {
                 id: true,
                 firstName: true,
                 lastName: true,
+                email: true,
+                avatar: true,
               },
             },
+            replyTo: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+            attachments: true,
           },
         },
         _count: {
@@ -208,7 +305,11 @@ export class ChatService {
       },
     });
 
-    return chats;
+    // Transform the response to include lastMessage field for easier access
+    return chats.map((chat) => ({
+      ...chat,
+      lastMessage: chat.messages[0] || null,
+    }));
   }
 
   async getChatById(chatId: string, userId: string) {
@@ -240,6 +341,36 @@ export class ChatService {
           select: {
             id: true,
             name: true,
+            clientName: true,
+          },
+        },
+        messages: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1,
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                avatar: true,
+              },
+            },
+            replyTo: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+            attachments: true,
           },
         },
       },
@@ -249,7 +380,11 @@ export class ChatService {
       throw new NotFoundException('Chat not found');
     }
 
-    return chat;
+    // Transform the response to include lastMessage field for easier access
+    return {
+      ...chat,
+      lastMessage: chat.messages[0] || null,
+    };
   }
 
   async updateChat(
@@ -338,12 +473,46 @@ export class ChatService {
           select: {
             id: true,
             name: true,
+            clientName: true,
+          },
+        },
+        messages: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1,
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                avatar: true,
+              },
+            },
+            replyTo: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+            attachments: true,
           },
         },
       },
     });
 
-    return updatedChat;
+    // Transform the response to include lastMessage field for easier access
+    return {
+      ...updatedChat,
+      lastMessage: updatedChat.messages[0] || null,
+    };
   }
 
   async leaveChat(chatId: string, userId: string) {
@@ -655,6 +824,28 @@ export class ChatService {
     // Get or create chat for the project
     let chat = await this.prisma.chat.findUnique({
       where: { projectId },
+      include: {
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+        project: {
+          select: {
+            id: true,
+            name: true,
+            clientName: true,
+          },
+        },
+      },
     });
 
     if (!chat) {
@@ -664,6 +855,10 @@ export class ChatService {
         projectId,
         participantIds: [], // Will be automatically populated with all project members
       });
+    }
+
+    if (!chat) {
+      throw new NotFoundException('Failed to create or find project chat');
     }
 
     return chat;

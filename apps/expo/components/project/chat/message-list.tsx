@@ -80,6 +80,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
     };
 
     const groupMessagesByDate = (messages: any[]) => {
+      console.log("🚀 ~ groupMessagesByDate ~ messages:", messages);
       const groups: { [key: string]: any[] } = {};
 
       messages.forEach((message) => {

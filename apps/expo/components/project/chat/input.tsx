@@ -322,7 +322,11 @@ const styles = StyleSheet.create({
     maxHeight: 120,
   },
   inputWrapperFocused: {
+<<<<<<< HEAD
     borderColor: "#182e43" ,
+=======
+    borderColor: "#1e88e5",
+>>>>>>> 0fb99e518b8cbeae849dd2120922e5e891547523
     backgroundColor: "#ffffff",
   },
   textInput: {
@@ -332,13 +336,21 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   sendButton: {
+<<<<<<< HEAD
     backgroundColor: "#182e43" ,
+=======
+    backgroundColor: "#1e88e5",
+>>>>>>> 0fb99e518b8cbeae849dd2120922e5e891547523
     borderRadius: 20,
     width: 40,
     height: 40,
     justifyContent: "center",
     alignItems: "center",
+<<<<<<< HEAD
     shadowColor: "#182e43" ,
+=======
+    shadowColor: "#1e88e5",
+>>>>>>> 0fb99e518b8cbeae849dd2120922e5e891547523
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
