@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -5,
     right: -5,
-    backgroundColor: "#182e43" ,
+    backgroundColor: "#182e43",
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -618,18 +618,19 @@ const NotesModal = ({
   isVisible,
   onClose,
   imageId,
-  comments,
+  // comments,
 }: {
   isVisible: boolean;
   onClose: () => void;
   imageId: string;
-  comments: any[];
+  // comments: any[];
 }) => {
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [noteText, setNoteText] = useState("");
   const noteInputRef = useRef<TextInput>(null);
   const { mutate: addComment } = useAddComment();
   const { data: user } = useCurrentUser();
+  const { data: comments } = useGetComments(imageId);
 
   const handleAddNote = async () => {
     if (noteText.trim() && !isAddingNote) {
@@ -805,6 +806,7 @@ export default function ModalImagesWithNotes({
   const thumbnailScrollRef = useRef<ScrollView>(null);
   const currentNoteText = useRef("");
   const noteInputRef = useRef<TextInput>(null);
+  const [showNotes, setShowNotes] = useState(false);
 
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -887,6 +889,8 @@ export default function ModalImagesWithNotes({
                   handleCloseModal={handleCloseModal}
                   images={images}
                   refetch={refetch}
+                  showNotes={showNotes}
+                  setShowNotes={setShowNotes}
                 />
               )}
               keyExtractor={(item) => item.id}
@@ -899,6 +903,8 @@ export default function ModalImagesWithNotes({
               setActiveImageIndex={setActiveImageIndex}
               modalScrollRef={modalScrollRef}
               images={images}
+              showNotes={showNotes}
+              setShowNotes={setShowNotes}
             />
 
             {/* Thumbnails */}
@@ -968,6 +974,8 @@ const ModalItem = ({
   handleCloseModal,
   images,
   refetch,
+  showNotes,
+  setShowNotes,
 }: {
   item: Image;
   images: Image[];
@@ -975,8 +983,10 @@ const ModalItem = ({
   activeImageIndex: number;
   handleCloseModal: () => void;
   refetch: () => void;
+  showNotes: boolean;
+  setShowNotes: (show: boolean) => void;
 }) => {
-  const [showNotes, setShowNotes] = useState(false);
+  //  const [showNotes, setShowNotes] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingReport, setIsUpdatingReport] = useState(false);
   const [showTagsModal, setShowTagsModal] = useState(false);
@@ -1133,13 +1143,6 @@ const ModalItem = ({
         </TouchableOpacity>
       </View>
 
-      <NotesModal
-        isVisible={showNotes}
-        onClose={() => setShowNotes(false)}
-        imageId={item.id}
-        comments={comments || []}
-      />
-
       <ImageTagsModal
         visible={showTagsModal}
         onClose={() => setShowTagsModal(false)}
@@ -1194,12 +1197,16 @@ const ModalItemMetadata = ({
   setActiveImageIndex,
   modalScrollRef,
   images,
+  showNotes,
+  setShowNotes,
 }: {
   item: Image;
   activeImageIndex: number;
   setActiveImageIndex: (index: number) => void;
   modalScrollRef: React.RefObject<FlatList<Image>>;
   images: Image[];
+  showNotes: boolean;
+  setShowNotes: (show: boolean) => void;
 }) => {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [description, setDescription] = useState(item.description || "");
@@ -1311,7 +1318,12 @@ const ModalItemMetadata = ({
           </TouchableOpacity>
         )}
       </View>
-
+      <NotesModal
+        isVisible={showNotes}
+        onClose={() => setShowNotes(false)}
+        imageId={item.id}
+        // comments={comments || []}
+      />
       {/* Description Edit Modal */}
       <DescriptionEditModal
         isVisible={isEditingDescription}

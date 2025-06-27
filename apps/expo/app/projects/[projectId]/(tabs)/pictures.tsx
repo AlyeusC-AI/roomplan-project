@@ -548,6 +548,7 @@ export default function ProjectPhotos() {
           isSelectionMode && selectedPhotos.length > 0 && { paddingTop: 60 },
         ]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
           <View style={styles.headerTop}>
@@ -867,7 +868,6 @@ export default function ProjectPhotos() {
                   className="bg-accent rounded-full border border-gray-200 "
                   onPress={() => handleSetMainImage(true)}
                   disabled={isUploadingMainImage}
-                  
                 >
                   {isUploadingMainImage ? (
                     <ActivityIndicator color="#fff" />
@@ -1169,7 +1169,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   libraryButton: {
-    backgroundColor: "#182e43" ,
+    backgroundColor: "#182e43",
     width: "auto",
     paddingHorizontal: 8,
   },

@@ -460,8 +460,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   selectCircleActive: {
-    backgroundColor: "#182e43" ,
-    borderColor: "#182e43" ,
+    backgroundColor: "#182e43",
+    borderColor: "#182e43",
   },
   imageCountText: {
     fontSize: 13,
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderWidth: 3,
-    borderColor: "#182e43" ,
+    borderColor: "#182e43",
     borderRadius: 4,
   },
   tagXIcon: {
