@@ -12,6 +12,7 @@ import {
 import { Text } from "@/components/ui/text";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
+import ProjectImageSelector from "./ProjectImageSelector";
 
 interface ChatInputProps {
   message: string;
@@ -23,6 +24,7 @@ interface ChatInputProps {
   onCancelReply?: () => void;
   connected?: boolean;
   placeholder?: string;
+  projectId?: string;
 }
 
 export function ChatInput({
@@ -35,9 +37,12 @@ export function ChatInput({
   onCancelReply,
   connected = true,
   placeholder = "Type a message...",
+  projectId,
 }: ChatInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [showProjectImageSelector, setShowProjectImageSelector] =
+    useState(false);
 
   const handleSend = () => {
     if (message.trim() && connected) {
@@ -45,7 +50,28 @@ export function ChatInput({
     }
   };
 
-  const requestPermissions = async () => {
+  const requestCameraPermissions = async () => {
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission needed",
+          "Please grant camera permissions to take photos.",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Settings",
+              onPress: () => ImagePicker.requestCameraPermissionsAsync(),
+            },
+          ]
+        );
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const requestMediaLibraryPermissions = async () => {
     if (Platform.OS !== "web") {
       const { status } =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -84,15 +110,74 @@ export function ChatInput({
       return;
     }
 
-    Alert.alert("Add Attachment", "Choose what you want to send", [
+    const attachmentOptions: any[] = [
       { text: "Cancel", style: "cancel" },
-      { text: "Photo/Video", onPress: handleImagePicker },
-      { text: "Document", onPress: handleDocumentPicker },
-    ]);
+      { text: "Take Photo", onPress: handleCamera },
+      { text: "Photo/Video from Gallery", onPress: handleImagePicker },
+    ];
+
+    if (projectId) {
+      attachmentOptions.splice(2, 0, {
+        text: "Project Images",
+        onPress: () => setShowProjectImageSelector(true),
+      });
+    }
+
+    attachmentOptions.push({ text: "Document", onPress: handleDocumentPicker });
+
+    Alert.alert(
+      "Add Attachment",
+      "Choose what you want to send",
+      attachmentOptions
+    );
+  };
+
+  const handleProjectImageSelect = async (images: any[]) => {
+    if (onSendImage) {
+      // Send each image individually
+      for (const image of images) {
+        await onSendImage(image);
+      }
+    }
+  };
+
+  const handleCamera = async () => {
+    const hasPermission = await requestCameraPermissions();
+    if (!hasPermission) return;
+
+    try {
+      setIsUploading(true);
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        const asset = result.assets[0];
+        const file = {
+          uri: asset.uri,
+          type: asset.type || "image/jpeg",
+          name: asset.fileName || `photo_${Date.now()}.jpg`,
+          size: asset.fileSize || 0,
+        };
+
+        if (onSendImage) {
+          await onSendImage(file);
+        }
+      }
+    } catch (error) {
+      console.error("Error taking photo:", error);
+      Alert.alert("Error", "Failed to take photo. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleImagePicker = async () => {
-    const hasPermission = await requestPermissions();
+    const hasPermission = await requestMediaLibraryPermissions();
     if (!hasPermission) return;
 
     try {
@@ -159,92 +244,104 @@ export function ChatInput({
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
-    >
-      <View style={styles.container}>
-        {/* Reply Preview */}
-        {replyingTo && (
-          <View style={styles.replyPreview}>
-            <View style={styles.replyPreviewHeader}>
-              <Text style={styles.replyPreviewText}>
-                Replying to {replyingTo.user.firstName}{" "}
-                {replyingTo.user.lastName}
+    <>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+      >
+        <View style={styles.container}>
+          {/* Reply Preview */}
+          {replyingTo && (
+            <View style={styles.replyPreview}>
+              <View style={styles.replyPreviewHeader}>
+                <Text style={styles.replyPreviewText}>
+                  Replying to {replyingTo.user.firstName}{" "}
+                  {replyingTo.user.lastName}
+                </Text>
+                <TouchableOpacity
+                  onPress={onCancelReply}
+                  style={styles.cancelReplyButton}
+                >
+                  <Text style={styles.cancelIcon}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.replyPreviewContent} numberOfLines={2}>
+                {replyingTo.content}
               </Text>
-              <TouchableOpacity
-                onPress={onCancelReply}
-                style={styles.cancelReplyButton}
-              >
-                <Text style={styles.cancelIcon}>✕</Text>
-              </TouchableOpacity>
             </View>
-            <Text style={styles.replyPreviewContent} numberOfLines={2}>
-              {replyingTo.content}
-            </Text>
+          )}
+
+          <View style={styles.inputRow}>
+            {/* Attachment Button */}
+            <TouchableOpacity
+              style={[
+                styles.attachmentButton,
+                isUploading && styles.attachmentButtonDisabled,
+              ]}
+              disabled={!connected || isUploading}
+              onPress={handleAttachmentPress}
+            >
+              {isUploading ? (
+                <ActivityIndicator size="small" color="#64748b" />
+              ) : (
+                <Text
+                  style={[
+                    styles.attachmentIcon,
+                    { color: connected ? "#64748b" : "#cbd5e1" },
+                  ]}
+                >
+                  📎
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            {/* Text Input */}
+            <View
+              style={[
+                styles.inputWrapper,
+                isFocused && styles.inputWrapperFocused,
+              ]}
+            >
+              <TextInput
+                style={styles.textInput}
+                value={message}
+                onChangeText={onMessageChange}
+                placeholder={replyingTo ? "Type your reply..." : placeholder}
+                placeholderTextColor="#94a3b8"
+                multiline
+                maxLength={1000}
+                editable={connected && !isUploading}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+              />
+            </View>
+
+            {/* Send Button */}
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                (!message.trim() || !connected || isUploading) &&
+                  styles.sendButtonDisabled,
+              ]}
+              onPress={handleSend}
+              disabled={!message.trim() || !connected || isUploading}
+            >
+              <Text style={styles.sendIcon}>➤</Text>
+            </TouchableOpacity>
           </View>
-        )}
-
-        <View style={styles.inputRow}>
-          {/* Attachment Button */}
-          <TouchableOpacity
-            style={[
-              styles.attachmentButton,
-              isUploading && styles.attachmentButtonDisabled,
-            ]}
-            disabled={!connected || isUploading}
-            onPress={handleAttachmentPress}
-          >
-            {isUploading ? (
-              <ActivityIndicator size="small" color="#64748b" />
-            ) : (
-              <Text
-                style={[
-                  styles.attachmentIcon,
-                  { color: connected ? "#64748b" : "#cbd5e1" },
-                ]}
-              >
-                📎
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          {/* Text Input */}
-          <View
-            style={[
-              styles.inputWrapper,
-              isFocused && styles.inputWrapperFocused,
-            ]}
-          >
-            <TextInput
-              style={styles.textInput}
-              value={message}
-              onChangeText={onMessageChange}
-              placeholder={replyingTo ? "Type your reply..." : placeholder}
-              placeholderTextColor="#94a3b8"
-              multiline
-              maxLength={1000}
-              editable={connected && !isUploading}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-            />
-          </View>
-
-          {/* Send Button */}
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              (!message.trim() || !connected || isUploading) &&
-                styles.sendButtonDisabled,
-            ]}
-            onPress={handleSend}
-            disabled={!message.trim() || !connected || isUploading}
-          >
-            <Text style={styles.sendIcon}>➤</Text>
-          </TouchableOpacity>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+
+      {/* Project Image Selector Modal */}
+      {projectId && (
+        <ProjectImageSelector
+          visible={showProjectImageSelector}
+          onClose={() => setShowProjectImageSelector(false)}
+          onSelectImage={handleProjectImageSelect}
+          projectId={projectId}
+        />
+      )}
+    </>
   );
 }
 
@@ -322,11 +419,7 @@ const styles = StyleSheet.create({
     maxHeight: 120,
   },
   inputWrapperFocused: {
-<<<<<<< HEAD
-    borderColor: "#182e43" ,
-=======
     borderColor: "#1e88e5",
->>>>>>> 0fb99e518b8cbeae849dd2120922e5e891547523
     backgroundColor: "#ffffff",
   },
   textInput: {
@@ -336,21 +429,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   sendButton: {
-<<<<<<< HEAD
-    backgroundColor: "#182e43" ,
-=======
     backgroundColor: "#1e88e5",
->>>>>>> 0fb99e518b8cbeae849dd2120922e5e891547523
     borderRadius: 20,
     width: 40,
     height: 40,
     justifyContent: "center",
     alignItems: "center",
-<<<<<<< HEAD
-    shadowColor: "#182e43" ,
-=======
     shadowColor: "#1e88e5",
->>>>>>> 0fb99e518b8cbeae849dd2120922e5e891547523
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,

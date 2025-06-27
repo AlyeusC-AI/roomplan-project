@@ -87,11 +87,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveButton: {
-<<<<<<< HEAD
-    backgroundColor: "#182e43" ,
-=======
     backgroundColor: "#1e88e5",
->>>>>>> 0fb99e518b8cbeae849dd2120922e5e891547523
   },
   cancelButton: {
     backgroundColor: "#f1f5f9",
@@ -230,17 +226,33 @@ export default function ChatScreen() {
 
   const handleSendImage = async (image: any) => {
     try {
-      toast.loading("Uploading image...");
+      // Check if this is a project image (already has a URL)
+      const isProjectImage = image.uri && image.uri.startsWith("http");
 
-      // Upload image to space
-      const attachment = await uploadFileToSpace(image);
+      if (isProjectImage) {
+        // For project images, use the existing URL directly
+        const attachment = {
+          fileUrl: image.uri,
+          fileName: image.name,
+          fileSize: image.size || 0,
+          mimeType: image.type || "image/jpeg",
+        };
 
-      // Send message with attachment
-      await sendMessage("", MessageType.IMAGE, [attachment], replyingTo?.id);
-      setReplyingTo(null);
+        // Send message with attachment
+        await sendMessage("", MessageType.IMAGE, [attachment], replyingTo?.id);
+        setReplyingTo(null);
+        toast.success("Project image sent successfully");
+      } else {
+        // For new images, upload to space first
+        toast.loading("Uploading image...");
+        const attachment = await uploadFileToSpace(image);
 
-      toast.dismiss();
-      toast.success("Image sent successfully");
+        // Send message with attachment
+        await sendMessage("", MessageType.IMAGE, [attachment], replyingTo?.id);
+        setReplyingTo(null);
+        toast.dismiss();
+        toast.success("Image sent successfully");
+      }
 
       // Scroll to bottom after sending image
       setTimeout(() => {
@@ -409,11 +421,7 @@ export default function ChatScreen() {
   if (loading || messagesLoading || !chatId) {
     return (
       <View style={styles.loadingContainer}>
-<<<<<<< HEAD
-        <ActivityIndicator color="#182e43"  size="large" />
-=======
         <ActivityIndicator color="#1e88e5" size="large" />
->>>>>>> 0fb99e518b8cbeae849dd2120922e5e891547523
       </View>
     );
   }
@@ -424,7 +432,7 @@ export default function ChatScreen() {
         <ChatHeader
           title="Project Chat"
           connected={false}
-          onBack={() => router.back()}
+          onBack={() => router.push(`/projects/${projectId}`)}
         />
         <View style={styles.errorContent}>
           <Text style={styles.errorText}>
@@ -442,7 +450,7 @@ export default function ChatScreen() {
         title={project?.data?.clientName || "Project Chat"}
         subtitle={connected ? "Live" : "Offline"}
         connected={connected}
-        onBack={() => router.back()}
+        onBack={() => router.push(`/projects/${projectId}`)}
       />
 
       {/* Message List */}
@@ -511,6 +519,7 @@ export default function ChatScreen() {
         replyingTo={replyingTo}
         onCancelReply={() => setReplyingTo(null)}
         connected={connected}
+        projectId={projectId}
       />
 
       {/* Image Viewer Modal */}

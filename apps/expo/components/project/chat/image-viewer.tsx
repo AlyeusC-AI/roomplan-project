@@ -27,6 +27,8 @@ export function ImageViewer({
   onDownload,
   downloadingFiles = new Set(),
 }: ImageViewerProps) {
+  console.log("🚀 ~ imagesssssss:", image);
+
   if (!image) return null;
 
   const isDownloading = downloadingFiles.has(
@@ -78,10 +80,12 @@ export function ImageViewer({
             <Text style={styles.fileName} numberOfLines={1}>
               {image.fileName}
             </Text>
-            {image.fileSize && (
+            {image.fileSize ? (
               <Text style={styles.fileSize}>
-                {formatFileSize(image.fileSize)}
+                {formatFileSize(image.fileSize || 200)}
               </Text>
+            ) : (
+              <Text style={styles.fileSize}>Unknown file size</Text>
             )}
           </View>
         </View>
@@ -121,11 +125,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   downloadButton: {
-<<<<<<< HEAD
-    backgroundColor: "#182e43" ,
-=======
     backgroundColor: "#1e88e5",
->>>>>>> 0fb99e518b8cbeae849dd2120922e5e891547523
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,

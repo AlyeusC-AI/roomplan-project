@@ -131,6 +131,16 @@ export default function ChatDetailScreen() {
     }
   }, [chats, chatId]);
 
+  // Extract projectId from chat if it's a project chat
+  const getProjectIdFromChat = () => {
+    if (chatInfo?.type === ChatType.PROJECT && chatInfo?.projectId) {
+      return chatInfo.projectId;
+    }
+    return undefined;
+  };
+
+  const projectId = getProjectIdFromChat();
+
   const getChatName = (chat: any) => {
     if (!chat) return "Chat";
 
@@ -231,17 +241,33 @@ export default function ChatDetailScreen() {
 
   const handleSendImage = async (image: any) => {
     try {
-      toast.loading("Uploading image...");
+      // Check if this is a project image (already has a URL)
+      const isProjectImage = image.uri && image.uri.startsWith("http");
 
-      // Upload image to space
-      const attachment = await uploadFileToSpace(image);
+      if (isProjectImage) {
+        // For project images, use the existing URL directly
+        const attachment = {
+          fileUrl: image.uri,
+          fileName: image.name || "image.jpg",
+          fileSize: image.size || 0,
+          mimeType: image.type || "image/jpeg",
+        };
 
-      // Send message with attachment
-      await sendMessage("", MessageType.IMAGE, [attachment], replyingTo?.id);
-      setReplyingTo(null);
+        // Send message with attachment
+        await sendMessage("", MessageType.IMAGE, [attachment], replyingTo?.id);
+        setReplyingTo(null);
+        toast.success("Project image sent successfully");
+      } else {
+        // For new images, upload to space first
+        toast.loading("Uploading image...");
+        const attachment = await uploadFileToSpace(image);
 
-      toast.dismiss();
-      toast.success("Image sent successfully");
+        // Send message with attachment
+        await sendMessage("", MessageType.IMAGE, [attachment], replyingTo?.id);
+        setReplyingTo(null);
+        toast.dismiss();
+        toast.success("Image sent successfully");
+      }
 
       // Scroll to bottom after sending image
       setTimeout(() => {
@@ -421,7 +447,7 @@ export default function ChatDetailScreen() {
         <ChatHeader
           title={getChatName(chatInfo)}
           connected={false}
-          onBack={() => router.back()}
+          onBack={() => router.push(`/chats`)}
         />
         <View style={styles.errorContent}>
           <Text style={styles.errorText}>
@@ -439,7 +465,7 @@ export default function ChatDetailScreen() {
         title={getChatName(chatInfo)}
         subtitle={connected ? "Live" : "Offline"}
         connected={connected}
-        onBack={() => router.back()}
+        onBack={() => router.push(`/chats`)}
       />
 
       {/* Message List */}
@@ -508,6 +534,7 @@ export default function ChatDetailScreen() {
         replyingTo={replyingTo}
         onCancelReply={() => setReplyingTo(null)}
         connected={connected}
+        projectId={projectId}
       />
 
       {/* Image Viewer Modal */}

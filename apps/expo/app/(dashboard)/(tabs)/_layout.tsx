@@ -24,19 +24,6 @@ export default function Layout() {
       screenOptions={{
         tabBarActiveTintColor: "#182e43",
         headerTintColor: "#FFFF",
-<<<<<<< HEAD
-        headerStyle: { backgroundColor: "#182e43" },
-        headerRight: () => (
-          <View className="flex-row mr-3">
-            <TouchableOpacity onPress={() => router.push("/chat")}>
-              <CircleHelp style={{ marginRight: 10 }} color="#FFFF" size={24} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push("/settings")}>
-              <Cog color="#FFFF" size={24} />
-            </TouchableOpacity>
-          </View>
-        ),
-=======
         headerStyle: { backgroundColor: "#2563eb" },
         header: ({ navigation, route, options }) =>
           route.name === "chats/[chatId]" || route.name === "chats/new" ? (
@@ -81,7 +68,6 @@ export default function Layout() {
               </View>
             </SafeAreaView>
           ),
->>>>>>> 0fb99e518b8cbeae849dd2120922e5e891547523
       }}
     >
       <Tabs.Screen
