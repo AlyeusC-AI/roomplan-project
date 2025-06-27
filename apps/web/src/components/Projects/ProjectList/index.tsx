@@ -35,7 +35,7 @@ import {
   KanbanHeader,
   KanbanProvider,
 } from "@/components/ui/kibo-ui/kanban";
-import { AlertTriangle, ChevronRightIcon, CirclePlus, FileImage, CalendarIcon, X } from "lucide-react";
+import { AlertTriangle, ChevronRightIcon, CirclePlus, FileImage, CalendarIcon, X, RotateCw } from "lucide-react";
 import { ColumnDef, Row } from "@tanstack/react-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
 import { Badge } from "@components/ui/badge";
@@ -77,14 +77,28 @@ export default function ProjectList() {
 
   const page = parseInt(search.get("page") || "1");
   const query = search.get("query") || "";
+  const [filterObj, setFilterObj] = useState({
+    search: "",
+    startDate: null as Date | null,
+    endDate: null as Date | null,
+    assigneeIds: [],
+  });
+  const [filterDialogState, setFilterDialogState] = useState({
+    startDate: null as Date | null,
+    endDate: null as Date | null,
+    assigneeId: "",
+  });
 
-  const { data, isLoading } = useGetProjects({
+  const { data, isLoading, refetch } = useGetProjects({
     pagination: {
       page,
       limit: 10,
       sortBy: "createdAt",
       sortOrder: "desc",
       search: query,
+      assigneeIds: filterObj.assigneeIds,
+      startDate: filterObj?.startDate ? filterObj?.startDate?.toISOString() : undefined,
+      endDate: filterObj?.endDate ? filterObj?.endDate?.toISOString() : undefined,
     },
   });
 
@@ -110,28 +124,51 @@ export default function ProjectList() {
     updatePreference({ savedDashboardView: view });
   }
 
-  const [filterObj, setFilterObj] = useState({
-    search: "",
-    startDate: null as Date | null,
-    endDate: null as Date | null,
-    user: "",
-  });
+ 
   const [filterQuery, setFilterQuery] = useState("");
+
+  const filterTabsList = [
+    {
+      label: "All",
+      value: "all",
+    },
+    {
+      label: "Started",
+      value: "stared",
+    },
+    {
+      label: "My Projects",
+      value: "My Projects",
+    },
+    {
+      label: "Archived",
+      value: "Archived",
+    },    
+  ]
 
   return (
     <>
       <div
         className={cn(
           "z-10 bg-background lg:pr-6",
-          "w-[calc(100vw-var(--sidebar-width)-48px)]"
+          "md:w-[calc(100vw-var(--sidebar-width)-48px)]"
         )}
       >
         <div className='flex w-full justify-between space-x-6'>
-          <div className='z-10 w-11/12 space-y-0.5'>
-            <h2 className='text-2xl font-bold tracking-tight'>Projects</h2>
-            <p className='hidden text-muted-foreground lg:block'>
+          <div className='z-10 w-11/12 flex flex-col md:flex-row md:items-center gap-2 space-x-4'>
+          <div className=" space-y-0.5">
+
+            <h2 className='text-2xl md:text-4xl font-bold tracking-tight'>Projects</h2>
+            {/* <p className='hidden text-muted-foreground lg:block'>
               Select a project to manage files and estimates.
-            </p>
+            </p> */}
+          </div>
+          <Input
+              placeholder="Search projects..."
+              onChange={e => handleSearch(e.target.value)}
+              className="w-full lg:max-w-64 h-10"
+              defaultValue={query}
+            />
           </div>
           <div className='ml-auto flex min-w-[100px] flex-col space-y-4'>
             <Button onClick={() => setIsCreatingNewProject((i) => !i)}>
@@ -142,135 +179,43 @@ export default function ProjectList() {
         </div>
         <div className='mt-5 flex justify-between'>
           <div className="flex items-center gap-2">
-            <Input
-              placeholder="Search projects..."
-              onChange={e => handleSearch(e.target.value)}
-              className="w-full lg:max-w-96"
-              defaultValue={query}
-            />
+
+          <Tabs
+            defaultValue={"all"}
+            onValueChange={(e) => changeDashboardView(e)}
+          >
+            <TabsList className='hidden lg:block'>
+              {filterTabsList.map((tab) => (
+                <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+            
             <ToggleFilter
               filterTitle='Filter Projects'
               onApply={() => {
-                // handleSearch(
-                //   [
-                //     filterObj.search,
-                //     filterObj.startDate ? filterObj.startDate.toISOString() : "",
-                //     filterObj.endDate ? filterObj.endDate.toISOString() : "",
-                //     filterObj.user,
-                //   ].filter(Boolean)
-                //     .join(" ")
-                // );
+                setFilterObj({
+                  ...filterObj,
+                  startDate: filterDialogState.startDate,
+                  endDate: filterDialogState.endDate,
+                  assigneeIds: filterDialogState.assigneeId ? [filterDialogState.assigneeId] : [],
+                });
               }}
             >
-              <div className='flex flex-col gap-4'>
-                <div className="grid grid-cols-2 gap-4">
-                  <div >
-                    <label className='text-sm font-medium mb-2'>Start Date</label>
-                    <div className="relative">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal pr-8",
-                              !filterObj.startDate && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {filterObj.startDate ? format(filterObj.startDate, "PPP") : <span>Pick a date</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={filterObj.startDate || undefined}
-                            onSelect={(date) => setFilterObj(obj => ({ ...obj, startDate: date }))}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      {filterObj.startDate && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
-                          onClick={() => setFilterObj(obj => ({ ...obj, startDate: null }))}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <label className='text-sm font-medium mb-2'>End Date</label>
-                    <div className="relative">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal pr-8",
-                              !filterObj.endDate && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {filterObj.endDate ? format(filterObj.endDate, "PPP") : <span>Pick a date</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={filterObj.endDate || undefined}
-                            onSelect={(date) => setFilterObj(obj => ({ ...obj, endDate: date }))}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      {filterObj.endDate && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
-                          onClick={() => setFilterObj(obj => ({ ...obj, endDate: null }))}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <label className='text-sm font-medium mb-2'>User</label>
-                  <div className="relative">
-                    <Select
-                      value={filterObj.user}
-                      onValueChange={val => setFilterObj(obj => ({ ...obj, user: val }))}
-                    >
-                      <SelectTrigger className='w-full pr-8'>
-                        <SelectValue placeholder='Select user' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {organizationMembers?.data?.map((member: any) => (
-                          <SelectItem key={member.user?.id} value={member.user?.id}>
-                            {member.user?.firstName} {member.user?.lastName} ({member.user?.email})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {filterObj.user && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
-                        onClick={() => setFilterObj(obj => ({ ...obj, user: "" }))}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
+            <ProjectFilterForm
+              filterObj={filterDialogState}
+              setFilterObj={setFilterDialogState}
+              organizationMembers={organizationMembers}
+            />
             </ToggleFilter>
+            <Button
+              variant={"outline"}
+
+              onClick={() => refetch()}
+            >
+              <RotateCw />
+
+            </Button>
           </div>
           <Tabs
             defaultValue={savedDashboardView}
@@ -293,9 +238,10 @@ export default function ProjectList() {
               // <KanBan projects={data?.data ?? []} />
               <ProjectKanban />
             ) : (
-              <Card>
-                <Table projects={data?.data ?? []} />
-              </Card>
+              <List projects={data?.data ?? []} />
+              // <Card>
+              //   <Table projects={data?.data ?? []} />
+              // </Card>
             )}
             {savedDashboardView === "listView" && data?.meta && (
               <Pagination className='mt-5'>
@@ -426,10 +372,10 @@ export const Table = ({ projects }: { projects: any[] }) => {
             </div>
           </div>
           <div className="grow flex items-center  gap-2">
-            {row.original.images?.map((image:any)=>
-            <img src={image.url} alt={row.original.name || "image"} height={64} width={64} className='md:size-24 size-16 rounded-xl border-2 border-border'/>
-          )}
-            
+            {row.original.images?.map((image: any) =>
+              <img src={image.url} alt={row.original.name || "image"} height={64} width={64} className='md:size-24 size-16 rounded-xl border-2 border-border' />
+            )}
+
 
           </div>
         </div>
@@ -488,6 +434,92 @@ export const Table = ({ projects }: { projects: any[] }) => {
         )}
       </TableBody>
     </TableProvider>
+  );
+};
+
+const List = ({ projects }: { projects: any[] }) => {
+  const { data: statuses } = useGetProjectStatuses();
+  const router = useRouter();
+
+  return (
+    <div className="flex flex-col gap-4 ">
+      {projects.map((project) => {
+        const status = statuses?.find((status) => status.id === project.statusId);
+        return (
+          <div
+            key={project.id}
+            className="flex flex-col lg:flex-row lg:items-center gap-4 p-4 border rounded-lg shadow hover:shadow-xl hover:bg-gray-50 cursor-pointer transition-colors group"
+            onClick={() => router.push(`/projects/${project.id}/overview`)}
+            tabIndex={0}
+            role="button"
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.push(`/projects/${project.id}/overview`); }}
+          >
+            <div className="flex flex-col md:flex-row divide-y md:divide-y-0 space-y-4 md:space-y-0 justify-between md:items-center grow">
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                <div className="relative">
+                  {project.mainImage ? (
+                    <img
+                      src={project.mainImage}
+                      alt={project.clientName}
+                      className="md:size-24 size-16 rounded-xl border-2 border-border object-cover bg-white"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center md:size-24 size-16 rounded-xl border-2 border-border bg-gray-100">
+                      <FileImage size={45} />
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col justify-between h-full gap-1 min-w-0">
+                  <span className="font-medium text-lg capitalize truncate">{project?.name}</span>
+                  <div className="flex items-center text-sm gap-1 text-muted-foreground min-w-0">
+                    <span className="truncate">{project?.location}</span>
+                    <ChevronRightIcon size={12} />
+                    <span className="truncate">{project?.clientName}</span>
+                  </div>
+                  <span className="text-muted-foreground text-xs">Last updated {formatDate(new Date(project?.createdAt))}</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge style={{ backgroundColor: status?.color || 'green', width: 'fit-content' }}>
+                      {status?.label}
+                    </Badge>
+                    {project.lossType && (
+                      <Badge
+                        variant='secondary'
+                        className='border-red-200 bg-red-100 text-xs text-red-700 w-fit'
+                      >
+                        <AlertTriangle className='mr-1 h-3 w-3' />
+                        {project.lossType}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex divide-x divide-gray-200 rounded-lg p-2">
+                <div className="flex flex-col items-center gap-2 px-2">
+                  <span className="text-muted-foreground text-xs">Images</span>
+                  <span className="text-lg">{project._count.images}</span>
+                </div>
+                <div className="flex flex-col items-center gap-2 px-2">
+                  <span className="text-muted-foreground text-xs">Docs</span>
+                  <span className="text-lg">{project._count.documents?.length || 0}</span>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 items-center gap-2 md:flex-wrap w-fit lg:w-auto md:basis-1/3">
+              {project.images?.map((image: any) => (
+                <img
+                  key={image.url}
+                  src={image.url}
+                  alt={project.name || 'image'}
+                  height={48}
+                  width={48}
+                  className="md:size-24 size-16 rounded-xl border-2 border-border object-cover bg-white"
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
@@ -554,5 +586,126 @@ export const KanBan = ({ projects }: { projects: any[] }) => {
         </KanbanBoard>
       ))}
     </KanbanProvider>
+  );
+};
+
+const ProjectFilterForm = ({
+  filterObj,
+  setFilterObj,
+  organizationMembers,
+}: {
+  filterObj: any;
+  setFilterObj: any;
+  organizationMembers: any;
+}) => {
+  return (
+      <div className='flex flex-col gap-4'>
+                <div className="grid grid-cols-2 gap-4">
+                  <div >
+                    <label className='text-sm font-medium mb-2'>Start Date</label>
+                    <div className="relative">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal pr-8",
+                              !filterObj.startDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {filterObj.startDate ? format(filterObj.startDate, "PPP") : <span>Pick a date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={filterObj.startDate || undefined}
+                            onSelect={(date) => setFilterObj(obj => ({ ...obj, startDate: date }))}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      {filterObj.startDate && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+                          onClick={() => setFilterObj(obj => ({ ...obj, startDate: null }))}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className='text-sm font-medium mb-2'>End Date</label>
+                    <div className="relative">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal pr-8",
+                              !filterObj.endDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {filterObj.endDate ? format(filterObj.endDate, "PPP") : <span>Pick a date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={filterObj.endDate || undefined}
+                            onSelect={(date) => setFilterObj(obj => ({ ...obj, endDate: date }))}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      {filterObj.endDate && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+                          onClick={() => setFilterObj(obj => ({ ...obj, endDate: null }))}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className='text-sm font-medium mb-2'>User</label>
+                  <div className="relative">
+                    <Select
+                      value={filterObj.user}
+                      onValueChange={val => setFilterObj(obj => ({ ...obj, user: val }))}
+                    >
+                      <SelectTrigger className='w-full pr-8'>
+                        <SelectValue placeholder='Select user' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {organizationMembers?.data?.map((member: any) => (
+                          <SelectItem key={member.user?.id} value={member.user?.id}>
+                            {member.user?.firstName} {member.user?.lastName} ({member.user?.email})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {filterObj.user && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+                        onClick={() => setFilterObj(obj => ({ ...obj, user: "" }))}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
   );
 };
