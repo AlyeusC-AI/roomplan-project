@@ -94,7 +94,7 @@ export default function SaveToPhoneModal({
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <View style={styles.modalHeaderContent}>
-              <DownloadIcon size={24} color="#1e88e5" />
+              <DownloadIcon size={24} color="#182e43" />
               <Text style={styles.modalTitle}>{getTitle()}</Text>
             </View>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -107,7 +107,7 @@ export default function SaveToPhoneModal({
 
             {isSaving && (
               <View style={styles.progressContainer}>
-                <ActivityIndicator size="large" color="#1e88e5" />
+                <ActivityIndicator size="large" color="#182e43" />
                 <Text style={styles.progressText}>
                   Saving {savedCount} of {selectedPhotos.length} images...
                 </Text>
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
   },
   confirmButtonDisabled: {
     opacity: 0.5,

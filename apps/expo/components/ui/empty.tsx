@@ -24,7 +24,7 @@ export function Empty({
     <View className="flex-1 items-center justify-center p-8 bg-muted/5 rounded-lg">
       {Icon && (
         <View className="mb-4 p-4 rounded-full bg-primary/10">
-          <Icon size={32} color="#1e88e5" />
+          <Icon size={32} color="#182e43" />
         </View>
       )}
       <Text className="text-xl font-semibold text-center mb-2">{title}</Text>

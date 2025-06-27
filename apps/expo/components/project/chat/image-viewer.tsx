@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   downloadButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#182e43" ,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,

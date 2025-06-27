@@ -26,7 +26,7 @@ import {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   viewButton: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -110,10 +110,10 @@ const styles = StyleSheet.create({
     bottom: 24,
     left: 24,
     right: 24,
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#1e88e5",
+    shadowColor: "#182e43",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -145,7 +145,7 @@ export default function ScopeScreen() {
   if (isLoading) {
     return (
       <View className="flex items-center justify-center h-full w-full">
-        <ActivityIndicator color="#1e88e5" size="large" />
+        <ActivityIndicator color="#182e43" size="large" />
       </View>
     );
   }

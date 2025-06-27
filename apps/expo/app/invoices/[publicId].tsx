@@ -70,7 +70,7 @@ export default function InvoiceDetailsScreen() {
       case "draft":
         return { bg: "#e2e8f0", text: "#64748b" };
       case "sent":
-        return { bg: "#dbeafe", text: "#2563eb" };
+        return { bg: "#dbeafe", text: "#182e43" };
       case "paid":
         return { bg: "#dcfce7", text: "#16a34a" };
       case "partial":

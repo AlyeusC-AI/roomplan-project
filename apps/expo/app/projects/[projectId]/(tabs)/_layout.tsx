@@ -39,10 +39,10 @@ export default function Layout() {
   return (
     <Tabs
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: "#1e88e5",
+        tabBarActiveTintColor: "#182e43",
         headerTintColor: "white",
         headerStyle: {
-          backgroundColor: "#1e88e5",
+          backgroundColor: "#182e43",
         },
         header: ({ navigation, route, options }) =>
           route.name === "chat" ? (
@@ -50,13 +50,13 @@ export default function Layout() {
               <StatusBar barStyle="dark-content" backgroundColor="#fff" />
             </SafeAreaView>
           ) : (
-            <SafeAreaView style={{ backgroundColor: "#1e88e5" }}>
-              <StatusBar barStyle="light-content" backgroundColor="#1e88e5" />
+            <SafeAreaView style={{ backgroundColor: "#182e43" }}>
+              <StatusBar barStyle="light-content" backgroundColor="#182e43" />
               <View
                 style={{
                   paddingTop:
                     Platform.OS === "android" ? StatusBar.currentHeight : 0,
-                  backgroundColor: "#1e88e5",
+                  backgroundColor: "#182e43",
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.1,

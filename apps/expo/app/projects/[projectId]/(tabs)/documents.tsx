@@ -141,7 +141,7 @@ export default function ProjectDocumentsPage() {
   if (isDocumentsLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#1e88e5" />
+        <ActivityIndicator size="large" color="#182e43" />
       </View>
     );
   }
@@ -164,7 +164,7 @@ export default function ProjectDocumentsPage() {
             onPress={() => setShowCreateDialog(true)}
             className="bg-blue-600 p-4 rounded-full shadow-lg"
             style={{
-              shadowColor: "#2563eb",
+              shadowColor: "#182e43",
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.2,
               shadowRadius: 8,
@@ -190,7 +190,7 @@ export default function ProjectDocumentsPage() {
               onPress={() => setShowCreateDialog(true)}
               className="bg-blue-600 px-8 py-4 rounded-xl shadow-sm"
               style={{
-                shadowColor: "#2563eb",
+                shadowColor: "#182e43",
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.1,
                 shadowRadius: 4,

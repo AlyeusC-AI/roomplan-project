@@ -7,7 +7,7 @@ export default function ArrivalNotificationScreen() {
     <NotificationScreen
       type="arrival"
       title="Arrival"
-      icon={<MapPin size={24} color="#3b82f6" />}
+      icon={<MapPin size={24} color="#182e43"  />}
       defaultMessageTemplate={createArrivalMessageTemplate}
     />
   );

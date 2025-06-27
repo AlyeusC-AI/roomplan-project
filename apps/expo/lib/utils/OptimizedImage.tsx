@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "rgba(30, 136, 229, 0.3)",
     borderWidth: 3,
-    borderColor: "#1e88e5",
+    borderColor: "#182e43",
     borderRadius: 8,
   },
   imageInfo: {
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
     borderRadius: 4,
   },
   retryText: {
@@ -260,7 +260,7 @@ export function OptimizedImage({
 
       {loading && !error && (
         <View style={[styles.loadingContainer, style]}>
-          <ActivityIndicator size="large" color="#1e88e5" />
+          <ActivityIndicator size="large" color="#182e43" />
         </View>
       )}
 

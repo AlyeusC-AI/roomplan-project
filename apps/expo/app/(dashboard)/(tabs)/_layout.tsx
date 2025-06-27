@@ -13,9 +13,9 @@ export default function Layout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#2563eb",
+        tabBarActiveTintColor: "#182e43",
         headerTintColor: "#FFFF",
-        headerStyle: { backgroundColor: "#2563eb" },
+        headerStyle: { backgroundColor: "#182e43" },
         headerRight: () => (
           <View className="flex-row mr-3">
             <TouchableOpacity onPress={() => router.push("/chat")}>

@@ -13,14 +13,14 @@ export default function TabNavigation() {
         // tabBarIcon: ({ focused, color, size }) => {
         //   if (route.name === "Home") {
         //     if (focused)
-        //       return <Entypo name="home" size={24} color="#1e88e5" />;
+        //       return <Entypo name="home" size={24} color="#182e43" />;
         //     return <Entypo name="home" size={24} color="black" />;
         //   } else if (route.name === "Settings") {
-        //     if (focused) return <Entypo name="cog" size={24} color="#1e88e5" />;
+        //     if (focused) return <Entypo name="cog" size={24} color="#182e43" />;
         //     return <Entypo name="cog" size={24} color="black" />;
         //   }
         // },
-        tabBarActiveTintColor: "#2563eb",
+        tabBarActiveTintColor: "#182e43",
         tabBarInactiveTintColor: "gray",
       })}
     >

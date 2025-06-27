@@ -37,6 +37,7 @@ import {
   File,
   MessageSquare,
   MessageCircle,
+  Files,
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -160,7 +161,7 @@ export default function ProjectOverview() {
     //   description: "Project notes",
     // },
     {
-      Icon: ClipboardCheck,
+      Icon: Files,
       title: "Report",
       description: "Generate project report",
       onPress: () =>
@@ -288,10 +289,32 @@ export default function ProjectOverview() {
       >
         <View className="flex-1 justify-end bg-black/50">
           <View className="bg-background rounded-t-3xl p-5">
-            <View className="flex-row justify-between items-center mb-4">
+            <View className="flex-row justify-between items-start mb-4">
+              <View className="flex-col items-start">
+
               <Text className="text-xl font-bold text-foreground">
                 {project?.data?.clientName}
               </Text>
+              {project?.data?.lossType && (
+                <View className="flex flex-row items-center">
+                  <View className="bg-primary/10 p-2 rounded-lg">
+                    <AlertTriangle
+                      height={16}
+                      width={16}
+                      className="text-primary"
+                    />
+                  </View>
+                  <View className="ml-3 flex-1">
+                    <Text className="text-sm text-muted-foreground">
+                      Damage Type
+                    </Text>
+                    <Text className="text-base text-foreground capitalize">
+                      {project?.data?.lossType.replace(/_/g, " ")}
+                    </Text>
+                  </View>
+                </View>
+              )}
+              </View>
               <View className="flex-row items-center space-x-2">
                 <Button
                   variant="outline"
@@ -316,38 +339,18 @@ export default function ProjectOverview() {
               </View>
             </View>
 
-            <View className="space-y-4">
-              {project?.data?.lossType && (
-                <View className="flex flex-row items-center">
-                  <View className="bg-primary/10 p-2 rounded-lg">
-                    <AlertTriangle
-                      height={20}
-                      width={20}
-                      className="text-primary"
-                    />
-                  </View>
-                  <View className="ml-3 flex-1">
-                    <Text className="text-sm text-muted-foreground">
-                      Damage Type
-                    </Text>
-                    <Text className="text-base text-foreground capitalize">
-                      {project?.data?.lossType.replace(/_/g, " ")}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              <View className="bg-muted/50 p-4 rounded-xl">
-                <Text className="text-sm font-medium text-muted-foreground mb-3">
+            
+              <View className="">
+                {/* <Text className="text-sm font-medium text-muted-foreground mb-3">
                   Contact Information
-                </Text>
+                </Text> */}
 
                 <View className="space-y-3">
                   <View className="flex flex-row items-center justify-between">
                     <View className="flex-row items-center flex-1">
-                      <View className="bg-primary/10 p-2 rounded-lg">
+                      {/* <View className="bg-primary/10 p-2 rounded-lg">
                         <Map height={20} width={20} className="text-primary" />
-                      </View>
+                      </View> */}
                       <Text className="text-base ml-3 text-foreground flex-1">
                         {project?.data?.location || "No location"}
                       </Text>
@@ -357,9 +360,9 @@ export default function ProjectOverview() {
                         onPress={() => copyText(project?.data?.location)}
                         className="p-2"
                       >
-                        <ClipboardCheck
+                        <Files
                           size={18}
-                          className="text-muted-foreground"
+                          className="text-primary-dark"
                         />
                       </TouchableOpacity>
                     )}
@@ -368,13 +371,13 @@ export default function ProjectOverview() {
                   {project?.data?.clientEmail ? (
                     <View className="flex flex-row items-center justify-between">
                       <View className="flex-row items-center flex-1">
-                        <View className="bg-primary/10 p-2 rounded-lg">
+                        {/* <View className="bg-primary/10 p-2 rounded-lg">
                           <Mail
                             height={20}
                             width={20}
                             className="text-primary"
                           />
-                        </View>
+                        </View> */}
                         <Text className="text-base ml-3 text-foreground flex-1">
                           {project?.data?.clientEmail}
                         </Text>
@@ -383,17 +386,17 @@ export default function ProjectOverview() {
                         onPress={() => copyText(project?.data?.clientEmail)}
                         className="p-2"
                       >
-                        <ClipboardCheck
+                        <Files
                           size={18}
-                          className="text-muted-foreground"
+                          className="text-primary-dark"
                         />
                       </TouchableOpacity>
                     </View>
                   ) : (
                     <View className="flex flex-row items-center">
-                      <View className="bg-primary/10 p-2 rounded-lg">
+                      {/* <View className="bg-primary/10 p-2 rounded-lg">
                         <Mail height={20} width={20} className="text-primary" />
-                      </View>
+                      </View> */}
                       <Text className="text-base ml-3 text-muted-foreground">
                         No email
                       </Text>
@@ -403,13 +406,13 @@ export default function ProjectOverview() {
                   {project?.data?.clientPhoneNumber ? (
                     <View className="flex flex-row items-center justify-between">
                       <View className="flex-row items-center flex-1">
-                        <View className="bg-primary/10 p-2 rounded-lg">
+                        {/* <View className="bg-primary/10 p-2 rounded-lg">
                           <Phone
                             height={20}
                             width={20}
                             className="text-primary"
                           />
-                        </View>
+                        </View> */}
                         <Text className="text-base ml-3 text-foreground flex-1">
                           {project?.data?.clientPhoneNumber}
                         </Text>
@@ -420,21 +423,21 @@ export default function ProjectOverview() {
                         }
                         className="p-2"
                       >
-                        <ClipboardCheck
+                        <Files
                           size={18}
-                          className="text-muted-foreground"
+                          className="text-primary-dark"
                         />
                       </TouchableOpacity>
                     </View>
                   ) : (
                     <View className="flex flex-row items-center">
-                      <View className="bg-primary/10 p-2 rounded-lg">
+                      {/* <View className="bg-primary/10 p-2 rounded-lg">
                         <Phone
                           height={20}
                           width={20}
                           className="text-primary"
                         />
-                      </View>
+                      </View> */}
                       <Text className="text-base ml-3 text-muted-foreground">
                         No phone
                       </Text>
@@ -442,25 +445,13 @@ export default function ProjectOverview() {
                   )}
                 </View>
               </View>
-            </View>
 
             <View className="my-6 space-y-2 ">
               {project?.data?.clientPhoneNumber && (
                 <View className="flex-row space-x-2 w-full justify-between">
                   <Button
                     // variant="secondary"
-                    variant="outline"
-                    className=" flex-row gap-2"
-                    onPress={() =>
-                      Linking.openURL(`tel:${project?.data?.clientPhoneNumber}`)
-                    }
-                  >
-                    <Phone size={18} className="mr-2" />
-                    <Text>Call</Text>
-                  </Button>
-                  <Button
-                    // variant="secondary"
-                    variant="outline"
+                    variant="secondary"
                     className=" flex-row gap-2"
                     onPress={() =>
                       Linking.openURL(`sms:${project?.data?.clientPhoneNumber}`)
@@ -469,11 +460,23 @@ export default function ProjectOverview() {
                     <MessageSquare size={18} className="mr-2" />
                     <Text>Message</Text>
                   </Button>
+                  <Button
+                    // variant="secondary"
+                    variant="secondary"
+                    className=" flex-row gap-2"
+                    onPress={() =>
+                      Linking.openURL(`tel:${project?.data?.clientPhoneNumber}`)
+                    }
+                  >
+                    <Phone size={18} className="mr-2" />
+                    <Text>Call</Text>
+                  </Button>
+                  
                   {project?.data?.clientEmail && (
                     <Button
                       // variant="secondary"
-                      variant="outline"
-                      className=" flex-row gap-2"
+                      variant="secondary"
+                      className=" flex-row gap-2 text-gray-500"
                       onPress={() =>
                         Linking.openURL(`mailto:${project?.data?.clientEmail}`)
                       }

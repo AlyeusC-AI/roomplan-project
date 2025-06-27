@@ -61,7 +61,7 @@ export default function FilterModal({
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Filter size={24} color="#1e88e5" />
+            <Filter size={24} color="#182e43" />
             <Text style={styles.headerTitle}>Filters</Text>
           </View>
           <View style={styles.headerRight}>
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   clearButtonText: {
-    color: "#1e88e5",
+    color: "#182e43",
     fontSize: 14,
     fontWeight: "500",
   },
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   activeTab: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
   },
   tabText: {
     fontSize: 16,
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     borderTopColor: "#e5e7eb",
   },
   applyButton: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",

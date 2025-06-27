@@ -109,6 +109,8 @@
       --sidebar-accent-foreground: 240 5.9% 10%;
       --sidebar-border: 220 13% 91%;
       --sidebar-ring: 217.2 91.2% 59.8%;
+
+      --dark-primary: 209 47% 18%;
     }
     .dark {
       --sidebar-width: 16rem;
@@ -150,6 +152,7 @@
       --input: 0 0% 14.9%;
   
       --ring: 0 0% 83.1%;
+      --dark-primary: 209 47% 18%;
     }
   }
   

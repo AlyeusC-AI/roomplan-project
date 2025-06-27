@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
 //         </HStack>
 //         <HStack justifyContent="space-between" mt="4">
 //           <HStack color="coolGray.700" maxW="1/2">
-//             <Map width={24} height={24} stroke="#1e88e5" />
+//             <Map width={24} height={24} stroke="#182e43" />
 //             <View marginLeft={2}>
 //               <Address address={project.location} />
 //             </View>

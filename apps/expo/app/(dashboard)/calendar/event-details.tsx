@@ -255,7 +255,7 @@ export default function EventDetailsScreen() {
       >
         {isLoadingProject ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#3b82f6" />
+            <ActivityIndicator size="large" color="#182e43"  />
           </View>
         ) : (
           <>
@@ -269,7 +269,7 @@ export default function EventDetailsScreen() {
                     <Text style={styles.viewProjectText}>
                       View project details
                     </Text>
-                    <ChevronRight size={16} color="#3b82f6" />
+                    <ChevronRight size={16} color="#182e43"  />
                   </View>
                 </TouchableOpacity>
 
@@ -280,7 +280,7 @@ export default function EventDetailsScreen() {
                   >
                     <Mail
                       size={18}
-                      color="#3b82f6"
+                      color="#182e43" 
                       style={styles.contactIcon}
                     />
                     <Text style={styles.contactText}>
@@ -296,7 +296,7 @@ export default function EventDetailsScreen() {
                   >
                     <Phone
                       size={18}
-                      color="#3b82f6"
+                      color="#182e43" 
                       style={styles.contactIcon}
                     />
                     <Text style={styles.contactText}>
@@ -372,7 +372,7 @@ export default function EventDetailsScreen() {
                   <View style={styles.mapPreview}>
                     {isLoadingMap ? (
                       <View style={styles.mapLoading}>
-                        <ActivityIndicator size="small" color="#3b82f6" />
+                        <ActivityIndicator size="small" color="#182e43"  />
                       </View>
                     ) : mapImageUrl ? (
                       <Image
@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
   },
   contactText: {
     fontSize: 16,
-    color: "#3b82f6",
+    color: "#182e43" ,
   },
   contactTextSecondary: {
     fontSize: 16,
@@ -792,7 +792,7 @@ const styles = StyleSheet.create({
   },
   viewProjectText: {
     fontSize: 14,
-    color: "#3b82f6",
+    color: "#182e43" ,
     marginRight: 4,
   },
 });

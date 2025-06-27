@@ -307,7 +307,7 @@ export function MaterialSelect({
                     style={styles.addNewButton}
                     onPress={() => setShowAddNew(true)}
                   >
-                    <Plus size={20} color="#1e88e5" />
+                    <Plus size={20} color="#182e43" />
                     <Text style={styles.addNewButtonText}>Add New Material</Text>
                   </TouchableOpacity>
                 )}

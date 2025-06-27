@@ -741,10 +741,10 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
           >
             <ActivityIndicator
               size="small"
-              color="#2563EB"
+              color="#182e43"
               style={{ marginRight: 4 }}
             />
-            <Text style={{ fontSize: 12, color: "#2563EB" }}>Saving...</Text>
+            <Text style={{ fontSize: 12, color: "#182e43" }}>Saving...</Text>
           </View>
         )}
       </View>
@@ -759,7 +759,7 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
                   ...styles.singleImage,
                   borderWidth: highlightedImageIndex === 0 ? 3 : 0,
                   borderColor:
-                    highlightedImageIndex === 0 ? "#3B82F6" : "transparent",
+                    highlightedImageIndex === 0 ? "#182e43"  : "transparent",
                 }}
                 size="large"
               />
@@ -796,7 +796,7 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
                         borderWidth: highlightedImageIndex === index ? 3 : 0,
                         borderColor:
                           highlightedImageIndex === index
-                            ? "#3B82F6"
+                            ? "#182e43" 
                             : "transparent",
                       }}
                       size="medium"

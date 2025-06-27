@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     maxHeight: 120,
   },
   inputWrapperFocused: {
-    borderColor: "#3b82f6",
+    borderColor: "#182e43" ,
     backgroundColor: "#ffffff",
   },
   textInput: {
@@ -332,13 +332,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   sendButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#182e43" ,
     borderRadius: 20,
     width: 40,
     height: 40,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#3b82f6",
+    shadowColor: "#182e43" ,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,

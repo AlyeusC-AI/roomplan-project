@@ -93,7 +93,7 @@ export default function TagFilterTab({
           <View style={styles.tagOptionContent}>
             <Tag
               size={16}
-              color={selectedTagFilters.length === 0 ? "#fff" : "#1e88e5"}
+              color={selectedTagFilters.length === 0 ? "#fff" : "#182e43"}
             />
             <Text
               style={[
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   clearAllButtonText: {
-    color: "#1e88e5",
+    color: "#182e43",
     fontSize: 14,
     fontWeight: "500",
   },
@@ -275,8 +275,8 @@ const styles = StyleSheet.create({
     borderColor: "#e2e8f0",
   },
   selectedTagOption: {
-    backgroundColor: "#1e88e5",
-    borderColor: "#1e88e5",
+    backgroundColor: "#182e43",
+    borderColor: "#182e43",
   },
   tagOptionContent: {
     flex: 1,
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   selectedTagBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   applyButton: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",

@@ -63,7 +63,7 @@ const equipmentOptions = [
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   },
   areaToggleActive: {
     backgroundColor: "#f0f9ff",
-    borderColor: "#1e88e5",
+    borderColor: "#182e43",
   },
   areaTabsContainer: {
     flexDirection: "row",
@@ -146,8 +146,8 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   areaTabActive: {
-    backgroundColor: "#1e88e5",
-    shadowColor: "#1e88e5",
+    backgroundColor: "#182e43",
+    shadowColor: "#182e43",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -522,7 +522,7 @@ export default function AffectedArea({ room }: { room: Room }) {
                     value={isChecked}
                     onValueChange={(value) => handleAreaToggle(type, value)}
                     trackColor={{ false: "#e2e8f0", true: "#93c5fd" }}
-                    thumbColor={isChecked ? "#1e88e5" : "#ffffff"}
+                    thumbColor={isChecked ? "#182e43" : "#ffffff"}
                   />
                 </View>
               );

@@ -125,7 +125,7 @@ export default function Dashboard() {
   //           >
   //             <ChevronLeft
   //               size={16}
-  //               color={currentPage === 1 ? "#9CA3AF" : "#2563eb"}
+  //               color={currentPage === 1 ? "#9CA3AF" : "#182e43"}
   //             />
   //           </TouchableOpacity>
 
@@ -201,7 +201,7 @@ export default function Dashboard() {
   //           >
   //             <ChevronRight
   //               size={16}
-  //               color={currentPage === totalPages ? "#9CA3AF" : "#2563eb"}
+  //               color={currentPage === totalPages ? "#9CA3AF" : "#182e43"}
   //             />
   //           </TouchableOpacity>
   //         </View>
@@ -213,7 +213,7 @@ export default function Dashboard() {
   if (isLoadingUser) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color="#182e43" />
       </View>
     );
   }
@@ -251,7 +251,7 @@ export default function Dashboard() {
   if (isLoading && !data?.data) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color="#182e43" />
       </View>
     );
   }
@@ -273,13 +273,13 @@ export default function Dashboard() {
               onPress={() => setOrgModalVisible(true)}
               style={styles.orgButton}
             >
-              <Building2 size={16} color="#2563eb" style={{ marginRight: 4 }} />
+              <Building2 size={16} color="#182e43" style={{ marginRight: 4 }} />
               <Text style={styles.orgButtonText}>
                 {activeOrganization?.name || "Select Org"}
               </Text>
               <ChevronRight
                 size={16}
-                color="#2563eb"
+                color="#182e43"
                 style={{ marginLeft: 2 }}
               />
             </TouchableOpacity> */}
@@ -305,8 +305,8 @@ export default function Dashboard() {
               <RefreshControl
                 refreshing={isRefreshing}
                 onRefresh={resetAndFetch}
-                colors={["#2563eb"]}
-                tintColor="#2563eb"
+                colors={["#182e43"]}
+                tintColor="#182e43"
               />
             }
             ListEmptyComponent={renderEmpty}
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   orgButtonText: {
-    color: "#2563eb",
+    color: "#182e43",
     fontWeight: "bold",
     fontSize: 14,
   },
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
     height: 24,
   },
   pageButtonActive: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#182e43",
   },
   pageButtonDisabled: {
     opacity: 0.5,
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#182e43",
     borderRadius: 6,
   },
   retryButtonText: {
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 1,
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
     borderRadius: 100,
   },
 });

@@ -495,7 +495,7 @@ export default function ProjectPhotos() {
   if (loading && !rooms?.length) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1e88e5" />
+        <ActivityIndicator size="large" color="#182e43" />
       </View>
     );
   }
@@ -566,9 +566,9 @@ export default function ProjectPhotos() {
                 disabled={isUploadingMainImage}
               >
                 {isUploadingMainImage ? (
-                  <Loader size={20} color="#1e88e5" />
+                  <Loader size={20} color="#182e43" />
                 ) : (
-                  <Home size={20} color="#1e88e5" />
+                  <Home size={20} color="#182e43" />
                 )}
               </TouchableOpacity>
 
@@ -581,11 +581,11 @@ export default function ProjectPhotos() {
                 disabled={isUpdatingAll || !rooms?.length}
               >
                 {isUpdatingAll ? (
-                  <Loader size={20} color="#1e88e5" />
+                  <Loader size={20} color="#182e43" />
                 ) : (
                   <Star
                     size={20}
-                    color={areAllImagesIncluded ? "#FBBF24" : "#1e88e5"}
+                    color={areAllImagesIncluded ? "#FBBF24" : "#182e43"}
                     fill={areAllImagesIncluded ? "#FBBF24" : "transparent"}
                   />
                 )}
@@ -595,7 +595,7 @@ export default function ProjectPhotos() {
                 style={styles.actionButton}
                 onPress={handlePickImages}
               >
-                <ImagePlus size={20} color="#1e88e5" />
+                <ImagePlus size={20} color="#182e43" />
               </TouchableOpacity>
             </View>
 
@@ -614,7 +614,7 @@ export default function ProjectPhotos() {
               >
                 <CheckSquare
                   size={18}
-                  color={isSelectionMode ? "#fff" : "#1e88e5"}
+                  color={isSelectionMode ? "#fff" : "#182e43"}
                 />
               </TouchableOpacity>
 
@@ -622,7 +622,7 @@ export default function ProjectPhotos() {
                 style={styles.filterButton}
                 onPress={() => setShowFilterModal(true)}
               >
-                <Filter size={18} color="#1e88e5" />
+                <Filter size={18} color="#182e43" />
               </TouchableOpacity>
             </View>
           </View>
@@ -768,7 +768,7 @@ export default function ProjectPhotos() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
-                <Building2 size={24} color="#1e88e5" />
+                <Building2 size={24} color="#182e43" />
                 <Text style={styles.modalTitle}>Select Room</Text>
               </View>
               <TouchableOpacity
@@ -826,7 +826,7 @@ export default function ProjectPhotos() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
-                <Home size={24} color="#1e88e5" />
+                <Home size={24} color="#182e43" />
                 <Text style={styles.modalTitle}>Project Cover</Text>
               </View>
               <TouchableOpacity
@@ -860,19 +860,20 @@ export default function ProjectPhotos() {
 
               <View
                 // style={styles.actionButtonsContainer}
-                className="flex-row gap-2"
+                className="flex-row gap-1"
               >
                 <TouchableOpacity
                   style={[styles.actionButton, styles.cameraButton]}
-                  className="bg-accent rounded-full border border-gray-200"
+                  className="bg-accent rounded-full border border-gray-200 "
                   onPress={() => handleSetMainImage(true)}
                   disabled={isUploadingMainImage}
+                  
                 >
                   {isUploadingMainImage ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
                     <View style={styles.actionButtonContent}>
-                      <CameraIcon size={24} color="#fff" />
+                      <CameraIcon size={20} color="#fff" />
                       <Text style={styles.actionButtonText}>Take Photo</Text>
                     </View>
                   )}
@@ -887,7 +888,7 @@ export default function ProjectPhotos() {
                     <ActivityIndicator color="#fff" />
                   ) : (
                     <View style={styles.actionButtonContent}>
-                      <ImageIcon size={24} color="#fff" />
+                      <ImageIcon size={20} color="#fff" />
                       <Text style={styles.actionButtonText}>
                         Choose from Library
                       </Text>
@@ -987,7 +988,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   actionButtonActive: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
   },
   roomsContainer: {
     padding: 12,
@@ -1049,7 +1050,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -1163,10 +1164,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   cameraButton: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
+    width: "auto",
+    paddingHorizontal: 8,
   },
   libraryButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#182e43" ,
+    width: "auto",
+    paddingHorizontal: 8,
   },
   actionButtonContent: {
     flexDirection: "row",
@@ -1203,7 +1208,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#e5e7eb",
   },
   selectedRoom: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
   },
   roomOptionText: {
     fontSize: 16,
@@ -1224,7 +1229,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 90,
     right: 20,
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#182e43",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -1295,7 +1300,7 @@ const styles = StyleSheet.create({
   mainImagePlaceholderText: {
     marginTop: 8,
     fontSize: 16,
-    color: "#1e88e5",
+    color: "#182e43",
     fontWeight: "500",
   },
 });

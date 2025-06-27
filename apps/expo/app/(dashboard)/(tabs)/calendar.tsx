@@ -122,7 +122,7 @@ export default function CalendarScreen() {
 
     if (daysDifference > 30) {
       status = "Future";
-      color = "#3b82f6"; // blue
+      color = "#182e43" ; // blue
     } else if (daysDifference > 7) {
       status = "Upcoming";
       color = "#10b981"; // green
@@ -220,7 +220,7 @@ export default function CalendarScreen() {
   if (isDeleting) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color="#182e43" />
         <Text style={{ marginTop: 10, color: "#64748b" }}>
           Deleting event...
         </Text>
@@ -238,7 +238,7 @@ export default function CalendarScreen() {
             style={styles.todayButton}
             onPress={() => setSelectedDate(new Date())}
           >
-            <CalendarIcon size={16} color="#2563eb" />
+            <CalendarIcon size={16} color="#182e43" />
             <Text style={styles.todayButtonText}>Today</Text>
           </TouchableOpacity>
         </View>
@@ -434,7 +434,7 @@ export default function CalendarScreen() {
 // Function to generate consistent colors for projects
 const getProjectColor = (projectId: number): string => {
   const colors = [
-    "#3b82f6", // blue
+    "#182e43" , // blue
     "#10b981", // emerald
     "#8b5cf6", // violet
     "#f97316", // orange
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   },
   todayButtonText: {
     marginLeft: 4,
-    color: "#2563eb",
+    color: "#182e43",
     fontWeight: "600",
     fontSize: 14,
   },
@@ -548,7 +548,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   addEventButtonText: {
-    color: "#2563eb",
+    color: "#182e43",
     fontWeight: "600",
   },
   eventCard: {
@@ -632,8 +632,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 20,
-    backgroundColor: "#2563eb",
-    shadowColor: "#2563eb",
+    backgroundColor: "#182e43",
+    shadowColor: "#182e43",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -661,9 +661,9 @@ const customStyles = StyleSheet.create({
     backgroundColor: "#93c5fd", // light blue
   },
   selectedDay: {
-    backgroundColor: "#2563eb", // darker blue
+    backgroundColor: "#182e43", // darker blue
     transform: [{ scale: 1.05 }],
-    shadowColor: "#2563eb",
+    shadowColor: "#182e43",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
