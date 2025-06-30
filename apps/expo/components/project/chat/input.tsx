@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   TextInput,
@@ -8,11 +8,15 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  Animated,
 } from "react-native";
 import { Text } from "@/components/ui/text";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
+import { toast } from "sonner-native";
 import ProjectImageSelector from "./ProjectImageSelector";
+import { Audio } from "expo-av";
+import * as Haptics from "expo-haptics";
 
 interface ChatInputProps {
   message: string;
@@ -20,6 +24,7 @@ interface ChatInputProps {
   onSend: () => void;
   onSendFile?: (file: any) => void;
   onSendImage?: (image: any) => void;
+  onSendAudio?: (audio: any) => void;
   replyingTo?: any;
   onCancelReply?: () => void;
   connected?: boolean;
@@ -33,6 +38,7 @@ export function ChatInput({
   onSend,
   onSendFile,
   onSendImage,
+  onSendAudio,
   replyingTo,
   onCancelReply,
   connected = true,
@@ -43,6 +49,221 @@ export function ChatInput({
   const [isUploading, setIsUploading] = useState(false);
   const [showProjectImageSelector, setShowProjectImageSelector] =
     useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [hasPermission, setHasPermission] = useState(false);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const timeInterval = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    requestPermissions();
+    return () => {
+      if (timeInterval.current) {
+        clearInterval(timeInterval.current);
+      }
+    };
+  }, []);
+
+  const requestPermissions = async () => {
+    try {
+      const { status } = await Audio.requestPermissionsAsync();
+      setHasPermission(status === "granted");
+
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "Please grant microphone permissions to record voice messages.",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Settings",
+              onPress: () => Audio.requestPermissionsAsync(),
+            },
+          ]
+        );
+      }
+    } catch (error) {
+      console.error("Error requesting audio permissions:", error);
+    }
+  };
+
+  const startRecording = async () => {
+    if (!hasPermission) {
+      await requestPermissions();
+      return;
+    }
+
+    if (!connected) {
+      Alert.alert(
+        "Not Connected",
+        "Please wait for connection to record voice messages."
+      );
+      return;
+    }
+
+    if (isUploading) {
+      Alert.alert(
+        "Uploading",
+        "Please wait for the current upload to complete."
+      );
+      return;
+    }
+
+    try {
+      // Configure audio mode for recording
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
+
+      // Start recording
+      const { recording: newRecording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+
+      setRecording(newRecording);
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      // Start pulse animation
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.2,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+
+      // Start timer
+      timeInterval.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+
+      // Haptic feedback
+      if (Platform.OS === "ios") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+    } catch (error) {
+      console.error("Failed to start recording:", error);
+      Alert.alert("Error", "Failed to start recording. Please try again.");
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!recording) return;
+
+    try {
+      // Stop recording
+      await recording.stopAndUnloadAsync();
+
+      // Clear timer and animation
+      if (timeInterval.current) {
+        clearInterval(timeInterval.current);
+        timeInterval.current = null;
+      }
+      pulseAnim.stopAnimation();
+
+      setIsRecording(false);
+
+      // Haptic feedback
+      if (Platform.OS === "ios") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+
+      // Check if recording is long enough (at least 1 second)
+      if (recordingTime >= 1) {
+        await handleVoiceRecordingComplete(recording);
+      } else {
+        Alert.alert(
+          "Recording Too Short",
+          "Please record for at least 1 second."
+        );
+        setRecording(null);
+        setRecordingTime(0);
+      }
+    } catch (error) {
+      console.error("Failed to stop recording:", error);
+      Alert.alert("Error", "Failed to stop recording. Please try again.");
+    }
+  };
+
+  const cancelRecording = async () => {
+    if (recording) {
+      try {
+        await recording.stopAndUnloadAsync();
+      } catch (error) {
+        console.error("Error stopping recording:", error);
+      }
+    }
+
+    if (timeInterval.current) {
+      clearInterval(timeInterval.current);
+      timeInterval.current = null;
+    }
+    pulseAnim.stopAnimation();
+
+    setIsRecording(false);
+    setRecording(null);
+    setRecordingTime(0);
+  };
+
+  const handleVoiceRecordingComplete = async (recording: Audio.Recording) => {
+    try {
+      setIsUploading(true);
+      toast.loading("Processing audio...");
+
+      // Get the recording URI
+      const uri = recording.getURI();
+      if (!uri) {
+        throw new Error("Failed to get recording URI");
+      }
+
+      // Get recording status to get duration
+      const status = await recording.getStatusAsync();
+      const duration = status.durationMillis || 0;
+
+      // Create file object for the audio
+      const audioFile = {
+        uri,
+        type: "audio/m4a",
+        name: `voice_message_${Date.now()}.m4a`,
+        size: 0, // We'll get this from the file system if needed
+        duration,
+      };
+
+      if (onSendAudio) {
+        await onSendAudio(audioFile);
+      }
+
+      toast.dismiss();
+      toast.success("Voice message sent successfully");
+      setRecording(null);
+      setRecordingTime(0);
+    } catch (error) {
+      console.error("Failed to send voice message:", error);
+      toast.dismiss();
+      toast.error("Failed to send voice message");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
   const handleSend = () => {
     if (message.trim() && connected) {
@@ -91,45 +312,6 @@ export function ChatInput({
       }
     }
     return true;
-  };
-
-  const handleAttachmentPress = () => {
-    if (!connected) {
-      Alert.alert(
-        "Not Connected",
-        "Please wait for connection to send attachments."
-      );
-      return;
-    }
-
-    if (isUploading) {
-      Alert.alert(
-        "Uploading",
-        "Please wait for the current upload to complete."
-      );
-      return;
-    }
-
-    const attachmentOptions: any[] = [
-      { text: "Cancel", style: "cancel" },
-      { text: "Take Photo", onPress: handleCamera },
-      { text: "Photo/Video from Gallery", onPress: handleImagePicker },
-    ];
-
-    if (projectId) {
-      attachmentOptions.splice(2, 0, {
-        text: "Project Images",
-        onPress: () => setShowProjectImageSelector(true),
-      });
-    }
-
-    attachmentOptions.push({ text: "Document", onPress: handleDocumentPicker });
-
-    Alert.alert(
-      "Add Attachment",
-      "Choose what you want to send",
-      attachmentOptions
-    );
   };
 
   const handleProjectImageSelect = async (images: any[]) => {
@@ -185,28 +367,32 @@ export function ChatInput({
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
-        allowsEditing: true,
-        aspect: [4, 3],
+        allowsEditing: false,
         quality: 0.8,
-        allowsMultipleSelection: false,
+        allowsMultipleSelection: true,
       });
 
-      if (!result.canceled && result.assets && result.assets[0]) {
-        const asset = result.assets[0];
-        const file = {
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const files = result.assets.map((asset, index) => ({
           uri: asset.uri,
           type: asset.type || "image/jpeg",
-          name: asset.fileName || `image_${Date.now()}.jpg`,
+          name: asset.fileName || `image_${Date.now()}_${index}.jpg`,
           size: asset.fileSize || 0,
-        };
+        }));
 
-        if (onSendImage) {
-          await onSendImage(file);
+        for (const file of files) {
+          if (onSendImage) {
+            await onSendImage(file);
+          }
+        }
+
+        if (files.length > 1) {
+          toast.success(`${files.length} images selected`);
         }
       }
     } catch (error) {
-      console.error("Error picking image:", error);
-      Alert.alert("Error", "Failed to select image. Please try again.");
+      console.error("Error picking images:", error);
+      Alert.alert("Error", "Failed to select images. Please try again.");
     } finally {
       setIsUploading(false);
     }
@@ -271,63 +457,148 @@ export function ChatInput({
             </View>
           )}
 
+          {/* Recording Indicator */}
+          {isRecording && (
+            <View style={styles.recordingIndicator}>
+              <Animated.View
+                style={[
+                  styles.recordingPulse,
+                  {
+                    transform: [{ scale: pulseAnim }],
+                  },
+                ]}
+              >
+                <Text style={styles.recordingIcon}>🎤</Text>
+              </Animated.View>
+              <Text style={styles.recordingText}>
+                Recording... {formatTime(recordingTime)}
+              </Text>
+              <TouchableOpacity
+                style={styles.cancelRecordingButton}
+                onPress={cancelRecording}
+              >
+                <Text style={styles.cancelRecordingText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           <View style={styles.inputRow}>
-            {/* Attachment Button */}
-            <TouchableOpacity
-              style={[
-                styles.attachmentButton,
-                isUploading && styles.attachmentButtonDisabled,
-              ]}
-              disabled={!connected || isUploading}
-              onPress={handleAttachmentPress}
-            >
-              {isUploading ? (
-                <ActivityIndicator size="small" color="#64748b" />
-              ) : (
-                <Text
+            {/* Attachment Buttons - Hidden when input is focused */}
+            {!isFocused && (
+              <View style={styles.attachmentButtons}>
+                {/* Camera Button */}
+                <TouchableOpacity
                   style={[
-                    styles.attachmentIcon,
-                    { color: connected ? "#64748b" : "#cbd5e1" },
+                    styles.attachmentButton,
+                    isUploading && styles.attachmentButtonDisabled,
                   ]}
+                  disabled={!connected || isUploading || isRecording}
+                  onPress={handleCamera}
                 >
-                  📎
-                </Text>
-              )}
-            </TouchableOpacity>
+                  <Text style={styles.attachmentIcon}>📷</Text>
+                </TouchableOpacity>
+
+                {/* Gallery Button */}
+                <TouchableOpacity
+                  style={[
+                    styles.attachmentButton,
+                    isUploading && styles.attachmentButtonDisabled,
+                  ]}
+                  disabled={!connected || isUploading || isRecording}
+                  onPress={handleImagePicker}
+                >
+                  <Text style={styles.attachmentIcon}>🖼️</Text>
+                </TouchableOpacity>
+
+                {/* Document Button */}
+                <TouchableOpacity
+                  style={[
+                    styles.attachmentButton,
+                    isUploading && styles.attachmentButtonDisabled,
+                  ]}
+                  disabled={!connected || isUploading || isRecording}
+                  onPress={handleDocumentPicker}
+                >
+                  <Text style={styles.attachmentIcon}>📄</Text>
+                </TouchableOpacity>
+
+                {/* Project Images Button (only if projectId exists) */}
+                {projectId && (
+                  <TouchableOpacity
+                    style={[
+                      styles.attachmentButton,
+                      isUploading && styles.attachmentButtonDisabled,
+                    ]}
+                    disabled={!connected || isUploading || isRecording}
+                    onPress={() => setShowProjectImageSelector(true)}
+                  >
+                    <Text style={styles.attachmentIcon}>🏗️</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+
+            {/* Back Button - Only shown when input is focused */}
+            {isFocused && (
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => setIsFocused(false)}
+              >
+                <Text style={styles.backIcon}>←</Text>
+              </TouchableOpacity>
+            )}
 
             {/* Text Input */}
             <View
               style={[
                 styles.inputWrapper,
                 isFocused && styles.inputWrapperFocused,
+                isRecording && styles.inputWrapperRecording,
               ]}
             >
               <TextInput
                 style={styles.textInput}
                 value={message}
                 onChangeText={onMessageChange}
-                placeholder={replyingTo ? "Type your reply..." : placeholder}
+                placeholder={
+                  isRecording
+                    ? "Release to send voice message"
+                    : replyingTo
+                      ? "Type your reply..."
+                      : placeholder
+                }
                 placeholderTextColor="#94a3b8"
                 multiline
                 maxLength={1000}
-                editable={connected && !isUploading}
+                editable={connected && !isUploading && !isRecording}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
               />
             </View>
 
-            {/* Send Button */}
-            <TouchableOpacity
-              style={[
-                styles.sendButton,
-                (!message.trim() || !connected || isUploading) &&
-                  styles.sendButtonDisabled,
-              ]}
-              onPress={handleSend}
-              disabled={!message.trim() || !connected || isUploading}
-            >
-              <Text style={styles.sendIcon}>➤</Text>
-            </TouchableOpacity>
+            {/* Microphone/Send Button */}
+            {isRecording ? (
+              <TouchableOpacity
+                style={[styles.sendButton, styles.recordingButton]}
+                onPress={stopRecording}
+              >
+                <Text style={styles.sendIcon}>⬆</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[
+                  styles.sendButton,
+                  (!message.trim() || !connected || isUploading) &&
+                    styles.sendButtonDisabled,
+                ]}
+                onPress={message.trim() ? handleSend : startRecording}
+                disabled={!connected || isUploading}
+              >
+                <Text style={styles.sendIcon}>
+                  {message.trim() ? "➤" : "🎤"}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -351,7 +622,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#e2e8f0",
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
   },
   replyPreview: {
     backgroundColor: "#dcfce7",
@@ -388,13 +659,18 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: 8,
+    gap: 6,
+  },
+  attachmentButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   attachmentButton: {
     backgroundColor: "#f8fafc",
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+    borderRadius: 18,
+    width: 36,
+    height: 36,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
@@ -405,20 +681,24 @@ const styles = StyleSheet.create({
     borderColor: "#cbd5e1",
   },
   attachmentIcon: {
-    fontSize: 18,
+    fontSize: 16,
   },
   inputWrapper: {
     flex: 1,
     backgroundColor: "#f8fafc",
     borderWidth: 1,
     borderColor: "#e2e8f0",
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    minHeight: 44,
-    maxHeight: 120,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    minHeight: 36,
+    maxHeight: 100,
   },
   inputWrapperFocused: {
+    borderColor: "#1e88e5",
+    backgroundColor: "#ffffff",
+  },
+  inputWrapperRecording: {
     borderColor: "#1e88e5",
     backgroundColor: "#ffffff",
   },
@@ -426,13 +706,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 20,
     color: "#1e293b",
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
   sendButton: {
     backgroundColor: "#1e88e5",
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+    borderRadius: 18,
+    width: 36,
+    height: 36,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#1e88e5",
@@ -446,9 +726,56 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
     elevation: 0,
   },
+  recordingButton: {
+    backgroundColor: "#dc2626",
+  },
   sendIcon: {
     fontSize: 16,
     color: "#ffffff",
+    fontWeight: "600",
+  },
+  recordingIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  recordingPulse: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#1e88e5",
+    marginRight: 8,
+  },
+  recordingIcon: {
+    fontSize: 18,
+    color: "#ffffff",
+  },
+  recordingText: {
+    fontSize: 12,
+    color: "#1e293b",
+  },
+  cancelRecordingButton: {
+    padding: 2,
+  },
+  cancelRecordingText: {
+    fontSize: 12,
+    color: "#1e88e5",
+    fontWeight: "600",
+  },
+  backButton: {
+    backgroundColor: "#f8fafc",
+    borderRadius: 18,
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+  backIcon: {
+    fontSize: 16,
+    color: "#1e88e5",
     fontWeight: "600",
   },
 });

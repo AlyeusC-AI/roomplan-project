@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Text } from "@/components/ui/text";
 import { format } from "date-fns";
+import { AudioPlayer } from "./AudioPlayer";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -52,6 +53,13 @@ export function Message({
     );
   };
 
+  const isAudio = (attachment: any) => {
+    return (
+      attachment.mimeType?.startsWith("audio/") ||
+      attachment.fileName.match(/\.(m4a|mp3|wav|aac)$/i)
+    );
+  };
+
   const formatFileSize = (size: number) => {
     if (size < 1024) return `${size} B`;
     if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
@@ -65,10 +73,17 @@ export function Message({
   const hasImageAttachments = message.attachments?.some((attachment: any) =>
     isImage(attachment)
   );
+  const hasAudioAttachments = message.attachments?.some((attachment: any) =>
+    isAudio(attachment)
+  );
   const hasOnlyImages =
     hasImageAttachments &&
     !message.content?.trim() &&
     message.attachments?.every((attachment: any) => isImage(attachment));
+  const hasOnlyAudio =
+    hasAudioAttachments &&
+    !message.content?.trim() &&
+    message.attachments?.every((attachment: any) => isAudio(attachment));
   const hasTextContent = message.content?.trim();
 
   return (
@@ -108,6 +123,7 @@ export function Message({
             isSent ? styles.messageBubbleSent : styles.messageBubbleReceived,
             hasImageAttachments && styles.messageBubbleWithImages,
             hasOnlyImages && styles.messageBubbleImageOnly,
+            hasOnlyAudio && styles.messageBubbleAudioOnly,
           ]}
         >
           {/* Message Content */}
@@ -145,6 +161,12 @@ export function Message({
                           resizeMode="cover"
                         />
                       </TouchableOpacity>
+                    ) : isAudio(attachment) ? (
+                      <AudioPlayer
+                        audioUrl={attachment.fileUrl}
+                        fileName={attachment.fileName}
+                        duration={attachment.fileSize}
+                      />
                     ) : (
                       <View style={styles.fileContainer}>
                         <View style={styles.fileIcon}>
@@ -305,6 +327,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   messageBubbleImageOnly: {
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    shadowOpacity: 0,
+    elevation: 0,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+  },
+  messageBubbleAudioOnly: {
     backgroundColor: "transparent",
     borderWidth: 0,
     shadowOpacity: 0,

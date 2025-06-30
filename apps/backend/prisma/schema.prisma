@@ -765,6 +765,7 @@ enum MessageType {
   TEXT
   IMAGE
   FILE
+  AUDIO
   SYSTEM
 }
 

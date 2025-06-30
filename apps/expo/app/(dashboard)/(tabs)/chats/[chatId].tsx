@@ -280,6 +280,31 @@ export default function ChatDetailScreen() {
     }
   };
 
+  const handleSendAudio = async (audio: any) => {
+    try {
+      toast.loading("Uploading audio...");
+
+      // Upload audio to space
+      const attachment = await uploadFileToSpace(audio);
+
+      // Send message with attachment
+      await sendMessage("", MessageType.FILE, [attachment], replyingTo?.id);
+      setReplyingTo(null);
+
+      toast.dismiss();
+      toast.success("Voice message sent successfully");
+
+      // Scroll to bottom after sending audio
+      setTimeout(() => {
+        messageListRef.current?.scrollToBottom(true);
+      }, 100);
+    } catch (error) {
+      console.error("Failed to send audio:", error);
+      toast.dismiss();
+      toast.error("Failed to send voice message");
+    }
+  };
+
   const handleEditMessage = async () => {
     if (!editContent.trim() || editContent === editMessageId) return;
 
@@ -531,6 +556,7 @@ export default function ChatDetailScreen() {
         onSend={handleSendMessage}
         onSendFile={handleSendFile}
         onSendImage={handleSendImage}
+        onSendAudio={handleSendAudio}
         replyingTo={replyingTo}
         onCancelReply={() => setReplyingTo(null)}
         connected={connected}
