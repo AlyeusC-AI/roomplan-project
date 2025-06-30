@@ -96,21 +96,40 @@
 import { useDebounce } from "@/utils/debounce";
 import { Filter, Search } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, TextInput, TouchableOpacity } from "react-native";
+import { StyleSheet, View, TextInput, TouchableOpacity, Modal, SafeAreaView, Text } from "react-native";
 import { router } from "expo-router";
+import DateTimePicker, { DateType, useDefaultStyles } from 'react-native-ui-datepicker';
+import dayjs from 'dayjs';
+import MemberSelector from '@/components/calendar/member-selector';
+
+const FilterIcon = Filter as any;
 
 export default function Header({
   refetch,
   selectedUser,
   setSelectedUser,
+  filterObj,
+  setFilterObj,
+  filterDialogState,
+  setFilterDialogState,
 }: {
   refetch: (s: string) => void;
   selectedUser: string;
   setSelectedUser: (s: string) => void;
+  filterObj: any;
+  setFilterObj: (f: any) => void;
+  filterDialogState: any;
+  setFilterDialogState: (f: any) => void;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [visible, setVisible] = useState(false);
+  const [startDate, setStartDate] = useState<DateType | null>(null);
+  const [endDate, setEndDate] = useState<DateType | null>(null);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const defaultStyles = useDefaultStyles();
   const debouncedSearchTerm = useDebounce(searchTerm, 1000);
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
 
   useEffect(() => {
     refetch(debouncedSearchTerm);
@@ -143,6 +162,122 @@ export default function Header({
           value={searchTerm}
         />
       </View>
+      <TouchableOpacity
+      onPress={() => setVisible(true)}
+      className="bg-white p-2 "
+      >
+        <FilterIcon size={21} />
+        </TouchableOpacity>
+
+        <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="fullScreen"
+      onRequestClose={() => setVisible(false)}
+    >
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+        <View style={{ flex: 1, padding: 20 }}>
+          <View style={{ marginBottom: 20 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Filters</Text>
+            {/* Start Date Picker */}
+            <Text style={{ fontSize: 16, marginBottom: 4 }}>Start Date</Text>
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: 'white',
+                borderRadius: 8,
+                padding: 12,
+                borderWidth: 1,
+                borderColor: '#e2e8f0',
+                marginBottom: 12,
+              }}
+              onPress={() => setShowStartPicker(true)}
+            >
+              <Text style={{ fontSize: 16, color: '#1d1d1d' }}>
+                {startDate ? dayjs(startDate).format('MMM D, YYYY') : 'Select start date'}
+              </Text>
+              <FilterIcon size={20} />
+            </TouchableOpacity>
+            {/* End Date Picker */}
+            <Text style={{ fontSize: 16, marginBottom: 4 }}>End Date</Text>
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: 'white',
+                borderRadius: 8,
+                padding: 12,
+                borderWidth: 1,
+                borderColor: '#e2e8f0',
+                marginBottom: 12,
+              }}
+              onPress={() => setShowEndPicker(true)}
+            >
+              <Text style={{ fontSize: 16, color: '#1d1d1d' }}>
+                {endDate ? dayjs(endDate).format('MMM D, YYYY') : 'Select end date'}
+              </Text>
+              <FilterIcon size={20} />
+            </TouchableOpacity>
+            {/* User Selector */}
+            <Text style={{ fontSize: 16, marginBottom: 4 }}>Assignees</Text>
+            <MemberSelector selectedUserIds={selectedUserIds} onChange={setSelectedUserIds} />
+          </View>
+          {/* DateTimePickers (hidden, show on demand) */}
+          {showStartPicker && (
+            <DateTimePicker
+              mode="single"
+              date={startDate || new Date()}
+              onChange={({ date }) => {
+                setStartDate(date);
+                setShowStartPicker(false);
+              }}
+              styles={defaultStyles}
+            />
+          )}
+          {showEndPicker && (
+            <DateTimePicker
+              mode="single"
+              date={endDate || new Date()}
+              onChange={({ date }) => {
+                setEndDate(date);
+                setShowEndPicker(false);
+              }}
+              styles={defaultStyles}
+            />
+          )}
+        </View>
+        <View style={{ flexDirection: 'row', gap: 12, padding: 20 }}>
+          <TouchableOpacity
+            style={{ flex: 1, backgroundColor: '#e5e7eb', padding: 16, borderRadius: 8, alignItems: 'center' }}
+            onPress={() => {
+              setVisible(false);
+              setStartDate(filterObj.startDate || null);
+              setEndDate(filterObj.endDate || null);
+              setSelectedUserIds(filterObj.assigneeIds || []);
+            }}
+          >
+            <Text style={{ color: '#182e43', fontSize: 16, fontWeight: '600' }}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{ flex: 1, backgroundColor: '#182e43', padding: 16, borderRadius: 8, alignItems: 'center' }}
+            onPress={() => {
+              setVisible(false);
+              setFilterObj({
+                ...filterObj,
+                startDate,
+                endDate,
+                assigneeIds: selectedUserIds,
+              });
+            }}
+          >
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Apply Filters</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </Modal>
 
       {/* <View style={styles.headerAction}>
         <TouchableOpacity
@@ -161,7 +296,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    // marginBottom: 24,
+    marginBottom: 24,
     marginTop: 10,
   },
   headerSearch: {

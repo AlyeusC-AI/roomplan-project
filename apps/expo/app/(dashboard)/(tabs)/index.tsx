@@ -48,6 +48,17 @@ export default function Dashboard() {
   const limit = 20;
   const { data: user, isLoading: isLoadingUser } = useCurrentUser();
   console.log("🚀 ~ Dashboard ~ user:", user);
+  const [filterObj, setFilterObj] = useState({
+    search: "",
+    startDate: null as Date | null,
+    endDate: null as Date | null,
+    assigneeIds: [],
+  });
+  const [filterDialogState, setFilterDialogState] = useState({
+    startDate: null as Date | null,
+    endDate: null as Date | null,
+    assigneeId: "",
+  });
   const activeOrganization = useActiveOrganization();
   const result = useGetProjects({
     pagination: {
@@ -56,6 +67,9 @@ export default function Dashboard() {
       sortBy: "createdAt",
       sortOrder: "desc",
       search: searchTerm,
+      assigneeIds: filterObj.assigneeIds,
+      startDate: filterObj?.startDate ? filterObj?.startDate?.toISOString() : undefined,
+      endDate: filterObj?.endDate ? filterObj?.endDate?.toISOString() : undefined,
     },
   });
   const data = result.data as PaginatedResponse<Project> | undefined;
@@ -260,14 +274,9 @@ export default function Dashboard() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.header}>
-          <DashboardHeader
-            refetch={setSearchTerm}
-            selectedUser=""
-            setSelectedUser={() => {}}
-          />
           <View
             style={styles.headerTitle}
-            className="mb-4 pt-4 flex flex-row items-center "
+            className="mb-4 flex flex-row items-center "
           >
             {/* <TouchableOpacity
               onPress={() => setOrgModalVisible(true)}
@@ -285,6 +294,15 @@ export default function Dashboard() {
             </TouchableOpacity> */}
             <Text className="font-bold text-3xl mx-2">Projects</Text>
           </View>
+          <DashboardHeader
+            refetch={setSearchTerm}
+            selectedUser=""
+            setSelectedUser={() => {}}
+            filterObj={filterObj}
+            setFilterObj={setFilterObj}
+            filterDialogState={filterDialogState}
+            setFilterDialogState={setFilterDialogState}
+          />
         </View>
         {/* <OrganizationSwitcher
           visible={orgModalVisible}
@@ -355,7 +373,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    marginTop: 30,
+    marginTop: 10,
   },
   headerTitle: {
     flexDirection: "row",

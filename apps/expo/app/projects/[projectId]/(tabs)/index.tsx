@@ -38,12 +38,14 @@ import {
   MessageSquare,
   MessageCircle,
   Files,
+  Calendar,
+  Edit2,
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { uiPreferencesStore } from "@/lib/state/ui-preferences";
 import { Text } from "@/components/ui/text";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { toast } from "sonner-native";
 import { api } from "@/lib/api";
 import {
@@ -218,66 +220,74 @@ export default function ProjectOverview() {
 
   return (
     <View className="flex-1 bg-background">
-      <View className="px-4 pt-4 pb-2 bg-background">
-        <View className="w-full flex-row justify-between items-center">
-          <TouchableOpacity
-            onPress={() => setShowClientInfo(true)}
-            // onPress={() =>
-            //   router.push({
-            //     pathname: "./details",
-            //     params: { activeTab: "customer" },
-            //   })
-            // }
-            className="flex-row items-center"
-          >
-            <Text className="text-2xl font-bold text-foreground">
+      {/* Enhanced Project Info Card */}
+      <View className="px-4 pt-4 pb-2">
+        <Card className="flex-row items-center mb-3 bg-white !border-0 !shadow-none">
+          {/* Project Image */}
+          {project?.data?.mainImage ? (
+            <View className="w-24 h-24 rounded-xl overflow-hidden border border-border bg-white justify-center items-center mr-4">
+              <Animated.Image
+                source={{ uri: project.data.mainImage }}
+                style={{ width: 96, height: 96, resizeMode: 'cover' }}
+              />
+            </View>
+          ) : (
+            <View className="w-24 h-24 rounded-xl overflow-hidden border border-border bg-gray-100 justify-center items-center mr-4">
+              <Text className="text-3xl font-bold text-gray-400">
+                {project?.data?.name?.[0] || "?"}
+              </Text>
+            </View>
+          )}
+          {/* Project Info */}
+          <View className="flex-1 min-w-0">
+            <CardHeader className="p-0 mb-1">
+              <View className="flex-row items-center gap-4">
+
+                <TouchableOpacity onPress={() => setShowClientInfo(true)}>
+                  <CardTitle className="text-xl mb-1 truncate capitalize">{project?.data?.name}
+
+
+                  </CardTitle>
+                </TouchableOpacity>
+              </View>
+              <View className="flex-col flex-wrap gap-3 mb-1">
+                {project?.data?.location && (
+                  <CardDescription className="flex-row items-center">
+                    <Text className="text-xs text-primary-dark"> {project.data.location}</Text>
+                  </CardDescription>
+                )}
+                <View className="flex-row items-center gap-2">
+
+                  {project?.data?.status?.label && (
+                    <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: project.data.status.color || '#e0e7ff' }}>
+                      <Text className="text-xs font-semibold text-white">{project.data.status.label}</Text>
+                    </View>
+                  )}
+                  {project?.data?.lossType && (
+                    <View className="flex-row items-center bg-red-100 rounded px-2 py-0.5">
+                      <Text className="text-xs text-red-700 capitalize">{project.data.lossType.replace(/_/g, ' ')}</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+              {project?.data?.dateOfLoss && (
+                <CardDescription className="flex-row items-center mt-1">
+                  <Text className="text-xs text-orange-700"> <Calendar size={18} /> Loss: {new Date(project.data.dateOfLoss).toLocaleDateString()}</Text>
+                </CardDescription>
+              )}
+            </CardHeader>
+          </View>
+        </Card>
+        {/* Client Info Button (TouchableOpacity) */}
+        {/* <TouchableOpacity
+          onPress={() => setShowClientInfo(true)}
+          className="flex-row items-center mt-1"
+        >
+          <Text className="text-2xl font-bold text-foreground">
               {project?.data?.clientName}
             </Text>
             <ChevronDown size={20} className="ml-2 text-foreground" />
-          </TouchableOpacity>
-          {/* <View className="flex-row overflow-hidden rounded-full border border-border">
-            <TouchableOpacity
-              className={`px-4 py-2 flex-row items-center ${
-                projectViewMode === "list" ? "bg-primary" : "bg-transparent"
-              }`}
-              onPress={() => setProjectViewMode("list")}
-            >
-              <List
-                size={16}
-                color={projectViewMode === "list" ? "#FFFFFF" : "#000000"}
-              />
-              <Text
-                className={`text-sm ml-2 font-medium ${
-                  projectViewMode === "list"
-                    ? "text-primary-foreground"
-                    : "text-foreground"
-                }`}
-              >
-                List
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={`px-4 py-2 flex-row items-center ${
-                projectViewMode === "grid" ? "bg-primary" : "bg-transparent"
-              }`}
-              onPress={() => setProjectViewMode("grid")}
-            >
-              <Grid2X2
-                size={16}
-                color={projectViewMode === "grid" ? "#FFFFFF" : "#000000"}
-              />
-              <Text
-                className={`text-sm ml-2 font-medium ${
-                  projectViewMode === "grid"
-                    ? "text-primary-foreground"
-                    : "text-foreground"
-                }`}
-              >
-                Grid
-              </Text>
-            </TouchableOpacity>
-          </View> */}
-        </View>
+        </TouchableOpacity> */}
       </View>
 
       {/* Client Info Modal */}
@@ -292,28 +302,28 @@ export default function ProjectOverview() {
             <View className="flex-row justify-between items-start mb-4">
               <View className="flex-col items-start">
 
-              <Text className="text-xl font-bold text-foreground">
-                {project?.data?.clientName}
-              </Text>
-              {project?.data?.lossType && (
-                <View className="flex flex-row items-center">
-                  <View className="bg-primary/10 p-2 rounded-lg">
-                    <AlertTriangle
-                      height={16}
-                      width={16}
-                      className="text-primary"
-                    />
+                <Text className="text-xl font-bold text-foreground">
+                  {project?.data?.clientName}
+                </Text>
+                {project?.data?.lossType && (
+                  <View className="flex flex-row items-center">
+                    <View className="bg-primary/10 p-2 rounded-lg">
+                      <AlertTriangle
+                        height={16}
+                        width={16}
+                        className="text-primary"
+                      />
+                    </View>
+                    <View className="ml-3 flex-1">
+                      <Text className="text-sm text-muted-foreground">
+                        Damage Type
+                      </Text>
+                      <Text className="text-base text-foreground capitalize">
+                        {project?.data?.lossType.replace(/_/g, " ")}
+                      </Text>
+                    </View>
                   </View>
-                  <View className="ml-3 flex-1">
-                    <Text className="text-sm text-muted-foreground">
-                      Damage Type
-                    </Text>
-                    <Text className="text-base text-foreground capitalize">
-                      {project?.data?.lossType.replace(/_/g, " ")}
-                    </Text>
-                  </View>
-                </View>
-              )}
+                )}
               </View>
               <View className="flex-row items-center space-x-2">
                 <Button
@@ -339,112 +349,112 @@ export default function ProjectOverview() {
               </View>
             </View>
 
-            
-              <View className="">
-                {/* <Text className="text-sm font-medium text-muted-foreground mb-3">
+
+            <View className="">
+              {/* <Text className="text-sm font-medium text-muted-foreground mb-3">
                   Contact Information
                 </Text> */}
 
-                <View className="space-y-3">
+              <View className="space-y-3">
+                <View className="flex flex-row items-center justify-between">
+                  <View className="flex-row items-center flex-1">
+                    {/* <View className="bg-primary/10 p-2 rounded-lg">
+                        <Map height={20} width={20} className="text-primary" />
+                      </View> */}
+                    <Text className="text-base ml-3 text-foreground flex-1">
+                      {project?.data?.location || "No location"}
+                    </Text>
+                  </View>
+                  {project?.data?.location && (
+                    <TouchableOpacity
+                      onPress={() => copyText(project?.data?.location)}
+                      className="p-2"
+                    >
+                      <Files
+                        size={18}
+                        className="text-primary-dark"
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {project?.data?.clientEmail ? (
                   <View className="flex flex-row items-center justify-between">
                     <View className="flex-row items-center flex-1">
                       {/* <View className="bg-primary/10 p-2 rounded-lg">
-                        <Map height={20} width={20} className="text-primary" />
-                      </View> */}
-                      <Text className="text-base ml-3 text-foreground flex-1">
-                        {project?.data?.location || "No location"}
-                      </Text>
-                    </View>
-                    {project?.data?.location && (
-                      <TouchableOpacity
-                        onPress={() => copyText(project?.data?.location)}
-                        className="p-2"
-                      >
-                        <Files
-                          size={18}
-                          className="text-primary-dark"
-                        />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-
-                  {project?.data?.clientEmail ? (
-                    <View className="flex flex-row items-center justify-between">
-                      <View className="flex-row items-center flex-1">
-                        {/* <View className="bg-primary/10 p-2 rounded-lg">
                           <Mail
                             height={20}
                             width={20}
                             className="text-primary"
                           />
                         </View> */}
-                        <Text className="text-base ml-3 text-foreground flex-1">
-                          {project?.data?.clientEmail}
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => copyText(project?.data?.clientEmail)}
-                        className="p-2"
-                      >
-                        <Files
-                          size={18}
-                          className="text-primary-dark"
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <View className="flex flex-row items-center">
-                      {/* <View className="bg-primary/10 p-2 rounded-lg">
-                        <Mail height={20} width={20} className="text-primary" />
-                      </View> */}
-                      <Text className="text-base ml-3 text-muted-foreground">
-                        No email
+                      <Text className="text-base ml-3 text-foreground flex-1">
+                        {project?.data?.clientEmail}
                       </Text>
                     </View>
-                  )}
+                    <TouchableOpacity
+                      onPress={() => copyText(project?.data?.clientEmail)}
+                      className="p-2"
+                    >
+                      <Files
+                        size={18}
+                        className="text-primary-dark"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View className="flex flex-row items-center">
+                    {/* <View className="bg-primary/10 p-2 rounded-lg">
+                        <Mail height={20} width={20} className="text-primary" />
+                      </View> */}
+                    <Text className="text-base ml-3 text-muted-foreground">
+                      No email
+                    </Text>
+                  </View>
+                )}
 
-                  {project?.data?.clientPhoneNumber ? (
-                    <View className="flex flex-row items-center justify-between">
-                      <View className="flex-row items-center flex-1">
-                        {/* <View className="bg-primary/10 p-2 rounded-lg">
+                {project?.data?.clientPhoneNumber ? (
+                  <View className="flex flex-row items-center justify-between">
+                    <View className="flex-row items-center flex-1">
+                      {/* <View className="bg-primary/10 p-2 rounded-lg">
                           <Phone
                             height={20}
                             width={20}
                             className="text-primary"
                           />
                         </View> */}
-                        <Text className="text-base ml-3 text-foreground flex-1">
-                          {project?.data?.clientPhoneNumber}
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={() =>
-                          copyText(project?.data?.clientPhoneNumber)
-                        }
-                        className="p-2"
-                      >
-                        <Files
-                          size={18}
-                          className="text-primary-dark"
-                        />
-                      </TouchableOpacity>
+                      <Text className="text-base ml-3 text-foreground flex-1">
+                        {project?.data?.clientPhoneNumber}
+                      </Text>
                     </View>
-                  ) : (
-                    <View className="flex flex-row items-center">
-                      {/* <View className="bg-primary/10 p-2 rounded-lg">
+                    <TouchableOpacity
+                      onPress={() =>
+                        copyText(project?.data?.clientPhoneNumber)
+                      }
+                      className="p-2"
+                    >
+                      <Files
+                        size={18}
+                        className="text-primary-dark"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View className="flex flex-row items-center">
+                    {/* <View className="bg-primary/10 p-2 rounded-lg">
                         <Phone
                           height={20}
                           width={20}
                           className="text-primary"
                         />
                       </View> */}
-                      <Text className="text-base ml-3 text-muted-foreground">
-                        No phone
-                      </Text>
-                    </View>
-                  )}
-                </View>
+                    <Text className="text-base ml-3 text-muted-foreground">
+                      No phone
+                    </Text>
+                  </View>
+                )}
               </View>
+            </View>
 
             <View className="my-6 space-y-2 ">
               {project?.data?.clientPhoneNumber && (
@@ -471,7 +481,7 @@ export default function ProjectOverview() {
                     <Phone size={18} className="mr-2" />
                     <Text>Call</Text>
                   </Button>
-                  
+
                   {project?.data?.clientEmail && (
                     <Button
                       // variant="secondary"
@@ -495,12 +505,20 @@ export default function ProjectOverview() {
       <ScrollView className="flex-1">
         <View className="px-4">
           {/* Action buttons with text below icons for better responsiveness */}
-          <View className="flex-row justify-between mb-4 py-5">
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              justifyContent: "space-between",
+              marginBottom: 16,
+              paddingVertical: 20,
+            }}
+          >
             <Animated.View
               style={{
-                flex: 1,
+                width: "48%",
+                marginBottom: 12,
                 transform: [{ scale: arrivalScale }],
-                marginHorizontal: 2,
               }}
             >
               <TouchableOpacity
@@ -508,11 +526,11 @@ export default function ProjectOverview() {
                 onPress={handleArrivalPress}
                 activeOpacity={0.6}
               >
-                <View className="items-center py-3 px-1">
-                  <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
-                    <MapPin size={18} color="#fff" />
-                  </View>
-                  <Text className="text-white font-semibold text-xs">
+                <View className="flex-row items-center justify-center py-3 px-1 gap-2">
+                  {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
+                  </View> */}
+                  <MapPin size={18} color="#fff" />
+                  <Text className="text-white font-semibold ">
                     Arrival
                   </Text>
                 </View>
@@ -521,9 +539,9 @@ export default function ProjectOverview() {
 
             <Animated.View
               style={{
-                flex: 1,
+                width: "48%",
+                marginBottom: 12,
                 transform: [{ scale: startScale }],
-                marginHorizontal: 2,
               }}
             >
               <TouchableOpacity
@@ -531,11 +549,11 @@ export default function ProjectOverview() {
                 onPress={handleStartPress}
                 activeOpacity={0.6}
               >
-                <View className="items-center py-3 px-1">
-                  <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
-                    <PlayCircle size={18} color="#fff" />
-                  </View>
-                  <Text className="text-white font-semibold text-xs">
+                <View className="flex-row items-center justify-center py-3 px-1 gap-2">
+                  {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
+                  </View> */}
+                  <PlayCircle size={18} color="#fff" />
+                  <Text className="text-white font-semibold ">
                     Start
                   </Text>
                 </View>
@@ -544,9 +562,9 @@ export default function ProjectOverview() {
 
             <Animated.View
               style={{
-                flex: 1,
+                width: "48%",
+                marginBottom: 0,
                 transform: [{ scale: completeScale }],
-                marginHorizontal: 2,
               }}
             >
               <TouchableOpacity
@@ -554,11 +572,11 @@ export default function ProjectOverview() {
                 onPress={handleCompletePress}
                 activeOpacity={0.6}
               >
-                <View className="items-center py-3 px-1">
-                  <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
-                    <CheckCircle size={18} color="#fff" />
-                  </View>
-                  <Text className="text-white font-semibold text-xs">
+                <View className="flex-row items-center justify-center py-3 px-1 gap-2">
+                  {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
+                  </View> */}
+                  <CheckCircle size={18} color="#fff" />
+                  <Text className="text-white font-semibold ">
                     Complete
                   </Text>
                 </View>
@@ -567,9 +585,9 @@ export default function ProjectOverview() {
 
             <Animated.View
               style={{
-                flex: 1,
+                width: "48%",
+                marginBottom: 0,
                 transform: [{ scale: directionsScale }],
-                marginHorizontal: 2,
               }}
             >
               <TouchableOpacity
@@ -577,11 +595,11 @@ export default function ProjectOverview() {
                 onPress={openInMaps}
                 activeOpacity={0.6}
               >
-                <View className="items-center py-3 px-1">
-                  <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
-                    <Map size={18} color="#fff" />
-                  </View>
-                  <Text className="text-white font-semibold text-xs">
+                <View className="flex-row items-center justify-center py-3 px-1 gap-2">
+                  {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
+                  </View> */}
+                  <Map size={18} color="#fff" />
+                  <Text className="text-white font-semibold ">
                     Directions
                   </Text>
                 </View>
@@ -599,7 +617,6 @@ export default function ProjectOverview() {
                     key={index}
                     project={project?.data!}
                     path={item.path}
-                    params={item.params}
                     Icon={item.Icon}
                     title={item.title}
                     description={item.description}
@@ -614,7 +631,6 @@ export default function ProjectOverview() {
                     key={index}
                     project={project?.data!}
                     path={item.path}
-                    params={item.params}
                     Icon={item.Icon}
                     title={item.title}
                     description={item.description}
@@ -633,7 +649,6 @@ export default function ProjectOverview() {
 function NavigationCell({
   project,
   path,
-  params,
   Icon,
   title,
   description,
@@ -641,7 +656,6 @@ function NavigationCell({
 }: {
   project: Project | null;
   path?: string;
-  params?: { activeTab?: string };
   Icon: LucideIcon;
   title: string;
   description: string;
@@ -660,7 +674,6 @@ function NavigationCell({
           router.navigate({
             pathname: path,
             params: {
-              ...params,
               projectName: project?.clientName || "",
             },
           });
@@ -670,7 +683,7 @@ function NavigationCell({
       <Card className="p-4">
         <View className="flex-row items-center">
           <View className="bg-primary/10 p-3 rounded-xl">
-            <Icon height={24} width={24} className="text-white" color="#000" />
+            {React.createElement(Icon as any, { height: 24, width: 24, color: '#000', className: 'text-white' })}
           </View>
           <View className="flex-1 ml-4">
             <Text className="text-base font-semibold text-foreground">
@@ -678,11 +691,7 @@ function NavigationCell({
             </Text>
             <Text className="text-sm text-muted-foreground">{description}</Text>
           </View>
-          <ArrowRight
-            height={20}
-            width={20}
-            className="text-muted-foreground"
-          />
+          <Text style={{ fontSize: 20, marginLeft: 8 }}>→</Text>
         </View>
       </Card>
     </TouchableOpacity>
@@ -695,18 +704,16 @@ function GridCell({
   Icon,
   title,
   description,
-  params,
   onPress,
 }: {
   project: Project | null;
   path?: string;
-  params?: { activeTab?: string };
   Icon: LucideIcon;
   title: string;
   description: string;
   onPress?: () => void;
 }) {
-  console.log("🚀 ~ params:", params);
+  console.log("🚀 ~ params:", path);
   const router = useRouter();
   return (
     <TouchableOpacity
@@ -720,7 +727,6 @@ function GridCell({
           router.navigate({
             pathname: path,
             params: {
-              ...params,
               projectName: project?.clientName || "",
             },
           });
@@ -730,7 +736,7 @@ function GridCell({
       <Card className="overflow-hidden h-[110px]">
         <View className="items-center p-3 h-full justify-center">
           <View className="h-14 w-14 rounded-full bg-primary/10 items-center justify-center mb-3">
-            <Icon height={22} width={22} color="#000" />
+            {React.createElement(Icon as any, { height: 22, width: 22, color: '#000' })}
           </View>
           <Text className="text-sm font-semibold text-center text-foreground">
             {title}

@@ -71,12 +71,28 @@ export default function ProjectCell({ project }: { project: Project }) {
         )}
 
         <View style={styles.cardBody}>
-          <Text style={[styles.cardTag, { color: status?.data.color }]}>
-            {status?.data.label}
-          </Text>
 
           <Text style={styles.cardTitle}>{`${project.name}`}</Text>
           <Text style={styles.cardSubTitle}>{project.location}</Text>
+          {/* <Text style={[styles.cardTag, { color: status?.data.color }]}>
+            {status?.data.label}
+          </Text> */}
+          <View className="flex-row items-center gap-2">
+
+          {status?.data?.label && (
+            <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: status?.data.color || '#e0e7ff' }}>
+                    <Text className="text-xs font-semibold text-white">{status?.data.label}</Text>
+                  </View>
+                )}
+                {project?.lossType && (
+                  <View className="flex-row items-center bg-red-100 rounded px-2 py-0.5">
+                    <Text className="text-xs text-red-700 capitalize">{project.lossType.replace(/_/g, ' ')}</Text>
+                  </View>
+                )}
+                </View>
+
+              
+              
           {/* <View style={styles.cardRow}>
             <View style={styles.cardRowItem}>
               <Image
@@ -167,11 +183,12 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
   },
   cardTitle: {
-    fontWeight: "600",
-    fontSize: 16,
-    lineHeight: 19,
-    color: "#000",
+    fontWeight: "700",
+    fontSize: 20,
+    lineHeight: 24,
+    color: "#1d1d1d",
     marginBottom: 2,
+    textTransform: "capitalize",
   },
   cardSubTitle: {
     fontWeight: "400",
