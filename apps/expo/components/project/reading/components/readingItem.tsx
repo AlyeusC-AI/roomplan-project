@@ -15,6 +15,7 @@ import {
   Alert,
   ActivityIndicator,
   Pressable,
+  ScrollView,
 } from "react-native";
 import { ExtendedWallItem, ReadingType } from "@/types/app";
 import { toast } from "sonner-native";
@@ -192,200 +193,212 @@ const RoomReadingItem = ({
   };
 
   return (
-    <Box
-      key={reading.id}
-      w="full"
-      pl={4}
-      borderLeftWidth={1}
-      borderLeftColor="blue.500"
-      className="gap-y-2"
-    >
-      {/* Delete Reading Button */}
-      <Button
-        onPress={confirmDeleteReading}
-        className="flex-row items-center justify-center bg-white rounded-lg py-1.5 px-3 border border-red-300"
-        variant="destructive"
-        disabled={isDeleting}
+    <Pressable onPress={() => {}} style={{ flex: 1 }}>
+      <Box
+        key={reading.id}
+        w="full"
+        pl={4}
+        borderLeftWidth={1}
+        borderLeftColor="blue.500"
+        className="gap-y-2"
       >
-        <View className="flex-row items-center">
-          {isDeleting ? (
-            <ActivityIndicator
-              color="#dc2626"
-              size="small"
-              className="mr-1.5"
-            />
-          ) : (
-            <Trash2 color="#dc2626" height={16} width={16} className="mr-1.5" />
-          )}
-          <Text className="text-red-700 font-medium text-sm">
-            {isDeleting ? "Deleting..." : "Delete Reading"}
-          </Text>
-        </View>
-      </Button>
-
-      {/* Main Form */}
-      <FormControl>
-        <Stack mx="2" className="gap-y-2">
-          {/* Temperature Input */}
-          <View>
-            <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">
-              Temperature
-            </FormControl.Label>
-            <RoomReadingInput
-              value={tempRoomReading.temperature?.toString() || ""}
-              placeholder="Temperature"
-              rightText="°F"
-              onChange={(value) => {
-                setTempRoomReading((prev) => ({
-                  ...prev,
-                  temperature: Number(value),
-                }));
-              }}
-            />
-          </View>
-
-          {/* Relative Humidity Input */}
-          <View>
-            <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">
-              Relative Humidity
-            </FormControl.Label>
-            <RoomReadingInput
-              value={tempRoomReading.humidity?.toString() || ""}
-              placeholder="Relative Humidity"
-              rightText="%"
-              onChange={(value) => {
-                setTempRoomReading((prev) => ({
-                  ...prev,
-                  humidity: Number(value),
-                }));
-              }}
-            />
-          </View>
-
-          {/* Grains Per Pound Input */}
-          <View>
-            <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">
-              Grains Per Pound
-            </FormControl.Label>
-            <RoomReadingInput
-              value={
-                calculateGPP(
-                  tempRoomReading.temperature,
-                  tempRoomReading.humidity
-                )?.toString() || ""
-              }
-              placeholder="Grains Per Pound"
-              rightText="gpp"
-              disabled
-              onChange={() => {}}
-            />
-          </View>
-
-          <View className="gap-y-2">
-            {/* Extended Walls Section */}
-            {walls.map((wall) => (
-              <ExtendedWallSection
-                key={wall.id}
-                wall={wall}
-                roomReading={tempRoomReading}
-                wallReading={tempRoomReading.wallReadings?.find(
-                  (w) => w.wallId === wall.id
-                )}
-                onEdit={handleEditExtendedWall}
-                pickImage={pickImage}
-                handleAddExtendedWall={handleAddExtendedWall}
-                onImagePress={(index, id) => openImageViewer(index, id)}
+        {/* Delete Reading Button */}
+        <Button
+          onPress={confirmDeleteReading}
+          className="flex-row items-center justify-center bg-white rounded-lg py-1.5 px-3 border border-red-300"
+          variant="destructive"
+          disabled={isDeleting}
+        >
+          <View className="flex-row items-center">
+            {isDeleting ? (
+              <ActivityIndicator
+                color="#dc2626"
+                size="small"
+                className="mr-1.5"
               />
-            ))}
-          </View>
-          <View className="gap-y-2">
-            {/* Extended Floors Section */}
-            {floors.map((floor) => (
-              <ExtendedWallSection
-                key={floor.id}
-                wall={floor}
-                roomReading={tempRoomReading}
-                wallReading={tempRoomReading.wallReadings?.find(
-                  (w) => w.wallId === floor.id
-                )}
-                onEdit={handleEditExtendedWall}
-                handleAddExtendedWall={handleAddExtendedWall}
-                pickImage={pickImage}
-                onImagePress={(index, id) => openImageViewer(index, id)}
+            ) : (
+              <Trash2
+                color="#dc2626"
+                height={16}
+                width={16}
+                className="mr-1.5"
               />
-            ))}
+            )}
+            <Text className="text-red-700 font-medium text-sm">
+              {isDeleting ? "Deleting..." : "Delete Reading"}
+            </Text>
           </View>
+        </Button>
 
-          {/* Dehumidifier Readings Section */}
-          <Heading
-            size="sm"
-            mt="2"
-            mb="1"
-            className="text-gray-700 font-semibold text-sm"
-          >
-            Dehumidifier Readings
-          </Heading>
-
-          {/* Map through generic readings */}
-          {reading.genericRoomReading?.map((grr: any, index: number) => (
-            <GenericRoomReadingSection
-              key={grr.id}
-              genericRoomReading={grr}
-              pickImage={pickImage}
-              index={index}
-              handleAddExtendedWall={handleAddExtendedWall}
-              roomReading={tempRoomReading}
-              onImagePress={(imgIndex, genericId) =>
-                openImageViewer(imgIndex, "generic", genericId)
-              }
-            />
-          ))}
-
-          {/* Empty state for generic readings */}
-          {reading.genericRoomReading?.length === 0 && (
-            <View className="flex items-center justify-center py-4">
-              <Text className="text-gray-400 font-medium text-sm">
-                No dehumidifier readings yet
-              </Text>
+        {/* Main Form */}
+        <FormControl>
+          <Stack mx="2" className="gap-y-2">
+            {/* Temperature Input */}
+            <View>
+              <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">
+                Temperature
+              </FormControl.Label>
+              <RoomReadingInput
+                value={tempRoomReading.temperature?.toString() || ""}
+                placeholder="Temperature"
+                rightText="°F"
+                onChange={(value) => {
+                  setTempRoomReading((prev) => ({
+                    ...prev,
+                    temperature: Number(value),
+                  }));
+                }}
+              />
             </View>
-          )}
 
-          {/* Add Dehumidifier Reading Button */}
-          <Button
-            onPress={async () => {
-              try {
-                await addGenericRoomReading({
-                  roomReadingId: reading.id,
-                  value: "",
-                  humidity: 0,
-                  temperature: 0,
-                  images: [],
-                });
-              } catch (err) {
-                console.error("Failed to add dehumidifer reading:", err);
-              }
-            }}
-            className="flex-row items-center justify-center bg-blue-600 rounded-lg py-1.5 px-3 my-2 mx-2 border border-blue-700"
-            disabled={isAdding}
-          >
-            <View className="flex-row items-center ">
-              {isAdding ? (
-                <ActivityIndicator
-                  color="#FFF"
-                  size="small"
-                  className="mr-1.5"
+            {/* Relative Humidity Input */}
+            <View>
+              <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">
+                Relative Humidity
+              </FormControl.Label>
+              <RoomReadingInput
+                value={tempRoomReading.humidity?.toString() || ""}
+                placeholder="Relative Humidity"
+                rightText="%"
+                onChange={(value) => {
+                  setTempRoomReading((prev) => ({
+                    ...prev,
+                    humidity: Number(value),
+                  }));
+                }}
+              />
+            </View>
+
+            {/* Grains Per Pound Input */}
+            <View>
+              <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">
+                Grains Per Pound
+              </FormControl.Label>
+              <RoomReadingInput
+                value={
+                  calculateGPP(
+                    tempRoomReading.temperature,
+                    tempRoomReading.humidity
+                  )?.toString() || ""
+                }
+                placeholder="Grains Per Pound"
+                rightText="gpp"
+                disabled
+                onChange={() => {}}
+              />
+            </View>
+
+            <View className="gap-y-2">
+              {/* Extended Walls Section */}
+              {walls.map((wall) => (
+                <ExtendedWallSection
+                  key={wall.id}
+                  wall={wall}
+                  roomReading={tempRoomReading}
+                  wallReading={tempRoomReading.wallReadings?.find(
+                    (w) => w.wallId === wall.id
+                  )}
+                  onEdit={handleEditExtendedWall}
+                  pickImage={pickImage}
+                  handleAddExtendedWall={handleAddExtendedWall}
+                  onImagePress={(index, id) => openImageViewer(index, id)}
                 />
-              ) : (
-                <Plus color="#FFF" height={16} width={16} className="mr-1.5" />
-              )}
-              <Text className="text-white font-medium text-sm">
-                {isAdding ? "Adding..." : "Add Dehumidifier Reading"}
-              </Text>
+              ))}
             </View>
-          </Button>
-        </Stack>
-      </FormControl>
-    </Box>
+            <View className="gap-y-2">
+              {/* Extended Floors Section */}
+              {floors.map((floor) => (
+                <ExtendedWallSection
+                  key={floor.id}
+                  wall={floor}
+                  roomReading={tempRoomReading}
+                  wallReading={tempRoomReading.wallReadings?.find(
+                    (w) => w.wallId === floor.id
+                  )}
+                  onEdit={handleEditExtendedWall}
+                  handleAddExtendedWall={handleAddExtendedWall}
+                  pickImage={pickImage}
+                  onImagePress={(index, id) => openImageViewer(index, id)}
+                />
+              ))}
+            </View>
+
+            {/* Dehumidifier Readings Section */}
+            <Heading
+              size="sm"
+              mt="2"
+              mb="1"
+              className="text-gray-700 font-semibold text-sm"
+            >
+              Dehumidifier Readings
+            </Heading>
+
+            {/* Map through generic readings */}
+            {reading.genericRoomReading?.map((grr: any, index: number) => (
+              <GenericRoomReadingSection
+                key={grr.id}
+                genericRoomReading={grr}
+                pickImage={pickImage}
+                index={index}
+                handleAddExtendedWall={handleAddExtendedWall}
+                roomReading={tempRoomReading}
+                onImagePress={(imgIndex, genericId) =>
+                  openImageViewer(imgIndex, "generic", genericId)
+                }
+              />
+            ))}
+
+            {/* Empty state for generic readings */}
+            {reading.genericRoomReading?.length === 0 && (
+              <View className="flex items-center justify-center py-4">
+                <Text className="text-gray-400 font-medium text-sm">
+                  No dehumidifier readings yet
+                </Text>
+              </View>
+            )}
+
+            {/* Add Dehumidifier Reading Button */}
+            <Button
+              onPress={async () => {
+                try {
+                  await addGenericRoomReading({
+                    roomReadingId: reading.id,
+                    value: "",
+                    humidity: 0,
+                    temperature: 0,
+                    images: [],
+                  });
+                } catch (err) {
+                  console.error("Failed to add dehumidifer reading:", err);
+                }
+              }}
+              className="flex-row items-center justify-center bg-blue-600 rounded-lg py-1.5 px-3 my-2 mx-2 border border-blue-700"
+              disabled={isAdding}
+            >
+              <View className="flex-row items-center ">
+                {isAdding ? (
+                  <ActivityIndicator
+                    color="#FFF"
+                    size="small"
+                    className="mr-1.5"
+                  />
+                ) : (
+                  <Plus
+                    color="#FFF"
+                    height={16}
+                    width={16}
+                    className="mr-1.5"
+                  />
+                )}
+                <Text className="text-white font-medium text-sm">
+                  {isAdding ? "Adding..." : "Add Dehumidifier Reading"}
+                </Text>
+              </View>
+            </Button>
+          </Stack>
+        </FormControl>
+      </Box>
+    </Pressable>
   );
 };
 

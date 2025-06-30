@@ -23,6 +23,7 @@ import {
   Room,
   Wall,
   RoomReading as RoomReadingType,
+  useUpdateRoomReading,
 } from "@service-geek/api-client";
 
 // Define the type for the room reading component props
@@ -57,6 +58,7 @@ const RoomReading: React.FC<RoomReadingProps> = ({ room, reading }) => {
     pickImage,
     openImageViewer,
   } = useImageHandling(reading);
+  const { mutate: updateRoomReading } = useUpdateRoomReading();
 
   const handleCancelWallNameEdit = () => {
     setWall(null);
@@ -83,17 +85,17 @@ const RoomReading: React.FC<RoomReadingProps> = ({ room, reading }) => {
         </View>
       </Button>
 
-      <Collapsible collapsed={isCollapsed}>
-        {!isCollapsed && (
-          <RoomReadingItem
-            room={room}
-            reading={reading}
-            pickImage={pickImage}
-            openImageViewer={openImageViewer}
-            setWall={(wall) => setWall(wall)}
-          />
-        )}
-      </Collapsible>
+      {/* <Collapsible collapsed={isCollapsed}> */}
+      {!isCollapsed && (
+        <RoomReadingItem
+          room={room}
+          reading={reading}
+          pickImage={pickImage}
+          openImageViewer={openImageViewer}
+          setWall={(wall) => setWall(wall)}
+        />
+      )}
+      {/* </Collapsible> */}
       {/* Date Picker Modal */}
       <FormControl>
         <Modal isOpen={showDatePicker} onClose={() => setShowDatePicker(false)}>
@@ -109,9 +111,15 @@ const RoomReading: React.FC<RoomReadingProps> = ({ room, reading }) => {
                 }}
                 onChange={(params) => {
                   setDate(new Date(params.date as string));
-                  updateRoomReading(reading.publicId, "standard", {
-                    date: new Date(params.date as string).toISOString(),
+                  updateRoomReading({
+                    id: reading.id,
+                    data: {
+                      date: new Date(params.date as string),
+                    },
                   });
+                  // updateRoomReading(reading.publicId, "standard", {
+                  //   date: new Date(params.date as string).toISOString(),
+                  // });
                   setShowDatePicker(false);
                 }}
                 styles={{

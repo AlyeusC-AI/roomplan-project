@@ -35,6 +35,7 @@ import {
   Scissors,
   Ruler,
   File,
+  MessageSquare,
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -49,6 +50,7 @@ import {
   useGetProjectById,
   useGetProjectMembers,
 } from "@service-geek/api-client";
+import { Button } from "@/components/ui/button";
 
 export default function ProjectOverview() {
   const { projectId } = useLocalSearchParams<{
@@ -211,13 +213,13 @@ export default function ProjectOverview() {
       <View className="px-4 pt-4 pb-2 bg-background">
         <View className="w-full flex-row justify-between items-center">
           <TouchableOpacity
-            // onPress={() => setShowClientInfo(true)}
-            onPress={() =>
-              router.push({
-                pathname: "./details",
-                params: { activeTab: "customer" },
-              })
-            }
+            onPress={() => setShowClientInfo(true)}
+            // onPress={() =>
+            //   router.push({
+            //     pathname: "./details",
+            //     params: { activeTab: "customer" },
+            //   })
+            // }
             className="flex-row items-center"
           >
             <Text className="text-2xl font-bold text-foreground">
@@ -283,12 +285,28 @@ export default function ProjectOverview() {
               <Text className="text-xl font-bold text-foreground">
                 {project?.data?.clientName}
               </Text>
-              <TouchableOpacity
-                onPress={() => setShowClientInfo(false)}
-                className="p-2"
-              >
-                <X size={20} color="#000" />
-              </TouchableOpacity>
+              <View className="flex-row items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onPress={() => {
+                    setShowClientInfo(false);
+                    router.push({
+                      pathname: "./details",
+                      params: { activeTab: "customer" },
+                    });
+                  }}
+                >
+                  {/* <Cog size={16} className="mr-2" /> */}
+                  <Text>Edit</Text>
+                </Button>
+                <TouchableOpacity
+                  onPress={() => setShowClientInfo(false)}
+                  className="p-2"
+                >
+                  <X size={20} color="#000" />
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View className="space-y-4">
@@ -301,7 +319,7 @@ export default function ProjectOverview() {
                       className="text-primary"
                     />
                   </View>
-                  <View className="ml-3">
+                  <View className="ml-3 flex-1">
                     <Text className="text-sm text-muted-foreground">
                       Damage Type
                     </Text>
@@ -312,80 +330,154 @@ export default function ProjectOverview() {
                 </View>
               )}
 
-              <TouchableOpacity
-                onPress={openInMaps}
-                onLongPress={() => copyText(project?.data?.location)}
-                className="flex flex-row items-center"
-              >
-                <View className="bg-primary/10 p-2 rounded-lg">
-                  <Map height={20} width={20} className="text-primary" />
-                </View>
-                <Text className="text-base ml-3 text-foreground">
-                  {project?.data?.location || "No location"}
+              <View className="bg-muted/50 p-4 rounded-xl">
+                <Text className="text-sm font-medium text-muted-foreground mb-3">
+                  Contact Information
                 </Text>
-              </TouchableOpacity>
 
-              {project?.data?.clientEmail ? (
-                <TouchableOpacity
-                  onPress={() =>
-                    Linking.openURL(`mailto:${project?.data?.clientEmail}`)
-                  }
-                  onLongPress={() => copyText(project?.data?.clientEmail)}
-                  className="flex flex-row items-center"
-                >
-                  <View className="bg-primary/10 p-2 rounded-lg">
-                    <Mail height={20} width={20} className="text-primary" />
+                <View className="space-y-3">
+                  <View className="flex flex-row items-center justify-between">
+                    <View className="flex-row items-center flex-1">
+                      <View className="bg-primary/10 p-2 rounded-lg">
+                        <Map height={20} width={20} className="text-primary" />
+                      </View>
+                      <Text className="text-base ml-3 text-foreground flex-1">
+                        {project?.data?.location || "No location"}
+                      </Text>
+                    </View>
+                    {project?.data?.location && (
+                      <TouchableOpacity
+                        onPress={() => copyText(project?.data?.location)}
+                        className="p-2"
+                      >
+                        <ClipboardCheck
+                          size={18}
+                          className="text-muted-foreground"
+                        />
+                      </TouchableOpacity>
+                    )}
                   </View>
-                  <Text className="text-base ml-3 text-foreground">
-                    {project?.data?.clientEmail}
-                  </Text>
-                </TouchableOpacity>
-              ) : (
-                <View className="flex flex-row items-center">
-                  <View className="bg-primary/10 p-2 rounded-lg">
-                    <Mail height={20} width={20} className="text-primary" />
-                  </View>
-                  <Text className="text-base ml-3 text-muted-foreground">
-                    No email
-                  </Text>
+
+                  {project?.data?.clientEmail ? (
+                    <View className="flex flex-row items-center justify-between">
+                      <View className="flex-row items-center flex-1">
+                        <View className="bg-primary/10 p-2 rounded-lg">
+                          <Mail
+                            height={20}
+                            width={20}
+                            className="text-primary"
+                          />
+                        </View>
+                        <Text className="text-base ml-3 text-foreground flex-1">
+                          {project?.data?.clientEmail}
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => copyText(project?.data?.clientEmail)}
+                        className="p-2"
+                      >
+                        <ClipboardCheck
+                          size={18}
+                          className="text-muted-foreground"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View className="flex flex-row items-center">
+                      <View className="bg-primary/10 p-2 rounded-lg">
+                        <Mail height={20} width={20} className="text-primary" />
+                      </View>
+                      <Text className="text-base ml-3 text-muted-foreground">
+                        No email
+                      </Text>
+                    </View>
+                  )}
+
+                  {project?.data?.clientPhoneNumber ? (
+                    <View className="flex flex-row items-center justify-between">
+                      <View className="flex-row items-center flex-1">
+                        <View className="bg-primary/10 p-2 rounded-lg">
+                          <Phone
+                            height={20}
+                            width={20}
+                            className="text-primary"
+                          />
+                        </View>
+                        <Text className="text-base ml-3 text-foreground flex-1">
+                          {project?.data?.clientPhoneNumber}
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() =>
+                          copyText(project?.data?.clientPhoneNumber)
+                        }
+                        className="p-2"
+                      >
+                        <ClipboardCheck
+                          size={18}
+                          className="text-muted-foreground"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View className="flex flex-row items-center">
+                      <View className="bg-primary/10 p-2 rounded-lg">
+                        <Phone
+                          height={20}
+                          width={20}
+                          className="text-primary"
+                        />
+                      </View>
+                      <Text className="text-base ml-3 text-muted-foreground">
+                        No phone
+                      </Text>
+                    </View>
+                  )}
                 </View>
-              )}
+              </View>
+            </View>
 
-              {project?.data?.clientPhoneNumber ? (
-                <TouchableOpacity
-                  onPress={() =>
-                    Linking.openURL(`tel:${project?.data?.clientPhoneNumber}`)
-                  }
-                  onLongPress={() => copyText(project?.data?.clientPhoneNumber)}
-                  className="flex flex-row items-center"
-                >
-                  <View className="bg-primary/10 p-2 rounded-lg">
-                    <Phone height={20} width={20} className="text-primary" />
-                  </View>
-                  <Text className="text-base ml-3 text-foreground">
-                    {project?.data?.clientPhoneNumber}
-                  </Text>
-                </TouchableOpacity>
-              ) : (
-                <View className="flex flex-row items-center">
-                  <View className="bg-primary/10 p-2 rounded-lg">
-                    <Phone height={20} width={20} className="text-primary" />
-                  </View>
-                  <Text className="text-base ml-3 text-muted-foreground">
-                    No phone
-                  </Text>
+            <View className="my-6 space-y-2 ">
+              {project?.data?.clientPhoneNumber && (
+                <View className="flex-row space-x-2 w-full justify-between">
+                  <Button
+                    // variant="secondary"
+                    variant="outline"
+                    className=" flex-row gap-2"
+                    onPress={() =>
+                      Linking.openURL(`tel:${project?.data?.clientPhoneNumber}`)
+                    }
+                  >
+                    <Phone size={18} className="mr-2" />
+                    <Text>Call</Text>
+                  </Button>
+                  <Button
+                    // variant="secondary"
+                    variant="outline"
+                    className=" flex-row gap-2"
+                    onPress={() =>
+                      Linking.openURL(`sms:${project?.data?.clientPhoneNumber}`)
+                    }
+                  >
+                    <MessageSquare size={18} className="mr-2" />
+                    <Text>Message</Text>
+                  </Button>
+                  {project?.data?.clientEmail && (
+                    <Button
+                      // variant="secondary"
+                      variant="outline"
+                      className=" flex-row gap-2"
+                      onPress={() =>
+                        Linking.openURL(`mailto:${project?.data?.clientEmail}`)
+                      }
+                    >
+                      <Mail size={18} className="mr-2" />
+                      <Text>Send Email</Text>
+                    </Button>
+                  )}
                 </View>
               )}
             </View>
-
-            <TouchableOpacity
-              onPress={() => setShowClientInfo(false)}
-              className="bg-primary mt-6 py-3 rounded-lg"
-            >
-              <Text className="text-center text-primary-foreground font-semibold">
-                Close
-              </Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>

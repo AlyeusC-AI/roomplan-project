@@ -63,7 +63,6 @@ export default function ProjectPhotos() {
     projectId: string;
     projectName: string;
   }>();
-  const [loading, setLoading] = useState(true);
   const [expandedValue, setExpandedValue] = useState<string | undefined>(
     undefined
   );
@@ -81,16 +80,17 @@ export default function ProjectPhotos() {
   const [mainImage, setMainImage] = useState<string | null>(null);
   const [showCoverModal, setShowCoverModal] = useState(false);
   const { mutate: addImage } = useAddImage();
-  const { mutate: addComment } = useAddComment();
 
   const { data: rooms } = useGetRooms(projectId);
-  const { mutate: removeImage } = useRemoveImage();
   const { mutate: bulkUpdateImages } = useBulkUpdateImages();
-  const { mutate: bulkRemoveImages } = useBulkRemoveImages();
-  const { mutate: updateImagesOrder } = useUpdateImagesOrder();
   const { mutate: updateProject } = useUpdateProject();
 
-  const { data: images } = useSearchImages(
+  const {
+    data: images,
+    isLoading: loading,
+    refetch,
+    isRefetching,
+  } = useSearchImages(
     projectId,
     {
       // roomId: selectedRoom,
@@ -219,7 +219,7 @@ export default function ProjectPhotos() {
   const includeAllInReport = async () => {
     try {
       setIsUpdatingAll(true);
-      const response = await bulkUpdateImages({
+      await bulkUpdateImages({
         projectId,
         filters: {
           ids: images?.data?.map((image) => image.id) || [],
@@ -341,9 +341,9 @@ export default function ProjectPhotos() {
   return (
     <View style={styles.container}>
       <ScrollView
-        // refreshControl={
-        //   <RefreshControl refreshing={loading} onRefresh={refreshData} />
-        // }
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+        }
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >

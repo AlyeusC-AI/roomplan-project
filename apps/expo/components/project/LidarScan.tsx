@@ -20,6 +20,9 @@ const { RoomScanModule } = NativeModules;
 
 // Check if device has LiDAR sensor (iOS only)
 const hasLidarSensor = async (): Promise<boolean> => {
+  console.log("NativeModules.RoomScanModule: ", NativeModules.RoomScanModule);
+  console.log("RoomScanModule has isAvailable? ", typeof RoomScanModule.isAvailable === 'function');
+  console.log("RoomScanModule.isAvailable(): ", RoomScanModule.isAvailable());
   return await RoomScanModule && RoomScanModule.isAvailable();
 };
 

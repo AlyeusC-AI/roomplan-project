@@ -1,3 +1,4 @@
+import "ts-node/register";
 import { ExpoConfig } from "@expo/config";
 
 const config: ExpoConfig = {
@@ -38,6 +39,28 @@ const config: ExpoConfig = {
       NSLocationWhenInUseUsageDescription:
         "This app requires access to your location.",
     },
+    privacyManifests: {
+      NSPrivacyAccessedAPITypes: [
+        {
+          NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategoryFileTimestamp",
+          NSPrivacyAccessedAPITypeReasons: ["C617.1", "0A2A.1", "3B52.1"],
+        },
+        {
+          NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategoryUserDefaults",
+          NSPrivacyAccessedAPITypeReasons: ["CA92.1"],
+        },
+        {
+          NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategoryDiskSpace",
+          NSPrivacyAccessedAPITypeReasons: ["E174.1", "85F4.1"],
+        },
+        {
+          NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategorySystemBootTime",
+          NSPrivacyAccessedAPITypeReasons: ["35F9.1"],
+        },
+      ],
+      NSPrivacyCollectedDataTypes: [],
+      NSPrivacyTracking: false,
+    },
   },
   web: {
     favicon: "./assets/icon.png",
@@ -55,6 +78,7 @@ const config: ExpoConfig = {
     ["expo-asset"],
     ["expo-font"],
     "expo-router",
+    ["./plugins/withLidar"],
     [
       "react-native-vision-camera",
       {

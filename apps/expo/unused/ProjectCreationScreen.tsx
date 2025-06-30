@@ -46,7 +46,7 @@ export default function ProjectCreationScreen({
           <HStack direction="row" space="2">
             <Text color="white">
               Could not create project. If this error persits, please contact
-              support@servicegeek.com
+              support@restoregeek.app
             </Text>
           </HStack>
         ),

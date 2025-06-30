@@ -291,14 +291,6 @@ export function OptimizedImage({
           <Trash2 size={20} color="#ef4444" />
         </TouchableOpacity>
       )}
-
-      {showInfo && !loading && !error && actualImageKey && (
-        <View style={styles.imageInfo}>
-          <Text style={styles.infoText} numberOfLines={1}>
-            {actualImageKey.split("/").pop()}
-          </Text>
-        </View>
-      )}
     </TouchableOpacity>
   );
 }

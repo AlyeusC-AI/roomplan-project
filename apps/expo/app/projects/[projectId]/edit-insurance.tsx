@@ -67,7 +67,7 @@ export default function InsuranceScreen() {
       router.dismiss();
     } catch {
       toast.error(
-        "Could not update project. If this error persits, please contact support@servicegeek.com"
+        "Could not update project. If this error persits, please contact support@restoregeek.app"
       );
     }
   };

@@ -120,15 +120,17 @@ export default function RoomReadings() {
   }>();
   const router = useRouter();
   const { data: rooms, isLoading: loading } = useGetRooms(projectId);
-  const [selectedRoom, setSelectedRoom] = useState<string | "all" | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<string | "all" | null>(
+    "all"
+  );
   const [showRoomSelector, setShowRoomSelector] = useState(false);
 
   // Set initial selected room when rooms data is loaded
-  React.useEffect(() => {
-    if (rooms && rooms.length > 0 && !selectedRoom) {
-      setSelectedRoom(rooms[0].id);
-    }
-  }, [rooms]);
+  // React.useEffect(() => {
+  //   if (rooms && rooms.length > 0 && !selectedRoom) {
+  //     setSelectedRoom(rooms[0].id);
+  //   }
+  // }, [rooms]);
 
   const filteredRooms =
     selectedRoom === "all"
@@ -255,6 +257,15 @@ export default function RoomReadings() {
             showsVerticalScrollIndicator={false}
             w="full"
             h="full"
+            // nestedScrollEnabled={true}
+            // scrollEnabled={true}
+            // removeClippedSubviews={false}
+            // bounces={true}
+            // overScrollMode="always"
+            // scrollEventThrottle={16}
+            // onScrollBeginDrag={() => {
+            //   Keyboard.dismiss();
+            // }}
           />
         </Box>
       </TouchableWithoutFeedback>

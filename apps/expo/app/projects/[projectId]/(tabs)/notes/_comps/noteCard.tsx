@@ -29,7 +29,9 @@ import {
   Image as ImageIcon,
   ChevronUp,
   ChevronDown,
+  FileText,
 } from "lucide-react-native";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { toast } from "sonner-native";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -72,6 +74,7 @@ import {
 } from "@service-geek/api-client";
 import ImageGalleryModal, { OptimizedImage } from "./notesGallery";
 import { useQueryClient } from "@tanstack/react-query";
+import { SvgProps } from "react-native-svg";
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
@@ -417,9 +420,7 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
       });
 
       clearImages();
-      refreshNotes().then(() => {
-        // setExpandedImageGrid(true);
-      });
+      refreshNotes();
 
       // Add to NoteImage table
       //   supabaseServiceRole
@@ -630,19 +631,12 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          {/* <View style={[styles.userAvatar, { backgroundColor: "#EFF6FF" }]}>
-            <Text
-              style={{ color: "#1E40AF", fontWeight: "bold", fontSize: 18 }}
-            >
-              {note.NotesAuditTrail?.[0]?.userName?.[0]?.toUpperCase() || "U"}
-            </Text>
-          </View> */}
+          <View style={[styles.userAvatar, { backgroundColor: "#EFF6FF" }]}>
+            <FileText color="#1E40AF" size={20} />
+          </View>
           <View>
-            {/* <Text style={styles.userName}>
-              {note.NotesAuditTrail?.[0]?.userName || "User"}
-            </Text> */}
             <Text style={{ color: "#6B7280", fontSize: 13 }}>
-              {format(new Date(note.updatedAt), "LLLL	d, yyyy hh:mm a")}
+              {format(new Date(note.updatedAt), "d LLLL	hh:mm a")}
             </Text>
           </View>
         </View>

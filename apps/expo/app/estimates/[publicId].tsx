@@ -264,9 +264,9 @@ export default function EstimateDetailsScreen() {
               <Text style={styles.companyDetail}>Knoxville, TN 37932</Text>
               <Text style={styles.companyDetail}>Phone: (865) 771-2013</Text>
               <Text style={styles.companyDetail}>
-                Email: support@servicegeek.com
+                Email: support@restoregeek.app
               </Text>
-              <Text style={styles.companyDetail}>Web: servicegeek.com/</Text>
+              <Text style={styles.companyDetail}>Web: restoregeek.app/</Text>
             </View>
 
             <View style={styles.estimateDetails}>
