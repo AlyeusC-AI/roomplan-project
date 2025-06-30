@@ -39,10 +39,10 @@ export default function Layout() {
   return (
     <Tabs
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor:"#2563eb" ,
+        tabBarActiveTintColor: "#2563eb",
         headerTintColor: "white",
         headerStyle: {
-          backgroundColor: "#2563eb" ,
+          backgroundColor: "#2563eb",
         },
         header: ({ navigation, route, options }) =>
           route.name === "chat" ? (
@@ -188,6 +188,13 @@ export default function Layout() {
         name="chat"
         options={{
           title: "Chat",
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="filtered-images"
+        options={{
+          title: "Filtered Images",
           href: null,
         }}
       />

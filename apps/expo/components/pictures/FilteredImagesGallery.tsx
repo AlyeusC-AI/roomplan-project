@@ -14,6 +14,7 @@ import {
   CheckSquare,
   X,
   Filter,
+  Home,
 } from "lucide-react-native";
 import ModalImagesWithNotes from "./modalImagesWithNotes";
 import { Image } from "@service-geek/api-client";
@@ -38,45 +39,45 @@ interface FilteredImagesGalleryProps {
   onClearFilters?: () => void;
   onClearTagFilter?: (tagToRemove: string) => void;
   rooms?: any[];
+  refetch: () => void;
 }
 
-// Group images by date
-const groupImagesByDate = (images: Image[]) => {
+// Group images by room
+const groupImagesByRoom = (images: Image[], rooms: any[] = []) => {
   const groups: { [key: string]: Image[] } = {};
 
   images.forEach((image) => {
-    const date = new Date(image.createdAt);
-    const dateKey = date.toISOString().split("T")[0];
-    const displayDate = date.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    const roomId = image.roomId || "unassigned";
+    const roomName =
+      roomId === "unassigned"
+        ? "Unassigned"
+        : rooms.find((r) => r.id === roomId)?.name || roomId;
 
-    if (!groups[dateKey]) {
-      groups[dateKey] = [];
+    if (!groups[roomId]) {
+      groups[roomId] = [];
     }
-    groups[dateKey].push(image);
+    groups[roomId].push(image);
   });
 
   return Object.entries(groups)
-    .map(([dateKey, images]) => ({
-      dateKey,
-      displayDate: new Date(dateKey).toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
+    .map(([roomId, images]) => ({
+      roomId,
+      roomName:
+        roomId === "unassigned"
+          ? "Unassigned"
+          : rooms.find((r) => r.id === roomId)?.name || roomId,
       images: images.sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       ),
     }))
-    .sort(
-      (a, b) => new Date(b.dateKey).getTime() - new Date(a.dateKey).getTime()
-    );
+    .sort((a, b) => {
+      // Sort unassigned to the end
+      if (a.roomId === "unassigned") return 1;
+      if (b.roomId === "unassigned") return -1;
+      // Sort by room name alphabetically
+      return a.roomName.localeCompare(b.roomName);
+    });
 };
 
 // Filter Display Component
@@ -152,22 +153,22 @@ const FilterDisplay = ({
   );
 };
 
-// Floating Date Header
-const FloatingDateHeader = ({
-  displayDate,
+// Floating Room Header
+const FloatingRoomHeader = ({
+  roomName,
   imageCount,
   isSelected,
   onToggleSelect,
   selectable,
 }: {
-  displayDate: string;
+  roomName: string;
   imageCount: number;
   isSelected: boolean;
   onToggleSelect: () => void;
   selectable: boolean;
 }) => (
-  <View style={styles.dateHeader}>
-    <View style={styles.dateInfo}>
+  <View style={styles.roomHeader}>
+    <View style={styles.roomInfo}>
       {selectable && (
         <TouchableOpacity
           style={[
@@ -182,8 +183,8 @@ const FloatingDateHeader = ({
           {isSelected && <CheckSquare size={12} />}
         </TouchableOpacity>
       )}
-      <Calendar size={14} color="#6b7280" />
-      <Text style={styles.dateText}>{displayDate}</Text>
+      <Home size={14} color="#6b7280" />
+      <Text style={styles.roomText}>{roomName}</Text>
     </View>
     <Text style={styles.imageCountText}>
       {imageCount} {imageCount === 1 ? "photo" : "photos"}
@@ -217,7 +218,7 @@ const ImageItem = ({
       resizeMode="cover"
       isSelected={isSelected}
       imageKey={image.id}
-      disabled={selectable}
+      disabled={true}
     />
     {selectable && isSelected && (
       <View style={styles.selectionOverlay}>
@@ -239,6 +240,7 @@ export default function FilteredImagesGallery({
   onClearFilters,
   onClearTagFilter,
   rooms,
+  refetch,
 }: FilteredImagesGalleryProps) {
   const [selectedKeys, setSelectedKeys] =
     useState<string[]>(initialSelectedKeys);
@@ -254,7 +256,7 @@ export default function FilteredImagesGallery({
     setImages(imagesProp);
   }, [imagesProp]);
 
-  const dateGroups = groupImagesByDate(images);
+  const roomGroups = groupImagesByRoom(images, rooms);
   const urlMap = images.reduce(
     (acc, image) => {
       acc[image.id] = image.url || "";
@@ -263,12 +265,17 @@ export default function FilteredImagesGallery({
     {} as { [key: string]: string }
   );
 
-  const handleImagePress = (index: number) => {
-    setActiveImageIndex(index);
+  const handleImagePress = (imageId: string) => {
+    console.log("🚀 ~ handleImagePress ~ imageId:", imageId);
+    const index = images.findIndex((img) => img.id === imageId);
+    if (index !== -1) {
+      setActiveImageIndex(index);
+    }
     setModalVisible(true);
   };
 
   const toggleImageSelection = (imageKey: string) => {
+    console.log("🚀 ~ toggleImageSelection ~ imageKey:", imageKey);
     const newSelectedKeys = selectedKeys.includes(imageKey)
       ? selectedKeys.filter((key) => key !== imageKey)
       : [...selectedKeys, imageKey];
@@ -277,7 +284,7 @@ export default function FilteredImagesGallery({
     onSelectionChange?.(newSelectedKeys);
   };
 
-  const toggleDateGroupSelection = (groupImages: Image[]) => {
+  const toggleRoomGroupSelection = (groupImages: Image[]) => {
     const groupImageIds = groupImages.map((img) => img.id);
     const isGroupSelected = groupImageIds.every((id) =>
       selectedKeys.includes(id)
@@ -294,7 +301,7 @@ export default function FilteredImagesGallery({
     onSelectionChange?.(newSelectedKeys);
   };
 
-  const isDateGroupSelected = (groupImages: Image[]) => {
+  const isRoomGroupSelected = (groupImages: Image[]) => {
     return groupImages.every((img) => selectedKeys.includes(img.id));
   };
 
@@ -317,16 +324,16 @@ export default function FilteredImagesGallery({
       />
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {dateGroups.map(({ dateKey, displayDate, images: groupImages }) => {
-          const isGroupSelected = isDateGroupSelected(groupImages);
+        {roomGroups.map(({ roomId, roomName, images: groupImages }) => {
+          const isGroupSelected = isRoomGroupSelected(groupImages);
 
           return (
-            <View key={dateKey} style={styles.dateSection}>
-              <FloatingDateHeader
-                displayDate={displayDate}
+            <View key={roomId} style={styles.roomSection}>
+              <FloatingRoomHeader
+                roomName={roomName}
                 imageCount={groupImages.length}
                 isSelected={isGroupSelected}
-                onToggleSelect={() => toggleDateGroupSelection(groupImages)}
+                onToggleSelect={() => toggleRoomGroupSelection(groupImages)}
                 selectable={selectable}
               />
 
@@ -336,7 +343,7 @@ export default function FilteredImagesGallery({
                     key={image.id}
                     image={image}
                     isSelected={selectedKeys.includes(image.id)}
-                    onPress={() => handleImagePress(images.indexOf(image))}
+                    onPress={() => handleImagePress(image.id)}
                     onSelect={() => toggleImageSelection(image.id)}
                     selectable={selectable}
                   />
@@ -355,6 +362,7 @@ export default function FilteredImagesGallery({
         modalVisible={modalVisible}
         activeImageIndex={activeImageIndex}
         setActiveImageIndex={setActiveImageIndex}
+        refetch={refetch}
       />
     </View>
   );
@@ -423,10 +431,10 @@ const styles = StyleSheet.create({
     color: "#6b7280",
     fontWeight: "500",
   },
-  dateSection: {
+  roomSection: {
     marginBottom: 8,
   },
-  dateHeader: {
+  roomHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -437,12 +445,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
   },
-  dateInfo: {
+  roomInfo: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
   },
-  dateText: {
+  roomText: {
     fontSize: 15,
     fontWeight: "600",
     color: "#374151",

@@ -311,6 +311,7 @@ export default function FilteredImagesScreen() {
             }
           }}
           rooms={rooms || []}
+          refetch={refetch}
         />
 
         {/* Filter Modal */}
