@@ -70,7 +70,7 @@ export default function ProjectConversationCard({
 
   if (loading) {
     return (
-      <div className='flex flex-col bg-background shadow-sm'>
+      <div className='flex flex-col'>
         <div className='flex flex-row items-center justify-between p-4 pb-2'>
           <div className='flex items-center gap-2 text-base font-semibold'>
             <div className='rounded-lg bg-blue-50 p-1.5'>
@@ -93,7 +93,7 @@ export default function ProjectConversationCard({
 
   if (error || !chatId) {
     return (
-      <div className='flex flex-col bg-background shadow-sm'>
+      <div className='flex flex-col'>
         <div className='flex flex-row items-center justify-between p-4 pb-2'>
           <div className='flex items-center gap-2 text-base font-semibold'>
             <div className='rounded-lg bg-blue-50 p-1.5'>
@@ -229,7 +229,7 @@ function ChatInterface({ chatId, currentUser, projectId }: ChatInterfaceProps) {
 
   return (
     <>
-      <div className='flex flex-col bg-background shadow-sm'>
+      <div className='flex flex-col'>
         <div className='flex flex-row items-center justify-between p-4 pb-2'>
           <div className='flex items-center gap-2 text-base font-semibold'>
             <div className='rounded-lg bg-blue-50 p-1.5'>

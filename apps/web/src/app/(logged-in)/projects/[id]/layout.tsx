@@ -124,7 +124,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
 
   return (
     <>
-      <div className='relative grid grid-cols-[24fr_7fr] gap-5 '>
+      <div className='relative grid grid-cols-[24fr_auto] gap-5 '>
         {/* Main Content */}
         <div className='col-span-17'>
           <Link href='/projects' className='flex items-center gap-2 mb-4'>
@@ -150,7 +150,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
                       />
                     </div>
                   ) : (
-                    <div className='flex items-center justify-center relative h-36 w-36 flex-shrink-0 overflow-hidden rounded-xl border-2 border-border shadow-sm bg-gray-100' >
+                    <div className='flex items-center justify-center relative h-36 w-36 flex-shrink-0 overflow-hidden rounded-xl border-2 border-border shadow-sm bg-background' >
                       <FileImage size={45} />
                       </div>
                   )}
@@ -274,7 +274,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
         </div>
 
         {/* Right Sidebar */}
-        <div className=''>
+        <div >
           <InfoSidebar />
         </div>
       </div>

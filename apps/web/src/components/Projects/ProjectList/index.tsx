@@ -301,7 +301,7 @@ export const Table = ({ projects }: { projects: any[] }) => {
           <div className='flex items-center gap-2'>
             <div className='relative'>
               {row.original.mainImage ? <img src={row.original.mainImage} alt={row.original.clientName} className='md:size-24 size-16 rrounded-xl border-2 border-border' /> :
-                <div className='flex items-center justify-center md:size-24 size-16 rounded-xl border-2 border-border  bg-gray-100' >
+                <div className='flex items-center justify-center md:size-24 size-16 rounded-xl border-2 border-border  bg-background' >
                   <FileImage size={45} />
                 </div>}
               {/* <Avatar className='size-16 rounded-full'>
@@ -448,7 +448,7 @@ const List = ({ projects }: { projects: any[] }) => {
         return (
           <div
             key={project.id}
-            className="flex flex-col lg:flex-row lg:items-center gap-4 p-4 border rounded-lg shadow hover:shadow-xl hover:bg-gray-50 cursor-pointer transition-colors group"
+            className="flex flex-col lg:flex-row lg:items-center gap-4 p-4 border rounded-lg shadow hover:shadow-xl cursor-pointer transition-colors group"
             onClick={() => router.push(`/projects/${project.id}/overview`)}
             tabIndex={0}
             role="button"
@@ -464,8 +464,8 @@ const List = ({ projects }: { projects: any[] }) => {
                       className="md:size-24 size-16 rounded-xl border-2 border-border object-cover bg-white"
                     />
                   ) : (
-                    <div className="flex items-center justify-center md:size-24 size-16 rounded-xl border-2 border-border bg-gray-100">
-                      <FileImage size={45} />
+                    <div className="flex items-center justify-center md:size-24 size-16 rounded-xl border-2 border-border bg-background">
+                      <FileImage size={45}  />
                     </div>
                   )}
                 </div>
@@ -504,16 +504,18 @@ const List = ({ projects }: { projects: any[] }) => {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 items-center gap-2 md:flex-wrap w-fit lg:w-auto md:basis-1/3">
+            <div className="w-full grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 items-center gap-2 md:flex-wrap w-fit lg:w-auto md:basis-1/3">
               {project.images?.map((image: any) => (
+                <div  key={image.url} className="relative md:h-24 h-16 min-w-16">
                 <img
                   key={image.url}
                   src={image.url}
                   alt={project.name || 'image'}
                   height={48}
                   width={48}
-                  className="md:size-24 size-16 rounded-xl border-2 border-border object-cover bg-white"
+                  className="w-full h-full absolute top-0 left-0 rounded-xl border-2 border-border object-cover bg-white"
                 />
+                </div>
               ))}
             </div>
           </div>

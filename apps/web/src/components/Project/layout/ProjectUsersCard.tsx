@@ -6,7 +6,9 @@ import {
   UserPlus,
   UserMinus,
   ChevronUp,
-  Check,
+  Edit2,
+  UserCheck,
+  UserX,
 } from "lucide-react";
 import UserAvatar from "@components/DesignSystem/UserAvatar";
 import { LoadingSpinner } from "@components/ui/spinner";
@@ -19,6 +21,8 @@ import {
 } from "@service-geek/api-client";
 import { OrganizationMembership } from "@service-geek/api-client/src/types/organization";
 import clsx from "clsx";
+import { Dialog, DialogContent } from "@components/ui/dialog";
+import { Badge } from "@components/ui/badge";
 
 export default function ProjectUsersCard({
   projectData,
@@ -28,6 +32,7 @@ export default function ProjectUsersCard({
   const [isOpen, setIsOpen] = useState(false);
   const [loadingId, setLoadingId] = useState("");
   const ref = useRef<HTMLDivElement>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { data: teamMembersData } = useGetOrganizationMembers();
   const teamMembers = teamMembersData?.data || [];
@@ -79,84 +84,108 @@ export default function ProjectUsersCard({
     };
   }, []);
 
-  
+
   return (
-    <div className="flex flex-col bg-background shadow-sm">
-      <div className='flex flex-row items-center justify-between pb-2'>
+    <div className='flex flex-col'>
+      <div className='flex flex-row items-center justify-between'>
         <div className='flex items-center gap-2 text-base font-semibold'>
-          {/* <Users className='h-5 w-5 text-indigo-600' />  */}
-          Project Users
+          Project Users {projectMembers.length ? `(${projectMembers.length})` : ''}
         </div>
-        <div className='relative' ref={ref}>
-          <Button
-            variant='ghost'
-            size='icon'
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsOpen((p) => !p);
-            }}
-          >
-            <UserPlus className='h-4 w-4 text-gray-400' />
-          </Button>
-          {isOpen && (
-            <div className='absolute right-0 top-full z-50 w-80 rounded-md border bg-background shadow-md'>
-              <div className='border-b p-2 text-xs text-gray-500'>
-                Click to assign team members
-              </div>
-              {teamMembers.map((member: OrganizationMembership) => {
-                const selected = projectMembers.some(
-                  (pm: UserType) => pm.id === member.user?.id
-                );
-                return (
-                  <button
-                    disabled={!!loadingId}
-                    key={member.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (selected) {
-                        onRemove(member.user?.id || "");
-                      } else {
-                        onAdd(member.user?.id || "");
-                      }
-                    }}
-                    className='grid w-full grid-cols-6 gap-2 px-3 py-2 text-sm hover:bg-blue-50'
-                  >
-                    <div className='col-span-1 flex h-full items-center justify-center'>
-                      <UserAvatar
-                        firstName={member.user?.firstName}
-                        lastName={member.user?.lastName}
-                        email={member.user?.email}
-                        textSize="text-xs"
-                      />
-                    </div>
-                    <div className='col-span-4 flex h-full flex-col justify-start overflow-hidden'>
-                      <div className='block truncate text-left font-semibold'>
+        <Button
+          variant='ghost'
+          size='icon'
+          onClick={() => setIsDialogOpen(true)}
+        >
+          {projectMembers.length ? <Edit2 className='h-4 w-4 text-gray-400' /> : <UserPlus className='h-4 w-4 text-gray-400' />}
+        </Button>
+      </div>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}  >
+        <DialogContent className="xl:min-w-[700px] bg-white rounded-lg shadow-lg p-6">
+          <div className="border-b pb-4 mb-4 flex flex-col gap-1">
+            <h3 className="text-xl font-bold text-gray-900">Project Users</h3>
+            <p className="text-sm text-gray-500">Click to assign team members</p>
+          </div>
+          <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto">
+            {teamMembers.map((member: OrganizationMembership) => {
+              const selected = projectMembers.some(
+                (pm: UserType) => pm.id === member.user?.id
+              );
+              return (
+                <div
+                  key={member.id}
+                  className={
+                    `flex items-center justify-between rounded-md px-4 py-3 transition-colors ` +
+                    (selected
+                      ? 'bg-green-50 hover:bg-green-100 border border-green-200'
+                      : 'bg-gray-50 hover:bg-gray-100 border border-gray-200')
+                  }
+                >
+                  <div className="flex items-center gap-3">
+                    <UserAvatar
+                      firstName={member.user?.firstName}
+                      lastName={member.user?.lastName}
+                      email={member.user?.email}
+                      textSize="text-xs"
+                    />
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-gray-900 truncate">
                         {member.user?.firstName && member.user?.lastName && (
                           <span>
                             {member.user.firstName} {member.user.lastName}
                           </span>
                         )}
-                      </div>
-                      <span className='text-left text-xs text-gray-500'>
+                      </span>
+                      <span className="text-xs text-gray-500 truncate">
                         {member.user?.email}
                       </span>
                     </div>
-                    <div className='col-span-1 flex h-full items-center justify-center'>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {selected && (
+                      <Badge variant="outline" className="flex items-center gap-1 border-green-400 bg-green-100 text-green-700 px-2 py-1">
+                        <UserCheck className="h-4 w-4" />
+                        <span className="text-xs font-medium">Assigned</span>
+                      </Badge>
+                    )}
+                    <button
+                      disabled={!!loadingId}
+                      onClick={e => {
+                        e.stopPropagation();
+                        if (selected) {
+                          onRemove(member.user?.id || "");
+                        } else {
+                          onAdd(member.user?.id || "");
+                        }
+                      }}
+                      className={
+                        `flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border ` +
+                        (selected
+                          ? 'bg-red-50 hover:bg-red-100 text-red-600 border-red-300'
+                          : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-300') +
+                        (loadingId === member.user?.id ? ' opacity-60 cursor-not-allowed' : '')
+                      }
+                    >
                       {loadingId === member.user?.id ? (
                         <LoadingSpinner />
+                      ) : selected ? (
+                        <>
+                          <UserX className="h-4 w-4" />
+                          Unassign
+                        </>
                       ) : (
                         <>
-                          {selected && <Check className='h-4 text-green-600' />}
+                          <UserPlus className="h-4 w-4" />
+                          Add
                         </>
                       )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
       <div className='flex flex-col space-y-2 p-4 pt-2'>
         {projectMembers.length === 0 ? (
           <div className='flex items-center gap-2 text-sm text-gray-400'>
@@ -166,12 +195,16 @@ export default function ProjectUsersCard({
         ) : (
           projectMembers.map((member: UserType) => (
             <div key={member.id} className='flex items-center justify-between'>
-              <div className='flex items-center gap-2 text-sm'>
+              <div className="flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold size-7" title={`${member.firstName} ${member.lastName}`}>
+                {member.firstName[0]?.toUpperCase()}
+                {member.lastName[0]?.toUpperCase()}
+              </div>
+              {/* <div className='flex items-center gap-2 text-sm'>
                 <UserAvatar
                   firstName={member.firstName}
                   lastName={member.lastName}
                   email={member.email}
-                  textSize="text-xs"
+                  textSize='text-xs'
                 />
                 <div className='flex flex-col'>
                   <span className='font-medium'>
@@ -196,7 +229,7 @@ export default function ProjectUsersCard({
                 ) : (
                   <UserMinus className='h-3 w-3 text-gray-400 hover:text-red-500' />
                 )}
-              </Button>
+              </Button> */}
             </div>
           ))
         )}
