@@ -3,7 +3,7 @@ import { ListTodo, Edit2 } from "lucide-react";
 
 export default function TasksCard() {
   return (
-    <div className="flex flex-col bg-background shadow-sm">
+    <div className="flex flex-col ">
       <div className='flex flex-row items-center justify-between pb-2'>
         <div className='flex items-center gap-2 text-base font-semibold'>
           <ListTodo className='h-5 w-5 text-yellow-600' /> Tasks

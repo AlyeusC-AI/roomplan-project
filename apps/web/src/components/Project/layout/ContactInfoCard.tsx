@@ -82,12 +82,12 @@ export default function ContactInfoCard({
         onClick={() => setEditOpen(true)}
       >
         <div className='mb-0 flex items-center justify-between'>
-          <h3 className='text-lg font-medium'>Contact Info</h3>
+          <h3 className='  font-medium'>Contact Info</h3>
           <Button variant='ghost' size='icon' onClick={() => setEditOpen(true)}>
             <Edit2 className='h-4 w-4 text-blue-600' />
           </Button>
         </div>
-        <div className='space-y-2'>
+        <div className="">
           <div className='flex items-center gap-2'>
             <div className='text-xs text-gray-500'>
               {projectData?.clientName || "No name"}
