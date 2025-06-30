@@ -96,6 +96,26 @@ export default function Dashboard() {
     }
   }, [result]);
 
+
+  const filterTabsList = [
+    {
+      label: "All",
+      value: "all",
+    },
+    {
+      label: "Started",
+      value: "stared",
+    },
+    {
+      label: "My Projects",
+      value: "My Projects",
+    },
+    {
+      label: "Archived",
+      value: "Archived",
+    },    
+  ]
+
   // Reset pagination when organization changes
   // useEffect(() => {
   //   if (activeOrganization) {

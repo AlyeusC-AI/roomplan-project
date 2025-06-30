@@ -55,7 +55,7 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
             defaultOpen={item.isActive || pathname.includes(item.url)}
             onOpenChange={(isOpen) => handleOpenChange(item.title, isOpen)}
             open={openItems[item.title] || pathname.includes(item.url)}
-            className='group/collapsible'
+            className='group/collapsible text-white/50'
           >
             <SidebarMenuItem>
               {item.items ? (
