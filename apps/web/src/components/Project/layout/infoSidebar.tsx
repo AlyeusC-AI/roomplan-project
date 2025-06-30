@@ -26,13 +26,13 @@ export default function InfoSidebar() {
     <div
       className={clsx(
         "relative h-screen",
-        isCollapsed ? "w-5 min-w-5" : "w-full min-w-96 max-w-md"
+        isCollapsed ? "w-5 min-w-5" : "w-full min-w-96 max-w-[25rem]"
       )}
     >
       <div
         className={clsx(
           "fixed right-0 top-0 z-30 h-screen bg-accent",
-          isCollapsed ? "w-20 min-w-20" : "w-full min-w-96 max-w-md"
+          isCollapsed ? "w-20 min-w-20" : "w-full min-w-96 max-w-[25rem]"
         )}
       >
         {isCollapsed ? (
@@ -46,14 +46,14 @@ export default function InfoSidebar() {
           </button>
         ) : (
           <>
-            <button
+            {/* <button
               className='absolute -left-6 top-4 flex h-10 w-10 items-center justify-center rounded-lg border-0 bg-accent'
               onClick={() => setIsCollapsed(true)}
               aria-label='Collapse sidebar'
               style={{ zIndex: 40 }}
             >
               <ChevronRight size={24} />
-            </button>
+            </button> */}
             <div className='space-y-4 p-4'>
               <div className='space-y-4 divide-y divide-gray-200 rounded-lg border border-border bg-background p-4'>
                 <ContactInfoCard projectData={projectData} />
