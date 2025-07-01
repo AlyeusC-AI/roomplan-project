@@ -32,6 +32,7 @@ import {
   useRemoveImageTags,
 } from "@service-geek/api-client";
 import { toast } from "sonner-native";
+import { Checkbox } from "../ui/checkbox";
 
 // Type assertion to fix ReactNode compatibility
 const XIcon = X as any;
@@ -359,44 +360,31 @@ export default function ImageTagsModal({
       >
         <View style={styles.tagList}>
           {tagsToShow.map((tag) => (
-            <View key={tag.id} style={styles.tagItem}>
-              <TouchableOpacity
-                style={[
-                  styles.tagOption,
-                  selectedTags.includes(tag.name) && styles.selectedTagOption,
-                ]}
-                onPress={() => toggleTag(tag.name)}
-              >
-                <View
-                  style={[styles.tagColor, { backgroundColor: tag.color }]}
+                        <View key={tag.id} style={styles.tagItem}>
+                <Checkbox
+                  checked={selectedTags.includes(tag.name)}
+                  onCheckedChange={() => toggleTag(tag.name)}
+                  className="w-4 h-4"
                 />
-                <Text
-                  style={[
-                    styles.tagOptionText,
-                    selectedTags.includes(tag.name) &&
-                      styles.selectedTagOptionText,
-                  ]}
-                >
-                  {tag.name}
-                </Text>
-                {selectedTags.includes(tag.name) && (
-                  <CheckIcon size={16} color="#fff" />
-                )}
-              </TouchableOpacity>
-              <View style={styles.tagActions}>
+                
                 <TouchableOpacity
-                  style={styles.actionButton}
+                  style={styles.tagLabelContainer}
+                  onPress={() => toggleTag(tag.name)}
+                >
+                  <View
+                    style={[styles.tagColor, { backgroundColor: tag.color }]}
+                  />
+                  <Text style={styles.tagOptionText}>
+                    {tag.name}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.editButton}
                   onPress={() => openEditModal(tag)}
                 >
                   <PencilIcon size={16} color="#64748b" />
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => handleDelete(tag)}
-                >
-                  <TrashIcon size={16} color="#ef4444" />
-                </TouchableOpacity>
-              </View>
             </View>
           ))}
 
@@ -486,7 +474,40 @@ export default function ImageTagsModal({
                     </TouchableOpacity>
                   )}
                 </View>
+                
               </View>
+
+              {/* Selected Tags Section */}
+              {selectedTags.length > 0 && (
+                <View style={styles.selectedTagsSection}>
+                  {/* <Text style={styles.selectedTagsTitle}>Selected Tags:</Text> */}
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.selectedTagsContainer}
+                  >
+                    {selectedTags.map((tagName) => {
+                      const tag = availableTags.find(t => t.name === tagName);
+                      return (
+                        <TouchableOpacity
+                          key={tagName}
+                          style={styles.selectedTagChip}
+                          onPress={() => toggleTag(tagName)}
+                        >
+                          <View
+                            style={[
+                              styles.selectedTagColor,
+                              { backgroundColor: tag?.color || "#6b7280" }
+                            ]}
+                          />
+                          <Text style={styles.selectedTagText}>{tagName}</Text>
+                          <XIcon size={12} color="#64748b" />
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              )}
 
               {renderTagList()}
             </View>
@@ -541,28 +562,45 @@ export default function ImageTagsModal({
               />
               {renderColorPicker()}
               <View style={styles.nestedModalFooter}>
-                <TouchableOpacity
-                  style={styles.nestedCancelButton}
-                  onPress={() => {
-                    setShowAddModal(false);
-                    setShowEditModal(false);
-                  }}
-                >
-                  <Text style={styles.nestedCancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.nestedSaveButton}
-                  onPress={handleSave}
-                  disabled={isCreatingTag || isUpdatingTag}
-                >
-                  {isCreatingTag || isUpdatingTag ? (
-                    <ActivityIndicator color="#fff" size="small" />
-                  ) : (
-                    <Text style={styles.nestedSaveButtonText}>
-                      {editId ? "Save" : "Add"}
-                    </Text>
-                  )}
-                </TouchableOpacity>
+                {editId && (
+                  <TouchableOpacity
+                    style={styles.nestedDeleteButton}
+                    onPress={() => {
+                      const tagToDelete = availableTags.find(tag => tag.id === editId);
+                      if (tagToDelete) {
+                        setShowEditModal(false);
+                        handleDelete(tagToDelete);
+                      }
+                    }}
+                  >
+                    <TrashIcon size={16} color="#fff" />
+                    <Text style={styles.nestedDeleteButtonText}>Delete</Text>
+                  </TouchableOpacity>
+                )}
+                <View style={styles.nestedModalRightButtons}>
+                  <TouchableOpacity
+                    style={styles.nestedCancelButton}
+                    onPress={() => {
+                      setShowAddModal(false);
+                      setShowEditModal(false);
+                    }}
+                  >
+                    <Text style={styles.nestedCancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.nestedSaveButton}
+                    onPress={handleSave}
+                    disabled={isCreatingTag || isUpdatingTag}
+                  >
+                    {isCreatingTag || isUpdatingTag ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <Text style={styles.nestedSaveButtonText}>
+                        {editId ? "Save" : "Add"}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </View>
@@ -640,21 +678,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  tagOption: {
+  tagLabelContainer: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
     backgroundColor: "#f8fafc",
     gap: 8,
+    minHeight: 44,
   },
-  selectedTagOption: {
-    backgroundColor: "#2563eb",
-    borderColor: "#2563eb",
+  editButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#f1f5f9",
   },
   tagColor: {
     width: 12,
@@ -670,15 +708,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
   },
-  tagActions: {
-    flexDirection: "row",
-    gap: 4,
-  },
-  actionButton: {
-    padding: 6,
-    borderRadius: 6,
-    backgroundColor: "#f1f5f9",
-  },
+
   addNewButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -848,7 +878,26 @@ const styles = StyleSheet.create({
   },
   nestedModalFooter: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+  },
+  nestedDeleteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: "#ef4444",
+    gap: 8,
+  },
+  nestedDeleteButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  nestedModalRightButtons: {
+    flexDirection: "row",
     gap: 12,
   },
   nestedCancelButton: {
@@ -876,6 +925,40 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     marginBottom: 16,
+  },
+  selectedTagsSection: {
+    marginBottom: 16,
+  },
+  selectedTagsTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1e293b",
+    marginBottom: 8,
+  },
+  selectedTagsContainer: {
+    gap: 8,
+    paddingRight: 16,
+  },
+  selectedTagChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: "#f1f5f9",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    gap: 6,
+  },
+  selectedTagColor: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  selectedTagText: {
+    fontSize: 12,
+    color: "#1e293b",
+    fontWeight: "500",
   },
   searchInputContainer: {
     flexDirection: "row",
