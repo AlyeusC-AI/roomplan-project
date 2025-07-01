@@ -114,7 +114,7 @@ export default function ProjectUsersCard({
                 <div
                   key={member.id}
                   className={
-                    `flex items-center justify-between rounded-md px-4 py-3 transition-colors ` +
+                    `w-full flex items-center justify-between rounded-md px-4 py-3 transition-colors ` +
                     (selected
                       ? 'bg-green-50 hover:bg-green-100 border border-green-200'
                       : 'bg-gray-50 hover:bg-gray-100 border border-gray-200')
@@ -186,7 +186,7 @@ export default function ProjectUsersCard({
           </div>
         </DialogContent>
       </Dialog>
-      <div className='flex flex-col space-y-2 p-4 pt-2'>
+      <div className='flex flex-wrap gap-2 p-4 pt-2'>
         {projectMembers.length === 0 ? (
           <div className='flex items-center gap-2 text-sm text-gray-400'>
             <User className='h-4 w-4' />
