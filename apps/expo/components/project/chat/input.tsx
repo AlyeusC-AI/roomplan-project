@@ -316,9 +316,11 @@ export function ChatInput({
 
   const handleProjectImageSelect = async (images: any[]) => {
     if (onSendImage) {
-      // Send each image individually
-      for (const image of images) {
-        await onSendImage(image);
+      // Send all images as a group if multiple, or single image if only one
+      if (images.length === 1) {
+        await onSendImage(images[0]);
+      } else {
+        await onSendImage(images);
       }
     }
   };
@@ -380,9 +382,12 @@ export function ChatInput({
           size: asset.fileSize || 0,
         }));
 
-        for (const file of files) {
-          if (onSendImage) {
-            await onSendImage(file);
+        if (onSendImage) {
+          // Send all images as a group if multiple, or single image if only one
+          if (files.length === 1) {
+            await onSendImage(files[0]);
+          } else {
+            await onSendImage(files);
           }
         }
 

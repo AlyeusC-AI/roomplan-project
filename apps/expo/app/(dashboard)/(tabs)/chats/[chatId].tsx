@@ -114,6 +114,8 @@ export default function ChatDetailScreen() {
   const [editContent, setEditContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<any>(null);
   const [selectedImage, setSelectedImage] = useState<any>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
+  const [selectedMessageImages, setSelectedMessageImages] = useState<any[]>([]);
   const [downloadingFiles, setDownloadingFiles] = useState<Set<string>>(
     new Set()
   );
@@ -241,35 +243,80 @@ export default function ChatDetailScreen() {
 
   const handleSendImage = async (image: any) => {
     try {
-      // Check if this is a project image (already has a URL)
-      const isProjectImage = image.uri && image.uri.startsWith("http");
+      // Check if this is an array of images (multiple images)
+      const isMultipleImages = Array.isArray(image);
 
-      if (isProjectImage) {
-        // For project images, use the existing URL directly
-        const attachment = {
-          fileUrl: image.uri,
-          fileName: image.name || "image.jpg",
-          fileSize: image.size || 0,
-          mimeType: image.type || "image/jpeg",
-        };
+      if (isMultipleImages) {
+        // Handle multiple images
+        toast.loading("Uploading images...");
 
-        // Send message with attachment
-        await sendMessage("", MessageType.IMAGE, [attachment], replyingTo?.id);
-        setReplyingTo(null);
-        toast.success("Project image sent successfully");
-      } else {
-        // For new images, upload to space first
-        toast.loading("Uploading image...");
-        const attachment = await uploadFileToSpace(image);
+        const attachments = [];
 
-        // Send message with attachment
-        await sendMessage("", MessageType.IMAGE, [attachment], replyingTo?.id);
+        for (const img of image) {
+          // Check if this is a project image (already has a URL)
+          const isProjectImage = img.uri && img.uri.startsWith("http");
+
+          if (isProjectImage) {
+            // For project images, use the existing URL directly
+            attachments.push({
+              fileUrl: img.uri,
+              fileName: img.name || "image.jpg",
+              fileSize: img.size || 0,
+              mimeType: img.type || "image/jpeg",
+            });
+          } else {
+            // For new images, upload to space first
+            const attachment = await uploadFileToSpace(img);
+            attachments.push(attachment);
+          }
+        }
+
+        // Send message with all attachments
+        await sendMessage("", MessageType.IMAGE, attachments, replyingTo?.id);
         setReplyingTo(null);
         toast.dismiss();
-        toast.success("Image sent successfully");
+        toast.success(`${attachments.length} images sent successfully`);
+      } else {
+        // Handle single image (existing logic)
+        const isProjectImage = image.uri && image.uri.startsWith("http");
+
+        if (isProjectImage) {
+          // For project images, use the existing URL directly
+          const attachment = {
+            fileUrl: image.uri,
+            fileName: image.name || "image.jpg",
+            fileSize: image.size || 0,
+            mimeType: image.type || "image/jpeg",
+          };
+
+          // Send message with attachment
+          await sendMessage(
+            "",
+            MessageType.IMAGE,
+            [attachment],
+            replyingTo?.id
+          );
+          setReplyingTo(null);
+          toast.success("Project image sent successfully");
+        } else {
+          // For new images, upload to space first
+          toast.loading("Uploading image...");
+          const attachment = await uploadFileToSpace(image);
+
+          // Send message with attachment
+          await sendMessage(
+            "",
+            MessageType.IMAGE,
+            [attachment],
+            replyingTo?.id
+          );
+          setReplyingTo(null);
+          toast.dismiss();
+          toast.success("Image sent successfully");
+        }
       }
 
-      // Scroll to bottom after sending image
+      // Scroll to bottom after sending image(s)
       setTimeout(() => {
         messageListRef.current?.scrollToBottom(true);
       }, 100);
@@ -353,8 +400,37 @@ export default function ChatDetailScreen() {
     setSelectedMessage(null);
   };
 
-  const handleImageClick = (attachment: any) => {
-    setSelectedImage(attachment);
+  const handleImageClick = (attachment: any, message?: any) => {
+    if (message && message.attachments) {
+      // Find all image attachments in the message
+      const imageAttachments = message.attachments.filter(
+        (att: any) =>
+          att.mimeType?.startsWith("image/") ||
+          att.fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i)
+      );
+
+      // Find the index of the clicked image
+      const imageIndex = imageAttachments.findIndex(
+        (img: any) => img.fileUrl === attachment.fileUrl
+      );
+
+      if (imageIndex !== -1 && imageAttachments.length > 1) {
+        // Multiple images in the message - set up for swiping
+        setSelectedMessageImages(imageAttachments);
+        setSelectedImageIndex(imageIndex);
+        setSelectedImage(attachment);
+      } else {
+        // Single image or not found
+        setSelectedMessageImages([attachment]);
+        setSelectedImageIndex(0);
+        setSelectedImage(attachment);
+      }
+    } else {
+      // Single image
+      setSelectedMessageImages([attachment]);
+      setSelectedImageIndex(0);
+      setSelectedImage(attachment);
+    }
   };
 
   const handleDownload = async (fileUrl: string, fileName: string) => {
@@ -567,7 +643,13 @@ export default function ChatDetailScreen() {
       <ImageViewer
         visible={!!selectedImage}
         image={selectedImage}
-        onClose={() => setSelectedImage(null)}
+        images={selectedMessageImages}
+        currentIndex={selectedImageIndex}
+        onClose={() => {
+          setSelectedImage(null);
+          setSelectedMessageImages([]);
+          setSelectedImageIndex(0);
+        }}
         onDownload={handleDownload}
         downloadingFiles={downloadingFiles}
       />

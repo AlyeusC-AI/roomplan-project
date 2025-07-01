@@ -207,6 +207,7 @@ export default function ProjectImageSelector({
       size: 0, // We don't have file size for project images
     }));
 
+    // Send all selected images as a group
     onSelectImage(imageFiles);
     setSelectedImages(new Set()); // Clear selection
     onClose();

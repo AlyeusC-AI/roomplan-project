@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Modal,
@@ -7,6 +7,7 @@ import {
   Image as RNImage,
   Dimensions,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { Text } from "@/components/ui/text";
 
@@ -15,6 +16,8 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 interface ImageViewerProps {
   visible: boolean;
   image: any;
+  images?: any[];
+  currentIndex?: number;
   onClose: () => void;
   onDownload: (fileUrl: string, fileName: string) => void;
   downloadingFiles?: Set<string>;
@@ -23,17 +26,43 @@ interface ImageViewerProps {
 export function ImageViewer({
   visible,
   image,
+  images = [],
+  currentIndex = 0,
   onClose,
   onDownload,
   downloadingFiles = new Set(),
 }: ImageViewerProps) {
-  console.log("🚀 ~ imagesssssss:", image);
+  const [currentImageIndex, setCurrentImageIndex] = useState(currentIndex);
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  if (!image) return null;
+  // Use images array if available, otherwise use single image
+  const imageList = images.length > 0 ? images : [image];
+  const currentImage = imageList[currentImageIndex] || image;
+
+  if (!currentImage) return null;
 
   const isDownloading = downloadingFiles.has(
-    `${image.fileUrl}_${image.fileName}`
+    `${currentImage.fileUrl}_${currentImage.fileName}`
   );
+
+  const handleScroll = (event: any) => {
+    const contentOffset = event.nativeEvent.contentOffset.x;
+    const index = Math.round(contentOffset / screenWidth);
+    setCurrentImageIndex(index);
+  };
+
+  const handleSwipe = (direction: "left" | "right") => {
+    const newIndex =
+      direction === "left"
+        ? Math.min(currentImageIndex + 1, imageList.length - 1)
+        : Math.max(currentImageIndex - 1, 0);
+
+    setCurrentImageIndex(newIndex);
+    scrollViewRef.current?.scrollTo({
+      x: newIndex * screenWidth,
+      animated: true,
+    });
+  };
 
   return (
     <Modal
@@ -51,7 +80,9 @@ export function ImageViewer({
                 styles.downloadButton,
                 isDownloading && styles.downloadButtonLoading,
               ]}
-              onPress={() => onDownload(image.fileUrl, image.fileName)}
+              onPress={() =>
+                onDownload(currentImage.fileUrl, currentImage.fileName)
+              }
               disabled={isDownloading}
             >
               {isDownloading ? (
@@ -63,26 +94,73 @@ export function ImageViewer({
                 </>
               )}
             </TouchableOpacity>
+
+            {/* Image counter for multiple images */}
+            {imageList.length > 1 && (
+              <View style={styles.imageCounter}>
+                <Text style={styles.counterText}>
+                  {currentImageIndex + 1} / {imageList.length}
+                </Text>
+              </View>
+            )}
+
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <Text style={styles.closeIcon}>✕</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Image */}
-          <RNImage
-            source={{ uri: image.fileUrl }}
-            style={styles.image}
-            resizeMode="contain"
-          />
+          {/* Images with horizontal scrolling */}
+          <ScrollView
+            ref={scrollViewRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollViewContent}
+          >
+            {imageList.map((img, index) => (
+              <View key={index} style={styles.imageContainer}>
+                <RNImage
+                  source={{ uri: img.fileUrl }}
+                  style={styles.image}
+                  resizeMode="contain"
+                />
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* Navigation arrows for multiple images */}
+          {imageList.length > 1 && (
+            <>
+              {currentImageIndex > 0 && (
+                <TouchableOpacity
+                  style={[styles.navArrow, styles.leftArrow]}
+                  onPress={() => handleSwipe("right")}
+                >
+                  <Text style={styles.arrowIcon}>‹</Text>
+                </TouchableOpacity>
+              )}
+              {currentImageIndex < imageList.length - 1 && (
+                <TouchableOpacity
+                  style={[styles.navArrow, styles.rightArrow]}
+                  onPress={() => handleSwipe("left")}
+                >
+                  <Text style={styles.arrowIcon}>›</Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
 
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.fileName} numberOfLines={1}>
-              {image.fileName}
+              {currentImage.fileName}
             </Text>
-            {image.fileSize ? (
+            {currentImage.fileSize ? (
               <Text style={styles.fileSize}>
-                {formatFileSize(image.fileSize || 200)}
+                {formatFileSize(currentImage.fileSize || 200)}
               </Text>
             ) : (
               <Text style={styles.fileSize}>Unknown file size</Text>
@@ -182,5 +260,51 @@ const styles = StyleSheet.create({
   fileSize: {
     color: "#d1d5db",
     fontSize: 12,
+  },
+  imageCounter: {
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  counterText: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  scrollView: {
+    width: screenWidth,
+    height: screenHeight * 0.7,
+  },
+  scrollViewContent: {
+    alignItems: "center",
+  },
+  imageContainer: {
+    width: screenWidth,
+    height: screenHeight * 0.7,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  navArrow: {
+    position: "absolute",
+    top: "50%",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: -20,
+  },
+  leftArrow: {
+    left: 16,
+  },
+  rightArrow: {
+    right: 16,
+  },
+  arrowIcon: {
+    fontSize: 24,
+    color: "#ffffff",
+    fontWeight: "600",
   },
 });

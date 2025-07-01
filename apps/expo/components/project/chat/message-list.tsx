@@ -27,7 +27,7 @@ interface MessageListProps {
   onMessageReply: (message: any) => void;
   onMessageEdit: (message: any) => void;
   onMessageDelete: (messageId: string) => void;
-  onImagePress: (attachment: any) => void;
+  onImagePress: (attachment: any, message?: any) => void;
   onDownload: (fileUrl: string, fileName: string) => void;
   isMessageSender: (messageUserId: string) => boolean;
   downloadingFiles?: Set<string>;
@@ -134,7 +134,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
           <RefreshControl
             refreshing={loading}
             onRefresh={onLoadMore}
-            colors={["#2563eb" ]}
+            colors={["#2563eb"]}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -179,7 +179,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
                   onReply={() => onMessageReply(msg)}
                   onEdit={() => onMessageEdit(msg)}
                   onDelete={() => onMessageDelete(msg.id)}
-                  onImagePress={onImagePress}
+                  onImagePress={(attachment) => onImagePress(attachment, msg)}
                   onDownload={onDownload}
                   downloadingFiles={downloadingFiles}
                 />

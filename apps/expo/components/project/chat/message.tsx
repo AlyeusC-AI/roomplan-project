@@ -23,7 +23,7 @@ interface MessageProps {
   onReply: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onImagePress: (attachment: any) => void;
+  onImagePress: (attachment: any, message?: any) => void;
   onDownload: (fileUrl: string, fileName: string) => void;
   downloadingFiles?: Set<string>;
 }
@@ -86,6 +86,120 @@ export function Message({
     message.attachments?.every((attachment: any) => isAudio(attachment));
   const hasTextContent = message.content?.trim();
 
+  // Get image attachments for grid layout
+  const imageAttachments =
+    message.attachments?.filter((attachment: any) => isImage(attachment)) || [];
+
+  const renderImageGrid = () => {
+    if (imageAttachments.length === 0) return null;
+
+    if (imageAttachments.length === 1) {
+      // Single image - full width with card effect
+      return (
+        <View style={styles.singleImageCard}>
+          <TouchableOpacity
+            onPress={() => onImagePress(imageAttachments[0], message)}
+            style={styles.singleImageContainer}
+            onLongPress={onLongPress}
+            activeOpacity={0.9}
+          >
+            <RNImage
+              source={{ uri: imageAttachments[0].fileUrl }}
+              style={styles.singleImage}
+              resizeMode="cover"
+            />
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (imageAttachments.length === 2) {
+      // Two images - overlapping cards
+      return (
+        <View style={styles.twoImageStack}>
+          {imageAttachments.map((attachment: any, index: number) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => onImagePress(attachment, message)}
+              style={[
+                styles.twoImageCard,
+                index === 1 && styles.twoImageCardOverlap,
+              ]}
+              onLongPress={onLongPress}
+              activeOpacity={0.9}
+            >
+              <RNImage
+                source={{ uri: attachment.fileUrl }}
+                style={styles.twoImageCardImage}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
+      );
+    }
+
+    if (imageAttachments.length === 3) {
+      // Three images - stacked cards with different overlaps
+      return (
+        <View style={styles.threeImageStack}>
+          {imageAttachments.map((attachment: any, index: number) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => onImagePress(attachment, message)}
+              style={[
+                styles.threeImageCard,
+                index === 1 && styles.threeImageCardOverlap1,
+                index === 2 && styles.threeImageCardOverlap2,
+              ]}
+              onLongPress={onLongPress}
+              activeOpacity={0.9}
+            >
+              <RNImage
+                source={{ uri: attachment.fileUrl }}
+                style={styles.threeImageCardImage}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
+      );
+    }
+
+    // Four or more images - stacked cards with overlay
+    return (
+      <View style={styles.multipleImageStack}>
+        {imageAttachments.slice(0, 4).map((attachment: any, index: number) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() => onImagePress(attachment, message)}
+            style={[
+              styles.multipleImageCard,
+              index === 1 && styles.multipleImageCardOverlap1,
+              index === 2 && styles.multipleImageCardOverlap2,
+              index === 3 && styles.multipleImageCardOverlap3,
+            ]}
+            onLongPress={onLongPress}
+            activeOpacity={0.9}
+          >
+            <RNImage
+              source={{ uri: attachment.fileUrl }}
+              style={styles.multipleImageCardImage}
+              resizeMode="cover"
+            />
+            {index === 3 && imageAttachments.length > 4 && (
+              <View style={styles.multipleImageOverlay}>
+                <Text style={styles.multipleImageOverlayText}>
+                  +{imageAttachments.length - 4}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
   return (
     <View
       style={[
@@ -147,27 +261,16 @@ export function Message({
             message.attachments.length > 0 &&
             !message.isDeleted && (
               <View style={styles.attachmentContainer}>
+                {renderImageGrid()}
                 {message.attachments.map((attachment: any, index: number) => (
                   <View key={index} style={styles.attachmentItem}>
-                    {isImage(attachment) ? (
-                      <TouchableOpacity
-                        onPress={() => onImagePress(attachment)}
-                        style={styles.imageContainer}
-                        onLongPress={onLongPress}
-                      >
-                        <RNImage
-                          source={{ uri: attachment.fileUrl }}
-                          style={styles.attachmentImage}
-                          resizeMode="cover"
-                        />
-                      </TouchableOpacity>
-                    ) : isAudio(attachment) ? (
+                    {isAudio(attachment) ? (
                       <AudioPlayer
                         audioUrl={attachment.fileUrl}
                         fileName={attachment.fileName}
                         duration={attachment.fileSize}
                       />
-                    ) : (
+                    ) : !isImage(attachment) ? (
                       <View style={styles.fileContainer}>
                         <View style={styles.fileIcon}>
                           <Text style={styles.fileIconText}>
@@ -213,7 +316,7 @@ export function Message({
                           )}
                         </TouchableOpacity>
                       </View>
-                    )}
+                    ) : null}
                   </View>
                 ))}
               </View>
@@ -325,6 +428,10 @@ const styles = StyleSheet.create({
   messageBubbleWithImages: {
     paddingHorizontal: 0,
     paddingVertical: 8,
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   messageBubbleImageOnly: {
     backgroundColor: "transparent",
@@ -380,16 +487,24 @@ const styles = StyleSheet.create({
   attachmentItem: {
     marginBottom: 8,
   },
-  imageContainer: {
+  // Single image card
+  singleImageCard: {
     width: screenWidth * 0.75,
-    borderRadius: 12,
-    overflow: "hidden",
-    backgroundColor: "#f8fafc",
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
+    backgroundColor: "#ffffff",
   },
-  attachmentImage: {
+  singleImageContainer: {
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  singleImage: {
     width: "100%",
     height: 250,
-    borderRadius: 12,
   },
   fileContainer: {
     flexDirection: "row",
@@ -472,5 +587,123 @@ const styles = StyleSheet.create({
   actionIcon: {
     fontSize: 14,
     fontWeight: "600",
+  },
+  // Two image stack
+  twoImageStack: {
+    width: screenWidth * 0.75,
+    height: 200,
+    position: "relative",
+  },
+  twoImageCard: {
+    position: "absolute",
+    width: screenWidth * 0.75 - 20,
+    height: 200,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
+    backgroundColor: "#ffffff",
+    overflow: "hidden",
+  },
+  twoImageCardOverlap: {
+    right: 0,
+    top: 10,
+    zIndex: 2,
+  },
+  twoImageCardImage: {
+    width: "100%",
+    height: "100%",
+  },
+  // Three image stack
+  threeImageStack: {
+    width: screenWidth * 0.75,
+    height: 200,
+    position: "relative",
+  },
+  threeImageCard: {
+    position: "absolute",
+    width: screenWidth * 0.75 - 30,
+    height: 200,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
+    backgroundColor: "#ffffff",
+    overflow: "hidden",
+  },
+  threeImageCardOverlap1: {
+    right: 10,
+    top: 5,
+    zIndex: 2,
+  },
+  threeImageCardOverlap2: {
+    right: 20,
+    top: 10,
+    zIndex: 3,
+  },
+  threeImageCardImage: {
+    width: "100%",
+    height: "100%",
+  },
+  // Multiple image stack (4+ images)
+  multipleImageStack: {
+    width: screenWidth * 0.75,
+    height: 200,
+    position: "relative",
+  },
+  multipleImageCard: {
+    position: "absolute",
+    width: screenWidth * 0.75 - 40,
+    height: 200,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
+    backgroundColor: "#ffffff",
+    overflow: "hidden",
+  },
+  multipleImageCardOverlap1: {
+    right: 10,
+    top: 5,
+    zIndex: 2,
+  },
+  multipleImageCardOverlap2: {
+    right: 20,
+    top: 10,
+    zIndex: 3,
+  },
+  multipleImageCardOverlap3: {
+    right: 30,
+    top: 15,
+    zIndex: 4,
+  },
+  multipleImageCardImage: {
+    width: "100%",
+    height: "100%",
+  },
+  multipleImageOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 16,
+  },
+  multipleImageOverlayText: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "700",
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });

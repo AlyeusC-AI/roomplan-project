@@ -89,9 +89,7 @@ const base64ToFile = async (base64: string): Promise<string> => {
 
 interface ImageGalleryProps {
   images: Image[];
-  urlMap: {
-    [imageKey: string]: string;
-  };
+
   onRefresh?: () => Promise<void>;
   roomName?: string;
   onDelete?: (imageKey: string) => Promise<void>;

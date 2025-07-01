@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   ActivityIndicator,
@@ -142,57 +142,58 @@ export function OptimizedImage({
   const [imageOpacity] = useState(new Animated.Value(0));
   const [retryCount, setRetryCount] = useState(0);
 
-  // Check if URI is valid
-  const isValidUri = uri && uri.trim() !== "";
+  // // Check if URI is valid
+  // const isValidUri = uri && uri.trim() !== "";
 
-  // If URI is invalid, show error state immediately
-  useEffect(() => {
-    if (!isValidUri) {
-      setLoading(true);
-      setError(true);
-      handleRetry();
-    } else {
-      setError(false);
-      setLoading(false);
-    }
-  }, [isValidUri]);
+  // // If URI is invalid, show error state immediately
+  // useEffect(() => {
+  //   if (!isValidUri) {
+  //     setLoading(true);
+  //     setError(true);
+  //     handleRetry();
+  //   } else {
+  //     setError(false);
+  //     setLoading(false);
+  //   }
+  // }, [isValidUri]);
 
-  // Determine if this is a Supabase storage URL for any bucket
-  const isSupabaseUrl =
-    isValidUri && Object.values(STORAGE_URLS).some((url) => uri.includes(url));
+  // // Determine if this is a Supabase storage URL for any bucket
+  // const isSupabaseUrl =
+  //   isValidUri && Object.values(STORAGE_URLS).some((url) => uri.includes(url));
 
   // Extract the bucket from the URI if it's a Supabase URL
   let actualBucket = bucket;
   let actualImageKey = imageKey || "";
 
-  if (isSupabaseUrl) {
-    // Find which bucket this URI belongs to
-    const matchingBucket = Object.entries(STORAGE_URLS).find(([_, url]) =>
-      uri.includes(url)
-    );
-    if (matchingBucket) {
-      actualBucket = matchingBucket[0];
-      actualImageKey = uri.replace(`${matchingBucket[1]}/`, "");
-    }
-  }
+  // if (isSupabaseUrl) {
+  //   // Find which bucket this URI belongs to
+  //   const matchingBucket = Object.entries(STORAGE_URLS).find(([_, url]) =>
+  //     uri.includes(url)
+  //   );
+  //   if (matchingBucket) {
+  //     actualBucket = matchingBucket[0];
+  //     actualImageKey = uri.replace(`${matchingBucket[1]}/`, "");
+  //   }
+  // }
 
   // Generate placeholder color based on the image key or use provided backgroundColor
   const placeholderColor =
     backgroundColor || generatePlaceholderColor(actualImageKey);
 
   // Optimize the URL based on the requested size
-  const optimizedUri =
-    isValidUri && isSupabaseUrl && actualImageKey
-      ? getOptimizedImageUrl(actualImageKey, size, actualBucket)
-      : uri;
+  // const optimizedUri =
+  // isValidUri && isSupabaseUrl && actualImageKey
+  //   ? getOptimizedImageUrl(actualImageKey, size, actualBucket)
+  //   : uri;
+  const optimizedUri = uri;
 
   // Effect to reset error state when URI changes or on retry
-  useEffect(() => {
-    if (retryCount > 0 && isValidUri) {
-      setError(false);
-      setLoading(true);
-    }
-  }, [retryCount, uri, isValidUri]);
+  // useEffect(() => {
+  //   if (retryCount > 0 && isValidUri) {
+  //     setError(false);
+  //     setLoading(true);
+  //   }
+  // }, [retryCount, uri, isValidUri]);
 
   // Handle image load success
   const handleLoadEnd = () => {
@@ -237,7 +238,7 @@ export function OptimizedImage({
       disabled={disabled || error}
       style={[styles.container, { backgroundColor: placeholderColor }, style]}
     >
-      {!error && isValidUri && (
+      {!error && (
         <Animated.View style={{ opacity: imageOpacity }}>
           <Image
             source={{
@@ -267,14 +268,12 @@ export function OptimizedImage({
       {error && (
         <View style={[styles.errorContainer, style]}>
           <ImageIcon size={24} color="#9CA3AF" />
-          <Text className="text-gray-400 mt-2">
-            {!isValidUri ? "No image available" : "Failed to load image"}
-          </Text>
-          {isValidUri && (
+          <Text className="text-gray-400 mt-2">{"Failed to load image"}</Text>
+          {
             <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
               <Text style={styles.retryText}>Retry</Text>
             </TouchableOpacity>
-          )}
+          }
         </View>
       )}
 
