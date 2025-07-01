@@ -221,7 +221,7 @@ model Room {
   name            String
   projectId       String
   supabaseId      String?            @unique
-  project         Project            @relation(fields: [projectId], references: [id])
+  project         Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
   images          Image[]
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
@@ -340,7 +340,7 @@ model Image {
   showInReport Boolean    @default(false)
   order        Int        @default(0)
   projectId    String
-  project      Project    @relation(fields: [projectId], references: [id])
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   supabaseId   String?    @unique
@@ -465,7 +465,7 @@ model Document {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   projectId String
-  project   Project      @relation(fields: [projectId], references: [id])
+  project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
 }
@@ -520,9 +520,9 @@ model FormField {
 model FormProject {
   id        String   @id @default(uuid())
   formId    String
-  form      Form     @relation(fields: [formId], references: [id])
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
   projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -532,9 +532,9 @@ model FormProject {
 model FormResponse {
   id                 String              @id @default(uuid())
   formId             String
-  form               Form                @relation(fields: [formId], references: [id])
+  form               Form                @relation(fields: [formId], references: [id], onDelete: Cascade)
   projectId          String
-  project            Project             @relation(fields: [projectId], references: [id])
+  project            Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   formResponseFields FormResponseField[]
@@ -543,9 +543,9 @@ model FormResponse {
 model FormResponseField {
   id             String       @id @default(uuid())
   formResponseId String
-  formResponse   FormResponse @relation(fields: [formResponseId], references: [id])
+  formResponse   FormResponse @relation(fields: [formResponseId], references: [id], onDelete: Cascade)
   fieldId        String
-  field          FormField    @relation(fields: [fieldId], references: [id])
+  field          FormField    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   value          String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -582,7 +582,7 @@ model Cost {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   projectId     String
-  project       Project  @relation(fields: [projectId], references: [id])
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
 }
