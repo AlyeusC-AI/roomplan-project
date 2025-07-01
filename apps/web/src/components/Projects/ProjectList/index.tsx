@@ -504,7 +504,7 @@ const List = ({ projects }: { projects: any[] }) => {
                 </div>
               </div>
             </div>
-            <div className="w-full grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-3 xl:grid-cols-5 items-center gap-2 md:flex-wrap w-fit lg:w-auto md:basis-1/3">
+            <div className="w-full grid grid-cols-3 sm:grid-cols-5 items-center gap-2 md:flex-wrap w-fit lg:w-auto md:basis-1/3">
               {project.images?.map((image: any) => (
                 <div  key={image.url} className="relative md:h-24 h-16 min-w-16">
                 <img

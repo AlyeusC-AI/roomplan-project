@@ -28,13 +28,13 @@ export default function InfoSidebar() {
     <div
       className={clsx(
         "relative",
-        isCollapsed ? "w-5 min-w-5" : "w-full max-w-[25rem]"
+        isCollapsed ? "w-5 min-w-5" : "w-[364px]"
       )}
     >
       <div
         className={clsx(
-          "right-0 top-0 z-30 bg-accent",
-          isCollapsed ? "w-20 min-w-20" : "w-full max-w-[25rem]"
+          "fixed right-0 top-0 z-30 bg-accent h-screen overflow-y-auto",
+          isCollapsed ? "w-20 min-w-20" : "w-[364px]"
         )}
       >
         {isCollapsed ? (

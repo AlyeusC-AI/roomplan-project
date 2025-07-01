@@ -105,7 +105,7 @@ export default function ProjectUsersCard({
             <h3 className="text-xl font-bold text-gray-900">Project Users</h3>
             <p className="text-sm text-gray-500">Click to assign team members</p>
           </div>
-          <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto">
+          <div className="flex flex-wrap gap-2 overflow-y-auto">
             {teamMembers.map((member: OrganizationMembership) => {
               const selected = projectMembers.some(
                 (pm: UserType) => pm.id === member.user?.id

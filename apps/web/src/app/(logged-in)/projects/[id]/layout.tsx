@@ -126,9 +126,9 @@ export default function Layout({ children }: React.PropsWithChildren) {
 
   return (
     <>
-      <div className='relative grid grid-cols-12 gap-2'>
+      <div className='relative grid grid-cols-[24fr_350px] gap-2'>
         {/* Main Content */}
-        <div className={clsx(!pathname.includes("report") && "col-span-8")}>
+        <div className={clsx(!pathname.includes("report") && "")}>
           <Link href='/projects' className='mb-4 flex items-center gap-2'>
             <ChevronLeft size={24} />
             <span className='font-medium'>Projects</span>
@@ -279,7 +279,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
 
         {/* Right Sidebar */}
         {pathname.includes("report") ? null : (
-          <div className='col-span-4'>
+          <div className='col-sp'>
             <InfoSidebar />
           </div>
         )}

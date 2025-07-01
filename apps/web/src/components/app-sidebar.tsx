@@ -159,9 +159,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <Image
               src='/images/brand/servicegeek-no-bg-icon.png'
               alt='logo'
-              width={32}
-              height={32}
-              className='size-8 w-auto'
+              width={28}
+              height={28}
+              className='size-7 w-auto'
               />
               </div>
               <ActionOptionsSidebar />
