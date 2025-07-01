@@ -468,8 +468,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   selectCircleActive: {
-    backgroundColor: "#182e43",
-    borderColor: "#182e43",
+    backgroundColor: "#2563eb",
+    borderColor: "#2563eb",
   },
   imageCountText: {
     fontSize: 13,
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    // backgroundColor: "#182e43" ,
+    // backgroundColor: "#2563eb" ,
     backgroundColor: "white",
     justifyContent: "center",
     alignItems: "center",
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderWidth: 3,
-    borderColor: "#182e43",
+    borderColor: "#2563eb",
     borderRadius: 4,
   },
   tagXIcon: {

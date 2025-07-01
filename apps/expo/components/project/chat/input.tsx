@@ -695,11 +695,11 @@ const styles = StyleSheet.create({
     maxHeight: 100,
   },
   inputWrapperFocused: {
-    borderColor: "#1e88e5",
+    borderColor: "#2563eb",
     backgroundColor: "#ffffff",
   },
   inputWrapperRecording: {
-    borderColor: "#1e88e5",
+    borderColor: "#2563eb",
     backgroundColor: "#ffffff",
   },
   textInput: {
@@ -709,13 +709,13 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   sendButton: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#2563eb",
     borderRadius: 18,
     width: 36,
     height: 36,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#1e88e5",
+    shadowColor: "#2563eb",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -744,7 +744,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#2563eb",
     marginRight: 8,
   },
   recordingIcon: {
@@ -760,7 +760,7 @@ const styles = StyleSheet.create({
   },
   cancelRecordingText: {
     fontSize: 12,
-    color: "#1e88e5",
+    color: "#2563eb",
     fontWeight: "600",
   },
   backButton: {
@@ -775,7 +775,7 @@ const styles = StyleSheet.create({
   },
   backIcon: {
     fontSize: 16,
-    color: "#1e88e5",
+    color: "#2563eb",
     fontWeight: "600",
   },
 });

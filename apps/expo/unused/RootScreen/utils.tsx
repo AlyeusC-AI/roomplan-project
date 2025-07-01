@@ -1,6 +1,6 @@
 export const NavigationOptions = {
   headerStyle: {
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
   },
   headerTintColor: "#fff",
   // headerRight: () => (

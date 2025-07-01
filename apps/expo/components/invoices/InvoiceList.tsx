@@ -43,7 +43,7 @@ const StatusBadge = ({ status }: { status: string }) => {
       break;
     case "sent":
       backgroundColor = "#dbeafe"; // Light blue
-      textColor = "#182e43";
+      textColor = "#2563eb";
       break;
     case "paid":
       backgroundColor = "#dcfce7"; // Light green
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: "#182e43",
+    borderBottomColor: "#2563eb",
   },
   tabText: {
     fontSize: 16,
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     color: "#64748b",
   },
   activeTabText: {
-    color: "#182e43",
+    color: "#2563eb",
     fontWeight: "600",
   },
   sectionHeader: {
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   retryButton: {
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 4,
@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   emptyStateButton: {
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 4,
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 24,
     right: 24,
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
     width: 56,
     height: 56,
     borderRadius: 28,

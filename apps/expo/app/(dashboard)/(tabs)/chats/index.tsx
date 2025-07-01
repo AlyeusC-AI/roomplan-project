@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#2563eb",
     justifyContent: "center",
     alignItems: "center",
     elevation: 4,
@@ -437,7 +437,7 @@ export default function ChatListScreen() {
   if (chatsLoading || membersLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator color="#1e88e5" size="large" />
+        <ActivityIndicator color="#2563eb" size="large" />
       </View>
     );
   }

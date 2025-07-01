@@ -124,7 +124,7 @@ const AssigneeSelect = () => {
         <View className="mt-6 space-y-3">
           {isLoading ? (
             <View className="items-center justify-center py-8">
-              <ActivityIndicator size="large" color="#182e43" />
+              <ActivityIndicator size="large" color="#2563eb" />
             </View>
           ) : (
             filteredMembers.map((member) => {

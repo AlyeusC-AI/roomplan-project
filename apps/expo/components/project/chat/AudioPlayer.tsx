@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   playButton: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#2563eb",
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#2563eb",
     borderRadius: 2,
   },
   stopButton: {

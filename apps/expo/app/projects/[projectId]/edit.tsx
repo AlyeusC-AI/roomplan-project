@@ -299,7 +299,7 @@ export default function EditProject() {
             rightElement={
               <Pressable onPress={handleCallPress}>
                 <HStack space={1} alignItems="center">
-                  <Phone size={13} color="#182e43" />
+                  <Phone size={13} color="#2563eb" />
                   <Text style={styles.callText}>Call</Text>
                 </HStack>
               </Pressable>
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   callText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#182e43",
+    color: "#2563eb",
   },
   addressInputContainer: {
     backgroundColor: "transparent",

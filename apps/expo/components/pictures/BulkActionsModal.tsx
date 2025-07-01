@@ -41,7 +41,7 @@ const TrashIcon = Trash as any;
 
 // Predefined color palette - 12 carefully chosen colors
 const COLOR_PALETTE = [
-  "#182e43" , // Blue
+  "#2563eb" , // Blue
   "#EF4444", // Red
   "#10B981", // Green
   "#F59E0B", // Amber
@@ -230,7 +230,7 @@ export default function BulkActionsModal({
     if (isLoading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#182e43" />
+          <ActivityIndicator size="large" color="#2563eb" />
           <Text style={styles.loadingText}>Loading rooms...</Text>
         </View>
       );
@@ -247,7 +247,7 @@ export default function BulkActionsModal({
             style={styles.addButton}
             onPress={() => openAddModal(true)}
           >
-            <PlusIcon size={16} color="#182e43" />
+            <PlusIcon size={16} color="#2563eb" />
             <Text style={styles.addButtonText}>Add Room</Text>
           </TouchableOpacity>
         </View>
@@ -272,7 +272,7 @@ export default function BulkActionsModal({
               >
                 <FolderInputIcon
                   size={20}
-                  color={selectedRoom === room.id ? "#fff" : "#182e43"}
+                  color={selectedRoom === room.id ? "#fff" : "#2563eb"}
                 />
                 <Text
                   style={[
@@ -304,7 +304,7 @@ export default function BulkActionsModal({
           style={styles.addNewButton}
           onPress={() => openAddModal(true)}
         >
-          <PlusIcon size={16} color="#182e43" />
+          <PlusIcon size={16} color="#2563eb" />
           <Text style={styles.addNewButtonText}>Add New Room</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -315,7 +315,7 @@ export default function BulkActionsModal({
     if (isLoading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#182e43" />
+          <ActivityIndicator size="large" color="#2563eb" />
           <Text style={styles.loadingText}>Loading tags...</Text>
         </View>
       );
@@ -332,7 +332,7 @@ export default function BulkActionsModal({
             style={styles.addButton}
             onPress={() => openAddModal(false)}
           >
-            <PlusIcon size={16} color="#182e43" />
+            <PlusIcon size={16} color="#2563eb" />
             <Text style={styles.addButtonText}>Add Tag</Text>
           </TouchableOpacity>
         </View>
@@ -389,7 +389,7 @@ export default function BulkActionsModal({
           style={styles.addNewButton}
           onPress={() => openAddModal(false)}
         >
-          <PlusIcon size={16} color="#182e43" />
+          <PlusIcon size={16} color="#2563eb" />
           <Text style={styles.addNewButtonText}>Add New Tag</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -408,9 +408,9 @@ export default function BulkActionsModal({
           <View style={styles.modalHeader}>
             <View style={styles.modalHeaderContent}>
               {action === "room" ? (
-                <FolderInputIcon size={24} color="#182e43" />
+                <FolderInputIcon size={24} color="#2563eb" />
               ) : (
-                <TagIcon size={24} color="#182e43" />
+                <TagIcon size={24} color="#2563eb" />
               )}
               <Text style={styles.modalTitle}>{getTitle()}</Text>
             </View>
@@ -597,8 +597,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   selectedRoomOption: {
-    backgroundColor: "#182e43",
-    borderColor: "#182e43",
+    backgroundColor: "#2563eb",
+    borderColor: "#2563eb",
   },
   roomOptionText: {
     fontSize: 16,
@@ -634,8 +634,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   selectedTagOption: {
-    backgroundColor: "#182e43",
-    borderColor: "#182e43",
+    backgroundColor: "#2563eb",
+    borderColor: "#2563eb",
   },
   tagColor: {
     width: 12,
@@ -667,14 +667,14 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#182e43",
+    borderColor: "#2563eb",
     borderStyle: "dashed",
     marginTop: 16,
     gap: 8,
   },
   addNewButtonText: {
     fontSize: 14,
-    color: "#182e43",
+    color: "#2563eb",
     fontWeight: "500",
   },
   addButton: {
@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 12,
     borderRadius: 8,
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
     marginTop: 16,
     gap: 8,
   },
@@ -716,7 +716,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
   },
   confirmButtonDisabled: {
     opacity: 0.5,
@@ -800,7 +800,7 @@ const styles = StyleSheet.create({
   nestedSaveButton: {
     padding: 10,
     borderRadius: 8,
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
   },
   nestedSaveButtonText: {
     color: "#fff",
@@ -839,9 +839,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   selectedColorOption: {
-    borderColor: "#182e43",
+    borderColor: "#2563eb",
     borderWidth: 3,
-    shadowColor: "#182e43",
+    shadowColor: "#2563eb",
     shadowOffset: {
       width: 0,
       height: 2,

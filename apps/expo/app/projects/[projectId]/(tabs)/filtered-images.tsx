@@ -218,7 +218,7 @@ export default function FilteredImagesScreen() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <ArrowLeft size={24} color="#182e43" />
+            <ArrowLeft size={24} color="#2563eb" />
           </TouchableOpacity>
 
           <View style={styles.headerContent}>
@@ -260,7 +260,7 @@ export default function FilteredImagesScreen() {
               style={styles.filterButton}
               onPress={() => setShowFilterModal(true)}
             >
-              <Filter size={20} color="#182e43" />
+              <Filter size={20} color="#2563eb" />
             </TouchableOpacity>
           </View>
         </View>
@@ -397,12 +397,12 @@ const styles = StyleSheet.create({
     borderColor: "#e2e8f0",
   },
   actionButtonActive: {
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
   },
   actionButtonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#182e43",
+    color: "#2563eb",
   },
   actionButtonTextActive: {
     color: "#fff",

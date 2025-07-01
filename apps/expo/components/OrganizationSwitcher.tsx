@@ -119,7 +119,7 @@ export function OrganizationSwitcher({
                   {item.name}
                 </Text>
                 {activeOrganization?.id === item.id && (
-                  <Check size={20} color="#182e43" />
+                  <Check size={20} color="#2563eb" />
                 )}
               </TouchableOpacity>
             )}
@@ -149,7 +149,7 @@ export function OrganizationSwitcher({
             }}
           >
             <Text
-              style={{ color: "#182e43", fontWeight: "bold", fontSize: 16 }}
+              style={{ color: "#2563eb", fontWeight: "bold", fontSize: 16 }}
             >
               Close
             </Text>

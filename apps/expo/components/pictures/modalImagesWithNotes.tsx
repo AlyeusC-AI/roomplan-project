@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   },
   activeThumbnail: {
     borderWidth: 2,
-    borderColor: "#182e43",
+    borderColor: "#2563eb",
   },
   thumbnailImage: {
     width: "100%",
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -5,
     right: -5,
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -5,
     right: -5,
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     minHeight: 40,
   },
   submitNoteButton: {
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
     // paddingBottom: 250,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: "#182e43",
+    borderColor: "#2563eb",
   },
   descriptionContainer: {
     marginBottom: 8,
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   saveButton: {
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
   },
   descriptionButtonText: {
     color: "#fff",
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   descriptionModalSaveButton: {
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   readMoreText: {
-    color: "#182e43",
+    color: "#2563eb",
     fontSize: 14,
     fontWeight: "500",
   },

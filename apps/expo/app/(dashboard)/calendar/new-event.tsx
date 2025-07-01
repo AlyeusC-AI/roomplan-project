@@ -385,7 +385,7 @@ export default function NewEvent() {
   if (loading || isDeleting) {
     return (
       <Box className="w-full h-full flex justify-center items-center">
-        <ActivityIndicator size="large" color="#182e43" />
+        <ActivityIndicator size="large" color="#2563eb" />
         <Text style={{ marginTop: 10, color: "#64748b" }}>
           {isDeleting
             ? "Deleting event..."

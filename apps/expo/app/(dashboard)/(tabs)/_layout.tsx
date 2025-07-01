@@ -22,22 +22,22 @@ export default function Layout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#182e43",
+        tabBarActiveTintColor: "#2563eb",
         headerTintColor: "#FFFF",
         headerStyle: { backgroundColor: "#2563eb" },
         header: ({ navigation, route, options }) =>
           route.name === "chats/[chatId]" || route.name === "chats/new" ? (
-            <SafeAreaView style={{ backgroundColor: "#1e88e5" }}>
-              <StatusBar barStyle="light-content" backgroundColor="#1e88e5" />
+            <SafeAreaView style={{ backgroundColor: "#2563eb" }}>
+              <StatusBar barStyle="light-content" backgroundColor="#2563eb" />
             </SafeAreaView>
           ) : (
-            <SafeAreaView style={{ backgroundColor: "#1e88e5" }}>
-              <StatusBar barStyle="light-content" backgroundColor="#1e88e5" />
+            <SafeAreaView style={{ backgroundColor: "#2563eb" }}>
+              <StatusBar barStyle="light-content" backgroundColor="#2563eb" />
               <View
                 style={{
                   paddingTop:
                     Platform.OS === "android" ? StatusBar.currentHeight : 0,
-                  backgroundColor: "#1e88e5",
+                  backgroundColor: "#2563eb",
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.1,

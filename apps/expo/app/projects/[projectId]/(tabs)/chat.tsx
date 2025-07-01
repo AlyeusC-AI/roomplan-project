@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveButton: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#2563eb",
   },
   cancelButton: {
     backgroundColor: "#f1f5f9",
@@ -446,7 +446,7 @@ export default function ChatScreen() {
   if (loading || messagesLoading || !chatId) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator color="#1e88e5" size="large" />
+        <ActivityIndicator color="#2563eb" size="large" />
       </View>
     );
   }

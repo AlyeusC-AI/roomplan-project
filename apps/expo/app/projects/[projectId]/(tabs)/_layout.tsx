@@ -46,8 +46,8 @@ export default function Layout() {
         },
         header: ({ navigation, route, options }) =>
           route.name === "chat" ? (
-            <SafeAreaView style={{ backgroundColor: "#1e88e5" }}>
-              <StatusBar barStyle="light-content" backgroundColor="#1e88e5" />
+            <SafeAreaView style={{ backgroundColor: "#2563eb" }}>
+              <StatusBar barStyle="light-content" backgroundColor="#2563eb" />
             </SafeAreaView>
           ) : (
             <SafeAreaView style={{ backgroundColor: "#2563eb" }}>

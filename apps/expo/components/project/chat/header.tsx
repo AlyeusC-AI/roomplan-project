@@ -46,7 +46,7 @@ export function ChatHeader({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#2563eb",
     borderBottomWidth: 1,
     borderBottomColor: "#1976d2",
   },

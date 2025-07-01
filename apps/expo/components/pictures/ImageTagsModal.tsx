@@ -44,7 +44,7 @@ const SearchIcon = Search as any;
 
 // Predefined color palette - 12 carefully chosen colors
 const COLOR_PALETTE = [
-  "#182e43" , // Blue
+  "#2563eb" , // Blue
   "#EF4444", // Red
   "#10B981", // Green
   "#F59E0B", // Amber
@@ -327,7 +327,7 @@ export default function ImageTagsModal({
     if (isLoading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#182e43" />
+          <ActivityIndicator size="large" color="#2563eb" />
           <Text style={styles.loadingText}>Loading tags...</Text>
         </View>
       );
@@ -344,7 +344,7 @@ export default function ImageTagsModal({
             Create tags to organize your images
           </Text>
           <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
-            <PlusIcon size={16} color="#182e43" />
+            <PlusIcon size={16} color="#2563eb" />
             <Text style={styles.addButtonText}>Add Tag</Text>
           </TouchableOpacity>
         </View>
@@ -418,9 +418,9 @@ export default function ImageTagsModal({
                   Create "{searchQuery.trim()}"
                 </Text>
                 {isCreatingTag ? (
-                  <ActivityIndicator size={16} color="#182e43" />
+                  <ActivityIndicator size={16} color="#2563eb" />
                 ) : (
-                  <PlusIcon size={16} color="#182e43" />
+                  <PlusIcon size={16} color="#2563eb" />
                 )}
               </TouchableOpacity>
             </View>
@@ -429,7 +429,7 @@ export default function ImageTagsModal({
 
         {!searchQuery.trim() && (
           <TouchableOpacity style={styles.addNewButton} onPress={openAddModal}>
-            <PlusIcon size={16} color="#182e43" />
+            <PlusIcon size={16} color="#2563eb" />
             <Text style={styles.addNewButtonText}>Add New Tag</Text>
           </TouchableOpacity>
         )}
@@ -449,7 +449,7 @@ export default function ImageTagsModal({
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
-                <TagIcon size={24} color="#182e43" />
+                <TagIcon size={24} color="#2563eb" />
                 <Text style={styles.modalTitle}>Manage Image Tags</Text>
               </View>
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -653,8 +653,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   selectedTagOption: {
-    backgroundColor: "#182e43",
-    borderColor: "#182e43",
+    backgroundColor: "#2563eb",
+    borderColor: "#2563eb",
   },
   tagColor: {
     width: 12,
@@ -686,14 +686,14 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#182e43",
+    borderColor: "#2563eb",
     borderStyle: "dashed",
     marginTop: 16,
     gap: 8,
   },
   addNewButtonText: {
     fontSize: 14,
-    color: "#182e43",
+    color: "#2563eb",
     fontWeight: "500",
   },
   addButton: {
@@ -702,7 +702,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 12,
     borderRadius: 8,
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
     marginTop: 16,
     gap: 8,
   },
@@ -735,7 +735,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
   },
   confirmButtonDisabled: {
     opacity: 0.5,
@@ -867,7 +867,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: "#182e43",
+    backgroundColor: "#2563eb",
   },
   nestedSaveButtonText: {
     color: "#fff",
@@ -908,14 +908,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#182e43",
+    borderColor: "#2563eb",
     borderStyle: "dashed",
     backgroundColor: "#f0f9ff",
     gap: 8,
   },
   createTagOptionText: {
     fontSize: 14,
-    color: "#182e43",
+    color: "#2563eb",
     flex: 1,
     fontStyle: "italic",
   },
