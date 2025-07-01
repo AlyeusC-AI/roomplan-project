@@ -187,10 +187,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarContent className='px-3'>
             <Input
               placeholder='Search'
-              className='bg-muted mt-2 border text-foreground'
-              style={{
-                border: "1px solid rgba(255, 255, 255, .22)",
-              }}
+              className='bg-[#142334] mt-2 border border-white/20 text-white hover:border-blue-200 '
+              // style={{
+              //   border: "1px solid rgba(255, 255, 255, .22)",
+              // }}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
