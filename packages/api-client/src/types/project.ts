@@ -1,4 +1,5 @@
 import { ProjectStatus } from "./projectStatus";
+import { Tag } from "./tags";
 
 export enum LossType {
   FIRE = "FIRE",
@@ -57,6 +58,7 @@ export interface Project {
   dateOfLoss?: Date;
   organizationId: string;
   status: ProjectStatus;
+  tags?: Tag[];
   images?: ProjectImage[];
   _count?: {
     images: number;

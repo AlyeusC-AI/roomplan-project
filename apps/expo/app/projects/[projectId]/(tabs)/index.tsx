@@ -10,6 +10,7 @@ import * as Clipboard from "expo-clipboard";
 import { Linking } from "react-native";
 
 import AssigneeSelect from "@/components/project/assignee";
+import ProjectTags from "@/components/project/ProjectTags";
 import {
   ArrowRight,
   Book,
@@ -55,6 +56,7 @@ import {
   useGetProjectMembers,
 } from "@service-geek/api-client";
 import { Button } from "@/components/ui/button";
+import ImageTagsModal from "@/components/pictures/ImageTagsModal";
 
 export default function ProjectOverview() {
   const { projectId } = useLocalSearchParams<{
@@ -62,7 +64,8 @@ export default function ProjectOverview() {
     projectName: string;
   }>();
 
-  const { data: project } = useGetProjectById(projectId);
+  const { data: project, refetch } = useGetProjectById(projectId);
+  const [showTagsModal, setShowTagsModal] = useState(false);
 
   const { projectViewMode, setProjectViewMode } = uiPreferencesStore();
   // Add state to control client info modal visibility
@@ -225,14 +228,14 @@ export default function ProjectOverview() {
         <Card className="flex-row items-center mb-3 bg-white !border-0 !shadow-none">
           {/* Project Image */}
           {project?.data?.mainImage ? (
-            <View className="w-[100px] h-[100px] rounded-xl overflow-hidden border border-border bg-white justify-center items-center mr-4">
+            <View className="w-[120px] h-[120px] rounded-xl overflow-hidden border border-border bg-white justify-center items-center mr-4">
               <Animated.Image
                 source={{ uri: project.data.mainImage }}
-                style={{ width: 100, height: 100, resizeMode: 'cover' }}
+                style={{ width: 120, height: 120, resizeMode: 'cover' }}
               />
             </View>
           ) : (
-            <View className="w-[100px] h-[100px] rounded-xl overflow-hidden border border-border bg-gray-100 justify-center items-center mr-4">
+            <View className="w-[120px] h-[120px] rounded-xl overflow-hidden border border-border bg-gray-100 justify-center items-center mr-4">
               <Text className="text-3xl font-bold text-gray-400">
                 {project?.data?.name?.[0] || "?"}
               </Text>
@@ -269,6 +272,20 @@ export default function ProjectOverview() {
                     </View>
                   )}
                 </View>
+                  <ProjectTags 
+                    tags={project?.data?.tags} 
+                    onAddTags={() => setShowTagsModal(true)}
+                  />
+                  <ImageTagsModal
+                    visible={showTagsModal}
+                    type="PROJECT"
+                    onClose={() => setShowTagsModal(false)}
+                    projectId={project?.data?.id}
+                    currentTags={project?.data?.tags || []}
+                    onTagsUpdated={() => {
+                      refetch();
+                    }}
+                  />
               </View>
               {/* {project?.data?.dateOfLoss && (
                 <CardDescription className="flex-row items-center mt-1">

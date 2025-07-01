@@ -1151,6 +1151,7 @@ const ModalItem = ({
           // Refresh the image data
           // This will trigger a re-render with updated tags
         }}
+        
       />
 
       <ImageEditorModal

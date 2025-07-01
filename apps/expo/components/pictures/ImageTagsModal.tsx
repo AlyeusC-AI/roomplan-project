@@ -30,6 +30,8 @@ import {
   useDeleteTag,
   useAddImageTags,
   useRemoveImageTags,
+  useAddProjectTags,
+  useRemoveProjectTags,
 } from "@service-geek/api-client";
 import { toast } from "sonner-native";
 import { Checkbox } from "../ui/checkbox";
@@ -62,7 +64,9 @@ const COLOR_PALETTE = [
 interface ImageTagsModalProps {
   visible: boolean;
   onClose: () => void;
-  imageId: string;
+  imageId?: string;
+  projectId?: string;
+  type?: "IMAGE" | "PROJECT";
   currentTags: any[];
   onTagsUpdated: () => void;
 }
@@ -71,16 +75,21 @@ export default function ImageTagsModal({
   visible,
   onClose,
   imageId,
+  projectId,
+  type = "IMAGE",
   currentTags,
   onTagsUpdated,
 }: ImageTagsModalProps) {
-  const { data: availableTags = [], isLoading } = useGetTags({ type: "IMAGE" });
+  const { data: availableTags = [], isLoading } = useGetTags({ type });
   const { mutate: createTag, isPending: isCreatingTag } = useCreateTag();
   const { mutate: updateTag, isPending: isUpdatingTag } = useUpdateTag();
   const { mutate: deleteTag, isPending: isDeletingTag } = useDeleteTag();
-  const { mutate: addImageTags, isPending: isAddingTags } = useAddImageTags();
-  const { mutate: removeImageTags, isPending: isRemovingTags } =
+  const { mutate: addImageTags, isPending: isAddingImageTags } = useAddImageTags();
+  const { mutate: removeImageTags, isPending: isRemovingImageTags } =
     useRemoveImageTags();
+  const { mutate: addProjectTags, isPending: isAddingProjectTags } = useAddProjectTags();
+  const { mutate: removeProjectTags, isPending: isRemovingProjectTags } =
+    useRemoveProjectTags();
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -144,7 +153,7 @@ export default function ImageTagsModal({
         {
           name: editValue.trim(),
           color: editColor,
-          type: "IMAGE",
+          type:  type === "PROJECT" ? "PROJECT" : "IMAGE",
         },
         {
           onSuccess: () => {
@@ -233,11 +242,6 @@ export default function ImageTagsModal({
   };
 
   const handleAssignTags = () => {
-    // if (selectedTags.length === 0) {
-    //   toast.error("Please select at least one tag");
-    //   return;
-    // }
-
     // Get current tag names
     const currentTagNames = currentTags.map((tag) => tag.name);
 
@@ -249,46 +253,94 @@ export default function ImageTagsModal({
       (tagName) => !selectedTags.includes(tagName)
     );
 
+    // Determine the entity ID based on type
+    const entityId = type === "PROJECT" ? projectId : imageId;
+    
+    if (!entityId) {
+      toast.error("Missing entity ID");
+      return;
+    }
+
     // Add new tags
     if (tagsToAdd.length > 0) {
-      addImageTags(
-        {
-          imageId,
-          tagNames: tagsToAdd,
-        },
-        {
-          onSuccess: () => {
-            if (tagsToRemove.length === 0) {
-              toast.success("Tags added successfully");
-              onTagsUpdated();
-              onClose();
-            }
+      if (type === "PROJECT") {
+        addProjectTags(
+          {
+            projectId: entityId,
+            tagNames: tagsToAdd,
           },
-          onError: () => {
-            toast.error("Failed to add tags");
+          {
+            onSuccess: () => {
+              if (tagsToRemove.length === 0) {
+                toast.success("Tags added successfully");
+                onTagsUpdated();
+                onClose();
+              }
+            },
+            onError: () => {
+              toast.error("Failed to add tags");
+            },
+          }
+        );
+      } else {
+        addImageTags(
+          {
+            imageId: entityId,
+            tagNames: tagsToAdd,
           },
-        }
-      );
+          {
+            onSuccess: () => {
+              if (tagsToRemove.length === 0) {
+                toast.success("Tags added successfully");
+                onTagsUpdated();
+                onClose();
+              }
+            },
+            onError: () => {
+              toast.error("Failed to add tags");
+            },
+          }
+        );
+      }
     }
 
     // Remove tags
     if (tagsToRemove.length > 0) {
-      removeImageTags(
-        {
-          imageId,
-          tagNames: tagsToRemove,
-        },
-        {
-          onSuccess: () => {
-            toast.success("Tags updated successfully");
-            onTagsUpdated();
-            onClose();
+      if (type === "PROJECT") {
+        removeProjectTags(
+          {
+            projectId: entityId,
+            tagNames: tagsToRemove,
           },
-          onError: () => {
-            toast.error("Failed to remove tags");
+          {
+            onSuccess: () => {
+              toast.success("Tags updated successfully");
+              onTagsUpdated();
+              onClose();
+            },
+            onError: () => {
+              toast.error("Failed to remove tags");
+            },
+          }
+        );
+      } else {
+        removeImageTags(
+          {
+            imageId: entityId,
+            tagNames: tagsToRemove,
           },
-        }
-      );
+          {
+            onSuccess: () => {
+              toast.success("Tags updated successfully");
+              onTagsUpdated();
+              onClose();
+            },
+            onError: () => {
+              toast.error("Failed to remove tags");
+            },
+          }
+        );
+      }
     }
 
     // If no changes needed
@@ -438,7 +490,9 @@ export default function ImageTagsModal({
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
                 <TagIcon size={24} color="#2563eb" />
-                <Text style={styles.modalTitle}>Manage Image Tags</Text>
+                <Text style={styles.modalTitle}>
+                  Manage {type === "PROJECT" ? "Project" : "Image"} Tags
+                </Text>
               </View>
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                 <XIcon size={24} color="#64748b" />
@@ -447,7 +501,7 @@ export default function ImageTagsModal({
 
             <View style={styles.modalBody}>
               <Text style={styles.modalDescription}>
-                Select tags to assign to this image
+                Select tags to assign to this {type === "PROJECT" ? "project" : "image"}
               </Text>
 
               {/* Search Input */}
@@ -516,20 +570,20 @@ export default function ImageTagsModal({
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={onClose}
-                disabled={isAddingTags || isRemovingTags}
+                disabled={isAddingImageTags || isRemovingImageTags || isAddingProjectTags || isRemovingProjectTags}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.confirmButton,
-                  (isAddingTags || isRemovingTags || isLoading) &&
+                  (isAddingImageTags || isRemovingImageTags || isAddingProjectTags || isRemovingProjectTags || isLoading) &&
                     styles.confirmButtonDisabled,
                 ]}
                 onPress={handleAssignTags}
-                disabled={isAddingTags || isRemovingTags || isLoading}
+                disabled={isAddingImageTags || isRemovingImageTags || isAddingProjectTags || isRemovingProjectTags || isLoading}
               >
-                {isAddingTags || isRemovingTags ? (
+                {isAddingImageTags || isRemovingImageTags || isAddingProjectTags || isRemovingProjectTags ? (
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
                   <Text style={styles.confirmButtonText}>Assign Tags</Text>
