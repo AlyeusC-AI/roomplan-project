@@ -4,12 +4,18 @@ import { Separator } from "@components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Project,
+  Tag,
   useActiveOrganization,
+  useAddImageTags,
+  useAddProjectTags,
   useGetProjectById,
   useGetProjectStatus,
+  useRemoveImageTags,
+  useRemoveProjectTags,
 } from "@service-geek/api-client";
 import { useParams, usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   MapPin,
   Calendar,
@@ -30,18 +36,24 @@ import {
   ArrowLeft,
   ChevronLeft,
   FileImage,
+  Loader2,
+  TagIcon,
+  X,
+  Plus,
 } from "lucide-react";
 import { format } from "date-fns";
 import InfoSidebar from "@components/Project/layout/infoSidebar";
 import { Button } from "@components/ui/button";
 import Link from "next/link";
 import clsx from "clsx";
+import TagsModal from "@components/tags/TagsModal";
 
 export default function Layout({ children }: React.PropsWithChildren) {
   const { id } = useParams();
   const { data: project, isLoading } = useGetProjectById(id as string);
   const org = useActiveOrganization();
   const pathname = usePathname();
+
 
   const sidebarNavItems = () => [
     {
@@ -81,6 +93,8 @@ export default function Layout({ children }: React.PropsWithChildren) {
       href: `/projects/${id}/report`,
     },
   ];
+
+
 
   if (
     (!project?.data || project?.data?.organizationId !== org?.id) &&
@@ -123,6 +137,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
   }
 
   const projectData = project?.data;
+  const currentProjectTags = projectData?.tags || [];
 
   return (
     <>
@@ -233,7 +248,9 @@ export default function Layout({ children }: React.PropsWithChildren) {
                           {projectData.lossType}
                         </Badge>
                       )}
+                    <ProjectTags currentProjectTags={currentProjectTags} projectData={projectData} />
                     </div>
+                    {/* Tags Section */}
                   </div>
                 </div>
                 {/* 3-dot menu */}
@@ -256,11 +273,10 @@ export default function Layout({ children }: React.PropsWithChildren) {
                       <Link
                         key={item.title}
                         href={item.href}
-                        className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors duration-150 ${
-                          isActive
+                        className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors duration-150 ${isActive
                             ? "border-black text-black"
                             : "border-gray-200 text-gray-500 hover:border-gray-400 hover:text-black"
-                        }`}
+                          }`}
                         prefetch={false}
                       >
                         {item.title}
@@ -277,6 +293,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
           <div className='bg-background p-4'>{children}</div>
         </div>
 
+
         {/* Right Sidebar */}
         {pathname.includes("report") ? null : (
           <div className='col-sp'>
@@ -286,4 +303,118 @@ export default function Layout({ children }: React.PropsWithChildren) {
       </div>
     </>
   );
+}
+
+const ProjectTags = ({ currentProjectTags, projectData }: { currentProjectTags: Tag[], projectData: Project }) => {
+  const [isTagsModalOpen, setIsTagsModalOpen] = useState(false);
+
+  const { mutate: addProjectTags, isPending: isAddingTags } = useAddProjectTags();
+  const { mutate: removeProjectTags, isPending: isRemovingTags } =
+    useRemoveProjectTags();
+  const handleAddTags = (tagNames: string[]) => {
+    if (!projectData) return;
+
+    addProjectTags(
+      {
+        projectId: projectData.id,
+        tagNames,
+      },
+      // {
+      //   onSuccess: () => {
+      //     toast.success("Tags added successfully");
+      //     refetch();
+      //   },
+      //   onError: () => {
+      //     toast.error("Failed to add tags");
+      //   },
+      // }
+    );
+  };
+
+  const handleRemoveTag = (tagName: string) => {
+
+    if (!projectData) return;
+
+    removeProjectTags(
+      {
+        projectId: projectData.id,
+        tagNames: [tagName],
+      },
+      // {
+      //   onSuccess: () => {
+      //     toast.success("Tag removed successfully");
+      //     refetch();
+      //   },
+      //   onError: () => {
+      //     toast.error("Failed to remove tag");
+      //   },
+      // }
+    );
+  };
+  return (<>
+    <div className='flex flex-wrap items-center gap-2'>
+   
+
+      {currentProjectTags.length === 0 ? (
+        // <div className='py-4 text-center text-muted-foreground'>
+        //   <TagIcon className='mx-auto mb-2 h-6 w-6 opacity-50' />
+        //   <p className='text-sm'>No tags assigned</p>
+        //   <Button
+        //     variant='outline'
+        //     size='sm'
+        //     onClick={() => setIsTagsModalOpen(true)}
+        //     className='mt-2'
+        //     disabled={isAddingTags || isRemovingTags}
+        //   >
+            
+        //   </Button>
+        // </div>
+        null
+      ) : (
+        <div className='flex flex-wrap gap-2'>
+          {currentProjectTags.map((tag) => (
+            <Badge
+              key={tag.id}
+              variant='secondary'
+              className='cursor-pointer transition-all hover:bg-destructive/10 hover:text-destructive'
+              onClick={() => handleRemoveTag(tag.name)}
+              style={
+                tag.color
+                  ? {
+                    backgroundColor: tag.color,
+                    color: "white",
+                  }
+                  : {}
+              }
+            >
+              {tag.name}
+              <X className='ml-1 h-3 w-3' />
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      
+       <Button
+          variant='default'
+          size='sm'
+          onClick={() => setIsTagsModalOpen(true)}
+          className="h-8 "
+          disabled={isAddingTags || isRemovingTags}
+        >
+          <Plus className='h-4 w-4' />
+          Add Tags
+        </Button>
+    </div>
+    <TagsModal
+      tagType='PROJECT'
+      open={isTagsModalOpen}
+      onOpenChange={setIsTagsModalOpen}
+      title='Add Tags to Project'
+      description='Select tags to add to this project'
+      onAssignTags={handleAddTags}
+      isAssignMode={true}
+      currentTags={currentProjectTags}
+    />
+  </>)
 }
