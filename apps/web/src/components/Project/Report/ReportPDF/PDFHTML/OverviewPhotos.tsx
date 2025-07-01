@@ -51,7 +51,7 @@ const OverviewPhotos = ({ room }: { room: Room }) => {
       <div className='photo-grid'>
         {selectedPhotos.length === 0 && <p>No photos of this room</p>}
         {photoRows.map((row, rowIndex) => (
-          <div key={rowIndex} className='photo-row'>
+          <div key={rowIndex} className='photo-row avoid-break'>
             {row.map((image) => (
               <div key={image.id} className='photo-item'>
                 <OverviewPhoto imageKey={image.url!} />

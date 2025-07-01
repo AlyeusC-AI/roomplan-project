@@ -8,7 +8,7 @@ import {
   useGetProjectById,
   useGetProjectStatus,
 } from "@service-geek/api-client";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import {
   MapPin,
@@ -35,11 +35,13 @@ import { format } from "date-fns";
 import InfoSidebar from "@components/Project/layout/infoSidebar";
 import { Button } from "@components/ui/button";
 import Link from "next/link";
+import clsx from "clsx";
 
 export default function Layout({ children }: React.PropsWithChildren) {
   const { id } = useParams();
   const { data: project, isLoading } = useGetProjectById(id as string);
   const org = useActiveOrganization();
+  const pathname = usePathname();
 
   const sidebarNavItems = () => [
     {
@@ -124,10 +126,10 @@ export default function Layout({ children }: React.PropsWithChildren) {
 
   return (
     <>
-      <div className='relative grid grid-cols-[24fr_auto] gap-5 '>
+      <div className='relative grid grid-cols-12 gap-2'>
         {/* Main Content */}
-        <div className='col-span-17'>
-          <Link href='/projects' className='flex items-center gap-2 mb-4'>
+        <div className={clsx(!pathname.includes("report") && "col-span-8")}>
+          <Link href='/projects' className='mb-4 flex items-center gap-2'>
             <ChevronLeft size={24} />
             <span className='font-medium'>Projects</span>
           </Link>
@@ -150,15 +152,15 @@ export default function Layout({ children }: React.PropsWithChildren) {
                       />
                     </div>
                   ) : (
-                    <div className='flex items-center justify-center relative h-36 w-36 flex-shrink-0 overflow-hidden rounded-xl border-2 border-border shadow-sm bg-background' >
+                    <div className='relative flex h-36 w-36 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-border bg-background shadow-sm'>
                       <FileImage size={45} />
-                      </div>
+                    </div>
                   )}
 
                   {/* Project Details */}
                   <div className='flex-1 space-y-3'>
                     <div className='flex items-center gap-3'>
-                      <h1 className='text-3xl font-bold tracking-tight capitalize'>
+                      <h1 className='text-3xl font-bold capitalize tracking-tight'>
                         {projectData?.name}
                       </h1>
                       {/* {projectData?.status && (
@@ -197,7 +199,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
                           </span>
                         </div>
                       )}
-                      
+
                       {/* {projectData?.lossType && (
                         <Badge
                           variant='secondary'
@@ -209,7 +211,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
                       )} */}
                     </div>
                     <div className='flex items-center gap-2'>
-                       {projectData?.status && (
+                      {projectData?.status && (
                         <Badge
                           variant='outline'
                           className='border px-2 py-0.5 text-xs font-medium'
@@ -222,7 +224,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
                           {projectData.status.label}
                         </Badge>
                       )}
-                        {projectData?.lossType && (
+                      {projectData?.lossType && (
                         <Badge
                           variant='secondary'
                           className='border-red-200 bg-red-100 text-xs text-red-700'
@@ -243,19 +245,21 @@ export default function Layout({ children }: React.PropsWithChildren) {
               </div>
 
               {/* Navigation */}
-              <div className="pt-4">
-              {/* <SidebarNav items={sidebarNavItems()} /> */}
-                <div className="flex border-b border-gray-200">
+              <div className='pt-4'>
+                {/* <SidebarNav items={sidebarNavItems()} /> */}
+                <div className='flex border-b border-gray-200'>
                   {sidebarNavItems().map((item) => {
-                    const isActive = typeof window !== 'undefined' && window.location.pathname.startsWith(item.href);
+                    const isActive =
+                      typeof window !== "undefined" &&
+                      window.location.pathname.startsWith(item.href);
                     return (
                       <Link
                         key={item.title}
                         href={item.href}
-                        className={`px-4 py-2 -mb-px text-sm font-medium border-b-2 transition-colors duration-150 ${
+                        className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors duration-150 ${
                           isActive
-                            ? 'border-black text-black'
-                            : 'border-gray-200 text-gray-500 hover:text-black hover:border-gray-400'
+                            ? "border-black text-black"
+                            : "border-gray-200 text-gray-500 hover:border-gray-400 hover:text-black"
                         }`}
                         prefetch={false}
                       >
@@ -274,9 +278,11 @@ export default function Layout({ children }: React.PropsWithChildren) {
         </div>
 
         {/* Right Sidebar */}
-        <div >
-          <InfoSidebar />
-        </div>
+        {pathname.includes("report") ? null : (
+          <div className='col-span-4'>
+            <InfoSidebar />
+          </div>
+        )}
       </div>
     </>
   );

@@ -347,10 +347,14 @@ export default function EstimateDetails() {
           try {
             const contentElement = iframeDocument.body;
             const canvas = await html2canvas(contentElement, {
-              scale: 2,
+              scale: 3,
               useCORS: true,
+              allowTaint: false,
+              backgroundColor: "#ffffff",
               logging: false,
               windowWidth: 800,
+              imageTimeout: 15000,
+              removeContainer: true,
             });
 
             // Remove the iframe

@@ -15,21 +15,57 @@ const PDFSafeImage = ({
 
   useEffect(() => {
     const fetchDataUri = async () => {
-      const blob = await fetch(url).then((r) => r.blob());
-      const dataUrl = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-      });
-      setDataUri(dataUrl as string);
+      try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+
+        // Create a canvas to maintain quality
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const img = new Image();
+
+        img.onload = () => {
+          // Set canvas size to match image dimensions
+          canvas.width = img.width;
+          canvas.height = img.height;
+
+          // Draw image with high quality settings
+          if (ctx) {
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+            ctx.drawImage(img, 0, 0);
+          }
+
+          // Convert to high-quality PNG base64
+          const dataUrl = canvas.toDataURL("image/png", 1.0);
+          setDataUri(dataUrl);
+        };
+
+        img.onerror = () => {
+          // Fallback to original URL if canvas conversion fails
+          setDataUri(url);
+        };
+
+        img.src = URL.createObjectURL(blob);
+      } catch (error) {
+        console.error("Error converting image to base64:", error);
+        // Fallback to original URL if conversion fails
+        setDataUri(url);
+      }
     };
     fetchDataUri();
   }, [url]);
+
   if (!dataUri) return null;
-  /* eslint-disable-next-line */
+
   return (
     <a href={url} target='_blank' rel='noopener noreferrer' className='block'>
-      <img src={dataUri} alt={alt} className={`${className} cursor-pointer`} style={style}  />
+      <img
+        src={dataUri}
+        alt={alt}
+        className={`${className} cursor-pointer`}
+        style={style}
+      />
     </a>
   );
 };

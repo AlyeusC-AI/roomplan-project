@@ -17,7 +17,7 @@ const Notes = ({ room }: { room: Room }) => {
           <div>{format(new Date(note.createdAt), "LLLL	d, yyyy")}</div>
           <p className='pdf notes-body section-spacing'>{note.body}</p>
           {note.images && note.images.length > 0 && (
-            <div className='mt-4 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4'>
+            <div className='avoid-break mt-4 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4'>
               {note.images.map((image, index) => (
                 <div key={image.id} className='relative'>
                   <PDFSafeImage

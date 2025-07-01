@@ -3,7 +3,7 @@
 import { Button } from "@components/ui/button";
 
 import { useGetProjectById } from "@service-geek/api-client";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 
 import ContactInfoCard from "./ContactInfoCard";
@@ -17,22 +17,24 @@ import clsx from "clsx";
 
 export default function InfoSidebar() {
   const { id } = useParams();
+  const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { data: project } = useGetProjectById(id as string);
   const projectData = project?.data;
   if (!projectData) return null;
+  if (pathname.includes("report")) return null;
 
   return (
     <div
       className={clsx(
-        "relative h-screen",
-        isCollapsed ? "w-5 min-w-5" : "w-full min-w-96 max-w-[25rem]"
+        "relative",
+        isCollapsed ? "w-5 min-w-5" : "w-full max-w-[25rem]"
       )}
     >
       <div
         className={clsx(
-          "fixed right-0 top-0 z-30 h-screen bg-accent",
-          isCollapsed ? "w-20 min-w-20" : "w-full min-w-96 max-w-[25rem]"
+          "right-0 top-0 z-30 bg-accent",
+          isCollapsed ? "w-20 min-w-20" : "w-full max-w-[25rem]"
         )}
       >
         {isCollapsed ? (
