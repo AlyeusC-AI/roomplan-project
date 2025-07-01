@@ -225,14 +225,14 @@ export default function ProjectOverview() {
         <Card className="flex-row items-center mb-3 bg-white !border-0 !shadow-none">
           {/* Project Image */}
           {project?.data?.mainImage ? (
-            <View className="w-24 h-24 rounded-xl overflow-hidden border border-border bg-white justify-center items-center mr-4">
+            <View className="w-[100px] h-[100px] rounded-xl overflow-hidden border border-border bg-white justify-center items-center mr-4">
               <Animated.Image
                 source={{ uri: project.data.mainImage }}
-                style={{ width: 96, height: 96, resizeMode: 'cover' }}
+                style={{ width: 100, height: 100, resizeMode: 'cover' }}
               />
             </View>
           ) : (
-            <View className="w-24 h-24 rounded-xl overflow-hidden border border-border bg-gray-100 justify-center items-center mr-4">
+            <View className="w-[100px] h-[100px] rounded-xl overflow-hidden border border-border bg-gray-100 justify-center items-center mr-4">
               <Text className="text-3xl font-bold text-gray-400">
                 {project?.data?.name?.[0] || "?"}
               </Text>
@@ -244,7 +244,7 @@ export default function ProjectOverview() {
               <View className="flex-row items-center gap-4">
 
                 <TouchableOpacity onPress={() => setShowClientInfo(true)}>
-                  <CardTitle className="text-xl mb-1 truncate capitalize">{project?.data?.name}
+                  <CardTitle className="text-2xl mb-1 truncate capitalize">{project?.data?.name}
 
 
                   </CardTitle>
@@ -270,11 +270,11 @@ export default function ProjectOverview() {
                   )}
                 </View>
               </View>
-              {project?.data?.dateOfLoss && (
+              {/* {project?.data?.dateOfLoss && (
                 <CardDescription className="flex-row items-center mt-1">
                   <Text className="text-xs text-orange-700"> <Calendar size={18} /> Loss: {new Date(project.data.dateOfLoss).toLocaleDateString()}</Text>
                 </CardDescription>
-              )}
+              )} */}
             </CardHeader>
           </View>
         </Card>
