@@ -401,9 +401,9 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 1)",
     padding: 16,
     // paddingBottom: 250,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: "#2563eb",
+    // borderTopWidth: 1,
+    // borderBottomWidth: 1,
+    // borderColor: "#2563eb",
   },
   descriptionContainer: {
     marginBottom: 8,

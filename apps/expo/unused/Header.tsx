@@ -241,10 +241,10 @@ export default function Header({
                       style={{ padding: 10, borderRadius: 8, backgroundColor: '#e5e7eb', marginRight: 8 }}
                       onPress={() => setShowStartPicker(false)}
                     >
-                      <Text style={{ color: '#182e43', fontWeight: '600' }}>Cancel</Text>
+                      <Text style={{ color: "#2563eb", fontWeight: '600' }}>Cancel</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={{ padding: 10, borderRadius: 8, backgroundColor: '#182e43' }}
+                      style={{ padding: 10, borderRadius: 8, backgroundColor: "#2563eb" }}
                       onPress={() => {
                         setStartDate(tempStartDate);
                         setShowStartPicker(false);
@@ -307,10 +307,10 @@ export default function Header({
                       style={{ padding: 10, borderRadius: 8, backgroundColor: '#e5e7eb', marginRight: 8 }}
                       onPress={() => setShowEndPicker(false)}
                     >
-                      <Text style={{ color: '#182e43', fontWeight: '600' }}>Cancel</Text>
+                      <Text style={{ color: "#2563eb", fontWeight: '600' }}>Cancel</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={{ padding: 10, borderRadius: 8, backgroundColor: '#182e43' }}
+                      style={{ padding: 10, borderRadius: 8, backgroundColor: "#2563eb" }}
                       onPress={() => {
                         setEndDate(tempEndDate);
                         setShowEndPicker(false);
@@ -344,11 +344,11 @@ export default function Header({
               setSelectedUserIds(filterObj.assigneeIds || []);
             }}
           >
-            <Text style={{ color: '#182e43', fontSize: 16, fontWeight: '600' }}>Cancel</Text>
+            <Text style={{ color: "#2563eb", fontSize: 16, fontWeight: '600' }}>Cancel</Text>
           </TouchableOpacity>
          
           <TouchableOpacity
-            style={{ flex: 1, backgroundColor: '#182e43', padding: 16, borderRadius: 8, alignItems: 'center' }}
+            style={{ flex: 1, backgroundColor: "#2563eb", padding: 16, borderRadius: 8, alignItems: 'center' }}
             onPress={() => {
               setVisible(false);
               setFilterObj({

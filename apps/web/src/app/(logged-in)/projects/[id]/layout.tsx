@@ -40,6 +40,7 @@ import {
   TagIcon,
   X,
   Plus,
+  ChevronRight,
 } from "lucide-react";
 import { format } from "date-fns";
 import InfoSidebar from "@components/Project/layout/infoSidebar";
@@ -53,6 +54,8 @@ export default function Layout({ children }: React.PropsWithChildren) {
   const { data: project, isLoading } = useGetProjectById(id as string);
   const org = useActiveOrganization();
   const pathname = usePathname();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
 
 
   const sidebarNavItems = () => [
@@ -141,7 +144,10 @@ export default function Layout({ children }: React.PropsWithChildren) {
 
   return (
     <>
-      <div className='relative grid grid-cols-[24fr_350px] gap-2'>
+      <div className={clsx('relative grid gap-2', {
+        'grid-cols-[24fr_350px]': !isCollapsed,
+        'grid-cols-[24fr_48px]': isCollapsed,
+      })}>
         {/* Main Content */}
         <div className={clsx(!pathname.includes("report") && "")}>
           <Link href='/projects' className='mb-4 flex items-center gap-2'>
@@ -296,8 +302,28 @@ export default function Layout({ children }: React.PropsWithChildren) {
 
         {/* Right Sidebar */}
         {pathname.includes("report") ? null : (
-          <div className='col-sp'>
-            <InfoSidebar />
+          <div className='relative col-sp'>
+             {isCollapsed ? (
+          <button
+            className='absolute left-3 top-0 flex h-10 w-10 items-center justify-center rounded-lg border-0 bg-accent'
+            onClick={() => setIsCollapsed(false)}
+            aria-label='Expand sidebar'
+            style={{ zIndex: 40 }}
+          >
+            <ChevronLeft size={24} />
+          </button>
+        ) : (
+          
+            <button
+              className='absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg border-0 bg-accent'
+              onClick={() => setIsCollapsed(true)}
+              aria-label='Collapse sidebar'
+              style={{ zIndex: 40 }}
+            >
+              <ChevronRight size={24} />
+            </button>
+             )}
+            <InfoSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed}  />
           </div>
         )}
       </div>
