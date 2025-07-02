@@ -10,9 +10,9 @@ import {
 } from "expo-router";
 import {
   ChevronRight,
-  Plus,
   Building2,
   ChevronLeft,
+  Plus,
 } from "lucide-react-native";
 import React, { useEffect, useState, useCallback } from "react";
 import {
@@ -47,7 +47,13 @@ export default function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const limit = 20;
   const { data: user, isLoading: isLoadingUser } = useCurrentUser();
-  console.log("🚀 ~ Dashboard ~ user:", user);
+  const router = useRouter();
+
+  // useEffect(() => {
+  //   if (!user && !isLoadingUser) {
+  //     router.replace({ pathname: "/login" });
+  //   }
+  // }, [user]);
   const [filterObj, setFilterObj] = useState({
     search: "",
     startDate: null as Date | null,
@@ -68,15 +74,19 @@ export default function Dashboard() {
       sortOrder: "desc",
       search: searchTerm,
       assigneeIds: filterObj.assigneeIds,
-      startDate: filterObj?.startDate ? filterObj?.startDate?.toISOString() : undefined,
-      endDate: filterObj?.endDate ? filterObj?.endDate?.toISOString() : undefined,
+      startDate: filterObj?.startDate
+        ? filterObj?.startDate?.toISOString()
+        : undefined,
+      endDate: filterObj?.endDate
+        ? filterObj?.endDate?.toISOString()
+        : undefined,
     },
   });
   const data = result.data as PaginatedResponse<Project> | undefined;
   const isLoading = result.isLoading;
   const isError = result.isError;
+  console.log("🚀 ~ Dashboard ~ user:", user, isLoadingUser, isLoading);
 
-  const router = useRouter();
   const navigation = useNavigation();
   // const { mutate: logout } = useLogout();
 
@@ -96,7 +106,6 @@ export default function Dashboard() {
     }
   }, [result]);
 
-
   const filterTabsList = [
     {
       label: "All",
@@ -113,8 +122,8 @@ export default function Dashboard() {
     {
       label: "Archived",
       value: "Archived",
-    },    
-  ]
+    },
+  ];
 
   // Reset pagination when organization changes
   // useEffect(() => {
@@ -252,9 +261,9 @@ export default function Dashboard() {
     );
   }
 
-  if (!user) {
-    return <Redirect href="/login" />;
-  }
+  // if (!user || !isLoadingUser) {
+  //   return <Redirect href="/login" />;
+  // }
 
   const renderEmpty = () => {
     if (isError) {
@@ -403,6 +412,7 @@ const styles = StyleSheet.create({
     color: "#1d1d1d",
     marginTop: 15,
   },
+
   orgButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -503,5 +513,10 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     backgroundColor: "#2563eb",
     borderRadius: 100,
+  },
+  fabButtonText: {
+    color: "#ffffff",
+    fontSize: 30,
+    fontWeight: "bold",
   },
 });

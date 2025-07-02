@@ -1907,7 +1907,7 @@
 
 "@aws-sdk/util-arn-parser@3.201.0":
   version "3.201.0"
-  resolved "https://registry.npmjs.org/@aws-sdk/util-arn-parser/-/util-arn-parser-3.201.0.tgz"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/util-arn-parser/-/util-arn-parser-3.201.0.tgz#f818ee52cacd85ddefab956c87db5f2347f13487"
   integrity sha512-FNZsr9ofEf3Ybglgj8ElhuXnHnSFCF1ctT/zGPwNc+7XTMROO36uPIxP22J/GTyMpf4Bx48rXs8JTFvu3P3hig==
   dependencies:
     tslib "^2.3.1"
@@ -7318,6 +7318,11 @@
   dependencies:
     invariant "^2.2.4"
 
+"@react-native-community/netinfo@^11.4.1":
+  version "11.4.1"
+  resolved "https://registry.yarnpkg.com/@react-native-community/netinfo/-/netinfo-11.4.1.tgz#a3c247aceab35f75dd0aa4bfa85d2be5a4508688"
+  integrity sha512-B0BYAkghz3Q2V09BF88RA601XursIEA111tnc2JOaN7axJWmNefmfjZqw/KdSxKZp7CZUuPpjBmz/WCR9uaHYg==
+
 "@react-native-community/slider@^4.5.7":
   version "4.5.7"
   resolved "https://registry.npmjs.org/@react-native-community/slider/-/slider-4.5.7.tgz"
@@ -9255,15 +9260,37 @@
     lodash.merge "^4.6.2"
     postcss-selector-parser "6.0.10"
 
-"@tanstack/query-core@5.75.5":
-  version "5.75.5"
-  resolved "https://registry.npmjs.org/@tanstack/query-core/-/query-core-5.75.5.tgz"
-  integrity sha512-kPDOxtoMn2Ycycb76Givx2fi+2pzo98F9ifHL/NFiahEDpDwSVW6o12PRuQ0lQnBOunhRG5etatAhQij91M3MQ==
+"@tanstack/query-async-storage-persister@^5.81.5":
+  version "5.81.5"
+  resolved "https://registry.yarnpkg.com/@tanstack/query-async-storage-persister/-/query-async-storage-persister-5.81.5.tgz#9300d94151bf8f79f245deb5b66b5cbd91c2e19a"
+  integrity sha512-5a8t7Q0Dih3Qp80txG88sbNP5nXjqj+djnfVt1xbEuMNRwa6CWVA7fhfdatl3GL5gw8tlBEhPcP0ddnviJjNmw==
+  dependencies:
+    "@tanstack/query-persist-client-core" "5.81.5"
+
+"@tanstack/query-core@5.81.5":
+  version "5.81.5"
+  resolved "https://registry.npmjs.org/@tanstack/query-core/-/query-core-5.81.5.tgz"
+  integrity sha512-ZJOgCy/z2qpZXWaj/oxvodDx07XcQa9BF92c0oINjHkoqUPsmm3uG08HpTaviviZ/N9eP1f9CM7mKSEkIo7O1Q==
 
 "@tanstack/query-devtools@5.74.7":
   version "5.74.7"
   resolved "https://registry.npmjs.org/@tanstack/query-devtools/-/query-devtools-5.74.7.tgz"
   integrity sha512-nSNlfuGdnHf4yB0S+BoNYOE1o3oAH093weAYZolIHfS2stulyA/gWfSk/9H4ZFk5mAAHb5vNqAeJOmbdcGPEQw==
+
+"@tanstack/query-persist-client-core@5.81.5":
+  version "5.81.5"
+  resolved "https://registry.npmjs.org/@tanstack/query-persist-client-core/-/query-persist-client-core-5.81.5.tgz"
+  integrity sha512-imiMWYXf8KuXavOgVRc5IDixqP0VKEN6IxZ/vyuX87Wk0eX7QmRtjLn1AD4Hz7GxYPM3RalRzP5Bshc30hgOcg==
+  dependencies:
+    "@tanstack/query-core" "5.81.5"
+
+"@tanstack/query-sync-storage-persister@^5.81.5":
+  version "5.81.5"
+  resolved "https://registry.yarnpkg.com/@tanstack/query-sync-storage-persister/-/query-sync-storage-persister-5.81.5.tgz#3515ed4789f8b3ea2c6abaa219288c6d3d078b5b"
+  integrity sha512-dkCtueftbmK68PxcAT9oIH6R8LV3vZZJGg3uaq0w0gqcmSvRDqkquHmBIVBA7Oi+PAgO9yfw0Gv2SvCr4oJ7sg==
+  dependencies:
+    "@tanstack/query-core" "5.81.5"
+    "@tanstack/query-persist-client-core" "5.81.5"
 
 "@tanstack/react-query-devtools@^5.75.4":
   version "5.75.4"
@@ -9272,12 +9299,19 @@
   dependencies:
     "@tanstack/query-devtools" "5.74.7"
 
-"@tanstack/react-query@^5.75.5":
-  version "5.75.5"
-  resolved "https://registry.npmjs.org/@tanstack/react-query/-/react-query-5.75.5.tgz"
-  integrity sha512-QrLCJe40BgBVlWdAdf2ZEVJ0cISOuEy/HKupId1aTKU6gPJZVhSvZpH+Si7csRflCJphzlQ77Yx6gUxGW9o0XQ==
+"@tanstack/react-query-persist-client@^5.81.5":
+  version "5.81.5"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-query-persist-client/-/react-query-persist-client-5.81.5.tgz#55c0865bf8cd3bfb6a8946e276f975334a034e45"
+  integrity sha512-ZV69n636C22RkbFK0rzel80oWjyWbMKiUwUE2MKhYWTSr42+JmqoehDwJ5sWcO8CxHNm4vWF8pyG+goRzluMYw==
   dependencies:
-    "@tanstack/query-core" "5.75.5"
+    "@tanstack/query-persist-client-core" "5.81.5"
+
+"@tanstack/react-query@^5.75.5":
+  version "5.81.5"
+  resolved "https://registry.npmjs.org/@tanstack/react-query/-/react-query-5.81.5.tgz"
+  integrity sha512-lOf2KqRRiYWpQT86eeeftAGnjuTR35myTP8MXyvHa81VlomoAWNEd8x5vkcAfQefu0qtYCvyqLropFZqgI2EQw==
+  dependencies:
+    "@tanstack/query-core" "5.81.5"
 
 "@tanstack/react-table@^8.20.6":
   version "8.21.2"
@@ -10661,7 +10695,7 @@
 
 "@visx/drag@latest":
   version "3.12.0"
-  resolved "https://registry.yarnpkg.com/@visx/drag/-/drag-3.12.0.tgz#5d3b09d720a951d179e863b9dca52934b64801a9"
+  resolved "https://registry.npmjs.org/@visx/drag/-/drag-3.12.0.tgz"
   integrity sha512-LXOoPVw//YPjpYhDJYBsCYDuv1QimsXjDV98duH0aCy4V94ediXMQpe2wHq4pnlDobLEB71FjOZMFrbFmqtERg==
   dependencies:
     "@types/react" "*"
@@ -10679,7 +10713,7 @@
 
 "@visx/gradient@latest":
   version "3.12.0"
-  resolved "https://registry.yarnpkg.com/@visx/gradient/-/gradient-3.12.0.tgz#4898241cdd78ff3003dae584787a4b2dffff1eb7"
+  resolved "https://registry.npmjs.org/@visx/gradient/-/gradient-3.12.0.tgz"
   integrity sha512-QRatjjdUEPbcp4pqRca1JlChpAnmmIAO3r3ZscLK7D1xEIANlIjzjl3uNgrmseYmBAYyPCcJH8Zru07R97ovOg==
   dependencies:
     "@types/react" "*"
@@ -10701,7 +10735,7 @@
 
 "@visx/responsive@latest":
   version "3.12.0"
-  resolved "https://registry.yarnpkg.com/@visx/responsive/-/responsive-3.12.0.tgz#5622e2dcf951642ff8ca49b81c8a477281fe6066"
+  resolved "https://registry.npmjs.org/@visx/responsive/-/responsive-3.12.0.tgz"
   integrity sha512-GV1BTYwAGlk/K5c9vH8lS2syPnTuIqEacI7L6LRPbsuaLscXMNi+i9fZyzo0BWvAdtRV8v6Urzglo++lvAXT1Q==
   dependencies:
     "@types/lodash" "^4.14.172"
@@ -10718,7 +10752,7 @@
 
 "@visx/shape@latest":
   version "3.12.0"
-  resolved "https://registry.yarnpkg.com/@visx/shape/-/shape-3.12.0.tgz#ce54491d2fb2d96a1f31095ff12218d85d3a2e15"
+  resolved "https://registry.npmjs.org/@visx/shape/-/shape-3.12.0.tgz"
   integrity sha512-/1l0lrpX9tPic6SJEalryBKWjP/ilDRnQA+BGJTI1tj7i23mJ/J0t4nJHyA1GrL4QA/bM/qTJ35eyz5dEhJc4g==
   dependencies:
     "@types/d3-path" "^1.0.8"
@@ -14944,7 +14978,7 @@ expo-asset@~11.0.5:
 
 expo-av@~15.0.2:
   version "15.0.2"
-  resolved "https://registry.yarnpkg.com/expo-av/-/expo-av-15.0.2.tgz#65bb08658a7fe3a67aa47da614abbfae9adb684e"
+  resolved "https://registry.npmjs.org/expo-av/-/expo-av-15.0.2.tgz"
   integrity sha512-AHIHXdqLgK1dfHZF0JzX3YSVySGMrWn9QtPzaVjw54FAzvXfMt4sIoq4qRL/9XWCP9+ICcCs/u3EcvmxQjrfcA==
 
 expo-blur@~14.0.3:
@@ -14999,7 +15033,7 @@ expo-font@~13.0.4:
 
 expo-haptics@^14.1.4:
   version "14.1.4"
-  resolved "https://registry.yarnpkg.com/expo-haptics/-/expo-haptics-14.1.4.tgz#442f48b1bdf83484d4fcadc653445aaae6049b70"
+  resolved "https://registry.npmjs.org/expo-haptics/-/expo-haptics-14.1.4.tgz"
   integrity sha512-QZdE3NMX74rTuIl82I+n12XGwpDWKb8zfs5EpwsnGi/D/n7O2Jd4tO5ivH+muEG/OCJOMq5aeaVDqqaQOhTkcA==
 
 expo-image-loader@~5.0.0:
@@ -15108,7 +15142,7 @@ expo-print@~14.0.3:
   resolved "https://registry.npmjs.org/expo-print/-/expo-print-14.0.3.tgz"
   integrity sha512-VEGl7SX3q2Z3ZKwvxtOBAlXm9yDX8Jodewr+kouQcg2EaV0ciAH9rqLwRWZhAtEETpVdEG53ow7IAmwJU7jInA==
 
-expo-router@^4.0.20:
+expo-router@^4.0.17, expo-router@^4.0.20:
   version "4.0.21"
   resolved "https://registry.yarnpkg.com/expo-router/-/expo-router-4.0.21.tgz#191e8e5a4401097261cf54461e621387da6cf910"
   integrity sha512-z1U9cGZbgL+ZSHp533VMobOqdkUpFBlDXBpd9/JH+Q0wW49is0G2PrJVUYMzdwr30HSUltdO/19W8rRwjfOnFw==
