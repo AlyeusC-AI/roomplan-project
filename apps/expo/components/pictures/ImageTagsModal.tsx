@@ -577,12 +577,12 @@ export default function ImageTagsModal({
                           style={styles.selectedTagChip}
                           onPress={() => toggleTag(tagName)}
                         >
-                          <View
+                          {/* <View
                             style={[
                               styles.selectedTagColor,
                               { backgroundColor: tag?.color || "#6b7280" }
                             ]}
-                          />
+                          /> */}
                           <Text style={styles.selectedTagText}>{tagName}</Text>
                           <XIcon size={12} color="#64748b" />
                         </TouchableOpacity>
@@ -1036,9 +1036,9 @@ const styles = StyleSheet.create({
   selectedTagChip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
     backgroundColor: "#f1f5f9",
     borderWidth: 1,
     borderColor: "#e2e8f0",
