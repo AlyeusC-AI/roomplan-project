@@ -85,8 +85,8 @@ export default function ProjectCell({ project }: { project: Project }) {
                   </View>
                 )}
                 {project?.lossType && (
-                  <View className="flex-row items-center bg-red-100 rounded px-2 py-0.5">
-                    <Text className="text-xs text-red-700 capitalize">{project.lossType.replace(/_/g, ' ')}</Text>
+                  <View className="flex-row items-center bg-blue-700 rounded px-2 py-0.5">
+                    <Text className="text-xs text-white capitalize">{project.lossType.replace(/_/g, ' ')}</Text>
                   </View>
                 )}
                 </View>

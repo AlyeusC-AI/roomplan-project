@@ -248,7 +248,7 @@ export default function ProjectOverview() {
                 <View className="flex-row items-center gap-4">
 
                   <TouchableOpacity onPress={() => setShowClientInfo(true)}>
-                    <CardTitle className="text-2xl mb-1 truncate capitalize">{project?.data?.name}
+                    <CardTitle className="text-3xl mb-1 truncate capitalize">{project?.data?.name}
 
 
                     </CardTitle>

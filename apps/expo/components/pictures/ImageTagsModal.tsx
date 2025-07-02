@@ -411,32 +411,35 @@ export default function ImageTagsModal({
         showsVerticalScrollIndicator={true}
       >
         <View style={styles.tagList}>
-          {tagsToShow.map((tag) => (
-                        <View key={tag.id} style={styles.tagItem}>
-                <Checkbox
-                  checked={selectedTags.includes(tag.name)}
-                  onCheckedChange={() => toggleTag(tag.name)}
-                  className="w-4 h-4"
+          {tagsToShow.map((tag, idx) => (
+            <View
+              key={tag.id}
+              style={[
+                styles.tagItem,
+                idx !== tagsToShow.length - 1 && styles.tagItemDivider, // Add divider except last
+                { backgroundColor: 'transparent' }, // Remove background
+              ]}
+            >
+              <Checkbox
+                checked={selectedTags.includes(tag.name)}
+                onCheckedChange={() => toggleTag(tag.name)}
+                className="w-4 h-4"
+              />
+              <TouchableOpacity
+                style={styles.tagLabelContainer}
+                onPress={() => toggleTag(tag.name)}
+              >
+                <View
+                  style={[styles.tagColor, { backgroundColor: tag.color }]}
                 />
-                
-                <TouchableOpacity
-                  style={styles.tagLabelContainer}
-                  onPress={() => toggleTag(tag.name)}
-                >
-                  <View
-                    style={[styles.tagColor, { backgroundColor: tag.color }]}
-                  />
-                  <Text style={styles.tagOptionText}>
-                    {tag.name}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.editButton}
-                  onPress={() => openEditModal(tag)}
-                >
-                  <PencilIcon size={16} color="#64748b" />
-                </TouchableOpacity>
+                <Text style={styles.tagOptionText}>{tag.name}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.editButtonGhost}
+                onPress={() => openEditModal(tag)}
+              >
+                <PencilIcon size={16} color="#64748b" />
+              </TouchableOpacity>
             </View>
           ))}
 
@@ -488,6 +491,12 @@ export default function ImageTagsModal({
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
+              <View style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}>
+
               <View style={styles.modalHeaderContent}>
                 <TagIcon size={24} color="#2563eb" />
                 <Text style={styles.modalTitle}>
@@ -497,14 +506,8 @@ export default function ImageTagsModal({
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                 <XIcon size={24} color="#64748b" />
               </TouchableOpacity>
-            </View>
-
-            <View style={styles.modalBody}>
-              <Text style={styles.modalDescription}>
-                Select tags to assign to this {type === "PROJECT" ? "project" : "image"}
-              </Text>
-
-              {/* Search Input */}
+               </View>
+                {/* Search Input */}
               <View style={styles.searchContainer}>
                 <View style={styles.searchInputContainer}>
                   <SearchIcon
@@ -530,6 +533,15 @@ export default function ImageTagsModal({
                 </View>
                 
               </View>
+             
+            </View>
+
+            <View style={styles.modalBody}>
+              {/* <Text style={styles.modalDescription}>
+                Select tags to assign to this {type === "PROJECT" ? "project" : "image"}
+              </Text> */}
+
+            
 
               {/* Selected Tags Section */}
               {selectedTags.length > 0 && (
@@ -688,9 +700,10 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: "column",
+    // alignItems: "center",
+    // justifyContent: "space-between",
+    gap: 12,
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
@@ -732,6 +745,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
+  tagItemDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
   tagLabelContainer: {
     flex: 1,
     flexDirection: "row",
@@ -739,7 +756,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: "#f8fafc",
+    // backgroundColor: "#f8fafc",
     gap: 8,
     minHeight: 44,
   },
@@ -747,6 +764,11 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
     backgroundColor: "#f1f5f9",
+  },
+  editButtonGhost: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "transparent",
   },
   tagColor: {
     width: 12,
@@ -978,7 +1000,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   searchContainer: {
-    marginBottom: 16,
+    // marginBottom: 16,
   },
   selectedTagsSection: {
     marginBottom: 16,
