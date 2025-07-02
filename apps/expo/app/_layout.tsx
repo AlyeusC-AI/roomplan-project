@@ -4,13 +4,16 @@ import { Toaster } from "sonner-native";
 import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
 import { Stack } from "expo-router";
 import "@/global.css";
-import { AppState, View, StatusBar, SafeAreaView } from "react-native";
+import { AppState, View, StatusBar, SafeAreaView, Text } from "react-native";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { PortalHost } from "@rn-primitives/portal";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as SplashScreen from "expo-splash-screen";
 
-import { QueryProvider } from "../lib/providers/QueryProvider";
+import {
+  QueryProvider,
+  useNetworkStatus,
+} from "../lib/providers/QueryProvider";
 
 console.log("App initialization started");
 
@@ -18,6 +21,40 @@ console.log("App initialization started");
 SplashScreen.preventAutoHideAsync().catch((err) => {
   console.warn("Error preventing splash screen auto hide:", err);
 });
+
+// Offline banner component
+function OfflineBanner() {
+  const { isOffline } = useNetworkStatus();
+
+  if (!isOffline) return null;
+
+  return (
+    <View
+      style={{
+        backgroundColor: "#ef4444",
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        alignItems: "center",
+        justifyContent: "center",
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+      }}
+    >
+      <Text
+        style={{
+          color: "#ffffff",
+          fontSize: 14,
+          fontWeight: "600",
+        }}
+      >
+        📱 You're offline - Data may be outdated
+      </Text>
+    </View>
+  );
+}
 
 export default function AppRoot() {
   console.log("AppRoot component started rendering");
@@ -30,7 +67,7 @@ export default function AppRoot() {
         200: "#bfdbfe",
         300: "#93c5fd",
         400: "#60a5fa",
-        500: "#2563eb" ,
+        500: "#2563eb",
         600: "#2563eb",
         700: "#1d4ed8",
         800: "#1e40af",
@@ -102,6 +139,7 @@ export default function AppRoot() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <ThemeProvider>
             <NativeBaseProvider theme={theme}>
+              <OfflineBanner />
               <Stack
                 screenOptions={{
                   headerTintColor: "#FFFF",
