@@ -429,9 +429,9 @@ export default function ImageTagsModal({
                 style={styles.tagLabelContainer}
                 onPress={() => toggleTag(tag.name)}
               >
-                <View
+                {/* <View
                   style={[styles.tagColor, { backgroundColor: tag.color }]}
-                />
+                /> */}
                 <Text style={styles.tagOptionText}>{tag.name}</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -497,14 +497,31 @@ export default function ImageTagsModal({
                 alignItems: "center",
               }}>
 
-              <View style={styles.modalHeaderContent}>
-                <TagIcon size={24} color="#2563eb" />
-                <Text style={styles.modalTitle}>
-                  Manage {type === "PROJECT" ? "Project" : "Image"} Tags
-                </Text>
-              </View>
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                 <XIcon size={24} color="#64748b" />
+              </TouchableOpacity>
+              <View style={styles.modalHeaderContent}>
+                {/* <TagIcon size={24} color="#2563eb" /> */}
+                <Text style={styles.modalTitle}>
+                  {/* Manage {type === "PROJECT" ? "Project" : "Image"} Tags */}
+                  Tags
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.confirmButton,
+                  (isAddingImageTags || isRemovingImageTags || isAddingProjectTags || isRemovingProjectTags || isLoading) &&
+                    styles.confirmButtonDisabled,
+                ]}
+                onPress={handleAssignTags}
+                disabled={isAddingImageTags || isRemovingImageTags || isAddingProjectTags || isRemovingProjectTags || isLoading}
+              >
+                 {isAddingImageTags || isRemovingImageTags || isAddingProjectTags || isRemovingProjectTags ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) :(
+
+                  <Text style={styles.confirmButtonText}>Save</Text>
+                )}
               </TouchableOpacity>
                </View>
                 {/* Search Input */}
@@ -578,7 +595,7 @@ export default function ImageTagsModal({
               {renderTagList()}
             </View>
 
-            <View style={styles.modalFooter}>
+            {/* <View style={styles.modalFooter}>
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={onClose}
@@ -601,7 +618,7 @@ export default function ImageTagsModal({
                   <Text style={styles.confirmButtonText}>Assign Tags</Text>
                 )}
               </TouchableOpacity>
-            </View>
+            </View> */}
           </View>
         </View>
 
@@ -738,12 +755,13 @@ const styles = StyleSheet.create({
     minHeight: 0,
   },
   tagList: {
-    gap: 8,
+    gap: 12,
   },
   tagItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    paddingBottom: 12
   },
   tagItemDivider: {
     borderBottomWidth: 1,
