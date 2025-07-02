@@ -237,7 +237,7 @@ export default function ProjectOverview() {
               </View>
             ) : (
               <View className="w-[120px] h-[120px] rounded-xl overflow-hidden border border-border bg-gray-100 justify-center items-center mr-4">
-                <Text className="text-3xl font-bold text-gray-400">
+                <Text className="text-4xl font-bold text-gray-400">
                   {project?.data?.name?.[0] || "?"}
                 </Text>
               </View>
@@ -263,20 +263,20 @@ export default function ProjectOverview() {
                   <View className="flex-row items-center gap-2">
 
                     {project?.data?.status?.label && (
-                      <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: project.data.status.color || '#e0e7ff' }}>
+                      <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: `${project.data.status.color}` || '#e0e7ff' }}>
                         <Text className="text-xs font-semibold text-white">{project.data.status.label}</Text>
                       </View>
                     )}
                     {project?.data?.lossType && (
-                      <View className="flex-row items-center bg-red-100 rounded px-2 py-0.5">
-                        <Text className="text-xs text-red-700 capitalize">{project.data.lossType.replace(/_/g, ' ')}</Text>
+                      <View className="flex-row items-center bg-blue-700 rounded px-2 py-0.5">
+                        <Text className="text-xs text-white capitalize">{project.data.lossType.replace(/_/g, ' ')}</Text>
                       </View>
                     )}
-                  </View>
                   <ProjectTags
                     tags={project?.data?.tags}
                     onAddTags={() => setShowTagsModal(true)}
                   />
+                  </View>
                   <ImageTagsModal
                     visible={showTagsModal}
                     type="PROJECT"

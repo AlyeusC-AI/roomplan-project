@@ -1,9 +1,9 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import { Badge } from "@/components/ui/badge";
-import { Plus } from "lucide-react-native";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@service-geek/api-client";
+import { Edit2 } from "lucide-react-native";
 
 interface ProjectTagsProps {
   tags?: Tag[];
@@ -11,15 +11,21 @@ interface ProjectTagsProps {
 }
 
 export default function ProjectTags({ tags, onAddTags }: ProjectTagsProps) {
+  const hasTags = !!tags && tags.length > 0;
   return (
-    <View className="flex-row flex-wrap items-center gap-2">
-      {tags && tags.length > 0 && (
-        <View className="flex-row flex-wrap gap-1">
-          {tags.map((tag) => (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}
+        style={{ flexGrow: 0 }}
+      >
+        {hasTags &&
+          tags!.map((tag) => (
             <Badge
               key={tag.id}
               variant="secondary"
-              className="px-2 py-1"
+              className="px-2 py-1 mr-2"
               style={
                 tag.color
                   ? {
@@ -47,17 +53,17 @@ export default function ProjectTags({ tags, onAddTags }: ProjectTagsProps) {
               </Text>
             </Badge>
           ))}
-        </View>
-      )}
-      
+      </ScrollView>
       <Button
-        variant="outline"
-        size="sm"
-        onPress={onAddTags}
-        className="h-8 px-2"
-      >
-        <Text className="text-sm">+ Add Tags</Text>
-      </Button>
+          variant="outline"
+          size="sm"
+          onPress={onAddTags}
+          className="h-8 px-2"
+          style={{ marginLeft: 8 }}
+          >
+          {!hasTags ? (
+          <Text className="text-sm">+ Add Labels</Text>): <Edit2 size={16} color="#000" />}
+        </Button>
     </View>
   );
 } 
