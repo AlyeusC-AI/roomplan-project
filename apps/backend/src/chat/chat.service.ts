@@ -40,11 +40,24 @@ export class ChatService {
     if (type === ChatType.PROJECT && projectId) {
       const projectMembers = await this.prisma.user.findMany({
         where: {
-          projects: {
-            some: {
-              id: projectId,
+          OR: [
+            {
+              organizationMemberships: {
+                some: {
+                  organizationId,
+                  status: 'ACTIVE',
+                  role: { in: ['OWNER', 'ADMIN'] },
+                },
+              },
             },
-          },
+            {
+              projects: {
+                some: {
+                  id: projectId,
+                },
+              },
+            },
+          ],
         },
       });
       finalParticipantIds = projectMembers.map((member) => member.id);
