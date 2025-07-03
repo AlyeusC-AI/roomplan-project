@@ -11,6 +11,7 @@ import {
 import { Text } from "@/components/ui/text";
 import { format } from "date-fns";
 import { AudioPlayer } from "./AudioPlayer";
+import { PencilIcon, ReplyIcon, Trash2Icon } from "lucide-react-native";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -344,18 +345,18 @@ export function Message({
       {isSelected && !message.isDeleted && (
         <View style={[styles.actionButtons, styles.actionButtonsVisible]}>
           <TouchableOpacity style={styles.actionButton} onPress={onReply}>
-            <Text style={[styles.actionIcon, { color: "#22c55e" }]}>↩</Text>
+            <Text style={[styles.actionIcon, { color: "#22c55e" }]}><ReplyIcon size={16} /></Text>
           </TouchableOpacity>
           {isSent && (
             <>
               <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
                 <Text style={[styles.actionIcon, { color: "#2563eb" }]}>
-                  ✏
+                <PencilIcon size={16} />
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton} onPress={onDelete}>
                 <Text style={[styles.actionIcon, { color: "#ef4444" }]}>
-                  🗑
+                <Trash2Icon size={16} />
                 </Text>
               </TouchableOpacity>
             </>
