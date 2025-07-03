@@ -87,7 +87,7 @@ export class ProjectsService {
           organizationId: createProjectDto.organizationId,
           participants: {
             connect: {
-              userId,
+              id: userId,
             },
           },
         },
