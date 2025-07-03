@@ -83,12 +83,6 @@ export class ChatService {
       const project = await this.prisma.project.findFirst({
         where: {
           id: projectId,
-          // organizationId,
-          members: {
-            some: {
-              id: { in: finalParticipantIds },
-            },
-          },
         },
       });
 
