@@ -42,7 +42,7 @@ interface ChatInputProps {
 }
 
 const VoiceNoteBars = ({ duration }: { duration: string }) => {
-  const barAnims = Array.from({ length: 20 }, () => useRef(new Animated.Value(1)).current);
+  const barAnims = Array.from({ length: 25 }, () => useRef(new Animated.Value(1)).current);
 
   useEffect(() => {
     const animations = barAnims.map((anim, i) =>
