@@ -134,7 +134,7 @@ export class ChatService {
     if (type === ChatType.PROJECT) {
       const isChatExists = await this.prisma.chat.findFirst({
         where: {
-          type,
+          // type,
           projectId,
           // organizationId,
         },
@@ -161,6 +161,7 @@ export class ChatService {
           },
         },
       });
+      console.log('🚀 ~ ChatService ~ isChatExists:', isChatExists);
 
       if (isChatExists) {
         return isChatExists;
