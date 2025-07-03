@@ -13,6 +13,7 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { EmailService } from '../email/email.service';
 import { SendLidarEmailDto } from './dto/send-lidar-email.dto';
+import { ChatType } from 'src/chat/dto/create-chat.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -70,13 +71,25 @@ export class ProjectsService {
           dateOfLoss: createProjectDto.dateOfLoss
             ? new Date(createProjectDto.dateOfLoss)
             : undefined,
+          members: {
+            connect: {
+              id: userId,
+            },
+          },
         },
       });
 
       // Create chat for the project
       await prisma.chat.create({
         data: {
+          type: ChatType.PROJECT,
           projectId: newProject.id,
+          organizationId: createProjectDto.organizationId,
+          participants: {
+            connect: {
+              userId,
+            },
+          },
         },
       });
 
@@ -183,13 +196,40 @@ export class ProjectsService {
         },
       };
     }
+    const whereClause2 = {
+      OR: [
+        {
+          organization: {
+            members: {
+              some: {
+                userId,
+                status: 'ACTIVE',
+                role: { in: ['OWNER', 'ADMIN'] },
+              },
+            },
+          },
+        },
+        {
+          members: {
+            some: {
+              id: userId,
+            },
+          },
+        },
+      ],
+    };
 
     const [total, projects] = await Promise.all([
       this.prisma.project.count({
-        where: whereClause,
+        where: {
+          AND: [whereClause, whereClause2],
+        },
       }),
+
       this.prisma.project.findMany({
-        where: whereClause,
+        where: {
+          AND: [whereClause, whereClause2],
+        },
         skip,
         take: limit,
         orderBy: {
