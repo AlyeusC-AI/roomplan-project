@@ -478,8 +478,8 @@ const List = ({ projects }: { projects: any[] }) => {
                   </div>
                   <span className="text-muted-foreground text-xs">Last updated {formatDate(new Date(project?.createdAt))}</span>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge style={{ backgroundColor: status?.color || 'green', width: 'fit-content' }}>
-                      {status?.label}
+                    <Badge style={{ backgroundColor: status?.color || project.status?.color || 'green', width: 'fit-content' }}>
+                      {status?.label || project.status?.label}
                     </Badge>
                     {project.lossType && (
                       <Badge

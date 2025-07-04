@@ -234,10 +234,10 @@ export default function Layout({ children }: React.PropsWithChildren) {
                     <div className='flex items-center gap-2'>
                       {projectData?.status && (
                         <Badge
-                          variant='outline'
+                          // variant='outline'
                           className='border px-2 py-0.5 text-xs font-medium'
                           style={{
-                            borderColor: projectData.status.color || 'green',
+                            borderColor: projectData.status.color,
                             backgroundColor: projectData.status.color || 'green',
                             color: "white",
                           }}
