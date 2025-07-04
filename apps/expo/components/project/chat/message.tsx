@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   TouchableOpacity,
@@ -7,6 +7,7 @@ import {
   Image as RNImage,
   Alert,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { Text } from "@/components/ui/text";
 import { format } from "date-fns";
@@ -42,6 +43,9 @@ export function Message({
   onDownload,
   downloadingFiles = new Set(),
 }: MessageProps) {
+  const [showTime, setShowTime] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
   const formatMessageTime = (date: Date) => {
     const messageDate = new Date(date);
     return format(messageDate, "h:mm a");
@@ -228,8 +232,22 @@ export function Message({
 
       {/* Message Bubble */}
       <TouchableOpacity
-        onLongPress={onLongPress}
-        onPress={onPress}
+        onLongPress={() => {
+
+          onLongPress();
+        }}
+        onPress={() => {
+
+          if (Platform.OS !== "web") {
+            setShowTime(true);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+              setShowTime(false);
+            }, 1500);
+          }
+
+          onPress()
+        }}
         activeOpacity={0.8}
       >
         <View
@@ -329,17 +347,20 @@ export function Message({
               (edited)
             </Text>
           )}
-
-          <Text
-            style={[
-              styles.messageTime,
-              isSent ? styles.messageTimeSent : styles.messageTimeReceived,
-            ]}
-          >
-            {formatMessageTime(new Date(message.createdAt))}
-          </Text>
         </View>
       </TouchableOpacity>
+
+      {/* Show time on long press (mobile only) */}
+      {showTime && Platform.OS !== "web" && (
+        <Text
+        style={[
+          styles.messageTime,
+          isSent ? styles.messageTimeSent : styles.messageTimeReceived,
+        ]}
+        >
+          {formatMessageTime(new Date(message.createdAt))}
+        </Text>
+      )}
 
       {/* Action Buttons */}
       {isSelected && !message.isDeleted && (
@@ -351,12 +372,12 @@ export function Message({
             <>
               <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
                 <Text style={[styles.actionIcon, { color: "#2563eb" }]}>
-                <PencilIcon size={16} />
+                  <PencilIcon size={16} />
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton} onPress={onDelete}>
                 <Text style={[styles.actionIcon, { color: "#ef4444" }]}>
-                <Trash2Icon size={16} />
+                  <Trash2Icon size={16} />
                 </Text>
               </TouchableOpacity>
             </>
@@ -407,8 +428,8 @@ const styles = StyleSheet.create({
     lineHeight: 12,
   },
   messageBubble: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
     borderRadius: 20,
   },
   messageBubbleSent: {
@@ -453,7 +474,7 @@ const styles = StyleSheet.create({
   messageText: {
     fontSize: 15,
     lineHeight: 20,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
   },
   messageTextSent: {
     color: "#ffffff",
@@ -466,17 +487,19 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   messageTime: {
-    fontSize: 11,
-    marginTop: 4,
-    paddingHorizontal: 16,
+    fontSize: 12,
+    // marginTop: 4,
+    // paddingHorizontal: 16,
   },
   messageTimeSent: {
-    color: "rgba(255, 255, 255, 0.7)",
+    // color: "rgba(255, 255, 255, 0.7)",
     textAlign: "right",
+    alignItems: "flex-end",
   },
   messageTimeReceived: {
-    color: "#94a3b8",
+    // color: "#94a3b8",
     textAlign: "left",
+    alignItems: "flex-start",
   },
   editedIndicator: {
     fontSize: 10,
@@ -486,7 +509,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   attachmentItem: {
-    marginBottom: 8,
+    marginBottom: 4,
   },
   // Single image card
   singleImageCard: {
@@ -563,7 +586,7 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     position: "absolute",
-    top: -8,
+    top: -30,
     right: -8,
     flexDirection: "row",
     gap: 4,
