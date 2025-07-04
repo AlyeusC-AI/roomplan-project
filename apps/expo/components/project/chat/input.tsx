@@ -17,6 +17,15 @@ import { toast } from "sonner-native";
 import ProjectImageSelector from "./ProjectImageSelector";
 import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
+import { ArrowUp, Camera, CameraIcon, Image, Images, Mic, Paperclip, Send, SendHorizontal, Trash2 } from "lucide-react-native";
+
+
+const SendHorizontalIcon = SendHorizontal as any;
+const MicIcon = Mic as any;
+const ImageIcon = Image as any;
+const PaperclipIcon = Paperclip as any;
+const ImagesIcon = Images as any;
+const Trash2Icon = Trash2 as any;
 
 interface ChatInputProps {
   message: string;
@@ -31,6 +40,96 @@ interface ChatInputProps {
   placeholder?: string;
   projectId?: string;
 }
+
+const VoiceNoteBars = ({ duration }: { duration: string }) => {
+  const barAnims = Array.from({ length: 25 }, () => useRef(new Animated.Value(1)).current);
+
+  useEffect(() => {
+    const animations = barAnims.map((anim, i) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(anim, {
+            toValue: Math.random() * 1.5 + 0.5,
+            duration: 300 + i * 50,
+            useNativeDriver: false,
+          }),
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: 300 + i * 50,
+            useNativeDriver: false,
+          }),
+        ])
+      )
+    );
+    animations.forEach((a) => a.start());
+    return () => {
+      animations.forEach((a) => a.stop());
+    };
+  }, []);
+
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#e0e7ef",
+        borderRadius: 16,
+        paddingVertical: 4,
+        paddingHorizontal: 10,
+        // marginBottom: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
+        minWidth: 140,
+        flex: 1,
+      }}
+    >
+      {/* Optional: Add a mic icon for context */}
+      {/* <MicIcon size={22} color="#2563eb" style={{ marginRight: 10 }} /> */}
+
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "flex-end",
+          marginRight: 14,
+          minWidth: 60,
+          height: 32,
+          flex: 1,
+        }}
+      >
+        {barAnims.map((anim, i) => (
+          <Animated.View
+            key={i}
+            style={{
+              width: 3,
+              marginHorizontal: 3,
+              backgroundColor: "#2563eb",
+              borderRadius: 3,
+              height: anim.interpolate({
+                inputRange: [0.5, 2],
+                outputRange: [12, 32],
+              }),
+              opacity: 0.85,
+            }}
+          />
+        ))}
+      </View>
+      <Text
+        style={{
+          fontWeight: "bold",
+          color: "#2563eb",
+          textAlign: "center",
+          minWidth: 40,
+        }}
+      >
+        {duration}
+      </Text>
+    </View>
+  );
+};
 
 export function ChatInput({
   message,
@@ -462,124 +561,118 @@ export function ChatInput({
             </View>
           )}
 
-          {/* Recording Indicator */}
-          {isRecording && (
-            <View style={styles.recordingIndicator}>
-              <Animated.View
-                style={[
-                  styles.recordingPulse,
-                  {
-                    transform: [{ scale: pulseAnim }],
-                  },
-                ]}
-              >
-                <Text style={styles.recordingIcon}>🎤</Text>
-              </Animated.View>
-              <Text style={styles.recordingText}>
-                Recording... {formatTime(recordingTime)}
-              </Text>
-              <TouchableOpacity
-                style={styles.cancelRecordingButton}
-                onPress={cancelRecording}
-              >
-                <Text style={styles.cancelRecordingText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+
 
           <View style={styles.inputRow}>
-            {/* Attachment Buttons - Hidden when input is focused */}
-            {!isFocused && (
-              <View style={styles.attachmentButtons}>
-                {/* Camera Button */}
+            {/* Recording Indicator */}
+            {isRecording ? (
+              <View style={[styles.recordingIndicator]}>
                 <TouchableOpacity
-                  style={[
-                    styles.attachmentButton,
-                    isUploading && styles.attachmentButtonDisabled,
-                  ]}
-                  disabled={!connected || isUploading || isRecording}
-                  onPress={handleCamera}
+                  style={styles.cancelRecordingButton}
+                  onPress={cancelRecording}
                 >
-                  <Text style={styles.attachmentIcon}>📷</Text>
+                  <Text style={styles.cancelRecordingText}><Trash2Icon /></Text>
                 </TouchableOpacity>
-
-                {/* Gallery Button */}
-                <TouchableOpacity
-                  style={[
-                    styles.attachmentButton,
-                    isUploading && styles.attachmentButtonDisabled,
-                  ]}
-                  disabled={!connected || isUploading || isRecording}
-                  onPress={handleImagePicker}
-                >
-                  <Text style={styles.attachmentIcon}>🖼️</Text>
-                </TouchableOpacity>
-
-                {/* Document Button */}
-                <TouchableOpacity
-                  style={[
-                    styles.attachmentButton,
-                    isUploading && styles.attachmentButtonDisabled,
-                  ]}
-                  disabled={!connected || isUploading || isRecording}
-                  onPress={handleDocumentPicker}
-                >
-                  <Text style={styles.attachmentIcon}>📄</Text>
-                </TouchableOpacity>
-
-                {/* Project Images Button (only if projectId exists) */}
-                {projectId && (
+                {/* Animated bars in a box with duration below */}
+                <VoiceNoteBars duration={formatTime(recordingTime)} />
+              </View>
+            ) : <>
+              {/* Attachment Buttons - Hidden when input is focused */}
+              {!isFocused && (
+                <View style={styles.attachmentButtons}>
+                  {/* Camera Button */}
                   <TouchableOpacity
                     style={[
                       styles.attachmentButton,
                       isUploading && styles.attachmentButtonDisabled,
                     ]}
                     disabled={!connected || isUploading || isRecording}
-                    onPress={() => setShowProjectImageSelector(true)}
+                    onPress={handleCamera}
                   >
-                    <Text style={styles.attachmentIcon}>🏗️</Text>
+                    <Text style={styles.attachmentIcon}><CameraIcon /></Text>
                   </TouchableOpacity>
-                )}
+
+                  {/* Gallery Button */}
+                  <TouchableOpacity
+                    style={[
+                      styles.attachmentButton,
+                      isUploading && styles.attachmentButtonDisabled,
+                    ]}
+                    disabled={!connected || isUploading || isRecording}
+                    onPress={handleImagePicker}
+                  >
+                    <Text style={styles.attachmentIcon}>
+                      <ImageIcon />
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Document Button */}
+                  <TouchableOpacity
+                    style={[
+                      styles.attachmentButton,
+                      isUploading && styles.attachmentButtonDisabled,
+                    ]}
+                    disabled={!connected || isUploading || isRecording}
+                    onPress={handleDocumentPicker}
+                  >
+                    <Text style={styles.attachmentIcon}><PaperclipIcon /></Text>
+                  </TouchableOpacity>
+
+                  {/* Project Images Button (only if projectId exists) */}
+                  {projectId && (
+                    <TouchableOpacity
+                      style={[
+                        styles.attachmentButton,
+                        isUploading && styles.attachmentButtonDisabled,
+                      ]}
+                      disabled={!connected || isUploading || isRecording}
+                      onPress={() => setShowProjectImageSelector(true)}
+                    >
+                      <Text style={styles.attachmentIcon}><ImagesIcon /></Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
+
+              {/* Back Button - Only shown when input is focused */}
+              {isFocused && (
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => setIsFocused(false)}
+                >
+                  <Text style={styles.backIcon}>←</Text>
+                </TouchableOpacity>
+              )}
+            </>}
+            {/* Text Input */}
+            {isRecording ? null : (
+              <View
+                style={[
+                  styles.inputWrapper,
+                  isFocused && styles.inputWrapperFocused,
+                  isRecording && styles.inputWrapperRecording,
+                ]}
+              >
+                <TextInput
+                  style={styles.textInput}
+                  value={message}
+                  onChangeText={onMessageChange}
+                  placeholder={
+                    isRecording
+                      ? "Release to send voice message"
+                      : replyingTo
+                        ? "Type your reply..."
+                        : placeholder
+                  }
+                  placeholderTextColor="#94a3b8"
+                  multiline
+                  maxLength={1000}
+                  editable={connected && !isUploading && !isRecording}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                />
               </View>
             )}
-
-            {/* Back Button - Only shown when input is focused */}
-            {isFocused && (
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => setIsFocused(false)}
-              >
-                <Text style={styles.backIcon}>←</Text>
-              </TouchableOpacity>
-            )}
-
-            {/* Text Input */}
-            <View
-              style={[
-                styles.inputWrapper,
-                isFocused && styles.inputWrapperFocused,
-                isRecording && styles.inputWrapperRecording,
-              ]}
-            >
-              <TextInput
-                style={styles.textInput}
-                value={message}
-                onChangeText={onMessageChange}
-                placeholder={
-                  isRecording
-                    ? "Release to send voice message"
-                    : replyingTo
-                      ? "Type your reply..."
-                      : placeholder
-                }
-                placeholderTextColor="#94a3b8"
-                multiline
-                maxLength={1000}
-                editable={connected && !isUploading && !isRecording}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-              />
-            </View>
 
             {/* Microphone/Send Button */}
             {isRecording ? (
@@ -587,20 +680,20 @@ export function ChatInput({
                 style={[styles.sendButton, styles.recordingButton]}
                 onPress={stopRecording}
               >
-                <Text style={styles.sendIcon}>⬆</Text>
+                <Text style={styles.sendIcon}><SendHorizontalIcon /></Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
                 style={[
                   styles.sendButton,
                   (!message.trim() || !connected || isUploading) &&
-                    styles.sendButtonDisabled,
+                  styles.sendButtonDisabled,
                 ]}
                 onPress={message.trim() ? handleSend : startRecording}
                 disabled={!connected || isUploading}
               >
                 <Text style={styles.sendIcon}>
-                  {message.trim() ? "➤" : "🎤"}
+                  {message.trim() ? <SendHorizontalIcon /> : <MicIcon />}
                 </Text>
               </TouchableOpacity>
             )}
@@ -672,14 +765,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   attachmentButton: {
-    backgroundColor: "#f8fafc",
-    borderRadius: 18,
+    // backgroundColor: "#f8fafc",
+    // borderRadius: 18,
     width: 36,
     height: 36,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
+    // borderWidth: 1,
+    // borderColor: "#e2e8f0",
   },
   attachmentButtonDisabled: {
     backgroundColor: "#f1f5f9",
@@ -714,25 +807,26 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   sendButton: {
-    backgroundColor: "#2563eb",
-    borderRadius: 18,
+    // backgroundColor: "#2563eb",
+    // borderRadius: 18,
     width: 36,
     height: 36,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#2563eb",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    // shadowColor: "#2563eb",
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.2,
+    // shadowRadius: 4,
     elevation: 3,
   },
   sendButtonDisabled: {
-    backgroundColor: "#cbd5e1",
+    // backgroundColor: "#cbd5e1",
     shadowOpacity: 0,
     elevation: 0,
   },
   recordingButton: {
-    backgroundColor: "#dc2626",
+    // backgroundColor: "#dc2626",
+
   },
   sendIcon: {
     fontSize: 16,
@@ -743,7 +837,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
+    flex: 1,
+    paddingVertical: 6,
   },
   recordingPulse: {
     width: 20,
