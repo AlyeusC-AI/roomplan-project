@@ -65,7 +65,7 @@ import { Button } from "@/components/ui/button";
 import ImageTagsModal from "@/components/pictures/ImageTagsModal";
 
 // Utility to add opacity to hex color
-function addOpacityToColor(color: string, opacityHex: string = '33') {
+function addOpacityToColor(color: string, opacityHex: string = "33") {
   if (!color) return color;
   // Only add opacity if color is in #RRGGBB format
   if (/^#([A-Fa-f0-9]{6})$/.test(color)) {
@@ -305,13 +305,17 @@ export default function ProjectOverview() {
                         className="px-2 py-0.5 rounded-full"
                         style={{
                           backgroundColor:
-                            `${project.data.status.color}` || "green",
+                            project.data.status.color?.toLowerCase() || "green",
                         }}
                       >
-                        <Text className="text-xs font-semibold text-white"
-                          style={{
-                            // color: addOpacityToColor(project.data.status.color || ''),
-                          }}>
+                        <Text
+                          className="text-xs font-semibold text-white"
+                          style={
+                            {
+                              // color: addOpacityToColor(project.data.status.color || ''),
+                            }
+                          }
+                        >
                           {project.data.status.label.replace(/_/g, " ")}
                         </Text>
                       </View>

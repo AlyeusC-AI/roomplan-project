@@ -71,28 +71,33 @@ export default function ProjectCell({ project }: { project: Project }) {
         )}
 
         <View style={styles.cardBody}>
-
           <Text style={styles.cardTitle}>{`${project.name}`}</Text>
           <Text style={styles.cardSubTitle}>{project.location}</Text>
           {/* <Text style={[styles.cardTag, { color: status?.data.color }]}>
             {status?.data.label}
           </Text> */}
           <View className="flex-row items-center gap-2">
+            {status?.data?.label && (
+              <View
+                className="px-2 py-0.5 rounded-full"
+                style={{
+                  backgroundColor: status?.data.color?.toLowerCase() || "green",
+                }}
+              >
+                <Text className="text-xs font-semibold text-white">
+                  {status?.data.label}
+                </Text>
+              </View>
+            )}
+            {project?.lossType && (
+              <View className="flex-row items-center bg-blue-700 rounded px-2 py-0.5">
+                <Text className="text-xs text-white capitalize">
+                  {project.lossType.replace(/_/g, " ")}
+                </Text>
+              </View>
+            )}
+          </View>
 
-          {status?.data?.label && (
-            <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: status?.data.color || 'green' }}>
-                    <Text className="text-xs font-semibold text-white">{status?.data.label}</Text>
-                  </View>
-                )}
-                {project?.lossType && (
-                  <View className="flex-row items-center bg-blue-700 rounded px-2 py-0.5">
-                    <Text className="text-xs text-white capitalize">{project.lossType.replace(/_/g, ' ')}</Text>
-                  </View>
-                )}
-                </View>
-
-              
-              
           {/* <View style={styles.cardRow}>
             <View style={styles.cardRowItem}>
               <Image
