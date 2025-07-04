@@ -64,6 +64,16 @@ import {
 import { Button } from "@/components/ui/button";
 import ImageTagsModal from "@/components/pictures/ImageTagsModal";
 
+// Utility to add opacity to hex color
+function addOpacityToColor(color: string, opacityHex: string = '33') {
+  if (!color) return color;
+  // Only add opacity if color is in #RRGGBB format
+  if (/^#([A-Fa-f0-9]{6})$/.test(color)) {
+    return color + opacityHex;
+  }
+  return color;
+}
+
 export default function ProjectOverview() {
   const { projectId } = useLocalSearchParams<{
     projectId: string;
@@ -150,6 +160,12 @@ export default function ProjectOverview() {
     //   description: "Manage insurance details",
     // },
     {
+      path: "./chat",
+      Icon: MessageCircle,
+      title: "Chat",
+      description: "Project conversation",
+    },
+    {
       path: "./documents",
       Icon: File,
       title: "Files",
@@ -202,12 +218,6 @@ export default function ProjectOverview() {
           `${process.env.EXPO_PUBLIC_BASE_URL}/projects/${projectId}/report`
         ),
     },
-    {
-      path: "./chat",
-      Icon: MessageCircle,
-      title: "Chat",
-      description: "Project conversation",
-    },
   ];
 
   const handleArrivalPress = () => {
@@ -257,15 +267,15 @@ export default function ProjectOverview() {
           <Card className="flex-row items-center mb-3 bg-white !border-0 !shadow-none">
             {/* Project Image */}
             {project?.data?.mainImage ? (
-              <View className="w-[120px] h-[120px] rounded-xl overflow-hidden border border-border bg-white justify-center items-center mr-4">
+              <View className="w-[110px] h-[110px] rounded-xl overflow-hidden border border-border bg-white justify-center items-center mr-4">
                 <Animated.Image
                   source={{ uri: project.data.mainImage }}
-                  style={{ width: 120, height: 120, resizeMode: "cover" }}
+                  style={{ width: 110, height: 110, resizeMode: "cover" }}
                 />
               </View>
             ) : (
-              <View className="w-[120px] h-[120px] rounded-xl overflow-hidden border border-border bg-gray-100 justify-center items-center mr-4">
-                <Text className="text-4xl font-bold text-gray-400">
+              <View className="w-[110px] h-[110px] rounded-xl overflow-hidden border border-border bg-gray-100 justify-center items-center mr-4">
+                <Text className="text-4xl font-bold text-gray-400 mb-1">
                   {project?.data?.name?.[0] || "?"}
                 </Text>
               </View>
@@ -280,7 +290,7 @@ export default function ProjectOverview() {
                     </CardTitle>
                   </TouchableOpacity>
                 </View>
-                <View className="flex-col flex-wrap gap-3 mb-1">
+                <View className="flex-col flex-wrap gap-4 ">
                   {project?.data?.location && (
                     <CardDescription className="flex-row items-center">
                       <Text className="text-xs text-primary-dark">
@@ -298,7 +308,10 @@ export default function ProjectOverview() {
                             `${project.data.status.color}` || "#e0e7ff",
                         }}
                       >
-                        <Text className="text-xs font-semibold text-white">
+                        <Text className="text-xs font-semibold text-white"
+                          style={{
+                            // color: addOpacityToColor(project.data.status.color || ''),
+                          }}>
                           {project.data.status.label.replace(/_/g, " ")}
                         </Text>
                       </View>
@@ -662,8 +675,8 @@ export default function ProjectOverview() {
               flexDirection: "row",
               flexWrap: "wrap",
               justifyContent: "space-between",
-              marginBottom: 16,
-              paddingVertical: 20,
+              marginBottom: 4,
+              // paddingVertical: 8,
             }}
           >
             <Animated.View

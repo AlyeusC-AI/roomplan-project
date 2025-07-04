@@ -175,7 +175,7 @@ export default function Header({
       </View>
       <TouchableOpacity
       onPress={() => setVisible(true)}
-      className="bg-white p-2 "
+      className="bg-white p-2  shadow-sm rounded-lg py-2"
       >
         <FilterIcon size={21} />
         </TouchableOpacity>
@@ -384,6 +384,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 24,
     marginTop: 10,
+    gap:4
   },
   headerSearch: {
     position: "relative",
