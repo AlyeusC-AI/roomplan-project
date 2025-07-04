@@ -174,7 +174,6 @@ export default function FilteredImagesScreen() {
           <View style={styles.headerContent}>
             <Text style={styles.headerTitle}>All Images</Text>
           </View>
-
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={[
