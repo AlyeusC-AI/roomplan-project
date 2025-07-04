@@ -1,7 +1,6 @@
 import FilterLabel from "./FilterLabel";
-import { Button } from "@components/ui/button";
-import { Calendar, Home } from "lucide-react";
 import { userPreferenceStore } from "@state/user-prefrence";
+import { RadioGroup, RadioGroupItem } from "@components/ui/radio-group";
 
 export default function GroupByPicker() {
   const { savedPhotoGroupBy, updatePreference } = userPreferenceStore();
@@ -25,7 +24,21 @@ export default function GroupByPicker() {
   return (
     <div className='flex flex-col'>
       <FilterLabel>Group By</FilterLabel>
-      <Button variant='outline' onClick={onClick}>
+      <RadioGroup
+        value={savedPhotoGroupBy}
+        onValueChange={onClick}
+        className='grid grid-cols-2 gap-2 text-xs'
+      >
+        <div className='flex items-center space-x-2'>
+          <RadioGroupItem value='date' id='date' />
+          <span>Date</span>
+        </div>
+        <div className='flex items-center space-x-2'>
+          <RadioGroupItem value='room' id='room' />
+          <span>Room</span>
+        </div>
+      </RadioGroup>
+      {/* <Button variant='outline' onClick={onClick}>
         {savedPhotoGroupBy == "date" ? (
           <>
             <Calendar className='mr-2 size-5' />
@@ -37,7 +50,7 @@ export default function GroupByPicker() {
             Room
           </>
         )}
-      </Button>
+      </Button> */}
     </div>
   );
 }

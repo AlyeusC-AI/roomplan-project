@@ -3,7 +3,7 @@ import { format, formatDistance } from "date-fns";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Check, Star, Loader2, GripVertical, Pencil } from "lucide-react";
+import { Check, Star, Loader2, GripVertical, Pencil, Tag } from "lucide-react";
 import { Button } from "@components/ui/button";
 import {
   Tooltip,
@@ -25,6 +25,7 @@ import {
 } from "@service-geek/api-client";
 import { userPreferenceStore } from "@state/user-prefrence";
 import ImageEditorModal from "./ImageEditorModal";
+import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
 
 const Photo = ({
   photo,
@@ -208,9 +209,38 @@ const Photo = ({
               src={supabaseUrl}
               alt=''
               className='h-full w-full'
-              // style={{ width: "100%", height: "100%" }}
+            // style={{ width: "100%", height: "100%" }}
             />
+            {/* user and tags section */}
+            <div className="absolute bottom-0 p-2 group-hover:z-10 left-0 right-0 w-full flex justify-between items-center">
+              <Avatar className="size-7 text-sm">
+                <AvatarImage src={photo.byUser?.avatar || ""} />
+                <AvatarFallback>
+                  {photo.byUser?.firstName?.charAt(0)?.toUpperCase()}
+                  {photo.byUser?.lastName?.charAt(0)?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              {photo.tags && photo.tags.length > 0 && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className='flex items-center gap-1'>
+                        <Tag size={20} className=' text-white' />
+
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side='top' className='max-w-xs'>
+
+                      <div className=''>
+                        {photo.tags.map((tag) => tag.name).join(", ")}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
           </div>
+
           <div
             className={clsx(
               "w-full text-primary",

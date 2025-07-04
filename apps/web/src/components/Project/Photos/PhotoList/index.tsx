@@ -312,8 +312,8 @@ const PhotoList = ({
   };
 
   return (
-    <div className='flex flex-col gap-4'>
-      <div className='flex justify-end'>
+    <div className='flex flex-col gap-4 '>
+      {/* <div className='flex justify-end'>
         <Button
           size='sm'
           variant='outline'
@@ -328,12 +328,12 @@ const PhotoList = ({
           )}
           Include All in Report
         </Button>
-      </div>
+      </div> */}
 
       {/* Tag Filter */}
       {allTags.length > 0 && (
         <div className='space-y-3'>
-          <div className='flex items-center justify-between'>
+          {/* <div className='flex items-center justify-between'>
             <h3 className='text-sm font-medium text-gray-900'>
               Filter by Tags:
             </h3>
@@ -347,79 +347,107 @@ const PhotoList = ({
                 Clear All
               </Button>
             )}
-          </div>
-          <div className='flex flex-wrap gap-2'>
-            <Button
-              variant={selectedTagFilters.length === 0 ? "default" : "outline"}
-              size='sm'
-              onClick={clearAllTagFilters}
-              className='flex items-center gap-2'
-            >
-              <Tag className='h-4 w-4' />
-              All Photos ({photos.length})
-            </Button>
-            <Button
-              variant={
-                selectedTagFilters.includes("untagged") ? "default" : "outline"
-              }
-              size='sm'
-              onClick={() => handleTagFilterToggle("untagged")}
-              className='flex items-center gap-2'
-            >
-              Untagged (
-              {photos.filter((p) => !p.tags || p.tags.length === 0).length})
-            </Button>
-            {allTags.map((tag) => {
-              const count = photos.filter(
-                (p) => p.tags && p.tags.some((t) => t.name === tag.name)
-              ).length;
-              const isSelected = selectedTagFilters.includes(tag.name);
-              return (
+          </div> */}
+          <div className="flex justify-between">
+            <div className="space-y-3">
+              <div className='flex flex-wrap gap-2'>
                 <Button
-                  key={tag.id}
-                  variant={isSelected ? "default" : "outline"}
+                  variant={selectedTagFilters.length === 0 ? "default" : "outline"}
                   size='sm'
-                  onClick={() => handleTagFilterToggle(tag.name)}
+                  onClick={clearAllTagFilters}
                   className='flex items-center gap-2'
-                  style={
-                    isSelected && tag.color
-                      ? {
-                          backgroundColor: tag.color,
-                          borderColor: tag.color,
-                          color: "white",
-                        }
-                      : tag.color
-                        ? {
-                            backgroundColor: `${tag.color}15`,
-                            borderColor: tag.color,
-                            color: tag.color,
-                          }
-                        : {}
-                  }
                 >
-                  {tag.name} ({count})
+                  <Tag className='h-4 w-4' />
+                  All Photos ({photos.length})
                 </Button>
-              );
-            })}
-          </div>
-          {selectedTagFilters.length > 0 && (
-            <div className='flex items-center gap-2 text-sm text-gray-600'>
-              <span>Showing photos with:</span>
-              <div className='flex flex-wrap gap-1'>
-                {selectedTagFilters.map((tagName) => (
-                  <Badge
-                    key={tagName}
-                    variant='secondary'
-                    className='cursor-pointer'
-                    onClick={() => handleTagFilterToggle(tagName)}
-                  >
-                    {tagName === "untagged" ? "Untagged" : tagName}
-                    <span className='ml-1 text-xs'>×</span>
-                  </Badge>
-                ))}
+                <Button
+                  variant={
+                    selectedTagFilters.includes("untagged") ? "default" : "outline"
+                  }
+                  size='sm'
+                  onClick={() => handleTagFilterToggle("untagged")}
+                  className='flex items-center gap-2'
+                >
+                  Untagged (
+                  {photos.filter((p) => !p.tags || p.tags.length === 0).length})
+                </Button>
+                {allTags.map((tag) => {
+                  const count = photos.filter(
+                    (p) => p.tags && p.tags.some((t) => t.name === tag.name)
+                  ).length;
+                  const isSelected = selectedTagFilters.includes(tag.name);
+                  return (
+                    <Button
+                      key={tag.id}
+                      variant={isSelected ? "default" : "outline"}
+                      size='sm'
+                      onClick={() => handleTagFilterToggle(tag.name)}
+                      className='flex items-center gap-2'
+                      style={
+                        isSelected && tag.color
+                          ? {
+                            backgroundColor: tag.color,
+                            borderColor: tag.color,
+                            color: "white",
+                          }
+                          : tag.color
+                            ? {
+                              backgroundColor: `${tag.color}15`,
+                              borderColor: tag.color,
+                              color: tag.color,
+                            }
+                            : {}
+                      }
+                    >
+                      {tag.name} ({count})
+                    </Button>
+                  );
+                })}
               </div>
+              {selectedTagFilters.length > 0 && (
+                <div className='flex items-center gap-2 text-sm text-gray-600'>
+                  <span>Showing photos with:</span>
+                  <div className='flex flex-wrap gap-1'>
+                    {selectedTagFilters.map((tagName) => (
+                      <Badge
+                        key={tagName}
+                        variant='secondary'
+                        className='cursor-pointer'
+                        onClick={() => handleTagFilterToggle(tagName)}
+                      >
+                        {tagName === "untagged" ? "Untagged" : tagName}
+                        <span className='ml-1 text-xs'>×</span>
+                      </Badge>
+                    ))}
+                  </div>
+                  {selectedTagFilters.length > 0 && (
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={clearAllTagFilters}
+                className='text-xs'
+              >
+                Clear All
+              </Button>
+            )}
+                </div>
+              )}
             </div>
-          )}
+            <Button
+              size='sm'
+              variant='outline'
+              onClick={includeAllInReport}
+              disabled={isUpdatingAll || !photos?.length}
+              className='flex items-center gap-2'
+            >
+              {isUpdatingAll ? (
+                <Loader2 className='h-4 w-4 animate-spin' />
+              ) : (
+                <Star className='h-4 w-4' />
+              )}
+              Include All in Report
+            </Button>
+          </div>
         </div>
       )}
 
@@ -549,7 +577,7 @@ const PhotoList = ({
               onPhotoClick={onPhotoClick}
               onSelectPhoto={onSelectPhoto}
               selectedPhotos={selectedPhotos}
-              // setPhotos={setPhotos}
+            // setPhotos={setPhotos}
             />
           </motion.div>
         ))}
