@@ -10,6 +10,7 @@ import {
   Switch,
   Image,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import * as StoreReview from "expo-store-review";
 import * as Application from "expo-application";
@@ -56,6 +57,31 @@ export default function Settings() {
     logoutMutate();
     setLoading(false);
     router.replace("/login");
+  };
+
+  const handleTestNotification = async () => {
+    try {
+      const response = await fetch("/api/v1/notifications/test", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        Alert.alert("Success", "Test notification sent successfully!");
+      } else {
+        Alert.alert(
+          "Error",
+          data.message || "Failed to send test notification"
+        );
+      }
+    } catch (error) {
+      console.error("Error sending test notification:", error);
+      Alert.alert("Error", "Failed to send test notification");
+    }
   };
 
   return (
@@ -163,7 +189,7 @@ export default function Settings() {
               </View>
             </View>
 
-            <View style={[styles.rowWrapper, styles.rowLast]}>
+            <View style={styles.rowWrapper}>
               <View style={styles.row}>
                 <Text style={styles.rowLabel}>Push Notifications</Text>
 
@@ -177,6 +203,19 @@ export default function Settings() {
                   value={form.pushNotifications}
                 />
               </View>
+            </View>
+
+            <View style={[styles.rowWrapper, styles.rowLast]}>
+              <TouchableOpacity
+                onPress={handleTestNotification}
+                style={styles.row}
+              >
+                <Text style={styles.rowLabel}>Test Push Notification</Text>
+
+                <View style={styles.rowSpacer} />
+
+                <ChevronRight color="#bcbcbc" size={19} />
+              </TouchableOpacity>
             </View>
           </View>
         </View>

@@ -5,6 +5,7 @@ import { ChatController } from './chat.controller';
 import { ChatGateway } from './chat.gateway';
 import { PrismaService } from '../prisma/prisma.service';
 import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Module({
   imports: [
@@ -14,7 +15,13 @@ import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
     }),
   ],
   controllers: [ChatController],
-  providers: [ChatService, ChatGateway, PrismaService, WsJwtGuard],
+  providers: [
+    ChatService,
+    ChatGateway,
+    PrismaService,
+    WsJwtGuard,
+    NotificationsService,
+  ],
   exports: [ChatService],
 })
 export class ChatModule {}

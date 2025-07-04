@@ -49,6 +49,7 @@
     "csv-writer": "^1.6.0",
     "date-fns": "2.29.3",
     "dayjs": "^1.11.13",
+    "expo-server-sdk": "^3.15.0",
     "imagekit": "^6.0.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",

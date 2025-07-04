@@ -25,6 +25,7 @@ import { EstimatesModule } from './estimates/estimates.module';
 import { SpaceModule } from './space/space.module';
 import { TagsModule } from './tags/tags.module';
 import { ChatModule } from './chat/chat.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { ChatModule } from './chat/chat.module';
     SpaceModule,
     TagsModule,
     ChatModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

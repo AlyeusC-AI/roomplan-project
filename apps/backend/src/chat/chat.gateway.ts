@@ -16,6 +16,7 @@ import {
 } from './dto/create-chat-message.dto';
 import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
 import { JwtService } from '@nestjs/jwt';
+import { NotificationsService } from '../notifications/notifications.service';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -46,6 +47,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly chatService: ChatService,
     private readonly jwtService: JwtService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async handleConnection(client: AuthenticatedSocket) {
@@ -199,6 +201,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         updatedAt: message.updatedAt,
         isEdited: message.isEdited,
       });
+
+      // Send push notification to chat participants (excluding sender)
+      try {
+        await this.notificationsService.sendChatMessageNotification(
+          data.chatId,
+          client.userId,
+          data.content,
+          data.type || MessageType.TEXT,
+        );
+      } catch (error) {
+        console.error('Failed to send push notification:', error);
+        // Don't fail the message send if notification fails
+      }
 
       return { success: true, message: 'Message sent' };
     } catch (error) {

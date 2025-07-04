@@ -25,6 +25,7 @@ model User {
   resetTokenExpiry  DateTime?
   supabaseId        String?   @unique
   avatar            String?
+  expoPushToken     String?
 
   // Organization relationships
   organizationMemberships OrganizationMember[]
@@ -37,6 +38,7 @@ model User {
   images           Image[]
   chatMessages     ChatMessage[]
   chatParticipants ChatParticipant[]
+  Notification     Notification[]
 }
 
 model Organization {
@@ -803,4 +805,26 @@ model ChatMessageAttachment {
   createdAt    DateTime    @default(now())
 
   @@index([messageId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  content   String
+  type      String // CHAT_MESSAGE, PROJECT_UPDATE, etc.
+  link      String?
+  linkText  String?
+  publicId  String   @unique
+  isSeen    Boolean  @default(false)
+  isDeleted Boolean  @default(false)
+  data      Json? // Additional data like chatId, projectId, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([isSeen])
+  @@index([createdAt])
 }
