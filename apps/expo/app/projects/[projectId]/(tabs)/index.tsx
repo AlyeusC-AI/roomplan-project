@@ -71,6 +71,7 @@ export default function ProjectOverview() {
   }>();
 
   const { data: project, refetch } = useGetProjectById(projectId);
+  console.log("🚀 ~ ProjectOverview ~ project:", project?.data.status);
   const [showTagsModal, setShowTagsModal] = useState(false);
 
   const { projectViewMode, setProjectViewMode } = uiPreferencesStore();
@@ -298,7 +299,7 @@ export default function ProjectOverview() {
                         }}
                       >
                         <Text className="text-xs font-semibold text-white">
-                          {project.data.status.label}
+                          {project.data.status.label.replace(/_/g, " ")}
                         </Text>
                       </View>
                     )}
