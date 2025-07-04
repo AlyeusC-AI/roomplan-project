@@ -78,6 +78,8 @@ PODS:
     - Yoga
   - ExpoPrint (14.0.3):
     - ExpoModulesCore
+  - ExpoSecureStore (14.2.3):
+    - ExpoModulesCore
   - ExpoSharing (13.0.1):
     - ExpoModulesCore
   - ExpoSpeechRecognition (1.1.1):
@@ -2028,6 +2030,7 @@ DEPENDENCIES:
   - ExpoMediaLibrary (from `../../../node_modules/expo-media-library/ios`)
   - ExpoModulesCore (from `../../../node_modules/expo-modules-core`)
   - ExpoPrint (from `../../../node_modules/expo-print/ios`)
+  - ExpoSecureStore (from `../../../node_modules/expo-secure-store/ios`)
   - ExpoSharing (from `../../../node_modules/expo-sharing/ios`)
   - ExpoSpeechRecognition (from `../../../node_modules/expo-speech-recognition/ios`)
   - ExpoSplashScreen (from `../../../node_modules/expo-splash-screen/ios`)
@@ -2188,6 +2191,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/expo-modules-core"
   ExpoPrint:
     :path: "../../../node_modules/expo-print/ios"
+  ExpoSecureStore:
+    :path: "../../../node_modules/expo-secure-store/ios"
   ExpoSharing:
     :path: "../../../node_modules/expo-sharing/ios"
   ExpoSpeechRecognition:
@@ -2399,6 +2404,7 @@ SPEC CHECKSUMS:
   ExpoMediaLibrary: 2709fc2e4fcf87d28767714abcc603c4bec228c6
   ExpoModulesCore: 725faec070d590810d2ea5983d9f78f7cf6a38ec
   ExpoPrint: 13208d67f48c190ccfeb9b97aa3394ff31ec606b
+  ExpoSecureStore: b367d9f62c9102d808afbeb1561636d4276e439d
   ExpoSharing: 849a5ce9985c22598c16ec027e32969be8062e8e
   ExpoSpeechRecognition: 925a22924a8455f2e4875de6a2ed3d4b1306e683
   ExpoSplashScreen: cb4e3d3ee646ed59810f7776cca0ae5c03ab4285

@@ -14,6 +14,7 @@ import {
   QueryProvider,
   useNetworkStatus,
 } from "../lib/providers/QueryProvider";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 console.log("App initialization started");
 
@@ -25,6 +26,7 @@ SplashScreen.preventAutoHideAsync().catch((err) => {
 // Offline banner component
 function OfflineBanner() {
   const { isOffline } = useNetworkStatus();
+  const { top } = useSafeAreaInsets();
 
   if (!isOffline) return null;
 
@@ -36,11 +38,7 @@ function OfflineBanner() {
         paddingHorizontal: 16,
         alignItems: "center",
         justifyContent: "center",
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
+        paddingTop: top,
       }}
     >
       <Text

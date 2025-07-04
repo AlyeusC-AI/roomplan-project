@@ -1,11 +1,78 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+// import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { toast } from "sonner-native";
 import React, { createContext, useContext, useState, useEffect } from "react";
 import NetInfo from "@react-native-community/netinfo";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import { persistQueryClient } from "@tanstack/react-query-persist-client";
+import * as SecureStore from "expo-secure-store";
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    mutations: {
+      onError: (error: ApiError) => {
+        console.log("🚀 ~ QueryProvider ~ error:", error.response?.data);
+        toast.error(
+          error.response?.data?.message ||
+            error.message ||
+            "An error occurred while fetching data"
+        );
+      },
+      // Retry less when offline
+      retry: false,
+    },
+    queries: {
+      throwOnError: (error: ApiError) => {
+        console.log("🚀 ~ QueryProvider ~ error:", error.response);
+        // Don't throw errors when offline to prevent crashes
+        // if (isOffline) {
+        //   console.log("Offline mode - not throwing error");
+        //   return false;
+        // }
+        toast.error(
+          error.response?.data?.message ||
+            error.message ||
+            "An error occurred while fetching data"
+        );
+        return false; // Changed from true to false to prevent crashes
+      },
+      // Add offline-friendly settings
+      retry: (failureCount, error: ApiError) => {
+        // Don't retry on network errors when offline
+        if (
+          error.message?.includes("Network Error") ||
+          error.message?.includes("fetch") ||
+          error.message?.includes("timeout")
+        ) {
+          return failureCount < 1;
+        }
+        return failureCount < 3;
+      },
+      // Offline-friendly cache settings
+      staleTime: 5 * 60 * 1000, // 30 minutes when offline, 5 minutes when online
+      gcTime: 24 * 60 * 60 * 1000, // 24 hours (formerly cacheTime)
+      // Disable refetch when offline
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: true, // Always refetch when reconnecting
+    },
+  },
+});
+
+const asyncStoragePersister = createAsyncStoragePersister({
+  storage: {
+    getItem: SecureStore.getItemAsync,
+    setItem: SecureStore.setItemAsync,
+    removeItem: SecureStore.deleteItemAsync,
+  },
+});
+
+persistQueryClient({
+  queryClient,
+  persister: asyncStoragePersister,
+  maxAge: 1000 * 60 * 60 * 24, // 24 hours
+});
 // Create a persister for React Native using AsyncStorage
 const persister = createAsyncStoragePersister({
   storage: AsyncStorage,
@@ -69,66 +136,61 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
 }
 
 function QueryProviderContent({ children }: { children: React.ReactNode }) {
-  const { isOffline } = useNetworkStatus();
+  // const { isOffline } = useNetworkStatus();
 
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      mutations: {
-        onError: (error: ApiError) => {
-          console.log("🚀 ~ QueryProvider ~ error:", error.response?.data);
-          toast.error(
-            error.response?.data?.message ||
-              error.message ||
-              "An error occurred while fetching data"
-          );
-        },
-        // Retry less when offline
-        retry: isOffline ? 1 : 3,
-      },
-      queries: {
-        throwOnError: (error: ApiError) => {
-          console.log("🚀 ~ QueryProvider ~ error:", error.response);
-          toast.error(
-            error.response?.data?.message ||
-              error.message ||
-              "An error occurred while fetching data"
-          );
-          return true;
-        },
-        // Add offline-friendly settings
-        retry: (failureCount, error: ApiError) => {
-          // Don't retry on network errors when offline
-          if (
-            error.message?.includes("Network Error") ||
-            error.message?.includes("fetch")
-          ) {
-            return failureCount < 1;
-          }
-          return failureCount < 3;
-        },
-        // Offline-friendly cache settings
-        staleTime: isOffline ? 30 * 60 * 1000 : 5 * 60 * 1000, // 30 minutes when offline, 5 minutes when online
-        gcTime: 24 * 60 * 60 * 1000, // 24 hours (formerly cacheTime)
-        // Disable refetch when offline
-        refetchOnWindowFocus: !isOffline,
-        refetchOnMount: !isOffline,
-        refetchOnReconnect: true, // Always refetch when reconnecting
-      },
-    },
-  });
+  // const queryClient = new QueryClient({
+  //   defaultOptions: {
+  //     mutations: {
+  //       onError: (error: ApiError) => {
+  //         console.log("🚀 ~ QueryProvider ~ error:", error.response?.data);
+  //         toast.error(
+  //           error.response?.data?.message ||
+  //             error.message ||
+  //             "An error occurred while fetching data"
+  //         );
+  //       },
+  //       // Retry less when offline
+  //       retry: isOffline ? 1 : 3,
+  //     },
+  //     queries: {
+  //       throwOnError: (error: ApiError) => {
+  //         console.log("🚀 ~ QueryProvider ~ error:", error.response);
+  //         // Don't throw errors when offline to prevent crashes
+  //         if (isOffline) {
+  //           console.log("Offline mode - not throwing error");
+  //           return false;
+  //         }
+  //         toast.error(
+  //           error.response?.data?.message ||
+  //             error.message ||
+  //             "An error occurred while fetching data"
+  //         );
+  //         return false; // Changed from true to false to prevent crashes
+  //       },
+  //       // Add offline-friendly settings
+  //       retry: (failureCount, error: ApiError) => {
+  //         // Don't retry on network errors when offline
+  //         if (
+  //           error.message?.includes("Network Error") ||
+  //           error.message?.includes("fetch") ||
+  //           error.message?.includes("timeout")
+  //         ) {
+  //           return isOffline ? false : failureCount < 1;
+  //         }
+  //         return failureCount < 3;
+  //       },
+  //       // Offline-friendly cache settings
+  //       staleTime: isOffline ? 30 * 60 * 1000 : 5 * 60 * 1000, // 30 minutes when offline, 5 minutes when online
+  //       gcTime: 24 * 60 * 60 * 1000, // 24 hours (formerly cacheTime)
+  //       // Disable refetch when offline
+  //       refetchOnWindowFocus: !isOffline,
+  //       refetchOnMount: !isOffline,
+  //       refetchOnReconnect: true, // Always refetch when reconnecting
+  //     },
+  //   },
+  // });
 
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{ persister }}
-      onSuccess={() => {
-        console.log("Query client persisted successfully");
-      }}
-      onError={() => {
-        console.error("Failed to persist query client");
-      }}
-    >
-      {children}
-    </PersistQueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 }

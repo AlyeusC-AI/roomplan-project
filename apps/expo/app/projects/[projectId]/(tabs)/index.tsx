@@ -46,7 +46,13 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { uiPreferencesStore } from "@/lib/state/ui-preferences";
 import { Text } from "@/components/ui/text";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import { toast } from "sonner-native";
 import { api } from "@/lib/api";
 import {
@@ -70,6 +76,8 @@ export default function ProjectOverview() {
   const { projectViewMode, setProjectViewMode } = uiPreferencesStore();
   // Add state to control client info modal visibility
   const [showClientInfo, setShowClientInfo] = useState(false);
+  // Add state to control directions modal visibility
+  const [showDirectionsModal, setShowDirectionsModal] = useState(false);
 
   // Animation refs for button press effects
   const arrivalScale = useRef(new Animated.Value(1)).current;
@@ -81,10 +89,29 @@ export default function ProjectOverview() {
   const openInMaps = () => {
     animateButton(directionsScale);
     setTimeout(() => {
-      Linking.openURL(
-        `https://www.google.com/maps/search/?api=1&query=${project?.data.location}`
-      );
+      setShowDirectionsModal(true);
     }, 200);
+  };
+
+  const openGoogleMaps = () => {
+    Linking.openURL(
+      `https://www.google.com/maps/search/?api=1&query=${project?.data.location}`
+    );
+    setShowDirectionsModal(false);
+  };
+
+  const openAppleMaps = () => {
+    Linking.openURL(
+      `http://maps.apple.com/?q=${encodeURIComponent(project?.data.location || "")}`
+    );
+    setShowDirectionsModal(false);
+  };
+
+  const copyAddress = async () => {
+    if (project?.data.location) {
+      await copyText(project.data.location);
+      setShowDirectionsModal(false);
+    }
   };
 
   const copyText = async (str?: string) => {
@@ -222,7 +249,7 @@ export default function ProjectOverview() {
   };
 
   return (
-    <ScrollView >
+    <ScrollView>
       <View className="flex-1 bg-background">
         {/* Enhanced Project Info Card */}
         <View className="px-4 pt-4 pb-2">
@@ -232,7 +259,7 @@ export default function ProjectOverview() {
               <View className="w-[120px] h-[120px] rounded-xl overflow-hidden border border-border bg-white justify-center items-center mr-4">
                 <Animated.Image
                   source={{ uri: project.data.mainImage }}
-                  style={{ width: 120, height: 120, resizeMode: 'cover' }}
+                  style={{ width: 120, height: 120, resizeMode: "cover" }}
                 />
               </View>
             ) : (
@@ -246,36 +273,46 @@ export default function ProjectOverview() {
             <View className="flex-1 min-w-0">
               <CardHeader className="p-0 mb-1">
                 <View className="flex-row items-center gap-4">
-
                   <TouchableOpacity onPress={() => setShowClientInfo(true)}>
-                    <CardTitle className="text-3xl mb-1 truncate capitalize">{project?.data?.name}
-
-
+                    <CardTitle className="text-3xl mb-1 truncate capitalize">
+                      {project?.data?.name}
                     </CardTitle>
                   </TouchableOpacity>
                 </View>
                 <View className="flex-col flex-wrap gap-3 mb-1">
                   {project?.data?.location && (
                     <CardDescription className="flex-row items-center">
-                      <Text className="text-xs text-primary-dark"> {project.data.location}</Text>
+                      <Text className="text-xs text-primary-dark">
+                        {" "}
+                        {project.data.location}
+                      </Text>
                     </CardDescription>
                   )}
                   <View className="flex-row items-center gap-2">
-
                     {project?.data?.status?.label && (
-                      <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: `${project.data.status.color}` || '#e0e7ff' }}>
-                        <Text className="text-xs font-semibold text-white">{project.data.status.label}</Text>
+                      <View
+                        className="px-2 py-0.5 rounded-full"
+                        style={{
+                          backgroundColor:
+                            `${project.data.status.color}` || "#e0e7ff",
+                        }}
+                      >
+                        <Text className="text-xs font-semibold text-white">
+                          {project.data.status.label}
+                        </Text>
                       </View>
                     )}
                     {project?.data?.lossType && (
                       <View className="flex-row items-center bg-blue-700 rounded px-2 py-0.5">
-                        <Text className="text-xs text-white capitalize">{project.data.lossType.replace(/_/g, ' ')}</Text>
+                        <Text className="text-xs text-white capitalize">
+                          {project.data.lossType.replace(/_/g, " ")}
+                        </Text>
                       </View>
                     )}
-                  <ProjectTags
-                    tags={project?.data?.tags}
-                    onAddTags={() => setShowTagsModal(true)}
-                  />
+                    <ProjectTags
+                      tags={project?.data?.tags}
+                      onAddTags={() => setShowTagsModal(true)}
+                    />
                   </View>
                   <ImageTagsModal
                     visible={showTagsModal}
@@ -319,18 +356,18 @@ export default function ProjectOverview() {
             <View className="bg-background rounded-t-3xl p-5">
               <View className="flex-row justify-between items-start mb-4">
                 <View className="flex-col items-start">
-
                   <Text className="text-xl font-bold text-foreground">
                     {project?.data?.clientName}
                   </Text>
                   {project?.data?.lossType && (
                     <View className="flex flex-row items-center">
                       <View className="bg-primary/10 p-2 rounded-lg">
-                        <AlertTriangle
-                          height={16}
-                          width={16}
-                          className="text-primary"
-                        />
+                        {React.createElement(AlertTriangle as any, {
+                          height: 16,
+                          width: 16,
+                          color: "#000",
+                          className: "text-primary",
+                        })}
                       </View>
                       <View className="ml-3 flex-1">
                         <Text className="text-sm text-muted-foreground">
@@ -362,11 +399,10 @@ export default function ProjectOverview() {
                     onPress={() => setShowClientInfo(false)}
                     className="p-2"
                   >
-                    <X size={20} color="#000" />
+                    {React.createElement(X as any, { size: 20, color: "#000" })}
                   </TouchableOpacity>
                 </View>
               </View>
-
 
               <View className="">
                 {/* <Text className="text-sm font-medium text-muted-foreground mb-3">
@@ -388,10 +424,11 @@ export default function ProjectOverview() {
                         onPress={() => copyText(project?.data?.location)}
                         className="p-2"
                       >
-                        <Files
-                          size={18}
-                          className="text-primary-dark"
-                        />
+                        {React.createElement(Files as any, {
+                          size: 18,
+                          color: "#000",
+                          className: "text-primary-dark",
+                        })}
                       </TouchableOpacity>
                     )}
                   </View>
@@ -414,10 +451,11 @@ export default function ProjectOverview() {
                         onPress={() => copyText(project?.data?.clientEmail)}
                         className="p-2"
                       >
-                        <Files
-                          size={18}
-                          className="text-primary-dark"
-                        />
+                        {React.createElement(Files, {
+                          size: 18,
+                          color: "#000",
+                          className: "text-primary-dark",
+                        })}
                       </TouchableOpacity>
                     </View>
                   ) : (
@@ -451,10 +489,11 @@ export default function ProjectOverview() {
                         }
                         className="p-2"
                       >
-                        <Files
-                          size={18}
-                          className="text-primary-dark"
-                        />
+                        {React.createElement(Files, {
+                          size: 18,
+                          color: "#000",
+                          className: "text-primary-dark",
+                        })}
                       </TouchableOpacity>
                     </View>
                   ) : (
@@ -482,10 +521,16 @@ export default function ProjectOverview() {
                       variant="secondary"
                       className=" flex-row gap-2"
                       onPress={() =>
-                        Linking.openURL(`sms:${project?.data?.clientPhoneNumber}`)
+                        Linking.openURL(
+                          `sms:${project?.data?.clientPhoneNumber}`
+                        )
                       }
                     >
-                      <MessageSquare size={18} className="mr-2" />
+                      {React.createElement(MessageSquare, {
+                        size: 18,
+                        color: "#000",
+                        className: "mr-2",
+                      })}
                       <Text>Message</Text>
                     </Button>
                     <Button
@@ -493,10 +538,16 @@ export default function ProjectOverview() {
                       variant="secondary"
                       className=" flex-row gap-2"
                       onPress={() =>
-                        Linking.openURL(`tel:${project?.data?.clientPhoneNumber}`)
+                        Linking.openURL(
+                          `tel:${project?.data?.clientPhoneNumber}`
+                        )
                       }
                     >
-                      <Phone size={18} className="mr-2" />
+                      {React.createElement(Phone, {
+                        size: 18,
+                        color: "#000",
+                        className: "mr-2",
+                      })}
                       <Text>Call</Text>
                     </Button>
 
@@ -506,10 +557,16 @@ export default function ProjectOverview() {
                         variant="secondary"
                         className=" flex-row gap-2 text-gray-500"
                         onPress={() =>
-                          Linking.openURL(`mailto:${project?.data?.clientEmail}`)
+                          Linking.openURL(
+                            `mailto:${project?.data?.clientEmail}`
+                          )
                         }
                       >
-                        <Mail size={18} className="mr-2" />
+                        {React.createElement(Mail, {
+                          size: 18,
+                          color: "#000",
+                          className: "mr-2",
+                        })}
                         <Text>Send Email</Text>
                       </Button>
                     )}
@@ -520,6 +577,82 @@ export default function ProjectOverview() {
           </View>
         </Modal>
 
+        {/* Directions Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={showDirectionsModal}
+          onRequestClose={() => setShowDirectionsModal(false)}
+        >
+          <View className="flex-1 justify-end bg-black/50 mb-8">
+            <View className="bg-background rounded-t-3xl p-5">
+              <View className="flex-row justify-between items-center mb-4">
+                <Text className="text-xl font-bold text-foreground">
+                  Get Directions
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setShowDirectionsModal(false)}
+                  className="p-2"
+                >
+                  {React.createElement(X, { size: 20, color: "#000" })}
+                </TouchableOpacity>
+              </View>
+
+              <View className="space-y-3">
+                <TouchableOpacity
+                  className="flex-row items-center p-4 bg-blue-50 rounded-lg"
+                  onPress={openGoogleMaps}
+                >
+                  <View className="bg-blue-500 p-2 rounded-lg mr-3">
+                    {React.createElement(Map, { size: 20, color: "#fff" })}
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-base font-semibold text-foreground">
+                      Google Maps
+                    </Text>
+                    <Text className="text-sm text-muted-foreground">
+                      Open in Google Maps app
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  className="flex-row items-center p-4 bg-gray-50 rounded-lg"
+                  onPress={openAppleMaps}
+                >
+                  <View className="bg-gray-500 p-2 rounded-lg mr-3">
+                    {React.createElement(Map, { size: 20, color: "#fff" })}
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-base font-semibold text-foreground">
+                      Apple Maps
+                    </Text>
+                    <Text className="text-sm text-muted-foreground">
+                      Open in Apple Maps app
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  className="flex-row items-center p-4 bg-green-50 rounded-lg"
+                  onPress={copyAddress}
+                >
+                  <View className="bg-green-500 p-2 rounded-lg mr-3">
+                    {React.createElement(Files, { size: 20, color: "#fff" })}
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-base font-semibold text-foreground">
+                      Copy Address
+                    </Text>
+                    <Text className="text-sm text-muted-foreground">
+                      Copy address to clipboard
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         <View className="px-4">
           {/* Action buttons with text below icons for better responsiveness */}
@@ -547,10 +680,8 @@ export default function ProjectOverview() {
                 <View className="flex-row items-center justify-center py-3 px-1 gap-2">
                   {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
                   </View> */}
-                  <MapPin size={18} color="#fff" />
-                  <Text className="text-white font-semibold ">
-                    Arrival
-                  </Text>
+                  {React.createElement(MapPin, { size: 18, color: "#fff" })}
+                  <Text className="text-white font-semibold ">Arrival</Text>
                 </View>
               </TouchableOpacity>
             </Animated.View>
@@ -570,10 +701,8 @@ export default function ProjectOverview() {
                 <View className="flex-row items-center justify-center py-3 px-1 gap-2">
                   {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
                   </View> */}
-                  <PlayCircle size={18} color="#fff" />
-                  <Text className="text-white font-semibold ">
-                    Start
-                  </Text>
+                  {React.createElement(PlayCircle, { size: 18, color: "#fff" })}
+                  <Text className="text-white font-semibold ">Start</Text>
                 </View>
               </TouchableOpacity>
             </Animated.View>
@@ -593,10 +722,11 @@ export default function ProjectOverview() {
                 <View className="flex-row items-center justify-center py-3 px-1 gap-2">
                   {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
                   </View> */}
-                  <CheckCircle size={18} color="#fff" />
-                  <Text className="text-white font-semibold ">
-                    Complete
-                  </Text>
+                  {React.createElement(CheckCircle, {
+                    size: 18,
+                    color: "#fff",
+                  })}
+                  <Text className="text-white font-semibold ">Complete</Text>
                 </View>
               </TouchableOpacity>
             </Animated.View>
@@ -616,10 +746,8 @@ export default function ProjectOverview() {
                 <View className="flex-row items-center justify-center py-3 px-1 gap-2">
                   {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
                   </View> */}
-                  <Map size={18} color="#fff" />
-                  <Text className="text-white font-semibold ">
-                    Directions
-                  </Text>
+                  {React.createElement(Map, { size: 18, color: "#fff" })}
+                  <Text className="text-white font-semibold ">Directions</Text>
                 </View>
               </TouchableOpacity>
             </Animated.View>
@@ -701,7 +829,12 @@ function NavigationCell({
       <Card className="p-4">
         <View className="flex-row items-center">
           <View className="bg-primary/10 p-3 rounded-xl">
-            {React.createElement(Icon as any, { height: 24, width: 24, color: '#000', className: 'text-white' })}
+            {React.createElement(Icon as any, {
+              height: 24,
+              width: 24,
+              color: "#000",
+              className: "text-white",
+            })}
           </View>
           <View className="flex-1 ml-4">
             <Text className="text-base font-semibold text-foreground">
@@ -754,7 +887,11 @@ function GridCell({
       <Card className="overflow-hidden h-[110px]">
         <View className="items-center p-3 h-full justify-center">
           <View className="h-14 w-14 rounded-full bg-primary/10 items-center justify-center mb-3">
-            {React.createElement(Icon as any, { height: 22, width: 22, color: '#000' })}
+            {React.createElement(Icon as any, {
+              height: 22,
+              width: 22,
+              color: "#000",
+            })}
           </View>
           <Text className="text-sm font-semibold text-center text-foreground">
             {title}

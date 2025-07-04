@@ -8,9 +8,13 @@ import {
 } from "react-native";
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, Filter } from "lucide-react-native";
+
+// Type assertions to fix ReactNode compatibility
+const ArrowLeftIcon = ArrowLeft as any;
+const FilterIcon = Filter as any;
 import { Text } from "@/components/ui/text";
 import FilteredImagesGallery from "@/components/pictures/FilteredImagesGallery";
-import FilterModal from "@/components/pictures/FilterModal";
+
 import SelectionMode from "@/components/pictures/SelectionMode";
 import BulkActionsModal from "@/components/pictures/BulkActionsModal";
 import SaveToPhoneModal from "@/components/pictures/SaveToPhoneModal";
@@ -36,7 +40,7 @@ export default function FilteredImagesScreen() {
     "all"
   );
   const [selectedTagFilters, setSelectedTagFilters] = useState<string[]>([]);
-  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   // Selection mode state
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -64,63 +68,9 @@ export default function FilteredImagesScreen() {
   const { mutate: bulkRemoveImages } = useBulkRemoveImages();
   const { mutateAsync: addImageTags } = useAddImageTags();
 
-  // Filter photos based on room and tag filters
-  const filteredPhotos = useMemo(() => {
-    if (!images?.data) return [];
-
-    let filtered = images.data;
-
-    // Apply room filter
-    if (selectedRoomFilter !== "all") {
-      filtered = filtered.filter(
-        (photo) => photo.roomId === selectedRoomFilter
-      );
-    }
-
-    // Apply tag filters
-    if (selectedTagFilters.length > 0) {
-      const hasUntaggedFilter = selectedTagFilters.includes("untagged");
-      const hasOtherFilters = selectedTagFilters.some(
-        (tag) => tag !== "untagged"
-      );
-
-      filtered = filtered.filter((photo) => {
-        const hasTags = photo.tags && photo.tags.length > 0;
-        const photoTagNames = hasTags
-          ? photo.tags.map((tag: any) => tag.name)
-          : [];
-
-        // If only "untagged" is selected
-        if (hasUntaggedFilter && !hasOtherFilters) {
-          return !hasTags;
-        }
-
-        // If "untagged" and other tags are selected
-        if (hasUntaggedFilter && hasOtherFilters) {
-          const otherSelectedTags = selectedTagFilters.filter(
-            (tag) => tag !== "untagged"
-          );
-          return (
-            !hasTags ||
-            otherSelectedTags.some((tag) => photoTagNames.includes(tag))
-          );
-        }
-
-        // If only other tags are selected
-        return selectedTagFilters.some((tag) => photoTagNames.includes(tag));
-      });
-    }
-
-    return filtered;
-  }, [images?.data, selectedRoomFilter, selectedTagFilters]);
-
-  // Check if filters are active
-  const hasActiveFilters =
-    selectedRoomFilter !== "all" || selectedTagFilters.length > 0;
-
   // Selection mode handlers
   const handleSelectionChange = (selectedKeys: string[]) => {
-    const selectedImages = filteredPhotos.filter((photo) =>
+    const selectedImages = (images?.data || []).filter((photo: any) =>
       selectedKeys.includes(photo.id)
     );
     setSelectedPhotos(selectedImages);
@@ -218,19 +168,11 @@ export default function FilteredImagesScreen() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <ArrowLeft size={24} color="#2563eb" />
+            <ArrowLeftIcon size={24} color="#2563eb" />
           </TouchableOpacity>
 
           <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>
-              {hasActiveFilters ? "Filtered Images" : "All Images"}
-            </Text>
-            {hasActiveFilters && (
-              <Text style={styles.headerSubtitle}>
-                {filteredPhotos.length}{" "}
-                {filteredPhotos.length === 1 ? "image" : "images"}
-              </Text>
-            )}
+            <Text style={styles.headerTitle}>All Images</Text>
           </View>
 
           <View style={styles.headerActions}>
@@ -258,9 +200,18 @@ export default function FilteredImagesScreen() {
 
             <TouchableOpacity
               style={styles.filterButton}
-              onPress={() => setShowFilterModal(true)}
+              onPress={() => setShowFilters(!showFilters)}
             >
-              <Filter size={20} color="#2563eb" />
+              <FilterIcon size={20} color="#2563eb" />
+              {(selectedRoomFilter !== "all" ||
+                selectedTagFilters.length > 0) && (
+                <View style={styles.filterBadge}>
+                  <Text style={styles.filterBadgeText}>
+                    {selectedTagFilters.length +
+                      (selectedRoomFilter !== "all" ? 1 : 0)}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -287,44 +238,20 @@ export default function FilteredImagesScreen() {
 
         {/* Images Gallery */}
         <FilteredImagesGallery
-          images={filteredPhotos}
+          images={images?.data || []}
           selectable={isSelectionMode}
           onSelectionChange={handleSelectionChange}
           initialSelectedKeys={selectedPhotos.map((p) => p.id)}
-          activeFilters={{
-            roomFilter:
-              selectedRoomFilter !== "all" ? selectedRoomFilter : undefined,
-            tagFilters:
-              selectedTagFilters.length > 0 ? selectedTagFilters : undefined,
-          }}
-          onClearFilters={() => {
-            setSelectedRoomFilter("all");
-            setSelectedTagFilters([]);
-          }}
-          onClearTagFilter={(tagToRemove) => {
-            if (tagToRemove === "room") {
-              setSelectedRoomFilter("all");
-            } else {
-              setSelectedTagFilters((prev) =>
-                prev.filter((tag) => tag !== tagToRemove)
-              );
-            }
-          }}
-          rooms={rooms || []}
-          refetch={refetch}
-        />
-
-        {/* Filter Modal */}
-        <FilterModal
-          visible={showFilterModal}
-          onClose={() => setShowFilterModal(false)}
-          selectedRoomFilter={selectedRoomFilter}
-          setSelectedRoomFilter={setSelectedRoomFilter}
-          selectedTagFilters={selectedTagFilters}
-          setSelectedTagFilters={setSelectedTagFilters}
           rooms={rooms || []}
           tags={tags || []}
-          photos={images?.data || []}
+          refetch={refetch}
+          showFilterControls={true}
+          showFilters={showFilters}
+          onToggleFilters={() => setShowFilters(!showFilters)}
+          onFilterChange={(filters) => {
+            setSelectedRoomFilter(filters.roomFilter);
+            setSelectedTagFilters(filters.tagFilters);
+          }}
         />
 
         {/* Bulk Actions Modal */}
@@ -416,5 +343,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1f5f9",
     borderWidth: 1,
     borderColor: "#e2e8f0",
+    position: "relative",
+  },
+  filterBadge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    backgroundColor: "#ef4444",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  filterBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
   },
 });
