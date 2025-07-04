@@ -305,7 +305,7 @@ export default function ProjectOverview() {
                         className="px-2 py-0.5 rounded-full"
                         style={{
                           backgroundColor:
-                            `${project.data.status.color}` || "#e0e7ff",
+                            `${project.data.status.color}` || "green",
                         }}
                       >
                         <Text className="text-xs font-semibold text-white"

@@ -237,8 +237,8 @@ export default function Layout({ children }: React.PropsWithChildren) {
                           variant='outline'
                           className='border px-2 py-0.5 text-xs font-medium'
                           style={{
-                            borderColor: projectData.status.color,
-                            backgroundColor: projectData.status.color,
+                            borderColor: projectData.status.color || 'green',
+                            backgroundColor: projectData.status.color || 'green',
                             color: "white",
                           }}
                         >

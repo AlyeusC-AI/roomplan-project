@@ -80,7 +80,7 @@ export default function ProjectCell({ project }: { project: Project }) {
           <View className="flex-row items-center gap-2">
 
           {status?.data?.label && (
-            <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: status?.data.color || '#e0e7ff' }}>
+            <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: status?.data.color || 'green' }}>
                     <Text className="text-xs font-semibold text-white">{status?.data.label}</Text>
                   </View>
                 )}
