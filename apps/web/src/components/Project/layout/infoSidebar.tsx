@@ -26,13 +26,13 @@ export default function InfoSidebar({ isCollapsed, setIsCollapsed }: { isCollaps
     <div
       className={clsx(
         "",
-        isCollapsed ? "w-5 min-w-5" : "w-full w-[364px]"
+        isCollapsed ? "w-5 min-w-5" : "w-full w-[400px]"
       )}
     >
       <div
         className={clsx(
           "fixed right-0 top-0 z-30 bg-accent h-screen overflow-y-auto",
-          isCollapsed ? "w-12 min-w-12" : "w-[200px] lg:w-[240px] xl:w-[280px] 2xl:w-[364px]"
+          isCollapsed ? "w-12 min-w-12" : "w-[200px] lg:w-[240px] xl:w-[300px] 2xl:w-[400px]"
         )}
       >
         {!isCollapsed && (<div className='space-y-4 p-4'>

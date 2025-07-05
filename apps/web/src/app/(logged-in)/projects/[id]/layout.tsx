@@ -48,6 +48,7 @@ import { Button } from "@components/ui/button";
 import Link from "next/link";
 import clsx from "clsx";
 import TagsModal from "@components/tags/TagsModal";
+import DamageBadge from "@components/Project/DamageBadge";
 
 export default function Layout({ children }: React.PropsWithChildren) {
   const { id } = useParams();
@@ -145,7 +146,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
   return (
     <>
       <div className={clsx('relative grid gap-2', {
-        'grid-cols-[24fr_350px]': !isCollapsed,
+        'grid-cols-[24fr_400px]': !isCollapsed,
         'grid-cols-[24fr_48px]': isCollapsed,
       })}>
         {/* Main Content */}
@@ -203,12 +204,12 @@ export default function Layout({ children }: React.PropsWithChildren) {
                     <div className='flex flex-wrap items-center gap-4 text-sm text-muted-foreground'>
                       {projectData?.location && (
                         <div className='flex items-center gap-1'>
-                          <MapPin className='h-4 w-4 text-blue-500' />
-                          <span>{projectData.location}</span>
+                          {/* <MapPin className='h-4 w-4 text-blue-500' /> */}
+                          <a className="underline" href={`https://www.google.com/maps/search/?api=1&query=${projectData.location}`} target="_blank" rel="noopener noreferrer">{projectData.location}</a>
                         </div>
                       )}
 
-                      {projectData?.dateOfLoss && (
+                      {/* {projectData?.dateOfLoss && (
                         <div className='flex items-center gap-1'>
                           <Calendar className='h-4 w-4 text-orange-500' />
                           <span>
@@ -219,7 +220,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
                             )}
                           </span>
                         </div>
-                      )}
+                      )} */}
 
                       {/* {projectData?.lossType && (
                         <Badge
@@ -246,13 +247,14 @@ export default function Layout({ children }: React.PropsWithChildren) {
                         </Badge>
                       )}
                       {projectData?.lossType && (
-                        <Badge
-                          variant='secondary'
-                          className='border-red-200 bg-red-100 text-xs text-red-700'
-                        >
-                          <AlertTriangle className='mr-1 h-3 w-3' />
-                          {projectData.lossType}
-                        </Badge>
+                        // <Badge
+                        //   variant='secondary'
+                        //   className='border-red-200 bg-red-100 text-xs text-red-700'
+                        // >
+                        //   <AlertTriangle className='mr-1 h-3 w-3' />
+                        //   {projectData.lossType}
+                        // </Badge>
+                        <DamageBadge lossType={projectData.lossType} />
                       )}
                     <ProjectTags currentProjectTags={currentProjectTags} projectData={projectData} />
                     </div>
@@ -315,7 +317,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
         ) : (
           
             <button
-              className='absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg border-0 bg-accent'
+              className='absolute left-3 top-0 flex h-10 w-10 items-center justify-center rounded-lg border-0 bg-accent'
               onClick={() => setIsCollapsed(true)}
               aria-label='Collapse sidebar'
               style={{ zIndex: 40 }}
@@ -429,7 +431,7 @@ const ProjectTags = ({ currentProjectTags, projectData }: { currentProjectTags: 
           disabled={isAddingTags || isRemovingTags}
         >
           <Plus className='h-4 w-4' />
-          Add Tags
+          Add Labels
         </Button>
     </div>
     <TagsModal

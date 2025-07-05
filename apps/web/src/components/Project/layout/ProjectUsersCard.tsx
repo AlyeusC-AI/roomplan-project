@@ -88,7 +88,7 @@ export default function ProjectUsersCard({
   return (
     <div className='flex flex-col'>
       <div className='flex flex-row items-center justify-between'>
-        <div className='flex items-center gap-2 text-base font-semibold'>
+        <div className='flex items-center gap-2 text-base font-semibold mb-2'>
           Project Users {projectMembers.length ? `(${projectMembers.length})` : ''}
         </div>
         <Button
@@ -186,7 +186,7 @@ export default function ProjectUsersCard({
           </div>
         </DialogContent>
       </Dialog>
-      <div className='flex flex-wrap gap-2 p-4 pt-2'>
+      <div className='flex flex-wrap gap-2'>
         {projectMembers.length === 0 ? (
           <div className='flex items-center gap-2 text-sm text-gray-400'>
             <User className='h-4 w-4' />

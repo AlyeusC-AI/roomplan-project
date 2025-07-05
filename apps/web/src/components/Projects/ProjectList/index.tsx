@@ -64,6 +64,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@components/ui/popover";
 import { Calendar } from "@components/ui/calendar";
 import { format } from "date-fns";
+import DamageBadge from "@components/Project/DamageBadge";
 
 export default function ProjectList() {
   const [isCreatingNewProject, setIsCreatingNewProject] = useState(false);
@@ -482,13 +483,7 @@ const List = ({ projects }: { projects: any[] }) => {
                       {status?.label || project.status?.label}
                     </Badge>
                     {project.lossType && (
-                      <Badge
-                        variant='secondary'
-                        className='border-red-200 bg-red-100 text-xs text-red-700 w-fit'
-                      >
-                        <AlertTriangle className='mr-1 h-3 w-3' />
-                        {project.lossType}
-                      </Badge>
+                      <DamageBadge lossType={project.lossType} />
                     )}
                   </div>
                 </div>
@@ -504,7 +499,7 @@ const List = ({ projects }: { projects: any[] }) => {
                 </div>
               </div>
             </div>
-            <div className="w-full grid grid-cols-3 sm:grid-cols-5 items-center gap-2 md:flex-wrap w-fit lg:w-auto md:basis-1/3">
+            <div className="w-full grid grid-cols-5 items-center gap-2  w-fit lg:w-auto basis-1/3">
               {project.images?.map((image: any) => (
                 <div key={image.url} className="relative md:h-24 h-16 min-w-16">
                   <img
