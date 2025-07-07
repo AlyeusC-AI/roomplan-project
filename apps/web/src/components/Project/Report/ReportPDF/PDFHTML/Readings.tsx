@@ -31,7 +31,7 @@ export const ImageGallery = ({ images }: { images: { url: string }[] }) => {
   if (!images || images.length === 0) return null;
 
   return (
-    <div className='avoid-break my-3 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3'>
+    <div className='avoid-break my-3 grid grid-3-columns grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3'>
       {images.map((image) => (
         <ReadingImage url={image.url} />
       ))}
