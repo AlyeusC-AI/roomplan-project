@@ -81,7 +81,7 @@ export default function ProjectConversationCard({
             </div>
           </div>
         </div>
-        <div className='p-4 pt-3'>
+        <div className='p-4 pt-3 bg-gray-100'>
           <div className='py-8 text-center'>
             <Loader2 className='mx-auto mb-2 h-6 w-6 animate-spin text-gray-400' />
             <div className='text-sm text-muted-foreground'>Loading chat...</div>
@@ -104,7 +104,7 @@ export default function ProjectConversationCard({
             </div>
           </div>
         </div>
-        <div className='p-4 pt-3'>
+        <div className='p-4 pt-3 bg-gray-100'>
           <div className='py-8 text-center'>
             <div className='rounded-lg border-2 border-dashed border-red-200 bg-red-50 p-4'>
               <MessageCircle className='mx-auto mb-2 h-8 w-8 text-red-400' />
@@ -247,7 +247,7 @@ function ChatInterface({ chatId, currentUser, projectId }: ChatInterfaceProps) {
           </div>
         </div>
 
-        <div className='p-4 pt-3'>
+        <div className='p-4 pt-3 bg-gray-100'>
           {error && (
             <div className='mb-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-600'>
               <div className='h-2 w-2 rounded-full bg-red-500'></div>
@@ -276,7 +276,7 @@ function ChatInterface({ chatId, currentUser, projectId }: ChatInterfaceProps) {
 
           <div
             ref={scrollRef}
-            className='scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 max-h-[600px] space-y-3 overflow-y-auto overflow-x-hidden'
+            className='scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 max-h-[600px] min-h-[200px] space-y-3 overflow-y-auto overflow-x-hidden'
           >
             {hasMoreMessages && (
               <div className='py-2 text-center'>

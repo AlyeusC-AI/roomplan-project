@@ -5,7 +5,7 @@ import { Input } from "@components/ui/input";
 import { Send, Paperclip, Image, File, Loader2, X, Reply } from "lucide-react";
 import { MessageType } from "@service-geek/api-client";
 import { uploadFile } from "@service-geek/api-client/src/services/space";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface MessageInputProps {
   onSendMessage: (
@@ -31,6 +31,14 @@ export default function MessageInput({
   const [isUploading, setIsUploading] = useState(false);
   const [attachments, setAttachments] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, []);
 
   const handleSendMessage = async () => {
     if (!message.trim() && attachments.length === 0) return;
@@ -220,6 +228,7 @@ export default function MessageInput({
       {/* Message input */}
       <div className='flex gap-2'>
         <Input
+          ref={inputRef}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
