@@ -179,6 +179,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginRight: 0,
     backgroundColor: '#fff', // Optional: helps shadow visibility
+    borderWidth: 1,
+    borderColor: '#fff',
   },
   shadow: {
     shadowColor: '#000', // Ensure shadow is black
