@@ -211,7 +211,7 @@ export default function TagSelector({
           className='flex items-center gap-2'
         >
           <Plus className='h-4 w-4' />
-          Manage {tagType === "PROJECT" ? "Labels" : "Tags"}
+          Add {tagType === "PROJECT" ? "Labels" : "Tags"}
         </Button>
         <div className='flex justify-end gap-3'>
           <Button

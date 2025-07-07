@@ -81,7 +81,7 @@ export default function TagsModal({
   const handleOpenChange = controlledOnOpenChange || setInternalOpen;
 
   // Set default title and description based on tagType
-  const defaultTitle = tagType === "PROJECT" ? "Manage Labels" : "Manage Tags";
+  const defaultTitle = tagType === "PROJECT" ? "Add Labels" : "Manage Tags";
   const defaultDescription =
     tagType === "PROJECT"
       ? "Create and manage your project labels"
