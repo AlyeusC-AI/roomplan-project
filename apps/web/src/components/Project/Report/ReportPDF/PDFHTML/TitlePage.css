@@ -388,7 +388,7 @@
 }
 
 /* Ensure proper spacing around image containers */
-.grid {
+.grid-3-columns {
   page-break-inside: auto;
   break-inside: auto;
   margin-bottom: 1rem;

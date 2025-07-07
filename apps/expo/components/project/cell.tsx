@@ -3,6 +3,7 @@ import { TouchableOpacity, Image, View, StyleSheet, Text } from "react-native";
 import { router } from "expo-router";
 import { Separator } from "@/components/ui/separator";
 import { Project, useGetProjectStatus } from "@service-geek/api-client";
+import DamageBadge from "./damageBadge";
 
 const getStatusColor = (status: string | null): string => {
   switch (status) {
@@ -45,30 +46,32 @@ export default function ProjectCell({ project }: { project: Project }) {
       }
     >
       <View style={styles.card}>
-        {imageUrl ? (
-          <Image
-            source={{
-              uri: imageUrl,
-            }}
-            alt="Image"
-            resizeMode="cover"
-            onError={() =>
-              setImageUrl(
-                `https://eu.ui-avatars.com/api/?name=${formatProjectName(project.name)}&size=250`
-              )
-            }
-            style={styles.cardImg}
-          />
-        ) : (
-          <Image
-            source={{
-              uri: `https://eu.ui-avatars.com/api/?name=${formatProjectName(project.name)}&size=250`,
-            }}
-            alt="Image"
-            resizeMode="cover"
-            style={styles.cardImg}
-          />
-        )}
+        <View style={[styles.cardImgContainer, styles.shadow]}>
+          {imageUrl ? (
+            <Image
+              source={{
+                uri: imageUrl,
+              }}
+              alt="Image"
+              resizeMode="cover"
+              onError={() =>
+                setImageUrl(
+                  `https://eu.ui-avatars.com/api/?name=${formatProjectName(project.name)}&size=250`
+                )
+              }
+              style={styles.cardImg}
+            />
+          ) : (
+            <Image
+              source={{
+                uri: `https://eu.ui-avatars.com/api/?name=${formatProjectName(project.name)}&size=250`,
+              }}
+              alt="Image"
+              resizeMode="cover"
+              style={styles.cardImg}
+            />
+          )}
+        </View>
 
         <View style={styles.cardBody}>
           <Text style={styles.cardTitle}>{`${project.name}`}</Text>
@@ -90,11 +93,12 @@ export default function ProjectCell({ project }: { project: Project }) {
               </View>
             )}
             {project?.lossType && (
-              <View className="flex-row items-center bg-blue-700 rounded px-2 py-0.5">
-                <Text className="text-xs text-white capitalize">
-                  {project.lossType.replace(/_/g, " ")}
-                </Text>
-              </View>
+              // <View className="flex-row items-center bg-blue-700 rounded px-2 py-0.5">
+              //   <Text className="text-xs text-white capitalize">
+              //     {project.lossType.replace(/_/g, " ")}
+              //   </Text>
+              // </View>
+              <DamageBadge lossType={project.lossType} />
             )}
           </View>
 
@@ -170,6 +174,20 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 12,
+  },
+  cardImgContainer: {
+    borderRadius: 12,
+    marginRight: 0,
+    backgroundColor: '#fff', // Optional: helps shadow visibility
+    borderWidth: 1,
+    borderColor: '#fff',
+  },
+  shadow: {
+    shadowColor: '#000', // Ensure shadow is black
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4, // Android, reduced for subtle effect
   },
   cardBody: {
     flexGrow: 1,

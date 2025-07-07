@@ -2,25 +2,57 @@
 
 import { useState } from "react";
 import { Button } from "@components/ui/button";
-import { Badge } from "@components/ui/badge";
 import { LoadingPlaceholder } from "@components/ui/spinner";
-import { Tag as TagIcon, Check } from "lucide-react";
-import { useGetTags } from "@service-geek/api-client";
+import {
+  EllipsisVertical,
+  Plus,
+  Tag as TagIcon,
+  X,
+  Pencil,
+  Trash,
+  Ellipsis,
+} from "lucide-react";
+import { useDeleteTag, useGetTags } from "@service-geek/api-client";
+import { Checkbox } from "@components/ui/checkbox";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogFooter,
+  AlertDialogDescription,
+  AlertDialogTitle,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTrigger,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface TagSelectorProps {
   tagType: "PROJECT" | "IMAGE";
   onAssignTags: (tagNames: string[]) => void;
   currentTags?: Array<{ id: string; name: string; color?: string }>;
+  setIsManageTagsOpen: (open: boolean) => void;
+  setSelectedTagEdit: (tag: any) => void;
 }
 
 export default function TagSelector({
   tagType,
   onAssignTags,
   currentTags = [],
+  setIsManageTagsOpen,
+  setSelectedTagEdit,
 }: TagSelectorProps) {
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>(
+    currentTags.map((tag) => tag.name)
+  );
 
   const { data: tags = [], isLoading } = useGetTags({ type: tagType });
+  const deleteTag = useDeleteTag();
 
   const handleTagToggle = (tagName: string) => {
     setSelectedTags((prev) =>
@@ -31,88 +63,39 @@ export default function TagSelector({
   };
 
   const handleAssign = () => {
-    if (selectedTags.length > 0) {
-      onAssignTags(selectedTags);
-    }
+    onAssignTags(selectedTags);
   };
-
-  // Get current tag names for easy comparison
-  const currentTagNames = currentTags.map((tag) => tag.name);
 
   if (isLoading) {
     return <LoadingPlaceholder />;
   }
 
+  const handleDeleteTag = (tagId: string) => {
+    deleteTag.mutate(tagId, {
+      onSuccess: () => {
+        toast.success(
+          tagType === "PROJECT"
+            ? "Label deleted successfully"
+            : "Tag deleted successfully"
+        );
+      },
+      onError: () => {
+        toast.error(
+          tagType === "PROJECT"
+            ? "Failed to delete label"
+            : "Failed to delete tag"
+        );
+      },
+    });
+  };
+
   return (
     <div className='space-y-6'>
-      {/* Current Tags Display */}
-      {currentTags.length > 0 && (
-        <div className='space-y-3'>
-          <h3 className='text-sm font-medium text-gray-900'>Current Tags:</h3>
-          <div className='flex flex-wrap gap-2'>
-            {currentTags.map((tag) => (
-              <Badge
-                key={tag.id}
-                variant='secondary'
-                className='cursor-default'
-                style={
-                  tagType === "PROJECT" && tag.color
-                    ? {
-                        backgroundColor: `${tag.color}15`,
-                        borderColor: tag.color,
-                        color: tag.color,
-                      }
-                    : {}
-                }
-              >
-                {tag.name}
-                <Check className='ml-1 h-3 w-3' />
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Selected New Tags Display */}
-      {selectedTags.length > 0 && (
-        <div className='space-y-3'>
-          <h3 className='text-sm font-medium text-gray-900'>Tags to Add:</h3>
-          <div className='flex flex-wrap gap-2'>
-            {selectedTags.map((tagName) => {
-              const tag = tags.find((t) => t.name === tagName);
-              return (
-                <Badge
-                  key={tagName}
-                  variant='secondary'
-                  className='cursor-pointer bg-blue-100 text-blue-800 hover:bg-blue-200'
-                  onClick={() => handleTagToggle(tagName)}
-                  style={
-                    tagType === "PROJECT" && tag?.color
-                      ? {
-                          backgroundColor: `${tag.color}15`,
-                          borderColor: tag.color,
-                          color: tag.color,
-                        }
-                      : {}
-                  }
-                >
-                  {tagName}
-                  <span className='ml-1 text-xs'>×</span>
-                </Badge>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Available Tags */}
-      <div className='space-y-3'>
-        <div className='flex items-center justify-between'>
-          <h3 className='text-sm font-medium text-gray-900'>
-            Available {tagType === "PROJECT" ? "Labels" : "Tags"}:
-          </h3>
-        </div>
-
+      {/* Tag Checkbox Group */}
+      <div >
+        {/* <h3 className='text-sm font-medium text-gray-900'>
+          {tagType === "PROJECT" ? "Labels" : "Tags"}
+        </h3> */}
         {tags.length === 0 ? (
           <div className='py-8 text-center text-muted-foreground'>
             <TagIcon className='mx-auto mb-2 h-8 w-8 opacity-50' />
@@ -124,48 +107,92 @@ export default function TagSelector({
             </p>
           </div>
         ) : (
-          <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4'>
+          <div className='grid grid-cols-1 gap-y-4 gap-x-12 py-2 sm:grid-cols-2'>
             {tags.map((tag) => {
-              const isCurrentTag = currentTagNames.includes(tag.name);
-              const isSelected = selectedTags.includes(tag.name);
-
+              const isChecked = selectedTags.includes(tag.name);
               return (
-                <Button
-                  key={tag.id}
-                  variant={
-                    isCurrentTag
-                      ? "default"
-                      : isSelected
-                        ? "default"
-                        : "outline"
-                  }
-                  size='sm'
-                  className={`justify-start ${
-                    isCurrentTag
-                      ? "cursor-default opacity-60"
-                      : "cursor-pointer"
-                  }`}
-                  onClick={() => !isCurrentTag && handleTagToggle(tag.name)}
-                  disabled={isCurrentTag}
-                  style={
-                    tagType === "PROJECT" && tag.color
-                      ? isCurrentTag || isSelected
-                        ? {
-                            backgroundColor: tag.color,
-                            borderColor: tag.color,
-                            color: "white",
-                          }
-                        : {
-                            backgroundColor: `${tag.color}15`,
-                            borderColor: tag.color,
-                            color: tag.color,
-                          }
-                      : {}
-                  }
-                >
-                  {tag.name}
-                  {isCurrentTag && <Check className='ml-1 h-3 w-3' />}
-                </Button>
+                <div key={tag.id} className='flex items-center justify-between'>
+                  <label
+                    className='flex cursor-pointer items-center gap-3'
+                    style={{
+                      borderColor:
+                        tagType === "PROJECT" && tag.color
+                          ? tag.color
+                          : undefined,
+                    }}
+                  >
+                    <Checkbox
+                      checked={isChecked}
+                      onCheckedChange={() => handleTagToggle(tag.name)}
+                      style={{
+                        accentColor:
+                          tagType === "PROJECT" && tag.color
+                            ? tag.color
+                            : undefined,
+                      }}
+                    />
+                    <div className='flex items-center gap-3'>
+                      {tagType === "PROJECT" && <span
+                        className='inline-block size-6 rounded-full border'
+                        style={{
+                          backgroundColor:
+                            tagType === "PROJECT" && tag.color
+                              ? tag.color
+                              : undefined,
+                          borderColor:
+                            tagType === "PROJECT" && tag.color
+                              ? tag.color
+                              : undefined,
+                        }}
+                      />}
+                      <span className='text-sm'>{tag.name}</span>
+                    </div>
+                  </label>
+                  <Popover>
+                    <PopoverTrigger>
+                      <Ellipsis />
+                    </PopoverTrigger>
+                    <PopoverContent className='w-36 p-2' align='end'>
+                      <button
+                        className='flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-muted'
+                        onClick={() => {
+                          setSelectedTagEdit(tag);
+                          setIsManageTagsOpen(true);
+                        }}
+                      >
+                        <Pencil className='h-4 w-4' />
+                        Edit
+                      </button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button className='flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-red-600 hover:bg-muted'>
+                            <Trash className='h-4 w-4' />
+                            Delete
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Delete {tagType === "PROJECT" ? "Label" : "Tag"}
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {`Are you sure you want to delete the ${tagType === "PROJECT" ? "label" : "tag"} "${tag.name}"? This action cannot be undone.`}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteTag(tag.id)}
+                              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </PopoverContent>
+                  </Popover>
+                </div>
               );
             })}
           </div>
@@ -173,18 +200,37 @@ export default function TagSelector({
       </div>
 
       {/* Action Buttons */}
-      <div className='flex justify-end gap-3 border-t pt-4'>
+      <div className='flex justify-between gap-3 border-t pt-4'>
         <Button
           variant='outline'
-          onClick={() => setSelectedTags([])}
-          disabled={selectedTags.length === 0}
+          size='sm'
+          onClick={() => {
+            setIsManageTagsOpen(true);
+            setSelectedTagEdit(null);
+          }}
+          className='flex items-center gap-2'
         >
-          Clear Selection
+          <Plus className='h-4 w-4' />
+          Add {tagType === "PROJECT" ? "Labels" : "Tags"}
         </Button>
-        <Button onClick={handleAssign} disabled={selectedTags.length === 0}>
-          Add {selectedTags.length > 0 ? `(${selectedTags.length})` : ""}{" "}
-          {tagType === "PROJECT" ? "Labels" : "Tags"}
-        </Button>
+        <div className='flex justify-end gap-3'>
+          <Button
+            variant='outline'
+            onClick={() => setSelectedTags(currentTags.map((tag) => tag.name))}
+            disabled={
+              selectedTags.length === currentTags.length &&
+              currentTags.every((tag) => selectedTags.includes(tag.name))
+            }
+          >
+            Reset
+          </Button>
+          <Button
+            onClick={handleAssign}
+            disabled={selectedTags.length === 0 && currentTags.length === 0}
+          >
+            Save {tagType === "PROJECT" ? "Labels" : "Tags"}
+          </Button>
+        </div>
       </div>
     </div>
   );

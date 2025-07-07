@@ -256,7 +256,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
                         // </Badge>
                         <DamageBadge lossType={projectData.lossType} />
                       )}
-                    <ProjectTags currentProjectTags={currentProjectTags} projectData={projectData} />
+                    <ProjectTags currentProjectTags={currentProjectTags} projectData={projectData}  />
                     </div>
                     {/* Tags Section */}
                   </div>
@@ -438,8 +438,8 @@ const ProjectTags = ({ currentProjectTags, projectData }: { currentProjectTags: 
       tagType='PROJECT'
       open={isTagsModalOpen}
       onOpenChange={setIsTagsModalOpen}
-      title='Add Tags to Project'
-      description='Select tags to add to this project'
+      title='Project Labels'
+      description='Select labels to add to this project'
       onAssignTags={handleAddTags}
       isAssignMode={true}
       currentTags={currentProjectTags}

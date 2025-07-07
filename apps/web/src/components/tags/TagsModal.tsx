@@ -74,13 +74,14 @@ export default function TagsModal({
 }: TagsModalProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
+  const [selectedTag, setSelectedTag] = useState(null);
 
   // Use controlled state if provided, otherwise use internal state
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const handleOpenChange = controlledOnOpenChange || setInternalOpen;
 
   // Set default title and description based on tagType
-  const defaultTitle = tagType === "PROJECT" ? "Manage Labels" : "Manage Tags";
+  const defaultTitle = tagType === "PROJECT" ? "Add Labels" : "Manage Tags";
   const defaultDescription =
     tagType === "PROJECT"
       ? "Create and manage your project labels"
@@ -106,13 +107,13 @@ export default function TagsModal({
           )}
         </DialogTrigger> */}
         <DialogContent className='max-h-[90vh] max-w-4xl overflow-y-auto'>
-          <DialogHeader>
+          <DialogHeader className='border-b pb-2'>
             <DialogTitle>{modalTitle}</DialogTitle>
             <DialogDescription>{modalDescription}</DialogDescription>
           </DialogHeader>
           {isAssignMode ? (
-            <div className='space-y-6'>
-              <div className='flex justify-end'>
+            <div >
+              {/* <div className='flex justify-end'>
                 <Button
                   variant='outline'
                   size='sm'
@@ -122,11 +123,13 @@ export default function TagsModal({
                   <Plus className='h-4 w-4' />
                   Manage {tagType === "PROJECT" ? "Labels" : "Tags"}
                 </Button>
-              </div>
+              </div> */}
               <TagSelector
                 tagType={tagType}
                 onAssignTags={handleAssignTags}
                 currentTags={currentTags}
+                setIsManageTagsOpen={setIsManageTagsOpen}
+                setSelectedTagEdit={setSelectedTag}
               />
             </div>
           ) : (
@@ -140,14 +143,21 @@ export default function TagsModal({
         <DialogContent className='max-h-[90vh] max-w-4xl overflow-y-auto'>
           <DialogHeader>
             <DialogTitle>
-              Manage {tagType === "PROJECT" ? "Labels" : "Tags"}
+              {selectedTag ? "Edit" : "Add"} {tagType === "PROJECT" ? "Label" : "Tag"}
             </DialogTitle>
             <DialogDescription>
-              Create and manage your{" "}
+              Manage your{" "}
               {tagType === "PROJECT" ? "project labels" : "image tags"}
             </DialogDescription>
           </DialogHeader>
-          <TagsManagment initialTagType={tagType} />
+          <TagsManagment
+            initialTagType={tagType}
+            tagToEdit={selectedTag}
+            onClose={() => {
+              setIsManageTagsOpen(false);
+              setSelectedTag(null);
+            }}
+          />
         </DialogContent>
       </Dialog>
     </>

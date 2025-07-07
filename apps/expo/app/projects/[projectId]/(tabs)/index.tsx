@@ -64,6 +64,7 @@ import {
 import { Button } from "@/components/ui/button";
 import ImageTagsModal from "@/components/pictures/ImageTagsModal";
 import OfflineTasksManager from "@/components/project/OfflineTasksManager";
+import DamageBadge from "@/components/project/damageBadge";
 
 // Utility to add opacity to hex color
 function addOpacityToColor(color: string, opacityHex: string = "33") {
@@ -306,7 +307,11 @@ export default function ProjectOverview() {
                         className="px-2 py-0.5 rounded-full"
                         style={{
                           backgroundColor:
-                            project.data.status.color?.toLowerCase() || "green",
+                            (project.data.status.color?.toLowerCase() ===
+                            "slate"
+                              ? "green"
+                              : project.data.status.color?.toLowerCase()) ||
+                            "green",
                         }}
                       >
                         <Text
@@ -322,11 +327,12 @@ export default function ProjectOverview() {
                       </View>
                     )}
                     {project?.data?.lossType && (
-                      <View className="flex-row items-center bg-blue-700 rounded px-2 py-0.5">
-                        <Text className="text-xs text-white capitalize">
-                          {project.data.lossType.replace(/_/g, " ")}
-                        </Text>
-                      </View>
+                      // <View className="flex-row items-center bg-blue-700 rounded px-2 py-0.5">
+                      //   <Text className="text-xs text-white capitalize">
+                      //     {project.data.lossType.replace(/_/g, " ")}
+                      //   </Text>
+                      // </View>
+                      <DamageBadge lossType={project.data.lossType} />
                     )}
                     <ProjectTags
                       tags={project?.data?.tags}
