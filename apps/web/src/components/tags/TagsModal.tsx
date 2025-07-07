@@ -74,6 +74,7 @@ export default function TagsModal({
 }: TagsModalProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
+  const [selectedTag, setSelectedTag] = useState(null);
 
   // Use controlled state if provided, otherwise use internal state
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
@@ -128,6 +129,7 @@ export default function TagsModal({
                 onAssignTags={handleAssignTags}
                 currentTags={currentTags}
                 setIsManageTagsOpen={setIsManageTagsOpen}
+                setSelectedTagEdit={setSelectedTag}
               />
             </div>
           ) : (
@@ -148,7 +150,14 @@ export default function TagsModal({
               {tagType === "PROJECT" ? "project labels" : "image tags"}
             </DialogDescription>
           </DialogHeader>
-          <TagsManagment initialTagType={tagType} />
+          <TagsManagment
+            initialTagType={tagType}
+            tagToEdit={selectedTag}
+            onClose={() => {
+              setIsManageTagsOpen(false);
+              setSelectedTag(null);
+            }}
+          />
         </DialogContent>
       </Dialog>
     </>

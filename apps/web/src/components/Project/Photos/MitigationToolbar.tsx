@@ -93,7 +93,7 @@ export default function MitigationToolbar() {
   );
 
   return (
-    <div className='flex flex-wrap justify-between items-center'>
+    <div className='flex flex-wrap  gap-4 items-center'>
       {/* <div>
         <h3 className='text-lg font-medium'>Upload Photos</h3>
         <p className='text-sm text-muted-foreground'>
