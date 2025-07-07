@@ -143,10 +143,10 @@ export default function TagsModal({
         <DialogContent className='max-h-[90vh] max-w-4xl overflow-y-auto'>
           <DialogHeader>
             <DialogTitle>
-              Manage {tagType === "PROJECT" ? "Labels" : "Tags"}
+              {selectedTag ? "Edit" : "Add"} {tagType === "PROJECT" ? "Label" : "Tag"}
             </DialogTitle>
             <DialogDescription>
-              Create and manage your{" "}
+              Manage your{" "}
               {tagType === "PROJECT" ? "project labels" : "image tags"}
             </DialogDescription>
           </DialogHeader>
