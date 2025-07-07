@@ -63,6 +63,7 @@ import {
 } from "@service-geek/api-client";
 import { Button } from "@/components/ui/button";
 import ImageTagsModal from "@/components/pictures/ImageTagsModal";
+import OfflineTasksManager from "@/components/project/OfflineTasksManager";
 
 // Utility to add opacity to hex color
 function addOpacityToColor(color: string, opacityHex: string = "33") {
@@ -772,6 +773,9 @@ export default function ProjectOverview() {
           </View>
 
           <AssigneeSelect />
+
+          {/* Offline Tasks Manager */}
+          <OfflineTasksManager projectId={projectId} />
 
           <View className="py-4">
             {projectViewMode === "list" ? (

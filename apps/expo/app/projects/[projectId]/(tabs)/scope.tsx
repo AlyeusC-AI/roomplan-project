@@ -17,12 +17,24 @@ import {
   DoorClosed,
   Wind,
   Maximize2,
+  Wifi,
+  WifiOff,
 } from "lucide-react-native";
 import {
   Room,
   useGetAreaAffected,
   useGetRooms,
 } from "@service-geek/api-client";
+import { useNetworkStatus } from "@/lib/providers/QueryProvider";
+
+// Type assertions to fix ReactNode compatibility
+const RulerComponent = Ruler as any;
+const ChevronRightComponent = ChevronRight as any;
+const DoorClosedComponent = DoorClosed as any;
+const WindComponent = Wind as any;
+const Maximize2Component = Maximize2 as any;
+const WifiComponent = Wifi as any;
+const WifiOffComponent = WifiOff as any;
 
 const styles = StyleSheet.create({
   headerContainer: {
@@ -125,6 +137,36 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
   },
+  offlineIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fef2f2",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginBottom: 16,
+    gap: 8,
+  },
+  offlineText: {
+    fontSize: 14,
+    color: "#ef4444",
+    fontWeight: "500",
+  },
+  offlineDataIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fef3c7",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginBottom: 12,
+    gap: 6,
+  },
+  offlineDataText: {
+    fontSize: 12,
+    color: "#f59e0b",
+    fontWeight: "500",
+  },
 });
 
 export default function ScopeScreen() {
@@ -137,6 +179,7 @@ export default function ScopeScreen() {
     isRefetching,
   } = useGetRooms(projectId);
   const router = useRouter();
+  const { isOffline } = useNetworkStatus();
 
   const onCreateRoom = () => {
     router.push(`/projects/${projectId}/rooms/new`);
@@ -155,23 +198,40 @@ export default function ScopeScreen() {
       <ScrollView
         className="flex-1 bg-background"
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            enabled={!isOffline} // Disable pull-to-refresh when offline
+          />
         }
       >
         <View className="px-5 py-6">
+          {/* Offline indicator */}
+          {isOffline && (
+            <View style={styles.offlineIndicator}>
+              <WifiOffComponent size={16} color="#ef4444" />
+              <Text style={styles.offlineText}>Offline Mode</Text>
+            </View>
+          )}
+
           {rooms?.length === 0 ? (
             <Empty
               title="No rooms added"
-              description="Add rooms to start documenting scope of work"
+              description={
+                isOffline
+                  ? "Add rooms to start documenting scope of work (offline mode - rooms will sync when online)"
+                  : "Add rooms to start documenting scope of work"
+              }
               //   buttonText="Add First Room"
               //   onPress={onCreateRoom}
-              icon={Ruler}
+              icon={RulerComponent}
             />
           ) : (
             <View>
               <Text className="text-slate-500 text-sm mb-4">
                 {rooms?.length} {rooms?.length === 1 ? "room" : "rooms"} in
                 scope
+                {isOffline && " (offline)"}
               </Text>
               <View className="space-y-4">
                 {rooms?.map((room) => (
@@ -197,6 +257,8 @@ export default function ScopeScreen() {
 function RoomScopeCard({ room }: { room: Room }) {
   const router = useRouter();
   const { projectId } = useGlobalSearchParams<{ projectId: string }>();
+  const { isOffline } = useNetworkStatus();
+
   const getTotalAreaRemoved = (room: any) => {
     return [
       areaAffected?.ceilingAffected,
@@ -210,7 +272,9 @@ function RoomScopeCard({ room }: { room: Room }) {
       );
   };
 
-  const { data: areaAffected } = useGetAreaAffected(room.id);
+  const { data: areaAffected, isLoading: areaLoading } = useGetAreaAffected(
+    room.id
+  );
   return (
     <View key={room.id} style={styles.card}>
       <View className="p-4">
@@ -232,14 +296,14 @@ function RoomScopeCard({ room }: { room: Room }) {
             style={styles.viewButton}
           >
             <Text style={styles.viewButtonText}>View Details</Text>
-            <ChevronRight color="#ffffff" size={16} />
+            <ChevronRightComponent color="#ffffff" size={16} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
             <View className="flex-row items-center mb-1">
-              <Maximize2 size={14} color="#64748b" />
+              <Maximize2Component size={14} color="#64748b" />
               <Text style={[styles.statLabel, { marginLeft: 4 }]}>
                 Total Area
               </Text>
@@ -253,19 +317,27 @@ function RoomScopeCard({ room }: { room: Room }) {
           </View>
           <View style={styles.statBox}>
             <View className="flex-row items-center mb-1">
-              <DoorClosed size={14} color="#64748b" />
+              <DoorClosedComponent size={14} color="#64748b" />
               <Text style={[styles.statLabel, { marginLeft: 4 }]}>Doors</Text>
             </View>
             <Text style={styles.statValue}>{room.doors || 0}</Text>
           </View>
           <View style={styles.statBox}>
             <View className="flex-row items-center mb-1">
-              <Wind size={14} color="#64748b" />
+              <WindComponent size={14} color="#64748b" />
               <Text style={[styles.statLabel, { marginLeft: 4 }]}>Windows</Text>
             </View>
             <Text style={styles.statValue}>{room.windows || 0}</Text>
           </View>
         </View>
+
+        {/* Offline indicator for area data */}
+        {isOffline && areaLoading && (
+          <View style={styles.offlineDataIndicator}>
+            <WifiOffComponent size={12} color="#f59e0b" />
+            <Text style={styles.offlineDataText}>Loading cached data...</Text>
+          </View>
+        )}
 
         {[
           areaAffected?.ceilingAffected,

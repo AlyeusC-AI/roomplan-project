@@ -16,19 +16,33 @@ import { View } from "react-native";
 import { Text } from "@/components/ui/text";
 import AddRoomButton from "@/components/project/AddRoomButton";
 import { router, useGlobalSearchParams } from "expo-router";
-import {
-  useCreateNote,
-  useGetNotes,
-  useGetRooms,
-  Room,
-} from "@service-geek/api-client";
+import { useGetNotes, useGetRooms, Room } from "@service-geek/api-client";
 import NoteCard from "./_comps/noteCard";
+import { useOfflineCreateNote } from "@/lib/hooks/useOfflineNotes";
+import { useOfflineNotesStore } from "@/lib/state/offline-notes";
+import { useNetworkStatus } from "@/lib/providers/QueryProvider";
+import OfflineNoteCard from "@/components/project/OfflineNoteCard";
+
+// Type assertions to fix ReactNode compatibility
+const BuildingComponent = Building as any;
+const PlusComponent = Plus as any;
 
 const RoomNoteListItem = ({ room }: { room: Room }) => {
-  const { mutate: createNote } = useCreateNote();
+  const { mutate: createNote } = useOfflineCreateNote();
   const { data: notes } = useGetNotes(room.id);
+  const { projectId } = useGlobalSearchParams<{ projectId: string }>();
+  const { getNotesByRoom } = useOfflineNotesStore();
+  const { isOffline } = useNetworkStatus();
+
+  // Get offline notes for this room
+  const offlineNotes = getNotesByRoom(room.id);
+
   const onAdd = async () => {
-    await createNote({ body: "", roomId: room.id });
+    await createNote({
+      body: "",
+      roomId: room.id,
+      projectId: projectId!,
+    });
     toast.success("Note added successfully");
   };
 
@@ -54,7 +68,7 @@ const RoomNoteListItem = ({ room }: { room: Room }) => {
               justifyContent: "center",
             }}
           >
-            <Building size={20} color="#0369A1" />
+            <BuildingComponent size={20} color="#0369A1" />
           </View>
           <TouchableOpacity
             onPress={() => {
@@ -68,13 +82,24 @@ const RoomNoteListItem = ({ room }: { room: Room }) => {
           </TouchableOpacity>
         </View>
         <Button variant="ghost" onPress={onAdd} className="p-2">
-          <Plus color="#1e40af" size={20} />
+          <PlusComponent color="#1e40af" size={20} />
         </Button>
       </View>
 
+      {/* Show offline notes first */}
+      {offlineNotes.map((offlineNote) => (
+        <OfflineNoteCard
+          key={offlineNote.id}
+          note={offlineNote}
+          roomId={room.id}
+          projectId={projectId!}
+        />
+      ))}
+
+      {/* Show online notes */}
       {notes?.map((note) => <NoteCard key={note.id} note={note} room={room} />)}
 
-      {notes?.length === 0 && (
+      {notes?.length === 0 && offlineNotes.length === 0 && (
         <Card
           style={{
             padding: 16,
@@ -93,7 +118,7 @@ const RoomNoteListItem = ({ room }: { room: Room }) => {
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
             >
-              <Plus size={16} color="#1e40af" />
+              <PlusComponent size={16} color="#1e40af" />
               <Text style={{ color: "#1e40af" }}>Add Note</Text>
             </View>
           </Button>
@@ -109,6 +134,7 @@ export default function Notes() {
     projectName: string;
   }>();
   const { data: rooms, isLoading: roomsLoading } = useGetRooms(projectId);
+  const { isOffline } = useNetworkStatus();
 
   if (roomsLoading) {
     return (
@@ -124,9 +150,9 @@ export default function Notes() {
         title="No Rooms"
         description="Create a room to add notes to it."
         buttonText="Create a room"
-        icon={<Building height={50} width={50} />}
+        icon={<BuildingComponent height={50} width={50} />}
         secondaryIcon={
-          <Plus height={20} width={20} color="#fff" className="ml-4" />
+          <PlusComponent height={20} width={20} color="#fff" className="ml-4" />
         }
         onPress={() =>
           router.push({
@@ -162,8 +188,8 @@ export default function Notes() {
             </View>
           ) : rooms?.length === 0 ? (
             <Empty
-              icon={<Building size={36} color="#1e40af" />}
-              secondaryIcon={<Building size={36} color="#1e40af" />}
+              icon={<BuildingComponent size={36} color="#1e40af" />}
+              secondaryIcon={<BuildingComponent size={36} color="#1e40af" />}
               title="No notes added yet"
               description="Add a note to get started"
               buttonText="Add Note"
@@ -179,16 +205,44 @@ export default function Notes() {
                   marginBottom: 16,
                 }}
               >
-                <Text
-                  style={{
-                    fontSize: 24,
-                    fontWeight: "bold",
-                    color: "#1e293b",
-                    paddingTop: 8,
-                  }}
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
                 >
-                  Notes
-                </Text>
+                  <Text
+                    style={{
+                      fontSize: 24,
+                      fontWeight: "bold",
+                      color: "#1e293b",
+                      paddingTop: 8,
+                    }}
+                  >
+                    Notes
+                  </Text>
+                  {isOffline && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        backgroundColor: "#fef2f2",
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 12,
+                        gap: 4,
+                      }}
+                    >
+                      <PlusComponent size={16} color="#ef4444" />
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#ef4444",
+                          fontWeight: "500",
+                        }}
+                      >
+                        Offline
+                      </Text>
+                    </View>
+                  )}
+                </View>
                 <AddRoomButton showText={false} size="sm" />
               </View>
 

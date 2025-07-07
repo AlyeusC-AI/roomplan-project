@@ -3,12 +3,12 @@ import {
   View,
   ActivityIndicator,
   StyleSheet,
-  Image,
   Platform,
   TouchableOpacity,
   Animated,
   Dimensions,
 } from "react-native";
+import { Image as ExpoImage } from "expo-image";
 import { ImageIcon, Trash2 } from "lucide-react-native";
 import { Text } from "@/components/ui/text";
 import {
@@ -18,6 +18,11 @@ import {
   STORAGE_BUCKETS,
   deleteImage,
 } from "./imageModule";
+
+// Type assertions to fix ReactNode compatibility
+const ImageIconComponent = ImageIcon as any;
+const Trash2Component = Trash2 as any;
+const ExpoImageComponent = ExpoImage as any;
 
 // Get screen dimensions for responsive sizing
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -240,17 +245,13 @@ export function OptimizedImage({
     >
       {!error && (
         <Animated.View style={{ opacity: imageOpacity }}>
-          <Image
+          <ExpoImageComponent
             source={{
               uri: optimizedUri,
-              cache: "force-cache",
-              headers:
-                Platform.OS === "ios"
-                  ? { "Cache-Control": "max-age=31536000" }
-                  : undefined,
             }}
             style={style}
-            resizeMode={resizeMode}
+            contentFit={resizeMode}
+            cachePolicy="memory-disk"
             onLoadStart={() => setLoading(true)}
             onLoadEnd={handleLoadEnd}
             onError={handleError}
@@ -267,7 +268,7 @@ export function OptimizedImage({
 
       {error && (
         <View style={[styles.errorContainer, style]}>
-          <ImageIcon size={24} color="#9CA3AF" />
+          <ImageIconComponent size={24} color="#9CA3AF" />
           <Text className="text-gray-400 mt-2">{"Failed to load image"}</Text>
           {
             <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
@@ -287,7 +288,7 @@ export function OptimizedImage({
           onPress={handleDelete}
           activeOpacity={0.8}
         >
-          <Trash2 size={20} color="#ef4444" />
+          <Trash2Component size={20} color="#ef4444" />
         </TouchableOpacity>
       )}
     </TouchableOpacity>

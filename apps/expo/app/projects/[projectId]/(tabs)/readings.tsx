@@ -11,7 +11,20 @@ import React, { useState } from "react";
 import RoomReading from "@/components/project/reading";
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import Empty from "@/components/project/empty";
-import { Building, Plus, ChevronDown } from "lucide-react-native";
+import {
+  Building,
+  Plus,
+  ChevronDown,
+  Wifi,
+  WifiOff,
+} from "lucide-react-native";
+
+// Type assertions to fix ReactNode compatibility
+const BuildingComponent = Building as any;
+const PlusComponent = Plus as any;
+const ChevronDownComponent = ChevronDown as any;
+const WifiComponent = Wifi as any;
+const WifiOffComponent = WifiOff as any;
 import { Button } from "@/components/ui/button";
 import {
   ActivityIndicator,
@@ -31,15 +44,21 @@ import {
   useGetRoomReadings,
   useGetRooms,
 } from "@service-geek/api-client";
+import { useOfflineReadingsStore } from "@/lib/state/offline-readings";
+import { useNetworkStatus } from "@/lib/providers/QueryProvider";
+import { useOfflineCreateRoomReading } from "@/lib/hooks/useOfflineReadings";
+import { toast } from "sonner-native";
 
 const RoomReadingItem = ({ room }: { room: Room }) => {
   const { projectId } = useGlobalSearchParams<{
     projectId: string;
   }>();
   const { mutate: createRoomReading, isPending: isCreatingRoomReading } =
-    useCreateRoomReading();
+    useOfflineCreateRoomReading(projectId);
   const { data: roomReadings, isPending: isLoadingRoomReadings } =
     useGetRoomReadings(room.id);
+  const { isOffline } = useNetworkStatus();
+
   console.log("🚀 ~ RoomReadingItem ~ roomReadings:", roomReadings?.data);
 
   const router = useRouter();
@@ -53,7 +72,7 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
       });
     } catch (error) {
       console.log(error);
-      //   toast.error("Could not add reading");
+      toast.error("Failed to create reading");
     }
   };
 
@@ -86,7 +105,7 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
             <ActivityIndicator />
           ) : (
             <View className="flex-row items-center">
-              <Plus color="#1e40af" height={18} width={18} />
+              <PlusComponent color="#1e40af" height={18} width={18} />
               <Text className="ml-1 text-primary">Add Reading</Text>
             </View>
           )}
@@ -104,9 +123,17 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
             </Heading>
           </Center>
         ) : (
-          roomReadings?.data?.map((reading: RoomReadingType) => (
-            <RoomReading room={room} key={reading.id} reading={reading} />
-          ))
+          <>
+            {/* Show all readings (online and offline) */}
+            {roomReadings?.data?.map((reading: RoomReadingType) => (
+              <RoomReading
+                room={room}
+                key={reading.id}
+                reading={reading}
+                projectId={projectId}
+              />
+            ))}
+          </>
         )}
       </VStack>
     </View>
@@ -120,6 +147,7 @@ export default function RoomReadings() {
   }>();
   const router = useRouter();
   const { data: rooms, isLoading: loading } = useGetRooms(projectId);
+  const { isOffline } = useNetworkStatus();
   const [selectedRoom, setSelectedRoom] = useState<string | "all" | null>(
     "all"
   );
@@ -151,8 +179,8 @@ export default function RoomReadings() {
         description="Start by creating a new room to add readings."
         buttonText="Create a room"
         onPress={onCreateRoom}
-        icon={<Building size={64} />}
-        secondaryIcon={<Plus color="#FFF" height={24} width={24} />}
+        icon={<BuildingComponent size={64} />}
+        secondaryIcon={<PlusComponent color="#FFF" height={24} width={24} />}
       />
     );
   }
@@ -182,7 +210,35 @@ export default function RoomReadings() {
           >
             <VStack space={3}>
               <HStack justifyContent="space-between" alignItems="center">
-                <Heading size="lg">Room Readings</Heading>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+                >
+                  <Heading size="lg">Room Readings</Heading>
+                  {isOffline && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        backgroundColor: "#fef2f2",
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 12,
+                        gap: 4,
+                      }}
+                    >
+                      <WifiOffComponent size={16} color="#ef4444" />
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#ef4444",
+                          fontWeight: "500",
+                        }}
+                      >
+                        Offline
+                      </Text>
+                    </View>
+                  )}
+                </View>
                 <AddRoomButton showText={false} size="sm" />
               </HStack>
 
@@ -195,7 +251,7 @@ export default function RoomReadings() {
                     ? "View All"
                     : rooms?.find((r) => r.id === selectedRoom)?.name}
                 </Text>
-                <ChevronDown color="#1e40af" size={18} />
+                <ChevronDownComponent color="#1e40af" size={18} />
               </Pressable>
 
               {showRoomSelector && (

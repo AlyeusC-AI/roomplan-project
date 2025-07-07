@@ -7,6 +7,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import * as SecureStore from "expo-secure-store";
+import { offlineUploadProcessor } from "../services/offline-upload-processor";
+import { offlineReadingsProcessor } from "../services/offline-readings-processor";
+import { offlineEditProcessor } from "../services/offline-edit-processor";
+import { offlineNotesProcessor } from "../services/offline-notes-processor";
+import { offlineScopeProcessor } from "../services/offline-scope-processor";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,28 +98,39 @@ interface NetworkContextType {
   isInternetReachable: boolean;
   isOffline: boolean;
 }
-
+const forceOffline = false;
 const NetworkContext = createContext<NetworkContextType>({
-  isConnected: true,
-  isInternetReachable: true,
-  isOffline: false,
+  isConnected: forceOffline ? false : true,
+  isInternetReachable: forceOffline ? false : true,
+  isOffline: forceOffline ? true : false,
 });
 
 export const useNetworkStatus = () => useContext(NetworkContext);
 
 // Network status provider component
 function NetworkStatusProvider({ children }: { children: React.ReactNode }) {
-  const [isConnected, setIsConnected] = useState(true);
-  const [isInternetReachable, setIsInternetReachable] = useState(true);
+  const [isConnected, setIsConnected] = useState(forceOffline ? false : true);
+  const [isInternetReachable, setIsInternetReachable] = useState(
+    forceOffline ? false : true
+  );
 
   useEffect(() => {
+    if (forceOffline) return;
     const unsubscribe = NetInfo.addEventListener((state: any) => {
+      const wasOffline = !isConnected || !isInternetReachable;
+      const isNowOnline = state.isConnected && state.isInternetReachable;
+
       setIsConnected(state.isConnected ?? true);
       setIsInternetReachable(state.isInternetReachable ?? true);
+
+      // Coming back online - tasks will be processed manually from the home screen
+      if (isNowOnline) {
+        console.log("Coming back online - tasks can be processed manually");
+      }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [isConnected, isInternetReachable, forceOffline]);
 
   const value = {
     isConnected,

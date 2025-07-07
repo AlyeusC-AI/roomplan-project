@@ -30,9 +30,14 @@ import {
 interface RoomReadingProps {
   room: Room; // Room object
   reading: RoomReadingType; // Reading object with GenericRoomReading
+  projectId?: string; // Project ID for offline functionality
 }
 
-const RoomReading: React.FC<RoomReadingProps> = ({ room, reading }) => {
+const RoomReading: React.FC<RoomReadingProps> = ({
+  room,
+  reading,
+  projectId,
+}) => {
   console.log("🚀 ~ room:", room);
 
   const {
@@ -93,6 +98,7 @@ const RoomReading: React.FC<RoomReadingProps> = ({ room, reading }) => {
           pickImage={pickImage}
           openImageViewer={openImageViewer}
           setWall={(wall) => setWall(wall)}
+          projectId={projectId}
         />
       )}
       {/* </Collapsible> */}

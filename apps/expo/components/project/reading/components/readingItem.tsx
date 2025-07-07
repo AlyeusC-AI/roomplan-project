@@ -7,6 +7,10 @@ import {
   Plus,
   Trash2,
 } from "lucide-react-native";
+
+// Type assertions to fix ReactNode compatibility
+const Trash2Component = Trash2 as any;
+const PlusComponent = Plus as any;
 import { v4 } from "react-native-uuid/dist/v4";
 import {
   TouchableOpacity,
@@ -31,13 +35,15 @@ import {
   Room,
   RoomReading,
   useCreateGenericRoomReading,
-  useDeleteRoomReading,
   useDeleteWall,
   useUpdateRoom,
-  useUpdateRoomReading,
   Wall,
   WallReading,
 } from "@service-geek/api-client";
+import {
+  useOfflineUpdateRoomReading,
+  useOfflineDeleteRoomReading,
+} from "@/lib/hooks/useOfflineReadings";
 import { useDebounce } from "@/utils/debounce";
 
 const RoomReadingItem = ({
@@ -46,6 +52,7 @@ const RoomReadingItem = ({
   pickImage,
   openImageViewer,
   setWall,
+  projectId,
 }: {
   room: Room;
   reading: RoomReading;
@@ -60,11 +67,12 @@ const RoomReadingItem = ({
     genericId?: string
   ) => void;
   setWall: (wall: Partial<Wall>) => void;
+  projectId?: string;
 }) => {
-  const { mutate: updateRoomReading } = useUpdateRoomReading();
+  const { mutate: updateRoomReading } = useOfflineUpdateRoomReading(projectId);
   const { mutate: deleteWall } = useDeleteWall();
   const { mutate: deleteRoomReading, isPending: isDeleting } =
-    useDeleteRoomReading();
+    useOfflineDeleteRoomReading(projectId);
   const { mutate: addGenericRoomReading, isPending: isAdding } =
     useCreateGenericRoomReading();
   const [tempRoomReading, setTempRoomReading] = useState<RoomReading>(reading);
@@ -95,26 +103,22 @@ const RoomReadingItem = ({
     // Only update if we're not already updating and enough time has passed since last update
     if (!isUpdating && now - lastUpdateTime > 1000) {
       setIsUpdating(true);
-      updateRoomReading(
-        {
-          id: reading.id,
-          data: {
-            date: debouncedRoomReading.date,
-            temperature: debouncedRoomReading.temperature,
-            humidity: debouncedRoomReading.humidity,
-            // wallReadings: debouncedRoomReading.wallReadings,
-          },
+      updateRoomReading({
+        id: reading.id,
+        data: {
+          date: debouncedRoomReading.date,
+          temperature: debouncedRoomReading.temperature,
+          humidity: debouncedRoomReading.humidity,
+          // wallReadings: debouncedRoomReading.wallReadings,
         },
-        {
-          onSuccess: () => {
-            setIsUpdating(false);
-            setLastUpdateTime(Date.now());
-          },
-          onError: () => {
-            setIsUpdating(false);
-          },
-        }
-      );
+      })
+        .then(() => {
+          setIsUpdating(false);
+          setLastUpdateTime(Date.now());
+        })
+        .catch(() => {
+          setIsUpdating(false);
+        });
     }
   }, [
     debouncedRoomReading.humidity,
@@ -217,7 +221,7 @@ const RoomReadingItem = ({
                 className="mr-1.5"
               />
             ) : (
-              <Trash2
+              <Trash2Component
                 color="#dc2626"
                 height={16}
                 width={16}
@@ -383,7 +387,7 @@ const RoomReadingItem = ({
                     className="mr-1.5"
                   />
                 ) : (
-                  <Plus
+                  <PlusComponent
                     color="#FFF"
                     height={16}
                     width={16}

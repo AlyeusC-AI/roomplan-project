@@ -7,9 +7,12 @@ import {
   View,
   StyleSheet,
   Dimensions,
-  Image,
   Modal,
 } from "react-native";
+import { Image as ExpoImage } from "expo-image";
+
+// Type assertion to fix ReactNode compatibility
+const ExpoImageComponent = ExpoImage as any;
 import { Camera } from "react-native-vision-camera";
 import {
   Camera as CameraIcon,
@@ -24,6 +27,8 @@ import {
   XCircle,
   Filter,
   CheckSquare,
+  Wifi,
+  WifiOff,
 } from "lucide-react-native";
 import { useFocusEffect, useGlobalSearchParams, useRouter } from "expo-router";
 import { toast } from "sonner-native";
@@ -61,6 +66,21 @@ import {
   useAddImageTags,
 } from "@service-geek/api-client";
 import { uploadImage } from "@/lib/imagekit";
+import { useOfflineUploadsStore } from "@/lib/state/offline-uploads";
+import { useNetworkStatus } from "@/lib/providers/QueryProvider";
+
+// Type assertions to fix ReactNode compatibility
+const CameraIconComponent = CameraIcon as any;
+const ImagePlusComponent = ImagePlus as any;
+const ImageIconComponent = ImageIcon as any;
+const Building2Component = Building2 as any;
+const StarComponent = Star as any;
+const LoaderComponent = Loader as any;
+const HomeComponent = Home as any;
+const XCircleComponent = XCircle as any;
+const FilterComponent = Filter as any;
+const WifiComponent = Wifi as any;
+const WifiOffComponent = WifiOff as any;
 
 export default function ProjectPhotos() {
   const { projectId } = useGlobalSearchParams<{
@@ -84,6 +104,8 @@ export default function ProjectPhotos() {
   const [mainImage, setMainImage] = useState<string | null>(null);
   const [showCoverModal, setShowCoverModal] = useState(false);
   const { mutate: addImage } = useAddImage();
+  const { isOffline } = useNetworkStatus();
+  const { addToQueue } = useOfflineUploadsStore();
 
   const { data: rooms } = useGetRooms(projectId);
   const { mutate: bulkUpdateImages } = useBulkUpdateImages();
@@ -131,6 +153,25 @@ export default function ProjectPhotos() {
 
   const uploadToSupabase = async (imagePath: string, roomId: string) => {
     console.log("🚀 ~ uploadToSupabase ~ imagePath:", imagePath, roomId);
+
+    if (isOffline) {
+      // Add to offline queue when offline
+      addToQueue({
+        projectId,
+        roomId,
+        imagePath,
+        imageUrl: imagePath,
+        metadata: {
+          size: 0,
+          type: "image/jpeg",
+          name: "offline-image",
+        },
+      });
+      toast.success("Image added to offline queue");
+      setUploadProgress((prev) => prev + 1);
+      return true;
+    }
+
     try {
       await addImage({
         data: {
@@ -144,7 +185,20 @@ export default function ProjectPhotos() {
       return true;
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Failed to upload image");
+
+      // If upload fails, add to offline queue as fallback
+      addToQueue({
+        projectId,
+        roomId,
+        imagePath,
+        imageUrl: imagePath,
+        metadata: {
+          size: 0,
+          type: "image/jpeg",
+          name: "failed-upload",
+        },
+      });
+      toast.error("Upload failed, added to offline queue");
       return false;
     }
   };
@@ -312,9 +366,14 @@ export default function ProjectPhotos() {
         title="No Images"
         description="Upload images to associate with this project. Images of rooms can be automatically assigned a room"
         buttonText="Create a room"
-        icon={<CameraIcon height={50} width={50} />}
+        icon={<CameraIconComponent height={50} width={50} />}
         secondaryIcon={
-          <CameraIcon height={20} width={20} color="#fff" className="ml-4" />
+          <CameraIconComponent
+            height={20}
+            width={20}
+            color="#fff"
+            className="ml-4"
+          />
         }
         onPress={onCreateRoom}
       />
@@ -333,7 +392,15 @@ export default function ProjectPhotos() {
       >
         <View style={styles.header}>
           <View style={styles.headerTop}>
-            <Text style={styles.headerTitle}>Project Photos</Text>
+            <View style={styles.headerTitleContainer}>
+              <Text style={styles.headerTitle}>Project Photos</Text>
+              {isOffline && (
+                <View style={styles.offlineIndicator}>
+                  <WifiOffComponent size={16} color="#ef4444" />
+                  <Text style={styles.offlineText}>Offline</Text>
+                </View>
+              )}
+            </View>
             <AddRoomButton showText={false} size="sm" />
           </View>
 
@@ -348,9 +415,9 @@ export default function ProjectPhotos() {
                 disabled={isUploadingMainImage}
               >
                 {isUploadingMainImage ? (
-                  <Loader size={20} color="#2563eb" />
+                  <LoaderComponent size={20} color="#2563eb" />
                 ) : (
-                  <Home size={20} color="#2563eb" />
+                  <HomeComponent size={20} color="#2563eb" />
                 )}
               </TouchableOpacity>
 
@@ -363,9 +430,9 @@ export default function ProjectPhotos() {
                 disabled={isUpdatingAll || !rooms?.length}
               >
                 {isUpdatingAll ? (
-                  <Loader size={20} color="#2563eb" />
+                  <LoaderComponent size={20} color="#2563eb" />
                 ) : (
-                  <Star
+                  <StarComponent
                     size={20}
                     color={areAllImagesIncluded ? "#FBBF24" : "#2563eb"}
                     fill={areAllImagesIncluded ? "#FBBF24" : "transparent"}
@@ -374,10 +441,16 @@ export default function ProjectPhotos() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.actionButton}
+                style={[
+                  styles.actionButton,
+                  isOffline && styles.actionButtonOffline,
+                ]}
                 onPress={handlePickImages}
               >
-                <ImagePlus size={20} color="#2563eb" />
+                <ImagePlusComponent
+                  size={20}
+                  color={isOffline ? "#f59e0b" : "#2563eb"}
+                />
               </TouchableOpacity>
             </View>
 
@@ -386,7 +459,7 @@ export default function ProjectPhotos() {
                 style={styles.filterButton}
                 onPress={handleNavigateToFilteredImages}
               >
-                <Filter size={18} color="#2563eb" />
+                <FilterComponent size={18} color="#2563eb" />
               </TouchableOpacity>
             </View>
           </View>
@@ -420,13 +493,15 @@ export default function ProjectPhotos() {
                   </View>
 
                   {previewImageUrl ? (
-                    <Image
+                    <ExpoImageComponent
                       source={{ uri: previewImageUrl }}
                       style={styles.roomPreviewImage}
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
                     />
                   ) : (
                     <View style={styles.roomPreviewPlaceholder}>
-                      <ImageIcon size={24} color="#9CA3AF" />
+                      <ImageIconComponent size={24} color="#9CA3AF" />
                     </View>
                   )}
                 </View>
@@ -456,7 +531,7 @@ export default function ProjectPhotos() {
             {isUploading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <CameraIcon size={30} color="#fff" />
+              <CameraIconComponent size={30} color="#fff" />
             )}
           </TouchableOpacity>
         </View>
@@ -472,7 +547,7 @@ export default function ProjectPhotos() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
-                <Building2 size={24} color="#2563eb" />
+                <Building2Component size={24} color="#2563eb" />
                 <Text style={styles.modalTitle}>Select Room</Text>
               </View>
               <TouchableOpacity
@@ -482,7 +557,7 @@ export default function ProjectPhotos() {
                   setSelectedRoom(null);
                 }}
               >
-                <XCircle size={24} color="#64748b" />
+                <XCircleComponent size={24} color="#64748b" />
               </TouchableOpacity>
             </View>
 
@@ -530,24 +605,25 @@ export default function ProjectPhotos() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
-                <Home size={24} color="#2563eb" />
+                <HomeComponent size={24} color="#2563eb" />
                 <Text style={styles.modalTitle}>Project Cover</Text>
               </View>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setShowCoverModal(false)}
               >
-                <XCircle size={24} color="#64748b" />
+                <XCircleComponent size={24} color="#64748b" />
               </TouchableOpacity>
             </View>
 
             <View style={styles.modalBody}>
               {mainImage ? (
                 <View style={styles.coverPreview}>
-                  <Image
+                  <ExpoImageComponent
                     source={{ uri: mainImage }}
                     style={styles.coverImage}
-                    resizeMode="cover"
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
                   />
                   <View style={styles.coverOverlay}>
                     <Text style={styles.coverOverlayText}>Current Cover</Text>
@@ -555,7 +631,7 @@ export default function ProjectPhotos() {
                 </View>
               ) : (
                 <View style={styles.coverPlaceholder}>
-                  <Home size={48} color="#94a3b8" />
+                  <HomeComponent size={48} color="#94a3b8" />
                   <Text style={styles.coverPlaceholderText}>
                     No cover image set
                   </Text>
@@ -573,7 +649,7 @@ export default function ProjectPhotos() {
                     <ActivityIndicator color="#fff" />
                   ) : (
                     <View style={styles.actionButtonContent}>
-                      <CameraIcon size={20} color="#fff" />
+                      <CameraIconComponent size={20} color="#fff" />
                       <Text style={styles.actionButtonText}>Take Photo</Text>
                     </View>
                   )}
@@ -588,7 +664,7 @@ export default function ProjectPhotos() {
                     <ActivityIndicator color="#fff" />
                   ) : (
                     <View style={styles.actionButtonContent}>
-                      <ImageIcon size={20} color="#fff" />
+                      <ImageIconComponent size={20} color="#fff" />
                       <Text style={styles.actionButtonText}>
                         Choose from Library
                       </Text>
@@ -627,6 +703,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  headerTitleContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  offlineIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fef2f2",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  offlineText: {
+    fontSize: 12,
+    color: "#ef4444",
+    fontWeight: "500",
   },
   headerTitle: {
     paddingTop: 8,
@@ -679,6 +775,10 @@ const styles = StyleSheet.create({
   },
   actionButtonDisabled: {
     opacity: 0.5,
+  },
+  actionButtonOffline: {
+    backgroundColor: "#fef3c7",
+    borderColor: "#f59e0b",
   },
   actionButtonActive: {
     backgroundColor: "#2563eb",
