@@ -106,13 +106,13 @@ export default function TagsModal({
           )}
         </DialogTrigger> */}
         <DialogContent className='max-h-[90vh] max-w-4xl overflow-y-auto'>
-          <DialogHeader>
+          <DialogHeader className='border-b pb-2'>
             <DialogTitle>{modalTitle}</DialogTitle>
             <DialogDescription>{modalDescription}</DialogDescription>
           </DialogHeader>
           {isAssignMode ? (
-            <div className='space-y-6'>
-              <div className='flex justify-end'>
+            <div >
+              {/* <div className='flex justify-end'>
                 <Button
                   variant='outline'
                   size='sm'
@@ -122,11 +122,12 @@ export default function TagsModal({
                   <Plus className='h-4 w-4' />
                   Manage {tagType === "PROJECT" ? "Labels" : "Tags"}
                 </Button>
-              </div>
+              </div> */}
               <TagSelector
                 tagType={tagType}
                 onAssignTags={handleAssignTags}
                 currentTags={currentTags}
+                setIsManageTagsOpen={setIsManageTagsOpen}
               />
             </div>
           ) : (
