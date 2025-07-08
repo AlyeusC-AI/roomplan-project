@@ -206,6 +206,15 @@ export const useOfflineTasksStore = create<OfflineTasksState>()(
                 t.id === id ? { ...t, status: "completed" } : t
               ),
             }));
+
+            // Auto-clear completed tasks after a short delay
+            setTimeout(() => {
+              set((state) => ({
+                tasks: state.tasks.filter(
+                  (task) => task.status !== "completed"
+                ),
+              }));
+            }, 1000);
           }, 2000);
         } catch (error: any) {
           console.error(`Error executing task ${id}:`, error);
@@ -247,6 +256,15 @@ export const useOfflineTasksStore = create<OfflineTasksState>()(
               ),
               isProcessing: false,
             }));
+
+            // Auto-clear completed tasks after a short delay
+            setTimeout(() => {
+              set((state) => ({
+                tasks: state.tasks.filter(
+                  (task) => task.status !== "completed"
+                ),
+              }));
+            }, 1000);
           }, 3000);
         } catch (error) {
           console.error("Error executing all pending tasks:", error);

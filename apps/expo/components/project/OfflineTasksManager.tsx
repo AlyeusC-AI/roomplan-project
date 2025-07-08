@@ -130,7 +130,9 @@ export default function OfflineTasksManager({
   const handleExecuteTask = async (taskId: string) => {
     try {
       await executeTask(taskId);
-      toast.success("Task executed successfully");
+      toast.success(
+        "Task executed successfully and will be cleared automatically"
+      );
     } catch (error) {
       toast.error("Failed to execute task");
     }
@@ -144,7 +146,9 @@ export default function OfflineTasksManager({
 
     try {
       await executeAllPending();
-      toast.success("All pending tasks executed");
+      toast.success(
+        "All pending tasks executed and will be cleared automatically"
+      );
     } catch (error) {
       toast.error("Failed to execute some tasks");
     }
@@ -369,18 +373,9 @@ export default function OfflineTasksManager({
             {/* Completed Tasks */}
             {completedTasks.length > 0 && (
               <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>
-                    Completed ({completedTasks.length})
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.clearButton}
-                    onPress={clearCompleted}
-                  >
-                    <Trash2Component size={14} color="#64748b" />
-                    <Text style={styles.clearButtonText}>Clear</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.sectionTitle}>
+                  Completed ({completedTasks.length}) - Auto-clearing soon
+                </Text>
                 {completedTasks.slice(0, 5).map((task) => (
                   <TaskItem key={task.id} task={task} />
                 ))}

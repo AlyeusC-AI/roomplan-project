@@ -44,8 +44,8 @@ export function RoomReadingInput({
           md: "100%",
         }}
         fontSize="md"
-        type="text"
-        value={text}
+        keyboardType="numeric"
+        value={text === "0" ? "" : text}
         placeholder={placeholder}
         onChangeText={(text) => {
           if (disabled) return;
