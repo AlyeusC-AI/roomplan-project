@@ -6,7 +6,7 @@ import { Stack } from "expo-router";
 import "@/global.css";
 import { AppState, View, StatusBar, SafeAreaView, Text } from "react-native";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { NotificationProvider } from "@/components/providers/NotificationProvider";
+// import { NotificationProvider } from "@/components/providers/NotificationProvider";
 import { PortalHost } from "@rn-primitives/portal";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as SplashScreen from "expo-splash-screen";
@@ -137,72 +137,72 @@ export default function AppRoot() {
       <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <ThemeProvider>
-            <NotificationProvider>
-              <NativeBaseProvider theme={theme}>
-                <OfflineBanner />
-                <Stack
-                  screenOptions={{
-                    headerTintColor: "#FFFF",
-                    headerStyle: { backgroundColor: "#2563eb" },
+            {/* <NotificationProvider> */}
+            <NativeBaseProvider theme={theme}>
+              <OfflineBanner />
+              <Stack
+                screenOptions={{
+                  headerTintColor: "#FFFF",
+                  headerStyle: { backgroundColor: "#2563eb" },
+                }}
+              >
+                <Stack.Screen
+                  name="(auth)"
+                  options={{
+                    headerShown: false,
                   }}
-                >
-                  <Stack.Screen
-                    name="(auth)"
-                    options={{
-                      headerShown: false,
-                    }}
-                  />
-                  <Stack.Screen
-                    name="(app)"
-                    options={{
-                      headerShown: false,
-                    }}
-                  />
-                  <Stack.Screen
-                    name="(dashboard)/(tabs)"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="projects/address-input"
-                    options={{ presentation: "modal" }}
-                  />
-                  <Stack.Screen
-                    name="(dashboard)/select-assignee"
-                    options={{ presentation: "modal" }}
-                  />
-                  <Stack.Screen
-                    name="projects/[projectId]/(tabs)"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="(dashboard)/settings"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="projects/new-project/index"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="(dashboard)/chat"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="projects/[projectId]/edit"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="projects/[projectId]"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="(auth)/login"
-                    options={{
-                      headerTitle: "Log In",
-                    }}
-                  />
-                </Stack>
-              </NativeBaseProvider>
-            </NotificationProvider>
+                />
+                <Stack.Screen
+                  name="(app)"
+                  options={{
+                    headerShown: false,
+                  }}
+                />
+                <Stack.Screen
+                  name="(dashboard)/(tabs)"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="projects/address-input"
+                  options={{ presentation: "modal" }}
+                />
+                <Stack.Screen
+                  name="(dashboard)/select-assignee"
+                  options={{ presentation: "modal" }}
+                />
+                <Stack.Screen
+                  name="projects/[projectId]/(tabs)"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="(dashboard)/settings"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="projects/new-project/index"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="(dashboard)/chat"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="projects/[projectId]/edit"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="projects/[projectId]"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="(auth)/login"
+                  options={{
+                    headerTitle: "Log In",
+                  }}
+                />
+              </Stack>
+            </NativeBaseProvider>
+            {/* </NotificationProvider> */}
           </ThemeProvider>
           <Toaster visibleToasts={1} position="top-center" closeButton />
           <PortalHost />

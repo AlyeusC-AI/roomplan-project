@@ -3,7 +3,6 @@ import ImageKit from "imagekit-javascript";
 import { toast } from "sonner-native";
 import { api } from "./api";
 import { STORAGE_BUCKETS } from "./utils/imageHelpers";
-import { supabaseServiceRole } from "@/unused/screens/CameraScreen";
 import { v4 } from "uuid";
 import {
   getImageKitAuthToken,

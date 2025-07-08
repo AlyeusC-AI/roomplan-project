@@ -18,7 +18,7 @@ import {
   useGetUserChats,
   ChatType,
 } from "@service-geek/api-client";
-import { pushNotificationService } from "@/lib/notifications";
+// import { pushNotificationService } from "@/lib/notifications";
 import {
   ChatHeader,
   MessageList,
@@ -181,11 +181,11 @@ export default function ChatDetailScreen() {
   });
 
   // Clear notification badge when entering chat
-  useEffect(() => {
-    if (chatId) {
-      pushNotificationService.setBadgeCountAsync(0);
-    }
-  }, [chatId]);
+  // useEffect(() => {
+  //   if (chatId) {
+  //     pushNotificationService.setBadgeCountAsync(0);
+  //   }
+  // }, [chatId]);
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
