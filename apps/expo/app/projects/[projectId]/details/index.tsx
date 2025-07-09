@@ -44,6 +44,7 @@ import {
   ChevronRight,
   ChevronLeft as ChevronLeftIcon,
   ChevronDown,
+  Droplets,
 } from "lucide-react-native";
 import { Linking } from "react-native";
 import {
@@ -67,6 +68,15 @@ import {
 } from "@service-geek/api-client";
 
 type TabType = "customer" | "loss" | "insurance";
+
+// Water damage classification types
+type WaterDamageType = "clean" | "gray" | "black";
+
+const WATER_DAMAGE_TYPES = [
+  { label: "Class 1 (Clean)", value: "Class 1 (Clean)" as WaterDamageType },
+  { label: "Class 2 (Gray)", value: "Class 2 (Gray)" as WaterDamageType },
+  { label: "Class 3 (Black)", value: "Class 3 (Black)" as WaterDamageType },
+] as const;
 
 // Create a LossType selector component
 const LOSS_TYPES = [
@@ -133,6 +143,90 @@ function LossTypeSelector({ value, onChange, style }: LossTypeSelectorProps) {
                 >
                   {type.label}
                 </Text>
+              </TouchableOpacity>
+            ))}
+          </VStack>
+
+          <HStack space={2} mt={4}>
+            <Button
+              variant="outline"
+              onPress={() => setModalVisible(false)}
+              style={styles.modalButton}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </Button>
+          </HStack>
+        </Box>
+      </Modal>
+    </Box>
+  );
+}
+
+interface WaterDamageTypeSelectorProps {
+  value?: WaterDamageType;
+  onChange: (value: WaterDamageType) => void;
+  style?: any;
+}
+
+function WaterDamageTypeSelector({
+  value,
+  onChange,
+  style,
+}: WaterDamageTypeSelectorProps) {
+  const [modalVisible, setModalVisible] = useState(false);
+  const selectedLabel = value
+    ? WATER_DAMAGE_TYPES.find((type) => type.value === value)?.label
+    : "Select water type";
+
+  return (
+    <Box>
+      <FormControl.Label>Water Classification</FormControl.Label>
+      <TouchableOpacity
+        style={[styles.selectorInput, style]}
+        onPress={() => setModalVisible(true)}
+      >
+        <Text style={[styles.inputText, !value && styles.placeholderText]}>
+          {selectedLabel}
+        </Text>
+        <ChevronDown size={20} color="#1d1d1d" />
+      </TouchableOpacity>
+
+      <Modal isOpen={modalVisible} onClose={() => setModalVisible(false)}>
+        <Box style={styles.calendarContainer}>
+          <HStack justifyContent="space-between" alignItems="center" mb={4}>
+            <Text style={styles.modalTitle}>Select Water Type</Text>
+            <Pressable onPress={() => setModalVisible(false)}>
+              <X color="#64748b" size={20} />
+            </Pressable>
+          </HStack>
+
+          <VStack space={2}>
+            {WATER_DAMAGE_TYPES.map((type) => (
+              <TouchableOpacity
+                key={type.value}
+                style={[
+                  styles.optionItem,
+                  value === type.value && styles.selectedOption,
+                ]}
+                onPress={() => {
+                  onChange(type.value);
+                  setModalVisible(false);
+                }}
+              >
+                <HStack space={2} alignItems="center">
+                  <Droplets
+                    size={16}
+                    color={value === type.value ? "#2563eb" : "#94a3b8"}
+                  />
+                  <Text
+                    style={[
+                      styles.optionText,
+                      value === type.value && styles.selectedOptionText,
+                    ]}
+                  >
+                    {type.label}
+                  </Text>
+                </HStack>
               </TouchableOpacity>
             ))}
           </VStack>
@@ -294,7 +388,17 @@ export default function ProjectDetails() {
       setAdjusterPhoneNumber(project.data?.adjusterPhoneNumber || "");
       setInsuranceClaimId(project.data?.insuranceClaimId || "");
       setPolicyNumber(project.data?.policyNumber || "");
-      setCatCode(project.data?.catCode || "");
+      // Parse catCode for water damage type if it's a water damage project
+      if (project.data?.lossType === LossType.WATER && project.data?.catCode) {
+        const waterType = project.data.catCode as WaterDamageType;
+        if (["clean", "gray", "black"].includes(waterType)) {
+          setCatCode(waterType);
+        } else {
+          setCatCode(project.data.catCode || "");
+        }
+      } else {
+        setCatCode(project.data?.catCode || "");
+      }
       setClaimSummary(project.data?.claimSummary || "");
       setDateOfLoss(
         project.data?.dateOfLoss
@@ -308,6 +412,18 @@ export default function ProjectDetails() {
     if (phoneNumber) {
       Linking.openURL(`tel:${phoneNumber}`);
     }
+  };
+
+  // Helper function to get current water damage type from catCode
+  const getCurrentWaterDamageType = (): WaterDamageType | undefined => {
+    if (
+      lossType === LossType.WATER &&
+      catCode &&
+      ["clean", "gray", "black"].includes(catCode)
+    ) {
+      return catCode as WaterDamageType;
+    }
+    return undefined;
   };
 
   const updateProject = async () => {
@@ -503,21 +619,30 @@ export default function ProjectDetails() {
             onChange={setLossType}
             style={styles.sectionInput}
           />
+          {lossType === LossType.WATER && (
+            <WaterDamageTypeSelector
+              value={getCurrentWaterDamageType()}
+              onChange={(value) => setCatCode(value)}
+              style={styles.sectionInput}
+            />
+          )}
           <DateInput
             label="Date of Loss"
             value={dateOfLoss}
             onChange={setDateOfLoss}
           />
-          <FormInput
-            label="Category Code"
-            placeholder="Enter category code"
-            value={catCode}
-            onChangeText={setCatCode}
-            containerStyle={styles.inputContainer}
-            leftElement={
-              <Hash size={20} color="#94a3b8" style={styles.inputIcon} />
-            }
-          />
+          {lossType !== LossType.WATER && (
+            <FormInput
+              label="Category Code"
+              placeholder="Enter category code"
+              value={catCode}
+              onChangeText={setCatCode}
+              containerStyle={styles.inputContainer}
+              leftElement={
+                <Hash size={20} color="#94a3b8" style={styles.inputIcon} />
+              }
+            />
+          )}
           <FormInput
             label="Claim Summary"
             placeholder="Enter claim summary"

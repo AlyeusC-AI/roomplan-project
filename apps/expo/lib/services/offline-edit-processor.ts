@@ -22,13 +22,79 @@ class OfflineEditProcessor {
     this.isProcessing = true;
 
     try {
-      for (const edit of pendingEdits) {
-        await this.processEdit(edit);
+      // Group edits by readingId to handle batched updates
+      const editsByReading = this.groupEditsByReading(pendingEdits);
+
+      for (const [readingId, edits] of Object.entries(editsByReading)) {
+        await this.processBatchedEdits(readingId, edits);
       }
     } catch (error) {
       console.error("Error processing edit queue:", error);
     } finally {
       this.isProcessing = false;
+    }
+  }
+
+  private groupEditsByReading(
+    edits: OfflineEditOperation[]
+  ): Record<string, OfflineEditOperation[]> {
+    const grouped: Record<string, OfflineEditOperation[]> = {};
+
+    edits.forEach((edit) => {
+      if (!grouped[edit.readingId]) {
+        grouped[edit.readingId] = [];
+      }
+      grouped[edit.readingId].push(edit);
+    });
+
+    return grouped;
+  }
+
+  private async processBatchedEdits(
+    readingId: string,
+    edits: OfflineEditOperation[]
+  ) {
+    const store = useOfflineReadingsStore.getState();
+
+    // Find the most recent update edit (if any)
+    const updateEdit = edits
+      .filter((edit) => edit.operation === "update")
+      .sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      )[0];
+
+    // Find delete edit (if any)
+    const deleteEdit = edits.find((edit) => edit.operation === "delete");
+
+    try {
+      // Process delete first if it exists
+      if (deleteEdit) {
+        await this.processEdit(deleteEdit);
+        // Remove all other edits for this reading since it's being deleted
+        edits.forEach((edit) => {
+          if (edit.id !== deleteEdit.id) {
+            store.removeEditFromQueue(edit.id);
+          }
+        });
+        return;
+      }
+
+      // Process update if it exists
+      if (updateEdit) {
+        await this.processEdit(updateEdit);
+        // Remove all other update edits for this reading since they're now merged
+        edits.forEach((edit) => {
+          if (edit.operation === "update" && edit.id !== updateEdit.id) {
+            store.removeEditFromQueue(edit.id);
+          }
+        });
+      }
+    } catch (error) {
+      console.error(
+        `Error processing batched edits for reading ${readingId}:`,
+        error
+      );
     }
   }
 
@@ -40,7 +106,7 @@ class OfflineEditProcessor {
       store.updateEditStatus(edit.id, "uploading");
 
       if (edit.operation === "update") {
-        // Update the reading using the API client
+        // Update the reading using the API client with all batched data
         await readingsService.updateRoomReading(edit.readingId, {
           date: edit.data?.date,
           humidity: edit.data?.humidity,

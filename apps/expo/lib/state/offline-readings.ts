@@ -33,6 +33,7 @@ export interface OfflineEditOperation {
   };
   status: "pending" | "uploading" | "completed" | "failed";
   createdAt: Date;
+  updatedAt: Date; // Track when the edit was last updated
   retryCount: number;
   error?: string;
 }
@@ -50,8 +51,12 @@ interface OfflineReadingsState {
   addEditToQueue: (
     edit: Omit<
       OfflineEditOperation,
-      "id" | "status" | "createdAt" | "retryCount"
+      "id" | "status" | "createdAt" | "updatedAt" | "retryCount"
     >
+  ) => void;
+  updateExistingEdit: (
+    readingId: string,
+    data: Partial<OfflineEditOperation["data"]>
   ) => void;
   removeFromQueue: (id: string) => void;
   removeEditFromQueue: (id: string) => void;
@@ -81,6 +86,7 @@ interface OfflineReadingsState {
   getReadingsByRoom: (roomId: string) => OfflineRoomReading[];
   getEditsByReading: (readingId: string) => OfflineEditOperation[];
   getReadingsByProject: (projectId: string) => OfflineRoomReading[];
+  getExistingEditForReading: (readingId: string) => OfflineEditOperation | null;
 }
 
 export const useOfflineReadingsStore = create<OfflineReadingsState>()(
@@ -122,6 +128,7 @@ export const useOfflineReadingsStore = create<OfflineReadingsState>()(
           id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
           status: "pending",
           createdAt: new Date(),
+          updatedAt: new Date(),
           retryCount: 0,
         };
         set((state) => ({
@@ -142,6 +149,23 @@ export const useOfflineReadingsStore = create<OfflineReadingsState>()(
             data: edit.data,
           },
         });
+      },
+
+      updateExistingEdit: (readingId, data) => {
+        set((state) => ({
+          editQueue: state.editQueue.map((edit) =>
+            edit.readingId === readingId && edit.operation === "update"
+              ? {
+                  ...edit,
+                  data: {
+                    ...edit.data,
+                    ...data,
+                  },
+                  updatedAt: new Date(),
+                }
+              : edit
+          ),
+        }));
       },
 
       removeFromQueue: (id) => {
@@ -294,6 +318,13 @@ export const useOfflineReadingsStore = create<OfflineReadingsState>()(
         return get().readingsQueue.filter(
           (reading) => reading.projectId === projectId
         );
+      },
+
+      getExistingEditForReading: (readingId) => {
+        const existingEdit = get().editQueue.find(
+          (edit) => edit.readingId === readingId && edit.operation === "update"
+        );
+        return existingEdit || null;
       },
     }),
     {
