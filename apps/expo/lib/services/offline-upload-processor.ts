@@ -3,6 +3,7 @@ import {
   OfflineImageUpload,
 } from "../state/offline-uploads";
 import { roomsService } from "@service-geek/api-client";
+import { uploadImage } from "@/lib/imagekit";
 import { toast } from "sonner-native";
 
 class OfflineUploadProcessor {
@@ -42,15 +43,28 @@ class OfflineUploadProcessor {
       // Update status to uploading
       store.updateUploadStatus(upload.id, "uploading");
 
-      // Simulate the addImage mutation
-      // In a real implementation, you would call the actual API
-      const response = await this.uploadImageToServer(upload);
+      // First upload to ImageKit
+      const uploadResult = await this.uploadImageToImageKit(upload);
 
-      if (response.success) {
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || "ImageKit upload failed");
+      }
+
+      // Then save reference to backend
+      if (!uploadResult.url) {
+        throw new Error("No URL returned from ImageKit upload");
+      }
+
+      const backendResult = await this.saveImageToBackend(
+        upload,
+        uploadResult.url
+      );
+
+      if (backendResult.success) {
         store.updateUploadStatus(upload.id, "completed");
         toast.success(`Image uploaded successfully`);
       } else {
-        throw new Error(response.error || "Upload failed");
+        throw new Error(backendResult.error || "Backend save failed");
       }
     } catch (error) {
       console.error(`Error uploading image ${upload.id}:`, error);
@@ -65,13 +79,47 @@ class OfflineUploadProcessor {
     }
   }
 
-  private async uploadImageToServer(
+  private async uploadImageToImageKit(
     upload: OfflineImageUpload
+  ): Promise<{ success: boolean; url?: string; error?: string }> {
+    try {
+      // Create a mock ImagePickerAsset from the offline upload data
+      const mockAsset = {
+        uri: upload.imagePath,
+        width: 800,
+        height: 600,
+        type: "image" as const,
+        fileName: upload.metadata?.name || "offline-image.jpg",
+        fileSize: upload.metadata?.size || 0,
+      };
+
+      // Upload to ImageKit
+      const uploadResult = await uploadImage(mockAsset, {
+        folder: `projects/${upload.projectId}/rooms/${upload.roomId}`,
+        useUniqueFileName: true,
+        tags: [
+          `project-${upload.projectId}`,
+          `room-${upload.roomId}`,
+          "offline-upload",
+        ],
+      });
+
+      return { success: true, url: uploadResult.url };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  private async saveImageToBackend(
+    upload: OfflineImageUpload,
+    imageUrl: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
       // Use the roomsService.addImage method from the API client
       await roomsService.addImage({
-        url: upload.imageUrl,
+        url: imageUrl,
         roomId: upload.roomId,
         projectId: upload.projectId,
       });

@@ -215,8 +215,15 @@ export default function ProjectPhotos() {
         bucket: STORAGE_BUCKETS.PROJECT,
         pathPrefix: `projects/${projectId}/rooms`,
         compression: "high",
+        projectId,
+        roomId: selectedRoom,
+        isOffline,
+        addToOfflineQueue: addToQueue,
         onSuccess: async (file) => {
-          await uploadToSupabase(file.path, selectedRoom);
+          // Only upload to backend if not offline and file has a URL
+          if (!isOffline && file.url && file.url !== file.path) {
+            await uploadToSupabase(file.url, selectedRoom);
+          }
         },
       });
       setShouldOpenCamera(false);
@@ -244,10 +251,17 @@ export default function ProjectPhotos() {
         pathPrefix: `projects/${projectId}/rooms`,
         compression: "medium",
         maxImages: 20,
+        projectId,
+        roomId: selectedRoom,
+        isOffline,
+        addToOfflineQueue: addToQueue,
         onSuccess: async (files) => {
           for (const file of files) {
             console.log("🚀 ~ onSuccess: ~ file:", file);
-            await uploadToSupabase(file.url, selectedRoom);
+            // Only upload to backend if not offline and file has a URL
+            if (!isOffline && file.url && file.url !== file.path) {
+              await uploadToSupabase(file.url, selectedRoom);
+            }
           }
         },
       });
