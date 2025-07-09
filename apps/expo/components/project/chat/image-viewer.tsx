@@ -212,8 +212,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     zIndex: 1,
-    borderBottomWidth: 1,
-    borderColor: "white"
+    // borderBottomWidth: 1,
+    // borderColor: "white"
   },
   downloadButton: {
     // backgroundColor: "#2563eb",
