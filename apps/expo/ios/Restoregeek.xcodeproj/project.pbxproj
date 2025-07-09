@@ -11,6 +11,8 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
+		587976FA2E1D04B000D67059 /* ReactBridge in Frameworks */ = {isa = PBXBuildFile; productRef = 587976F92E1D04B000D67059 /* ReactBridge */; };
+		587976FD2E1E708E00D67059 /* RoomCaptureViewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587976FC2E1E708E00D67059 /* RoomCaptureViewManager.swift */; };
 		749B2CFFAEC3499A95A87061 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 40AFBA1EF4BF40BE864EFED6 /* PrivacyInfo.xcprivacy */; };
 		96905EF65AED1B983A6B3ABC /* libPods-Restoregeek.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 58EEBF8E8E6FB1BC6CAF49B5 /* libPods-Restoregeek.a */; };
 		96DF2276C08C4DAC99D86D92 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9EEA0647C2C4B7E89A15FE6 /* noop-file.swift */; };
@@ -26,6 +28,7 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Restoregeek/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = Restoregeek/main.m; sourceTree = "<group>"; };
 		40AFBA1EF4BF40BE864EFED6 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = PrivacyInfo.xcprivacy; path = Restoregeek/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		587976FC2E1E708E00D67059 /* RoomCaptureViewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RoomCaptureViewManager.swift; path = ../plugins/withLidar/RoomCaptureViewManager.swift; sourceTree = SOURCE_ROOT; };
 		58EEBF8E8E6FB1BC6CAF49B5 /* libPods-Restoregeek.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Restoregeek.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C2E3173556A471DD304B334 /* Pods-Restoregeek.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Restoregeek.debug.xcconfig"; path = "Target Support Files/Pods-Restoregeek/Pods-Restoregeek.debug.xcconfig"; sourceTree = "<group>"; };
 		7A4D352CD337FB3A3BF06240 /* Pods-Restoregeek.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Restoregeek.release.xcconfig"; path = "Target Support Files/Pods-Restoregeek/Pods-Restoregeek.release.xcconfig"; sourceTree = "<group>"; };
@@ -44,6 +47,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				96905EF65AED1B983A6B3ABC /* libPods-Restoregeek.a in Frameworks */,
+				587976FA2E1D04B000D67059 /* ReactBridge in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,6 +57,7 @@
 		13B07FAE1A68108700A75B9A /* Restoregeek */ = {
 			isa = PBXGroup;
 			children = (
+				587976FC2E1E708E00D67059 /* RoomCaptureViewManager.swift */,
 				BC93CE832E1CAE2F0007D74E /* RestoregeekDebug.entitlements */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
@@ -188,6 +193,9 @@
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
+			packageReferences = (
+				587976F82E1D04B000D67059 /* XCRemoteSwiftPackageReference "ReactBridge" */,
+			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -351,6 +359,7 @@
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 				B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */,
 				96DF2276C08C4DAC99D86D92 /* noop-file.swift in Sources */,
+				587976FD2E1E708E00D67059 /* RoomCaptureViewManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -365,6 +374,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Restoregeek/RestoregeekDebug.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W7SGF28U7L;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -401,6 +411,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Restoregeek/Restoregeek.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W7SGF28U7L;
 				INFOPLIST_FILE = Restoregeek/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -563,6 +574,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		587976F82E1D04B000D67059 /* XCRemoteSwiftPackageReference "ReactBridge" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ikhvorost/ReactBridge.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.4.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		587976F92E1D04B000D67059 /* ReactBridge */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 587976F82E1D04B000D67059 /* XCRemoteSwiftPackageReference "ReactBridge" */;
+			productName = ReactBridge;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }

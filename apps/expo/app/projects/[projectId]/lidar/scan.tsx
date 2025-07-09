@@ -11,7 +11,7 @@ const LidarScanScreen: React.FC = () => {
 
   return (
     <LidarScan
-      roomId={roomId && !isNaN(Number(roomId)) ? Number(roomId) : undefined}
+      roomId={roomId}
       roomPlanSVG={roomPlanSVG || undefined}
       onScanComplete={(roomId) => {
         // pass
