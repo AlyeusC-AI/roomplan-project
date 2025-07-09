@@ -342,7 +342,7 @@ function calculateAllAngles(room: Room): number[] {
     return angles;
 }
 
-export function makeSVG(data: EntireRooms, _roomNames: string[], mainRoomName: string) {
+export function makeSVG(data: EntireRooms, _roomNames: string[], mainRoomName: string): string {
     // const {room, angle} = alignRoomHorizontallyXZ(data.entireRoom);
     // const subRooms = data.rooms.map(room => alignRoomHorizontallyXZ(room, angle).room);
 
@@ -565,14 +565,7 @@ export function makeSVG(data: EntireRooms, _roomNames: string[], mainRoomName: s
         ...room.openings.flat()
     ];
 
-    if (allPoints.length === 0) return {
-        x1: Infinity,
-        y1: Infinity,
-        x2: -Infinity,
-        y2: -Infinity,
-        svg: '',
-        area: 0
-    }; // Return empty SVG if no points exist
+    if (allPoints.length === 0) return ""; // Return empty SVG if no points exist
 
     // Calculate bounding box
     const minX = Math.min(...allPoints.map(p => p[0]));

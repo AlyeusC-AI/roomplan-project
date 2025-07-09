@@ -50,9 +50,9 @@ const RoomScanView = isRoomPlanAvailable()
   : null;
 
 interface LidarScanProps {
-  onScanComplete?: (roomId?: number) => void;
+  onScanComplete?: (roomId?: string) => void;
   onClose?: () => void;
-  roomId?: number;
+  roomId?: string;
   roomPlanSVG?: string;
 }
 
@@ -68,7 +68,7 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
   const deviceWidth = Dimensions.get('window').width;
   const svgSize = deviceWidth * 0.95;
-  const processedRoomId = useRef<number | undefined>(roomId);
+  const processedRoomId = useRef<string | undefined>(roomId);
   const processedRoomPlanSVG = useRef<string | undefined>(roomPlanSVG);
   const pngBase64 = useRef<string>('');
   const rooms = roomsStore();
@@ -90,26 +90,16 @@ const LidarScan = ({ onScanComplete, onClose, roomId, roomPlanSVG }: LidarScanPr
     if (!processedRoomId.current) {
       console.log("new room creation - projectId", projectId)
       try {
-        const result = await createRoom.mutateAsync({
+        const room = await createRoom.mutateAsync({
           name: newRoomName,
           projectId,
         });
 
-        if (result.status === "failed") {
-          const errorMessage = result.reason === "existing-room" ? "Room already exists" : "Failed to create room";
-          Alert.alert(
-            'Error',
-            errorMessage,
-            [{ text: 'OK', style: 'cancel' }]
-          );
-          return;
-        }
+        processedRoomId.current = room.id;
+        console.log("json.room.id", room.id);
 
-        processedRoomId.current = result.room.id;
-        console.log("json.room.id", result.room.id);
-
-        roomsStore.getState().addRoom({ ...result.room, RoomReading: [] });
-        roomInferenceStore.getState().addRoom({ ...result.room, Inference: [] });
+        roomsStore.getState().addRoom({ ...room, RoomReading: [] });
+        roomInferenceStore.getState().addRoom({ ...room, Inference: [] });
       } catch (error) {
         console.error("Error creating room:", error);
         Alert.alert(
