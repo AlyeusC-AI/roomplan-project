@@ -20,7 +20,8 @@ import { userStore } from "@/lib/state/user";
 import { useLocalSearchParams } from "expo-router";
 import { roomsStore } from "@/lib/state/rooms";
 import { roomInferenceStore } from "@/lib/state/readings-image";
-import { supabaseServiceRole } from "@/app/projects/[projectId]/camera";
+import { createClient } from "@supabase/supabase-js";
+import { getConstants } from "@/utils/constants";
 import { useCreateRoom } from "@service-geek/api-client";
 
 import { RoomPlanImage } from "./LidarRooms";
@@ -29,6 +30,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LidarRoomTypeSelect } from "./LidarRoomTypeSelect";
 
 const { RoomScanModule } = NativeModules;
+
+export const supabaseServiceRole = createClient(
+  getConstants().supabaseUrl,
+  getConstants().serviceRoleJwt
+);
 
 // Check if device has LiDAR sensor (iOS only)
 const hasLidarSensor = async (): Promise<boolean> => {
