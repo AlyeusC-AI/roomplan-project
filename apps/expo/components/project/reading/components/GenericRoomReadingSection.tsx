@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, Pressable, Image } from "react-native";
+import { HStack } from "native-base";
 import { Box, FormControl, Heading, Stack } from "native-base";
 import { Camera } from "lucide-react-native";
 import { RoomReadingInput } from "./RoomReadingInput";
@@ -53,7 +54,7 @@ export const GenericRoomReadingSection: React.FC<GenericRoomReadingProps> = ({
     <Box
       w="full"
       key={genericRoomReading.id}
-      className="mb-3 bg-gray-50 rounded-lg p-3"
+      className="mb-3 bg-gray-50 rounded-lg py-2"
     >
       <Stack mx="2" className="gap-y-2">
         <View className="flex-row justify-between items-center">
@@ -101,43 +102,45 @@ export const GenericRoomReadingSection: React.FC<GenericRoomReadingProps> = ({
           </View>
         )}
 
-        <View>
-          <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">
-            Temperature
-          </FormControl.Label>
-          <RoomReadingInput
-            value={genericRoomReading.temperature?.toString() || ""}
-            rightText="°F"
-            placeholder="Enter temperature"
-            onChange={(temperature) => {
-              updateGenericRoomReading({
-                id: genericRoomReading.id,
-                data: {
-                  temperature: Number(temperature),
-                },
-              });
-            }}
-          />
-        </View>
+        <HStack space={4} alignItems="flex-end">
+          <View style={{ flex: 1 }}>
+            <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">
+              Temperature
+            </FormControl.Label>
+            <RoomReadingInput
+              value={genericRoomReading.temperature?.toString() || ""}
+              rightText="°F"
+              placeholder="Enter temperature"
+              onChange={(temperature) => {
+                updateGenericRoomReading({
+                  id: genericRoomReading.id,
+                  data: {
+                    temperature: Number(temperature),
+                  },
+                });
+              }}
+            />
+          </View>
 
-        <View>
-          <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">
-            Relative Humidity
-          </FormControl.Label>
-          <RoomReadingInput
-            value={genericRoomReading.humidity?.toString() || ""}
-            rightText="%"
-            placeholder="Enter humidity"
-            onChange={(humidity) => {
-              updateGenericRoomReading({
-                id: genericRoomReading.id,
-                data: {
-                  humidity: Number(humidity),
-                },
-              });
-            }}
-          />
-        </View>
+          <View style={{ flex: 1 }}>
+            <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">
+              Relative Humidity
+            </FormControl.Label>
+            <RoomReadingInput
+              value={genericRoomReading.humidity?.toString() || ""}
+              rightText="%"
+              placeholder="Enter humidity"
+              onChange={(humidity) => {
+                updateGenericRoomReading({
+                  id: genericRoomReading.id,
+                  data: {
+                    humidity: Number(humidity),
+                  },
+                });
+              }}
+            />
+          </View>
+        </HStack>
 
         <View>
           <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">

@@ -74,24 +74,28 @@ export default function ProjectCell({ project }: { project: Project }) {
         </View>
 
         <View style={styles.cardBody}>
+          {status?.data?.label && (
+            <View
+              className="mb-1 py-0.5 rounded-full"
+              style={{
+                // borderColor: status?.data.color?.toLowerCase() === 'slate' ? 'green' : status?.data.color?.toLowerCase() || "green",
+                // borderWidth: 1,
+              }}
+            >
+              <Text className="text-xs font-semibold text-white"
+              style={{
+                color: status?.data.color?.toLowerCase() === 'slate' ? 'green' : status?.data.color?.toLowerCase() || "green",
+              }}>
+                {status?.data.label}
+              </Text>
+            </View>
+          )}
           <Text style={styles.cardTitle}>{`${project.name}`}</Text>
           <Text style={styles.cardSubTitle}>{project.location}</Text>
           {/* <Text style={[styles.cardTag, { color: status?.data.color }]}>
             {status?.data.label}
           </Text> */}
           <View className="flex-row items-center gap-2">
-            {status?.data?.label && (
-              <View
-                className="px-2 py-0.5 rounded-full"
-                style={{
-                  backgroundColor: status?.data.color?.toLowerCase() || "green",
-                }}
-              >
-                <Text className="text-xs font-semibold text-white">
-                  {status?.data.label}
-                </Text>
-              </View>
-            )}
             {project?.lossType && (
               // <View className="flex-row items-center bg-blue-700 rounded px-2 py-0.5">
               //   <Text className="text-xs text-white capitalize">

@@ -686,7 +686,8 @@ export default function ProjectOverview() {
               flexDirection: "row",
               flexWrap: "wrap",
               justifyContent: "space-between",
-              marginBottom: 4,
+              marginBottom: 10,
+              paddingBottom: 10
               // paddingVertical: 8,
             }}
           >
