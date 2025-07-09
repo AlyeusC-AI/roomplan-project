@@ -35,7 +35,7 @@ export function useOfflineCreateRoomReading(projectId?: string) {
       // If creation fails, add to offline queue as fallback
       addToQueue({
         roomId: data.roomId,
-        projectId: "", // This will need to be passed from the component
+        projectId: projectId || "",
         date: data.date,
         humidity: data.humidity,
         temperature: data.temperature,
@@ -51,9 +51,13 @@ export function useOfflineCreateRoomReading(projectId?: string) {
   };
 }
 
-export function useOfflineUpdateRoomReading(projectId?: string) {
+export function useOfflineUpdateRoomReading(
+  projectId?: string,
+  roomId?: string
+) {
   const { isOffline } = useNetworkStatus();
-  const { addEditToQueue } = useOfflineReadingsStore();
+  const { addEditToQueue, updateExistingEdit, getExistingEditForReading } =
+    useOfflineReadingsStore();
   const updateRoomReading = useUpdateRoomReading();
 
   const mutate = async ({
@@ -64,19 +68,32 @@ export function useOfflineUpdateRoomReading(projectId?: string) {
     data: UpdateRoomReadingDto;
   }) => {
     if (isOffline) {
-      // Add edit to offline queue when offline
-      addEditToQueue({
-        readingId: id,
-        roomId: "", // This will be filled by the processor
-        projectId: projectId || "",
-        operation: "update",
-        data: {
+      // Check if there's already an existing edit for this reading
+      const existingEdit = getExistingEditForReading(id);
+
+      if (existingEdit) {
+        // Update the existing edit with new data (batch the changes)
+        updateExistingEdit(id, {
           date: data.date,
           humidity: data.humidity,
           temperature: data.temperature,
-        },
-      });
-      toast.success("Reading update queued for offline");
+        });
+        toast.success("Reading update merged with existing offline edit");
+      } else {
+        // Create a new edit operation
+        addEditToQueue({
+          readingId: id,
+          roomId: roomId || "",
+          projectId: projectId || "",
+          operation: "update",
+          data: {
+            date: data.date,
+            humidity: data.humidity,
+            temperature: data.temperature,
+          },
+        });
+        toast.success("Reading update queued for offline");
+      }
       return;
     }
 
@@ -85,17 +102,27 @@ export function useOfflineUpdateRoomReading(projectId?: string) {
     } catch (error) {
       console.error("Failed to update reading:", error);
       // If update fails, add to offline queue as fallback
-      addEditToQueue({
-        readingId: id,
-        roomId: "", // This will need to be passed from the component
-        projectId: "", // This will need to be passed from the component
-        operation: "update",
-        data: {
+      const existingEdit = getExistingEditForReading(id);
+
+      if (existingEdit) {
+        updateExistingEdit(id, {
           date: data.date,
           humidity: data.humidity,
           temperature: data.temperature,
-        },
-      });
+        });
+      } else {
+        addEditToQueue({
+          readingId: id,
+          roomId: roomId || "",
+          projectId: projectId || "",
+          operation: "update",
+          data: {
+            date: data.date,
+            humidity: data.humidity,
+            temperature: data.temperature,
+          },
+        });
+      }
       toast.error("Reading update failed, queued for offline");
       throw error;
     }
@@ -107,7 +134,10 @@ export function useOfflineUpdateRoomReading(projectId?: string) {
   };
 }
 
-export function useOfflineDeleteRoomReading(projectId?: string) {
+export function useOfflineDeleteRoomReading(
+  projectId?: string,
+  roomId?: string
+) {
   const { isOffline } = useNetworkStatus();
   const { addEditToQueue } = useOfflineReadingsStore();
   const deleteRoomReading = useDeleteRoomReading();
@@ -117,7 +147,7 @@ export function useOfflineDeleteRoomReading(projectId?: string) {
       // Add delete to offline queue when offline
       addEditToQueue({
         readingId: id,
-        roomId: "", // This will be filled by the processor
+        roomId: roomId || "",
         projectId: projectId || "",
         operation: "delete",
       });
@@ -132,8 +162,8 @@ export function useOfflineDeleteRoomReading(projectId?: string) {
       // If deletion fails, add to offline queue as fallback
       addEditToQueue({
         readingId: id,
-        roomId: "", // This will need to be passed from the component
-        projectId: "", // This will need to be passed from the component
+        roomId: roomId || "",
+        projectId: projectId || "",
         operation: "delete",
       });
       toast.error("Reading deletion failed, queued for offline");
@@ -144,5 +174,19 @@ export function useOfflineDeleteRoomReading(projectId?: string) {
   return {
     ...deleteRoomReading,
     mutate,
+  };
+}
+
+// Hook to get offline readings for display
+export function useOfflineReadings(roomId?: string) {
+  const { getReadingsByRoom, getEditsByReading } = useOfflineReadingsStore();
+
+  const offlineReadings = roomId ? getReadingsByRoom(roomId) : [];
+  const offlineEdits = roomId ? getEditsByReading(roomId) : [];
+
+  return {
+    offlineReadings,
+    offlineEdits,
+    hasOfflineData: offlineReadings.length > 0 || offlineEdits.length > 0,
   };
 }

@@ -46,7 +46,10 @@ import {
 } from "@service-geek/api-client";
 import { useOfflineReadingsStore } from "@/lib/state/offline-readings";
 import { useNetworkStatus } from "@/lib/providers/QueryProvider";
-import { useOfflineCreateRoomReading } from "@/lib/hooks/useOfflineReadings";
+import {
+  useOfflineCreateRoomReading,
+  useOfflineReadings,
+} from "@/lib/hooks/useOfflineReadings";
 import { toast } from "sonner-native";
 
 const RoomReadingItem = ({ room }: { room: Room }) => {
@@ -58,6 +61,9 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
   const { data: roomReadings, isPending: isLoadingRoomReadings } =
     useGetRoomReadings(room.id);
   const { isOffline } = useNetworkStatus();
+  const { offlineReadings, offlineEdits, hasOfflineData } = useOfflineReadings(
+    room.id
+  );
 
   console.log("🚀 ~ RoomReadingItem ~ roomReadings:", roomReadings?.data);
 
@@ -92,7 +98,29 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
             )
           }
         >
-          <Heading size="md">{room.name}</Heading>
+          <HStack alignItems="center" space={2}>
+            <Heading size="md">{room.name}</Heading>
+            {hasOfflineData && (
+              <View
+                style={{
+                  backgroundColor: "#fef3c7",
+                  paddingHorizontal: 8,
+                  paddingVertical: 2,
+                  borderRadius: 8,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 10,
+                    color: "#d97706",
+                    fontWeight: "600",
+                  }}
+                >
+                  {offlineReadings.length + offlineEdits.length} Pending
+                </Text>
+              </View>
+            )}
+          </HStack>
         </TouchableOpacity>
         <Button
           onPress={() => {

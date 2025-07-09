@@ -4,6 +4,7 @@ import {
 } from "../state/offline-readings";
 import { readingsService } from "@service-geek/api-client";
 import { toast } from "sonner-native";
+import { offlineEditProcessor } from "./offline-edit-processor";
 
 class OfflineReadingsProcessor {
   private isProcessing = false;
@@ -80,6 +81,8 @@ class OfflineReadingsProcessor {
   // Method to start processing when app comes online
   startProcessing() {
     this.processQueue();
+    // Also process edit queue
+    offlineEditProcessor.startProcessing();
   }
 
   // Method to stop processing
@@ -90,6 +93,15 @@ class OfflineReadingsProcessor {
     }
     this.isProcessing = false;
     useOfflineReadingsStore.getState().setIsProcessing(false);
+    offlineEditProcessor.stopProcessing();
+  }
+
+  // Method to process both readings and edits
+  async processAllQueues() {
+    await Promise.all([
+      this.processQueue(),
+      offlineEditProcessor.processQueue(),
+    ]);
   }
 }
 

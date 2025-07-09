@@ -18,6 +18,7 @@ export function RoomReadingInput({
   disabled = false,
 }: RoomReadingInputProps) {
   const [text, setText] = useState(value);
+  console.log("🚀 ~ text:", text);
   const debouncedText = useDebounce(text);
 
   useEffect(() => {
