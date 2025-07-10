@@ -330,6 +330,7 @@ export default function ProjectOverview() {
                           style={
                             {
                               // color: addOpacityToColor(project.data.status.color || ''),
+                              color: project.data.status.color?.toLowerCase() === 'cyan' ? 'black' : "white"
                             }
                           }
                         >

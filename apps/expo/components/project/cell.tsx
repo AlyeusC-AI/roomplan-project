@@ -76,15 +76,16 @@ export default function ProjectCell({ project }: { project: Project }) {
         <View style={styles.cardBody}>
           {status?.data?.label && (
             <View
-              className="mb-1 py-0.5 rounded-full"
+              className="mb-1 px-2 py-0.5 rounded-full"
               style={{
-                // borderColor: status?.data.color?.toLowerCase() === 'slate' ? 'slategray' : status?.data.color?.toLowerCase() || "green",
+                backgroundColor: status?.data.color?.toLowerCase() === 'slate' ? 'slategray' : status?.data.color?.toLowerCase() || "green",
                 // borderWidth: 1,
               }}
             >
               <Text className="text-xs font-semibold text-white"
               style={{
-                color: status?.data.color?.toLowerCase() === 'slate' ? 'slategray' : status?.data.color?.toLowerCase() || "green",
+                color: status?.data.color?.toLowerCase() === 'cyan' ? 'black' : "white"
+                
               }}>
                 {status?.data.label}
               </Text>
