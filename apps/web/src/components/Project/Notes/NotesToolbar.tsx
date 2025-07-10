@@ -18,7 +18,7 @@ export default function NotesToolbar() {
           </p>
         </div>
         <Button
-          variant='outline'
+          // variant='outline'
           onClick={() => setIsRoomCreationModalOpen(true)}
         >
           Add Room
