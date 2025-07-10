@@ -19,7 +19,6 @@ import { userStore } from "@/lib/state/user";
 import { useLocalSearchParams } from "expo-router";
 import { roomsStore } from "@/lib/state/rooms";
 import { roomInferenceStore } from "@/lib/state/readings-image";
-import { supabaseServiceRole } from "@/app/projects/[projectId]/camera";
 import { useCreateRoom } from "@service-geek/api-client";
 
 import { RoomPlanImage } from "./LidarRooms";
@@ -168,36 +167,36 @@ const LidarScanCubiCasa = ({
           uri: url,
           name: fileName,
         });
-        const storageRes = await supabaseServiceRole.storage
-          .from("cubi-zip-file")
-          .upload(fileName, formData, {
-            cacheControl: "3600",
-            upsert: true,
-          });
+        // const storageRes = await supabaseServiceRole.storage
+        //   .from("cubi-zip-file")
+        //   .upload(fileName, formData, {
+        //     cacheControl: "3600",
+        //     upsert: true,
+        //   });
 
-        const zipFilePath = storageRes.data?.path;
-        if (!zipFilePath) {
-          throw new Error("Failed to upload zip file");
-        }
+        // const zipFilePath = storageRes.data?.path;
+        // if (!zipFilePath) {
+        //   throw new Error("Failed to upload zip file");
+        // }
 
-        await supabaseServiceRole
-          .from("Room")
-          .update({
-            scannedFileKey: fileName,
-          })
-          .eq("id", processedRoomId.current);
+        // await supabaseServiceRole
+        //   .from("Room")
+        //   .update({
+        //     scannedFileKey: fileName,
+        //   })
+        //   .eq("id", processedRoomId.current);
 
         // call api to process zip file
-        await fetch(
-          `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room/${processedRoomId.current}/cubicasa?plan=${scanPlan}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "auth-token": `${supabaseSession?.access_token}`,
-            },
-          }
-        );
+        // await fetch(
+        //   `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}/room/${processedRoomId.current}/cubicasa?plan=${scanPlan}`,
+        //   {
+        //     method: "POST",
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //       "auth-token": `${supabaseSession?.access_token}`,
+        //     },
+        //   }
+        // );
 
         Alert.alert(
           "Success",
