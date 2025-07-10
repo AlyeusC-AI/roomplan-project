@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useOfflineTasksStore } from "./offline-tasks";
 
 export interface OfflineReading {
   id: string;
@@ -93,6 +94,19 @@ export const useOfflineReadingsStore = create<OfflineReadingsState>()(
         set((state) => ({
           readings: [...state.readings, newReading],
         }));
+
+        // Also add to centralized tasks store
+        const tasksStore = useOfflineTasksStore.getState();
+        tasksStore.addTask({
+          type: "reading",
+          title: "Reading Creation",
+          description: `Create new reading for room`,
+          metadata: {
+            projectId: reading.projectId,
+            roomId: reading.roomId,
+            originalId: newReading.id,
+          },
+        });
       },
 
       addEdit: (reading) => {
@@ -107,6 +121,20 @@ export const useOfflineReadingsStore = create<OfflineReadingsState>()(
         set((state) => ({
           readings: [...state.readings, newEdit],
         }));
+
+        // Also add to centralized tasks store
+        const tasksStore = useOfflineTasksStore.getState();
+        tasksStore.addTask({
+          type: "edit",
+          title: "Reading Edit",
+          description: `Edit existing reading`,
+          metadata: {
+            projectId: reading.projectId,
+            roomId: reading.roomId,
+            readingId: reading.originalReadingId,
+            originalId: newEdit.id,
+          },
+        });
       },
 
       updateReading: (id, data) => {

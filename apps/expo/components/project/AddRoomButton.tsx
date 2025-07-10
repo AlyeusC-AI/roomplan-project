@@ -11,6 +11,7 @@ interface AddRoomButtonProps {
   size?: "default" | "sm" | "lg" | "icon";
   showText?: boolean;
   className?: string;
+  onPress?: () => void;
 }
 
 export default function AddRoomButton({
@@ -18,6 +19,7 @@ export default function AddRoomButton({
   size = "default",
   showText = true,
   className = "",
+  onPress,
 }: AddRoomButtonProps) {
   const router = useRouter();
 
@@ -26,7 +28,7 @@ export default function AddRoomButton({
       className={className}
       variant={variant}
       size={size}
-      onPress={() => router.push("../rooms/create")}
+      onPress={() => (onPress ? onPress() : router.push("../rooms/create"))}
     >
       <View className="flex-row items-center">
         <Plus size={18} color={variant === "outline" ? "#1e40af" : "#fff"} />
