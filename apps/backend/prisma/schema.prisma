@@ -187,6 +187,7 @@ model Project {
   insuranceClaimId     String?
   lossType             LossType?
   catCode              String?
+  waterClass           String?
   humidity             String?
 
   temperature  String?

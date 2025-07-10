@@ -41,6 +41,7 @@ export interface Project {
   insuranceClaimId?: string;
   lossType?: LossType;
   catCode?: string;
+  waterClass?: string;
   humidity?: string;
   temperature?: string;
   wind?: string;
@@ -83,6 +84,7 @@ export interface CreateProjectDto {
   insuranceClaimId?: string;
   lossType?: LossType;
   catCode?: string;
+  waterClass?: string;
   humidity?: string;
   temperature?: string;
   wind?: string;

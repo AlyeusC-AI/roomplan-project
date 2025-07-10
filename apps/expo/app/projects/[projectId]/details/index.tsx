@@ -46,6 +46,35 @@ import {
   ChevronDown,
   Droplets,
 } from "lucide-react-native";
+
+// Type assertions for lucide-react-native icons
+const ChevronDownIcon = ChevronDown as any;
+const XIcon = X as any;
+const DropletsIcon = Droplets as any;
+const ChevronRightIcon = ChevronRight as any;
+const ChevronLeftIconType = ChevronLeft as any;
+const UserCircleIcon = UserCircle as any;
+const UserIcon = User as any;
+const PhoneIcon = Phone as any;
+const PhoneCallIcon = PhoneCall as any;
+const MailIconType = Mail as any;
+const MapPinIcon = MapPin as any;
+const AlertTriangleIcon = AlertTriangle as any;
+const HashIcon = Hash as any;
+const FileCheckIcon = FileCheck as any;
+const Building2Icon = Building2 as any;
+const FileTextIcon = FileText as any;
+const UserCircleIcon2 = UserCircle as any;
+const BuildingIcon = Building as any;
+const ShieldIcon = Shield as any;
+const MailIconType2 = MailIcon as any;
+const PhoneIcon2 = Phone as any;
+const PhoneCallIcon2 = PhoneCall as any;
+const FileTextIcon2 = FileText as any;
+const ChevronLeftIconType2 = ChevronLeft as any;
+const SaveIcon = Save as any;
+const AlertCircleIcon = AlertCircle as any;
+const ShieldIcon2 = Shield as any;
 import { Linking } from "react-native";
 import {
   router,
@@ -70,12 +99,41 @@ import {
 type TabType = "customer" | "loss" | "insurance";
 
 // Water damage classification types
-type WaterDamageType = "clean" | "gray" | "black";
+type WaterDamageCategory =
+  | "Category 1 (Clean)"
+  | "Category 2 (Gray)"
+  | "Category 3 (Black)";
+type WaterDamageClass = "Class 1" | "Class 2" | "Class 3" | "Class 4";
 
-const WATER_DAMAGE_TYPES = [
-  { label: "Class 1 (Clean)", value: "Class 1 (Clean)" as WaterDamageType },
-  { label: "Class 2 (Gray)", value: "Class 2 (Gray)" as WaterDamageType },
-  { label: "Class 3 (Black)", value: "Class 3 (Black)" as WaterDamageType },
+const WATER_DAMAGE_CATEGORIES = [
+  {
+    label: "Category 1 (Clean Water)",
+    value: "Category 1 (Clean)" as WaterDamageCategory,
+  },
+  {
+    label: "Category 2 (Gray Water)",
+    value: "Category 2 (Gray)" as WaterDamageCategory,
+  },
+  {
+    label: "Category 3 (Black Water)",
+    value: "Category 3 (Black)" as WaterDamageCategory,
+  },
+] as const;
+
+const WATER_DAMAGE_CLASSES = [
+  { label: "Class 1 – Minimal Damage", value: "Class 1" as WaterDamageClass },
+  {
+    label: "Class 2 – Significant Absorption",
+    value: "Class 2" as WaterDamageClass,
+  },
+  {
+    label: "Class 3 – Extensive Saturation",
+    value: "Class 3" as WaterDamageClass,
+  },
+  {
+    label: "Class 4 – Specialty Drying Situations",
+    value: "Class 4" as WaterDamageClass,
+  },
 ] as const;
 
 // Create a LossType selector component
@@ -163,24 +221,24 @@ function LossTypeSelector({ value, onChange, style }: LossTypeSelectorProps) {
 }
 
 interface WaterDamageTypeSelectorProps {
-  value?: WaterDamageType;
-  onChange: (value: WaterDamageType) => void;
+  value?: WaterDamageCategory;
+  onChange: (value: WaterDamageCategory) => void;
   style?: any;
 }
 
-function WaterDamageTypeSelector({
+function WaterDamageCategorySelector({
   value,
   onChange,
   style,
 }: WaterDamageTypeSelectorProps) {
   const [modalVisible, setModalVisible] = useState(false);
   const selectedLabel = value
-    ? WATER_DAMAGE_TYPES.find((type) => type.value === value)?.label
-    : "Select water type";
+    ? WATER_DAMAGE_CATEGORIES.find((type) => type.value === value)?.label
+    : "Select water category";
 
   return (
     <Box>
-      <FormControl.Label>Water Classification</FormControl.Label>
+      <FormControl.Label>Category of Water</FormControl.Label>
       <TouchableOpacity
         style={[styles.selectorInput, style]}
         onPress={() => setModalVisible(true)}
@@ -188,20 +246,104 @@ function WaterDamageTypeSelector({
         <Text style={[styles.inputText, !value && styles.placeholderText]}>
           {selectedLabel}
         </Text>
-        <ChevronDown size={20} color="#1d1d1d" />
+        <ChevronDownIcon size={20} color="#1d1d1d" />
       </TouchableOpacity>
 
       <Modal isOpen={modalVisible} onClose={() => setModalVisible(false)}>
         <Box style={styles.calendarContainer}>
           <HStack justifyContent="space-between" alignItems="center" mb={4}>
-            <Text style={styles.modalTitle}>Select Water Type</Text>
+            <Text style={styles.modalTitle}>Select Water Category</Text>
             <Pressable onPress={() => setModalVisible(false)}>
-              <X color="#64748b" size={20} />
+              <XIcon color="#64748b" size={20} />
             </Pressable>
           </HStack>
 
           <VStack space={2}>
-            {WATER_DAMAGE_TYPES.map((type) => (
+            {WATER_DAMAGE_CATEGORIES.map((type) => (
+              <TouchableOpacity
+                key={type.value}
+                style={[
+                  styles.optionItem,
+                  value === type.value && styles.selectedOption,
+                ]}
+                onPress={() => {
+                  onChange(type.value);
+                  setModalVisible(false);
+                }}
+              >
+                <HStack space={2} alignItems="center">
+                  <DropletsIcon
+                    size={16}
+                    color={value === type.value ? "#2563eb" : "#94a3b8"}
+                  />
+                  <Text
+                    style={[
+                      styles.optionText,
+                      value === type.value && styles.selectedOptionText,
+                    ]}
+                  >
+                    {type.label}
+                  </Text>
+                </HStack>
+              </TouchableOpacity>
+            ))}
+          </VStack>
+
+          <HStack space={2} mt={4}>
+            <Button
+              variant="outline"
+              onPress={() => setModalVisible(false)}
+              style={styles.modalButton}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </Button>
+          </HStack>
+        </Box>
+      </Modal>
+    </Box>
+  );
+}
+
+interface WaterDamageClassSelectorProps {
+  value?: WaterDamageClass;
+  onChange: (value: WaterDamageClass) => void;
+  style?: any;
+}
+
+function WaterDamageClassSelector({
+  value,
+  onChange,
+  style,
+}: WaterDamageClassSelectorProps) {
+  const [modalVisible, setModalVisible] = useState(false);
+  const selectedLabel = value
+    ? WATER_DAMAGE_CLASSES.find((type) => type.value === value)?.label
+    : "Select water class";
+
+  return (
+    <Box>
+      <FormControl.Label>Class of Water</FormControl.Label>
+      <TouchableOpacity
+        style={[styles.selectorInput, style]}
+        onPress={() => setModalVisible(true)}
+      >
+        <Text style={[styles.inputText, !value && styles.placeholderText]}>
+          {selectedLabel}
+        </Text>
+        <ChevronDownIcon size={20} color="#1d1d1d" />
+      </TouchableOpacity>
+
+      <Modal isOpen={modalVisible} onClose={() => setModalVisible(false)}>
+        <Box style={styles.calendarContainer}>
+          <HStack justifyContent="space-between" alignItems="center" mb={4}>
+            <Text style={styles.modalTitle}>Select Water Class</Text>
+            <Pressable onPress={() => setModalVisible(false)}>
+              <XIcon color="#64748b" size={20} />
+            </Pressable>
+          </HStack>
+
+          <VStack space={2}>
+            {WATER_DAMAGE_CLASSES.map((type) => (
               <TouchableOpacity
                 key={type.value}
                 style={[
@@ -368,6 +510,9 @@ export default function ProjectDetails() {
   const [insuranceClaimId, setInsuranceClaimId] = useState("");
   const [policyNumber, setPolicyNumber] = useState("");
   const [catCode, setCatCode] = useState("");
+  const [waterClass, setWaterClass] = useState<WaterDamageClass | undefined>(
+    undefined
+  );
   const [claimSummary, setClaimSummary] = useState("");
   const [dateOfLoss, setDateOfLoss] = useState<DateType>(dayjs().toDate());
 
@@ -390,11 +535,21 @@ export default function ProjectDetails() {
       setPolicyNumber(project.data?.policyNumber || "");
       // Parse catCode for water damage type if it's a water damage project
       if (project.data?.lossType === LossType.WATER && project.data?.catCode) {
-        const waterType = project.data.catCode as WaterDamageType;
-        if (["clean", "gray", "black"].includes(waterType)) {
+        const waterType = project.data.catCode as WaterDamageCategory;
+        if (
+          [
+            "Category 1 (Clean)",
+            "Category 2 (Gray)",
+            "Category 3 (Black)",
+          ].includes(waterType)
+        ) {
           setCatCode(waterType);
         } else {
           setCatCode(project.data.catCode || "");
+        }
+        // Parse water class if available
+        if (project.data?.waterClass) {
+          setWaterClass(project.data.waterClass as WaterDamageClass);
         }
       } else {
         setCatCode(project.data?.catCode || "");
@@ -415,13 +570,17 @@ export default function ProjectDetails() {
   };
 
   // Helper function to get current water damage type from catCode
-  const getCurrentWaterDamageType = (): WaterDamageType | undefined => {
+  const getCurrentWaterDamageType = (): WaterDamageCategory | undefined => {
     if (
       lossType === LossType.WATER &&
       catCode &&
-      ["clean", "gray", "black"].includes(catCode)
+      [
+        "Category 1 (Clean)",
+        "Category 2 (Gray)",
+        "Category 3 (Black)",
+      ].includes(catCode)
     ) {
-      return catCode as WaterDamageType;
+      return catCode as WaterDamageCategory;
     }
     return undefined;
   };
@@ -451,6 +610,7 @@ export default function ProjectDetails() {
               ? new Date(dateOfLoss as string)
               : undefined,
         catCode,
+        waterClass: waterClass || undefined,
         claimSummary,
       };
 
@@ -477,7 +637,7 @@ export default function ProjectDetails() {
       <VStack space={4}>
         <View style={styles.section}>
           <HStack space={2} alignItems="center" mb={4}>
-            <UserCircle size={24} color="#2563eb" />
+            <UserCircleIcon size={24} color="#2563eb" />
             <Text style={styles.sectionTitle}>Contact Information</Text>
           </HStack>
           <FormInput
@@ -487,7 +647,7 @@ export default function ProjectDetails() {
             onChangeText={setClientName}
             containerStyle={styles.inputContainer}
             leftElement={
-              <User size={20} color="#94a3b8" style={styles.inputIcon} />
+              <UserIcon size={20} color="#94a3b8" style={styles.inputIcon} />
             }
           />
           <FormInput
@@ -497,7 +657,7 @@ export default function ProjectDetails() {
             onChangeText={setClientPhoneNumber}
             containerStyle={styles.inputContainer}
             leftElement={
-              <Phone size={20} color="#94a3b8" style={styles.inputIcon} />
+              <PhoneIcon size={20} color="#94a3b8" style={styles.inputIcon} />
             }
             rightElement={
               <TouchableOpacity
@@ -506,7 +666,7 @@ export default function ProjectDetails() {
                 disabled={!clientPhoneNumber}
               >
                 <HStack space={1} alignItems="center">
-                  <PhoneCall
+                  <PhoneCallIcon
                     size={16}
                     color={clientPhoneNumber ? "#2563eb" : "#94a3b8"}
                   />
@@ -529,14 +689,18 @@ export default function ProjectDetails() {
             onChangeText={setClientEmail}
             containerStyle={styles.inputContainer}
             leftElement={
-              <Mail size={20} color="#94a3b8" style={styles.inputIcon} />
+              <MailIconType
+                size={20}
+                color="#94a3b8"
+                style={styles.inputIcon}
+              />
             }
           />
         </View>
 
         <View style={styles.section}>
           <HStack space={2} alignItems="center" mb={4}>
-            <MapPin size={24} color="#2563eb" />
+            <MapPinIcon size={24} color="#2563eb" />
             <Text style={styles.sectionTitle}>Location</Text>
           </HStack>
           <Box style={styles.addressContainer}>
@@ -611,7 +775,7 @@ export default function ProjectDetails() {
       <VStack space={4}>
         <View style={styles.section}>
           <HStack space={2} alignItems="center" mb={4}>
-            <AlertTriangle size={24} color="#2563eb" />
+            <AlertTriangleIcon size={24} color="#2563eb" />
             <Text style={styles.sectionTitle}>Loss Details</Text>
           </HStack>
           <LossTypeSelector
@@ -620,11 +784,18 @@ export default function ProjectDetails() {
             style={styles.sectionInput}
           />
           {lossType === LossType.WATER && (
-            <WaterDamageTypeSelector
-              value={getCurrentWaterDamageType()}
-              onChange={(value) => setCatCode(value)}
-              style={styles.sectionInput}
-            />
+            <>
+              <WaterDamageCategorySelector
+                value={getCurrentWaterDamageType()}
+                onChange={(value) => setCatCode(value)}
+                style={styles.sectionInput}
+              />
+              <WaterDamageClassSelector
+                value={waterClass}
+                onChange={setWaterClass}
+                style={styles.sectionInput}
+              />
+            </>
           )}
           <DateInput
             label="Date of Loss"

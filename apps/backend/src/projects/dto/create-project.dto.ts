@@ -86,6 +86,11 @@ export class CreateProjectDto {
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
+  waterClass?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
   humidity?: string;
 
   @ApiPropertyOptional()
