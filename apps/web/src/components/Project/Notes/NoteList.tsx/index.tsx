@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { event } from "nextjs-google-analytics";
 
 import Notes from "./Notes";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Trash, ChevronDown } from "lucide-react";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
 import { LoadingSpinner } from "@components/ui/spinner";
@@ -19,27 +19,28 @@ import {
   DialogHeader,
 } from "@components/ui/dialog";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@components/ui/collapsible";
+import {
   Room,
-  useGetNotes,
   useCreateNote,
-  useUpdateNote,
-  useDeleteNote,
-  Note,
   useUpdateRoom,
   useDeleteRoom,
 } from "@service-geek/api-client";
+import { Textarea } from "@components/ui/textarea";
 const NoteList = ({ room }: { room: Room }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { track } = useAmplitudeTrack();
   const [internalRoomName, setInternalRoomName] = useState(room.name);
 
   const { mutate: createNote } = useCreateNote();
-  const { mutate: updateNote } = useUpdateNote();
   const { mutate: updateRoom } = useUpdateRoom();
-  const { mutate: deleteNote } = useDeleteNote();
   const { mutate: deleteRoomMutation } = useDeleteRoom();
   const updateRoomName = async () => {
     if (internalRoomName === "" || internalRoomName.trim() === "") return;
@@ -81,17 +82,26 @@ const NoteList = ({ room }: { room: Room }) => {
   };
 
   const [isCreating, setIsCreating] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [newNoteBody, setNewNoteBody] = useState("");
 
-  const addNote = async () => {
+  const openAddDialog = () => {
+    setNewNoteBody("");
+    setAddDialogOpen(true);
+  };
+
+  const handleAddNote = async () => {
+    if (!newNoteBody.trim()) return;
     setIsCreating(true);
     track("Add Room Note");
-
     try {
       createNote({
         roomId: room.id,
-        body: "",
+        body: newNoteBody,
       });
       toast.success("Note created");
+      setAddDialogOpen(false);
+      setNewNoteBody("");
     } catch (error) {
       console.error(error);
     }
@@ -100,83 +110,131 @@ const NoteList = ({ room }: { room: Room }) => {
 
   return (
     <div className='py-8 text-sm md:text-base'>
-      <div className='flex items-center justify-between'>
-        <div className='flex items-center'>
-          {isEditingTitle ? (
-            <>
-              <Input
-                value={internalRoomName}
-                onChange={(e) => setInternalRoomName(e.target.value)}
-                disabled={isSaving}
-              />
-              <Button
-                onClick={() => setIsEditingTitle(false)}
-                className='ml-4'
-                disabled={isSaving}
-                variant='outline'
-              >
-                Cancel
+      <Collapsible open={isCollapsed} onOpenChange={setIsCollapsed}>
+
+
+
+        <div className='flex items-center justify-between'>
+          <CollapsibleTrigger asChild>
+            <div className='flex items-center'>
+
+              <Button variant='ghost' className='h-auto p-0 me-2' onClick={() => setIsCollapsed(true)}>
+                <ChevronDown
+                  className={`!size-6 transition-transform ${isCollapsed ? "" : "rotate-180"}`}
+                />
+
               </Button>
-              <Button
-                onClick={() => updateRoomName()}
-                className='ml-4'
-                disabled={isSaving}
-              >
-                {isSaving ? <LoadingSpinner /> : "Save"}
-              </Button>
-            </>
-          ) : (
-            <>
-              <h1 className='text-2xl font-semibold text-foreground'>
-                {room.name}
-              </h1>
-              <Button
-                className='ml-4'
-                onClick={() => setIsEditingTitle(true)}
-                variant='outline'
-              >
-                <Pencil className='h-4' />
-              </Button>
-            </>
-          )}
+              {isEditingTitle ? (
+                <>
+                  <Input
+                    value={internalRoomName}
+                    onChange={(e) => setInternalRoomName(e.target.value)}
+                    disabled={isSaving}
+                  />
+                  <Button
+                    onClick={() => setIsEditingTitle(false)}
+                    className='ml-4'
+                    disabled={isSaving}
+                    variant='outline'
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => updateRoomName()}
+                    className='ml-4'
+                    disabled={isSaving}
+                  >
+                    {isSaving ? <LoadingSpinner /> : "Save"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <h1 className='text-2xl font-semibold text-foreground'>
+                    {room.name}
+                  </h1>
+                  <Button
+                    className='ml-4'
+                    onClick={() => setIsEditingTitle(true)}
+                    variant='outline'
+                  >
+                    <Pencil className='h-4' />
+                  </Button>
+                </>
+              )}
+            </div>
+          </CollapsibleTrigger>
+          <div className='flex items-center justify-center gap-4'>
+            <Button
+              // variant='outline'
+              disabled={isCreating}
+              onClick={openAddDialog}
+            >
+              {isCreating ? <LoadingSpinner /> : "Add Note"}
+            </Button>
+            <Button
+              variant='destructive'
+              onClick={() => setIsConfirmingDelete(true)}
+            >
+              <Trash className='h-6' />
+            </Button>
+          </div>
+          <Dialog open={isConfirmingDelete} onOpenChange={setIsConfirmingDelete}>
+            <DialogContent>
+              <DialogHeader>Delete Room</DialogHeader>
+              <DialogDescription>
+                Permanently delete this room and everything associated within it
+              </DialogDescription>
+              <DialogFooter>
+                <Button onClick={() => setIsConfirmingDelete(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => deleteRoom()}
+                  disabled={isDeleting}
+                  variant='destructive'
+                >
+                  Yes, delete the room.
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
-        <div className='flex items-center justify-center gap-4'>
-          <Button
-            variant='outline'
-            disabled={isCreating}
-            onClick={() => addNote()}
-          >
-            {isCreating ? <LoadingSpinner /> : "Add Note"}
-          </Button>
-          <Button
-            variant='destructive'
-            onClick={() => setIsConfirmingDelete(true)}
-          >
-            <Trash className='h-6' />
-          </Button>
-        </div>
-        <Dialog open={isConfirmingDelete} onOpenChange={setIsConfirmingDelete}>
-          <DialogContent>
-            <DialogHeader>Delete Room</DialogHeader>
-            <DialogDescription>
-              Permanently delete this room and everything associated within it
-            </DialogDescription>
-            <DialogFooter>
-              <Button onClick={() => setIsConfirmingDelete(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={() => deleteRoom()}
-                disabled={isDeleting}
-                variant='destructive'
-              >
-                Yes, delete the room.
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-      <Notes room={room} />
+
+        <CollapsibleContent>
+          <Notes room={room} />
+        </CollapsibleContent>
+      </Collapsible>
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>Add Note</DialogHeader>
+          <DialogDescription>
+            Enter the note body below and click Save to add a new note.
+          </DialogDescription>
+          <Textarea
+            value={newNoteBody}
+            onChange={(e) => setNewNoteBody(e.target.value)}
+            className='mt-2'
+            rows={6}
+            autoFocus
+          />
+          <DialogFooter>
+            <Button
+              onClick={handleAddNote}
+              disabled={isCreating || !newNoteBody.trim()}
+            >
+              {isCreating ? <LoadingSpinner /> : "Save"}
+            </Button>
+            <Button
+              variant='outline'
+              type='button'
+              onClick={() => setAddDialogOpen(false)}
+              disabled={isCreating}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
