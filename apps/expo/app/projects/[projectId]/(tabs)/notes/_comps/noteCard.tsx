@@ -446,20 +446,6 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
 
       clearImages();
       refreshNotes();
-
-      // Add to NoteImage table
-      //   supabaseServiceRole
-      //     .from("NoteImage")
-      //     .insert({
-      //       noteId: note.id,
-      //       imageKey: images[0].url,
-      //     })
-      //     .then(({ data, error }) => {
-      //       console.log("🚀 ~ .then ~ data, error:", data, error);
-      // clearImages();
-
-      //       refreshNotes();
-      //     });
     }
   }, [images, fieldId]);
 
@@ -908,14 +894,6 @@ const uploadImageToSupabase = async (
   }
 
   try {
-    // Upload to Supabase storage
-    // const res = await supabaseServiceRole.storage
-    //   .from("note-images")
-    //   .upload(`/${noteId}/${v4()}.jpeg`, formData, {
-    //     cacheControl: "3600",
-    //     upsert: false,
-    //   });
-
     // Upload to ImageKit
     const uploadResult = await uploadImage(
       {

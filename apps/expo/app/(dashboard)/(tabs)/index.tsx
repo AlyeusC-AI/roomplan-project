@@ -1,4 +1,4 @@
-import DashboardHeader from "@/unused/Header";
+import DashboardHeader from "@/components/ui/Header";
 import NoProjects from "@/components/dashboard/no-projects";
 import ProjectCell from "@/components/project/cell";
 import { SubscriptionStatus } from "@/components/subscription-status";
