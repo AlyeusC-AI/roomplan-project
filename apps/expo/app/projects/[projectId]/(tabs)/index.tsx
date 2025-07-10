@@ -309,7 +309,7 @@ export default function ProjectOverview() {
                           backgroundColor:
                             (project.data.status.color?.toLowerCase() ===
                             "slate"
-                              ? "green"
+                              ? "slategray"
                               : project.data.status.color?.toLowerCase()) ||
                             "green",
                         }}
