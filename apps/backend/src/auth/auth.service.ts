@@ -70,6 +70,7 @@ export class AuthService {
     const user = await this.prisma.user.findFirst({
       where: { email: { equals: email, mode: 'insensitive' } },
     });
+    console.log('🚀 ~ AuthService ~ login ~ user:', user, email, password);
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
