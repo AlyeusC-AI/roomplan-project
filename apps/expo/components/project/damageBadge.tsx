@@ -4,13 +4,13 @@ import { Text } from "@/components/ui/text";
 
 
 const DAMAGE_TYPES = [
-    { value: LossType.FIRE, label: "Fire", color: "red" },
-    { value: LossType.WATER, label: "Water", color: "blue" },
-    { value: LossType.WIND, label: "Wind", color: "green" },
-    { value: LossType.HAIL, label: "Hail", color: "orange" },
-    { value: LossType.MOLD, label: "Mold", color: "gray" },
-    { value: LossType.OTHER, label: "Other", color: "purple" },
-] as const;
+    { value: LossType.FIRE, label: "Fire", color: "#e74c3c" },     
+    { value: LossType.WATER, label: "Water", color: "#3498db" },   
+    { value: LossType.WIND, label: "Wind", color: "#95a5a6" },     
+    { value: LossType.HAIL, label: "Hail", color: "#9b59b6" },    
+    { value: LossType.MOLD, label: "Mold", color: "#27ae60" },     
+    { value: LossType.OTHER, label: "Other", color: "#f39c12" },   
+  ] as const;
 
 const DamageBadge = ({ lossType }: { lossType: LossType }) => {
     return (
