@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,33 +10,39 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Alert,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Plus, Trash2, Edit2 } from 'lucide-react-native';
-import { invoicesStore, SavedLineItem } from '@/lib/state/invoices';
-import {
-  getSavedLineItems,
-  createSavedLineItem,
-  updateSavedLineItem,
-  deleteSavedLineItem,
-} from '@/lib/api/savedLineItems';
-import { showToast } from '@/utils/toast';
-import {Input} from '@/components/ui/input';
-import {Button} from '@/components/ui/button';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { Plus, Trash2, Edit2 } from "lucide-react-native";
+import { invoicesStore, SavedLineItem } from "@/lib/state/invoices";
+// import {
+//   getSavedLineItems,
+//   createSavedLineItem,
+//   updateSavedLineItem,
+//   deleteSavedLineItem,
+// } from '@/lib/api/savedLineItems';
+import { showToast } from "@/utils/toast";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function SavedLineItems() {
   const [isLoading, setIsLoading] = useState(true);
-  const [description, setDescription] = useState('');
-  const [rate, setRate] = useState('');
-  const [category, setCategory] = useState('');
+  const [description, setDescription] = useState("");
+  const [rate, setRate] = useState("");
+  const [category, setCategory] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<SavedLineItem | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
 
-  const { savedLineItems, setSavedLineItems, addSavedLineItem, updateSavedLineItem: updateStoreItem, removeSavedLineItem } = invoicesStore();
-  
+  const {
+    savedLineItems,
+    setSavedLineItems,
+    addSavedLineItem,
+    updateSavedLineItem: updateStoreItem,
+    removeSavedLineItem,
+  } = invoicesStore();
+
   const router = useRouter();
 
   useEffect(() => {
@@ -47,19 +53,21 @@ export default function SavedLineItems() {
     setIsLoading(true);
     try {
       const { data, error } = await getSavedLineItems();
-      
+
       if (error) {
         throw new Error(error);
       }
-      
+
       if (data) {
         setSavedLineItems(data);
       }
     } catch (error) {
       showToast(
-        'error',
-        'Error',
-        error instanceof Error ? error.message : 'Failed to load saved line items'
+        "error",
+        "Error",
+        error instanceof Error
+          ? error.message
+          : "Failed to load saved line items"
       );
     } finally {
       setIsLoading(false);
@@ -68,17 +76,17 @@ export default function SavedLineItems() {
 
   const handleSubmit = async () => {
     if (!description.trim()) {
-      return showToast('error', 'Error', 'Description is required');
+      return showToast("error", "Error", "Description is required");
     }
-    
+
     const rateNum = parseFloat(rate);
     if (isNaN(rateNum)) {
-      return showToast('error', 'Error', 'Rate must be a valid number');
+      return showToast("error", "Error", "Rate must be a valid number");
     }
-    
+
     try {
       setIsLoading(true);
-      
+
       if (editingItem) {
         // Update existing item
         const { data, error } = await updateSavedLineItem(
@@ -89,14 +97,14 @@ export default function SavedLineItems() {
             category: category || undefined,
           }
         );
-        
+
         if (error) {
           throw new Error(error);
         }
-        
+
         if (data) {
           updateStoreItem(data);
-          showToast('success', 'Success', 'Line item updated');
+          showToast("success", "Success", "Line item updated");
         }
       } else {
         // Create new item
@@ -105,24 +113,24 @@ export default function SavedLineItems() {
           rateNum,
           category || undefined
         );
-        
+
         if (error) {
           throw new Error(error);
         }
-        
+
         if (data) {
           addSavedLineItem(data);
-          showToast('success', 'Success', 'Line item saved');
+          showToast("success", "Success", "Line item saved");
         }
       }
-      
+
       // Reset form
       resetForm();
     } catch (error) {
       showToast(
-        'error',
-        'Error',
-        error instanceof Error ? error.message : 'Failed to save line item'
+        "error",
+        "Error",
+        error instanceof Error ? error.message : "Failed to save line item"
       );
     } finally {
       setIsLoading(false);
@@ -133,39 +141,41 @@ export default function SavedLineItems() {
     setEditingItem(item);
     setDescription(item.description);
     setRate(item.rate.toString());
-    setCategory(item.category || '');
+    setCategory(item.category || "");
     setShowForm(true);
   };
 
   const handleDelete = async (item: SavedLineItem) => {
     Alert.alert(
-      'Delete Line Item',
-      'Are you sure you want to delete this line item?',
+      "Delete Line Item",
+      "Are you sure you want to delete this line item?",
       [
         {
-          text: 'Cancel',
-          style: 'cancel',
+          text: "Cancel",
+          style: "cancel",
         },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             try {
               setIsLoading(true);
-              
+
               const { error } = await deleteSavedLineItem(item.publicId);
-              
+
               if (error) {
                 throw new Error(error);
               }
-              
+
               removeSavedLineItem(item.publicId);
-              showToast('success', 'Success', 'Line item deleted');
+              showToast("success", "Success", "Line item deleted");
             } catch (error) {
               showToast(
-                'error',
-                'Error',
-                error instanceof Error ? error.message : 'Failed to delete line item'
+                "error",
+                "Error",
+                error instanceof Error
+                  ? error.message
+                  : "Failed to delete line item"
               );
             } finally {
               setIsLoading(false);
@@ -177,24 +187,24 @@ export default function SavedLineItems() {
   };
 
   const resetForm = () => {
-    setDescription('');
-    setRate('');
-    setCategory('');
+    setDescription("");
+    setRate("");
+    setCategory("");
     setEditingItem(null);
     setShowForm(false);
   };
 
   const categories = Array.from(
-    new Set(savedLineItems.map(item => item.category).filter(Boolean))
+    new Set(savedLineItems.map((item) => item.category).filter(Boolean))
   );
 
-  const filteredItems = selectedCategory 
-    ? savedLineItems.filter(item => item.category === selectedCategory)
+  const filteredItems = selectedCategory
+    ? savedLineItems.filter((item) => item.category === selectedCategory)
     : savedLineItems;
 
   const handleSelectAll = (selectAll: boolean) => {
     if (selectAll) {
-      const itemIds = filteredItems.map(item => item.publicId);
+      const itemIds = filteredItems.map((item) => item.publicId);
       setSelectedItems(itemIds);
     } else {
       setSelectedItems([]);
@@ -202,31 +212,32 @@ export default function SavedLineItems() {
   };
 
   const toggleItemSelection = (itemId: string) => {
-    setSelectedItems(prev => 
-      prev.includes(itemId) 
-        ? prev.filter(id => id !== itemId)
+    setSelectedItems((prev) =>
+      prev.includes(itemId)
+        ? prev.filter((id) => id !== itemId)
         : [...prev, itemId]
     );
   };
 
-  const allSelected = filteredItems.length > 0 && 
-    filteredItems.every(item => selectedItems.includes(item.publicId));
+  const allSelected =
+    filteredItems.length > 0 &&
+    filteredItems.every((item) => selectedItems.includes(item.publicId));
 
   const handleBulkAddToInvoice = () => {
-    const selectedItemsData = savedLineItems.filter(item => 
+    const selectedItemsData = savedLineItems.filter((item) =>
       selectedItems.includes(item.publicId)
     );
-    
+
     showToast(
-      'success',
-      'Ready to Add',
+      "success",
+      "Ready to Add",
       `${selectedItemsData.length} items ready to add to invoice`
     );
-    
+
     // Reset selection
     setSelectedItems([]);
     setShowBulkActions(false);
-    
+
     // Optionally navigate to invoice creation
     // router.push('/invoices/create');
   };
@@ -241,7 +252,7 @@ export default function SavedLineItems() {
         <TouchableOpacity
           style={[
             styles.checkbox,
-            selectedItems.includes(item.publicId) && styles.checkboxSelected
+            selectedItems.includes(item.publicId) && styles.checkboxSelected,
           ]}
           onPress={() => toggleItemSelection(item.publicId)}
         >
@@ -262,14 +273,14 @@ export default function SavedLineItems() {
         </View>
       </View>
       <View style={styles.itemActions}>
-        <TouchableOpacity 
-          style={[styles.iconButton, styles.editButton]} 
+        <TouchableOpacity
+          style={[styles.iconButton, styles.editButton]}
           onPress={() => handleEdit(item)}
         >
           <Edit2 size={16} color="#0284c7" />
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.iconButton, styles.deleteButton]} 
+        <TouchableOpacity
+          style={[styles.iconButton, styles.deleteButton]}
           onPress={() => handleDelete(item)}
         >
           <Trash2 size={16} color="#dc2626" />
@@ -290,7 +301,7 @@ export default function SavedLineItems() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Saved Line Items</Text>
-        <Button 
+        <Button
           onPress={() => setShowForm(true)}
           icon={<Plus size={16} color="#ffffff" />}
         >
@@ -354,10 +365,7 @@ export default function SavedLineItems() {
         <>
           {showBulkActions && (
             <View style={styles.bulkActions}>
-              <Button 
-                onPress={handleBulkAddToInvoice}
-                variant="secondary"
-              >
+              <Button onPress={handleBulkAddToInvoice} variant="secondary">
                 Add {selectedItems.length} Items to Invoice
               </Button>
             </View>
@@ -365,15 +373,10 @@ export default function SavedLineItems() {
 
           <View style={styles.selectAllContainer}>
             <TouchableOpacity
-              style={[
-                styles.checkbox,
-                allSelected && styles.checkboxSelected
-              ]}
+              style={[styles.checkbox, allSelected && styles.checkboxSelected]}
               onPress={() => handleSelectAll(!allSelected)}
             >
-              {allSelected && (
-                <View style={styles.checkmark} />
-              )}
+              {allSelected && <View style={styles.checkmark} />}
             </TouchableOpacity>
             <Text style={styles.selectAllText}>Select All</Text>
           </View>
@@ -397,12 +400,12 @@ export default function SavedLineItems() {
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {editingItem ? 'Edit Line Item' : 'Add New Line Item'}
+                {editingItem ? "Edit Line Item" : "Add New Line Item"}
               </Text>
               <Text style={styles.modalSubtitle}>
                 {editingItem
-                  ? 'Update this line item for reuse in your invoices.'
-                  : 'Create a new line item for reuse in your invoices.'}
+                  ? "Update this line item for reuse in your invoices."
+                  : "Create a new line item for reuse in your invoices."}
               </Text>
             </View>
 
@@ -435,19 +438,19 @@ export default function SavedLineItems() {
             </View>
 
             <View style={styles.modalFooter}>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onPress={resetForm}
                 style={styles.footerButton}
               >
                 Cancel
               </Button>
-              <Button 
-                onPress={handleSubmit} 
+              <Button
+                onPress={handleSubmit}
                 disabled={isLoading}
                 style={styles.footerButton}
               >
-                {editingItem ? 'Update' : 'Save'}
+                {editingItem ? "Update" : "Save"}
               </Button>
             </View>
           </View>
@@ -460,82 +463,82 @@ export default function SavedLineItems() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
     padding: 16,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 20,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   emptyState: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   emptyStateText: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     marginBottom: 20,
   },
   listContainer: {
     paddingBottom: 20,
   },
   itemCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   itemContent: {
     flex: 1,
   },
   itemTitle: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 6,
   },
   itemMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   itemRate: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginRight: 8,
   },
   categoryBadge: {
-    backgroundColor: '#e5e7eb',
+    backgroundColor: "#e5e7eb",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
   },
   categoryText: {
     fontSize: 12,
-    color: '#4b5563',
+    color: "#4b5563",
   },
   itemActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   iconButton: {
     padding: 8,
@@ -543,22 +546,22 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   editButton: {
-    backgroundColor: '#e6f7ff',
+    backgroundColor: "#e6f7ff",
   },
   deleteButton: {
-    backgroundColor: '#fef2f2',
+    backgroundColor: "#fef2f2",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 20,
-    width: '90%',
+    width: "90%",
     maxWidth: 400,
   },
   modalHeader: {
@@ -566,24 +569,24 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
   modalSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   formGroup: {
     marginBottom: 16,
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 8,
   },
   modalFooter: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "flex-end",
     marginTop: 20,
   },
   footerButton: {
@@ -595,71 +598,71 @@ const styles = StyleSheet.create({
   },
   filterLabel: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 8,
   },
   categoryFilters: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
   categoryFilter: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: "#f3f4f6",
     marginRight: 8,
     marginBottom: 8,
   },
   selectedFilter: {
-    backgroundColor: '#0284c7',
+    backgroundColor: "#0284c7",
   },
   categoryFilterText: {
     fontSize: 14,
-    color: '#4b5563',
+    color: "#4b5563",
   },
   selectedFilterText: {
-    color: '#fff',
+    color: "#fff",
   },
   checkboxContainer: {
     marginRight: 10,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   checkbox: {
     width: 20,
     height: 20,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: '#cbd5e1',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: "#cbd5e1",
+    alignItems: "center",
+    justifyContent: "center",
   },
   checkboxSelected: {
-    borderColor: '#0284c7',
-    backgroundColor: '#0284c7',
+    borderColor: "#0284c7",
+    backgroundColor: "#0284c7",
   },
   checkmark: {
     width: 10,
     height: 10,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 2,
   },
   selectAllContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
     paddingHorizontal: 16,
   },
   selectAllText: {
     marginLeft: 8,
     fontSize: 16,
-    fontWeight: '500',
-    color: '#334155',
+    fontWeight: "500",
+    color: "#334155",
   },
   bulkActions: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: "#f1f5f9",
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
     marginHorizontal: 16,
   },
-}); 
+});
