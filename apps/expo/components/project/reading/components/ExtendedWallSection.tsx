@@ -10,6 +10,11 @@ import {
 } from "react-native";
 import { ExtendedWallItem } from "@/types/app";
 import { Camera, Plus, Trash2 } from "lucide-react-native";
+
+// Type assertions to fix ReactNode compatibility
+const PlusComponent = Plus as any;
+const CameraComponent = Camera as any;
+const Trash2Component = Trash2 as any;
 import { RoomReadingInput } from "./RoomReadingInput";
 import { OptimizedImage } from "@/lib/utils/OptimizedImage";
 import {
@@ -20,6 +25,11 @@ import {
   useCreateWallReading,
   RoomReading,
 } from "@service-geek/api-client";
+import {
+  useOfflineCreateWallReading,
+  useOfflineUpdateWallReading,
+} from "@/lib/hooks/useOfflineReadings";
+import { useOfflineWallReadingsStore } from "@/lib/state/offline-wall-readings";
 
 interface ExtendedWallSectionProps {
   wallReading?: WallReading;
@@ -45,17 +55,40 @@ export const ExtendedWallSection: React.FC<ExtendedWallSectionProps> = ({
   roomReading,
 }) => {
   const { mutate: updateWallReading, isPending: isUpdating } =
-    useUpdateWallReading();
+    useOfflineUpdateWallReading();
   const { mutate: addWallReading, isPending: isAdding } =
-    useCreateWallReading();
+    useOfflineCreateWallReading();
   const { mutate: deleteWallReading, isPending: isDeleting } = useDeleteWall();
+  const { getEditsForWall, getNewReadingsForWall } =
+    useOfflineWallReadingsStore();
+
+  // Get offline edit for this wall reading
+  const offlineEdits = wallReading
+    ? getEditsForWall(wallReading.id || wall.id)
+    : getNewReadingsForWall(wall.id);
+  const offlineEdit = offlineEdits.find(
+    (edit) => edit.roomReadingId === roomReading.id
+  );
+  console.log("🚀 ~ offlineEditsssss:", wallReading, offlineEdit);
+
+  // Merge online reading with offline edits
+  const mergedWallReading = offlineEdit
+    ? {
+        ...(wallReading || {}),
+        ...(offlineEdit && {
+          reading: offlineEdit.reading ?? wallReading?.reading,
+          images: offlineEdit.images ?? wallReading?.images,
+        }),
+      }
+    : null;
+  console.log("🚀 ~ mergedWallReading:", mergedWallReading);
 
   const isLoading = isUpdating || isAdding;
 
   const onChange = async (value: string) => {
-    if (wallReading) {
+    if (mergedWallReading?.id) {
       await updateWallReading({
-        id: wallReading.id,
+        id: mergedWallReading.id,
         data: {
           reading: Number(value),
         },
@@ -85,7 +118,7 @@ export const ExtendedWallSection: React.FC<ExtendedWallSectionProps> = ({
   };
   const onPickImage = async () => {
     await pickImage("wall", wall.id, async (type, id, images) => {
-      const updatedWall = wallReading;
+      const updatedWall = mergedWallReading;
       if (updatedWall) {
         await updateWallReading({
           id: updatedWall.id,
@@ -113,7 +146,7 @@ export const ExtendedWallSection: React.FC<ExtendedWallSectionProps> = ({
   //   }
   // }, [wallReading]);
 
-  const images = wallReading?.images || [];
+  const images = mergedWallReading?.images || [];
   console.log("🚀 ~ imagasadasdasdes:", images);
 
   return (
@@ -129,7 +162,7 @@ export const ExtendedWallSection: React.FC<ExtendedWallSectionProps> = ({
             onPress={() => handleAddExtendedWall(wall.type)}
             className="ml-2"
           >
-            <Plus color="#1d4ed8" size={16} />
+            <PlusComponent color="#1d4ed8" size={16} />
           </TouchableOpacity>
         </View>
 
@@ -139,16 +172,16 @@ export const ExtendedWallSection: React.FC<ExtendedWallSectionProps> = ({
             className="p-0.5 mr-2"
             disabled={isLoading}
           >
-            <Camera color="#1d4ed8" size={20} />
+            <CameraComponent color="#1d4ed8" size={20} />
           </TouchableOpacity>
           <TouchableOpacity onPress={confirmDelete} disabled={isLoading}>
-            <Trash2 color="#dc2626" size={20} />
+            <Trash2Component color="#dc2626" size={20} />
           </TouchableOpacity>
         </View>
       </View>
       <View className="relative">
         <RoomReadingInput
-          value={wallReading?.reading.toString() || ""}
+          value={mergedWallReading?.reading.toString() || ""}
           placeholder="Enter moisture content percentage"
           rightText="%"
           onChange={(value) => onChange(value)}
@@ -159,6 +192,9 @@ export const ExtendedWallSection: React.FC<ExtendedWallSectionProps> = ({
             <ActivityIndicator size="small" color="#1d4ed8" />
           </View>
         )}
+        {offlineEdit && (
+          <View className="absolute -top-1 -right-1 bg-orange-500 rounded-full w-3 h-3" />
+        )}
       </View>
 
       {images.length > 0 && (
@@ -168,7 +204,7 @@ export const ExtendedWallSection: React.FC<ExtendedWallSectionProps> = ({
               uri={img}
               style={{ width: 80, height: 80, borderRadius: 6 }}
               onPress={() =>
-                onImagePress(index, wallReading?.id || "", wall.id)
+                onImagePress(index, mergedWallReading?.id || "", wall.id)
               }
             />
           ))}

@@ -98,7 +98,7 @@ interface NetworkContextType {
   isInternetReachable: boolean;
   isOffline: boolean;
 }
-const forceOffline = true;
+const forceOffline = false;
 const NetworkContext = createContext<NetworkContextType>({
   isConnected: forceOffline ? false : true,
   isInternetReachable: forceOffline ? false : true,

@@ -7,7 +7,15 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  WifiOff,
 } from "lucide-react-native";
+
+// Type assertions to fix ReactNode compatibility
+const ChevronDownComponent = ChevronDown as any;
+const ChevronUpComponent = ChevronUp as any;
+const ChevronRightComponent = ChevronRight as any;
+const ChevronLeftComponent = ChevronLeft as any;
+const WifiOffComponent = WifiOff as any;
 import { TouchableOpacity, Text, View } from "react-native";
 
 // Import refactored components
@@ -31,12 +39,14 @@ interface RoomReadingProps {
   room: Room; // Room object
   reading: RoomReadingType; // Reading object with GenericRoomReading
   projectId?: string; // Project ID for offline functionality
+  isOffline?: boolean; // Whether this reading is offline
 }
 
 const RoomReading: React.FC<RoomReadingProps> = ({
   room,
   reading,
   projectId,
+  isOffline = false,
 }) => {
   console.log("🚀 ~ room:", room);
 
@@ -77,15 +87,25 @@ const RoomReading: React.FC<RoomReadingProps> = ({
         className="mb-4"
       >
         <View className="flex flex-row justify-between w-full items-center px-3 py-1.5">
-          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-            <Text className="text-blue-600 font-medium">
-              {format(date, "MM/dd/yyyy")}
-            </Text>
-          </TouchableOpacity>
+          <View className="flex flex-row items-center gap-2">
+            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+              <Text className="text-blue-600 font-medium">
+                {format(date, "MM/dd/yyyy")}
+              </Text>
+            </TouchableOpacity>
+            {isOffline && (
+              <View className="flex flex-row items-center bg-orange-100 px-2 py-1 rounded-full">
+                <WifiOffComponent size={12} color="#f97316" />
+                <Text className="text-orange-600 text-xs font-medium ml-1">
+                  Offline
+                </Text>
+              </View>
+            )}
+          </View>
           {!isCollapsed ? (
-            <ChevronDown color="#1d4ed8" size={18} />
+            <ChevronDownComponent color="#1d4ed8" size={18} />
           ) : (
-            <ChevronUp color="#1d4ed8" size={18} />
+            <ChevronUpComponent color="#1d4ed8" size={18} />
           )}
         </View>
       </Button>
@@ -112,8 +132,8 @@ const RoomReading: React.FC<RoomReadingProps> = ({
               <DateTimePicker
                 mode="single"
                 components={{
-                  IconNext: <ChevronRight color="#1d4ed8" size={18} />,
-                  IconPrev: <ChevronLeft color="#1d4ed8" size={18} />,
+                  IconNext: <ChevronRightComponent color="#1d4ed8" size={18} />,
+                  IconPrev: <ChevronLeftComponent color="#1d4ed8" size={18} />,
                 }}
                 onChange={(params) => {
                   setDate(new Date(params.date as string));

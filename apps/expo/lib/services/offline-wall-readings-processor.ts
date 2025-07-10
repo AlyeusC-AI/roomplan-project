@@ -1,18 +1,18 @@
 import {
-  useOfflineReadingsStore,
-  OfflineReading,
-} from "../state/offline-readings";
+  useOfflineWallReadingsStore,
+  OfflineWallReading,
+} from "../state/offline-wall-readings";
 import { readingsService } from "@service-geek/api-client";
 import { toast } from "sonner-native";
 
-class OfflineReadingsProcessor {
+class OfflineWallReadingsProcessor {
   private isProcessing = false;
   private retryTimeout: NodeJS.Timeout | null = null;
 
   async processQueue() {
     if (this.isProcessing) return;
 
-    const store = useOfflineReadingsStore.getState();
+    const store = useOfflineWallReadingsStore.getState();
     const pendingReadings = store.getPendingReadings();
 
     if (pendingReadings.length === 0) {
@@ -28,44 +28,43 @@ class OfflineReadingsProcessor {
         await this.processReading(reading);
       }
     } catch (error) {
-      console.error("Error processing readings queue:", error);
+      console.error("Error processing wall readings queue:", error);
     } finally {
       this.isProcessing = false;
       store.setIsProcessing(false);
     }
   }
 
-  private async processReading(reading: OfflineReading) {
-    const store = useOfflineReadingsStore.getState();
+  private async processReading(reading: OfflineWallReading) {
+    const store = useOfflineWallReadingsStore.getState();
 
     try {
       // Update status to uploading
       store.updateStatus(reading.id, "uploading");
 
       if (reading.type === "new") {
-        // Create new reading
-        await readingsService.createRoomReading({
-          roomId: reading.roomId,
-          date: reading.date,
-          humidity: reading.humidity,
-          temperature: reading.temperature,
+        // Create new wall reading
+        await readingsService.createWallReading({
+          wallId: reading.wallId,
+          roomReadingId: reading.roomReadingId,
+          reading: reading.reading,
+          images: reading.images,
         });
         store.updateStatus(reading.id, "completed");
-        toast.success(`New reading uploaded successfully`);
+        toast.success(`Wall reading uploaded successfully`);
 
         // Auto-clear completed reading after a delay
         setTimeout(() => {
           store.clearCompleted();
         }, 2000);
       } else if (reading.type === "edit") {
-        // Update existing reading
-        await readingsService.updateRoomReading(reading.originalReadingId!, {
-          date: reading.date,
-          humidity: reading.humidity,
-          temperature: reading.temperature,
+        // Update existing wall reading
+        await readingsService.updateWallReading(reading.originalReadingId!, {
+          reading: reading.reading,
+          images: reading.images,
         });
         store.updateStatus(reading.id, "completed");
-        toast.success(`Reading update uploaded successfully`);
+        toast.success(`Wall reading update uploaded successfully`);
 
         // Auto-clear completed reading after a delay
         setTimeout(() => {
@@ -73,7 +72,7 @@ class OfflineReadingsProcessor {
         }, 2000);
       }
     } catch (error) {
-      console.error(`Error uploading reading ${reading.id}:`, error);
+      console.error(`Error uploading wall reading ${reading.id}:`, error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
       store.updateStatus(reading.id, "failed", errorMessage);
@@ -91,7 +90,7 @@ class OfflineReadingsProcessor {
     }
 
     this.retryTimeout = setTimeout(() => {
-      const store = useOfflineReadingsStore.getState();
+      const store = useOfflineWallReadingsStore.getState();
       store.retryReading(readingId);
       this.processQueue();
     }, delay);
@@ -109,8 +108,8 @@ class OfflineReadingsProcessor {
       this.retryTimeout = null;
     }
     this.isProcessing = false;
-    useOfflineReadingsStore.getState().setIsProcessing(false);
+    useOfflineWallReadingsStore.getState().setIsProcessing(false);
   }
 }
 
-export const offlineReadingsProcessor = new OfflineReadingsProcessor();
+export const offlineWallReadingsProcessor = new OfflineWallReadingsProcessor();

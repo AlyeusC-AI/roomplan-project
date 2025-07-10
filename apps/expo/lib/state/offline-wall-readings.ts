@@ -2,13 +2,13 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export interface OfflineReading {
+export interface OfflineWallReading {
   id: string;
-  roomId: string;
+  wallId: string;
+  roomReadingId: string;
   projectId: string;
-  date: Date;
-  humidity: number;
-  temperature: number;
+  reading: number;
+  images: string[];
   type: "new" | "edit";
   originalReadingId?: string; // For edits, reference the original reading
   status: "pending" | "uploading" | "completed" | "failed";
@@ -17,30 +17,30 @@ export interface OfflineReading {
   error?: string;
 }
 
-interface OfflineReadingsState {
-  readings: OfflineReading[];
+interface OfflineWallReadingsState {
+  readings: OfflineWallReading[];
   isProcessing: boolean;
 
-  // Add new reading
-  addNewReading: (
+  // Add new wall reading
+  addNewWallReading: (
     reading: Omit<
-      OfflineReading,
+      OfflineWallReading,
       "id" | "type" | "status" | "createdAt" | "retryCount"
     >
   ) => void;
 
-  // Add edit for existing reading
+  // Add edit for existing wall reading
   addEdit: (
     reading: Omit<
-      OfflineReading,
+      OfflineWallReading,
       "id" | "type" | "status" | "createdAt" | "retryCount"
     > & { originalReadingId: string }
   ) => void;
 
-  // Update existing offline reading
+  // Update existing offline wall reading
   updateReading: (
     id: string,
-    data: Partial<Pick<OfflineReading, "date" | "humidity" | "temperature">>
+    data: Partial<Pick<OfflineWallReading, "reading" | "images">>
   ) => void;
 
   // Remove reading
@@ -49,7 +49,7 @@ interface OfflineReadingsState {
   // Update status
   updateStatus: (
     id: string,
-    status: OfflineReading["status"],
+    status: OfflineWallReading["status"],
     error?: string
   ) => void;
 
@@ -65,38 +65,49 @@ interface OfflineReadingsState {
   setIsProcessing: (isProcessing: boolean) => void;
 
   // Getters
-  getPendingReadings: () => OfflineReading[];
-  getFailedReadings: () => OfflineReading[];
-  getCompletedReadings: () => OfflineReading[];
-  getReadingsByRoom: (roomId: string) => OfflineReading[];
-  getReadingsByProject: (projectId: string) => OfflineReading[];
-  getEditForReading: (readingId: string) => OfflineReading | null;
-  getNewReadingsForRoom: (roomId: string) => OfflineReading[];
-  getEditsForRoom: (roomId: string) => OfflineReading[];
+  getPendingReadings: () => OfflineWallReading[];
+  getFailedReadings: () => OfflineWallReading[];
+  getCompletedReadings: () => OfflineWallReading[];
+  getReadingsByWall: (wallId: string) => OfflineWallReading[];
+  getReadingsByRoomReading: (roomReadingId: string) => OfflineWallReading[];
+  getEditForReading: (readingId: string) => OfflineWallReading | null;
+  getNewReadingsForWall: (wallId: string) => OfflineWallReading[];
+  getEditsForWall: (wallId: string) => OfflineWallReading[];
 }
 
-export const useOfflineReadingsStore = create<OfflineReadingsState>()(
+export const useOfflineWallReadingsStore = create<OfflineWallReadingsState>()(
   persist(
     (set, get) => ({
       readings: [],
       isProcessing: false,
 
-      addNewReading: (reading) => {
-        const newReading: OfflineReading = {
+      addNewWallReading: (reading) => {
+        const newReading: OfflineWallReading = {
           ...reading,
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          id: reading.wallId,
           type: "new",
           status: "pending",
           createdAt: new Date(),
           retryCount: 0,
         };
         set((state) => ({
-          readings: [...state.readings, newReading],
+          readings: state.readings.find(
+            (reading) =>
+              reading.id === newReading.id &&
+              reading.roomReadingId === newReading.roomReadingId
+          )
+            ? state.readings.map((reading) =>
+                reading.id === newReading.id &&
+                reading.roomReadingId === newReading.roomReadingId
+                  ? newReading
+                  : reading
+              )
+            : [...state.readings, newReading],
         }));
       },
 
       addEdit: (reading) => {
-        const newEdit: OfflineReading = {
+        const newEdit: OfflineWallReading = {
           ...reading,
           id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
           type: "edit",
@@ -194,13 +205,13 @@ export const useOfflineReadingsStore = create<OfflineReadingsState>()(
         );
       },
 
-      getReadingsByRoom: (roomId) => {
-        return get().readings.filter((reading) => reading.roomId === roomId);
+      getReadingsByWall: (wallId) => {
+        return get().readings.filter((reading) => reading.wallId === wallId);
       },
 
-      getReadingsByProject: (projectId) => {
+      getReadingsByRoomReading: (roomReadingId) => {
         return get().readings.filter(
-          (reading) => reading.projectId === projectId
+          (reading) => reading.roomReadingId === roomReadingId
         );
       },
 
@@ -213,20 +224,20 @@ export const useOfflineReadingsStore = create<OfflineReadingsState>()(
         );
       },
 
-      getNewReadingsForRoom: (roomId) => {
+      getNewReadingsForWall: (wallId) => {
         return get().readings.filter(
-          (reading) => reading.roomId === roomId && reading.type === "new"
+          (reading) => reading.wallId === wallId && reading.type === "new"
         );
       },
 
-      getEditsForRoom: (roomId) => {
+      getEditsForWall: (wallId) => {
         return get().readings.filter(
-          (reading) => reading.roomId === roomId && reading.type === "edit"
+          (reading) => reading.wallId === wallId && reading.type === "edit"
         );
       },
     }),
     {
-      name: "offline-readings-storage",
+      name: "offline-wall-readings-storage",
       partialize: (state) => ({ readings: state.readings }),
       storage: createJSONStorage(() => AsyncStorage),
     }

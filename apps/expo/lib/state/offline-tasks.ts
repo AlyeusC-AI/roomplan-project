@@ -10,10 +10,20 @@ import { offlineReadingsProcessor } from "../services/offline-readings-processor
 import { offlineEditProcessor } from "../services/offline-edit-processor";
 import { offlineNotesProcessor } from "../services/offline-notes-processor";
 import { offlineScopeProcessor } from "../services/offline-scope-processor";
+import { offlineWallReadingsProcessor } from "../services/offline-wall-readings-processor";
+import { offlineGenericReadingsProcessor } from "../services/offline-generic-readings-processor";
 
 export interface OfflineTask {
   id: string;
-  type: "upload" | "reading" | "edit" | "note" | "note-edit" | "scope-edit";
+  type:
+    | "upload"
+    | "reading"
+    | "edit"
+    | "note"
+    | "note-edit"
+    | "scope-edit"
+    | "wall-reading"
+    | "generic-reading";
   status: "pending" | "processing" | "completed" | "failed";
   title: string;
   description: string;
@@ -197,6 +207,14 @@ export const useOfflineTasksStore = create<OfflineTasksState>()(
               // Trigger scope processor
               offlineScopeProcessor.processEdits();
               break;
+            case "wall-reading":
+              // Trigger wall readings processor
+              offlineWallReadingsProcessor.startProcessing();
+              break;
+            case "generic-reading":
+              // Trigger generic readings processor
+              offlineGenericReadingsProcessor.startProcessing();
+              break;
           }
 
           // Mark as completed after a delay to allow processing
@@ -245,6 +263,8 @@ export const useOfflineTasksStore = create<OfflineTasksState>()(
           offlineEditProcessor.startProcessing();
           offlineNotesProcessor.startProcessing();
           offlineScopeProcessor.processEdits();
+          offlineWallReadingsProcessor.startProcessing();
+          offlineGenericReadingsProcessor.startProcessing();
 
           // Mark all pending tasks as completed after processing
           setTimeout(() => {
@@ -280,7 +300,6 @@ export const useOfflineTasksStore = create<OfflineTasksState>()(
 
         const pendingUploads = uploadsStore.getPendingUploads();
         const pendingReadings = readingsStore.getPendingReadings();
-        const pendingEdits = readingsStore.getPendingEdits();
         const pendingNotes = notesStore.getPendingNotes();
         const pendingNoteEdits = notesStore.getPendingEdits();
         const pendingScopeEdits = scopeStore.getPendingEdits();
@@ -311,41 +330,29 @@ export const useOfflineTasksStore = create<OfflineTasksState>()(
           }
         });
 
-        // Add reading tasks
+        // Add reading tasks (both new and edits)
         pendingReadings.forEach((reading) => {
           if (!existingTaskIds.includes(reading.id)) {
             newTasks.push({
               id: `reading-${reading.id}`,
               type: "reading",
               status: "pending",
-              title: "Room Reading",
-              description: `Add reading for room`,
+              title:
+                reading.type === "new" ? "New Room Reading" : "Reading Update",
+              description:
+                reading.type === "new"
+                  ? "Add reading for room"
+                  : "Update reading",
               createdAt: new Date(),
               retryCount: 0,
               metadata: {
                 projectId: reading.projectId,
                 roomId: reading.roomId,
                 originalId: reading.id,
-              },
-            });
-          }
-        });
-
-        // Add edit tasks
-        pendingEdits.forEach((edit) => {
-          if (!existingTaskIds.includes(edit.id)) {
-            newTasks.push({
-              id: `edit-${edit.id}`,
-              type: "edit",
-              status: "pending",
-              title: `Reading ${edit.operation}`,
-              description: `${edit.operation} reading`,
-              createdAt: new Date(),
-              retryCount: 0,
-              metadata: {
-                readingId: edit.readingId,
-                originalId: edit.id,
-                data: edit.data,
+                data: {
+                  type: reading.type,
+                  originalReadingId: reading.originalReadingId,
+                },
               },
             });
           }
