@@ -64,6 +64,7 @@ import {
   DropdownMenuItem,
 } from "@components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import Link from "next/link";
 
 function downloadFile(file: File) {
   // Create a link and set the URL using `createObjectURL`
@@ -407,7 +408,9 @@ const FileUploader = () => {
                   {documents.map((doc) => (
                     <TableRow key={doc.id}>
                       <TableCell className='max-w-[200px] truncate'>
+                        <Link target="_blank" href={ `/certificate/?isRep=true&id=${doc.id}&type=${doc.type}`} className="hover:underline">
                         {doc.name}
+                        </Link>
                       </TableCell>
                       <TableCell>{doc.type}</TableCell>
                       <TableCell>
