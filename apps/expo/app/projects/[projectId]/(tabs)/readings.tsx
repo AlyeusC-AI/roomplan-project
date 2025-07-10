@@ -73,7 +73,7 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
   console.log("🚀 ~ RoomReadingItem ~ hasOfflineData:", hasOfflineData);
   useFocusEffect(
     useCallback(() => {
-      refetchRoomReadings();
+      !isOffline && refetchRoomReadings();
     }, [])
   );
   const router = useRouter();

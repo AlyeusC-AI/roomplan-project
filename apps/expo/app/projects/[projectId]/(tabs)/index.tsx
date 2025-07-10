@@ -4,6 +4,7 @@ import {
   View,
   Animated,
   Modal,
+  Image,
 } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
 import * as Clipboard from "expo-clipboard";
@@ -41,6 +42,12 @@ import {
   Files,
   Calendar,
   Edit2,
+  ChevronRight,
+  LayoutGrid,
+  Bot,
+  Scan,
+  Home,
+  Image as ImageIcon,
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -60,11 +67,13 @@ import {
   useGetOrganizationMembers,
   useGetProjectById,
   useGetProjectMembers,
+  useGetRooms,
 } from "@service-geek/api-client";
 import { Button } from "@/components/ui/button";
 import ImageTagsModal from "@/components/pictures/ImageTagsModal";
 import OfflineTasksManager from "@/components/project/OfflineTasksManager";
 import DamageBadge from "@/components/project/damageBadge";
+import AddRoomButton from "@/components/project/AddRoomButton";
 
 // Utility to add opacity to hex color
 function addOpacityToColor(color: string, opacityHex: string = "33") {
@@ -176,7 +185,7 @@ export default function ProjectOverview() {
     {
       path: "./scope",
       Icon: Ruler,
-      title: "Scope of Work",
+      title: "Scope ",
       description: "Manage scope of work",
     },
     {
@@ -186,12 +195,12 @@ export default function ProjectOverview() {
       description: "Manage project forms",
     },
 
-    {
-      path: "./lidar/rooms",
-      Icon: Video,
-      title: "Lidar Scan",
-      description: "View 3D scans",
-    },
+    // {
+    //   path: "./lidar/rooms",
+    //   Icon: Video,
+    //   title: "Lidar Scan",
+    //   description: "View 3D scans",
+    // },
 
     // {
     //   path: "./pictures",
@@ -261,30 +270,32 @@ export default function ProjectOverview() {
     }, 200);
   };
 
+  const { data: rooms, isLoading: loadingRooms } = useGetRooms(projectId);
+
   return (
     <ScrollView>
       <View className="flex-1 bg-background">
         {/* Enhanced Project Info Card */}
-        <View className="px-4 pt-4 pb-2">
-          <Card className="flex-row items-center mb-3 bg-white !border-0 !shadow-none">
+        <View className="px-4 pt-4 pb-2  bg-gray-300">
+          <Card className="flex-row items-center mb-3  bg-gray-300 !border-0 !shadow-none">
             {/* Project Image */}
             {project?.data?.mainImage ? (
-              <View className="w-[110px] h-[110px] rounded-xl overflow-hidden border border-border bg-white justify-center items-center mr-4">
+              <View className="w-[110px] h-[110px] rounded-xl overflow-hidden border border-border  justify-center items-center mr-4">
                 <Animated.Image
                   source={{ uri: project.data.mainImage }}
                   style={{ width: 110, height: 110, resizeMode: "cover" }}
                 />
               </View>
             ) : (
-              <View className="w-[110px] h-[110px] rounded-xl overflow-hidden border border-border bg-gray-100 justify-center items-center mr-4">
+              <View className="w-[110px] h-[110px] rounded-xl overflow-hidden border border-border  justify-center items-center mr-4">
                 <Text className="text-4xl font-bold text-gray-400 mb-1">
                   {project?.data?.name?.[0] || "?"}
                 </Text>
               </View>
             )}
             {/* Project Info */}
-            <View className="flex-1 min-w-0">
-              <CardHeader className="p-0 mb-1">
+            <View className="flex-1 min-w-0 bg-gray-300">
+              <CardHeader className="p-0 mb-1 bg-gray-300">
                 <View className="flex-row items-center gap-4">
                   <TouchableOpacity onPress={() => setShowClientInfo(true)}>
                     <CardTitle className="text-3xl mb-1 truncate capitalize">
@@ -678,113 +689,321 @@ export default function ProjectOverview() {
             </View>
           </View>
         </Modal>
+        <View
+          className="bg-gray-300 px-4"
+          style={{
+            flexDirection: "row",
+            // flexWrap: "wrap",
+            justifyContent: "space-between",
+            marginBottom: 10,
+            paddingBottom: 10,
+            gap: 10,
+            width: "100%",
+            flex: 1,
+            // flexWrap: "wrap",
 
-        <View className="px-4">
-          {/* Action buttons with text below icons for better responsiveness */}
-          <View
+            // paddingVertical: 8,
+          }}
+        >
+          <Animated.View
             style={{
-              flexDirection: "row",
-              flexWrap: "wrap",
-              justifyContent: "space-between",
-              marginBottom: 10,
-              paddingBottom: 10
-              // paddingVertical: 8,
+              // width: "48%",
+              marginBottom: 12,
+              width: "23%",
+
+              transform: [{ scale: arrivalScale }],
             }}
           >
-            <Animated.View
-              style={{
-                width: "48%",
-                marginBottom: 12,
-                transform: [{ scale: arrivalScale }],
-              }}
+            <TouchableOpacity
+              className="bg-[#4338ca] rounded-lg overflow-hidden shadow-sm  "
+              onPress={handleArrivalPress}
+              activeOpacity={0.6}
             >
-              <TouchableOpacity
-                className="bg-[#4338ca] rounded-lg overflow-hidden shadow-sm"
-                onPress={handleArrivalPress}
-                activeOpacity={0.6}
-              >
-                <View className="flex-row items-center justify-center py-3 px-1 gap-2">
-                  {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
+              <View className="flex-col items-center justify-center py-3 px-1 gap-2">
+                {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
                   </View> */}
-                  {React.createElement(MapPin, { size: 18, color: "#fff" })}
-                  <Text className="text-white font-semibold ">Arrival</Text>
-                </View>
-              </TouchableOpacity>
-            </Animated.View>
+                {React.createElement(MapPin, { size: 18, color: "#fff" })}
+                <Text className="text-white font-semibold ">Arrival</Text>
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
 
-            <Animated.View
-              style={{
-                width: "48%",
-                marginBottom: 12,
-                transform: [{ scale: startScale }],
-              }}
+          <Animated.View
+            style={{
+              // width: "48%",
+              width: "23%",
+              marginBottom: 12,
+              transform: [{ scale: startScale }],
+            }}
+          >
+            <TouchableOpacity
+              className="bg-[#0e7490] rounded-lg overflow-hidden shadow-sm"
+              onPress={handleStartPress}
+              activeOpacity={0.6}
             >
-              <TouchableOpacity
-                className="bg-[#0e7490] rounded-lg overflow-hidden shadow-sm"
-                onPress={handleStartPress}
-                activeOpacity={0.6}
-              >
-                <View className="flex-row items-center justify-center py-3 px-1 gap-2">
-                  {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
+              <View className="flex-col items-center justify-center py-3 px-1 gap-2">
+                {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
                   </View> */}
-                  {React.createElement(PlayCircle, { size: 18, color: "#fff" })}
-                  <Text className="text-white font-semibold ">Start</Text>
-                </View>
-              </TouchableOpacity>
-            </Animated.View>
+                {React.createElement(PlayCircle, { size: 18, color: "#fff" })}
+                <Text className="text-white font-semibold ">Start</Text>
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
 
-            <Animated.View
-              style={{
-                width: "48%",
-                marginBottom: 0,
-                transform: [{ scale: completeScale }],
-              }}
+          <Animated.View
+            style={{
+              // width: "48%",
+              width: "23%",
+              marginBottom: 0,
+              transform: [{ scale: completeScale }],
+            }}
+          >
+            <TouchableOpacity
+              className="bg-[#15803d] rounded-lg overflow-hidden shadow-sm"
+              onPress={handleCompletePress}
+              activeOpacity={0.6}
             >
-              <TouchableOpacity
-                className="bg-[#15803d] rounded-lg overflow-hidden shadow-sm"
-                onPress={handleCompletePress}
-                activeOpacity={0.6}
-              >
-                <View className="flex-row items-center justify-center py-3 px-1 gap-2">
-                  {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
+              <View className="flex-col items-center justify-center py-3 px-1 gap-2">
+                {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
                   </View> */}
-                  {React.createElement(CheckCircle, {
-                    size: 18,
-                    color: "#fff",
-                  })}
-                  <Text className="text-white font-semibold ">Complete</Text>
-                </View>
-              </TouchableOpacity>
-            </Animated.View>
+                {React.createElement(CheckCircle, {
+                  size: 18,
+                  color: "#fff",
+                })}
+                <Text className="text-white font-semibold ">Complete</Text>
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
 
-            <Animated.View
-              style={{
-                width: "48%",
-                marginBottom: 0,
-                transform: [{ scale: directionsScale }],
-              }}
+          <Animated.View
+            style={{
+              // width: "48%",
+              width: "23%",
+              marginBottom: 0,
+              transform: [{ scale: directionsScale }],
+            }}
+          >
+            <TouchableOpacity
+              className="bg-[#0369a1] rounded-lg overflow-hidden shadow-sm"
+              onPress={openInMaps}
+              activeOpacity={0.6}
             >
-              <TouchableOpacity
-                className="bg-[#0369a1] rounded-lg overflow-hidden shadow-sm"
-                onPress={openInMaps}
-                activeOpacity={0.6}
-              >
-                <View className="flex-row items-center justify-center py-3 px-1 gap-2">
-                  {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
+              <View className="flex-col items-center justify-center py-3 px-1 gap-2">
+                {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
                   </View> */}
-                  {React.createElement(Map, { size: 18, color: "#fff" })}
-                  <Text className="text-white font-semibold ">Directions</Text>
-                </View>
-              </TouchableOpacity>
-            </Animated.View>
-          </View>
+                {React.createElement(Map, { size: 18, color: "#fff" })}
+                <Text className="text-white font-semibold ">Directions</Text>
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+        <View className="px-4 ">
+          {/* Action buttons with text below icons for better responsiveness */}
 
           <AssigneeSelect />
 
           {/* Offline Tasks Manager */}
           <OfflineTasksManager projectId={projectId} />
 
-          <View className="py-4">
+          <View className="gap-2 mt-4 mb-2 w-full">
+            <TouchableOpacity
+              className="bg-[#0ea5e9] rounded-lg w-full mb-2"
+              onPress={() => {
+                router.push({
+                  pathname: "./lidar/rooms",
+                  params: { projectId },
+                });
+              }}
+              activeOpacity={0.85}
+              style={{
+                paddingVertical: 12,
+                paddingHorizontal: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                minHeight: 48,
+              }}
+            >
+              <View className="bg-white/20 rounded-full p-2 mr-3">
+                {React.createElement(Scan, { size: 20, color: "#fff" })}
+              </View>
+              <View className="flex-1">
+                <Text className="text-white font-semibold text-base">
+                  Floor Plan
+                </Text>
+                <Text className="text-white/80 text-xs mt-0.5">
+                  Lidar scans
+                </Text>
+              </View>
+              <ChevronRight size={20} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="bg-gray-200 rounded-lg w-full"
+              activeOpacity={1}
+              disabled
+              style={{
+                paddingVertical: 12,
+                paddingHorizontal: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                minHeight: 48,
+                opacity: 0.7,
+              }}
+            >
+              <View className="bg-white/60 rounded-full p-2 mr-3">
+                {React.createElement(Bot, { size: 20, color: "#6b7280" })}
+              </View>
+              <View className="flex-1">
+                <Text className="text-gray-700 font-semibold text-base">
+                  Co-Pilot
+                </Text>
+                <Text className="text-gray-500 text-xs mt-0.5">
+                  Coming soon
+                </Text>
+              </View>
+              <ChevronRight size={20} color="#9ca3af" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Navigation Items Horizontal Scroll */}
+          <View className="mt-4 mb-2">
+            <Text className="text-lg font-semibold ml-1 mb-3">
+              Quick Actions
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16 }}
+              className="flex-row"
+            >
+              {navigationItems.map((item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  className="  "
+                  style={{
+                    width: 80,
+                    height: 100,
+                    padding: 12,
+                  }}
+                  onPress={() => {
+                    if (item.onPress) {
+                      item.onPress();
+                      return;
+                    }
+                    if (item.path) {
+                      router.navigate({
+                        pathname: item.path,
+                        params: {
+                          projectName: project?.data?.clientName || "",
+                        },
+                      });
+                    }
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View className="flex-1 items-center justify-center">
+                    <View className="bg-primary/10 p-2 rounded-full mb-2">
+                      {React.createElement(item.Icon as any, {
+                        size: 24,
+                        color: "#000",
+                      })}
+                    </View>
+                    <Text
+                      className="text-sm font-medium text-center text-foreground"
+                      numberOfLines={2}
+                    >
+                      {item.title}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          <View className="w-full mt-2">
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 8,
+              }}
+            >
+              <Text className="text-lg font-semibold ml-1">
+                {rooms?.length || 0} Rooms
+              </Text>
+              <AddRoomButton
+                showText={false}
+                size="sm"
+                className="rounded-full w-9 h-9 justify-center items-center bg-blue-50 border border-blue-200"
+                onPress={() => router.push(`./rooms/create`)}
+              />
+            </View>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+              {rooms?.map((room) => (
+                <TouchableOpacity
+                  key={room.id}
+                  style={{
+                    width: "48%",
+                    aspectRatio: 1,
+                    marginBottom: 12,
+                    borderRadius: 12,
+                    height: 70,
+                    backgroundColor: "#f3f4f6",
+                  }}
+                  onPress={() => router.push(`./rooms/${room.id}`)}
+                  activeOpacity={0.85}
+                >
+                  {room.images && room.images.length > 0 ? (
+                    <Image
+                      source={{ uri: room.images[0].url }}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        position: "absolute",
+                      }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        flex: 1,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <ImageIcon
+                        size={36}
+                        color="#9ca3af"
+                        style={{ opacity: 0.6 }}
+                      />
+                    </View>
+                  )}
+                  <View
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: "rgba(0,0,0,0.45)",
+                      paddingVertical: 8,
+                      paddingHorizontal: 10,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text
+                      className="text-base font-medium text-white"
+                      numberOfLines={1}
+                    >
+                      {room.name}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* <View className="py-4">
             {projectViewMode === "list" ? (
               <View className="space-y-3 gap-2">
                 {navigationItems.map((item, index) => (
@@ -814,7 +1033,7 @@ export default function ProjectOverview() {
                 ))}
               </View>
             )}
-          </View>
+          </View> */}
         </View>
       </View>
     </ScrollView>
