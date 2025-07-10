@@ -14,13 +14,20 @@ const DAMAGE_TYPES = [
 
 const DamageBadge = ({ lossType }: { lossType: LossType }) => {
     return (
-        <View className="flex-row items-center rounded px-2 py-0.5"
+        <View className="flex-row items-center rounded-full px-2 py-0.5"
             style={{
                 borderColor: DAMAGE_TYPES.find(type => type.value === lossType)?.color,
-                backgroundColor: DAMAGE_TYPES.find(type => type.value === lossType)?.color,
+                borderWidth: 1
+                // backgroundColor: DAMAGE_TYPES.find(type => type.value === lossType)?.color,
 
-            }}>
-            <Text className="text-xs text-white capitalize">{DAMAGE_TYPES.find(type => type.value === lossType)?.label}</Text>
+            }}
+        >
+            <Text className="text-xs text-white capitalize font-bold"
+                style={{
+                    color: DAMAGE_TYPES.find(type => type.value === lossType)?.color,
+
+                }}
+            >{DAMAGE_TYPES.find(type => type.value === lossType)?.label}</Text>
         </View>
     )
 }

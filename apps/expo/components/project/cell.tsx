@@ -78,13 +78,13 @@ export default function ProjectCell({ project }: { project: Project }) {
             <View
               className="mb-1 py-0.5 rounded-full"
               style={{
-                // borderColor: status?.data.color?.toLowerCase() === 'slate' ? 'green' : status?.data.color?.toLowerCase() || "green",
+                // borderColor: status?.data.color?.toLowerCase() === 'slate' ? 'slategray' : status?.data.color?.toLowerCase() || "green",
                 // borderWidth: 1,
               }}
             >
               <Text className="text-xs font-semibold text-white"
               style={{
-                color: status?.data.color?.toLowerCase() === 'slate' ? 'green' : status?.data.color?.toLowerCase() || "green",
+                color: status?.data.color?.toLowerCase() === 'slate' ? 'slategray' : status?.data.color?.toLowerCase() || "green",
               }}>
                 {status?.data.label}
               </Text>
