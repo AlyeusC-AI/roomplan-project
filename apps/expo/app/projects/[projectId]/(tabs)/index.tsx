@@ -74,6 +74,7 @@ import ImageTagsModal from "@/components/pictures/ImageTagsModal";
 import OfflineTasksManager from "@/components/project/OfflineTasksManager";
 import DamageBadge from "@/components/project/damageBadge";
 import AddRoomButton from "@/components/project/AddRoomButton";
+import StatusBadge from "@/components/project/statusBadge";
 
 // Utility to add opacity to hex color
 function addOpacityToColor(color: string, opacityHex: string = "33") {
@@ -314,29 +315,30 @@ export default function ProjectOverview() {
                   )}
                   <View className="flex-row items-center gap-2">
                     {project?.data?.status?.label && (
-                      <View
-                        className="px-2 py-0.5 rounded-full"
-                        style={{
-                          backgroundColor:
-                            (project.data.status.color?.toLowerCase() ===
-                            "slate"
-                              ? "slategray"
-                              : project.data.status.color?.toLowerCase()) ||
-                            "green",
-                        }}
-                      >
-                        <Text
-                          className="text-xs font-semibold text-white"
-                          style={
-                            {
-                              // color: addOpacityToColor(project.data.status.color || ''),
-                              color: project.data.status.color?.toLowerCase() === 'cyan' ? 'black' : "white"
-                            }
-                          }
-                        >
-                          {project.data.status.label.replace(/_/g, " ")}
-                        </Text>
-                      </View>
+                      // <View
+                      //   className="px-2 py-0.5 rounded-full"
+                      //   style={{
+                      //     backgroundColor:
+                      //       (project.data.status.color?.toLowerCase() ===
+                      //       "slate"
+                      //         ? "slategray"
+                      //         : project.data.status.color?.toLowerCase()) ||
+                      //       "green",
+                      //   }}
+                      // >
+                      //   <Text
+                      //     className="text-xs font-semibold text-white"
+                      //     style={
+                      //       {
+                      //         // color: addOpacityToColor(project.data.status.color || ''),
+                      //         color: project.data.status.color?.toLowerCase() === 'cyan' ? 'black' : "white"
+                      //       }
+                      //     }
+                      //   >
+                      //     {project.data.status.label.replace(/_/g, " ")}
+                      //   </Text>
+                      // </View>
+                      <StatusBadge status={project.data.status} />
                     )}
                     {project?.data?.lossType && (
                       // <View className="flex-row items-center bg-blue-700 rounded px-2 py-0.5">

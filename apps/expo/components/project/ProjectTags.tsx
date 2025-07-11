@@ -58,7 +58,7 @@ export default function ProjectTags({ tags, onAddTags }: ProjectTagsProps) {
           variant="outline"
           size="sm"
           onPress={onAddTags}
-          className="h-8 px-2"
+          className="h-7 px-2 rounded-full"
           style={{ marginLeft: 8 }}
           >
           {!hasTags ? (

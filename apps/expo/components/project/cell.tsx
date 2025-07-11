@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { Separator } from "@/components/ui/separator";
 import { Project, useGetProjectStatus } from "@service-geek/api-client";
 import DamageBadge from "./damageBadge";
+import StatusBadge from "./statusBadge";
 
 const getStatusColor = (status: string | null): string => {
   switch (status) {
@@ -75,23 +76,24 @@ export default function ProjectCell({ project }: { project: Project }) {
 
         <View style={styles.cardBody}>
           {status?.data?.label && (
-            <View
-              className="mb-1 px-2 py-0.5 rounded-full"
-              style={{
-                backgroundColor: status?.data.color?.toLowerCase() === 'slate' ? 'slategray' : status?.data.color?.toLowerCase() || "green",
-                // borderWidth: 1,
-              }}
-            >
-              <Text className="text-xs font-semibold text-white"
-              style={{
-                color: status?.data.color?.toLowerCase() === 'cyan' ? 'black' : "white"
+            // <View
+            //   className="mb-1 px-2 py-0.5 rounded-full"
+            //   style={{
+            //     backgroundColor: status?.data.color?.toLowerCase() === 'slate' ? 'slategray' : status?.data.color?.toLowerCase() || "green",
+            //     // borderWidth: 1,
+            //   }}
+            // >
+            //   <Text className="text-xs font-semibold text-white"
+            //   style={{
+            //     color: status?.data.color?.toLowerCase() === 'cyan' ? 'black' : "white"
                 
-              }}>
-                {status?.data.label}
-              </Text>
-            </View>
+            //   }}>
+            //     {status?.data.label}
+            //   </Text>
+            // </View>
+            <StatusBadge status={status?.data} />
           )}
-          <Text style={styles.cardTitle}>{`${project.name}`}</Text>
+          <Text style={[styles.cardTitle,{marginTop:4}]}>{`${project.name}`}</Text>
           <Text style={styles.cardSubTitle}>{project.location}</Text>
           {/* <Text style={[styles.cardTag, { color: status?.data.color }]}>
             {status?.data.label}
