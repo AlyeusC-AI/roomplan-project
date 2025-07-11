@@ -327,12 +327,14 @@ export default function ProjectOverview() {
                       >
                         <Text
                           className="text-xs font-semibold text-white"
-                          style={
-                            {
-                              // color: addOpacityToColor(project.data.status.color || ''),
-                              color: project.data.status.color?.toLowerCase() === 'cyan' ? 'black' : "white"
-                            }
-                          }
+                          style={{
+                            // color: addOpacityToColor(project.data.status.color || ''),
+                            color:
+                              project.data.status.color?.toLowerCase() ===
+                              "cyan"
+                                ? "black"
+                                : "white",
+                          }}
                         >
                           {project.data.status.label.replace(/_/g, " ")}
                         </Text>
@@ -866,7 +868,7 @@ export default function ProjectOverview() {
           </View>
 
           {/* Navigation Items Horizontal Scroll */}
-          <View className="mt-4 mb-2">
+          <View className="mt-6 mb-4">
             <Text className="text-lg font-semibold ml-1 mb-3">
               Quick Actions
             </Text>
