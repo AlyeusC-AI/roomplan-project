@@ -230,30 +230,12 @@ export default function Layout({ children }: React.PropsWithChildren) {
                     <FileImage size={45} />
                   </div>
                 )}
-
                 {/* Project Details */}
                 <div className='flex-1 space-y-3'>
-                  <div className='flex items-center gap-3'>
+                  <div>
                     <h1 className='text-[40px] font-bold capitalize tracking-tight'>
                       {projectData?.name}
                     </h1>
-                    {/* {projectData?.status && (
-                        <Badge
-                          variant='outline'
-                          className='border px-2 py-0.5 text-xs font-medium'
-                          style={{
-                            borderColor: projectData.status.color,
-                            backgroundColor: projectData.status.color,
-                            color: "white",
-                          }}
-                        >
-                          {projectData.status.label}
-                        </Badge>
-                      )} */}
-                  </div>
-
-                  {/* Key Project Info */}
-                  <div className='flex flex-wrap items-center gap-4 text-sm text-muted-foreground'>
                     {projectData?.location && (
                       <div className='flex items-center gap-1'>
                         {/* <MapPin className='h-4 w-4 text-blue-500' /> */}
@@ -267,8 +249,30 @@ export default function Layout({ children }: React.PropsWithChildren) {
                         </a>
                       </div>
                     )}
+                  </div>
+                  {/* <div className='flex items-center gap-3'>
+                    <h1 className='text-[40px] font-bold capitalize tracking-tight'>
+                      {projectData?.name}
+                    </h1>
+                   
+                  </div> */}
 
-                    {/* {projectData?.dateOfLoss && (
+                  {/* <div className='flex flex-wrap items-center gap-4 text-sm text-muted-foreground'>
+                    {projectData?.location && (
+                      <div className='flex items-center gap-1'>
+                        <MapPin className='h-4 w-4 text-blue-500' />
+                        <a
+                          className='underline'
+                          href={`https://www.google.com/maps/search/?api=1&query=${projectData.location}`}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                        >
+                          {projectData.location}
+                        </a>
+                      </div>
+                    )}
+
+                    {projectData?.dateOfLoss && (
                         <div className='flex items-center gap-1'>
                           <Calendar className='h-4 w-4 text-orange-500' />
                           <span>
@@ -279,18 +283,10 @@ export default function Layout({ children }: React.PropsWithChildren) {
                             )}
                           </span>
                         </div>
-                      )} */}
+                      )}
 
-                    {/* {projectData?.lossType && (
-                        <Badge
-                          variant='secondary'
-                          className='border-red-200 bg-red-100 text-xs text-red-700'
-                        >
-                          <AlertTriangle className='mr-1 h-3 w-3' />
-                          {projectData.lossType}
-                        </Badge>
-                      )} */}
-                  </div>
+                    
+                  </div> */}
                   <div className='flex items-center gap-2'>
                     {projectData?.status && (
                       <StatusBadge
@@ -471,7 +467,7 @@ const ProjectTags = ({ currentProjectTags, projectData }: ProjectTagsProps) => {
                   }
                   : {}
               }
-              
+
             >
               {tag.name}
               <X className='ml-1 h-3 w-3' />
