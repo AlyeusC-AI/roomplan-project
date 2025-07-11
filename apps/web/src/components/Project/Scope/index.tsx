@@ -33,12 +33,12 @@ export default function Scope() {
 
   return (
     <div className='relative min-h-screen pb-20'>
-      <div className='mb-8 space-y-6 bg-background/50 p-6 backdrop-blur-sm'>
+      <div className='mb-8 space-y-6 bg-background/50 backdrop-blur-sm'>
         <div>
-          <h1 className='text-3xl font-semibold text-foreground'>
+          <h2 className='text-lg font-medium'>
             Scope Details
-          </h1>
-          <p className='mt-2 text-base text-muted-foreground'>
+          </h2>
+          <p className='text-sm text-muted-foreground'>
             Enter room dimensions, number of windows and doors, as well as
             document affected areas.
           </p>

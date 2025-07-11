@@ -110,7 +110,7 @@ export default function DescriptionCard({ projectData }: { projectData: any }) {
               size='icon'
               onClick={() => setEditOpen(true)}
             >
-              <Edit2 className='h-4 w-4 text-gray-400' />
+              <Edit2 className='h-4 w-4 text-blue-600' />
             </Button>
           </div>
         </div>
