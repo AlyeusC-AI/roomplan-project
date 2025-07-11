@@ -19,7 +19,6 @@ import {
   X,
   Plus,
   ChevronRight,
-  Trash2,
 } from "lucide-react";
 import InfoSidebar from "@components/Project/layout/infoSidebar";
 import { Button } from "@components/ui/button";
@@ -28,11 +27,6 @@ import clsx from "clsx";
 import TagsModal from "@components/tags/TagsModal";
 import DamageBadge from "@components/Project/DamageBadge";
 import StatusBadge from "@components/Project/StatusBadge";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@components/ui/popover";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -174,52 +168,43 @@ export default function Layout({ children }: React.PropsWithChildren) {
               <ChevronLeft size={24} />
               <span className='font-medium'>Projects</span>
             </Link>
-            {/* 3-dot menu with Popover */}
+            {/* 3-dot menu with AlertDialog */}
             <div className='mb-2 flex justify-end'>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant='ghost' size='icon' className='rounded-full'>
+              <AlertDialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+              >
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='rounded-full'
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                  >
                     <MoreHorizontal className='text-gray-400' />
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent align='end' className='w-48 p-0'>
-                  <AlertDialog
-                    open={isDeleteDialogOpen}
-                    onOpenChange={setIsDeleteDialogOpen}
-                  >
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant='outline'
-                        className='flex w-full items-center gap-2 rounded-b border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700'
-                        onClick={() => setIsDeleteDialogOpen(true)}
-                      >
-                        <Trash2 className='h-4 w-4' />
-                        Delete Project
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Project</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this project? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isDeleting}>
-                          Cancel
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                          className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-                          onClick={handleDeleteConfirm}
-                          disabled={isDeleting}
-                        >
-                          {isDeleting ? "Deleting..." : "Delete"}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </PopoverContent>
-              </Popover>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Project</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this project? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isDeleting}>
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                      onClick={handleDeleteConfirm}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? "Deleting..." : "Delete"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
           {/* Project Header */}
