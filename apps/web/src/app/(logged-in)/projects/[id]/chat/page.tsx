@@ -17,7 +17,7 @@ export default function ProjectChatPage() {
         </div>
       </div>
 
-      <div className='max-w-4xl'>
+      <div className=''>
         <ProjectConversationCard projectId={id as string} />
       </div>
     </div>

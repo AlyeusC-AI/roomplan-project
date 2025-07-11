@@ -9,7 +9,7 @@ export default function TasksCard() {
           <ListTodo className='h-5 w-5 text-yellow-600' /> Tasks
         </div>
         <Button variant='ghost' size='icon'>
-          <Edit2 className='h-4 w-4 text-gray-400' />
+          <Edit2 className='h-4 w-4 text-blue-600' />
         </Button>
       </div>
       <div className='p-4 pt-2'>

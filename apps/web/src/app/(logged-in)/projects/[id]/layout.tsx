@@ -404,7 +404,7 @@ const ProjectTags = ({ currentProjectTags, projectData }: { currentProjectTags: 
             <Badge
               key={tag.id}
               variant='secondary'
-              className='cursor-pointer transition-all hover:bg-destructive/10 hover:text-destructive'
+              className='text-sm cursor-pointer transition-all hover:bg-destructive/10 hover:text-destructive'
               onClick={() => handleRemoveTag(tag.name)}
               style={
                 tag.color
@@ -427,7 +427,7 @@ const ProjectTags = ({ currentProjectTags, projectData }: { currentProjectTags: 
           variant='default'
           size='sm'
           onClick={() => setIsTagsModalOpen(true)}
-          className="h-8 "
+          className="h-7 "
           disabled={isAddingTags || isRemovingTags}
         >
           <Plus className='h-4 w-4' />

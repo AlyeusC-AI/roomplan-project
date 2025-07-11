@@ -1,7 +1,7 @@
 import { useState } from "react";
 import useAmplitudeTrack from "@utils/hooks/useAmplitudeTrack";
 import { event } from "nextjs-google-analytics";
-import { ChevronDown, ChevronRight, Pencil, Trash } from "lucide-react";
+import { ChevronDown, ChevronRight, Pencil, PlusCircle, Trash } from "lucide-react";
 import {
   Room,
   useCreateRoomReading,
@@ -161,6 +161,7 @@ const MitigationRoomTable = ({ room }: { room: Room }) => {
             onClick={() => addReading()}
             className='h-8'
           >
+            <PlusCircle />
             {isCreating ? <LoadingSpinner /> : "Add Reading"}
           </Button>
           <Button

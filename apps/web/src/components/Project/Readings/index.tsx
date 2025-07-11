@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useParams } from "next/navigation";
 import { LoadingPlaceholder } from "@components/ui/spinner";
 import { useGetRooms, useCreateRoom } from "@service-geek/api-client";
+import { PlusCircle } from "lucide-react";
 
 const Readings = () => {
   const [roomName, setRoomName] = useState("");
@@ -57,7 +58,8 @@ const Readings = () => {
               within the job site.
             </p>
           </div>
-          <Button onClick={() => setShowModal(true)}>Add Room</Button>
+          <Button onClick={() => setShowModal(true)}>
+            <PlusCircle />Add Room</Button>
         </div>
         <Separator className='dark:bg-gray-700' />
         {isCreatingRoom ? <LoadingPlaceholder /> : <ReadingsTable />}
