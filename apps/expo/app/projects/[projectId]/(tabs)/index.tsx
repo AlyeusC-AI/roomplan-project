@@ -53,11 +53,8 @@ import {
   Scan,
   Home,
   Image as ImageIcon,
-<<<<<<< HEAD
   ChevronRightIcon,
-=======
   Plus,
->>>>>>> 808d01dfe2111765f02cd4552e562ee467eb8e47
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -451,7 +448,10 @@ export default function ProjectOverview() {
                         onPress={() => setShowClientInfo(false)}
                         className="p-2"
                       >
-                        {React.createElement(X as any, { size: 20, color: "#000" })}
+                        {React.createElement(X as any, {
+                          size: 20,
+                          color: "#000",
+                        })}
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -690,7 +690,10 @@ export default function ProjectOverview() {
                       onPress={copyAddress}
                     >
                       <View className="bg-green-500 p-2 rounded-lg mr-3">
-                        {React.createElement(Files, { size: 20, color: "#fff" })}
+                        {React.createElement(Files, {
+                          size: 20,
+                          color: "#fff",
+                        })}
                       </View>
                       <View className="flex-1">
                         <Text className="text-base font-semibold text-foreground">
@@ -760,7 +763,10 @@ export default function ProjectOverview() {
                   <View className="flex-col items-center justify-center py-3 px-1 gap-2">
                     {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
                   </View> */}
-                    {React.createElement(PlayCircle, { size: 18, color: "#fff" })}
+                    {React.createElement(PlayCircle, {
+                      size: 18,
+                      color: "#fff",
+                    })}
                     <Text className="text-white font-semibold ">Start</Text>
                   </View>
                 </TouchableOpacity>
@@ -808,7 +814,9 @@ export default function ProjectOverview() {
                     {/* <View className="w-9 h-9 rounded-full justify-center items-center mb-1.5 bg-white/20">
                   </View> */}
                     {React.createElement(Map, { size: 18, color: "#fff" })}
-                    <Text className="text-white font-semibold ">Directions</Text>
+                    <Text className="text-white font-semibold ">
+                      Directions
+                    </Text>
                   </View>
                 </TouchableOpacity>
               </Animated.View>
@@ -855,15 +863,21 @@ export default function ProjectOverview() {
                 <TouchableOpacity
                   className="bg-gray-200 rounded-lg w-full"
                   activeOpacity={1}
-                  disabled
+                  // disabled
                   style={{
                     paddingVertical: 12,
                     paddingHorizontal: 14,
                     flexDirection: "row",
                     alignItems: "center",
                     minHeight: 48,
-                    opacity: 0.7,
+                    opacity: 1,
                   }}
+                  onPress={() =>
+                    router.push({
+                      pathname: `./copilot`,
+                      params: { projectId },
+                    })
+                  }
                 >
                   <View className="bg-white/60 rounded-full p-2 mr-3">
                     {React.createElement(Bot, { size: 20, color: "#6b7280" })}
@@ -873,7 +887,7 @@ export default function ProjectOverview() {
                       Co-Pilot
                     </Text>
                     <Text className="text-gray-500 text-xs mt-0.5">
-                      Coming soon
+                      Project & Room Checklist
                     </Text>
                   </View>
                   <ChevronRight size={20} color="#9ca3af" />
@@ -954,7 +968,9 @@ export default function ProjectOverview() {
                     onPress={() => router.push(`./rooms/create`)}
                   />
                 </View>
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+                <View
+                  style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}
+                >
                   {rooms?.map((room) => (
                     <TouchableOpacity
                       key={room.id}
