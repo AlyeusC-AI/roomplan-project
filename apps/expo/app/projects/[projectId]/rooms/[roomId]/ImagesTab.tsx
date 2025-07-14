@@ -20,7 +20,6 @@ import {
   Filter,
   CheckSquare,
   X,
-  Camera,
   ImagePlus,
   Wifi,
   WifiOff,
@@ -28,11 +27,7 @@ import {
 import { Text } from "@/components/ui/text";
 import { toast } from "sonner-native";
 import { useRouter } from "expo-router";
-import {
-  takePhoto,
-  pickMultipleImages,
-  STORAGE_BUCKETS,
-} from "@/lib/utils/imageModule";
+import { pickMultipleImages, STORAGE_BUCKETS } from "@/lib/utils/imageModule";
 import { useOfflineUploadsStore } from "@/lib/state/offline-uploads";
 import { useNetworkStatus } from "@/lib/providers/QueryProvider";
 
@@ -40,7 +35,6 @@ import { useNetworkStatus } from "@/lib/providers/QueryProvider";
 const FilterIcon = Filter as any;
 const CheckSquareIcon = CheckSquare as any;
 const XIcon = X as any;
-const CameraIcon = Camera as any;
 const ImagePlusIcon = ImagePlus as any;
 const WifiIcon = Wifi as any;
 const WifiOffIcon = WifiOff as any;
@@ -82,7 +76,6 @@ export default function ImagesTab({
   // Upload state
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [shouldOpenCamera, setShouldOpenCamera] = useState(false);
 
   const router = useRouter();
   const { mutate: addImage } = useAddImage();
@@ -252,38 +245,8 @@ export default function ImagesTab({
     }
   };
 
-  const handleTakePhoto = async () => {
-    try {
-      setShouldOpenCamera(true);
-
-      await takePhoto(roomId, {
-        bucket: STORAGE_BUCKETS.PROJECT,
-        pathPrefix: `projects/${projectId}/rooms`,
-        compression: "high",
-        projectId,
-        roomId: roomId,
-        isOffline,
-        addToOfflineQueue: addToQueue,
-        onSuccess: async (file) => {
-          // Only upload to backend if not offline and file has a URL
-          if (!isOffline && file.url && file.url !== file.path) {
-            await uploadToSupabase(file.url);
-          }
-          // Refetch images after upload
-          await refetch();
-        },
-      });
-      setShouldOpenCamera(false);
-    } catch (error) {
-      console.error("Error taking photo:", error);
-      toast.error("Failed to take photo");
-    }
-  };
-
   const handlePickImages = async () => {
     try {
-      setShouldOpenCamera(false);
-
       setIsUploading(true);
       setUploadProgress(0);
 
@@ -344,13 +307,6 @@ export default function ImagesTab({
               )}
               <Text style={styles.uploadButtonText}>Add Images</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.uploadButton, styles.cameraButton]}
-              onPress={handleTakePhoto}
-            >
-              <CameraIcon size={20} color="#fff" />
-              <Text style={styles.uploadButtonText}>Take Photo</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -373,7 +329,7 @@ export default function ImagesTab({
           </View>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[
               styles.actionButton,
               isUploading && styles.actionButtonDisabled,
@@ -386,14 +342,7 @@ export default function ImagesTab({
             ) : (
               <ImagePlusIcon size={20} color="#2563eb" />
             )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleTakePhoto}
-          >
-            <CameraIcon size={20} color="#2563eb" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity
             style={[
@@ -491,23 +440,6 @@ export default function ImagesTab({
         selectedPhotos={selectedPhotos}
         onComplete={handleSaveToPhoneComplete}
       />
-
-      {/* FAB for camera access */}
-      {images.length > 0 && (
-        <View style={styles.fabContainer}>
-          <TouchableOpacity
-            onPress={() => router.push("../camera")}
-            style={[styles.fab, isUploading && styles.fabDisabled]}
-            disabled={isUploading}
-          >
-            {isUploading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <CameraIcon size={30} color="#fff" />
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
   );
 }
@@ -566,9 +498,7 @@ const styles = StyleSheet.create({
   uploadButtonDisabled: {
     opacity: 0.7,
   },
-  cameraButton: {
-    backgroundColor: "#10b981",
-  },
+
   uploadButtonText: {
     color: "#fff",
     fontSize: 14,
@@ -650,26 +580,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 10,
     fontWeight: "600",
-  },
-  fabContainer: {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-  },
-  fab: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#2563eb",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  fabDisabled: {
-    opacity: 0.7,
   },
 });

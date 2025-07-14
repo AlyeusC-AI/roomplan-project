@@ -697,13 +697,15 @@ export default function FilteredImagesGallery({
 
           return (
             <View key={roomId} style={styles.roomSection}>
-              <FloatingRoomHeader
-                roomName={roomName}
-                imageCount={groupImages.length}
-                isSelected={isGroupSelected}
-                onToggleSelect={() => toggleRoomGroupSelection(groupImages)}
-                selectable={selectable}
-              />
+              {!hideRoomFilter && (
+                <FloatingRoomHeader
+                  roomName={roomName}
+                  imageCount={groupImages.length}
+                  isSelected={isGroupSelected}
+                  onToggleSelect={() => toggleRoomGroupSelection(groupImages)}
+                  selectable={selectable}
+                />
+              )}
 
               <View style={styles.imageGrid}>
                 {groupImages.map((image, index) => (
