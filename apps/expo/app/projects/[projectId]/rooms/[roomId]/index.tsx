@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: "row",
     backgroundColor: "#fff",
-    borderRadius: 16,
+    // borderRadius: 16,
     marginHorizontal: 12,
     marginTop: 8,
     marginBottom: 4,
@@ -459,11 +459,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     alignItems: "center",
-    borderRadius: 16,
+    // borderRadius: 16,
     backgroundColor: "#fff",
   },
   activeTab: {
-    backgroundColor: "#2563eb11",
+    borderBottomWidth: 3,
+    borderBottomColor: "#2563eb",
   },
   tabContentRow: {
     flexDirection: "row",

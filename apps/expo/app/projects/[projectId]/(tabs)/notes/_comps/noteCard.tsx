@@ -94,7 +94,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const styles = StyleSheet.create({
   noteCard: {
     padding: 16,
-    marginBottom: 16,
+    // marginBottom: 16,
     borderRadius: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -653,10 +653,8 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
         </View>
 
         {/* Action buttons moved to the top */}
-        <View style={{ flexDirection: "row", gap: 0 }}>
-          <Button
-            variant="ghost"
-            className="p-1"
+        <View style={{ flexDirection: "row", gap: 12 }}>
+          <Pressable
             disabled={isUpdating || imageUploading}
             onPress={() => handleStart(note.id)}
           >
@@ -665,12 +663,8 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
             ) : (
               <Mic color="#1e40af" size={20} />
             )}
-          </Button>
-
-          {/* Combined image button for camera and gallery */}
-          <Button
-            variant="ghost"
-            className="p-1"
+          </Pressable>
+          <Pressable
             disabled={isUpdating || imageUploading}
             onPress={handleImageOptions}
           >
@@ -679,12 +673,8 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
             ) : (
               <Camera color="#1e40af" size={20} />
             )}
-          </Button>
-
-          {/* Delete button with confirmation */}
-          <Button
-            variant="ghost"
-            className="p-1"
+          </Pressable>
+          <Pressable
             disabled={isDeleting}
             onPress={() => {
               Alert.alert(
@@ -709,7 +699,7 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
             ) : (
               <Trash color="red" size={20} />
             )}
-          </Button>
+          </Pressable>
         </View>
       </View>
 

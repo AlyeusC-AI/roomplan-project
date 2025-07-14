@@ -249,7 +249,7 @@ const RoomReadingItem = ({
         <HStack justifyContent="space-between" alignItems="center" mb={2}>
           <Button
             onPress={confirmDeleteReading}
-            className="flex-row items-center w-full justify-center bg-white rounded-lg py-1.5 px-3 border border-red-300"
+            className="flex-row items-center w-full justify-center bg-white rounded-lg py-1.5 px-3 border border-red-300 my-4"
             variant="destructive"
             disabled={isDeleting}
           >
@@ -407,7 +407,7 @@ const RoomReadingItem = ({
             <Heading
               size="sm"
               mt="4"
-              mb="2"
+              mb="6"
               className="text-gray-700 font-semibold text-sm"
             >
               Dehumidifier Readings
