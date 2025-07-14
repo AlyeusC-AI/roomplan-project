@@ -636,4 +636,28 @@ export class ProjectsService {
       );
     }
   }
+
+  async getCopilotProgress(id: string, userId: string) {
+    // Check access
+    const project = await this.prisma.project.findUnique({ where: { id } });
+    if (!project) throw new NotFoundException('Project not found');
+    // Optionally: check user is a member of the project
+    return { copilotProgress: project.copilotProgress };
+  }
+
+  async updateCopilotProgress(
+    id: string,
+    dto: { copilotProgress: any },
+    userId: string,
+  ) {
+    // Check access
+    const project = await this.prisma.project.findUnique({ where: { id } });
+    if (!project) throw new NotFoundException('Project not found');
+    // Optionally: check user is a member of the project
+    const updated = await this.prisma.project.update({
+      where: { id },
+      data: { copilotProgress: dto.copilotProgress },
+    });
+    return { copilotProgress: updated.copilotProgress };
+  }
 }

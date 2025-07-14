@@ -48,6 +48,7 @@ import {
   Scan,
   Home,
   Image as ImageIcon,
+  ChevronRightIcon,
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -841,16 +842,18 @@ export default function ProjectOverview() {
             </TouchableOpacity>
             <TouchableOpacity
               className="bg-gray-200 rounded-lg w-full"
-              activeOpacity={1}
-              disabled
+              activeOpacity={0.85}
               style={{
                 paddingVertical: 12,
                 paddingHorizontal: 14,
                 flexDirection: "row",
                 alignItems: "center",
                 minHeight: 48,
-                opacity: 0.7,
+                opacity: 1,
               }}
+              onPress={() =>
+                router.push({ pathname: `./copilot`, params: { projectId } })
+              }
             >
               <View className="bg-white/60 rounded-full p-2 mr-3">
                 {React.createElement(Bot, { size: 20, color: "#6b7280" })}
@@ -860,10 +863,10 @@ export default function ProjectOverview() {
                   Co-Pilot
                 </Text>
                 <Text className="text-gray-500 text-xs mt-0.5">
-                  Coming soon
+                  Project & Room Checklist
                 </Text>
               </View>
-              <ChevronRight size={20} color="#9ca3af" />
+              <ChevronRightIcon size={20} color="#9ca3af" />
             </TouchableOpacity>
           </View>
 
