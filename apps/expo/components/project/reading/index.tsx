@@ -84,7 +84,7 @@ const RoomReading: React.FC<RoomReadingProps> = ({
       <Button
         variant="outline"
         onPress={() => setIsCollapsed((o) => !o)}
-        className="mb-4"
+        // className="mb-4"
       >
         <View className="flex flex-row justify-between w-full items-center px-3 py-1.5">
           <View className="flex flex-row items-center gap-2">

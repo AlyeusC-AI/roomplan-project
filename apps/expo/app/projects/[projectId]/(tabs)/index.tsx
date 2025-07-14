@@ -1057,10 +1057,12 @@ export default function ProjectOverview() {
               label: "Camera",
               onPress: () => router.push("./camera"),
               disabled: !(rooms?.length > 0),
+              icon: Camera,
             },
             {
               label: "Create Room",
               onPress: () => router.push("./rooms/create"),
+              icon: Plus,
             },
           ]}
         />

@@ -1,10 +1,22 @@
 // components/FloatingActionButton.tsx
-import { Plus } from "lucide-react-native";
+import { Plus, X } from "lucide-react-native";
 import { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  TouchableWithoutFeedback,
+} from "react-native";
+import type { LucideIcon } from "lucide-react-native";
+import React from "react";
 
+// Add icon property to Action type
+// icon: LucideIcon (component)
 type Action = {
   label: string;
+  icon: LucideIcon;
   onPress: () => void;
   disabled?: boolean;
 };
@@ -13,29 +25,53 @@ export default function FloatingButtonOption({ actions }: { actions: Action[] })
   const [open, setOpen] = useState(false);
 
   return (
-    <View style={styles.container}>
-      {open && (
-        <View style={styles.optionsContainer}>
-          {actions.map((action, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={[styles.option, action.disabled && { opacity: 0.5 }]}
-              onPress={() => {
-                if (!action.disabled) {
-                  setOpen(false);
-                  action.onPress();
-                }
-              }}
-              disabled={action.disabled}
-            >
-              <Text style={styles.optionText}>{action.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+    <View style={styles.container} pointerEvents="box-none">
+      {/* Modal Overlay for FAB Options */}
+      <Modal
+        visible={open}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setOpen(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setOpen(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.fabOptionsColumn}>
+              {actions.map((action, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={styles.squareOption}
+                  onPress={() => {
+                    if (!action.disabled) {
+                      setOpen(false);
+                      action.onPress();
+                    }
+                  }}
+                  disabled={action.disabled}
+                  activeOpacity={0.8}
+                >
+                  {React.createElement(action.icon as any, { size: 28 })}
+                  <Text style={styles.squareLabel}>{action.label}</Text>
+                </TouchableOpacity>
+              ))}
+              {/* Close Button styled like other options but blue */}
+              <TouchableOpacity
+                style={[styles.squareOption, styles.closeOption]}
+                onPress={() => setOpen(false)}
+                activeOpacity={0.8}
+              >
+                {React.createElement(X as any, { size: 28, color: '#fff' })}
+                <Text style={styles.closeOptionLabel}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+      {/* Main FAB Button (hide when open) */}
+      {!open && (
+        <TouchableOpacity style={styles.fab} onPress={() => setOpen(!open)}>
+          {React.createElement(Plus as any, { size: 30, color: "#fff" })}
+        </TouchableOpacity>
       )}
-      <TouchableOpacity style={styles.fab} onPress={() => setOpen(!open)}>
-        <Plus size={30} color="#fff" />
-      </TouchableOpacity>
     </View>
   );
 }
@@ -49,10 +85,10 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   fab: {
-    backgroundColor: "#007AFF",
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    backgroundColor: "#2563eb",
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -61,19 +97,76 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  optionsContainer: {
-    marginBottom: 10,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "flex-end",
+    alignItems: "flex-end",
   },
-  option: {
-    flexDirection: "row",
+  fabOptionsColumn: {
+    flexDirection: "column",
+    justifyContent: "flex-end",
+    alignItems: "flex-end",
+    marginBottom: 100,
+    marginRight: 10,
+    gap: 10,
+  },
+  squareOption: {
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#333",
-    padding: 10,
-    borderRadius: 20,
-    marginBottom: 8,
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 0,
+    minWidth: 120,
+    minHeight: 48,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
   },
-  optionText: {
-    color: "#fff",
+  squareLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+    marginTop: 2,
+    color: "#1e293b",
+  },
+  closeFab: {
+    backgroundColor: '#2563eb',
+    borderRadius: 32,
+    width: 64,
+    height: 64,
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 1001,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
     marginLeft: 8,
+  },
+  closeOption: {
+    backgroundColor: '#2563eb',
+  },
+  closeOptionLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 2,
   },
 });
