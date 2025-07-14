@@ -230,6 +230,21 @@ class RoomsService {
     );
     return response.data;
   }
+
+  // Copilot Progress
+  async getCopilotProgress(roomId: string) {
+    const response = await apiClient.get<{ copilotProgress: any }>(
+      `/rooms/${roomId}/copilot-progress`
+    );
+    return response.data;
+  }
+  async updateCopilotProgress(roomId: string, copilotProgress: any) {
+    const response = await apiClient.patch<{ copilotProgress: any }>(
+      `/rooms/${roomId}/copilot-progress`,
+      { copilotProgress }
+    );
+    return response.data;
+  }
 }
 
 export const roomsService = new RoomsService();

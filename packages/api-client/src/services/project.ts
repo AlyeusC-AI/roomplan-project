@@ -99,4 +99,19 @@ export const projectService = {
     );
     return response.data;
   },
+
+  // Copilot Progress
+  getCopilotProgress: async (projectId: string) => {
+    const response = await apiClient.get<{ copilotProgress: any }>(
+      `/projects/${projectId}/copilot-progress`
+    );
+    return response.data;
+  },
+  updateCopilotProgress: async (projectId: string, copilotProgress: any) => {
+    const response = await apiClient.patch<{ copilotProgress: any }>(
+      `/projects/${projectId}/copilot-progress`,
+      { copilotProgress }
+    );
+    return response.data;
+  },
 };

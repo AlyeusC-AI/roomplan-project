@@ -1,0 +1,8 @@
+{
+  "android": {
+    "package": "com.vincentowler.backend"
+  },
+  "ios": {
+    "bundleIdentifier": "com.vincentowler.backend"
+  }
+}

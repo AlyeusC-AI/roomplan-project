@@ -29,6 +29,7 @@ import { RequestWithUser } from '../auth/interfaces/request-with-user';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponse } from '../common/interfaces/pagination.interface';
 import { SendLidarEmailDto } from './dto/send-lidar-email.dto';
+import { UpdateCopilotProgressDto } from './dto/update-copilot-progress.dto';
 
 @ApiTags('projects')
 @ApiBearerAuth()
@@ -260,5 +261,26 @@ export class ProjectsController {
     @Body() data: SendLidarEmailDto,
   ) {
     return this.projectsService.sendLidarEmail(id, data);
+  }
+
+  @Get(':id/copilot-progress')
+  @ApiOperation({ summary: 'Get copilot progress for a project' })
+  @ApiParam({ name: 'id', description: 'Project ID' })
+  async getCopilotProgress(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.projectsService.getCopilotProgress(id, req.user.userId);
+  }
+
+  @Patch(':id/copilot-progress')
+  @ApiOperation({ summary: 'Update copilot progress for a project' })
+  @ApiParam({ name: 'id', description: 'Project ID' })
+  async updateCopilotProgress(
+    @Param('id') id: string,
+    @Body() dto: UpdateCopilotProgressDto,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.projectsService.updateCopilotProgress(id, dto, req.user.userId);
   }
 }

@@ -197,26 +197,27 @@ model Project {
   forecast     String?
   claimSummary String?
 
-  roofSegments   String[]
-  roofSpecs      String?
-  rcvValue       String?
-  actualValue    String?
-  status         ProjectStatus? @relation(fields: [statusId], references: [id])
-  statusId       String?
-  mainImage      String?
-  policyNumber   String?
-  dateOfLoss     DateTime?
-  organization   Organization   @relation(fields: [organizationId], references: [id])
-  organizationId String
-  rooms          Room[]
-  images         Image[]
-  documents      Document[]
-  forms          FormProject[]
-  formResponses  FormResponse[]
-  invoices       Invoice[]
-  Estimate       Estimate[]
-  tags           Tag[]
-  chat           Chat?
+  roofSegments    String[]
+  roofSpecs       String?
+  rcvValue        String?
+  actualValue     String?
+  status          ProjectStatus? @relation(fields: [statusId], references: [id])
+  statusId        String?
+  mainImage       String?
+  policyNumber    String?
+  dateOfLoss      DateTime?
+  organization    Organization   @relation(fields: [organizationId], references: [id])
+  organizationId  String
+  rooms           Room[]
+  images          Image[]
+  documents       Document[]
+  forms           FormProject[]
+  formResponses   FormResponse[]
+  invoices        Invoice[]
+  Estimate        Estimate[]
+  tags            Tag[]
+  chat            Chat?
+  copilotProgress Json? // Stores project-level checklist progress
 }
 
 model Room {
@@ -252,6 +253,7 @@ model Room {
   wallsRoomId     String?            @unique
   ceilingAffected AreaAffected?      @relation("CeilingAffected", fields: [ceilingRoomId], references: [id])
   ceilingRoomId   String?            @unique
+  copilotProgress Json? // Stores room-level checklist progress
 
   @@index([projectId])
 }

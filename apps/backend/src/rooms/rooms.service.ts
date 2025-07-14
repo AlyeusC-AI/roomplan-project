@@ -941,4 +941,20 @@ export class RoomsService {
 
     return room;
   }
+
+  async getCopilotProgress(id: string) {
+    const room = await this.prisma.room.findUnique({ where: { id } });
+    if (!room) throw new NotFoundException('Room not found');
+    return { copilotProgress: room.copilotProgress };
+  }
+
+  async updateCopilotProgress(id: string, dto: { copilotProgress: any }) {
+    const room = await this.prisma.room.findUnique({ where: { id } });
+    if (!room) throw new NotFoundException('Room not found');
+    const updated = await this.prisma.room.update({
+      where: { id },
+      data: { copilotProgress: dto.copilotProgress },
+    });
+    return { copilotProgress: updated.copilotProgress };
+  }
 }
