@@ -970,13 +970,15 @@ const styles = StyleSheet.create({
   imageGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: 16,
+    paddingHorizontal: 6,
+    gap: 6,
+    marginTop: 4
   },
   imageItem: {
     width: ITEM_SIZE,
-    height: ITEM_SIZE,
+    height: ITEM_SIZE * 1.25,
     margin: ITEM_MARGIN,
-    borderRadius: 4,
+    // borderRadius: 4,
     overflow: "hidden",
     position: "relative",
   },
