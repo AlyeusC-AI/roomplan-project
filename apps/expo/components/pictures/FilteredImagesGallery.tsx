@@ -978,7 +978,7 @@ const styles = StyleSheet.create({
     width: ITEM_SIZE,
     height: ITEM_SIZE * 1.25,
     margin: ITEM_MARGIN,
-    // borderRadius: 4,
+    borderRadius: 0,
     overflow: "hidden",
     position: "relative",
   },
@@ -988,6 +988,7 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
+    borderRadius: 4,
   },
   selectionOverlay: {
     position: "absolute",

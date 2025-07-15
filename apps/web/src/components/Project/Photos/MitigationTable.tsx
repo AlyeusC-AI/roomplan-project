@@ -7,7 +7,7 @@ import { useSearchImages } from "@service-geek/api-client";
 
 export default function MitigationTable() {
   const { id } = useParams<{ id: string }>();
-  const { rooms, onlySelected, sortDirection } = useFilterParams();
+  const { rooms, onlySelected, sortDirection, createdAfter, createdBefore } = useFilterParams();
 
   // React Query hooks
   const {
@@ -20,6 +20,8 @@ export default function MitigationTable() {
       type: "ROOM",
       roomIds: rooms,
       showInReport: onlySelected || undefined,
+      createdAfter: createdAfter || undefined,
+      createdBefore: createdBefore || undefined,
     },
     { field: "createdAt", direction: sortDirection || "desc" },
     { page: 1, limit: 100 }

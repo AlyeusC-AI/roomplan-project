@@ -4,12 +4,14 @@ import { Dialog, DialogContent } from "@components/ui/dialog";
 import { Button } from "@components/ui/button";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Image as ImageType } from "@service-geek/api-client";
+import clsx from "clsx";
 
 interface ImageGalleryProps {
   images: ImageType[];
+  groupImages?: boolean;
 }
 
-const ImageGallery = ({ images }: ImageGalleryProps) => {
+const ImageGallery = ({ images, groupImages = false }: ImageGalleryProps) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
     null
   );
@@ -19,11 +21,13 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
   return (
     <div className='mt-4'>
       {/* Image Grid */}
-      <div className='grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5'>
-        {images.map((image, index) => (
+      <div className={(!groupImages ? 'grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5' : "")}>
+        {(groupImages ? images.slice(0, 1) : images).map((image, index) => (
           <div
             key={image.id}
-            className='group relative aspect-square cursor-pointer overflow-hidden rounded-lg'
+            className={clsx('group relative aspect-square cursor-pointer overflow-hidden rounded-lg',
+              { "relative cursor-pointer overflow-hidden min-h-10": groupImages }
+            )}
             onClick={() => setSelectedImageIndex(index)}
           >
             <Image
@@ -33,6 +37,11 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
               className='object-cover transition-transform duration-200 group-hover:scale-105'
               sizes='(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw'
             />
+            {groupImages && images.length > 1 && (
+              <span className='absolute bottom-0 right-0 rounded bg-black/70 px-2 py-1 text-xs text-white'>
+                {images.length}+ photos
+              </span>
+            )}
           </div>
         ))}
       </div>
