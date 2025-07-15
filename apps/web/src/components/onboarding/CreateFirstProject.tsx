@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { event } from "nextjs-google-analytics";
 import { FormEvent, useState } from "react";
+import { uploadFile } from "@/lib/services/space";
+import { useRef } from "react";
 
 // Should be an html form. Not a form because the google auto complete dropdown breaks when nested in a form and clicking "enter"
 const CreateFirstProject = () => {
@@ -12,6 +14,20 @@ const CreateFirstProject = () => {
   const [projectLocation, setProjectLocation] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const { track } = useAmplitudeTrack();
+  const [claimSummaryImages, setClaimSummaryImages] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const uploadedUrls: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const response = await uploadFile(file, file.name);
+      uploadedUrls.push(response.publicUrl);
+    }
+    setClaimSummaryImages((prev) => [...prev, ...uploadedUrls]);
+  };
 
   const createProject = async (e: FormEvent) => {
     e.preventDefault();
@@ -29,6 +45,7 @@ const CreateFirstProject = () => {
         body: JSON.stringify({
           name: projectName,
           location: projectLocation,
+          claimSummaryImages,
         }),
       });
       if (res.ok) {
@@ -130,6 +147,29 @@ const CreateFirstProject = () => {
                 }}
                 defaultValue={projectLocation}
               /> */}
+            </div>
+          </div>
+          <div className='mt-6'>
+            <label className='block text-sm font-medium text-gray-700'>
+              Claim Summary Images
+            </label>
+            <input
+              type='file'
+              multiple
+              accept='image/*'
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              className='mt-1 block w-full'
+            />
+            <div className='mt-2 flex flex-wrap'>
+              {claimSummaryImages.map((url, idx) => (
+                <img
+                  key={idx}
+                  src={url}
+                  alt='Claim Summary'
+                  className='mb-2 mr-2 h-16 w-16 rounded object-cover'
+                />
+              ))}
             </div>
           </div>
           <div className='mt-4 flex w-full items-center justify-end'>

@@ -190,12 +190,13 @@ model Project {
   waterClass           String?
   humidity             String?
 
-  temperature  String?
-  wind         String?
-  lat          String?
-  lng          String?
-  forecast     String?
-  claimSummary String?
+  temperature        String?
+  wind               String?
+  lat                String?
+  lng                String?
+  forecast           String?
+  claimSummary       String?
+  claimSummaryImages String[]
 
   roofSegments    String[]
   roofSpecs       String?

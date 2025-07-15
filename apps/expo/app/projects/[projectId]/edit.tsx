@@ -162,6 +162,7 @@ import {
   Text,
   TouchableOpacity,
   Linking,
+  Image,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
@@ -173,6 +174,8 @@ import {
   DamageType,
   DamageTypeSelector,
 } from "@/components/project/damageSelector";
+import { uploadFile } from "@/lib/services/space";
+import * as ImagePicker from "expo-image-picker";
 
 export default function EditProject() {
   const { session: supabaseSession } = userStore((state) => state);
@@ -198,6 +201,9 @@ export default function EditProject() {
   );
   const [currentAddress, setCurrentAddress] = useState(
     project.project?.location || ""
+  );
+  const [claimSummaryImages, setClaimSummaryImages] = useState<string[]>(
+    project.project?.claimSummaryImages || []
   );
   const { projects, setProjects } = projectsStore((state) => state);
 
@@ -228,6 +234,10 @@ export default function EditProject() {
         update.lat = address.lat;
       }
 
+      if (claimSummaryImages.length > 0) {
+        update.claimSummaryImages = claimSummaryImages;
+      }
+
       await fetch(
         `${process.env.EXPO_PUBLIC_BASE_URL}/api/v1/projects/${projectId}`,
         {
@@ -256,6 +266,24 @@ export default function EditProject() {
   const handleCallPress = () => {
     if (project.project?.clientPhoneNumber) {
       Linking.openURL(`tel:${project.project.clientPhoneNumber}`);
+    }
+  };
+
+  const pickImages = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets) {
+      const uploadedUrls: string[] = [];
+      for (const asset of result.assets) {
+        const fileUri = asset.uri;
+        const fileName = fileUri.split("/").pop() || `image_${Date.now()}.jpg`;
+        const response = await uploadFile(fileUri, fileName);
+        uploadedUrls.push(response.publicUrl);
+      }
+      setClaimSummaryImages([...claimSummaryImages, ...uploadedUrls]);
     }
   };
 
@@ -387,6 +415,38 @@ export default function EditProject() {
               />
             </Box>
           </Box>
+
+          <FormControl.Label>Claim Summary Images</FormControl.Label>
+          <View
+            style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 8 }}
+          >
+            {claimSummaryImages.map((url, idx) => (
+              <Image
+                key={idx}
+                source={{ uri: url }}
+                style={{
+                  width: 60,
+                  height: 60,
+                  marginRight: 8,
+                  marginBottom: 8,
+                  borderRadius: 8,
+                }}
+              />
+            ))}
+            <TouchableOpacity
+              onPress={pickImages}
+              style={{
+                width: 60,
+                height: 60,
+                backgroundColor: "#eee",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 8,
+              }}
+            >
+              <Text style={{ fontSize: 32, color: "#888" }}>+</Text>
+            </TouchableOpacity>
+          </View>
 
           <FormButton onPress={updateProject} mt={2}>
             <HStack space={2} alignItems="center">

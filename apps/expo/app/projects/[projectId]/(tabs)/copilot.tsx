@@ -15,6 +15,8 @@ import {
   useGetRoom,
   useUpdateProject,
   useUpdateRoom,
+  useGetDocuments, // <-- add this
+  DocumentType, // <-- add this
 } from "@service-geek/api-client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -102,6 +104,9 @@ export default function CopilotScreen() {
   const { data: project } = useGetProjectById(projectId);
   const { data: rooms } = useGetRooms(projectId);
 
+  // Add: fetch project documents
+  const { data: documents } = useGetDocuments(projectId);
+
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [roomDropdownOpen, setRoomDropdownOpen] = useState(false);
 
@@ -130,6 +135,16 @@ export default function CopilotScreen() {
 
   // Compute projectTasks from real data
   const projectData = project?.data;
+  // Check if a Work Auth document exists
+  const hasWorkAuth = useMemo(
+    () =>
+      (documents || []).some(
+        (doc) =>
+          doc.type === DocumentType.AUTH ||
+          doc.name?.toLowerCase().includes("work auth")
+      ),
+    [documents]
+  );
   const computedProjectTasks = [
     {
       label: "Take Cover Photo",
@@ -152,8 +167,14 @@ export default function CopilotScreen() {
           params: { projectId, activeTab: "insurance" },
         }),
     },
-    // You can add more tasks here, keeping the old logic for now
-    ...WATER_PROJECT_TASKS.slice(2).map((label) => ({
+    {
+      label: "Sign Work Auth",
+      done: hasWorkAuth,
+      onPress: () =>
+        router.push({ pathname: "../documents", params: { projectId } }),
+    },
+    // The rest of the tasks
+    ...WATER_PROJECT_TASKS.slice(3).map((label) => ({
       label,
       done: false,
       onPress: () => {},

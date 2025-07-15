@@ -49,6 +49,7 @@ export interface Project {
   lng?: string;
   forecast?: string;
   claimSummary?: string;
+  claimSummaryImages?: string[];
   roofSegments?: string[];
   roofSpecs?: string;
   rcvValue?: string;
@@ -93,6 +94,7 @@ export interface CreateProjectDto {
   lng?: string;
   forecast?: string;
   claimSummary?: string;
+  claimSummaryImages?: string[];
   roofSegments?: string[];
   roofSpecs?: string;
   rcvValue?: string;

@@ -23,7 +23,13 @@ import { Card } from "@components/ui/card";
 import { Label } from "@components/ui/label";
 import { PhoneInput } from "@components/ui/phone-input";
 import { LoadingSpinner } from "@components/ui/spinner";
-import { useGetProjectById, useUpdateProject } from "@service-geek/api-client";
+import {
+  useGetProjectById,
+  useUpdateProject,
+  uploadFile,
+} from "@service-geek/api-client";
+import { useRef } from "react";
+import { X } from "lucide-react";
 
 const propertyOwnerData = z.object({
   clientName: z.string().optional(),
@@ -54,7 +60,10 @@ export default function ProjectOwnerInformation() {
       setLoading(true);
       await updateProject.mutateAsync({
         id: id as string,
-        data,
+        data: {
+          ...form.getValues(),
+          claimSummaryImages,
+        },
       });
 
       toast.success("Project updated successfully!");
@@ -82,6 +91,49 @@ export default function ProjectOwnerInformation() {
 
   const [newAddress, setAddress] = useState<AddressType | null>(null);
   const [searchInput, setSearchInput] = useState("");
+  const [claimSummaryImages, setClaimSummaryImages] = useState<string[]>(
+    project?.claimSummaryImages || []
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragActive, setDragActive] = useState(false);
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const uploadedUrls: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const response = await uploadFile(file, file.name);
+      uploadedUrls.push(response.publicUrl);
+    }
+    setClaimSummaryImages((prev) => [...prev, ...uploadedUrls]);
+  };
+
+  const handleRemoveImage = (idx: number) => {
+    setClaimSummaryImages((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragActive(true);
+  };
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragActive(false);
+  };
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragActive(false);
+    const files = e.dataTransfer.files;
+    if (!files) return;
+    const uploadedUrls: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const response = await uploadFile(file, file.name);
+      uploadedUrls.push(response.publicUrl);
+    }
+    setClaimSummaryImages((prev) => [...prev, ...uploadedUrls]);
+  };
 
   return (
     <div className='flex w-full space-x-4'>
@@ -210,6 +262,61 @@ export default function ProjectOwnerInformation() {
                     Your client's claim summary.
                   </FormDescription>
                   <FormMessage />
+                  {/* Elegant Claim Summary Images UI */}
+                  <div className='mt-4'>
+                    <label className='mb-1 block text-sm font-medium text-gray-700'>
+                      Claim Summary Images
+                    </label>
+                    <div
+                      className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 transition-colors duration-200 ${dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-gray-50"}`}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <input
+                        type='file'
+                        multiple
+                        accept='image/*'
+                        ref={fileInputRef}
+                        onChange={handleImageChange}
+                        className='hidden'
+                      />
+                      <span className='mb-2 text-sm text-gray-500'>
+                        Drag & drop images here, or{" "}
+                        <span className='text-blue-600 underline'>browse</span>
+                      </span>
+                      <div className='mt-2 flex w-full flex-wrap justify-center gap-4'>
+                        {claimSummaryImages.map((url, idx) => (
+                          <div key={idx} className='group relative'>
+                            <img
+                              src={url}
+                              alt='Claim Summary'
+                              className='h-24 w-24 rounded border border-gray-200 object-cover shadow transition-transform duration-200 group-hover:z-10 group-hover:scale-105'
+                              style={{
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                              }}
+                            />
+                            <button
+                              type='button'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveImage(idx);
+                              }}
+                              className='absolute right-1 top-1 z-20 rounded-full bg-white bg-opacity-80 p-1 shadow transition-colors hover:bg-red-100'
+                              aria-label='Remove image'
+                            >
+                              <X
+                                size={16}
+                                className='text-gray-600 hover:text-red-500'
+                              />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </FormItem>
               )}
             />

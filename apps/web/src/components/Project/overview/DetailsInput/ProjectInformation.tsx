@@ -24,7 +24,9 @@ import {
   useCurrentUser,
   useGetProjectById,
   useUpdateProject,
+  uploadFile,
 } from "@service-geek/api-client";
+import { useRef } from "react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Project Name is required"),
@@ -49,12 +51,32 @@ export default function ProjectInformation() {
     },
   });
 
+  const [claimSummaryImages, setClaimSummaryImages] = useState<string[]>(
+    project?.claimSummaryImages || []
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const uploadedUrls: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const response = await uploadFile(file, file.name);
+      uploadedUrls.push(response.publicUrl);
+    }
+    setClaimSummaryImages((prev) => [...prev, ...uploadedUrls]);
+  };
+
   const onSave = async (data: z.infer<typeof formSchema>) => {
     try {
       setLoading(true);
       await updateProject.mutateAsync({
         id: id as string,
-        data,
+        data: {
+          ...data,
+          claimSummaryImages,
+        },
       });
 
       toast.success("Project updated successfully!");
@@ -124,6 +146,29 @@ export default function ProjectInformation() {
               </FormItem>
             )}
           />
+          <div className='mt-6'>
+            <label className='block text-sm font-medium text-gray-700'>
+              Claim Summary Images
+            </label>
+            <input
+              type='file'
+              multiple
+              accept='image/*'
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              className='mt-1 block w-full'
+            />
+            <div className='mt-2 flex flex-wrap'>
+              {claimSummaryImages.map((url, idx) => (
+                <img
+                  key={idx}
+                  src={url}
+                  alt='Claim Summary'
+                  className='mb-2 mr-2 h-16 w-16 rounded object-cover'
+                />
+              ))}
+            </div>
+          </div>
           <div className='flex justify-end'>
             <Button type='submit' className='ml-auto'>
               {loading ? <LoadingSpinner /> : "Save"}

@@ -123,6 +123,12 @@ export class CreateProjectDto {
   @IsOptional()
   claimSummary?: string;
 
+  @ApiPropertyOptional({ type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  claimSummaryImages?: string[];
+
   @ApiPropertyOptional()
   @IsArray()
   @IsString({ each: true })

@@ -95,6 +95,9 @@ import {
   useUpdateProject,
   LossType,
 } from "@service-geek/api-client";
+import { uploadFile } from "@service-geek/api-client";
+import * as ImagePicker from "expo-image-picker";
+import { Image } from "react-native";
 
 type TabType = "customer" | "loss" | "insurance";
 
@@ -515,6 +518,9 @@ export default function ProjectDetails() {
   );
   const [claimSummary, setClaimSummary] = useState("");
   const [dateOfLoss, setDateOfLoss] = useState<DateType>(dayjs().toDate());
+  const [claimSummaryImages, setClaimSummaryImages] = useState<string[]>(
+    project?.data?.claimSummaryImages || []
+  );
 
   // Update form values when project data is loaded
   useEffect(() => {
@@ -560,6 +566,7 @@ export default function ProjectDetails() {
           ? dayjs(project.data.dateOfLoss).toDate()
           : dayjs().toDate()
       );
+      setClaimSummaryImages(project.data?.claimSummaryImages || []);
     }
   }, [project]);
 
@@ -583,6 +590,24 @@ export default function ProjectDetails() {
       return catCode as WaterDamageCategory;
     }
     return undefined;
+  };
+
+  const pickImages = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets) {
+      const uploadedUrls: string[] = [];
+      for (const asset of result.assets) {
+        const fileUri = asset.uri;
+        const fileName = fileUri.split("/").pop() || `image_${Date.now()}.jpg`;
+        const response = await uploadFile(fileUri, fileName);
+        uploadedUrls.push(response.publicUrl);
+      }
+      setClaimSummaryImages([...claimSummaryImages, ...uploadedUrls]);
+    }
   };
 
   const updateProject = async () => {
@@ -612,6 +637,7 @@ export default function ProjectDetails() {
         catCode,
         waterClass: waterClass || undefined,
         claimSummary,
+        claimSummaryImages,
       };
 
       await updateProjectMutation.mutateAsync({
@@ -826,6 +852,36 @@ export default function ProjectDetails() {
               <FileCheck size={20} color="#94a3b8" style={styles.inputIcon} />
             }
           />
+          <View
+            style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 8 }}
+          >
+            {claimSummaryImages.map((url, idx) => (
+              <Image
+                key={idx}
+                source={{ uri: url }}
+                style={{
+                  width: 60,
+                  height: 60,
+                  marginRight: 8,
+                  marginBottom: 8,
+                  borderRadius: 8,
+                }}
+              />
+            ))}
+            <TouchableOpacity
+              onPress={pickImages}
+              style={{
+                width: 60,
+                height: 60,
+                backgroundColor: "#eee",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 8,
+              }}
+            >
+              <Text style={{ fontSize: 32, color: "#888" }}>+</Text>
+            </TouchableOpacity>
+          </View>
         </View>
         <View style={styles.section}>
           <HStack space={2} alignItems="center" mb={4}>
