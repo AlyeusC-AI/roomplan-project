@@ -52,6 +52,7 @@ export interface Room {
   floorRoomId?: string;
   wallsRoomId?: string;
   ceilingRoomId?: string;
+  copilotProgress?: any;
 }
 
 export interface Image {
@@ -107,6 +108,7 @@ export interface UpdateRoomDto {
   cubiTicketId?: string;
   cubiModelId?: string;
   cubiRoomPlan?: string;
+  copilotProgress?: any;
 }
 
 export interface UpdateAreaAffectedDto {

@@ -6,10 +6,9 @@ import { X, ChevronRight, ChevronDown, ChevronUp } from "lucide-react-native";
 import {
   useGetProjectById,
   useGetRooms,
-  useGetProjectCopilotProgress,
-  useUpdateProjectCopilotProgress,
-  useGetRoomCopilotProgress,
-  useUpdateRoomCopilotProgress,
+  useGetRoom,
+  useUpdateProject,
+  useUpdateRoom,
 } from "@service-geek/api-client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -100,6 +99,9 @@ export default function CopilotScreen() {
     [rooms, selectedRoomId]
   );
 
+  // Get current room data with copilot progress
+  const { data: roomData } = useGetRoom(currentRoom?.id || "");
+
   // If no room selected, default to first
   useEffect(() => {
     if (!selectedRoomId && rooms && rooms.length > 0) {
@@ -107,14 +109,9 @@ export default function CopilotScreen() {
     }
   }, [rooms, selectedRoomId]);
 
-  // Copilot progress hooks
-  const { data: projectCopilot, isLoading: loadingProjectCopilot } =
-    useGetProjectCopilotProgress(projectId);
-  const updateProjectCopilot = useUpdateProjectCopilotProgress();
-
-  const { data: roomCopilot, isLoading: loadingRoomCopilot } =
-    useGetRoomCopilotProgress(currentRoom?.id || "");
-  const updateRoomCopilot = useUpdateRoomCopilotProgress();
+  // Update hooks for project and room
+  const updateProject = useUpdateProject();
+  const updateRoom = useUpdateRoom();
 
   // Checklist state
   const [projectTasks, setProjectTasks] = useState(
@@ -126,22 +123,24 @@ export default function CopilotScreen() {
 
   // Sync checklist state with backend data
   useEffect(() => {
-    if (roomCopilot?.copilotProgress) {
-      setRoomTasks(roomCopilot.copilotProgress);
+    if (roomData?.copilotProgress) {
+      setRoomTasks(roomData.copilotProgress);
     } else {
       setRoomTasks(WATER_ROOM_TASKS.map((label) => ({ label, done: false })));
     }
-  }, [roomCopilot]);
+  }, [roomData]);
 
   useEffect(() => {
-    if (projectCopilot?.copilotProgress) {
-      setProjectTasks(projectCopilot.copilotProgress);
+    // Handle different possible project data structures
+    const projectData = project?.data;
+    if (projectData && projectData.copilotProgress) {
+      setProjectTasks(projectData.copilotProgress);
     } else {
       setProjectTasks(
         WATER_PROJECT_TASKS.map((label) => ({ label, done: false }))
       );
     }
-  }, [projectCopilot]);
+  }, [project]);
 
   const [checklistOpen, setChecklistOpen] = useState(true);
   const [noteInput, setNoteInput] = useState("");
@@ -149,16 +148,16 @@ export default function CopilotScreen() {
 
   // Handlers
   const handleTaskToggle = useCallback(
-    (idx: number, isRoom: boolean) => {
+    async (idx: number, isRoom: boolean) => {
       if (isRoom) {
         const updated = roomTasks.map((t, i) =>
           i === idx ? { ...t, done: !t.done } : t
         );
         setRoomTasks(updated);
         if (currentRoom) {
-          updateRoomCopilot.mutate({
-            roomId: currentRoom.id,
-            copilotProgress: updated,
+          await updateRoom.mutateAsync({
+            id: currentRoom.id,
+            data: { copilotProgress: updated },
           });
         }
       } else {
@@ -166,17 +165,13 @@ export default function CopilotScreen() {
           i === idx ? { ...t, done: !t.done } : t
         );
         setProjectTasks(updated);
-        updateProjectCopilot.mutate({ projectId, copilotProgress: updated });
+        await updateProject.mutateAsync({
+          id: projectId,
+          data: { copilotProgress: updated },
+        });
       }
     },
-    [
-      roomTasks,
-      projectTasks,
-      currentRoom,
-      projectId,
-      updateRoomCopilot,
-      updateProjectCopilot,
-    ]
+    [roomTasks, projectTasks, currentRoom, projectId, updateRoom, updateProject]
   );
 
   const handleNextRoom = () => {
@@ -189,7 +184,7 @@ export default function CopilotScreen() {
   };
 
   // UI
-  const loading = currentRoom ? loadingRoomCopilot : loadingProjectCopilot;
+  const loading = currentRoom ? !roomData : !project;
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#f3f4f6" }}>
       {/* Header */}

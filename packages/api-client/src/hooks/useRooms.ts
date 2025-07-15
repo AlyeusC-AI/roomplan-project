@@ -273,29 +273,3 @@ export function useGetAreaAffected(roomId: string) {
     enabled: !!roomId,
   });
 }
-
-export function useGetRoomCopilotProgress(roomId: string) {
-  return useQuery({
-    queryKey: ["roomCopilotProgress", roomId],
-    queryFn: () => roomsService.getCopilotProgress(roomId),
-    enabled: !!roomId,
-  });
-}
-
-export function useUpdateRoomCopilotProgress() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      roomId,
-      copilotProgress,
-    }: {
-      roomId: string;
-      copilotProgress: any;
-    }) => roomsService.updateCopilotProgress(roomId, copilotProgress),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["roomCopilotProgress", variables.roomId],
-      });
-    },
-  });
-}

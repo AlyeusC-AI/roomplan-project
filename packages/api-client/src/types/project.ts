@@ -65,6 +65,7 @@ export interface Project {
     images: number;
     documents: number;
   };
+  copilotProgress?: any;
 }
 
 export interface CreateProjectDto {
@@ -100,9 +101,12 @@ export interface CreateProjectDto {
   mainImage?: string;
   policyNumber?: string;
   dateOfLoss?: Date;
+  copilotProgress?: any;
 }
 
-export type UpdateProjectDto = Partial<CreateProjectDto>;
+export type UpdateProjectDto = Partial<CreateProjectDto> & {
+  copilotProgress?: any;
+};
 
 export interface FilterProjectsParams {
   page?: number;

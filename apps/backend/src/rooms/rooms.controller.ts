@@ -21,7 +21,6 @@ import {
 import { RequestWithUser } from 'src/auth/interfaces/request-with-user';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { UpdateCopilotProgressDto } from '../projects/dto/update-copilot-progress.dto';
 
 @ApiTags('rooms')
 @ApiBearerAuth()
@@ -76,6 +75,7 @@ export class RoomsController {
       cubiTicketId?: string;
       cubiModelId?: string;
       cubiRoomPlan?: string;
+      copilotProgress?: any;
     },
   ): Promise<
     Prisma.RoomGetPayload<{
@@ -339,18 +339,5 @@ export class RoomsController {
   @Get(':id/area-affected')
   async getAreaAffected(@Param('id') roomId: string) {
     return this.roomsService.getAreaAffected(roomId);
-  }
-
-  @Get(':id/copilot-progress')
-  async getCopilotProgress(@Param('id') id: string) {
-    return this.roomsService.getCopilotProgress(id);
-  }
-
-  @Patch(':id/copilot-progress')
-  async updateCopilotProgress(
-    @Param('id') id: string,
-    @Body() dto: UpdateCopilotProgressDto,
-  ) {
-    return this.roomsService.updateCopilotProgress(id, dto);
   }
 }
