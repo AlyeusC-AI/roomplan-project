@@ -225,29 +225,3 @@ export function useSendLidarEmail() {
     },
   });
 }
-
-export function useGetProjectCopilotProgress(projectId: string) {
-  return useQuery({
-    queryKey: ["projectCopilotProgress", projectId],
-    queryFn: () => projectService.getCopilotProgress(projectId),
-    enabled: !!projectId,
-  });
-}
-
-export function useUpdateProjectCopilotProgress() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      projectId,
-      copilotProgress,
-    }: {
-      projectId: string;
-      copilotProgress: any;
-    }) => projectService.updateCopilotProgress(projectId, copilotProgress),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["projectCopilotProgress", variables.projectId],
-      });
-    },
-  });
-}

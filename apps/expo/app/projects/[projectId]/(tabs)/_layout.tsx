@@ -45,7 +45,7 @@ export default function Layout() {
           backgroundColor: "#2563eb",
         },
         header: ({ navigation, route, options }) =>
-          route.name === "chat" ? (
+          route.name === "chat" || route.name === "copilot" ? (
             <SafeAreaView style={{ backgroundColor: "#2563eb" }}>
               <StatusBar barStyle="light-content" backgroundColor="#2563eb" />
             </SafeAreaView>
@@ -195,6 +195,13 @@ export default function Layout() {
         name="filtered-images"
         options={{
           title: "Filtered Images",
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="copilot"
+        options={{
+          title: "Copilot",
           href: null,
         }}
       />
