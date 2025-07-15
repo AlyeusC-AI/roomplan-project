@@ -16,16 +16,13 @@ import {
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { makeSVG } from "@/lib/utils/generate2DPlan";
-import { userStore } from "@/lib/state/user";
 import { useLocalSearchParams } from "expo-router";
 import { roomsStore } from "@/lib/state/rooms";
 import { roomInferenceStore } from "@/lib/state/readings-image";
-import { getConstants } from "@/utils/constants";
-import { useCreateRoom } from "@service-geek/api-client";
+import { useCreateRoom, useUpdateRoom } from "@service-geek/api-client";
 
 import { RoomPlanImage } from "./LidarRooms";
 import { cn } from "@/lib/utils";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LidarRoomTypeSelect } from "./LidarRoomTypeSelect";
 
 const { RoomScanModule } = NativeModules;
@@ -81,7 +78,7 @@ const LidarScan = ({
   const [isSupported, setIsSupported] = useState<boolean | null>(null);
   const [newRoomName, setNewRoomName] = useState<string>("");
   const [imgkitLoading, setImgkitLoading] = useState<boolean>(false);
-  const { session: supabaseSession } = userStore((state) => state);
+  const { mutate: updateRoomMutation } = useUpdateRoom();
   const { projectId } = useLocalSearchParams<{ projectId: string }>();
   const deviceWidth = Dimensions.get("window").width;
   const svgSize = deviceWidth * 0.95;
@@ -153,6 +150,7 @@ const LidarScan = ({
 
   const handleScanComplete = async () => {
     try {
+      if (!processedRoomId.current) { return; }
       const result = await new Promise<{
         destinationURL: string;
         capturedRoomURL: string;
@@ -190,27 +188,24 @@ const LidarScan = ({
         name: jsonFileName,
       });
 
-      // await supabaseServiceRole.storage
+      // await supabase.storage
       //   .from("roomplan-usdz")
       //   .upload(fileName, formData, {
       //     cacheControl: "3600",
       //     upsert: true,
       //   });
 
-      // await supabaseServiceRole.storage
+      // await supabase.storage
       //   .from("roomplan-usdz")
       //   .upload(jsonFileName, jsonFormData, {
       //     cacheControl: "3600",
       //     upsert: true,
       //   });
 
-      // await supabaseServiceRole
-      //   .from("Room")
-      //   .update({
-      //     roomPlanSVG: roomPlanSvg,
-      //     scannedFileKey: fileName,
-      //   })
-      //   .eq("id", processedRoomId.current);
+      updateRoomMutation({ id: processedRoomId.current, data: {
+        roomPlanSVG: roomPlanSvg,
+        scannedFileKey: fileName,
+      } });
 
       processedRoomPlanSVG.current = roomPlanSvg;
 
