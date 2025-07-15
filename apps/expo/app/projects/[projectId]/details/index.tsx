@@ -11,6 +11,8 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Pressable,
+  ActionSheetIOS,
+  Alert,
 } from "react-native";
 import { FormInput } from "@/components/ui/form";
 import { Box, VStack, HStack, Button, Spinner, FormControl } from "native-base";
@@ -80,6 +82,7 @@ import {
   router,
   useGlobalSearchParams,
   useLocalSearchParams,
+  useFocusEffect,
 } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -98,6 +101,8 @@ import {
 import { uploadFile } from "@service-geek/api-client";
 import * as ImagePicker from "expo-image-picker";
 import { Image } from "react-native";
+import { useCameraStore } from "@/lib/state/camera";
+import { uploadImage } from "@/lib/imagekit";
 
 type TabType = "customer" | "loss" | "insurance";
 
@@ -522,6 +527,22 @@ export default function ProjectDetails() {
     project?.data?.claimSummaryImages || []
   );
 
+  const { images: cameraImages, clearImages } = useCameraStore();
+
+  // Sync images from camera store when returning from camera
+  useFocusEffect(
+    React.useCallback(() => {
+      if (cameraImages && cameraImages.length > 0) {
+        // Only add images with a url
+        const newUrls = cameraImages.map((img) => img.url).filter(Boolean);
+        if (newUrls.length > 0) {
+          setClaimSummaryImages((prev) => [...prev, ...newUrls]);
+        }
+        clearImages();
+      }
+    }, [cameraImages, clearImages])
+  );
+
   // Update form values when project data is loaded
   useEffect(() => {
     if (project) {
@@ -570,6 +591,25 @@ export default function ProjectDetails() {
     }
   }, [project]);
 
+  // Auto-save claim summary images when they change
+  useEffect(() => {
+    if (!projectId) return;
+    if (!project) return;
+    // Only save if the images have changed from the project data
+    if (
+      JSON.stringify(claimSummaryImages) !==
+      JSON.stringify(project.data?.claimSummaryImages || [])
+    ) {
+      updateProjectMutation.mutate({
+        id: projectId,
+        data: {
+          claimSummaryImages,
+        },
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [claimSummaryImages]);
+
   const handleCallPress = (phoneNumber: string) => {
     if (phoneNumber) {
       Linking.openURL(`tel:${phoneNumber}`);
@@ -601,13 +641,58 @@ export default function ProjectDetails() {
     if (!result.canceled && result.assets) {
       const uploadedUrls: string[] = [];
       for (const asset of result.assets) {
-        const fileUri = asset.uri;
-        const fileName = fileUri.split("/").pop() || `image_${Date.now()}.jpg`;
-        const response = await uploadFile(fileUri, fileName);
-        uploadedUrls.push(response.publicUrl);
+        // Use uploadImage utility
+        const response = await uploadImage(asset, {
+          folder: `projects/${projectId}/claim-summary`,
+          useUniqueFileName: true,
+          tags: [`project-${projectId}`, "claim-summary"],
+        });
+        uploadedUrls.push(response.url);
       }
       setClaimSummaryImages([...claimSummaryImages, ...uploadedUrls]);
     }
+  };
+
+  // Action sheet/modal for picking or taking images
+  const handleAddClaimSummaryImage = () => {
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ["Take Photo(s)", "Pick from Gallery", "Cancel"],
+          cancelButtonIndex: 2,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 0) {
+            // Take Photo(s)
+            router.push({
+              pathname: `/projects/${projectId}/camera`,
+              params: { mode: "claimSummary" },
+            });
+          } else if (buttonIndex === 1) {
+            // Pick from Gallery
+            pickImages();
+          }
+        }
+      );
+    } else {
+      // For Android or others, use a simple modal or prompt
+      // For simplicity, just call pickImages for now, or implement a custom modal
+      pickImages();
+    }
+  };
+
+  // Remove image with confirmation
+  const handleRemoveClaimSummaryImage = (idx: number) => {
+    Alert.alert("Remove Image", "Are you sure you want to remove this image?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: () => {
+          setClaimSummaryImages((prev) => prev.filter((_, i) => i !== idx));
+        },
+      },
+    ]);
   };
 
   const updateProject = async () => {
@@ -856,20 +941,50 @@ export default function ProjectDetails() {
             style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 8 }}
           >
             {claimSummaryImages.map((url, idx) => (
-              <Image
+              <View
                 key={idx}
-                source={{ uri: url }}
                 style={{
+                  position: "relative",
                   width: 60,
                   height: 60,
                   marginRight: 8,
                   marginBottom: 8,
-                  borderRadius: 8,
                 }}
-              />
+              >
+                <Image
+                  source={{ uri: url }}
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: 8,
+                  }}
+                />
+                <TouchableOpacity
+                  onPress={() => handleRemoveClaimSummaryImage(idx)}
+                  style={{
+                    position: "absolute",
+                    top: -8,
+                    right: -8,
+                    backgroundColor: "#fff",
+                    borderRadius: 12,
+                    width: 24,
+                    height: 24,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 2,
+                    elevation: 2,
+                  }}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <X size={16} color="#ef4444" />
+                </TouchableOpacity>
+              </View>
             ))}
             <TouchableOpacity
-              onPress={pickImages}
+              onPress={handleAddClaimSummaryImage}
               style={{
                 width: 60,
                 height: 60,

@@ -96,6 +96,25 @@ export default function ProjectOwnerInformation() {
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const autoSaveImages = async (images: string[]) => {
+    setSaving(true);
+    try {
+      await updateProject.mutateAsync({
+        id: id as string,
+        data: {
+          ...form.getValues(),
+          claimSummaryImages: images,
+        },
+      });
+      toast.success("Claim Summary Images updated!");
+    } catch (error) {
+      toast.error("Failed to update images.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -106,11 +125,19 @@ export default function ProjectOwnerInformation() {
       const response = await uploadFile(file, file.name);
       uploadedUrls.push(response.publicUrl);
     }
-    setClaimSummaryImages((prev) => [...prev, ...uploadedUrls]);
+    const newImages = [...claimSummaryImages, ...uploadedUrls];
+    setClaimSummaryImages(newImages);
+    await autoSaveImages(newImages);
   };
 
-  const handleRemoveImage = (idx: number) => {
-    setClaimSummaryImages((prev) => prev.filter((_, i) => i !== idx));
+  const handleRemoveImage = async (idx: number) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to remove this image?"
+    );
+    if (!confirmed) return;
+    const newImages = claimSummaryImages.filter((_, i) => i !== idx);
+    setClaimSummaryImages(newImages);
+    await autoSaveImages(newImages);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -132,7 +159,9 @@ export default function ProjectOwnerInformation() {
       const response = await uploadFile(file, file.name);
       uploadedUrls.push(response.publicUrl);
     }
-    setClaimSummaryImages((prev) => [...prev, ...uploadedUrls]);
+    const newImages = [...claimSummaryImages, ...uploadedUrls];
+    setClaimSummaryImages(newImages);
+    await autoSaveImages(newImages);
   };
 
   return (
@@ -306,6 +335,7 @@ export default function ProjectOwnerInformation() {
                               }}
                               className='absolute right-1 top-1 z-20 rounded-full bg-white bg-opacity-80 p-1 shadow transition-colors hover:bg-red-100'
                               aria-label='Remove image'
+                              disabled={saving}
                             >
                               <X
                                 size={16}
@@ -315,6 +345,11 @@ export default function ProjectOwnerInformation() {
                           </div>
                         ))}
                       </div>
+                      {saving && (
+                        <span className='mt-2 text-xs text-blue-500'>
+                          Saving...
+                        </span>
+                      )}
                     </div>
                   </div>
                 </FormItem>
