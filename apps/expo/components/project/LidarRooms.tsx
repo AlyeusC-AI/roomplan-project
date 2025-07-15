@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,9 +8,7 @@ import {
   Image,
   Alert,
 } from "react-native";
-import { userStore } from "@/lib/state/user";
 import { Button } from "@/components/ui/button";
-import { roomsStore } from "@/lib/state/rooms";
 import { useGlobalSearchParams, usePathname, useRouter } from "expo-router";
 import { WebView } from "react-native-webview";
 import { Ionicons } from "@expo/vector-icons";
