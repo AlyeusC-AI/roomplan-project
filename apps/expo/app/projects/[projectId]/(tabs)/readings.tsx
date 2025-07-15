@@ -7,9 +7,9 @@ import {
   Center,
   Pressable,
 } from "native-base";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import RoomReading from "@/components/project/reading";
-import { useGlobalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useGlobalSearchParams, useRouter } from "expo-router";
 import Empty from "@/components/project/empty";
 import {
   Building,
@@ -58,15 +58,24 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
   }>();
   const { mutate: createRoomReading, isPending: isCreatingRoomReading } =
     useOfflineCreateRoomReading(projectId);
-  const { data: roomReadings, isPending: isLoadingRoomReadings } =
-    useGetRoomReadings(room.id);
+  const {
+    data: roomReadings,
+    isPending: isLoadingRoomReadings,
+    refetch: refetchRoomReadings,
+  } = useGetRoomReadings(room.id);
   const { isOffline } = useNetworkStatus();
   const { offlineReadings, offlineEdits, hasOfflineData } = useOfflineReadings(
     room.id
   );
 
   console.log("🚀 ~ RoomReadingItem ~ roomReadings:", roomReadings?.data);
-
+  console.log("🚀 ~ RoomReadingItem ~ offlineReadings:", offlineReadings);
+  console.log("🚀 ~ RoomReadingItem ~ hasOfflineData:", hasOfflineData);
+  useFocusEffect(
+    useCallback(() => {
+      !isOffline && refetchRoomReadings();
+    }, [])
+  );
   const router = useRouter();
   const addReading = async () => {
     try {
@@ -100,26 +109,6 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
         >
           <HStack alignItems="center" space={2}>
             <Heading size="md">{room.name}</Heading>
-            {hasOfflineData && (
-              <View
-                style={{
-                  backgroundColor: "#fef3c7",
-                  paddingHorizontal: 8,
-                  paddingVertical: 2,
-                  borderRadius: 8,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 10,
-                    color: "#d97706",
-                    fontWeight: "600",
-                  }}
-                >
-                  {offlineReadings.length + offlineEdits.length} Pending
-                </Text>
-              </View>
-            )}
           </HStack>
         </TouchableOpacity>
         <Button
@@ -144,7 +133,7 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
           <Center w="full" py={4}>
             <ActivityIndicator />
           </Center>
-        ) : roomReadings?.data?.length === 0 ? (
+        ) : roomReadings?.data?.length === 0 && offlineReadings.length === 0 ? (
           <Center w="full" py={4}>
             <Heading size="sm" color="gray.400">
               No readings yet
@@ -152,15 +141,39 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
           </Center>
         ) : (
           <>
-            {/* Show all readings (online and offline) */}
+            {/* Show online readings */}
             {roomReadings?.data?.map((reading: RoomReadingType) => (
               <RoomReading
                 room={room}
                 key={reading.id}
                 reading={reading}
                 projectId={projectId}
+                isOffline={false}
               />
             ))}
+
+            {/* Show offline new readings */}
+            {offlineReadings
+              .filter((reading) => reading.type === "new")
+              .map((reading) => (
+                <RoomReading
+                  room={room}
+                  key={reading.id}
+                  reading={{
+                    id: reading.id,
+                    roomId: reading.roomId,
+                    date: reading.date,
+                    temperature: reading.temperature,
+                    humidity: reading.humidity,
+                    wallReadings: [],
+                    genericRoomReading: [],
+                    createdAt: reading.createdAt,
+                    updatedAt: reading.createdAt,
+                  }}
+                  projectId={projectId}
+                  isOffline={true}
+                />
+              ))}
           </>
         )}
       </VStack>

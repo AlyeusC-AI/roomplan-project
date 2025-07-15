@@ -75,6 +75,7 @@ export class RoomsController {
       cubiTicketId?: string;
       cubiModelId?: string;
       cubiRoomPlan?: string;
+      copilotProgress?: any;
     },
   ): Promise<
     Prisma.RoomGetPayload<{

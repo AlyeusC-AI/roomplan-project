@@ -2,6 +2,7 @@ import { Image } from "./room";
 
 export interface Note {
   id: string;
+  title?: string;
   body: string;
   roomId: string;
   createdAt: Date;
@@ -10,10 +11,12 @@ export interface Note {
 }
 
 export interface CreateNoteDto {
+  title?: string;
   body: string;
   roomId: string;
 }
 
 export interface UpdateNoteDto {
+  title?: string;
   body?: string;
 }

@@ -16,8 +16,11 @@ import {
 
 export default function Login() {
   const [form, setForm] = useState({
-    email: "thermalhunting1@gmail.com",
-    password: "12345678",
+    // email: "thermalhunting1@gmail.com",
+    // password: "12345678",
+
+    email: "",
+    password: "",
   });
   const { data: user, isLoading: isLoadingUser } = useCurrentUser();
   console.log("🚀 ~ Login ~ user:", user);

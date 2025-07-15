@@ -123,9 +123,10 @@ export default function Settings() {
               />
 
               <View style={styles.profileBody}>
-                <Text
-                  style={styles.profileName}
-                >{`${user?.firstName} ${user?.lastName}`}</Text>
+                <Text style={styles.profileName}>
+                  {`${user?.firstName || ""} ${user?.lastName || ""}`}{" "}
+                  {!user?.firstName && !user?.lastName && user?.email}
+                </Text>
 
                 <Text style={styles.profileHandle}>{user?.email}</Text>
               </View>

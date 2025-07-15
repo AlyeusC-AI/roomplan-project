@@ -338,22 +338,15 @@ export class ProjectsService {
 
   async update(
     id: string,
-    updateProjectDto: UpdateProjectDto,
+    updateProjectDto: UpdateProjectDto & { copilotProgress?: any },
     userId: string,
   ): Promise<Project> {
+    // Check if project exists and user has access
     const project = await this.findOne(id, userId);
 
     return this.prisma.project.update({
       where: { id },
-      data: {
-        ...updateProjectDto,
-        dateOfLoss: updateProjectDto.dateOfLoss
-          ? new Date(updateProjectDto.dateOfLoss)
-          : undefined,
-      },
-      include: {
-        status: true,
-      },
+      data: updateProjectDto,
     });
   }
 

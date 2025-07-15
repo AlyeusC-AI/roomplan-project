@@ -66,6 +66,7 @@ interface FilteredImagesGalleryProps {
   }) => void;
   showFilters?: boolean;
   onToggleFilters?: () => void;
+  hideRoomFilter?: boolean;
 }
 
 // Group images by room
@@ -272,6 +273,7 @@ export default function FilteredImagesGallery({
   onFilterChange,
   showFilters = false,
   onToggleFilters,
+  hideRoomFilter = false,
 }: FilteredImagesGalleryProps) {
   const [selectedKeys, setSelectedKeys] =
     useState<string[]>(initialSelectedKeys);
@@ -288,7 +290,7 @@ export default function FilteredImagesGallery({
     activeFilters?.tagFilters || []
   );
   const [activeFilterTab, setActiveFilterTab] = useState<"room" | "tags">(
-    "room"
+    hideRoomFilter ? "tags" : "room"
   );
 
   useEffect(() => {
@@ -554,7 +556,7 @@ export default function FilteredImagesGallery({
   );
 
   const hasActiveFilters =
-    selectedRoomFilter !== "all" ||
+    (!hideRoomFilter && selectedRoomFilter !== "all") ||
     selectedTagFilters.length > 0 ||
     searchQuery.trim();
 
@@ -591,22 +593,25 @@ export default function FilteredImagesGallery({
 
               {/* Filter Tabs */}
               <View style={styles.filterTabs}>
-                <TouchableOpacity
-                  style={[
-                    styles.filterTab,
-                    activeFilterTab === "room" && styles.filterTabActive,
-                  ]}
-                  onPress={() => setActiveFilterTab("room")}
-                >
-                  <Text
+                {!hideRoomFilter && (
+                  <TouchableOpacity
                     style={[
-                      styles.filterTabText,
-                      activeFilterTab === "room" && styles.filterTabTextActive,
+                      styles.filterTab,
+                      activeFilterTab === "room" && styles.filterTabActive,
                     ]}
+                    onPress={() => setActiveFilterTab("room")}
                   >
-                    Rooms
-                  </Text>
-                </TouchableOpacity>
+                    <Text
+                      style={[
+                        styles.filterTabText,
+                        activeFilterTab === "room" &&
+                          styles.filterTabTextActive,
+                      ]}
+                    >
+                      Rooms
+                    </Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity
                   style={[
                     styles.filterTab,
@@ -634,7 +639,7 @@ export default function FilteredImagesGallery({
                 <View style={styles.activeFiltersContainer}>
                   <Text style={styles.activeFiltersLabel}>Active Filters:</Text>
                   <View style={styles.activeFiltersList}>
-                    {selectedRoomFilter !== "all" && (
+                    {!hideRoomFilter && selectedRoomFilter !== "all" && (
                       <View style={styles.activeFilterChip}>
                         <Text style={styles.activeFilterText}>
                           Room:{" "}
@@ -668,7 +673,7 @@ export default function FilteredImagesGallery({
               )}
 
               {/* Filter Content */}
-              {activeFilterTab === "room"
+              {!hideRoomFilter && activeFilterTab === "room"
                 ? renderRoomFilter()
                 : renderTagFilter()}
             </>
@@ -692,13 +697,15 @@ export default function FilteredImagesGallery({
 
           return (
             <View key={roomId} style={styles.roomSection}>
-              <FloatingRoomHeader
-                roomName={roomName}
-                imageCount={groupImages.length}
-                isSelected={isGroupSelected}
-                onToggleSelect={() => toggleRoomGroupSelection(groupImages)}
-                selectable={selectable}
-              />
+              {!hideRoomFilter && (
+                <FloatingRoomHeader
+                  roomName={roomName}
+                  imageCount={groupImages.length}
+                  isSelected={isGroupSelected}
+                  onToggleSelect={() => toggleRoomGroupSelection(groupImages)}
+                  selectable={selectable}
+                />
+              )}
 
               <View style={styles.imageGrid}>
                 {groupImages.map((image, index) => (

@@ -19,7 +19,6 @@ import { makeSVG } from "@/lib/utils/generate2DPlan";
 import { useLocalSearchParams } from "expo-router";
 import { roomsStore } from "@/lib/state/rooms";
 import { roomInferenceStore } from "@/lib/state/readings-image";
-import { supabase } from '@/lib/supabase';
 import { useCreateRoom, useUpdateRoom } from "@service-geek/api-client";
 
 import { RoomPlanImage } from "./LidarRooms";
@@ -189,19 +188,19 @@ const LidarScan = ({
         name: jsonFileName,
       });
 
-      await supabase.storage
-        .from("roomplan-usdz")
-        .upload(fileName, formData, {
-          cacheControl: "3600",
-          upsert: true,
-        });
+      // await supabase.storage
+      //   .from("roomplan-usdz")
+      //   .upload(fileName, formData, {
+      //     cacheControl: "3600",
+      //     upsert: true,
+      //   });
 
-      await supabase.storage
-        .from("roomplan-usdz")
-        .upload(jsonFileName, jsonFormData, {
-          cacheControl: "3600",
-          upsert: true,
-        });
+      // await supabase.storage
+      //   .from("roomplan-usdz")
+      //   .upload(jsonFileName, jsonFormData, {
+      //     cacheControl: "3600",
+      //     upsert: true,
+      //   });
 
       updateRoomMutation({ id: processedRoomId.current, data: {
         roomPlanSVG: roomPlanSvg,

@@ -71,7 +71,7 @@ export default function ProjectConversationCard({
   if (loading) {
     return (
       <div className='flex flex-col'>
-        <div className='flex flex-row items-center justify-between p-4 pb-2'>
+        {/* <div className='flex flex-row items-center justify-between p-4 pb-2'>
           <div className='flex items-center gap-2 text-base font-semibold'>
             <div className='rounded-lg bg-blue-50 p-1.5'>
               <MessageCircle className='h-5 w-5 text-blue-600' />
@@ -80,7 +80,7 @@ export default function ProjectConversationCard({
               <div className='font-semibold'>Project Conversation</div>
             </div>
           </div>
-        </div>
+        </div> */}
         <div className='p-4 pt-3 bg-gray-100'>
           <div className='py-8 text-center'>
             <Loader2 className='mx-auto mb-2 h-6 w-6 animate-spin text-gray-400' />
@@ -94,7 +94,7 @@ export default function ProjectConversationCard({
   if (error || !chatId) {
     return (
       <div className='flex flex-col'>
-        <div className='flex flex-row items-center justify-between p-4 pb-2'>
+        {/* <div className='flex flex-row items-center justify-between p-4 pb-2'>
           <div className='flex items-center gap-2 text-base font-semibold'>
             <div className='rounded-lg bg-blue-50 p-1.5'>
               <MessageCircle className='h-5 w-5 text-blue-600' />
@@ -103,7 +103,7 @@ export default function ProjectConversationCard({
               <div className='font-semibold'>Project Conversation</div>
             </div>
           </div>
-        </div>
+        </div> */}
         <div className='p-4 pt-3 bg-gray-100'>
           <div className='py-8 text-center'>
             <div className='rounded-lg border-2 border-dashed border-red-200 bg-red-50 p-4'>
@@ -230,7 +230,7 @@ function ChatInterface({ chatId, currentUser, projectId }: ChatInterfaceProps) {
   return (
     <>
       <div className='flex flex-col'>
-        <div className='flex flex-row items-center justify-between p-4 pb-2'>
+        {/* <div className='flex flex-row items-center justify-between p-4 pb-2'>
           <div className='flex items-center gap-2 text-base font-semibold'>
             <div className='rounded-lg bg-blue-50 p-1.5'>
               <MessageCircle className='h-5 w-5 text-blue-600' />
@@ -245,7 +245,7 @@ function ChatInterface({ chatId, currentUser, projectId }: ChatInterfaceProps) {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className='p-4 pt-3 bg-gray-100'>
           {error && (

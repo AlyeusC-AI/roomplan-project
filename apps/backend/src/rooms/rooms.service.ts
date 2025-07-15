@@ -172,6 +172,7 @@ export class RoomsService {
       cubiTicketId?: string;
       cubiModelId?: string;
       cubiRoomPlan?: string;
+      copilotProgress?: any;
     },
   ): Promise<
     Prisma.RoomGetPayload<{
@@ -181,66 +182,50 @@ export class RoomsService {
       };
     }>
   > {
-    const room = await this.prisma.room.findUniqueOrThrow({
+    const room = await this.prisma.room.findUnique({
       where: { id },
-      select: {
-        projectId: true,
-      },
-    });
-
-    // Calculate totalSqft if length and width are provided
-    let totalSqft = data.totalSqft;
-    if (data.length && data.width) {
-      totalSqft = data.length * data.width;
-    }
-    console.log('🚀 ~ RoomsService ~ data.equipmentUsed:', data.equipmentUsed);
-
-    return this.prisma.room.update({
-      where: { id },
-      data: {
-        name: data.name,
-        length: data.length,
-        width: data.width,
-        height: data.height,
-        totalSqft,
-        windows: data.windows,
-        doors: data.doors,
-        humidity: data.humidity,
-        dehuReading: data.dehuReading,
-        temperature: data.temperature,
-        roomPlanSVG: data.roomPlanSVG,
-        scannedFileKey: data.scannedFileKey,
-        cubiTicketId: data.cubiTicketId,
-        cubiModelId: data.cubiModelId,
-        cubiRoomPlan: data.cubiRoomPlan,
-        equipmentsUsed: data.equipmentUsed
-          ? {
-              deleteMany: {},
-              create: data.equipmentUsed.map((e) => ({
-                equipment: {
-                  connect: {
-                    id: e.id,
-                  },
-                },
-                project: {
-                  connect: {
-                    id: room.projectId,
-                  },
-                },
-                quantity: e.quantity,
-              })),
-            }
-          : undefined,
-      },
       include: {
         equipmentsUsed: true,
-        images: {
-          include: {
-            comments: true,
-          },
-        },
       },
     });
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    // Handle equipment updates
+    if (data.equipmentUsed) {
+      // Remove existing equipment associations
+      await this.prisma.equipmentProject.deleteMany({
+        where: { roomId: id },
+      });
+
+      // Add new equipment associations
+      if (data.equipmentUsed.length > 0) {
+        await this.prisma.equipmentProject.createMany({
+          data: data.equipmentUsed.map((equipment) => ({
+            equipmentId: equipment.id,
+            projectId: room.projectId,
+            roomId: id,
+            quantity: equipment.quantity,
+          })),
+        });
+      }
+    }
+
+    // Remove equipmentUsed from data to avoid Prisma errors
+    const { equipmentUsed, ...updateData } = data;
+
+    const updatedRoom = await this.prisma.room.update({
+      where: { id },
+      data: updateData,
+      include: {
+        images: { include: { comments: true } },
+        equipmentsUsed: true,
+      },
+    });
+
+    return updatedRoom;
   }
 
   async delete(id: string): Promise<

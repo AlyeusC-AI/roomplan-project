@@ -52,6 +52,7 @@ import {
   useOfflineUpdateRoomReading,
   useOfflineDeleteRoomReading,
   useOfflineReadings,
+  useOfflineCreateGenericRoomReading,
 } from "@/lib/hooks/useOfflineReadings";
 import { useOfflineReadingsStore } from "@/lib/state/offline-readings";
 import { useDebounce } from "@/utils/debounce";
@@ -87,9 +88,18 @@ const RoomReadingItem = ({
   const { mutate: deleteRoomReading, isPending: isDeleting } =
     useOfflineDeleteRoomReading(projectId, room.id);
   const { mutate: addGenericRoomReading, isPending: isAdding } =
-    useCreateGenericRoomReading();
-  const { getExistingEditForReading } = useOfflineReadingsStore();
-  const [tempRoomReading, setTempRoomReading] = useState<RoomReading>(reading);
+    useOfflineCreateGenericRoomReading(projectId);
+  const { getEditForReading } = useOfflineReadingsStore();
+  const offlineEdit = getEditForReading(reading.id);
+
+  const [tempRoomReading, setTempRoomReading] = useState<RoomReading>({
+    ...reading,
+    ...(offlineEdit && {
+      temperature: offlineEdit.temperature ?? reading.temperature,
+      humidity: offlineEdit.humidity ?? reading.humidity,
+      date: offlineEdit.date ?? reading.date,
+    }),
+  });
   const [isUpdating, setIsUpdating] = useState(false);
   const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
 
@@ -97,17 +107,16 @@ const RoomReadingItem = ({
   console.log("🚀 ~ reading.id:", reading.id);
 
   // Get offline edit for this reading
-  const offlineEdit = getExistingEditForReading(reading.id);
   console.log("🚀 ~ offlineEdit:", offlineEdit);
 
   useEffect(() => {
     // Merge online reading data with offline edits
     const mergedReading = {
       ...reading,
-      ...(offlineEdit?.data && {
-        temperature: offlineEdit.data.temperature ?? reading.temperature,
-        humidity: offlineEdit.data.humidity ?? reading.humidity,
-        date: offlineEdit.data.date ?? reading.date,
+      ...(offlineEdit && {
+        temperature: offlineEdit.temperature ?? reading.temperature,
+        humidity: offlineEdit.humidity ?? reading.humidity,
+        date: offlineEdit.date ?? reading.date,
       }),
     };
     console.log("🚀 ~ mergedReading:", offlineEdit, mergedReading);
@@ -231,36 +240,16 @@ const RoomReadingItem = ({
       <Box
         key={reading.id}
         w="full"
-        pl={4}
-        borderLeftWidth={1}
-        borderLeftColor="blue.500"
+        // pl={4}
+        // borderLeftWidth={1}
+        // borderLeftColor="blue.500"
         className="gap-y-2"
       >
         {/* Header with offline indicator */}
         <HStack justifyContent="space-between" alignItems="center" mb={2}>
-          {offlineEdit && (
-            <View
-              style={{
-                backgroundColor: "#fef3c7",
-                paddingHorizontal: 8,
-                paddingVertical: 4,
-                borderRadius: 8,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: "#d97706",
-                  fontWeight: "600",
-                }}
-              >
-                Offline Changes Pending
-              </Text>
-            </View>
-          )}
           <Button
             onPress={confirmDeleteReading}
-            className="flex-row items-center justify-center bg-white rounded-lg py-1.5 px-3 border border-red-300"
+            className="flex-row items-center w-full justify-center bg-white rounded-lg py-1.5 px-3 border border-red-300 my-4"
             variant="destructive"
             disabled={isDeleting}
           >
@@ -306,52 +295,51 @@ const RoomReadingItem = ({
               </HStack>
             </View>
           )}
-          <Stack mx="2" className="gap-y-2">
-            {/* Temperature Input */}
-            <View>
-              <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">
-                Temperature
-                {offlineEdit?.data?.temperature !== undefined && (
-                  <Text className="text-orange-600 text-xs ml-1">
-                    (Offline: {offlineEdit.data.temperature}°F)
-                  </Text>
-                )}
-              </FormControl.Label>
-              <RoomReadingInput
-                value={tempRoomReading.temperature?.toString() || ""}
-                placeholder="Temperature"
-                rightText="°F"
-                onChange={(value) => {
-                  setTempRoomReading((prev) => ({
-                    ...prev,
-                    temperature: Number(value),
-                  }));
-                }}
-              />
-            </View>
+          <Stack mx="2" className="">
+            <Heading
+              size="sm"
+              mb="2"
+              className="text-gray-700 font-semibold text-sm"
+            >
+              Affected Area Reading
+            </Heading>
+            <HStack space={4} alignItems="flex-end">
+              {/* Temperature Input */}
+              <View style={{ flex: 1 }}>
+                <FormControl.Label className="text-gray-700 font-medium text-[8px] items-center">
+                  Temperature
+                </FormControl.Label>
+                <RoomReadingInput
+                  value={tempRoomReading.temperature?.toString() || ""}
+                  placeholder="Temperature"
+                  rightText="°F"
+                  onChange={(value) => {
+                    setTempRoomReading((prev) => ({
+                      ...prev,
+                      temperature: Number(value),
+                    }));
+                  }}
+                />
+              </View>
 
-            {/* Relative Humidity Input */}
-            <View>
-              <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">
-                Relative Humidity
-                {offlineEdit?.data?.humidity !== undefined && (
-                  <Text className="text-orange-600 text-xs ml-1">
-                    (Offline: {offlineEdit.data.humidity}%)
-                  </Text>
-                )}
-              </FormControl.Label>
-              <RoomReadingInput
-                value={tempRoomReading.humidity?.toString() || ""}
-                placeholder="Relative Humidity"
-                rightText="%"
-                onChange={(value) => {
-                  setTempRoomReading((prev) => ({
-                    ...prev,
-                    humidity: Number(value),
-                  }));
-                }}
-              />
-            </View>
+              {/* Relative Humidity Input */}
+              <View style={{ flex: 1 }}>
+                <FormControl.Label className="text-gray-700 font-medium text-[8px] mb-0.5 items-center">
+                  Relative Humidity
+                </FormControl.Label>
+                <RoomReadingInput
+                  value={tempRoomReading.humidity?.toString() || ""}
+                  placeholder="Relative Humidity"
+                  rightText="%"
+                  onChange={(value) => {
+                    setTempRoomReading((prev) => ({
+                      ...prev,
+                      humidity: Number(value),
+                    }));
+                  }}
+                />
+              </View>
+            </HStack>
 
             {/* Grains Per Pound Input */}
             <View>
@@ -372,6 +360,14 @@ const RoomReadingItem = ({
               />
             </View>
 
+            <Heading
+              size="sm"
+              mt="4"
+              mb="2"
+              className="text-gray-700 font-semibold text-sm"
+            >
+              Moisture Points
+            </Heading>
             <View className="gap-y-2">
               {/* Extended Walls Section */}
               {walls.map((wall) => (
@@ -410,8 +406,8 @@ const RoomReadingItem = ({
             {/* Dehumidifier Readings Section */}
             <Heading
               size="sm"
-              mt="2"
-              mb="1"
+              mt="4"
+              mb="6"
               className="text-gray-700 font-semibold text-sm"
             >
               Dehumidifier Readings

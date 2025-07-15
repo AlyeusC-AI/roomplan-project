@@ -2,7 +2,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { toast } from "sonner-native";
 import React, { createContext, useContext, useState, useEffect } from "react";
-import NetInfo from "@react-native-community/netinfo";
+import NetInfo, { useNetInfo } from "@react-native-community/netinfo";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
@@ -95,47 +95,52 @@ interface ApiError extends Error {
 // Network status context
 interface NetworkContextType {
   isConnected: boolean;
-  isInternetReachable: boolean;
+  // isInternetReachable: boolean;
   isOffline: boolean;
 }
-const forceOffline = true;
+const forceOffline = false;
 const NetworkContext = createContext<NetworkContextType>({
-  isConnected: forceOffline ? false : true,
-  isInternetReachable: forceOffline ? false : true,
-  isOffline: forceOffline ? true : false,
+  isConnected: true,
+  // isInternetReachable: true,
+  isOffline: false,
 });
 
 export const useNetworkStatus = () => useContext(NetworkContext);
 
 // Network status provider component
 function NetworkStatusProvider({ children }: { children: React.ReactNode }) {
-  const [isConnected, setIsConnected] = useState(forceOffline ? false : true);
-  const [isInternetReachable, setIsInternetReachable] = useState(
-    forceOffline ? false : true
-  );
+  // const [isConnected, setIsConnected] = useState(true);
+  // const [isInternetReachable, setIsInternetReachable] = useState(true);
+  const { type, isConnected } = useNetInfo();
+  console.log("🚀 ~ NetworkStatusProvider ~ isConnected:", type, isConnected);
 
-  useEffect(() => {
-    if (forceOffline) return;
-    const unsubscribe = NetInfo.addEventListener((state: any) => {
-      const wasOffline = !isConnected || !isInternetReachable;
-      const isNowOnline = state.isConnected && state.isInternetReachable;
+  // useEffect(() => {
+  //   // if (forceOffline) return;
+  //   const unsubscribe = NetInfo.addEventListener((state: any) => {
+  //     console.log("🚀 ~ unsubscribe ~ state:", state);
 
-      setIsConnected(state.isConnected ?? true);
-      setIsInternetReachable(state.isInternetReachable ?? true);
+  //     const wasOffline = !isConnected || !isInternetReachable;
+  //     const isNowOnline = state.isConnected && state.isInternetReachable;
 
-      // Coming back online - tasks will be processed manually from the home screen
-      if (isNowOnline) {
-        console.log("Coming back online - tasks can be processed manually");
-      }
-    });
+  //     setIsConnected(state.isConnected ?? true);
+  //     setIsInternetReachable(state.isInternetReachable ?? true);
 
-    return () => unsubscribe();
-  }, [isConnected, isInternetReachable, forceOffline]);
+  //     // Coming back online - tasks will be processed manually from the home screen
+  //     if (isNowOnline) {
+  //       console.log("Coming back online - tasks can be processed manually");
+  //     }
+  //   });
+
+  //   return () => {
+  //     console.log("unsubscribed");
+  //     unsubscribe();
+  //   };
+  // }, []);
 
   const value = {
-    isConnected,
-    isInternetReachable,
-    isOffline: !isConnected || !isInternetReachable,
+    isConnected: isConnected ?? true,
+    // isInternetReachable,
+    isOffline: forceOffline || !isConnected,
   };
 
   return (

@@ -10,8 +10,13 @@ import {
   ScrollView,
 } from "react-native";
 import { Text } from "@/components/ui/text";
+import { Download, X } from "lucide-react-native";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+
+const DownloadIcon = Download as any;
+const XIcon = X as any;
+
 
 interface ImageViewerProps {
   visible: boolean;
@@ -75,6 +80,20 @@ export function ImageViewer({
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
+
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Text style={styles.closeIcon}>
+                <XIcon  />
+              </Text>
+            </TouchableOpacity>
+             {/* Image counter for multiple images */}
+             {imageList.length > 1 && (
+              <View style={styles.imageCounter}>
+                <Text style={styles.counterText}>
+                  {currentImageIndex + 1} / {imageList.length}
+                </Text>
+              </View>
+            )}
             <TouchableOpacity
               style={[
                 styles.downloadButton,
@@ -89,24 +108,16 @@ export function ImageViewer({
                 <ActivityIndicator size="small" color="#ffffff" />
               ) : (
                 <>
-                  <Text style={styles.downloadIcon}>↓</Text>
-                  <Text style={styles.downloadText}>Download</Text>
+                <DownloadIcon />
+                  {/* <Text style={styles.downloadIcon}>↓</Text> */}
+                  {/* <Text style={styles.downloadText}>Download</Text> */}
                 </>
               )}
             </TouchableOpacity>
 
-            {/* Image counter for multiple images */}
-            {imageList.length > 1 && (
-              <View style={styles.imageCounter}>
-                <Text style={styles.counterText}>
-                  {currentImageIndex + 1} / {imageList.length}
-                </Text>
-              </View>
-            )}
+           
 
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Text style={styles.closeIcon}>✕</Text>
-            </TouchableOpacity>
+            
           </View>
 
           {/* Images with horizontal scrolling */}
@@ -193,7 +204,7 @@ const styles = StyleSheet.create({
   },
   header: {
     position: "absolute",
-    top: 50,
+    top: 60,
     left: 0,
     right: 0,
     flexDirection: "row",
@@ -201,9 +212,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     zIndex: 1,
+    // borderBottomWidth: 1,
+    // borderColor: "white"
   },
   downloadButton: {
-    backgroundColor: "#2563eb",
+    // backgroundColor: "#2563eb",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -212,7 +226,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   downloadButtonLoading: {
-    backgroundColor: "#1976d2",
+    // backgroundColor: "#1976d2",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+
   },
   downloadIcon: {
     fontSize: 16,

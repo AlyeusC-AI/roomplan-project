@@ -65,6 +65,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@components/ui/popover"
 import { Calendar } from "@components/ui/calendar";
 import { format } from "date-fns";
 import DamageBadge from "@components/Project/DamageBadge";
+import StatusBadge from "@components/Project/StatusBadge";
 
 export default function ProjectList() {
   const [isCreatingNewProject, setIsCreatingNewProject] = useState(false);
@@ -479,9 +480,10 @@ const List = ({ projects }: { projects: any[] }) => {
                   </div>
                   <span className="text-muted-foreground text-xs">Last updated {formatDate(new Date(project?.createdAt))}</span>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge style={{ backgroundColor: status?.color || project.status?.color || 'green', width: 'fit-content' }}>
+                    {/* <Badge style={{ backgroundColor: status?.color || project.status?.color || 'green', width: 'fit-content' }}>
                       {status?.label || project.status?.label}
-                    </Badge>
+                    </Badge> */}
+                    <StatusBadge label={status?.label || project.status?.label} color={status?.color || project.status?.color}/>
                     {project.lossType && (
                       <DamageBadge lossType={project.lossType} />
                     )}

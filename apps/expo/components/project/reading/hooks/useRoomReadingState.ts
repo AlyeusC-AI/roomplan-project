@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useGlobalSearchParams } from "expo-router";
 
 import { RoomReading } from "@service-geek/api-client";
+import { useOfflineReadingsStore } from "@/lib/state/offline-readings";
 
 export function useRoomReadingState(reading: RoomReading) {
   // Basic component state
@@ -20,6 +21,10 @@ export function useRoomReadingState(reading: RoomReading) {
     number | null
   >(null);
 
+  // Offline state
+  const { getEditForReading } = useOfflineReadingsStore();
+  const offlineEdit = getEditForReading(reading.id);
+
   return {
     // Basic state
     isCollapsed,
@@ -36,5 +41,8 @@ export function useRoomReadingState(reading: RoomReading) {
     setSelectedImageType,
     selectedGenericIndex,
     setSelectedGenericIndex,
+
+    // Offline state
+    offlineEdit,
   };
 }

@@ -9,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
   Animated,
+  Image,
 } from "react-native";
 import { Text } from "@/components/ui/text";
 import * as ImagePicker from "expo-image-picker";
@@ -17,12 +18,13 @@ import { toast } from "sonner-native";
 import ProjectImageSelector from "./ProjectImageSelector";
 import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
-import { ArrowUp, Camera, CameraIcon, Image, Images, Mic, Paperclip, Send, SendHorizontal, Trash2 } from "lucide-react-native";
+import { ArrowUp, Camera, CameraIcon, Image as ImageIcon, Images, Mic, Paperclip, Send, SendHorizontal, Trash2 } from "lucide-react-native";
+import RoomIcon from "@/assets/roomIcon.png";
 
 
 const SendHorizontalIcon = SendHorizontal as any;
 const MicIcon = Mic as any;
-const ImageIcon = Image as any;
+// const ImageIcon = ImageIcon as any;
 const PaperclipIcon = Paperclip as any;
 const ImagesIcon = Images as any;
 const Trash2Icon = Trash2 as any;
@@ -628,7 +630,11 @@ export function ChatInput({
                       disabled={!connected || isUploading || isRecording}
                       onPress={() => setShowProjectImageSelector(true)}
                     >
-                      <Text style={styles.attachmentIcon}><ImagesIcon /></Text>
+                      {/* <Text style={styles.attachmentIcon}><ImagesIcon /></Text> */}
+                      <Image
+                      source={RoomIcon}
+                      style={{ width: 25, height: 25, resizeMode: "contain" ,tintColor: "#2563eb" , marginBottom: 4 }}
+                    />
                     </TouchableOpacity>
                   )}
                 </View>

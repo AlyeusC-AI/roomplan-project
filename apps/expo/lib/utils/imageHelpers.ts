@@ -1,6 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
 import { v4 } from "react-native-uuid/dist/v4";
-import { supabaseServiceRole } from "@/app/projects/[projectId]/camera";
+// import { supabaseServiceRole } from "@/app/projects/[projectId]/camera";
 import { toast } from "sonner-native";
 
 // Constants for different storage buckets
@@ -103,35 +103,34 @@ export const uploadImageToStorage = async (
       ? `/${pathPrefix}/${entityId}/${v4()}.jpeg`
       : `/${entityId}/${v4()}.jpeg`;
 
-    const res = await supabaseServiceRole.storage
-      .from(bucket)
-      .upload(path, formData, {
-        cacheControl: "3600",
-        upsert: false,
-      });
+    // const res = await supabaseServiceRole.storage
+    //   .from(bucket)
+    //   .upload(path, formData, {
+    //     cacheControl: "3600",
+    //     upsert: false,
+    //   });
 
-    if (!res.data?.path) {
-      throw new Error(`Failed to upload image to ${bucket}`);
-    }
+    // if (!res.data?.path) {
+    //   throw new Error(`Failed to upload image to ${bucket}`);
+    // }
 
     // If a database table is specified, add a record to it
     if (tableName && idField) {
       const record: Record<string, any> = {};
       record[idField] = entityId;
-      record[imageKeyField] = res.data.path;
+      // record[imageKeyField] = res.data.path;
 
-      const { error } = await supabaseServiceRole
-        .from(tableName)
-        .insert(record);
+      // const { error } = await supabaseServiceRole
+      //   .from(tableName)
+      //   .insert(record);
 
-      if (error) {
-        console.error(
-          `Failed to add image to ${tableName} table`,
-          JSON.stringify(error, null, 2)
-        );
-        toast.error(`Failed to add image to ${tableName} table`);
-        return undefined;
-      }
+      // if (error) {
+      //   console.error(
+      //     `Failed to add image to ${tableName} table`,
+      //     JSON.stringify(error, null, 2)
+      //   );
+      //   toast.error(`Failed to add image to ${tableName} table`);
+      //   return undefined;
     }
 
     // Call onSuccess callback if provided
@@ -139,7 +138,7 @@ export const uploadImageToStorage = async (
       await onSuccess();
     }
 
-    return res.data.path;
+    // return res.data.path;
   } catch (error) {
     console.error("Upload error:", error);
     throw error;
@@ -311,13 +310,13 @@ export const deleteImage = async (
   } = options;
 
   try {
-    // Delete from storage
-    await supabaseServiceRole.storage.from(bucket).remove([imageKey]);
+    // // Delete from storage
+    // await supabaseServiceRole.storage.from(bucket).remove([imageKey]);
 
-    // Delete from database if table is specified
-    if (tableName) {
-      await supabaseServiceRole.from(tableName).delete().eq(keyField, imageKey);
-    }
+    // // Delete from database if table is specified
+    // if (tableName) {
+    //   await supabaseServiceRole.from(tableName).delete().eq(keyField, imageKey);
+    // }
 
     // Fetch fresh data after deletion
     if (onRefresh) {

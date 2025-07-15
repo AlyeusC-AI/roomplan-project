@@ -96,7 +96,7 @@ export default function ProjectUsersCard({
           size='icon'
           onClick={() => setIsDialogOpen(true)}
         >
-          {projectMembers.length ? <Edit2 className='h-4 w-4 text-gray-400' /> : <UserPlus className='h-4 w-4 text-gray-400' />}
+          {projectMembers.length ? <Edit2 className='h-4 w-4 text-blue-600' /> : <UserPlus className='h-4 w-4 text-blue-600' />}
         </Button>
       </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}  >

@@ -41,6 +41,7 @@ export interface Project {
   insuranceClaimId?: string;
   lossType?: LossType;
   catCode?: string;
+  waterClass?: string;
   humidity?: string;
   temperature?: string;
   wind?: string;
@@ -64,6 +65,7 @@ export interface Project {
     images: number;
     documents: number;
   };
+  copilotProgress?: any;
 }
 
 export interface CreateProjectDto {
@@ -83,6 +85,7 @@ export interface CreateProjectDto {
   insuranceClaimId?: string;
   lossType?: LossType;
   catCode?: string;
+  waterClass?: string;
   humidity?: string;
   temperature?: string;
   wind?: string;
@@ -98,9 +101,12 @@ export interface CreateProjectDto {
   mainImage?: string;
   policyNumber?: string;
   dateOfLoss?: Date;
+  copilotProgress?: any;
 }
 
-export type UpdateProjectDto = Partial<CreateProjectDto>;
+export type UpdateProjectDto = Partial<CreateProjectDto> & {
+  copilotProgress?: any;
+};
 
 export interface FilterProjectsParams {
   page?: number;

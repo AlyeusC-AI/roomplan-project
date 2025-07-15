@@ -120,7 +120,7 @@ export class ProjectsController {
   @ApiResponse({ status: 404, description: 'Project not found.' })
   update(
     @Param('id') id: string,
-    @Body() updateProjectDto: UpdateProjectDto,
+    @Body() updateProjectDto: UpdateProjectDto & { copilotProgress?: any },
     @Request() req: RequestWithUser,
   ): Promise<Project> {
     return this.projectsService.update(id, updateProjectDto, req.user.userId);
