@@ -45,6 +45,7 @@ import type { Row } from "@tanstack/react-table";
 
 const Notes = ({ room }: { room: Room }) => {
   const { data: notes, isLoading } = useGetNotes(room.id as string);
+  console.log("🚀 ~ Notes ~ notes:", notes)
   const { mutate: updateNote } = useUpdateNote();
   const { mutate: deleteNote } = useDeleteNote();
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
@@ -118,18 +119,18 @@ const Notes = ({ room }: { room: Room }) => {
       cell: ({ row }: { row: Row<NoteType> }) => {
         const note = row.original as NoteType;
         return note.images && note.images.length > 0 ? (
-          <ImageGallery images={note.images} />
+          <ImageGallery images={note.images} groupImages={true} />
         ) : null;
       },
     },
     {
       id: "actions",
-      header: () => "Actions",
+      // header: () => "Actions",
       cell: ({ row }: { row: Row<NoteType> }) => {
         const note = row.original as NoteType;
         const isDeleting = deleting[note.id] || false;
         return (
-          <div className='flex items-center gap-2'>
+          <div className='flex items-center justify-evenly gap-2'>
             <Button variant='outline' onClick={() => openEditDialog(note)}>
               <Pencil className='h-4' />
             </Button>
@@ -162,10 +163,10 @@ const Notes = ({ room }: { room: Room }) => {
   return (
     <>
       <TableProvider columns={columns} data={notes} className='mt-4'>
-        <TableHeader>
+        <TableHeader className="bg-muted/50">
           {({ headerGroup }) => (
             <TableHeaderGroup headerGroup={headerGroup}>
-              {({ header }) => <TableHead header={header} />}
+              {({ header }) => <TableHead header={header}  />}
             </TableHeaderGroup>
           )}
         </TableHeader>
