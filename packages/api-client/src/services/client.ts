@@ -6,14 +6,17 @@ interface ClientConfig {
   baseURL?: string;
 }
 
+export const baseURL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.API_URL ||
+  process.env.EXPO_PUBLIC_API_URL ||
+  // "http://localhost:3000";
+  "https://api.restoregeek.io";
+
 export const createClient = (config: ClientConfig) => {
   const instance = axios.create({
-    baseURL:
-      config.baseURL ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      process.env.API_URL ||
-      process.env.EXPO_PUBLIC_API_URL ||
-      "https://api.restoregeek.io",
+    baseURL: config.baseURL || baseURL,
+
     // "http://localhost:3000",
   });
 
@@ -25,6 +28,16 @@ export const createClient = (config: ClientConfig) => {
     return axiosConfig;
   });
 
+  instance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      console.log("🚀 ~axios error:", error.response.data.message);
+      // if (error.response.status === 401) {
+      //   useAuthStore.getState().logout();
+      // }
+      return Promise.reject(error);
+    }
+  );
   return instance;
 };
 

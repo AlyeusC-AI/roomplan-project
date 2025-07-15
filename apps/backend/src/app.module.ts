@@ -22,6 +22,10 @@ import { FormsModule } from './forms/forms.module';
 import { CostsModule } from './costs/costs.module';
 import { InvoicesModule } from './invoices/invoices.module';
 import { EstimatesModule } from './estimates/estimates.module';
+import { SpaceModule } from './space/space.module';
+import { TagsModule } from './tags/tags.module';
+import { ChatModule } from './chat/chat.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -46,6 +50,10 @@ import { EstimatesModule } from './estimates/estimates.module';
     CostsModule,
     InvoicesModule,
     EstimatesModule,
+    SpaceModule,
+    TagsModule,
+    ChatModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

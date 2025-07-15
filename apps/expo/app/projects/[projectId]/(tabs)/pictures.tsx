@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -7,9 +7,12 @@ import {
   View,
   StyleSheet,
   Dimensions,
-  Image,
   Modal,
 } from "react-native";
+import { Image as ExpoImage } from "expo-image";
+
+// Type assertion to fix ReactNode compatibility
+const ExpoImageComponent = ExpoImage as any;
 import { Camera } from "react-native-vision-camera";
 import {
   Camera as CameraIcon,
@@ -22,6 +25,10 @@ import {
   Loader,
   Home,
   XCircle,
+  Filter,
+  CheckSquare,
+  Wifi,
+  WifiOff,
 } from "lucide-react-native";
 import { useFocusEffect, useGlobalSearchParams, useRouter } from "expo-router";
 import { toast } from "sonner-native";
@@ -55,8 +62,25 @@ import {
   useBulkUpdateImages,
   useRemoveImage,
   useUpdateProject,
+  useGetTags,
+  useAddImageTags,
 } from "@service-geek/api-client";
 import { uploadImage } from "@/lib/imagekit";
+import { useOfflineUploadsStore } from "@/lib/state/offline-uploads";
+import { useNetworkStatus } from "@/lib/providers/QueryProvider";
+
+// Type assertions to fix ReactNode compatibility
+const CameraIconComponent = CameraIcon as any;
+const ImagePlusComponent = ImagePlus as any;
+const ImageIconComponent = ImageIcon as any;
+const Building2Component = Building2 as any;
+const StarComponent = Star as any;
+const LoaderComponent = Loader as any;
+const HomeComponent = Home as any;
+const XCircleComponent = XCircle as any;
+const FilterComponent = Filter as any;
+const WifiComponent = Wifi as any;
+const WifiOffComponent = WifiOff as any;
 
 export default function ProjectPhotos() {
   const { projectId } = useGlobalSearchParams<{
@@ -80,6 +104,8 @@ export default function ProjectPhotos() {
   const [mainImage, setMainImage] = useState<string | null>(null);
   const [showCoverModal, setShowCoverModal] = useState(false);
   const { mutate: addImage } = useAddImage();
+  const { isOffline } = useNetworkStatus();
+  const { addToQueue } = useOfflineUploadsStore();
 
   const { data: rooms } = useGetRooms(projectId);
   const { mutate: bulkUpdateImages } = useBulkUpdateImages();
@@ -93,7 +119,6 @@ export default function ProjectPhotos() {
   } = useSearchImages(
     projectId,
     {
-      // roomId: selectedRoom,
       type: "ROOM",
     },
     {
@@ -103,11 +128,13 @@ export default function ProjectPhotos() {
     { page: 1, limit: 100 }
   );
 
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     refreshData();
-  //   }, [])
-  // );
+  const onCreateRoom = async () => {
+    router.navigate({
+      pathname: "../rooms/create",
+      params: { projectId, projectName: project?.name },
+    });
+  };
+
   useEffect(() => {
     if (selectedRoom) {
       if (shouldOpenCamera) {
@@ -126,17 +153,26 @@ export default function ProjectPhotos() {
 
   const uploadToSupabase = async (imagePath: string, roomId: string) => {
     console.log("🚀 ~ uploadToSupabase ~ imagePath:", imagePath, roomId);
+
+    if (isOffline) {
+      // Add to offline queue when offline
+      addToQueue({
+        projectId,
+        roomId,
+        imagePath,
+        imageUrl: imagePath,
+        metadata: {
+          size: 0,
+          type: "image/jpeg",
+          name: "offline-image",
+        },
+      });
+      toast.success("Image added to offline queue");
+      setUploadProgress((prev) => prev + 1);
+      return true;
+    }
+
     try {
-      // const imageUrl = await uploadImage(
-      //   {
-      //     uri: imagePath,
-      //     type: "image/jpeg",
-      //     name: `${Date.now()}.jpg`,
-      //   },
-      //   {
-      //     folder: `projects/${projectId}/rooms/${roomId}`,
-      //   }
-      // );
       await addImage({
         data: {
           url: imagePath,
@@ -149,7 +185,20 @@ export default function ProjectPhotos() {
       return true;
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Failed to upload image");
+
+      // If upload fails, add to offline queue as fallback
+      addToQueue({
+        projectId,
+        roomId,
+        imagePath,
+        imageUrl: imagePath,
+        metadata: {
+          size: 0,
+          type: "image/jpeg",
+          name: "failed-upload",
+        },
+      });
+      toast.error("Upload failed, added to offline queue");
       return false;
     }
   };
@@ -165,10 +214,16 @@ export default function ProjectPhotos() {
       await takePhoto(selectedRoom, {
         bucket: STORAGE_BUCKETS.PROJECT,
         pathPrefix: `projects/${projectId}/rooms`,
-        // onRefresh: refreshData,
         compression: "high",
+        projectId,
+        roomId: selectedRoom,
+        isOffline,
+        addToOfflineQueue: addToQueue,
         onSuccess: async (file) => {
-          await uploadToSupabase(file.path, selectedRoom);
+          // Only upload to backend if not offline and file has a URL
+          if (!isOffline && file.url && file.url !== file.path) {
+            await uploadToSupabase(file.url, selectedRoom);
+          }
         },
       });
       setShouldOpenCamera(false);
@@ -194,18 +249,22 @@ export default function ProjectPhotos() {
       await pickMultipleImages(selectedRoom, {
         bucket: STORAGE_BUCKETS.PROJECT,
         pathPrefix: `projects/${projectId}/rooms`,
-        // onRefresh: refreshData,
         compression: "medium",
         maxImages: 20,
+        projectId,
+        roomId: selectedRoom,
+        isOffline,
+        addToOfflineQueue: addToQueue,
         onSuccess: async (files) => {
           for (const file of files) {
             console.log("🚀 ~ onSuccess: ~ file:", file);
-            await uploadToSupabase(file.url, selectedRoom);
+            // Only upload to backend if not offline and file has a URL
+            if (!isOffline && file.url && file.url !== file.path) {
+              await uploadToSupabase(file.url, selectedRoom);
+            }
           }
-          // await refreshData();
         },
       });
-      // uploadToSupabase(fileUri, selectedRoom);
     } catch (error) {
       console.error("Error picking images:", error);
       toast.error("Failed to pick images");
@@ -222,6 +281,7 @@ export default function ProjectPhotos() {
       await bulkUpdateImages({
         projectId,
         filters: {
+          type: "ROOM",
           ids: images?.data?.map((image) => image.id) || [],
         },
         updates: {
@@ -232,7 +292,6 @@ export default function ProjectPhotos() {
       toast.success("All images included in report");
     } catch (error) {
       console.error("Error updating images:", error);
-      // toast.error("Failed to update images");
     } finally {
       setIsUpdatingAll(false);
     }
@@ -259,14 +318,14 @@ export default function ProjectPhotos() {
         }
 
         result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ["images"],
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: true,
           aspect: [16, 9],
           quality: 0.8,
         });
       } else {
         result = await launchImageLibraryAsync({
-          mediaTypes: ["images"],
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: true,
           aspect: [16, 9],
           quality: 0.8,
@@ -276,16 +335,9 @@ export default function ProjectPhotos() {
       if (!result.canceled && result.assets[0]) {
         const file = result.assets[0];
 
-        const uploadResult = await uploadImage(
-          {
-            uri: file.uri,
-            type: "image/jpeg",
-            name: `${Date.now()}.jpg`,
-          },
-          {
-            folder: `projects/${projectId}/main`,
-          }
-        );
+        const uploadResult = await uploadImage(file, {
+          folder: `projects/${projectId}/main`,
+        });
 
         if (uploadResult.url) {
           updateProject({
@@ -304,14 +356,20 @@ export default function ProjectPhotos() {
       toast.error("Failed to set cover image");
     } finally {
       setIsUploadingMainImage(false);
-      // setShowCoverModal(false);
     }
+  };
+
+  const handleNavigateToFilteredImages = () => {
+    router.navigate({
+      pathname: "../filtered-images",
+      params: { projectId, projectName: project?.name },
+    });
   };
 
   if (loading && !rooms?.length) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1e40af" />
+        <ActivityIndicator size="large" color="#2563eb" />
       </View>
     );
   }
@@ -321,19 +379,17 @@ export default function ProjectPhotos() {
       <Empty
         title="No Images"
         description="Upload images to associate with this project. Images of rooms can be automatically assigned a room"
-        // buttonText="Start Taking Pictures"
         buttonText="Create a room"
-        icon={<CameraIcon height={50} width={50} />}
+        icon={<CameraIconComponent height={50} width={50} />}
         secondaryIcon={
-          <CameraIcon height={20} width={20} color="#fff" className="ml-4" />
+          <CameraIconComponent
+            height={20}
+            width={20}
+            color="#fff"
+            className="ml-4"
+          />
         }
-        // onPress={() => router.push("../camera")}
-        onPress={() =>
-          router.push({
-            pathname: "../rooms/create",
-            params: { projectName: project?.name },
-          })
-        }
+        onPress={onCreateRoom}
       />
     );
   }
@@ -346,81 +402,84 @@ export default function ProjectPhotos() {
         }
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Project Photos</Text>
-          <View className="flex-row gap-2 justify-between">
-            <TouchableOpacity
-              style={[
-                {
-                  width: 40,
-                  height: 40,
-                },
-                styles.actionButton,
-                isUploadingMainImage && styles.actionButtonDisabled,
-              ]}
-              onPress={() => setShowCoverModal(true)}
-              disabled={isUploadingMainImage}
-              className="ml-2 bg-accent rounded-full border border-gray-200"
-            >
-              {isUploadingMainImage ? (
-                <View>
-                  <Loader size={20} color="#1e40af" />
-                </View>
-              ) : (
-                <View>
-                  <Home size={20} color="#1e40af" />
+          <View style={styles.headerTop}>
+            <View style={styles.headerTitleContainer}>
+              <Text style={styles.headerTitle}>Project Photos</Text>
+              {isOffline && (
+                <View style={styles.offlineIndicator}>
+                  <WifiOffComponent size={16} color="#ef4444" />
+                  <Text style={styles.offlineText}>Offline</Text>
                 </View>
               )}
-            </TouchableOpacity>
+            </View>
+            <AddRoomButton showText={false} size="sm" />
+          </View>
+
+          <View style={styles.headerBottom}>
             <View style={styles.actionButtons}>
               <TouchableOpacity
                 style={[
-                  {
-                    width: 40,
-                    height: 40,
-                  },
+                  styles.actionButton,
+                  isUploadingMainImage && styles.actionButtonDisabled,
+                ]}
+                onPress={() => setShowCoverModal(true)}
+                disabled={isUploadingMainImage}
+              >
+                {isUploadingMainImage ? (
+                  <LoaderComponent size={20} color="#2563eb" />
+                ) : (
+                  <HomeComponent size={20} color="#2563eb" />
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
                   styles.actionButton,
                   isUpdatingAll && styles.actionButtonDisabled,
                 ]}
                 onPress={includeAllInReport}
                 disabled={isUpdatingAll || !rooms?.length}
-                className="ml-2 bg-accent rounded-full border border-gray-200"
               >
                 {isUpdatingAll ? (
-                  <View>
-                    <Loader size={20} color="#1e40af" />
-                  </View>
+                  <LoaderComponent size={20} color="#2563eb" />
                 ) : (
-                  <View>
-                    <Star
-                      size={20}
-                      color={areAllImagesIncluded ? "#FBBF24" : "#1e40af"}
-                      fill={areAllImagesIncluded ? "#FBBF24" : "transparent"}
-                    />
-                  </View>
+                  <StarComponent
+                    size={20}
+                    color={areAllImagesIncluded ? "#FBBF24" : "#2563eb"}
+                    fill={areAllImagesIncluded ? "#FBBF24" : "transparent"}
+                  />
                 )}
               </TouchableOpacity>
+
               <TouchableOpacity
                 style={[
-                  {
-                    width: 40,
-                    height: 40,
-                  },
                   styles.actionButton,
+                  isOffline && styles.actionButtonOffline,
                 ]}
                 onPress={handlePickImages}
-                className="mx-2 bg-accent rounded-full border border-gray-200"
               >
-                <View>
-                  <ImagePlus size={20} color="#1e40af" />
-                </View>
+                <ImagePlusComponent
+                  size={20}
+                  color={isOffline ? "#f59e0b" : "#2563eb"}
+                />
               </TouchableOpacity>
-              <AddRoomButton variant="outline" />
+            </View>
+
+            <View style={styles.filterButtons}>
+              <TouchableOpacity
+                style={styles.filterButton}
+                onPress={handleNavigateToFilteredImages}
+              >
+                <FilterComponent size={18} color="#2563eb" />
+              </TouchableOpacity>
             </View>
           </View>
         </View>
 
+        {/* Show room-grouped view */}
         <View style={styles.roomsContainer}>
           {rooms?.map((room) => {
             const imagePerRoom = images?.data?.filter(
@@ -448,13 +507,15 @@ export default function ProjectPhotos() {
                   </View>
 
                   {previewImageUrl ? (
-                    <Image
+                    <ExpoImageComponent
                       source={{ uri: previewImageUrl }}
                       style={styles.roomPreviewImage}
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
                     />
                   ) : (
                     <View style={styles.roomPreviewPlaceholder}>
-                      <ImageIcon size={24} color="#9CA3AF" />
+                      <ImageIconComponent size={24} color="#9CA3AF" />
                     </View>
                   )}
                 </View>
@@ -463,8 +524,8 @@ export default function ProjectPhotos() {
                   <View style={styles.galleryContainer}>
                     <ImageGallery
                       images={imagePerRoom || []}
-                      // onRefresh={refreshData}
                       room={room}
+                      refetch={refetch}
                     />
                   </View>
                 )}
@@ -478,26 +539,17 @@ export default function ProjectPhotos() {
         <View style={styles.fabContainer}>
           <TouchableOpacity
             onPress={() => router.push("../camera")}
-            // onPress={handleTakePhoto}
             style={[styles.fab, isUploading && styles.fabDisabled]}
             disabled={isUploading}
           >
             {isUploading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <CameraIcon size={30} color="#fff" />
+              <CameraIconComponent size={30} color="#fff" />
             )}
           </TouchableOpacity>
         </View>
       )}
-
-      {/* {isUploading && (
-        <View style={styles.uploadProgress}>
-          <Text style={styles.uploadProgressText}>
-            Uploading {uploadProgress} images...
-          </Text>
-        </View>
-      )} */}
 
       <Modal
         visible={showRoomSelection}
@@ -509,7 +561,7 @@ export default function ProjectPhotos() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
-                <Building2 size={24} color="#1e40af" />
+                <Building2Component size={24} color="#2563eb" />
                 <Text style={styles.modalTitle}>Select Room</Text>
               </View>
               <TouchableOpacity
@@ -519,7 +571,7 @@ export default function ProjectPhotos() {
                   setSelectedRoom(null);
                 }}
               >
-                <XCircle size={24} color="#64748b" />
+                <XCircleComponent size={24} color="#64748b" />
               </TouchableOpacity>
             </View>
 
@@ -567,24 +619,25 @@ export default function ProjectPhotos() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
-                <Home size={24} color="#1e40af" />
+                <HomeComponent size={24} color="#2563eb" />
                 <Text style={styles.modalTitle}>Project Cover</Text>
               </View>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setShowCoverModal(false)}
               >
-                <XCircle size={24} color="#64748b" />
+                <XCircleComponent size={24} color="#64748b" />
               </TouchableOpacity>
             </View>
 
             <View style={styles.modalBody}>
               {mainImage ? (
                 <View style={styles.coverPreview}>
-                  <Image
+                  <ExpoImageComponent
                     source={{ uri: mainImage }}
                     style={styles.coverImage}
-                    resizeMode="cover"
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
                   />
                   <View style={styles.coverOverlay}>
                     <Text style={styles.coverOverlayText}>Current Cover</Text>
@@ -592,20 +645,17 @@ export default function ProjectPhotos() {
                 </View>
               ) : (
                 <View style={styles.coverPlaceholder}>
-                  <Home size={48} color="#94a3b8" />
+                  <HomeComponent size={48} color="#94a3b8" />
                   <Text style={styles.coverPlaceholderText}>
                     No cover image set
                   </Text>
                 </View>
               )}
 
-              <View
-                // style={styles.actionButtonsContainer}
-                className="flex-row gap-2"
-              >
+              <View className="flex-row gap-1">
                 <TouchableOpacity
                   style={[styles.actionButton, styles.cameraButton]}
-                  className="bg-accent rounded-full border border-gray-200"
+                  className="bg-accent rounded-full border border-gray-200 "
                   onPress={() => handleSetMainImage(true)}
                   disabled={isUploadingMainImage}
                 >
@@ -613,7 +663,7 @@ export default function ProjectPhotos() {
                     <ActivityIndicator color="#fff" />
                   ) : (
                     <View style={styles.actionButtonContent}>
-                      <CameraIcon size={24} color="#fff" />
+                      <CameraIconComponent size={20} color="#fff" />
                       <Text style={styles.actionButtonText}>Take Photo</Text>
                     </View>
                   )}
@@ -628,7 +678,7 @@ export default function ProjectPhotos() {
                     <ActivityIndicator color="#fff" />
                   ) : (
                     <View style={styles.actionButtonContent}>
-                      <ImageIcon size={24} color="#fff" />
+                      <ImageIconComponent size={20} color="#fff" />
                       <Text style={styles.actionButtonText}>
                         Choose from Library
                       </Text>
@@ -663,6 +713,31 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
   },
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerTitleContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  offlineIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fef2f2",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  offlineText: {
+    fontSize: 12,
+    color: "#ef4444",
+    fontWeight: "500",
+  },
   headerTitle: {
     paddingTop: 8,
     fontSize: 24,
@@ -670,24 +745,35 @@ const styles = StyleSheet.create({
     color: "#1e293b",
     marginBottom: 16,
   },
+  headerBottom: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 12,
+  },
+  filterButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  filterButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f1f5f9",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
   actionButtons: {
     flexDirection: "row",
-    gap: 2,
-    justifyContent: "flex-end",
+    gap: 8,
+    justifyContent: "flex-start",
   },
-  // actionButton: {
-  //   // width: 44,
-  //   // height: 44,
-  //   borderRadius: 22,
-  //   justifyContent: "center",
-  //   alignItems: "center",
-  //   margin: 0,
-  // },
   iconContainer: {
     width: 26,
     height: 26,
     borderRadius: 13,
-    // backgroundColor: "#f8fafc",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
@@ -703,6 +789,13 @@ const styles = StyleSheet.create({
   },
   actionButtonDisabled: {
     opacity: 0.5,
+  },
+  actionButtonOffline: {
+    backgroundColor: "#fef3c7",
+    borderColor: "#f59e0b",
+  },
+  actionButtonActive: {
+    backgroundColor: "#2563eb",
   },
   roomsContainer: {
     padding: 12,
@@ -764,7 +857,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#1e40af",
+    backgroundColor: "#2563eb",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -867,30 +960,25 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: "center",
-    padding: 8,
-    borderRadius: 24,
-    // width: 40,
-    // height: 40,
-    // borderColor: "#e2e8f0",
-
-    // backgroundColor: "hsl(var(--destructive))",
-    // shadowColor: "#000",
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 2,
-    // },
-    // shadowOpacity: 0.1,
-    // shadowRadius: 3,
-    // elevation: 2,
+    alignItems: "center",
+    backgroundColor: "#f1f5f9",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    marginHorizontal: 2,
   },
   cameraButton: {
-    backgroundColor: "#1e40af",
+    backgroundColor: "#2563eb",
+    width: "auto",
+    paddingHorizontal: 8,
   },
   libraryButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#2563eb",
+    width: "auto",
+    paddingHorizontal: 8,
   },
   actionButtonContent: {
     flexDirection: "row",
@@ -911,14 +999,23 @@ const styles = StyleSheet.create({
   roomList: {
     marginBottom: 20,
   },
+  roomSelector: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginTop: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
   roomOption: {
     padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: "#f1f5f9",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
   },
   selectedRoom: {
-    backgroundColor: "#1e40af",
+    backgroundColor: "#2563eb",
   },
   roomOptionText: {
     fontSize: 16,
@@ -926,6 +1023,7 @@ const styles = StyleSheet.create({
   },
   selectedRoomText: {
     color: "#fff",
+    fontWeight: "600",
   },
   modalFooter: {
     flexDirection: "row",
@@ -938,7 +1036,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 90,
     right: 20,
-    backgroundColor: "#1e40af",
+    backgroundColor: "#2563eb",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -1009,7 +1107,7 @@ const styles = StyleSheet.create({
   mainImagePlaceholderText: {
     marginTop: 8,
     fontSize: 16,
-    color: "#1e40af",
+    color: "#2563eb",
     fontWeight: "500",
   },
 });

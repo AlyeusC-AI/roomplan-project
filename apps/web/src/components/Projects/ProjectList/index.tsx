@@ -35,23 +35,37 @@ import {
   KanbanHeader,
   KanbanProvider,
 } from "@/components/ui/kibo-ui/kanban";
-import { ChevronRightIcon } from "lucide-react";
+import { AlertTriangle, ChevronRightIcon, CirclePlus, FileImage, CalendarIcon, X, RotateCw } from "lucide-react";
 import { ColumnDef, Row } from "@tanstack/react-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
 import { Badge } from "@components/ui/badge";
 import { LoadingPlaceholder } from "@components/ui/spinner";
 import { Input } from "@components/ui/input";
 import { statusStore } from "@atoms/status";
-import { cn } from "@lib/utils";
+import { cn, formatDate } from "@lib/utils";
 import { toast } from "sonner";
 import {
   Project,
   useGetProjects,
   useGetProjectStatuses,
   useUpdateProject,
+  useGetOrganizationMembers,
 } from "@service-geek/api-client";
 import { userPreferenceStore } from "@state/user-prefrence";
 import { ProjectKanban } from "./kanban";
+import { ToggleFilter } from "@components/ui/ToggleFilter";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@components/ui/popover";
+import { Calendar } from "@components/ui/calendar";
+import { format } from "date-fns";
+import DamageBadge from "@components/Project/DamageBadge";
+import StatusBadge from "@components/Project/StatusBadge";
 
 export default function ProjectList() {
   const [isCreatingNewProject, setIsCreatingNewProject] = useState(false);
@@ -65,16 +79,32 @@ export default function ProjectList() {
 
   const page = parseInt(search.get("page") || "1");
   const query = search.get("query") || "";
+  const [filterObj, setFilterObj] = useState({
+    search: "",
+    startDate: null as Date | null,
+    endDate: null as Date | null,
+    assigneeIds: [],
+  });
+  const [filterDialogState, setFilterDialogState] = useState({
+    startDate: null as Date | null,
+    endDate: null as Date | null,
+    assigneeId: "",
+  });
 
-  const { data, isLoading } = useGetProjects({
+  const { data, isLoading, refetch } = useGetProjects({
     pagination: {
       page,
       limit: 10,
       sortBy: "createdAt",
       sortOrder: "desc",
       search: query,
+      assigneeIds: filterObj.assigneeIds,
+      startDate: filterObj?.startDate ? filterObj?.startDate?.toISOString() : undefined,
+      endDate: filterObj?.endDate ? filterObj?.endDate?.toISOString() : undefined,
     },
   });
+
+  const { data: organizationMembers } = useGetOrganizationMembers();
 
   const handleSearch = useDebouncedCallback((term) => {
     const params = new URLSearchParams(search);
@@ -96,34 +126,99 @@ export default function ProjectList() {
     updatePreference({ savedDashboardView: view });
   }
 
+
+  const [filterQuery, setFilterQuery] = useState("");
+
+  const filterTabsList = [
+    {
+      label: "All",
+      value: "all",
+    },
+    {
+      label: "Started",
+      value: "stared",
+    },
+    {
+      label: "My Projects",
+      value: "My Projects",
+    },
+    {
+      label: "Archived",
+      value: "Archived",
+    },
+  ]
+
   return (
     <>
       <div
         className={cn(
-          "fixed z-10 bg-background lg:pr-10",
-          "lg:w-[calc(100vw-var(--sidebar-width))]"
+          "z-10 bg-background lg:pr-6",
+          "md:w-[calc(100vw-var(--sidebar-width)-48px)]"
         )}
       >
-        <div className='mt-3 flex w-full justify-between space-x-6'>
-          <div className='z-10 w-11/12 space-y-0.5'>
-            <h2 className='mt-4 text-2xl font-bold tracking-tight'>Projects</h2>
-            <p className='hidden text-muted-foreground lg:block'>
+        <div className='flex w-full justify-between space-x-6'>
+          <div className='z-10 w-11/12 flex flex-col md:flex-row md:items-center gap-2 space-x-4'>
+            <div className=" space-y-0.5">
+
+              <h2 className='text-2xl md:text-4xl font-bold tracking-tight'>Projects</h2>
+              {/* <p className='hidden text-muted-foreground lg:block'>
               Select a project to manage files and estimates.
-            </p>
+            </p> */}
+            </div>
+            <Input
+              placeholder="Search projects..."
+              onChange={e => handleSearch(e.target.value)}
+              className="w-full lg:max-w-64 h-10"
+              defaultValue={query}
+            />
           </div>
           <div className='ml-auto flex min-w-[100px] flex-col space-y-4'>
             <Button onClick={() => setIsCreatingNewProject((i) => !i)}>
-              New Project
+              <CirclePlus />
+              Create Project
             </Button>
           </div>
         </div>
         <div className='mt-5 flex justify-between'>
-          <Input
-            placeholder='Search projects...'
-            onChange={(e) => handleSearch(e.target.value)}
-            className='w-full lg:max-w-96'
-            defaultValue={query}
-          />
+          <div className="flex items-center gap-2">
+
+            <Tabs
+              defaultValue={"all"}
+              onValueChange={(e) => changeDashboardView(e)}
+            >
+              <TabsList className='hidden lg:block'>
+                {filterTabsList.map((tab) => (
+                  <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+
+            <ToggleFilter
+              filterTitle='Filter Projects'
+              onApply={() => {
+                setFilterObj({
+                  ...filterObj,
+                  startDate: filterDialogState.startDate,
+                  endDate: filterDialogState.endDate,
+                  assigneeIds: filterDialogState.assigneeId ? [filterDialogState.assigneeId] : [],
+                });
+              }}
+            >
+              <ProjectFilterForm
+                filterObj={filterDialogState}
+                setFilterObj={setFilterDialogState}
+                organizationMembers={organizationMembers}
+              />
+            </ToggleFilter>
+            <Button
+              variant={"outline"}
+
+              onClick={() => refetch()}
+            >
+              <RotateCw />
+
+            </Button>
+          </div>
           <Tabs
             defaultValue={savedDashboardView}
             onValueChange={(e) => changeDashboardView(e)}
@@ -136,7 +231,7 @@ export default function ProjectList() {
         </div>
       </div>
 
-      <div className='mt-40'>
+      <div className='mt-10'>
         {isLoading ? (
           <LoadingPlaceholder />
         ) : (
@@ -145,9 +240,10 @@ export default function ProjectList() {
               // <KanBan projects={data?.data ?? []} />
               <ProjectKanban />
             ) : (
-              <Card>
-                <Table projects={data?.data ?? []} />
-              </Card>
+              <List projects={data?.data ?? []} />
+              // <Card>
+              //   <Table projects={data?.data ?? []} />
+              // </Card>
             )}
             {savedDashboardView === "listView" && data?.meta && (
               <Pagination className='mt-5'>
@@ -199,13 +295,18 @@ export const Table = ({ projects }: { projects: any[] }) => {
         <TableColumnHeader column={column} title='Name' />
       ),
       cell: ({ row }: { row: Row<Project> }) => {
+        console.log("row.original", row.original);
         const status = statuses?.find(
           (status) => status.id === row.original.statusId
         );
         return (
           <div className='flex items-center gap-2'>
             <div className='relative'>
-              <Avatar className='size-16 rounded-full'>
+              {row.original.mainImage ? <img src={row.original.mainImage} alt={row.original.clientName} className='md:size-24 size-16 rrounded-xl border-2 border-border' /> :
+                <div className='flex items-center justify-center md:size-24 size-16 rounded-xl border-2 border-border  bg-background' >
+                  <FileImage size={45} />
+                </div>}
+              {/* <Avatar className='size-16 rounded-full'>
                 <AvatarImage
                   src={row.original.mainImage}
                   alt={row.original.clientName}
@@ -222,14 +323,32 @@ export const Table = ({ projects }: { projects: any[] }) => {
                 style={{
                   backgroundColor: status?.color || "green",
                 }}
-              />
+              /> */}
             </div>
-            <div>
-              <span className='font-medium'>{row.original?.name}</span>
-              <div className='hidden items-center gap-1 text-xs text-muted-foreground lg:flex'>
+            <div className="flex flex-col justify-between h-full gap-1">
+              <span className='font-medium text-lg capitalize'>{row.original?.name}</span>
+              <div className='hidden items-center text-sm gap-1 text-muted-foreground lg:flex'>
                 <span>{row.original?.location}</span>
                 <ChevronRightIcon size={12} />
                 <span>{row.original?.clientName}</span>
+
+              </div>
+              <span className="text-muted-foreground text-xs">Last updated {formatDate(new Date(row.original?.createdAt))}</span>
+              <div className="flex items-center gap-2">
+
+
+                <Badge style={{ backgroundColor: status?.color || "green", width: "fit-content", marginTop: 2 }}>
+                  {status?.label}
+                </Badge>
+                {row.original.lossType && (
+                  <Badge
+                    variant='secondary'
+                    className='border-red-200 bg-red-100 text-xs text-red-700 w-fit'
+                  >
+                    <AlertTriangle className='mr-1 h-3 w-3' />
+                    {row.original.lossType}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -237,31 +356,58 @@ export const Table = ({ projects }: { projects: any[] }) => {
       },
     },
     {
-      accessorKey: "createdAt",
+      accessorKey: "images",
       header: ({ column }) => (
-        <TableColumnHeader column={column} title='Start Date' />
+        <TableColumnHeader column={column} title='Images' />
       ),
       cell: ({ row }) =>
-        new Intl.DateTimeFormat("en-US", {
-          dateStyle: "medium",
-        }).format(new Date(row.original.createdAt)),
+        <div className="flex justify-between items-center gap-4">
+          {/* TO_DO: Add images and docs count */}
+          <div className="flex divide-x divide-gray-200">
+            <div className="flex flex-col items-center gap-2 px-2">
+              <span className="text-muted-foreground text-xs">Images</span>
+              <span className="text-lg">{row.original._count.images}</span>
+            </div>
+            <div className="flex flex-col items-center gap-2 px-2">
+              <span className="text-muted-foreground text-xs">Docs</span>
+              <span className="text-lg">{row.original._count.documents?.length || 0}</span>
+            </div>
+          </div>
+          <div className="grow flex items-center  gap-2">
+            {row.original.images?.map((image: any) =>
+              <img src={image.url} alt={row.original.name || "image"} height={64} width={64} className='md:size-24 size-16 rounded-xl border-2 border-border' />
+            )}
+
+
+          </div>
+        </div>
     },
-    {
-      accessorKey: "status",
-      header: ({ column }) => (
-        <TableColumnHeader column={column} title='Status' />
-      ),
-      cell: ({ row }: { row: Row<Project> }) => {
-        const status = statuses?.find(
-          (status) => status.id === row.original.statusId
-        );
-        return (
-          <Badge style={{ backgroundColor: status?.color || "green" }}>
-            {status?.label}
-          </Badge>
-        );
-      },
-    },
+    // {
+    //   accessorKey: "createdAt",
+    //   header: ({ column }) => (
+    //     <TableColumnHeader column={column} title='Start Date' />
+    //   ),
+    //   cell: ({ row }) =>
+    //     new Intl.DateTimeFormat("en-US", {
+    //       dateStyle: "medium",
+    //     }).format(new Date(row.original.createdAt)),
+    // },
+    // {
+    //   accessorKey: "status",
+    //   header: ({ column }) => (
+    //     <TableColumnHeader column={column} title='Status' />
+    //   ),
+    //   cell: ({ row }: { row: Row<Project> }) => {
+    //     const status = statuses?.find(
+    //       (status) => status.id === row.original.statusId
+    //     );
+    //     return (
+    //       <Badge style={{ backgroundColor: status?.color || "green" }}>
+    //         {status?.label}
+    //       </Badge>
+    //     );
+    //   },
+    // },
   ];
 
   return (
@@ -290,6 +436,89 @@ export const Table = ({ projects }: { projects: any[] }) => {
         )}
       </TableBody>
     </TableProvider>
+  );
+};
+
+const List = ({ projects }: { projects: any[] }) => {
+  const { data: statuses } = useGetProjectStatuses();
+  const router = useRouter();
+
+  return (
+    <div className="flex flex-col gap-4 ">
+      {projects.map((project) => {
+        const status = statuses?.find((status) => status.id === project.statusId);
+        return (
+          <div
+            key={project.id}
+            className="flex flex-col lg:flex-row lg:items-center gap-4 p-4 border rounded-lg shadow hover:shadow-xl cursor-pointer transition-colors group"
+            onClick={() => router.push(`/projects/${project.id}/overview`)}
+            tabIndex={0}
+            role="button"
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.push(`/projects/${project.id}/overview`); }}
+          >
+            <div className="flex flex-col md:flex-row divide-y md:divide-y-0 space-y-4 md:space-y-0 justify-between md:items-center grow">
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                <div className="relative">
+                  {project.mainImage ? (
+                    <img
+                      src={project.mainImage}
+                      alt={project.clientName}
+                      className="md:size-24 size-16 rounded-xl border-2 border-border object-cover bg-white"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center md:size-24 size-16 rounded-xl border-2 border-border bg-background">
+                      <FileImage size={45} />
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col justify-between h-full gap-1 min-w-0">
+                  <span className="font-medium text-lg capitalize truncate">{project?.name}</span>
+                  <div className="flex items-center text-sm gap-1 text-muted-foreground min-w-0">
+                    <span className="truncate">{project?.location}</span>
+                    <ChevronRightIcon size={12} />
+                    <span className="truncate">{project?.clientName}</span>
+                  </div>
+                  <span className="text-muted-foreground text-xs">Last updated {formatDate(new Date(project?.createdAt))}</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    {/* <Badge style={{ backgroundColor: status?.color || project.status?.color || 'green', width: 'fit-content' }}>
+                      {status?.label || project.status?.label}
+                    </Badge> */}
+                    <StatusBadge label={status?.label || project.status?.label} color={status?.color || project.status?.color}/>
+                    {project.lossType && (
+                      <DamageBadge lossType={project.lossType} />
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex divide-x divide-gray-200 rounded-lg p-2">
+                <div className="flex flex-col items-center gap-2 px-2">
+                  <span className="text-muted-foreground text-xs">Images</span>
+                  <span className="text-lg">{project._count.images}</span>
+                </div>
+                <div className="flex flex-col items-center gap-2 px-2">
+                  <span className="text-muted-foreground text-xs">Docs</span>
+                  <span className="text-lg">{project._count.documents?.length || 0}</span>
+                </div>
+              </div>
+            </div>
+            <div className="w-full grid grid-cols-5 items-center gap-2  w-fit lg:w-auto basis-1/3">
+              {project.images?.map((image: any) => (
+                <div key={image.url} className="relative md:h-24 h-16 min-w-16">
+                  <img
+                    key={image.url}
+                    src={image.url}
+                    alt={project.name || 'image'}
+                    height={48}
+                    width={48}
+                    className="w-full h-full absolute top-0 left-0 rounded-xl border-2 border-border object-cover bg-white"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
@@ -356,5 +585,126 @@ export const KanBan = ({ projects }: { projects: any[] }) => {
         </KanbanBoard>
       ))}
     </KanbanProvider>
+  );
+};
+
+const ProjectFilterForm = ({
+  filterObj,
+  setFilterObj,
+  organizationMembers,
+}: {
+  filterObj: any;
+  setFilterObj: any;
+  organizationMembers: any;
+}) => {
+  return (
+    <div className='flex flex-col gap-4'>
+      <div className="grid grid-cols-2 gap-4">
+        <div >
+          <label className='text-sm font-medium mb-2'>Start Date</label>
+          <div className="relative">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal pr-8",
+                    !filterObj.startDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {filterObj.startDate ? format(filterObj.startDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={filterObj.startDate || undefined}
+                  onSelect={(date) => setFilterObj(obj => ({ ...obj, startDate: date }))}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            {filterObj.startDate && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+                onClick={() => setFilterObj(obj => ({ ...obj, startDate: null }))}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        </div>
+        <div>
+          <label className='text-sm font-medium mb-2'>End Date</label>
+          <div className="relative">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal pr-8",
+                    !filterObj.endDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {filterObj.endDate ? format(filterObj.endDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={filterObj.endDate || undefined}
+                  onSelect={(date) => setFilterObj(obj => ({ ...obj, endDate: date }))}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            {filterObj.endDate && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+                onClick={() => setFilterObj(obj => ({ ...obj, endDate: null }))}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+      <div>
+        <label className='text-sm font-medium mb-2'>User</label>
+        <div className="relative">
+          <Select
+            value={filterObj.user}
+            onValueChange={val => setFilterObj(obj => ({ ...obj, user: val }))}
+          >
+            <SelectTrigger className='w-full pr-8'>
+              <SelectValue placeholder='Select user' />
+            </SelectTrigger>
+            <SelectContent>
+              {organizationMembers?.data?.map((member: any) => (
+                <SelectItem key={member.user?.id} value={member.user?.id}>
+                  {member.user?.firstName} {member.user?.lastName} ({member.user?.email})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {filterObj.user && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+              onClick={() => setFilterObj(obj => ({ ...obj, user: "" }))}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };

@@ -100,7 +100,8 @@ a.fc-col-header-cell-cushion {
 
     --secondary-foreground: 0 0% 9%;
 
-    --muted: 0 0% 96.1%;
+    /* --muted: 0 0% 96.1%; */
+    --muted: 216 33% 94%;
 
     --muted-foreground: 0 0% 45.1%;
 

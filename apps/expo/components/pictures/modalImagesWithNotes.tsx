@@ -28,6 +28,7 @@ import {
   MessageCircle,
   Star,
   Loader,
+  Tag,
 } from "lucide-react-native";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,8 +54,20 @@ import { useGlobalSearchParams } from "expo-router";
 import { Pencil } from "@/lib/icons/ImageEditorIcons";
 import dayjs from "dayjs";
 import ImageEditorModal from "../project/ImageEditorModal";
+import ImageTagsModal from "./ImageTagsModal";
 import { uploadAsync } from "expo-file-system";
 import * as FileSystem from "expo-file-system";
+
+// Type assertion to fix ReactNode compatibility
+const ChevronLeftIcon = ChevronLeft as any;
+const ChevronRightIcon = ChevronRight as any;
+const Trash2Icon = Trash2 as any;
+const ImageIconComponent = ImageIcon as any;
+const MessageCircleIcon = MessageCircle as any;
+const StarIcon = Star as any;
+const LoaderIcon = Loader as any;
+const TagIcon = Tag as any;
+
 // Get screen dimensions for responsive sizing
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -76,9 +89,7 @@ const base64ToFile = async (base64: string): Promise<string> => {
 
 interface ImageGalleryProps {
   images: Image[];
-  urlMap: {
-    [imageKey: string]: string;
-  };
+
   onRefresh?: () => Promise<void>;
   roomName?: string;
   onDelete?: (imageKey: string) => Promise<void>;
@@ -91,6 +102,7 @@ interface ImageGalleryProps {
   modalVisible: boolean;
   activeImageIndex: number;
   setActiveImageIndex: (index: number) => void;
+  refetch: () => void;
 }
 
 const styles = StyleSheet.create({
@@ -203,7 +215,7 @@ const styles = StyleSheet.create({
   },
   activeThumbnail: {
     borderWidth: 2,
-    borderColor: "#1e40af",
+    borderColor: "#2563eb",
   },
   thumbnailImage: {
     width: "100%",
@@ -228,7 +240,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -5,
     right: -5,
-    backgroundColor: "#1e40af",
+    backgroundColor: "#2563eb",
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -237,6 +249,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   noteBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  tagBadge: {
+    position: "absolute",
+    top: -5,
+    right: -5,
+    backgroundColor: "#2563eb",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+  tagBadgeText: {
     color: "#fff",
     fontSize: 12,
     fontWeight: "600",
@@ -298,7 +327,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#1e40af",
+    backgroundColor: "#2563eb",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
@@ -346,7 +375,7 @@ const styles = StyleSheet.create({
     minHeight: 40,
   },
   submitNoteButton: {
-    backgroundColor: "#1e40af",
+    backgroundColor: "#2563eb",
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -372,9 +401,9 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 1)",
     padding: 16,
     // paddingBottom: 250,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    // borderTopWidth: 1,
+    // borderBottomWidth: 1,
+    // borderColor: "#2563eb",
   },
   descriptionContainer: {
     marginBottom: 8,
@@ -418,7 +447,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   saveButton: {
-    backgroundColor: "#1e40af",
+    backgroundColor: "#2563eb",
   },
   descriptionButtonText: {
     color: "#fff",
@@ -466,7 +495,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   descriptionModalSaveButton: {
-    backgroundColor: "#1e40af",
+    backgroundColor: "#2563eb",
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -487,7 +516,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   readMoreText: {
-    color: "#1e40af",
+    color: "#2563eb",
     fontSize: 14,
     fontWeight: "500",
   },
@@ -587,18 +616,19 @@ const NotesModal = ({
   isVisible,
   onClose,
   imageId,
-  comments,
+  // comments,
 }: {
   isVisible: boolean;
   onClose: () => void;
   imageId: string;
-  comments: any[];
+  // comments: any[];
 }) => {
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [noteText, setNoteText] = useState("");
   const noteInputRef = useRef<TextInput>(null);
   const { mutate: addComment } = useAddComment();
   const { data: user } = useCurrentUser();
+  const { data: comments } = useGetComments(imageId);
 
   const handleAddNote = async () => {
     if (noteText.trim() && !isAddingNote) {
@@ -767,12 +797,14 @@ export default function ModalImagesWithNotes({
   modalVisible,
   activeImageIndex,
   setActiveImageIndex,
+  refetch,
 }: ImageGalleryProps) {
   // Refs for scrolling and input
   const modalScrollRef = useRef<FlatList>(null);
   const thumbnailScrollRef = useRef<ScrollView>(null);
   const currentNoteText = useRef("");
   const noteInputRef = useRef<TextInput>(null);
+  const [showNotes, setShowNotes] = useState(false);
 
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -854,6 +886,9 @@ export default function ModalImagesWithNotes({
                   activeImageIndex={activeImageIndex}
                   handleCloseModal={handleCloseModal}
                   images={images}
+                  refetch={refetch}
+                  showNotes={showNotes}
+                  setShowNotes={setShowNotes}
                 />
               )}
               keyExtractor={(item) => item.id}
@@ -866,6 +901,8 @@ export default function ModalImagesWithNotes({
               setActiveImageIndex={setActiveImageIndex}
               modalScrollRef={modalScrollRef}
               images={images}
+              showNotes={showNotes}
+              setShowNotes={setShowNotes}
             />
 
             {/* Thumbnails */}
@@ -934,16 +971,23 @@ const ModalItem = ({
   activeImageIndex,
   handleCloseModal,
   images,
+  refetch,
+  showNotes,
+  setShowNotes,
 }: {
   item: Image;
   images: Image[];
   modalVisible: boolean;
   activeImageIndex: number;
   handleCloseModal: () => void;
+  refetch: () => void;
+  showNotes: boolean;
+  setShowNotes: (show: boolean) => void;
 }) => {
-  const [showNotes, setShowNotes] = useState(false);
+  //  const [showNotes, setShowNotes] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingReport, setIsUpdatingReport] = useState(false);
+  const [showTagsModal, setShowTagsModal] = useState(false);
   const { mutate: deleteImage } = useRemoveImage();
   const imageUrl = item.url;
   const { data: comments } = useGetComments(item.id);
@@ -1026,6 +1070,9 @@ const ModalItem = ({
     ],
   };
 
+  const currentTags = item.tags || [];
+  const hasTags = currentTags.length > 0;
+
   return (
     <View style={styles.modalImageContainer}>
       <OptimizedImage
@@ -1044,7 +1091,7 @@ const ModalItem = ({
           onPress={() => handleDeleteImage(item.id)}
           disabled={isDeleting}
         >
-          <Trash2 size={24} color="#fff" opacity={isDeleting ? 0.5 : 1} />
+          <Trash2Icon size={24} color="#fff" opacity={isDeleting ? 0.5 : 1} />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionButton}
@@ -1061,9 +1108,9 @@ const ModalItem = ({
           disabled={isUpdatingReport}
         >
           {isUpdatingReport ? (
-            <Loader size={24} color="#fff" />
+            <LoaderIcon size={24} color="#fff" />
           ) : (
-            <Star
+            <StarIcon
               size={24}
               color="#fff"
               fill={item.showInReport ? "#FBBF24" : "transparent"}
@@ -1072,9 +1119,20 @@ const ModalItem = ({
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionButton}
+          onPress={() => setShowTagsModal(true)}
+        >
+          <TagIcon size={24} color="#fff" />
+          {hasTags && (
+            <View style={styles.tagBadge}>
+              <Text style={styles.tagBadgeText}>{currentTags.length}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.actionButton}
           onPress={() => setShowNotes(true)}
         >
-          <MessageCircle size={24} color="#fff" />
+          <MessageCircleIcon size={24} color="#fff" />
           {noteCount > 0 && (
             <View style={styles.noteBadge}>
               <Text style={styles.noteBadgeText}>{noteCount}</Text>
@@ -1083,11 +1141,17 @@ const ModalItem = ({
         </TouchableOpacity>
       </View>
 
-      <NotesModal
-        isVisible={showNotes}
-        onClose={() => setShowNotes(false)}
+      <ImageTagsModal
+        visible={showTagsModal}
+        onClose={() => setShowTagsModal(false)}
         imageId={item.id}
-        comments={comments || []}
+        currentTags={currentTags}
+        onTagsUpdated={() => {
+          refetch();
+          // Refresh the image data
+          // This will trigger a re-render with updated tags
+        }}
+        
       />
 
       <ImageEditorModal
@@ -1104,7 +1168,7 @@ const ModalItem = ({
                 size: 100,
                 name: "image.png",
                 type: "image/png",
-              },
+              } as any,
               "image.png"
             );
             await updateImage({
@@ -1132,12 +1196,16 @@ const ModalItemMetadata = ({
   setActiveImageIndex,
   modalScrollRef,
   images,
+  showNotes,
+  setShowNotes,
 }: {
   item: Image;
   activeImageIndex: number;
   setActiveImageIndex: (index: number) => void;
   modalScrollRef: React.RefObject<FlatList<Image>>;
   images: Image[];
+  showNotes: boolean;
+  setShowNotes: (show: boolean) => void;
 }) => {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [description, setDescription] = useState(item.description || "");
@@ -1209,7 +1277,7 @@ const ModalItemMetadata = ({
             ]}
             disabled={activeImageIndex === 0}
           >
-            <ChevronLeft
+            <ChevronLeftIcon
               size={30}
               color={activeImageIndex === 0 ? "#666" : "#fff"}
             />
@@ -1228,7 +1296,7 @@ const ModalItemMetadata = ({
             ]}
             disabled={activeImageIndex === images.length - 1}
           >
-            <ChevronRight
+            <ChevronRightIcon
               size={30}
               color={activeImageIndex === images.length - 1 ? "#666" : "#fff"}
             />
@@ -1249,7 +1317,12 @@ const ModalItemMetadata = ({
           </TouchableOpacity>
         )}
       </View>
-
+      <NotesModal
+        isVisible={showNotes}
+        onClose={() => setShowNotes(false)}
+        imageId={item.id}
+        // comments={comments || []}
+      />
       {/* Description Edit Modal */}
       <DescriptionEditModal
         isVisible={isEditingDescription}

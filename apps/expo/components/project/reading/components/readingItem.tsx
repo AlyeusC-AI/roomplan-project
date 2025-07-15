@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button, FormControl, Heading, Modal, Stack } from "native-base";
+import {
+  Box,
+  Button,
+  FormControl,
+  Heading,
+  Modal,
+  Stack,
+  HStack,
+} from "native-base";
 import {
   Camera,
   ChevronLeft,
@@ -7,6 +15,10 @@ import {
   Plus,
   Trash2,
 } from "lucide-react-native";
+
+// Type assertions to fix ReactNode compatibility
+const Trash2Component = Trash2 as any;
+const PlusComponent = Plus as any;
 import { v4 } from "react-native-uuid/dist/v4";
 import {
   TouchableOpacity,
@@ -31,13 +43,18 @@ import {
   Room,
   RoomReading,
   useCreateGenericRoomReading,
-  useDeleteRoomReading,
   useDeleteWall,
   useUpdateRoom,
-  useUpdateRoomReading,
   Wall,
   WallReading,
 } from "@service-geek/api-client";
+import {
+  useOfflineUpdateRoomReading,
+  useOfflineDeleteRoomReading,
+  useOfflineReadings,
+  useOfflineCreateGenericRoomReading,
+} from "@/lib/hooks/useOfflineReadings";
+import { useOfflineReadingsStore } from "@/lib/state/offline-readings";
 import { useDebounce } from "@/utils/debounce";
 
 const RoomReadingItem = ({
@@ -46,6 +63,7 @@ const RoomReadingItem = ({
   pickImage,
   openImageViewer,
   setWall,
+  projectId,
 }: {
   room: Room;
   reading: RoomReading;
@@ -60,21 +78,50 @@ const RoomReadingItem = ({
     genericId?: string
   ) => void;
   setWall: (wall: Partial<Wall>) => void;
+  projectId?: string;
 }) => {
-  const { mutate: updateRoomReading } = useUpdateRoomReading();
+  const { mutate: updateRoomReading } = useOfflineUpdateRoomReading(
+    projectId,
+    room.id
+  );
   const { mutate: deleteWall } = useDeleteWall();
   const { mutate: deleteRoomReading, isPending: isDeleting } =
-    useDeleteRoomReading();
+    useOfflineDeleteRoomReading(projectId, room.id);
   const { mutate: addGenericRoomReading, isPending: isAdding } =
-    useCreateGenericRoomReading();
-  const [tempRoomReading, setTempRoomReading] = useState<RoomReading>(reading);
+    useOfflineCreateGenericRoomReading(projectId);
+  const { getEditForReading } = useOfflineReadingsStore();
+  const offlineEdit = getEditForReading(reading.id);
+
+  const [tempRoomReading, setTempRoomReading] = useState<RoomReading>({
+    ...reading,
+    ...(offlineEdit && {
+      temperature: offlineEdit.temperature ?? reading.temperature,
+      humidity: offlineEdit.humidity ?? reading.humidity,
+      date: offlineEdit.date ?? reading.date,
+    }),
+  });
   const [isUpdating, setIsUpdating] = useState(false);
   const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
 
   console.log("🚀 ~ tempRoomReading:", tempRoomReading.humidity);
+  console.log("🚀 ~ reading.id:", reading.id);
+
+  // Get offline edit for this reading
+  console.log("🚀 ~ offlineEdit:", offlineEdit);
+
   useEffect(() => {
-    setTempRoomReading(reading);
-  }, [reading]);
+    // Merge online reading data with offline edits
+    const mergedReading = {
+      ...reading,
+      ...(offlineEdit && {
+        temperature: offlineEdit.temperature ?? reading.temperature,
+        humidity: offlineEdit.humidity ?? reading.humidity,
+        date: offlineEdit.date ?? reading.date,
+      }),
+    };
+    console.log("🚀 ~ mergedReading:", offlineEdit, mergedReading);
+    setTempRoomReading(mergedReading);
+  }, [reading, offlineEdit]);
 
   const debouncedRoomReading = useDebounce(tempRoomReading, 1000);
   // console.log("🚀 ~ debouncedRoomReading:", debouncedRoomReading);
@@ -95,26 +142,22 @@ const RoomReadingItem = ({
     // Only update if we're not already updating and enough time has passed since last update
     if (!isUpdating && now - lastUpdateTime > 1000) {
       setIsUpdating(true);
-      updateRoomReading(
-        {
-          id: reading.id,
-          data: {
-            date: debouncedRoomReading.date,
-            temperature: debouncedRoomReading.temperature,
-            humidity: debouncedRoomReading.humidity,
-            // wallReadings: debouncedRoomReading.wallReadings,
-          },
+      updateRoomReading({
+        id: reading.id,
+        data: {
+          date: debouncedRoomReading.date,
+          temperature: debouncedRoomReading.temperature,
+          humidity: debouncedRoomReading.humidity,
+          // wallReadings: debouncedRoomReading.wallReadings,
         },
-        {
-          onSuccess: () => {
-            setIsUpdating(false);
-            setLastUpdateTime(Date.now());
-          },
-          onError: () => {
-            setIsUpdating(false);
-          },
-        }
-      );
+      })
+        .then(() => {
+          setIsUpdating(false);
+          setLastUpdateTime(Date.now());
+        })
+        .catch(() => {
+          setIsUpdating(false);
+        });
     }
   }, [
     debouncedRoomReading.humidity,
@@ -197,77 +240,106 @@ const RoomReadingItem = ({
       <Box
         key={reading.id}
         w="full"
-        pl={4}
-        borderLeftWidth={1}
-        borderLeftColor="blue.500"
+        // pl={4}
+        // borderLeftWidth={1}
+        // borderLeftColor="blue.500"
         className="gap-y-2"
       >
-        {/* Delete Reading Button */}
-        <Button
-          onPress={confirmDeleteReading}
-          className="flex-row items-center justify-center bg-white rounded-lg py-1.5 px-3 border border-red-300"
-          variant="destructive"
-          disabled={isDeleting}
-        >
-          <View className="flex-row items-center">
-            {isDeleting ? (
-              <ActivityIndicator
-                color="#dc2626"
-                size="small"
-                className="mr-1.5"
-              />
-            ) : (
-              <Trash2
-                color="#dc2626"
-                height={16}
-                width={16}
-                className="mr-1.5"
-              />
-            )}
-            <Text className="text-red-700 font-medium text-sm">
-              {isDeleting ? "Deleting..." : "Delete Reading"}
-            </Text>
-          </View>
-        </Button>
+        {/* Header with offline indicator */}
+        <HStack justifyContent="space-between" alignItems="center" mb={2}>
+          <Button
+            onPress={confirmDeleteReading}
+            className="flex-row items-center justify-center bg-white rounded-lg py-1.5 px-3 border border-red-300"
+            variant="destructive"
+            disabled={isDeleting}
+          >
+            <View className="flex-row items-center">
+              {isDeleting ? (
+                <ActivityIndicator
+                  color="#dc2626"
+                  size="small"
+                  className="mr-1.5"
+                />
+              ) : (
+                <Trash2Component
+                  color="#dc2626"
+                  height={16}
+                  width={16}
+                  className="mr-1.5"
+                />
+              )}
+              <Text className="text-red-700 font-medium text-sm">
+                {isDeleting ? "Deleting..." : "Delete Reading"}
+              </Text>
+            </View>
+          </Button>
+        </HStack>
 
         {/* Main Form */}
         <FormControl>
-          <Stack mx="2" className="gap-y-2">
-            {/* Temperature Input */}
-            <View>
-              <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">
-                Temperature
-              </FormControl.Label>
-              <RoomReadingInput
-                value={tempRoomReading.temperature?.toString() || ""}
-                placeholder="Temperature"
-                rightText="°F"
-                onChange={(value) => {
-                  setTempRoomReading((prev) => ({
-                    ...prev,
-                    temperature: Number(value),
-                  }));
-                }}
-              />
+          {isUpdating && (
+            <View
+              style={{
+                backgroundColor: "#dbeafe",
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: 8,
+                marginBottom: 8,
+              }}
+            >
+              <HStack alignItems="center" space={2}>
+                <ActivityIndicator size="small" color="#1e40af" />
+                <Text className="text-blue-700 font-medium text-sm">
+                  Saving changes...
+                </Text>
+              </HStack>
             </View>
+          )}
+          <Stack mx="2" className="">
+            <Heading
+              size="sm"
+              mb="2"
+              className="text-gray-700 font-semibold text-sm"
+            >
+              Affected Area Reading
+            </Heading>
+            <HStack space={4} alignItems="flex-end">
+              {/* Temperature Input */}
+              <View style={{ flex: 1 }}>
+                <FormControl.Label className="text-gray-700 font-medium text-[8px] items-center">
+                  Temperature
+                </FormControl.Label>
+                <RoomReadingInput
+                  value={tempRoomReading.temperature?.toString() || ""}
+                  placeholder="Temperature"
+                  rightText="°F"
+                  onChange={(value) => {
+                    setTempRoomReading((prev) => ({
+                      ...prev,
+                      temperature: Number(value),
+                    }));
+                  }}
+                />
+              </View>
 
-            {/* Relative Humidity Input */}
-            <View>
-              <FormControl.Label className="text-gray-700 font-medium text-sm mb-0.5">
-                Relative Humidity
-              </FormControl.Label>
-              <RoomReadingInput
-                value={tempRoomReading.humidity?.toString() || ""}
-                placeholder="Relative Humidity"
-                rightText="%"
-                onChange={(value) => {
-                  setTempRoomReading((prev) => ({
-                    ...prev,
-                    humidity: Number(value),
-                  }));
-                }}
-              />
-            </View>
+              {/* Relative Humidity Input */}
+              <View style={{ flex: 1 }}>
+                <FormControl.Label className="text-gray-700 font-medium text-[8px] mb-0.5 items-center">
+                  Relative Humidity
+                </FormControl.Label>
+                <RoomReadingInput
+                  value={tempRoomReading.humidity?.toString() || ""}
+                  placeholder="Relative Humidity"
+                  rightText="%"
+                  onChange={(value) => {
+                    setTempRoomReading((prev) => ({
+                      ...prev,
+                      humidity: Number(value),
+                    }));
+                  }}
+                />
+              </View>
+            </HStack>
 
             {/* Grains Per Pound Input */}
             <View>
@@ -288,6 +360,14 @@ const RoomReadingItem = ({
               />
             </View>
 
+            <Heading
+              size="sm"
+              mt="4"
+              mb="2"
+              className="text-gray-700 font-semibold text-sm"
+            >
+              Moisture Points
+            </Heading>
             <View className="gap-y-2">
               {/* Extended Walls Section */}
               {walls.map((wall) => (
@@ -326,8 +406,8 @@ const RoomReadingItem = ({
             {/* Dehumidifier Readings Section */}
             <Heading
               size="sm"
-              mt="2"
-              mb="1"
+              mt="4"
+              mb="2"
               className="text-gray-700 font-semibold text-sm"
             >
               Dehumidifier Readings
@@ -383,7 +463,7 @@ const RoomReadingItem = ({
                     className="mr-1.5"
                   />
                 ) : (
-                  <Plus
+                  <PlusComponent
                     color="#FFF"
                     height={16}
                     width={16}

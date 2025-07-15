@@ -1,12 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private prisma: PrismaService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
@@ -20,6 +24,31 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    return { userId: payload.sub, email: payload.email, user: payload };
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: payload.sub,
+      },
+      include: {
+        organizationMemberships: {
+          take: 1,
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+      },
+    });
+    console.log('🚀 ~ JwtStrategy ~ vsssalidate ~ user:', user);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    return {
+      userId: payload.sub,
+      email: payload.email,
+      organizationId: user.organizationMemberships[0]?.organizationId,
+      user: {
+        ...user,
+        organizationId: user.organizationMemberships[0]?.organizationId,
+      },
+    };
   }
 }

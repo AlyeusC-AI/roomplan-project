@@ -13,9 +13,11 @@ import { Textarea } from "@components/ui/textarea";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MapPin, Clock } from "lucide-react";
-import { createClient } from "@lib/supabase/client";
 import { Slider } from "@components/ui/slider";
 import { Switch } from "@components/ui/switch";
+import { useActiveOrganization } from "@service-geek/api-client";
+import { Project } from "@service-geek/api-client";
+import { CalendarEvent } from "@service-geek/api-client";
 
 const createArrivalMessageTemplate = (
   projectName: string,
@@ -25,48 +27,38 @@ const createArrivalMessageTemplate = (
   return `Hi, this is ${projectName}. I'm heading your way and will be there in ${arrivalTime} minutes. You can reach me at ${phoneNumber} if you need anything.`;
 };
 
-export function ArrivalNotification({ onClose,project,event }: { onClose: () => void,project:Project,event:CalendarEvent }) {
+export function ArrivalNotification({
+  onClose,
+  project,
+  event,
+}: {
+  onClose: () => void;
+  project: Project;
+  event: CalendarEvent;
+}) {
   const [isOpen, setIsOpen] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
-  const [org, setOrg] = useState<any | null>(null);
   const [charCount, setCharCount] = useState(0);
   const [arrivalTime, setArrivalTime] = useState(30);
   const [status, setStatus] = useState<"heading" | "late">("heading");
   const MAX_CHARS = 300;
+
+  const org = useActiveOrganization();
 
   useEffect(() => {
     !isOpen && onClose();
   }, [isOpen]);
 
   useEffect(() => {
-    const fetchOrg = async () => {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.user_metadata?.organizationId) return;
-
-      const { data, error } = await supabase
-        .from("Organization")
-        .select("*")
-        .eq("publicId", session.user.user_metadata.organizationId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching organization:", error);
-      } else {
-        setOrg(data);
-        // Initialize default message
-        const defaultMessage = createArrivalMessageTemplate(
-          data?.name || "Service Geek",
-          data?.phoneNumber || "(your phone number)",
-          arrivalTime
-        );
-        setMessage(defaultMessage);
-        setCharCount(defaultMessage.length);
-      }
-    };
-    fetchOrg();
-  }, []);
+    // Initialize default message
+    const defaultMessage = createArrivalMessageTemplate(
+      org?.name || "Service Geek",
+      org?.phoneNumber || "(your phone number)"
+    );
+    setMessage(defaultMessage);
+    setCharCount(defaultMessage.length);
+  }, [org]);
 
   // Update message when arrival time changes
   useEffect(() => {
@@ -125,21 +117,24 @@ export function ArrivalNotification({ onClose,project,event }: { onClose: () => 
 
     try {
       setIsSubmitting(true);
-      const response = await fetch("/api/v1/projects/calendar-events/notifications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          projectId: project.id,
-          eventId: event.id,
-          message,
-          phoneNumber: project.clientPhoneNumber,
-          notificationType: "arrival",
-          arrivalTime,
-          status,
-        }),
-      });
+      const response = await fetch(
+        "/api/v1/projects/calendar-events/notifications",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            projectId: project.id,
+            eventId: event.id,
+            message,
+            phoneNumber: project.clientPhoneNumber,
+            notificationType: "arrival",
+            arrivalTime,
+            status,
+          }),
+        }
+      );
 
       if (response.ok) {
         toast.success("Arrival notification sent successfully");
@@ -160,35 +155,35 @@ export function ArrivalNotification({ onClose,project,event }: { onClose: () => 
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-blue-600" />
+          <DialogTitle className='flex items-center gap-2'>
+            <MapPin className='h-5 w-5 text-blue-600' />
             Send Arrival Notification
           </DialogTitle>
           <DialogDescription>
             Send a notification to inform about your arrival time.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="message">Message</Label>
+        <div className='space-y-4 py-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='message'>Message</Label>
             <Textarea
-              id="message"
-              placeholder="Enter your arrival message..."
+              id='message'
+              placeholder='Enter your arrival message...'
               value={message}
               onChange={(e) => handleMessageChange(e.target.value)}
-              className="min-h-[100px]"
+              className='min-h-[100px]'
             />
-            <div className="text-sm text-muted-foreground">
+            <div className='text-sm text-muted-foreground'>
               {charCount}/{MAX_CHARS} characters
             </div>
           </div>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
+          <div className='space-y-4'>
+            <div className='space-y-2'>
+              <div className='flex items-center justify-between'>
                 <Label>Arrival Time</Label>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
+                <div className='flex items-center gap-2'>
+                  <Clock className='h-4 w-4 text-muted-foreground' />
+                  <span className='text-sm text-muted-foreground'>
                     {arrivalTime} minutes
                   </span>
                 </div>
@@ -199,13 +194,13 @@ export function ArrivalNotification({ onClose,project,event }: { onClose: () => 
                 min={5}
                 max={120}
                 step={5}
-                className="py-2"
+                className='py-2'
               />
             </div>
-            <div className="flex items-center justify-between">
+            <div className='flex items-center justify-between'>
               <Label>Status</Label>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
+              <div className='flex items-center gap-2'>
+                <span className='text-sm text-muted-foreground'>
                   {status === "heading" ? "On Time" : "Running Late"}
                 </span>
                 <Switch
@@ -219,7 +214,7 @@ export function ArrivalNotification({ onClose,project,event }: { onClose: () => 
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
+          <Button variant='outline' onClick={() => setIsOpen(false)}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
@@ -229,4 +224,4 @@ export function ArrivalNotification({ onClose,project,event }: { onClose: () => 
       </DialogContent>
     </Dialog>
   );
-} 
+}

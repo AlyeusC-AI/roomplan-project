@@ -8,6 +8,7 @@ interface RoomReadingInputProps {
   rightText: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  noStyle?: boolean;
 }
 
 export function RoomReadingInput({
@@ -16,8 +17,10 @@ export function RoomReadingInput({
   onChange,
   rightText,
   disabled = false,
+  noStyle = false,
 }: RoomReadingInputProps) {
   const [text, setText] = useState(value);
+  console.log("🚀 ~ text:", text);
   const debouncedText = useDebounce(text);
 
   useEffect(() => {
@@ -36,7 +39,8 @@ export function RoomReadingInput({
         base: "100%",
         md: "285",
       }}
-      mb="4"
+      mb={noStyle ? "0" : "4"}
+      borderWidth={noStyle ? 0 : undefined}
     >
       <Input
         w={{
@@ -44,16 +48,17 @@ export function RoomReadingInput({
           md: "100%",
         }}
         fontSize="md"
-        type="text"
-        value={text}
+        keyboardType="numeric"
+        value={text === "0" ? "" : text}
         placeholder={placeholder}
         onChangeText={(text) => {
           if (disabled) return;
           setText(text);
         }}
+        borderWidth={noStyle ? 0 : undefined}
         isDisabled={disabled}
       />
-      <InputRightAddon children={rightText} w="20%" />
+      <InputRightAddon children={rightText} w="20%"  />
     </InputGroup>
   );
 }

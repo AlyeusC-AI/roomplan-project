@@ -30,7 +30,10 @@ export default function Report() {
         margin: 4,
         filename: "report.pdf",
         html2canvas: {
-          scale: 1,
+          scale: 3,
+          useCORS: true,
+          allowTaint: false,
+          backgroundColor: "#ffffff",
         },
         pagebreak: { mode: ["avoid-all", "css", "legacy"] },
       };

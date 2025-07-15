@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { router } from "expo-router";
-import { useLogin } from "@service-geek/api-client";
+import React, { useEffect, useState } from "react";
+import { router, useRouter } from "expo-router";
+import { useCurrentUser, useLogin } from "@service-geek/api-client";
 import {
   ActivityIndicator,
   Image,
@@ -16,9 +16,20 @@ import {
 
 export default function Login() {
   const [form, setForm] = useState({
-    email: "thermalhunting1@gmail.com",
-    password: "12345678",
+    // email: "thermalhunting1@gmail.com",
+    // password: "12345678",
+
+    email: "",
+    password: "",
   });
+  const { data: user, isLoading: isLoadingUser } = useCurrentUser();
+  console.log("🚀 ~ Login ~ user:", user);
+  const router = useRouter();
+  useEffect(() => {
+    if (user && !isLoadingUser) {
+      router.replace({ pathname: "/" });
+    }
+  }, [user]);
 
   const login = useLogin();
 

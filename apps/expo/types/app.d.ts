@@ -8,8 +8,7 @@ declare type ProjectStatus =
   | "completed"
   | "inactive"
   | "incomplete";
-  export  type DamageType = "fire" | "water" | "mold" | "other";
-
+export type DamageType = "fire" | "water" | "mold" | "other";
 
 declare type ReadingType = "generic" | "standard";
 

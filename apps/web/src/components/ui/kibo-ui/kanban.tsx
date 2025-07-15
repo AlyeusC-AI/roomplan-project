@@ -86,11 +86,30 @@ export const KanbanCard = ({
           ? `translateX(${transform.x}px) translateY(${transform.y}px)`
           : "none",
       }}
-      {...listeners}
-      {...attributes}
       ref={setNodeRef}
     >
-      {children ?? <p className='m-0 text-sm font-medium'>{name}</p>}
+      <div className='flex items-start gap-2'>
+        <span
+          {...listeners}
+          {...attributes}
+          className='mr-1 flex cursor-grab select-none items-center p-1'
+          title='Drag'
+          style={{ touchAction: "none" }}
+        >
+          {/* Grip icon */}
+          <svg width='14' height='14' viewBox='0 0 20 20' fill='none'>
+            <circle cx='5' cy='6' r='1.5' fill='#888' />
+            <circle cx='5' cy='10' r='1.5' fill='#888' />
+            <circle cx='5' cy='14' r='1.5' fill='#888' />
+            <circle cx='10' cy='6' r='1.5' fill='#888' />
+            <circle cx='10' cy='10' r='1.5' fill='#888' />
+            <circle cx='10' cy='14' r='1.5' fill='#888' />
+          </svg>
+        </span>
+        <div className='min-w-0 flex-1'>
+          {children ?? <p className='m-0 text-sm font-medium'>{name}</p>}
+        </div>
+      </div>
     </Card>
   );
 };

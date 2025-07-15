@@ -8,10 +8,10 @@ import {
   FileText,
   File,
   Plus,
-  Eye,
-  Trash2,
-  Mail,
   AlertTriangle,
+  Eye,
+  MoveRight,
+  Trash2,
 } from "lucide-react";
 import {
   Dialog,
@@ -49,6 +49,22 @@ import {
   useDeleteDocument,
   useSendDocumentEmail,
 } from "@service-geek/api-client";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+import Link from "next/link";
 
 function downloadFile(file: File) {
   // Create a link and set the URL using `createObjectURL`
@@ -379,61 +395,68 @@ const FileUploader = () => {
                 </p>
               </div>
             ) : (
-              <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
-                {documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className='overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md'
-                  >
-                    <div className='border-b border-gray-200 bg-gray-50 p-4'>
-                      <div className='flex items-center justify-between'>
-                        <span className='block max-w-[200px] truncate text-sm font-medium text-gray-900'>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Created At</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {documents.map((doc) => (
+                    <TableRow key={doc.id}>
+                      <TableCell className='max-w-[200px] truncate'>
+                        <Link target="_blank" href={`/certificate/?isRep=true&id=${doc.id}&type=${doc.type}`} className="hover:underline">
                           {doc.name}
-                        </span>
-                        <div className='flex items-center gap-2'>
-                          <button
-                            onClick={() =>
-                              window.open(
-                                `/certificate/?isRep=true&id=${doc.id}&type=${doc.type}`,
-                                "_blank"
-                              )
-                            }
-                            className='h-8 w-8 rounded-md p-0 text-gray-500 hover:bg-gray-100'
-                          >
-                            <Eye className='h-4 w-4' />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setSelectedDocument(doc);
-                              setShowEmailDialog(true);
-                            }}
-                            className='h-8 w-8 rounded-md p-0 text-gray-500 hover:bg-gray-100'
-                          >
-                            <Mail className='h-4 w-4' />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setDocumentToDelete(doc);
-                              setShowDeleteDialog(true);
-                            }}
-                            className='h-8 w-8 rounded-md p-0 text-gray-500 hover:bg-gray-100'
-                          >
-                            <Trash2 className='h-4 w-4' />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div className='p-4'>
-                      <div className='flex items-center gap-2 text-sm text-gray-500'>
-                        <FileText className='h-4 w-4' />
-                        <span>
-                          Added {new Date(doc.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                        </Link>
+                      </TableCell>
+                      <TableCell>{doc.type}</TableCell>
+                      <TableCell>
+                        {new Date(doc.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className='flex h-8 w-8 items-center justify-center rounded-md p-0 text-gray-500 hover:bg-gray-100'>
+                              <MoreHorizontal className='h-5 w-5' />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='end'>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                window.open(
+                                  `/certificate/?isRep=true&id=${doc.id}&type=${doc.type}`,
+                                  "_blank"
+                                )
+                              }
+                            >
+                              <Eye className='mr-2 h-4 w-4' /> View
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedDocument(doc);
+                                setShowEmailDialog(true);
+                              }}
+                            >
+                              <MoveRight className='mr-2 h-4 w-4' /> Send Email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setDocumentToDelete(doc);
+                                setShowDeleteDialog(true);
+                              }}
+                            >
+                              <Trash2 className='mr-2 h-4 w-4' /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </div>
         </TabsContent>

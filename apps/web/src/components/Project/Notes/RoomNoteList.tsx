@@ -12,7 +12,7 @@ export default function RoomNoteList() {
     return <LoadingPlaceholder />;
   }
   return (
-    <div className='space-y-6 divide-y-2'>
+    <div className='space-y-6'>
       {rooms?.length === 0 ? (
         <EmptyState
           imagePath={"/images/empty.svg"}

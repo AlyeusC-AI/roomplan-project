@@ -1,4 +1,4 @@
-import DashboardHeader from "@/unused/Header";
+import DashboardHeader from "@/components/ui/Header";
 import NoProjects from "@/components/dashboard/no-projects";
 import ProjectCell from "@/components/project/cell";
 import { SubscriptionStatus } from "@/components/subscription-status";
@@ -10,9 +10,9 @@ import {
 } from "expo-router";
 import {
   ChevronRight,
-  Plus,
   Building2,
   ChevronLeft,
+  Plus,
 } from "lucide-react-native";
 import React, { useEffect, useState, useCallback } from "react";
 import {
@@ -47,7 +47,24 @@ export default function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const limit = 20;
   const { data: user, isLoading: isLoadingUser } = useCurrentUser();
-  console.log("🚀 ~ Dashboard ~ user:", user);
+  const router = useRouter();
+
+  // useEffect(() => {
+  //   if (!user && !isLoadingUser) {
+  //     router.replace({ pathname: "/login" });
+  //   }
+  // }, [user]);
+  const [filterObj, setFilterObj] = useState({
+    search: "",
+    startDate: null as Date | null,
+    endDate: null as Date | null,
+    assigneeIds: [],
+  });
+  const [filterDialogState, setFilterDialogState] = useState({
+    startDate: null as Date | null,
+    endDate: null as Date | null,
+    assigneeId: "",
+  });
   const activeOrganization = useActiveOrganization();
   const result = useGetProjects({
     pagination: {
@@ -56,13 +73,20 @@ export default function Dashboard() {
       sortBy: "createdAt",
       sortOrder: "desc",
       search: searchTerm,
+      assigneeIds: filterObj.assigneeIds,
+      startDate: filterObj?.startDate
+        ? filterObj?.startDate?.toISOString()
+        : undefined,
+      endDate: filterObj?.endDate
+        ? filterObj?.endDate?.toISOString()
+        : undefined,
     },
   });
   const data = result.data as PaginatedResponse<Project> | undefined;
   const isLoading = result.isLoading;
   const isError = result.isError;
+  console.log("🚀 ~ Dashboard ~ user:", user, isLoadingUser, isLoading);
 
-  const router = useRouter();
   const navigation = useNavigation();
   // const { mutate: logout } = useLogout();
 
@@ -81,6 +105,25 @@ export default function Dashboard() {
       setIsRefreshing(false);
     }
   }, [result]);
+
+  const filterTabsList = [
+    {
+      label: "All",
+      value: "all",
+    },
+    {
+      label: "Started",
+      value: "stared",
+    },
+    {
+      label: "My Projects",
+      value: "My Projects",
+    },
+    {
+      label: "Archived",
+      value: "Archived",
+    },
+  ];
 
   // Reset pagination when organization changes
   // useEffect(() => {
@@ -218,9 +261,9 @@ export default function Dashboard() {
     );
   }
 
-  if (!user) {
-    return <Redirect href="/login" />;
-  }
+  // if (!user || !isLoadingUser) {
+  //   return <Redirect href="/login" />;
+  // }
 
   const renderEmpty = () => {
     if (isError) {
@@ -260,14 +303,9 @@ export default function Dashboard() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.header}>
-          <DashboardHeader
-            refetch={setSearchTerm}
-            selectedUser=""
-            setSelectedUser={() => {}}
-          />
           <View
             style={styles.headerTitle}
-            className="mb-4 pt-4 flex flex-row items-center "
+            className="mb-4 flex flex-row items-center "
           >
             {/* <TouchableOpacity
               onPress={() => setOrgModalVisible(true)}
@@ -285,6 +323,15 @@ export default function Dashboard() {
             </TouchableOpacity> */}
             <Text className="font-bold text-3xl mx-2">Projects</Text>
           </View>
+          <DashboardHeader
+            refetch={setSearchTerm}
+            selectedUser=""
+            setSelectedUser={() => {}}
+            filterObj={filterObj}
+            setFilterObj={setFilterObj}
+            filterDialogState={filterDialogState}
+            setFilterDialogState={setFilterDialogState}
+          />
         </View>
         {/* <OrganizationSwitcher
           visible={orgModalVisible}
@@ -355,7 +402,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    marginTop: 30,
+    marginTop: 10,
   },
   headerTitle: {
     flexDirection: "row",
@@ -365,6 +412,7 @@ const styles = StyleSheet.create({
     color: "#1d1d1d",
     marginTop: 15,
   },
+
   orgButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -463,7 +511,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 1,
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#2563eb",
     borderRadius: 100,
+  },
+  fabButtonText: {
+    color: "#ffffff",
+    fontSize: 30,
+    fontWeight: "bold",
   },
 });

@@ -122,7 +122,7 @@ export default function CalendarScreen() {
 
     if (daysDifference > 30) {
       status = "Future";
-      color = "#3b82f6"; // blue
+      color = "#2563eb" ; // blue
     } else if (daysDifference > 7) {
       status = "Upcoming";
       color = "#10b981"; // green
@@ -434,7 +434,7 @@ export default function CalendarScreen() {
 // Function to generate consistent colors for projects
 const getProjectColor = (projectId: number): string => {
   const colors = [
-    "#3b82f6", // blue
+    "#2563eb" , // blue
     "#10b981", // emerald
     "#8b5cf6", // violet
     "#f97316", // orange

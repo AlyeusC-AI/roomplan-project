@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import clsx from "clsx";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "@components/ui/button";
-import RoomActions from "@components/Project/rooms/RoomActions";
+import RoomActionsModal from "@components/Project/rooms/RoomActionsModal";
 import { useParams } from "next/navigation";
 import {
   DndContext,
@@ -40,15 +40,16 @@ const PhotoGroup = ({
   selectedPhotos: Image[];
   day: string;
   onPhotoClick: (key: string) => void;
-  onSelectPhoto: (photo: Image) => void;
+  onSelectPhoto: (photo: Image, selectAllFromGroup?: Image[]) => void;
 }) => {
   console.log("🚀 ~ phasdasdaotos:", photos);
-  const [isOpen, setOpen] = useState(true);
   const { savedPhotoGroupBy, savedPhotoView } = userPreferenceStore();
   const { id } = useParams<{ id: string }>();
   const { data: rooms } = useGetRooms(id);
   const { mutate: updateImagesOrder } = useUpdateImagesOrder();
   const [images, setImages] = useState<Image[]>(photos);
+  const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
+
   useEffect(() => {
     setImages(photos);
   }, [photos]);
@@ -63,6 +64,35 @@ const PhotoGroup = ({
   const room = rooms?.find((room) => room.name === day);
   // Check if this is a room group by looking at the first photo's room
   const isRoomGroup = savedPhotoGroupBy === "room";
+
+  // Check if all photos in this group are selected
+  const allPhotosSelected =
+    photos.length > 0 &&
+    photos.every((photo) =>
+      selectedPhotos.some((selected) => selected.id === photo.id)
+    );
+
+  // Check if some photos in this group are selected
+  const somePhotosSelected = photos.some((photo) =>
+    selectedPhotos.some((selected) => selected.id === photo.id)
+  );
+
+  const handleSelectAll = () => {
+    if (allPhotosSelected) {
+      // Unselect all photos in this group
+      photos.forEach((photo) => {
+        const isSelected = selectedPhotos.some(
+          (selected) => selected.id === photo.id
+        );
+        if (isSelected) {
+          onSelectPhoto(photo);
+        }
+      });
+    } else {
+      // Select all photos in this group
+      onSelectPhoto(photos[0], photos);
+    }
+  };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -144,35 +174,64 @@ const PhotoGroup = ({
   return (
     <div key={day} className='mt-4'>
       <div className='flex items-center'>
-        <Button variant='outline' onClick={() => setOpen((o) => !o)}>
-          {isOpen ? (
-            <ChevronDown className='size-8' />
-          ) : (
-            <ChevronUp className='size-8' />
+        <Button
+          variant='outline'
+          onClick={handleSelectAll}
+          className={clsx(
+            "h-8 w-8 p-0",
+            allPhotosSelected && "bg-primary text-primary-foreground",
+            somePhotosSelected &&
+              !allPhotosSelected &&
+              "bg-primary/50 text-primary-foreground"
+          )}
+        >
+          {allPhotosSelected && <Check className='size-4' />}
+          {somePhotosSelected && !allPhotosSelected && (
+            <div className='size-2 rounded-sm bg-primary-foreground' />
           )}
         </Button>
         <div className='ml-4 flex items-center gap-4'>
-          <h2 className='text-xl font-bold'>{day}</h2>
-          {isRoomGroup && room && <RoomActions room={room} />}
+          <h2
+            className={clsx(
+              "text-xl font-bold",
+              isRoomGroup &&
+                room &&
+                "cursor-pointer transition-colors hover:text-primary"
+            )}
+            onClick={() => {
+              if (isRoomGroup && room) {
+                setIsRoomModalOpen(true);
+              }
+            }}
+          >
+            {day}
+          </h2>
         </div>
       </div>
-      {isOpen &&
-        (isRoomGroup ? (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+      {isRoomGroup ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={photos.map((photo) => photo.id)}
+            strategy={rectSortingStrategy}
           >
-            <SortableContext
-              items={photos.map((photo) => photo.id)}
-              strategy={rectSortingStrategy}
-            >
-              {renderPhotos()}
-            </SortableContext>
-          </DndContext>
-        ) : (
-          renderPhotos()
-        ))}
+            {renderPhotos()}
+          </SortableContext>
+        </DndContext>
+      ) : (
+        renderPhotos()
+      )}
+
+      {isRoomGroup && room && (
+        <RoomActionsModal
+          isOpen={isRoomModalOpen}
+          setOpen={setIsRoomModalOpen}
+          room={room}
+        />
+      )}
     </div>
   );
 };

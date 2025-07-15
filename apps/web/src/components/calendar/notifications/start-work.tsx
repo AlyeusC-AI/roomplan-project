@@ -12,7 +12,9 @@ import { Textarea } from "@components/ui/textarea";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PlayCircle } from "lucide-react";
-import { createClient } from "@lib/supabase/client";
+import { useActiveOrganization } from "@service-geek/api-client";
+import { CalendarEvent } from "@service-geek/api-client";
+import { Project } from "@service-geek/api-client";
 
 const createStartWorkMessageTemplate = (
   projectName: string,
@@ -21,46 +23,36 @@ const createStartWorkMessageTemplate = (
   return `Hi, this is ${projectName}. I'm starting work on your project now. You can reach me at ${phoneNumber} if you need anything.`;
 };
 
-export function StartWorkNotification({ onClose,project,event }: { onClose: () => void,project:Project,event:CalendarEvent }) {
+export function StartWorkNotification({
+  onClose,
+  project,
+  event,
+}: {
+  onClose: () => void;
+  project: Project;
+  event: CalendarEvent;
+}) {
   const [isOpen, setIsOpen] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
-  const [org, setOrg] = useState<any | null>(null);
   const [charCount, setCharCount] = useState(0);
   const MAX_CHARS = 300;
+
+  const org = useActiveOrganization();
 
   useEffect(() => {
     !isOpen && onClose();
   }, [isOpen]);
 
-
   useEffect(() => {
-    const fetchOrg = async () => {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.user_metadata?.organizationId) return;
-
-      const { data, error } = await supabase
-        .from("Organization")
-        .select("*")
-        .eq("publicId", session.user.user_metadata.organizationId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching organization:", error);
-      } else {
-        setOrg(data);
-        // Initialize default message
-        const defaultMessage = createStartWorkMessageTemplate(
-          data?.name || "Service Geek",
-          data?.phoneNumber || "(your phone number)"
-        );
-        setMessage(defaultMessage);
-        setCharCount(defaultMessage.length);
-      }
-    };
-    fetchOrg();
-  }, []);
+    // Initialize default message
+    const defaultMessage = createStartWorkMessageTemplate(
+      org?.name || "Service Geek",
+      org?.phoneNumber || "(your phone number)"
+    );
+    setMessage(defaultMessage);
+    setCharCount(defaultMessage.length);
+  }, [org]);
 
   const handleMessageChange = (text: string) => {
     setMessage(text);
@@ -85,19 +77,22 @@ export function StartWorkNotification({ onClose,project,event }: { onClose: () =
 
     try {
       setIsSubmitting(true);
-      const response = await fetch("/api/v1/projects/calendar-events/notifications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          projectId: project.id,
-          eventId: event.id,
-          message,
-          phoneNumber: project.clientPhoneNumber,
-          notificationType: "start_work",
-        }),
-      });
+      const response = await fetch(
+        "/api/v1/projects/calendar-events/notifications",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            projectId: project.id,
+            eventId: event.id,
+            message,
+            phoneNumber: project.clientPhoneNumber,
+            notificationType: "start_work",
+          }),
+        }
+      );
 
       if (response.ok) {
         toast.success("Start work notification sent successfully");
@@ -118,31 +113,31 @@ export function StartWorkNotification({ onClose,project,event }: { onClose: () =
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <PlayCircle className="h-5 w-5 text-cyan-600" />
+          <DialogTitle className='flex items-center gap-2'>
+            <PlayCircle className='h-5 w-5 text-cyan-600' />
             Send Start Work Notification
           </DialogTitle>
           <DialogDescription>
             Send a notification to inform about starting work on the project.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="message">Message</Label>
+        <div className='space-y-4 py-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='message'>Message</Label>
             <Textarea
-              id="message"
-              placeholder="Enter your start work message..."
+              id='message'
+              placeholder='Enter your start work message...'
               value={message}
               onChange={(e) => handleMessageChange(e.target.value)}
-              className="min-h-[100px]"
+              className='min-h-[100px]'
             />
-            <div className="text-sm text-muted-foreground">
+            <div className='text-sm text-muted-foreground'>
               {charCount}/{MAX_CHARS} characters
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
+          <Button variant='outline' onClick={() => setIsOpen(false)}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
@@ -152,4 +147,4 @@ export function StartWorkNotification({ onClose,project,event }: { onClose: () =
       </DialogContent>
     </Dialog>
   );
-} 
+}

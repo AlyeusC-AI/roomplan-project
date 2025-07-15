@@ -166,7 +166,7 @@ class RoomCaptureViewWrapper : RCTView, RoomCaptureSessionDelegate {
           }
         }
       }
-    }
+    } 
   }
 
 //    func captureView(didPresent processedResult: CapturedRoom, error: Error?) async {

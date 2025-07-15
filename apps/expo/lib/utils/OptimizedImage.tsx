@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   ActivityIndicator,
   StyleSheet,
-  Image,
   Platform,
   TouchableOpacity,
   Animated,
   Dimensions,
 } from "react-native";
+import { Image as ExpoImage } from "expo-image";
 import { ImageIcon, Trash2 } from "lucide-react-native";
 import { Text } from "@/components/ui/text";
 import {
@@ -18,6 +18,11 @@ import {
   STORAGE_BUCKETS,
   deleteImage,
 } from "./imageModule";
+
+// Type assertions to fix ReactNode compatibility
+const ImageIconComponent = ImageIcon as any;
+const Trash2Component = Trash2 as any;
+const ExpoImageComponent = ExpoImage as any;
 
 // Get screen dimensions for responsive sizing
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -70,9 +75,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(30, 64, 175, 0.3)",
+    backgroundColor: "rgba(30, 136, 229, 0.3)",
     borderWidth: 3,
-    borderColor: "#1e40af",
+    borderColor: "#2563eb",
     borderRadius: 8,
   },
   imageInfo: {
@@ -91,7 +96,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: "#1e40af",
+    backgroundColor: "#2563eb",
     borderRadius: 4,
   },
   retryText: {
@@ -142,57 +147,58 @@ export function OptimizedImage({
   const [imageOpacity] = useState(new Animated.Value(0));
   const [retryCount, setRetryCount] = useState(0);
 
-  // Check if URI is valid
-  const isValidUri = uri && uri.trim() !== "";
+  // // Check if URI is valid
+  // const isValidUri = uri && uri.trim() !== "";
 
-  // If URI is invalid, show error state immediately
-  useEffect(() => {
-    if (!isValidUri) {
-      setLoading(true);
-      setError(true);
-      handleRetry();
-    } else {
-      setError(false);
-      setLoading(false);
-    }
-  }, [isValidUri]);
+  // // If URI is invalid, show error state immediately
+  // useEffect(() => {
+  //   if (!isValidUri) {
+  //     setLoading(true);
+  //     setError(true);
+  //     handleRetry();
+  //   } else {
+  //     setError(false);
+  //     setLoading(false);
+  //   }
+  // }, [isValidUri]);
 
-  // Determine if this is a Supabase storage URL for any bucket
-  const isSupabaseUrl =
-    isValidUri && Object.values(STORAGE_URLS).some((url) => uri.includes(url));
+  // // Determine if this is a Supabase storage URL for any bucket
+  // const isSupabaseUrl =
+  //   isValidUri && Object.values(STORAGE_URLS).some((url) => uri.includes(url));
 
   // Extract the bucket from the URI if it's a Supabase URL
   let actualBucket = bucket;
   let actualImageKey = imageKey || "";
 
-  if (isSupabaseUrl) {
-    // Find which bucket this URI belongs to
-    const matchingBucket = Object.entries(STORAGE_URLS).find(([_, url]) =>
-      uri.includes(url)
-    );
-    if (matchingBucket) {
-      actualBucket = matchingBucket[0];
-      actualImageKey = uri.replace(`${matchingBucket[1]}/`, "");
-    }
-  }
+  // if (isSupabaseUrl) {
+  //   // Find which bucket this URI belongs to
+  //   const matchingBucket = Object.entries(STORAGE_URLS).find(([_, url]) =>
+  //     uri.includes(url)
+  //   );
+  //   if (matchingBucket) {
+  //     actualBucket = matchingBucket[0];
+  //     actualImageKey = uri.replace(`${matchingBucket[1]}/`, "");
+  //   }
+  // }
 
   // Generate placeholder color based on the image key or use provided backgroundColor
   const placeholderColor =
     backgroundColor || generatePlaceholderColor(actualImageKey);
 
   // Optimize the URL based on the requested size
-  const optimizedUri =
-    isValidUri && isSupabaseUrl && actualImageKey
-      ? getOptimizedImageUrl(actualImageKey, size, actualBucket)
-      : uri;
+  // const optimizedUri =
+  // isValidUri && isSupabaseUrl && actualImageKey
+  //   ? getOptimizedImageUrl(actualImageKey, size, actualBucket)
+  //   : uri;
+  const optimizedUri = uri;
 
   // Effect to reset error state when URI changes or on retry
-  useEffect(() => {
-    if (retryCount > 0 && isValidUri) {
-      setError(false);
-      setLoading(true);
-    }
-  }, [retryCount, uri, isValidUri]);
+  // useEffect(() => {
+  //   if (retryCount > 0 && isValidUri) {
+  //     setError(false);
+  //     setLoading(true);
+  //   }
+  // }, [retryCount, uri, isValidUri]);
 
   // Handle image load success
   const handleLoadEnd = () => {
@@ -237,19 +243,15 @@ export function OptimizedImage({
       disabled={disabled || error}
       style={[styles.container, { backgroundColor: placeholderColor }, style]}
     >
-      {!error && isValidUri && (
+      {!error && (
         <Animated.View style={{ opacity: imageOpacity }}>
-          <Image
+          <ExpoImageComponent
             source={{
               uri: optimizedUri,
-              cache: "force-cache",
-              headers:
-                Platform.OS === "ios"
-                  ? { "Cache-Control": "max-age=31536000" }
-                  : undefined,
             }}
             style={style}
-            resizeMode={resizeMode}
+            contentFit={resizeMode}
+            cachePolicy="memory-disk"
             onLoadStart={() => setLoading(true)}
             onLoadEnd={handleLoadEnd}
             onError={handleError}
@@ -260,21 +262,19 @@ export function OptimizedImage({
 
       {loading && !error && (
         <View style={[styles.loadingContainer, style]}>
-          <ActivityIndicator size="large" color="#1e40af" />
+          <ActivityIndicator size="large" color="#2563eb" />
         </View>
       )}
 
       {error && (
         <View style={[styles.errorContainer, style]}>
-          <ImageIcon size={24} color="#9CA3AF" />
-          <Text className="text-gray-400 mt-2">
-            {!isValidUri ? "No image available" : "Failed to load image"}
-          </Text>
-          {isValidUri && (
+          <ImageIconComponent size={24} color="#9CA3AF" />
+          <Text className="text-gray-400 mt-2">{"Failed to load image"}</Text>
+          {
             <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
               <Text style={styles.retryText}>Retry</Text>
             </TouchableOpacity>
-          )}
+          }
         </View>
       )}
 
@@ -288,7 +288,7 @@ export function OptimizedImage({
           onPress={handleDelete}
           activeOpacity={0.8}
         >
-          <Trash2 size={20} color="#ef4444" />
+          <Trash2Component size={20} color="#ef4444" />
         </TouchableOpacity>
       )}
     </TouchableOpacity>

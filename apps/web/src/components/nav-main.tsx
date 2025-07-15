@@ -21,12 +21,6 @@ import { cn } from "@lib/utils";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { useSidebar } from "@/components/ui/sidebar";
 
 interface SidebarItem {
   title: string;
@@ -42,12 +36,11 @@ interface SidebarItem {
 export function NavMain({ items }: { items: SidebarItem[] }) {
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const pathname = usePathname();
-  const { state } = useSidebar();
 
   const handleOpenChange = (itemTitle: string, isOpen: boolean) => {
-    setOpenItems(prev => ({
+    setOpenItems((prev) => ({
       ...prev,
-      [itemTitle]: isOpen
+      [itemTitle]: isOpen,
     }));
   };
 
@@ -62,95 +55,66 @@ export function NavMain({ items }: { items: SidebarItem[] }) {
             defaultOpen={item.isActive || pathname.includes(item.url)}
             onOpenChange={(isOpen) => handleOpenChange(item.title, isOpen)}
             open={openItems[item.title] || pathname.includes(item.url)}
-            className='group/collapsible'
+            className='group/collapsible text-white/50'
           >
             <SidebarMenuItem>
               {item.items ? (
-                state === "collapsed" ? (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <SidebarMenuButton
-                        isActive={openItems[item.title] || pathname.includes(item.url)}
-                        tooltip={item.title}
-                      >
-                        {item.icon && <item.icon size={16} />}
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      side="right"
-                      align="start"
-                      className="w-56 p-0"
-                    >
-                      <div className="flex flex-col gap-1 p-2">
-                        {item.items.map((subItem) => (
-                          <Link
-                            key={subItem.url}
-                            href={subItem.url}
-                            className={cn(
-                              "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
-                              pathname === subItem.url && "bg-accent text-accent-foreground"
-                            )}
-                          >
-                            <span>{subItem.title}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                ) : (
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton
-                      isActive={openItems[item.title] || pathname.includes(item.url)}
-                      tooltip={item.title}
-                    >
-                      {item.icon && <item.icon size={16} />}
-                      <span>{item.title}</span>
-                      <ChevronRight
-                        size={16}
-                        className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90'
-                      />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                )
-              ) : (
-                <Link href={item.url}>
-                  <div
-                    data-active={pathname == item.url}
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton
+                    isActive={
+                      openItems[item.title] || pathname.includes(item.url)
+                    }
                     className={cn(
-                      "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
-                      "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      "relative",
+                      (openItems[item.title] || pathname.includes(item.url)) &&
+                      "bg-muted/50 after:absolute after:left-0 after:top-0 after:h-full after:w-1 after:bg-primary"
                     )}
                   >
                     {item.icon && <item.icon size={16} />}
                     <span>{item.title}</span>
-                    {item.items && (
-                      <ChevronRight
-                        size={16}
-                        className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90'
-                      />
+                    <ChevronRight
+                      size={16}
+                      className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90'
+                    />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+              ) : (
+                <Link href={item.url}>
+                  <SidebarMenuButton
+                    isActive={item.isActive || pathname.includes(item.url)}
+                    className={cn(
+                      "relative",
+                      (item.isActive || pathname.includes(item.url)) && "bg-muted/50 after:absolute after:left-0 after:top-0 after:h-full after:w-1 after:bg-primary"
                     )}
-                  </div>
+                  >
+                    {item.icon && <item.icon size={16} />}
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
                 </Link>
               )}
-              {state !== "collapsed" && (
-                <CollapsibleContent>
-                  {item.items?.map((subItem) => (
-                    <SidebarMenuSub
-                      key={subItem.url}
-                      isActive={pathname.includes(subItem.url)}
-                    >
-                      <SidebarMenuSubItem key={subItem.title}>
-                        <SidebarMenuSubButton asChild>
-                          <Link href={subItem.url}>
-                            <span>{subItem.title}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    </SidebarMenuSub>
-                  ))}
-                </CollapsibleContent>
-              )}
+
+              <CollapsibleContent>
+                {item.items?.map((subItem) => (
+                  <SidebarMenuSub
+                    key={subItem.url}
+                    isActive={pathname.includes(subItem.url)}
+                  >
+                    <SidebarMenuSubItem key={subItem.title}>
+                      <SidebarMenuSubButton
+                        asChild
+                        className={cn(
+                          "relative",
+                          pathname.includes(subItem.url) && "bg-muted/50 after:absolute after:left-0 after:top-0 after:h-full after:w-1 after:bg-primary"
+                        )}
+                      >
+                        <Link href={subItem.url}>
+                          <span>{subItem.title}</span>
+                        </Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                ))}
+              </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>
         ))}

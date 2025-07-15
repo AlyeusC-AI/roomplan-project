@@ -1,4 +1,4 @@
-import "ts-node/register";
+// import "ts-node/register";
 import { ExpoConfig } from "@expo/config";
 
 const config: ExpoConfig = {
@@ -27,7 +27,11 @@ const config: ExpoConfig = {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#FFFFFF",
     },
-    permissions: ["com.google.android.gms.permission.AD_ID"],
+    permissions: [
+      "com.google.android.gms.permission.AD_ID",
+      "android.permission.RECORD_AUDIO",
+      "android.permission.MODIFY_AUDIO_SETTINGS",
+    ],
   },
   ios: {
     bundleIdentifier: "com.servicegeek.servicegeekmobile",
@@ -38,6 +42,8 @@ const config: ExpoConfig = {
         "This app requires access to the photo library.",
       NSLocationWhenInUseUsageDescription:
         "This app requires access to your location.",
+      NSMicrophoneUsageDescription:
+        "This app requires access to the microphone to record voice messages.",
     },
     privacyManifests: {
       NSPrivacyAccessedAPITypes: [
@@ -54,7 +60,8 @@ const config: ExpoConfig = {
           NSPrivacyAccessedAPITypeReasons: ["E174.1", "85F4.1"],
         },
         {
-          NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategorySystemBootTime",
+          NSPrivacyAccessedAPIType:
+            "NSPrivacyAccessedAPICategorySystemBootTime",
           NSPrivacyAccessedAPITypeReasons: ["35F9.1"],
         },
       ],
@@ -78,7 +85,7 @@ const config: ExpoConfig = {
     ["expo-asset"],
     ["expo-font"],
     "expo-router",
-    ["./plugins/withLidar"],
+    // ["./plugins/withLidar"],
     [
       "react-native-vision-camera",
       {

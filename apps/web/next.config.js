@@ -21,7 +21,25 @@ const nextConfig = {
   },
   productionBrowserSourceMaps: true,
   images: {
-    domains: ["zmvdimcemmhesgabixlf.supabase.co", "bit.ly", "ik.imagekit.io"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "nyc3.digitaloceanspaces.com",
+      },
+      {
+        protocol: "https",
+        hostname: "fra1.digitaloceanspaces.com",
+      },
+      {
+        protocol: "https",
+        hostname: "zmvdimcemmhesgabixlf.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "bit.ly",
+      },
+    ],
+    domains: ["zmvdimcemmhesgabixlf.supabase.co", "bit.ly", "ik.imagekit.io","nyc3.digitaloceanspaces.com","fra1.digitaloceanspaces.com"],
   },
 };
 

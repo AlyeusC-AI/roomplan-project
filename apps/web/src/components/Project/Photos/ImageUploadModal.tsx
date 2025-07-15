@@ -18,6 +18,8 @@ import {
   useGetRooms,
   useAddImage,
   useSearchImages,
+  getUploadUrl,
+  uploadFile,
 } from "@service-geek/api-client";
 import { uploadImage } from "@service-geek/api-client";
 
@@ -51,15 +53,16 @@ const ImageUploadModal = ({ setOpen }: ImageUploadModalProps) => {
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
         // Upload to ImageKit
-        const imageKitResponse = await uploadImage(file, {
-          folder: `projects/${id}`,
-          useUniqueFileName: true,
-        });
+        const { signedUrl, publicUrl, key } = await uploadFile(file, file.name);
+        // const imageKitResponse = await uploadImage(file, {
+        //   folder: `projects/${id}`,
+        //   useUniqueFileName: true,
+        // });
 
         // Add image to room
         await addImageMutation.mutateAsync({
           data: {
-            url: imageKitResponse.url,
+            url: publicUrl,
             projectId: id,
             showInReport: false,
             order: 0,

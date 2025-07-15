@@ -3,6 +3,8 @@ import { TouchableOpacity, Image, View, StyleSheet, Text } from "react-native";
 import { router } from "expo-router";
 import { Separator } from "@/components/ui/separator";
 import { Project, useGetProjectStatus } from "@service-geek/api-client";
+import DamageBadge from "./damageBadge";
+import StatusBadge from "./statusBadge";
 
 const getStatusColor = (status: string | null): string => {
   switch (status) {
@@ -45,38 +47,68 @@ export default function ProjectCell({ project }: { project: Project }) {
       }
     >
       <View style={styles.card}>
-        {imageUrl ? (
-          <Image
-            source={{
-              uri: imageUrl,
-            }}
-            alt="Image"
-            resizeMode="cover"
-            onError={() =>
-              setImageUrl(
-                `https://eu.ui-avatars.com/api/?name=${formatProjectName(project.name)}&size=250`
-              )
-            }
-            style={styles.cardImg}
-          />
-        ) : (
-          <Image
-            source={{
-              uri: `https://eu.ui-avatars.com/api/?name=${formatProjectName(project.name)}&size=250`,
-            }}
-            alt="Image"
-            resizeMode="cover"
-            style={styles.cardImg}
-          />
-        )}
+        <View style={[styles.cardImgContainer, styles.shadow]}>
+          {imageUrl ? (
+            <Image
+              source={{
+                uri: imageUrl,
+              }}
+              alt="Image"
+              resizeMode="cover"
+              onError={() =>
+                setImageUrl(
+                  `https://eu.ui-avatars.com/api/?name=${formatProjectName(project.name)}&size=250`
+                )
+              }
+              style={styles.cardImg}
+            />
+          ) : (
+            <Image
+              source={{
+                uri: `https://eu.ui-avatars.com/api/?name=${formatProjectName(project.name)}&size=250`,
+              }}
+              alt="Image"
+              resizeMode="cover"
+              style={styles.cardImg}
+            />
+          )}
+        </View>
 
         <View style={styles.cardBody}>
-          <Text style={[styles.cardTag, { color: status?.data.color }]}>
-            {status?.data.label}
-          </Text>
-
-          <Text style={styles.cardTitle}>{`${project.name}`}</Text>
+          {status?.data?.label && (
+            // <View
+            //   className="mb-1 px-2 py-0.5 rounded-full"
+            //   style={{
+            //     backgroundColor: status?.data.color?.toLowerCase() === 'slate' ? 'slategray' : status?.data.color?.toLowerCase() || "green",
+            //     // borderWidth: 1,
+            //   }}
+            // >
+            //   <Text className="text-xs font-semibold text-white"
+            //   style={{
+            //     color: status?.data.color?.toLowerCase() === 'cyan' ? 'black' : "white"
+                
+            //   }}>
+            //     {status?.data.label}
+            //   </Text>
+            // </View>
+            <StatusBadge status={status?.data} />
+          )}
+          <Text style={[styles.cardTitle,{marginTop:4}]}>{`${project.name}`}</Text>
           <Text style={styles.cardSubTitle}>{project.location}</Text>
+          {/* <Text style={[styles.cardTag, { color: status?.data.color }]}>
+            {status?.data.label}
+          </Text> */}
+          <View className="flex-row items-center gap-2">
+            {project?.lossType && (
+              // <View className="flex-row items-center bg-blue-700 rounded px-2 py-0.5">
+              //   <Text className="text-xs text-white capitalize">
+              //     {project.lossType.replace(/_/g, " ")}
+              //   </Text>
+              // </View>
+              <DamageBadge lossType={project.lossType} />
+            )}
+          </View>
+
           {/* <View style={styles.cardRow}>
             <View style={styles.cardRowItem}>
               <Image
@@ -150,6 +182,20 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 12,
   },
+  cardImgContainer: {
+    borderRadius: 12,
+    marginRight: 0,
+    backgroundColor: '#fff', // Optional: helps shadow visibility
+    borderWidth: 1,
+    borderColor: '#fff',
+  },
+  shadow: {
+    shadowColor: '#000', // Ensure shadow is black
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4, // Android, reduced for subtle effect
+  },
   cardBody: {
     flexGrow: 1,
     flexShrink: 1,
@@ -167,11 +213,12 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
   },
   cardTitle: {
-    fontWeight: "600",
-    fontSize: 16,
-    lineHeight: 19,
-    color: "#000",
+    fontWeight: "700",
+    fontSize: 20,
+    lineHeight: 24,
+    color: "#1d1d1d",
     marginBottom: 2,
+    textTransform: "capitalize",
   },
   cardSubTitle: {
     fontWeight: "400",
@@ -272,7 +319,7 @@ const styles = StyleSheet.create({
 //         </HStack>
 //         <HStack justifyContent="space-between" mt="4">
 //           <HStack color="coolGray.700" maxW="1/2">
-//             <Map width={24} height={24} stroke="#1e88e5" />
+//             <Map width={24} height={24} stroke="#2563eb" />
 //             <View marginLeft={2}>
 //               <Address address={project.location} />
 //             </View>

@@ -87,12 +87,9 @@ interface ImageNote {
 
 interface ImageGalleryProps {
   images: Image[];
-  room: Room;
-  selectable?: boolean;
-  onSelectionChange?: (selectedKeys: string[]) => void;
   initialSelectedKeys?: string[];
-
-  onReorder?: (newOrder: Inference[]) => void;
+  room: Room;
+  refetch: () => void;
 }
 
 // Add this new component before the main ImageGallery component
@@ -102,30 +99,24 @@ const GridItem = React.memo(
     index,
     imageKey,
     imageUrl,
-    isSelected,
     positions,
     isDragging,
     draggedIndex,
     handleDragStart,
     handleDragEnd,
     handleImagePress,
-    toggleImageSelection,
-    selectable,
     isReorderMode,
   }: {
     image: Image | null;
     index: number;
     imageKey: string;
     imageUrl: string;
-    isSelected: boolean;
     positions: any;
     isDragging: boolean;
     draggedIndex: number | null;
     handleDragStart: (index: number) => void;
     handleDragEnd: (index: number) => void;
     handleImagePress: (index: number) => void;
-    toggleImageSelection: (imageKey: string) => void;
-    selectable: boolean;
     isReorderMode: boolean;
   }) => {
     const shakeAnimation = useSharedValue(0);
@@ -194,18 +185,13 @@ const GridItem = React.memo(
           uri={imageUrl}
           style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
-          isSelected={isSelected}
           imageKey={imageKey}
           onLongPress={() => {
             if (!isReorderMode) {
               handleDragStart(index);
             }
           }}
-          onPress={
-            selectable
-              ? () => toggleImageSelection(imageKey)
-              : () => handleImagePress(index)
-          }
+          onPress={() => handleImagePress(index)}
           disabled={isReorderMode}
         />
         {isReorderMode && (
@@ -241,12 +227,9 @@ const GridItem = React.memo(
 export default function ImageGallery({
   images: imagesProp,
   room,
-  selectable = false,
-  onSelectionChange,
+  refetch,
   initialSelectedKeys = [],
 }: ImageGalleryProps) {
-  const [selectedKeys, setSelectedKeys] =
-    useState<string[]>(initialSelectedKeys);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   // Add state for drag and drop
@@ -357,22 +340,6 @@ export default function ImageGallery({
     setModalVisible(true);
   };
 
-  // Handle image selection toggle
-  const toggleImageSelection = (imageKey: string) => {
-    let newSelectedKeys: string[];
-
-    if (selectedKeys.includes(imageKey)) {
-      newSelectedKeys = selectedKeys.filter((key) => key !== imageKey);
-    } else {
-      newSelectedKeys = [...selectedKeys, imageKey];
-    }
-
-    setSelectedKeys(newSelectedKeys);
-    if (onSelectionChange) {
-      onSelectionChange(newSelectedKeys);
-    }
-  };
-
   // Add a function to exit reorder mode
   const exitReorderMode = () => {
     setIsReorderMode(false);
@@ -392,8 +359,6 @@ export default function ImageGallery({
 
     const imageUrl = image.url || "";
 
-    const isSelected = selectedKeys.includes(image.id);
-
     return (
       <GridItem
         key={image.id}
@@ -401,15 +366,12 @@ export default function ImageGallery({
         index={index}
         imageKey={image.id}
         imageUrl={imageUrl}
-        isSelected={isSelected}
         positions={positions}
         isDragging={isDragging}
         draggedIndex={draggedIndex}
         handleDragStart={handleDragStart}
         handleDragEnd={handleDragEnd}
         handleImagePress={handleImagePress}
-        toggleImageSelection={toggleImageSelection}
-        selectable={selectable}
         isReorderMode={isReorderMode}
       />
     );
@@ -455,6 +417,7 @@ export default function ImageGallery({
         modalVisible={modalVisible}
         activeImageIndex={activeImageIndex}
         setActiveImageIndex={setActiveImageIndex}
+        refetch={refetch}
       />
     </GestureHandlerRootView>
   );
@@ -542,7 +505,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "rgba(30, 64, 175, 0.7)",
+    backgroundColor: "rgba(30, 136, 229, 0.7)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -570,7 +533,7 @@ const styles = StyleSheet.create({
   },
   activeThumbnail: {
     borderWidth: 2,
-    borderColor: "#1e40af",
+    borderColor: "#2563eb",
   },
   thumbnailImage: {
     width: "100%",
@@ -595,7 +558,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -5,
     right: -5,
-    backgroundColor: "#1e40af",
+    backgroundColor: "#2563eb",
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -665,7 +628,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#1e40af",
+    backgroundColor: "#2563eb",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
@@ -713,7 +676,7 @@ const styles = StyleSheet.create({
     minHeight: 40,
   },
   submitNoteButton: {
-    backgroundColor: "#1e40af",
+    backgroundColor: "#2563eb",
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -756,7 +719,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 16,
     right: 16,
-    backgroundColor: "#1e40af",
+    backgroundColor: "#2563eb",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,

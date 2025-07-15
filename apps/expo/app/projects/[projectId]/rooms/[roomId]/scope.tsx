@@ -23,6 +23,8 @@ import {
   DoorClosed,
   Wind,
   X,
+  Wifi,
+  WifiOff,
 } from "lucide-react-native";
 import { toast } from "sonner-native";
 import {
@@ -45,6 +47,12 @@ import {
 } from "@service-geek/api-client";
 import Dimensions from "@/components/project/scope/Dimensions";
 import AffectedArea from "@/components/project/scope/affectedArea";
+import { useNetworkStatus } from "@/lib/providers/QueryProvider";
+
+// Type assertions to fix ReactNode compatibility
+const ArrowLeftComponent = ArrowLeft as any;
+const WifiComponent = Wifi as any;
+const WifiOffComponent = WifiOff as any;
 
 // Constants for area types and equipment
 const areaAffectedTitle = {
@@ -64,7 +72,7 @@ const equipmentOptions = [
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#2563eb",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -131,7 +139,7 @@ const styles = StyleSheet.create({
   },
   areaToggleActive: {
     backgroundColor: "#f0f9ff",
-    borderColor: "#1e88e5",
+    borderColor: "#2563eb",
   },
   areaTabsContainer: {
     flexDirection: "row",
@@ -147,8 +155,8 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   areaTabActive: {
-    backgroundColor: "#1e88e5",
-    shadowColor: "#1e88e5",
+    backgroundColor: "#2563eb",
+    shadowColor: "#2563eb",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -274,6 +282,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+  offlineIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fef2f2",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    gap: 8,
+  },
+  offlineText: {
+    fontSize: 14,
+    color: "#ef4444",
+    fontWeight: "500",
+    flex: 1,
+  },
 });
 
 export default function RoomScopeScreen() {
@@ -286,18 +312,34 @@ export default function RoomScopeScreen() {
   const { data: room, isLoading } = useGetRoom(roomId);
   const router = useRouter();
   const { top } = useSafeAreaInsets();
+  const { isOffline } = useNetworkStatus();
 
   if (isLoading && !room) {
     return (
       <View className="flex items-center justify-center h-full w-full">
         <ActivityIndicator />
+        {isOffline && (
+          <Text
+            style={{ marginTop: 16, color: "#64748b", textAlign: "center" }}
+          >
+            Loading cached room data...
+          </Text>
+        )}
       </View>
     );
   }
   if (!room) {
     return (
       <View className="flex items-center justify-center h-full w-full">
-        <Text>Room not found</Text>
+        <Text style={{ fontSize: 18, color: "#1e293b", marginBottom: 8 }}>
+          Room not found
+        </Text>
+        {isOffline && (
+          <Text style={{ color: "#64748b", textAlign: "center" }}>
+            This room may not be available offline. Please check your
+            connection.
+          </Text>
+        )}
       </View>
     );
   }
@@ -310,11 +352,14 @@ export default function RoomScopeScreen() {
             onPress={() => router.back()}
             className="mr-4 p-2 bg-white/10 rounded-full"
           >
-            <ArrowLeft color="white" size={20} />
+            <ArrowLeftComponent color="white" size={20} />
           </TouchableOpacity>
           <View>
             <Text className="text-white text-xl font-semibold">{roomName}</Text>
-            <Text className="text-white/80 text-sm">Room Scope Details</Text>
+            <Text className="text-white/80 text-sm">
+              Room Scope Details
+              {isOffline && " (Offline)"}
+            </Text>
           </View>
         </View>
       </View>
@@ -324,6 +369,16 @@ export default function RoomScopeScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
         <ScrollView className="flex-1 bg-background">
+          {/* Offline indicator */}
+          {isOffline && (
+            <View style={styles.offlineIndicator}>
+              <WifiOffComponent size={16} color="#ef4444" />
+              <Text style={styles.offlineText}>
+                Offline Mode - Changes will sync when online
+              </Text>
+            </View>
+          )}
+
           <Dimensions room={room} />
           <AffectedArea room={room} />
         </ScrollView>

@@ -1,8 +1,9 @@
 import { User } from "./auth";
 import { Wall } from "./reading";
 import { Equipment, EquipmentProject } from "./equipment";
+import { Tag } from "./tags";
 
-type ImageType = "ROOM" | "FILE" | "NOTE";
+export type ImageType = "ROOM" | "FILE" | "NOTE";
 export interface AreaAffected {
   id: string;
   createdAt: string;
@@ -67,6 +68,8 @@ export interface Image {
   name?: string;
   description?: string;
   type?: ImageType;
+  byUser?: User;
+  tags: Tag[];
 }
 
 export interface Comment {
@@ -125,6 +128,7 @@ export interface ImageFilters {
   searchTerm?: string;
   ids?: string[];
   type: ImageType;
+  tagNames?: string[];
 }
 
 export interface ImageSortOptions {

@@ -15,6 +15,7 @@ import { Project } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { FilterProjectsDto } from './dto/filter-projects.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -56,7 +57,13 @@ export class ProjectsController {
   @Get('organization/:organizationId')
   @ApiOperation({ summary: 'Get all projects for an organization' })
   @ApiParam({ name: 'organizationId', description: 'Organization ID' })
-  @ApiQuery({ type: PaginationDto })
+  @ApiQuery({ type: FilterProjectsDto })
+  @ApiQuery({
+    name: 'tagNames',
+    description: 'Filter by tag names (comma-separated)',
+    required: false,
+    type: String,
+  })
   @ApiResponse({
     status: 200,
     description: 'Return all projects for the organization.',
@@ -67,12 +74,18 @@ export class ProjectsController {
   findAll(
     @Param('organizationId') organizationId: string,
     @Request() req: RequestWithUser,
-    @Query() paginationDto: PaginationDto,
+    @Query() filterDto: FilterProjectsDto,
+    @Query('tagNames') tagNames?: string,
   ): Promise<PaginatedResponse<Project>> {
+    const tagNamesArray = tagNames
+      ? tagNames.split(',').map((tag) => tag.trim())
+      : undefined;
+
     return this.projectsService.findAll(
       organizationId,
       req.user.userId,
-      paginationDto,
+      filterDto,
+      tagNamesArray,
     );
   }
 
@@ -218,7 +231,7 @@ export class ProjectsController {
   @ApiOperation({ summary: 'Get all projects for an organization by status' })
   @ApiParam({ name: 'organizationId', description: 'Organization ID' })
   @ApiParam({ name: 'statusId', description: 'Status ID' })
-  @ApiQuery({ type: PaginationDto })
+  @ApiQuery({ type: FilterProjectsDto })
   @ApiResponse({
     status: 200,
     description: 'Return all projects for the organization by status.',
@@ -230,13 +243,13 @@ export class ProjectsController {
     @Param('organizationId') organizationId: string,
     @Param('statusId') statusId: string,
     @Request() req: RequestWithUser,
-    @Query() paginationDto: PaginationDto,
+    @Query() filterDto: FilterProjectsDto,
   ): Promise<PaginatedResponse<Project>> {
     return this.projectsService.findAllByStatus(
       organizationId,
       req.user.userId,
       statusId,
-      paginationDto,
+      filterDto,
     );
   }
 

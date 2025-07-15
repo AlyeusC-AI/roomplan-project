@@ -24,6 +24,14 @@ import {
   Wind,
   X,
 } from "lucide-react-native";
+
+// Type assertions to fix ReactNode compatibility
+const RulerComponent = Ruler as any;
+const DoorClosedComponent = DoorClosed as any;
+const WindComponent = Wind as any;
+const ChevronDownComponent = ChevronDown as any;
+const SearchComponent = Search as any;
+const XComponent = X as any;
 import { toast } from "sonner-native";
 import {
   SafeAreaView,
@@ -43,6 +51,12 @@ import {
   AreaAffected as AreaAffectedInterface,
   useGetRoom,
 } from "@service-geek/api-client";
+import {
+  useOfflineUpdateRoom,
+  useOfflineCreateEquipment,
+  useOfflineDeleteEquipment,
+} from "@/lib/hooks/useOfflineScope";
+import { useNetworkStatus } from "@/lib/providers/QueryProvider";
 
 // Constants for area types and equipment
 const areaAffectedTitle = {
@@ -62,7 +76,7 @@ const equipmentOptions = [
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#2563eb",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -129,7 +143,7 @@ const styles = StyleSheet.create({
   },
   areaToggleActive: {
     backgroundColor: "#f0f9ff",
-    borderColor: "#1e88e5",
+    borderColor: "#2563eb",
   },
   areaTabsContainer: {
     flexDirection: "row",
@@ -145,8 +159,8 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   areaTabActive: {
-    backgroundColor: "#1e88e5",
-    shadowColor: "#1e88e5",
+    backgroundColor: "#2563eb",
+    shadowColor: "#2563eb",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -311,9 +325,11 @@ export default function Dimensions({ room }: { room: Room }) {
   }>({ isOpen: false, equipment: "" });
   const { data: equipments } = useGetEquipment();
   console.log("🚀 ~ Dimensions ~ equipments:", equipments);
-  const { mutate: createEquipment } = useCreateEquipment();
-  const { mutate: deleteEquipment } = useDeleteEquipment();
-  const { mutate: updateRoom, isPending: saving } = useUpdateRoom();
+  const { mutate: createEquipment } = useOfflineCreateEquipment();
+  const { mutate: deleteEquipment } = useOfflineDeleteEquipment();
+  const { mutate: updateRoom } = useOfflineUpdateRoom();
+  const { isOffline } = useNetworkStatus();
+  const [saving, setSaving] = useState(false);
   console.log(
     "🚀 ~ Dimeaaaasadts:",
     JSON.stringify({ equipments, room }, null, 2)
@@ -349,9 +365,9 @@ export default function Dimensions({ room }: { room: Room }) {
         d.totalSqft = Number(d.width) * Number(d.length);
       }
 
-      await updateRoom({
-        id: room.id,
-        data: {
+      await updateRoom(
+        room.id,
+        {
           name: d.name,
           length: d.length,
           width: d.width,
@@ -369,7 +385,8 @@ export default function Dimensions({ room }: { room: Room }) {
           cubiModelId: d.cubiModelId,
           cubiRoomPlan: d.cubiRoomPlan,
         },
-      });
+        room.projectId
+      );
       console.log("🚀 ~ save ~ equipmentUsed:", equipmentUsed);
 
       //   toast.success("Room updated successfully.");
@@ -461,7 +478,7 @@ export default function Dimensions({ room }: { room: Room }) {
           <View style={styles.cardHeader}>
             <View className="flex-row items-center">
               <View style={styles.iconContainer}>
-                <Ruler size={24} color="#1e88e5" />
+                <Ruler size={24} color="#2563eb" />
               </View>
               <View>
                 <Text style={styles.sectionTitle}>Room Dimensions</Text>
@@ -708,12 +725,12 @@ export default function Dimensions({ room }: { room: Room }) {
                             borderColor: equipmentUsed.some(
                               (e) => e.id === item.id
                             )
-                              ? "#1e88e5"
+                              ? "#2563eb"
                               : "#e2e8f0",
                             backgroundColor: equipmentUsed.some(
                               (e) => e.id === item.id
                             )
-                              ? "#1e88e5"
+                              ? "#2563eb"
                               : "transparent",
                           },
                         ]}
@@ -872,7 +889,7 @@ export default function Dimensions({ room }: { room: Room }) {
           {saving ? (
             <>
               <View
-                style={[styles.saveIndicator, { backgroundColor: "#3b82f6" }]}
+                style={[styles.saveIndicator, { backgroundColor: "#2563eb" }]}
               />
               <Text style={styles.saveText}>Saving changes...</Text>
             </>

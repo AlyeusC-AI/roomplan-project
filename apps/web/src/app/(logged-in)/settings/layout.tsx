@@ -23,6 +23,10 @@ const sidebarNavItems = [
     href: "/settings/workflow",
   },
   {
+    title: "Tags",
+    href: "/settings/tags",
+  },
+  {
     title: "Equipment",
     href: "/settings/equipment",
   },

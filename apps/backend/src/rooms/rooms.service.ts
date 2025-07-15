@@ -17,6 +17,7 @@ export interface ImageFilters {
   searchTerm?: string;
   ids?: string[];
   type: ImageType;
+  tagNames?: string[];
 }
 
 export interface ImageSortOptions {
@@ -46,7 +47,11 @@ export class RoomsService {
     });
 
     if (room) {
-      throw new Error('Room already exists');
+      throw new BadRequestException({
+        status: 'failed',
+        reason: 'existing-room',
+        message: 'Room already exists for this project.',
+      });
     }
 
     return this.prisma.room.create({
@@ -79,7 +84,7 @@ export class RoomsService {
     Prisma.RoomGetPayload<{
       include: {
         walls: true;
-        images: { include: { comments: true } };
+        images: { include: { comments: true; tags: true } };
       };
     }>[]
   > {
@@ -105,6 +110,7 @@ export class RoomsService {
           },
           include: {
             comments: true,
+            tags: true,
           },
         },
       },
@@ -116,7 +122,7 @@ export class RoomsService {
 
   async findOne(id: string): Promise<Prisma.RoomGetPayload<{
     include: {
-      images: { include: { comments: true } };
+      images: { include: { comments: true; tags: true } };
       equipmentsUsed: true;
       walls: true;
     };
@@ -140,6 +146,7 @@ export class RoomsService {
         images: {
           include: {
             comments: true,
+            tags: true,
           },
         },
       },
@@ -255,17 +262,20 @@ export class RoomsService {
   }
 
   // Add image to room
-  async addImage(data: {
-    url: string;
-    showInReport?: boolean;
-    order?: number;
-    projectId: string;
-    roomId?: string;
-    noteId?: string;
-    name?: string;
-    description?: string;
-    type?: ImageType;
-  }): Promise<
+  async addImage(
+    data: {
+      url: string;
+      showInReport?: boolean;
+      order?: number;
+      projectId: string;
+      roomId?: string;
+      noteId?: string;
+      name?: string;
+      description?: string;
+      type?: ImageType;
+    },
+    userId: string,
+  ): Promise<
     Prisma.ImageGetPayload<{
       include: { comments: true };
     }>
@@ -333,16 +343,26 @@ export class RoomsService {
         ...data,
         url: data.url,
         showInReport: data.showInReport ?? false,
-        order: data.order ?? 0,
+        order: 0,
         projectId: data.projectId,
         roomId: roomId,
         noteId: data.noteId,
         type: data.type ?? (data.noteId ? 'NOTE' : 'ROOM'),
         name: data.name,
         description: data.description,
+        byUserId: userId,
       },
       include: {
         comments: true,
+      },
+    });
+
+    await this.prisma.image.updateMany({
+      where: {
+        roomId: roomId,
+      },
+      data: {
+        order: { increment: 1 },
       },
     });
 
@@ -358,6 +378,27 @@ export class RoomsService {
     // Then delete the image
     return this.prisma.image.delete({
       where: { id: imageId },
+      include: {
+        comments: true,
+      },
+    });
+  }
+
+  // Update image
+  async updateImage(
+    imageId: string,
+    data: {
+      url?: string;
+      showInReport?: boolean;
+      order?: number;
+      name?: string;
+      description?: string;
+      type?: ImageType;
+    },
+  ): Promise<Prisma.ImageGetPayload<{ include: { comments: true } }>> {
+    return this.prisma.image.update({
+      where: { id: imageId },
+      data,
       include: {
         comments: true,
       },
@@ -399,6 +440,7 @@ export class RoomsService {
       },
       include: {
         comments: true,
+        byUser: true,
       },
       orderBy: {
         order: 'asc',
@@ -452,6 +494,7 @@ export class RoomsService {
       },
       include: {
         comments: true,
+        byUser: true,
       },
       orderBy: {
         order: 'asc',
@@ -479,6 +522,7 @@ export class RoomsService {
     filters: ImageFilters,
     sort: ImageSortOptions = { field: 'createdAt', direction: 'desc' },
     pagination: PaginationOptions = { page: 1, limit: 20 },
+    tagNames?: string[],
   ): Promise<{
     data: Prisma.ImageGetPayload<{ include: { comments: true; room: true } }>[];
     total: number;
@@ -525,6 +569,18 @@ export class RoomsService {
               },
             }
           : {},
+
+        // Tag filtering
+        tagNames && tagNames.length > 0
+          ? {
+              tags: {
+                some: {
+                  name: { in: tagNames },
+                  type: 'IMAGE',
+                },
+              },
+            }
+          : {},
       ],
     };
 
@@ -543,6 +599,8 @@ export class RoomsService {
       include: {
         comments: true,
         room: true,
+        byUser: true,
+        tags: true,
       },
       orderBy: {
         [sort.field]: sort.direction,
@@ -637,6 +695,17 @@ export class RoomsService {
               },
             }
           : {},
+        // Tag filtering
+        filter.tagNames && filter.tagNames.length > 0
+          ? {
+              tags: {
+                some: {
+                  name: { in: filter.tagNames },
+                  type: 'IMAGE',
+                },
+              },
+            }
+          : {},
       ],
     };
 
@@ -650,6 +719,7 @@ export class RoomsService {
   async bulkRemoveImages(filter: ImageFilters): Promise<Prisma.BatchPayload> {
     const where: Prisma.ImageWhereInput = {
       AND: [
+        filter.ids?.length ? { id: { in: filter.ids } } : {},
         // Reuse the same filter logic from findImages
         filter.showInReport !== undefined
           ? { showInReport: filter.showInReport }
@@ -671,7 +741,17 @@ export class RoomsService {
               },
             }
           : {},
-        filter.ids?.length ? { id: { in: filter.ids } } : {},
+        // Tag filtering
+        filter.tagNames && filter.tagNames.length > 0
+          ? {
+              tags: {
+                some: {
+                  name: { in: filter.tagNames },
+                  type: 'IMAGE',
+                },
+              },
+            }
+          : {},
       ],
     };
 

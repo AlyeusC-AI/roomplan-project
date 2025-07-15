@@ -12,6 +12,7 @@ import type {
   AddCommentDto,
   AreaAffected,
   RoomAreaAffected,
+  ImageType,
 } from "../types/room";
 import { apiClient } from "./client";
 
@@ -52,6 +53,24 @@ class RoomsService {
     return response.data;
   }
 
+  async updateImage(
+    imageId: string,
+    data: {
+      url?: string;
+      showInReport?: boolean;
+      order?: number;
+      name?: string;
+      description?: string;
+      type?: ImageType;
+    }
+  ): Promise<Image> {
+    const response = await apiClient.put<Image>(
+      `/rooms/images/${imageId}`,
+      data
+    );
+    return response.data;
+  }
+
   async searchImages(
     projectId: string,
     filters: ImageFilters,
@@ -75,6 +94,7 @@ class RoomsService {
       ...(filters.roomIds?.length && { roomIds: filters.roomIds.join(",") }),
       ...(filters.searchTerm && { searchTerm: filters.searchTerm }),
       ...(filters.type && { type: filters.type }),
+      ...(filters.tagNames?.length && { tagNames: filters.tagNames.join(",") }),
       sortField: sort.field,
       sortDirection: sort.direction,
       page: String(pagination.page || 1),
@@ -99,12 +119,22 @@ class RoomsService {
     filters: Omit<ImageFilters, "projectId">,
     updates: { showInReport?: boolean; order?: number }
   ): Promise<{ count: number }> {
+    const requestData: any = {
+      filters: {
+        ...filters,
+        projectId,
+      },
+      updates,
+    };
+
+    // Convert tagNames array to comma-separated string for backend
+    if (filters.tagNames && Array.isArray(filters.tagNames)) {
+      requestData.filters.tagNames = filters.tagNames.join(",");
+    }
+
     const response = await apiClient.patch(
       `/rooms/project/${projectId}/images/bulk-update`,
-      {
-        filters,
-        updates,
-      }
+      requestData
     );
     return response.data;
   }
@@ -113,10 +143,22 @@ class RoomsService {
     projectId: string,
     filters: Omit<ImageFilters, "projectId">
   ): Promise<{ count: number }> {
+    const requestData: any = {
+      filters: {
+        ...filters,
+        projectId,
+      },
+    };
+
+    // Convert tagNames array to comma-separated string for backend
+    if (filters.tagNames && Array.isArray(filters.tagNames)) {
+      requestData.filters.tagNames = filters.tagNames.join(",");
+    }
+
     const response = await apiClient.delete(
       `/rooms/project/${projectId}/images/bulk-remove`,
       {
-        data: { filters },
+        data: requestData,
       }
     );
     return response.data;

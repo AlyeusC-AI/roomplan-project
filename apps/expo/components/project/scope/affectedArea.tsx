@@ -43,6 +43,8 @@ import {
   AreaAffected as AreaAffectedInterface,
   useGetRoom,
 } from "@service-geek/api-client";
+import { useOfflineUpdateAreaAffected } from "@/lib/hooks/useOfflineScope";
+import { useNetworkStatus } from "@/lib/providers/QueryProvider";
 import { RoomReadingInput } from "../reading";
 
 // Constants for area types and equipment
@@ -63,7 +65,7 @@ const equipmentOptions = [
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: "#1e88e5",
+    backgroundColor: "#2563eb",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -130,7 +132,7 @@ const styles = StyleSheet.create({
   },
   areaToggleActive: {
     backgroundColor: "#f0f9ff",
-    borderColor: "#1e88e5",
+    borderColor: "#2563eb",
   },
   areaTabsContainer: {
     flexDirection: "row",
@@ -146,8 +148,8 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   areaTabActive: {
-    backgroundColor: "#1e88e5",
-    shadowColor: "#1e88e5",
+    backgroundColor: "#2563eb",
+    shadowColor: "#2563eb",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -305,7 +307,8 @@ export default function AffectedArea({ room }: { room: Room }) {
     areaId: number;
   } | null>(null);
   const { data: areaAffected, isLoading } = useGetAreaAffected(room.id);
-  const { mutate: updateAreaAffected } = useUpdateAreaAffected();
+  const { mutate: updateAreaAffected } = useOfflineUpdateAreaAffected();
+  const { isOffline } = useNetworkStatus();
   const areaAffecteds = [
     {
       ...areaAffected?.wallsAffected,
@@ -342,11 +345,7 @@ export default function AffectedArea({ room }: { room: Room }) {
     setHasChanges(true);
 
     try {
-      await updateAreaAffected({
-        roomId: room.id,
-        type,
-        data,
-      });
+      await updateAreaAffected(room.id, type, data, projectId);
 
       setHasChanges(false);
       setLocalChanges({});
@@ -364,13 +363,14 @@ export default function AffectedArea({ room }: { room: Room }) {
     checked: boolean
   ) => {
     try {
-      await updateAreaAffected({
-        roomId: room.id,
+      await updateAreaAffected(
+        room.id,
         type,
-        data: {
+        {
           isVisible: checked,
         },
-      });
+        projectId
+      );
     } catch (error) {
       console.error("Error toggling area:", error);
       toast.error("Failed to update area");
@@ -522,7 +522,7 @@ export default function AffectedArea({ room }: { room: Room }) {
                     value={isChecked}
                     onValueChange={(value) => handleAreaToggle(type, value)}
                     trackColor={{ false: "#e2e8f0", true: "#93c5fd" }}
-                    thumbColor={isChecked ? "#1e88e5" : "#ffffff"}
+                    thumbColor={isChecked ? "#2563eb" : "#ffffff"}
                   />
                 </View>
               );

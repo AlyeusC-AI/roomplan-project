@@ -95,8 +95,8 @@ export default function InvoiceList() {
     <>
       <div
         className={cn(
-          "fixed z-10 bg-background lg:pr-10",
-          "lg:w-[calc(100vw-var(--sidebar-width))]"
+          "z-10 bg-background lg:pr-6",
+          "md:w-[calc(100vw-var(--sidebar-width)-48px)]"
         )}
       >
         <div className='mt-3 flex w-full justify-between space-x-6'>
@@ -128,7 +128,7 @@ export default function InvoiceList() {
         </div>
       </div>
 
-      <div className='mt-40'>
+      <div className='mt-10'>
         {isLoading ? (
           <LoadingPlaceholder />
         ) : (

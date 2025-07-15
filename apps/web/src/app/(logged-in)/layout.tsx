@@ -12,7 +12,6 @@ import NextBreadcrumb from "./breadcrumb";
 import { Search } from "./performance/components/search";
 import { UserNav } from "./user-nav";
 import { cn } from "@lib/utils";
-import { createClient } from "@lib/supabase/client";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -88,7 +87,9 @@ export default function Layout({ children }: React.PropsWithChildren) {
       <AppSidebar />
       <SidebarInset>
         {/* <SidebarHeader /> */}
-        <div className='flex flex-1 flex-col gap-4 p-4 pt-0'>{children}</div>
+        <div className='flex flex-1 flex-col gap-4 p-2 sm:p-4 md:p-6 lg:p-8 xl:p-10 2xl:p-12 pt-0'>
+          {children}
+        </div>
       </SidebarInset>
       {/* <SubscriptionAlert /> */}
     </SidebarProvider>

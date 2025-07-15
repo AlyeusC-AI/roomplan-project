@@ -25,6 +25,7 @@ model User {
   resetTokenExpiry  DateTime?
   supabaseId        String?   @unique
   avatar            String?
+  expoPushToken     String?
 
   // Organization relationships
   organizationMemberships OrganizationMember[]
@@ -32,8 +33,12 @@ model User {
   calendarEventReminders  CalendarEventReminder[]
 
   // Add direct many-to-many relationship with Project
-  projects Project[] @relation("ProjectMembers")
-  comments Comment[]
+  projects         Project[]         @relation("ProjectMembers")
+  comments         Comment[]
+  images           Image[]
+  chatMessages     ChatMessage[]
+  chatParticipants ChatParticipant[]
+  Notification     Notification[]
 }
 
 model Organization {
@@ -72,6 +77,8 @@ model Organization {
   invoices        Invoice[]
   estimates       Estimate[]
   invoiceItems    InvoiceItem[]
+  Tag             Tag[]
+  chats           Chat[]
 }
 
 enum MemberStatus {
@@ -180,6 +187,7 @@ model Project {
   insuranceClaimId     String?
   lossType             LossType?
   catCode              String?
+  waterClass           String?
   humidity             String?
 
   temperature  String?
@@ -189,16 +197,15 @@ model Project {
   forecast     String?
   claimSummary String?
 
-  roofSegments String[]
-  roofSpecs    String?
-  rcvValue     String?
-  actualValue  String?
-  status       ProjectStatus? @relation(fields: [statusId], references: [id])
-  statusId     String?
-  mainImage    String?
-  policyNumber String?
-  dateOfLoss   DateTime?
-
+  roofSegments   String[]
+  roofSpecs      String?
+  rcvValue       String?
+  actualValue    String?
+  status         ProjectStatus? @relation(fields: [statusId], references: [id])
+  statusId       String?
+  mainImage      String?
+  policyNumber   String?
+  dateOfLoss     DateTime?
   organization   Organization   @relation(fields: [organizationId], references: [id])
   organizationId String
   rooms          Room[]
@@ -208,6 +215,8 @@ model Project {
   formResponses  FormResponse[]
   invoices       Invoice[]
   Estimate       Estimate[]
+  tags           Tag[]
+  chat           Chat?
 }
 
 model Room {
@@ -215,7 +224,7 @@ model Room {
   name            String
   projectId       String
   supabaseId      String?            @unique
-  project         Project            @relation(fields: [projectId], references: [id])
+  project         Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
   images          Image[]
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
@@ -334,20 +343,22 @@ model Image {
   showInReport Boolean    @default(false)
   order        Int        @default(0)
   projectId    String
-  project      Project    @relation(fields: [projectId], references: [id])
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   supabaseId   String?    @unique
   Note         Note?      @relation(fields: [noteId], references: [id])
   noteId       String?
   type         ImageType? @default(ROOM)
+  byUserId     String?
+  byUser       User?      @relation(fields: [byUserId], references: [id])
+  tags         Tag[]
 
   @@index([roomId])
 }
 
 enum ImageType {
   ROOM
-  IMAGE
   FILE
   NOTE
 }
@@ -457,7 +468,7 @@ model Document {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   projectId String
-  project   Project      @relation(fields: [projectId], references: [id])
+  project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
 }
@@ -512,9 +523,9 @@ model FormField {
 model FormProject {
   id        String   @id @default(uuid())
   formId    String
-  form      Form     @relation(fields: [formId], references: [id])
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
   projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -524,9 +535,9 @@ model FormProject {
 model FormResponse {
   id                 String              @id @default(uuid())
   formId             String
-  form               Form                @relation(fields: [formId], references: [id])
+  form               Form                @relation(fields: [formId], references: [id], onDelete: Cascade)
   projectId          String
-  project            Project             @relation(fields: [projectId], references: [id])
+  project            Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   formResponseFields FormResponseField[]
@@ -535,9 +546,9 @@ model FormResponse {
 model FormResponseField {
   id             String       @id @default(uuid())
   formResponseId String
-  formResponse   FormResponse @relation(fields: [formResponseId], references: [id])
+  formResponse   FormResponse @relation(fields: [formResponseId], references: [id], onDelete: Cascade)
   fieldId        String
-  field          FormField    @relation(fields: [fieldId], references: [id])
+  field          FormField    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   value          String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -574,7 +585,7 @@ model Cost {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   projectId     String
-  project       Project  @relation(fields: [projectId], references: [id])
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
 }
@@ -688,4 +699,133 @@ enum EstimateStatus {
   REJECTED
   CANCELLED
   EXPIRED
+}
+
+enum TagType {
+  PROJECT
+  IMAGE
+}
+
+model Tag {
+  id             String       @id @default(uuid())
+  name           String
+  type           TagType
+  color          String?      @default("#3B82F6")
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Many-to-many relationships
+  projects Project[]
+  images   Image[]
+
+  @@unique([name, type, organizationId])
+  @@index([organizationId])
+  @@index([type])
+}
+
+enum ChatType {
+  PRIVATE
+  GROUP
+  PROJECT
+}
+
+model Chat {
+  id             String            @id @default(uuid())
+  type           ChatType          @default(PRIVATE)
+  name           String? // For group chats
+  projectId      String?           @unique // Only for project chats
+  project        Project?          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organizationId String?
+  organization   Organization?     @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  messages       ChatMessage[]
+  participants   ChatParticipant[]
+  lastMessageAt  DateTime?
+
+  @@index([organizationId])
+  @@index([projectId])
+}
+
+model ChatParticipant {
+  id       String    @id @default(uuid())
+  chatId   String
+  chat     Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User      @relation(fields: [userId], references: [id])
+  joinedAt DateTime  @default(now())
+  leftAt   DateTime?
+  isActive Boolean   @default(true)
+
+  @@unique([chatId, userId])
+  @@index([chatId])
+  @@index([userId])
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  AUDIO
+  SYSTEM
+}
+
+model ChatMessage {
+  id          String                  @id @default(uuid())
+  content     String
+  type        MessageType             @default(TEXT)
+  chatId      String
+  chat        Chat                    @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User                    @relation(fields: [userId], references: [id])
+  replyToId   String?
+  replyTo     ChatMessage?            @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies     ChatMessage[]           @relation("MessageReplies")
+  attachments ChatMessageAttachment[]
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  isEdited    Boolean                 @default(false)
+  isDeleted   Boolean                 @default(false)
+
+  @@index([chatId])
+  @@index([userId])
+  @@index([replyToId])
+}
+
+model ChatMessageAttachment {
+  id           String      @id @default(uuid())
+  messageId    String
+  message      ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  fileName     String
+  fileUrl      String
+  fileSize     Int?
+  mimeType     String?
+  thumbnailUrl String?
+  createdAt    DateTime    @default(now())
+
+  @@index([messageId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  content   String
+  type      String // CHAT_MESSAGE, PROJECT_UPDATE, etc.
+  link      String?
+  linkText  String?
+  publicId  String   @unique
+  isSeen    Boolean  @default(false)
+  isDeleted Boolean  @default(false)
+  data      Json? // Additional data like chatId, projectId, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([isSeen])
+  @@index([createdAt])
 }

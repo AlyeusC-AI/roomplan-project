@@ -59,8 +59,6 @@ import { useCameraStore } from "@/lib/state/camera";
 import { router, useGlobalSearchParams } from "expo-router";
 import { uploadImage } from "@/lib/imagekit";
 import {
-  useUpdateNote,
-  useDeleteNote,
   useCreateNote,
   useGetNotes,
   useGetNote,
@@ -72,9 +70,25 @@ import {
   useAddImage,
   useRemoveImage,
 } from "@service-geek/api-client";
+import {
+  useOfflineUpdateNote,
+  useOfflineDeleteNote,
+} from "@/lib/hooks/useOfflineNotes";
+import { useOfflineUploadsStore } from "@/lib/state/offline-uploads";
+import { useNetworkStatus } from "@/lib/providers/QueryProvider";
 import ImageGalleryModal, { OptimizedImage } from "./notesGallery";
 import { useQueryClient } from "@tanstack/react-query";
 import { SvgProps } from "react-native-svg";
+
+// Type assertions to fix ReactNode compatibility
+const FileTextComponent = FileText as any;
+const SquareComponent = Square as any;
+const MicComponent = Mic as any;
+const CameraComponent = Camera as any;
+const TrashComponent = Trash as any;
+const ChevronUpComponent = ChevronUp as any;
+const ChevronDownComponent = ChevronDown as any;
+
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
@@ -237,22 +251,22 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
   );
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const { projectId } = useGlobalSearchParams<{ projectId: string }>();
+  const { mutate: updateNoteMutation } = useOfflineUpdateNote();
+  const { mutate: deleteNoteMutation } = useOfflineDeleteNote();
   const [tempNote, setNote] = useState(note?.body);
   const { setFieldId, images, clearImages, fieldId } = useCameraStore();
-  const { mutate: updateNoteMutation } = useUpdateNote();
-  const { mutate: deleteNoteMutation } = useDeleteNote();
   const { mutate: addImageMutation } = useAddImage();
   const { mutate: removeImageMutation } = useRemoveImage();
   const { data: notes } = useGetNotes(room.id);
+  const { addToQueue: addImageToUploadQueue } = useOfflineUploadsStore();
+  const { isOffline } = useNetworkStatus();
   const queryClient = useQueryClient();
   const refreshNotes = useCallback(() => {
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
     }, 1000);
   }, [queryClient, room.id]);
-  const { projectId } = useGlobalSearchParams<{
-    projectId: string;
-  }>();
 
   // State to track newly uploaded images for highlighting
   const [highlightedImageIndex, setHighlightedImageIndex] = useState<
@@ -353,12 +367,12 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
       // Auto-save silently
       (async () => {
         setIsSaving(true);
-        await updateNoteMutation({
-          id: note.id,
-          data: {
-            body: debouncedNote,
-          },
-        });
+        await updateNoteMutation(
+          note.id,
+          { body: debouncedNote },
+          projectId!,
+          room.id
+        );
         setIsSaving(false);
       })();
     }
@@ -374,12 +388,7 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
     try {
       if (!silent) setIsUpdating(true);
 
-      await updateNoteMutation({
-        id: noteId,
-        data: {
-          body: body,
-        },
-      });
+      await updateNoteMutation(noteId, { body }, projectId!, roomId);
 
       // Only show success toast if not in silent mode
       if (!silent) {
@@ -395,7 +404,7 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
   const deleteNote = async (noteId: string, roomId: string) => {
     try {
       setIsDeleting(true);
-      await deleteNoteMutation(noteId);
+      await deleteNoteMutation(noteId, projectId!, roomId);
 
       toast.success("Note deleted successfully");
     } catch (error) {
@@ -411,30 +420,32 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
     console.log("🚀 ~ useEffect ~ images:", images);
 
     if (images.length > 0 && note.id == fieldId) {
-      addImageMutation({
-        data: {
-          noteId: note.id,
-          url: images[0].url,
-          projectId: projectId,
-        },
-      });
+      if (isOffline) {
+        // Add to offline upload queue when offline
+        addImageToUploadQueue({
+          projectId: projectId!,
+          roomId: room.id,
+          imagePath: images[0].url,
+          imageUrl: images[0].url,
+          metadata: {
+            size: 0,
+            type: "image/jpeg",
+            name: "note-image",
+          },
+        });
+        toast.success("Image added to offline queue");
+      } else {
+        addImageMutation({
+          data: {
+            noteId: note.id,
+            url: images[0].url,
+            projectId: projectId,
+          },
+        });
+      }
 
       clearImages();
       refreshNotes();
-
-      // Add to NoteImage table
-      //   supabaseServiceRole
-      //     .from("NoteImage")
-      //     .insert({
-      //       noteId: note.id,
-      //       imageKey: images[0].url,
-      //     })
-      //     .then(({ data, error }) => {
-      //       console.log("🚀 ~ .then ~ data, error:", data, error);
-      // clearImages();
-
-      //       refreshNotes();
-      //     });
     }
   }, [images, fieldId]);
 
@@ -741,10 +752,10 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
           >
             <ActivityIndicator
               size="small"
-              color="#2563EB"
+              color="#2563eb"
               style={{ marginRight: 4 }}
             />
-            <Text style={{ fontSize: 12, color: "#2563EB" }}>Saving...</Text>
+            <Text style={{ fontSize: 12, color: "#2563eb" }}>Saving...</Text>
           </View>
         )}
       </View>
@@ -759,7 +770,7 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
                   ...styles.singleImage,
                   borderWidth: highlightedImageIndex === 0 ? 3 : 0,
                   borderColor:
-                    highlightedImageIndex === 0 ? "#3B82F6" : "transparent",
+                    highlightedImageIndex === 0 ? "#2563eb" : "transparent",
                 }}
                 size="large"
               />
@@ -796,7 +807,7 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
                         borderWidth: highlightedImageIndex === index ? 3 : 0,
                         borderColor:
                           highlightedImageIndex === index
-                            ? "#3B82F6"
+                            ? "#2563eb"
                             : "transparent",
                       }}
                       size="medium"
@@ -883,14 +894,6 @@ const uploadImageToSupabase = async (
   }
 
   try {
-    // Upload to Supabase storage
-    // const res = await supabaseServiceRole.storage
-    //   .from("note-images")
-    //   .upload(`/${noteId}/${v4()}.jpeg`, formData, {
-    //     cacheControl: "3600",
-    //     upsert: false,
-    //   });
-
     // Upload to ImageKit
     const uploadResult = await uploadImage(
       {

@@ -4,13 +4,18 @@ import { Toaster } from "sonner-native";
 import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
 import { Stack } from "expo-router";
 import "@/global.css";
-import { AppState, View, StatusBar, SafeAreaView } from "react-native";
+import { AppState, View, StatusBar, SafeAreaView, Text } from "react-native";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+// import { NotificationProvider } from "@/components/providers/NotificationProvider";
 import { PortalHost } from "@rn-primitives/portal";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as SplashScreen from "expo-splash-screen";
 
-import { QueryProvider } from "../lib/providers/QueryProvider";
+import {
+  QueryProvider,
+  useNetworkStatus,
+} from "../lib/providers/QueryProvider";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 console.log("App initialization started");
 
@@ -18,6 +23,37 @@ console.log("App initialization started");
 SplashScreen.preventAutoHideAsync().catch((err) => {
   console.warn("Error preventing splash screen auto hide:", err);
 });
+
+// Offline banner component
+function OfflineBanner() {
+  const { isOffline } = useNetworkStatus();
+  const { top } = useSafeAreaInsets();
+
+  if (!isOffline) return null;
+
+  return (
+    <View
+      style={{
+        backgroundColor: "#ef4444",
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingTop: top,
+      }}
+    >
+      <Text
+        style={{
+          color: "#ffffff",
+          fontSize: 14,
+          fontWeight: "600",
+        }}
+      >
+        📱 You're offline - Data may be outdated
+      </Text>
+    </View>
+  );
+}
 
 export default function AppRoot() {
   console.log("AppRoot component started rendering");
@@ -30,7 +66,7 @@ export default function AppRoot() {
         200: "#bfdbfe",
         300: "#93c5fd",
         400: "#60a5fa",
-        500: "#3b82f6",
+        500: "#2563eb",
         600: "#2563eb",
         700: "#1d4ed8",
         800: "#1e40af",
@@ -101,7 +137,9 @@ export default function AppRoot() {
       <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <ThemeProvider>
+            {/* <NotificationProvider> */}
             <NativeBaseProvider theme={theme}>
+              <OfflineBanner />
               <Stack
                 screenOptions={{
                   headerTintColor: "#FFFF",
@@ -164,6 +202,7 @@ export default function AppRoot() {
                 />
               </Stack>
             </NativeBaseProvider>
+            {/* </NotificationProvider> */}
           </ThemeProvider>
           <Toaster visibleToasts={1} position="top-center" closeButton />
           <PortalHost />

@@ -8,6 +8,8 @@ import {
   Param,
   Patch,
   Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 import { ImageType, Prisma } from '@prisma/client';
@@ -16,8 +18,14 @@ import {
   ImageSortOptions,
   PaginationOptions,
 } from './rooms.service';
+import { RequestWithUser } from 'src/auth/interfaces/request-with-user';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
+@ApiTags('rooms')
+@ApiBearerAuth()
 @Controller('rooms')
+@UseGuards(JwtAuthGuard)
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
 
@@ -88,6 +96,7 @@ export class RoomsController {
   // Image endpoints
   @Post('images')
   async addImage(
+    @Req() req: RequestWithUser,
     @Body()
     data: {
       url: string;
@@ -100,7 +109,8 @@ export class RoomsController {
       type?: ImageType;
     },
   ): Promise<Prisma.ImageGetPayload<{ include: { comments: true } }>> {
-    return this.roomsService.addImage(data);
+    const userId = req.user.userId;
+    return this.roomsService.addImage(data, userId);
   }
 
   @Delete('images/:imageId')
@@ -108,6 +118,22 @@ export class RoomsController {
     @Param('imageId') imageId: string,
   ): Promise<Prisma.ImageGetPayload<{ include: { comments: true } }>> {
     return this.roomsService.removeImage(imageId);
+  }
+
+  @Put('images/:imageId')
+  async updateImage(
+    @Param('imageId') imageId: string,
+    @Body()
+    data: {
+      url?: string;
+      showInReport?: boolean;
+      order?: number;
+      name?: string;
+      description?: string;
+      type?: ImageType;
+    },
+  ): Promise<Prisma.ImageGetPayload<{ include: { comments: true } }>> {
+    return this.roomsService.updateImage(imageId, data);
   }
 
   // Comment endpoints
@@ -192,6 +218,7 @@ export class RoomsController {
     @Query('createdBefore') createdBefore?: string,
     @Query('roomIds') roomIds?: string,
     @Query('searchTerm') searchTerm?: string,
+    @Query('tagNames') tagNames?: string,
     @Query('sortField') sortField?: 'createdAt' | 'order' | 'url',
     @Query('sortDirection') sortDirection?: 'asc' | 'desc',
     @Query('page') page?: string,
@@ -218,7 +245,16 @@ export class RoomsController {
       limit: limit ? parseInt(limit) : 20,
     };
 
-    return this.roomsService.findImages(filters, sort, pagination);
+    const tagNamesArray = tagNames
+      ? tagNames.split(',').map((tag) => tag.trim())
+      : undefined;
+
+    return this.roomsService.findImages(
+      filters,
+      sort,
+      pagination,
+      tagNamesArray,
+    );
   }
 
   // Get image statistics for a project
@@ -237,10 +273,18 @@ export class RoomsController {
       updates: { showInReport?: boolean; order?: number };
     },
   ) {
-    const filters = {
+    const filters: any = {
       ...data.filters,
       projectId,
     };
+
+    // Convert tagNames string to array if provided
+    if (filters.tagNames && typeof filters.tagNames === 'string') {
+      filters.tagNames = filters.tagNames
+        .split(',')
+        .map((tag: string) => tag.trim());
+    }
+
     return this.roomsService.bulkUpdateImages(filters, data.updates);
   }
 
@@ -250,10 +294,18 @@ export class RoomsController {
     @Param('projectId') projectId: string,
     @Body() data: { filters: Omit<ImageFilters, 'projectId'> },
   ) {
-    const filters = {
+    const filters: any = {
       ...data.filters,
       projectId,
     };
+
+    // Convert tagNames string to array if provided
+    if (filters.tagNames && typeof filters.tagNames === 'string') {
+      filters.tagNames = filters.tagNames
+        .split(',')
+        .map((tag: string) => tag.trim());
+    }
+
     return this.roomsService.bulkRemoveImages(filters);
   }
 

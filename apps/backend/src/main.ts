@@ -3,13 +3,17 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
-import { MemberStatus, Role } from '@prisma/client';
+import { ImageType, MemberStatus, Role } from '@prisma/client';
 import { PrismaService } from './prisma/prisma.service';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     rawBody: true,
   });
+
+  // Enable WebSocket support
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   // Swagger configuration
   const config = new DocumentBuilder()
@@ -52,12 +56,11 @@ async function bootstrap() {
     `Swagger is running on http://localhost:${process.env.PORT ?? 3000}/api`,
   );
 
-  // const prisma = app.get(PrismaService);
-  // await prisma.user.updateMany({
-  //   // where: {
-  //   //   status: MemberStatus.PENDING,
-  //   // },
-  //   data: { acceptReminders: true, isEmailVerified: true },
+  const prisma = app.get(PrismaService);
+  // await prisma.chat.deleteMany({
+  //   where: {
+  //     // type: ChatType.PROJECT,
+  //   },
   // });
 }
 bootstrap();

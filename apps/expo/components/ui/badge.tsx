@@ -5,12 +5,14 @@ interface BadgeProps {
   children: React.ReactNode;
   variant?: "default" | "secondary" | "destructive" | "outline";
   className?: string;
+  style?: any;
 }
 
 export function Badge({
   children,
   variant = "default",
   className,
+  style,
   ...props
 }: BadgeProps) {
   return (
@@ -23,6 +25,7 @@ export function Badge({
         variant === "outline" && "border border-border",
         className
       )}
+      style={style}
       {...props}
     >
       <Text

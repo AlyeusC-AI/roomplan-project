@@ -39,6 +39,7 @@ import {
   CheckCircle2,
   XCircle,
   Check,
+  WifiOff,
 } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -46,8 +47,20 @@ import { uploadImage } from "@/lib/imagekit";
 import { useCameraStore } from "@/lib/state/camera";
 import { toast } from "sonner-native";
 import { useAddImage, useGetRooms } from "@service-geek/api-client";
+import { useNetworkStatus } from "@/lib/providers/QueryProvider";
+import { useOfflineUploadsStore } from "@/lib/state/offline-uploads";
 
-const AnimatedCamera = Reanimated.createAnimatedComponent(Camera);
+// Type assertions to fix ReactNode compatibility
+const AnimatedCamera = Reanimated.createAnimatedComponent(Camera) as any;
+const CameraIconComponent = CameraIcon as any;
+const ZapComponent = Zap as any;
+const ZapOffComponent = ZapOff as any;
+const WifiOffComponent = WifiOff as any;
+const CheckComponent = Check as any;
+const CheckCircle2Component = CheckCircle2 as any;
+const XCircleComponent = XCircle as any;
+const UploadComponent = Upload as any;
+
 Reanimated.addWhitelistedNativeProps({
   zoom: true,
 });
@@ -73,6 +86,8 @@ export default function CameraScreen() {
   const [disabled, setDisabled] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const { session: supabaseSession } = userStore((state) => state);
+  const { isOffline } = useNetworkStatus();
+  const { addToQueue } = useOfflineUploadsStore();
 
   const { projectId, formId, fieldId, mode } = useGlobalSearchParams<{
     projectId: string;
@@ -121,6 +136,54 @@ export default function CameraScreen() {
   // Process image uploads in the background
   const processImageUpload = async (uploadItem: UploadItem) => {
     console.log("🚀 ~ processImageUpload ~ uploadItem:", uploadItem);
+
+    // Check if offline and handle accordingly
+    if (isOffline) {
+      console.log("Offline mode - adding to offline queue");
+
+      // Add to offline upload queue
+      addToQueue({
+        projectId,
+        roomId: selectedRoomId,
+        imagePath: uploadItem.photo.path,
+        imageUrl: uploadItem.photo.path,
+        metadata: {
+          size: 0,
+          type: "image/jpeg",
+          name: "camera-photo",
+        },
+      });
+
+      // Update UI to show offline status
+      setUploadQueue((prev) =>
+        prev.map((item) =>
+          item.id === uploadItem.id
+            ? {
+                ...item,
+                status: "success",
+                progress: 1,
+                message: "Added to offline queue",
+              }
+            : item
+        )
+      );
+
+      toast.success("Photo added to offline queue");
+
+      // Remove from queue after delay
+      setTimeout(() => {
+        setUploadQueue((prev) => {
+          const newQueue = prev.filter((item) => item.id !== uploadItem.id);
+          if (newQueue.length === 0) {
+            setIsUploading(false);
+          }
+          return newQueue;
+        });
+      }, 2000);
+
+      return;
+    }
+
     try {
       setIsUploading(true);
       setUploadQueue((prev) =>
@@ -143,8 +206,6 @@ export default function CameraScreen() {
             : item
         )
       );
-
-      // Convert PhotoFile to Blob for ImageKit upload
 
       setUploadQueue((prev) =>
         prev.map((item) =>
@@ -182,12 +243,6 @@ export default function CameraScreen() {
 
       if (!isFormMode && !cameraFieldId) {
         try {
-          // Save image reference to your backend for room photos
-          // await api.post(`/api/v1/projects/${projectId}/image`, {
-          //   roomId: selectedRoomId,
-          //   imageId: uploadResult.url,
-          // });
-
           addImageMutation({
             data: {
               roomId: selectedRoomId,
@@ -219,8 +274,6 @@ export default function CameraScreen() {
 
       // If in form mode, go back to form with the image data
       if (isFormMode || cameraFieldId) {
-        // router.back();
-
         addImage({
           fieldId: fieldId as string,
           url: uploadResult.url,
@@ -229,14 +282,27 @@ export default function CameraScreen() {
           size: uploadResult.size || 0,
           fileId: uploadResult.fileId || "",
           filePath: uploadResult.filePath || "",
-          // fileId: uploadResult.fileId,
-          // filePath: uploadResult.filePath,
         });
       }
-
-      // Set the result in Zustand store
     } catch (error) {
       console.error("Upload error:", error);
+
+      // If upload fails and we're online, add to offline queue as fallback
+      if (!isOffline) {
+        addToQueue({
+          projectId,
+          roomId: selectedRoomId,
+          imagePath: uploadItem.photo.path,
+          imageUrl: uploadItem.photo.path,
+          metadata: {
+            size: 0,
+            type: "image/jpeg",
+            name: "failed-upload",
+          },
+        });
+        toast.error("Upload failed, added to offline queue");
+      }
+
       setUploadQueue((prev) =>
         prev.map((item) =>
           item.id === uploadItem.id
@@ -247,12 +313,13 @@ export default function CameraScreen() {
     } finally {
       // Remove the completed upload after a delay
       setTimeout(() => {
-        setUploadQueue((prev) =>
-          prev.filter((item) => item.id !== uploadItem.id)
-        );
-        if (uploadQueue?.length === 1) {
-          setIsUploading(false);
-        }
+        setUploadQueue((prev) => {
+          const newQueue = prev.filter((item) => item.id !== uploadItem.id);
+          if (newQueue.length === 0) {
+            setIsUploading(false);
+          }
+          return newQueue;
+        });
       }, 2000);
     }
   };
@@ -267,7 +334,7 @@ export default function CameraScreen() {
         processImageUpload(uploadItem);
       });
     }
-  }, [uploadQueue]);
+  }, [uploadQueue, isOffline]);
 
   // Simplified function to just capture the photo and update UI immediately
   const processImage = (photo: PhotoFile) => {
@@ -281,7 +348,7 @@ export default function CameraScreen() {
         id: uuid.v4(),
         progress: 0,
         status: "idle",
-        message: "Queued",
+        message: isOffline ? "Queued for offline" : "Queued",
         photo,
       },
     ]);
@@ -347,7 +414,7 @@ export default function CameraScreen() {
       const startZoom = context.startZoom ?? 0;
       const scale = interpolate(
         event.scale,
-        [1 - 1 / SCALE_FULL_ZOOM, 1, SCALE_FULL_ZOOM],
+        [1 - 1 / SCALE_FULL_ZOOM, 1, 1 + 1 / SCALE_FULL_ZOOM],
         [-1, 0, 1],
         Extrapolate.CLAMP
       );
@@ -432,11 +499,11 @@ export default function CameraScreen() {
 
   if (!device) {
     return (
-      <SafeAreaView className="flex justify-center items-center h-full w-full bg-black">
+      <View className="flex justify-center items-center h-full w-full bg-black">
         <StatusBar barStyle="light-content" />
         <ActivityIndicator size="large" color="#ffffff" />
         <Text className="text-white mt-4 text-lg">Opening Camera...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -455,24 +522,35 @@ export default function CameraScreen() {
           >
             <ArrowLeft size={24} color="white" />
           </Pressable>
-          {!isFormMode && !cameraFieldId && (
-            <View className="flex-1 mx-2">
+
+          <View className="flex-1 mx-2 flex-row items-center justify-center">
+            {!isFormMode && !cameraFieldId && (
               <RoomSelection
                 rooms={rooms}
                 selectedRoom={selectedRoomId}
                 onChange={onRoomSelect}
               />
-            </View>
-          )}
+            )}
+            {isOffline && (
+              <View className="ml-2 flex-row items-center bg-red-500/20 px-2 py-1 rounded-full">
+                <WifiOffComponent size={14} color="#ef4444" />
+                <Text className="text-red-400 text-xs ml-1">Offline</Text>
+              </View>
+            )}
+          </View>
+
           {device.hasFlash && (
             <Pressable
               onPress={toggleFlash}
               className="p-2 bg-black/50 rounded-full"
             >
               {flash === "off" ? (
-                <ZapOff size={24} color="white" />
+                <ZapOffComponent size={24} color="white" />
               ) : (
-                <Zap size={24} color={flash === "on" ? "#FFD700" : "white"} />
+                <ZapComponent
+                  size={24}
+                  color={flash === "on" ? "#FFD700" : "white"}
+                />
               )}
             </Pressable>
           )}
@@ -502,11 +580,11 @@ export default function CameraScreen() {
                   >
                     <View className="flex-row items-center space-x-2 mb-2">
                       {item.status === "success" ? (
-                        <CheckCircle2 size={20} color="#4CAF50" />
+                        <CheckCircle2Component size={20} color="#4CAF50" />
                       ) : item.status === "error" ? (
-                        <XCircle size={20} color="#F44336" />
+                        <XCircleComponent size={20} color="#F44336" />
                       ) : (
-                        <Upload size={20} color="white" />
+                        <UploadComponent size={20} color="white" />
                       )}
                       <Text className="text-white font-medium flex-1">
                         {item.message}
@@ -607,7 +685,7 @@ export default function CameraScreen() {
               </Pressable>
             ) : (
               <View className="size-16 rounded-md bg-black/30 flex items-center justify-center">
-                <CameraIcon size={24} color="rgba(255,255,255,0.5)" />
+                <CameraIconComponent size={24} color="rgba(255,255,255,0.5)" />
               </View>
             )}
 
@@ -634,7 +712,7 @@ export default function CameraScreen() {
               className="size-16 rounded-full bg-black/50 flex items-center justify-center"
               // disabled={isProcessing || isUploading}
             >
-              <Check size={24} color="white" />
+              <CheckComponent size={24} color="white" />
             </TouchableOpacity>
           </View>
         </View>

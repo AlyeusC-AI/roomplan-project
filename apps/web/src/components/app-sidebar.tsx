@@ -11,9 +11,10 @@ import {
   GalleryVerticalEnd,
   Map,
   Settings,
-  PanelLeftClose,
-  PanelLeftOpen,
   Receipt,
+  MapPin,
+  CirclePlus,
+  Bell,
 } from "lucide-react";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -22,11 +23,11 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarRail,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
 import { SidebarSubscriptionStatus } from "./sidebar-subscription-status";
+import { Input } from "./ui/input";
+import ActionOptionsSidebar from "./action-options-sidebar";
 // import { OrganizationSelector } from "./organization-selector";
 
 // This is sample data.
@@ -52,7 +53,7 @@ const data = {
     {
       title: "Projects",
       url: "/projects",
-      icon: FolderKanban,
+      icon: MapPin,
     },
     {
       title: "Calendar",
@@ -114,6 +115,10 @@ const data = {
           url: "/settings/workflow",
         },
         {
+          title: "Tags",
+          url: "/settings/tags",
+        },
+        {
           title: "Equipment",
           url: "/settings/equipment",
         },
@@ -123,41 +128,50 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { toggleSidebar, state } = useSidebar();
+  const [searchQuery, setSearchQuery] = React.useState("");
+
+  // Filter navigation items based on search query
+  const filteredNavItems = React.useMemo(() => {
+    if (!searchQuery.trim()) {
+      return data.navMain;
+    }
+
+    return data.navMain.filter((item) => {
+      // Check if main item title matches
+      const titleMatch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Check if any sub-items match
+      const subItemsMatch = item.items?.some((subItem) =>
+        subItem.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      return titleMatch || subItemsMatch;
+    });
+  }, [searchQuery]);
 
   return (
-    <Sidebar collapsible='icon' className='overflow-y-auto border-r' {...props}>
+    <Sidebar className='w-56 border-r border-gray-800 bg-[#192d43]' {...props}>
       <div className='flex h-full flex-col'>
         <div className='flex-1'>
-          <SidebarHeader className='flex items-center'>
-            <div
-              className={`flex ${state === "collapsed" ? "flex-col" : "items-center gap-2"}`}
-            >
-              <Image
-                src={
-                  state === "collapsed"
-                    ? "/images/brand/servicegeek-no-bg-icon.png"
-                    : "/images/brand/servicegeek-no-bg.png"
-                }
-                alt='logo'
-                className='my-4'
-                width={state === "collapsed" ? 40 : 140}
-                height={state === "collapsed" ? 40 : 30}
+        <SidebarHeader className='flex flex-row items-center justify-between py-3'>
+          <div className="flex items-center bg-white rounded-full ms-4" title="Service Geek">
+
+            <Image
+              src='/images/brand/servicegeek-no-bg-icon.png'
+              alt='logo'
+              width={28}
+              height={28}
+              className='size-7 w-auto'
               />
-              <button
-                onClick={toggleSidebar}
-                className='mt-3 rounded-lg p-2 transition-colors duration-200 ease-in-out hover:bg-gray-100 dark:hover:bg-gray-800'
-                title={
-                  state === "collapsed" ? "Expand sidebar" : "Collapse sidebar"
-                }
-              >
-                {state === "collapsed" ? (
-                  <PanelLeftOpen className='size-5 text-gray-600 dark:text-gray-400' />
-                ) : (
-                  <PanelLeftClose className='size-5 text-gray-600 dark:text-gray-400' />
-                )}
-              </button>
-            </div>
+              </div>
+              <ActionOptionsSidebar />
+            
+            {/* <div className="flex items-center gap-2">
+              <CirclePlus size={30} />
+              <Bell size={30} />
+              <NavUser withAvatar={false} />
+            </div> */}
+
           </SidebarHeader>
 
           {/* {state === "expanded" && (
@@ -170,16 +184,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </div>
           )} */}
 
-          <SidebarContent>
-            <NavMain items={data.navMain} />
+          <SidebarContent className='px-3'>
+            <Input
+              placeholder='Search'
+              className='bg-[#142334] mt-2 border border-white/20 text-white hover:border-blue-200 '
+              // style={{
+              //   border: "1px solid rgba(255, 255, 255, .22)",
+              // }}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <NavMain items={filteredNavItems} />
           </SidebarContent>
-
-          <SidebarRail />
         </div>
+
         <SidebarSubscriptionStatus />
-        <SidebarFooter>
+
+        {/* <SidebarFooter className='border-t border-gray-700 bg-[#192d43]/50 px-3 pb-4'>
           <NavUser />
-        </SidebarFooter>
+        </SidebarFooter> */}
       </div>
     </Sidebar>
   );
