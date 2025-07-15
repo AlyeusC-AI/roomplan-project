@@ -439,11 +439,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tabBarShadow: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 2,
+    // shadowColor: "#000",
+    // shadowOffset: { width: 0, height: 1 },
+    // shadowOpacity: 0.04,
+    // shadowRadius: 3,
+    // elevation: 2,
     backgroundColor: "#fff",
   },
   tabBar: {
@@ -452,8 +452,10 @@ const styles = StyleSheet.create({
     // borderRadius: 16,
     marginHorizontal: 12,
     marginTop: 8,
-    marginBottom: 4,
+    // marginBottom: 4,
     overflow: "hidden",
+    borderBottomWidth: 3,
+    borderBottomColor: "#f4f4f4",
   },
   tab: {
     flex: 1,

@@ -30,6 +30,7 @@ import { useRouter } from "expo-router";
 import { pickMultipleImages, STORAGE_BUCKETS } from "@/lib/utils/imageModule";
 import { useOfflineUploadsStore } from "@/lib/state/offline-uploads";
 import { useNetworkStatus } from "@/lib/providers/QueryProvider";
+import dayjs from "dayjs";
 
 // Type assertions to fix ReactNode compatibility
 const FilterIcon = Filter as any;
@@ -100,6 +101,30 @@ export default function ImagesTab({
     () => imagesData?.data?.filter((img) => img.roomId === roomId) || [],
     [imagesData, roomId]
   );
+
+  // Utility to count images and videos by file extension
+  function countMedia(items: any[]) {
+    let imageCount = 0;
+    let videoCount = 0;
+    for (const item of items) {
+      const url = item.url?.toLowerCase() || "";
+      if (url.match(/\.(jpg|jpeg|png|webp|gif)$/)) {
+        imageCount++;
+      } else if (url.match(/\.(mp4|mov|avi|mkv|webm)$/)) {
+        videoCount++;
+      }
+    }
+    return { imageCount, videoCount };
+  }
+
+  // Get media summary and latest date
+  const { imageCount, videoCount } = countMedia(images);
+  let summary = [];
+  if (imageCount > 0) summary.push(`${imageCount} photo${imageCount > 1 ? 's' : ''}`);
+  if (videoCount > 0) summary.push(`${videoCount} video${videoCount > 1 ? 's' : ''}`);
+  const mediaSummary = summary.length ? summary.join(", ") : "No media";
+  // Find latest date
+  const latestDate = images.length > 0 ? dayjs(images[0].createdAt).format("ddd MMM D, YYYY") : "";
 
   // Selection mode handlers
   const handleSelectionChange = (selectedKeys: string[]) => {
@@ -319,7 +344,13 @@ export default function ImagesTab({
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Room Images</Text>
+            {/* Replace header title with media summary and date */}
+            <View>
+              <Text style={styles.headerTitle}>{mediaSummary}</Text>
+              {latestDate ? (
+                <Text style={{ fontSize: 14, color: '#64748b', marginTop: 2, textAlign: 'center' }}>{latestDate}</Text>
+              ) : null}
+            </View>
             {isOffline && (
               <View style={styles.offlineIndicator}>
                 <WifiOffIcon size={16} color="#ef4444" />
@@ -510,9 +541,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 16,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    // backgroundColor: "#fff",
+    // // borderBottomWidth: 1,
+    // borderBottomColor: "#e5e7eb",
   },
   headerContent: {
     flex: 1,
@@ -535,7 +566,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: "#f1f5f9",
+    // backgroundColor: "#f1f5f9",
+    backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#e2e8f0",
   },
@@ -549,7 +581,7 @@ const styles = StyleSheet.create({
   actionButtonText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#64748b",
+    // color: "#64748b",
   },
   actionButtonTextActive: {
     color: "#fff",
@@ -560,7 +592,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f1f5f9",
+    // backgroundColor: "#f1f5f9",
+    backgroundColor: "#fff",  
     borderWidth: 1,
     borderColor: "#e2e8f0",
     position: "relative",
