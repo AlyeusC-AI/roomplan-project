@@ -30,8 +30,6 @@ import {
   ChevronUp,
   ChevronDown,
   FileText,
-  Type,
-  ImagePlus,
 } from "lucide-react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { toast } from "sonner-native";
@@ -81,7 +79,6 @@ import { useNetworkStatus } from "@/lib/providers/QueryProvider";
 import ImageGalleryModal, { OptimizedImage } from "./notesGallery";
 import { useQueryClient } from "@tanstack/react-query";
 import { SvgProps } from "react-native-svg";
-import { TextInput } from "react-native";
 
 // Type assertions to fix ReactNode compatibility
 const FileTextComponent = FileText as any;
@@ -91,10 +88,6 @@ const CameraComponent = Camera as any;
 const TrashComponent = Trash as any;
 const ChevronUpComponent = ChevronUp as any;
 const ChevronDownComponent = ChevronDown as any;
-const MoreVerticalComponent = MoreVertical as any;
-const TypeComponent = Type as any;
-const ImagePlusComponent = ImagePlus as any;
-const XComponent = X as any;
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -246,202 +239,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  noteTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1e293b",
-    marginBottom: 8,
-  },
-  noteDescription: {
-    fontSize: 14,
-    color: "#4b5563",
-    marginBottom: 8,
-  },
-  editHint: {
-    alignSelf: "flex-end",
-    backgroundColor: "#e0e7ff",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 6,
-    marginTop: 4,
-  },
-  editHintText: {
-    color: "#3b82f6",
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  editDialogContent: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 20,
-    margin: 20,
-    maxHeight: "80%",
-  },
-  editDialogHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  editDialogTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1e293b",
-  },
-  inputField: {
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 16,
-    backgroundColor: "#ffffff",
-  },
-  textareaField: {
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 16,
-    backgroundColor: "#ffffff",
-    minHeight: 120,
-    textAlignVertical: "top",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 12,
-    marginTop: 16,
-  },
-  saveButton: {
-    backgroundColor: "#2563eb",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  cancelButton: {
-    backgroundColor: "#e5e7eb",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  cancelButtonText: {
-    color: "#374151",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  imageCountBadge: {
-    position: "absolute",
-    top: -8,
-    right: -8,
-    backgroundColor: "#ef4444",
-    borderRadius: 10,
-    width: 20,
-    height: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  imageCountText: {
-    color: "#ffffff",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  noteDescription: {
-    fontSize: 14,
-    color: "#4b5563",
-    marginBottom: 8,
-  },
-  editHint: {
-    alignSelf: "flex-end",
-    backgroundColor: "#e0e7ff",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 6,
-    marginTop: 4,
-  },
-  editHintText: {
-    color: "#3b82f6",
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  editDialogContent: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 20,
-    margin: 20,
-    maxHeight: "80%",
-  },
-  editDialogHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  editDialogTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1e293b",
-  },
-  inputField: {
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 16,
-    backgroundColor: "#ffffff",
-  },
-  textareaField: {
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 16,
-    backgroundColor: "#ffffff",
-    minHeight: 120,
-    textAlignVertical: "top",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 12,
-    marginTop: 16,
-  },
-  saveButton: {
-    backgroundColor: "#2563eb",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  cancelButton: {
-    backgroundColor: "#e5e7eb",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  cancelButtonText: {
-    color: "#374151",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  editImageGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 4,
-    justifyContent: "space-between",
-  },
 });
 
 export default function NoteCard({ note, room }: { note: Note; room: Room }) {
@@ -458,7 +255,6 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
   const { mutate: updateNoteMutation } = useOfflineUpdateNote();
   const { mutate: deleteNoteMutation } = useOfflineDeleteNote();
   const [tempNote, setNote] = useState(note?.body);
-  const [tempTitle, setTempTitle] = useState(note?.title || "");
   const { setFieldId, images, clearImages, fieldId } = useCameraStore();
   const { mutate: addImageMutation } = useAddImage();
   const { mutate: removeImageMutation } = useRemoveImage();
@@ -466,12 +262,6 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
   const { addToQueue: addImageToUploadQueue } = useOfflineUploadsStore();
   const { isOffline } = useNetworkStatus();
   const queryClient = useQueryClient();
-  
-  // State for edit dialog
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [editTitle, setEditTitle] = useState(note?.title || "");
-  const [editBody, setEditBody] = useState(note?.body || "");
-  
   const refreshNotes = useCallback(() => {
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
@@ -491,8 +281,7 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
 
   useEffect(() => {
     setNote(note.body);
-    setTempTitle(note?.title || "");
-  }, [note.body, note?.title]);
+  }, [note.body]);
 
   useSpeechRecognitionEvent("start", () => setRecognizing(true));
   useSpeechRecognitionEvent("end", () => {
@@ -594,18 +383,12 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
     noteId: string,
     roomId: string,
     body: string,
-    title?: string,
     silent = false
   ) => {
     try {
       if (!silent) setIsUpdating(true);
 
-      const updateData: any = { body };
-      if (title !== undefined) {
-        updateData.title = title;
-      }
-
-      await updateNoteMutation(noteId, updateData, projectId!, roomId);
+      await updateNoteMutation(noteId, { body }, projectId!, roomId);
 
       // Only show success toast if not in silent mode
       if (!silent) {
@@ -691,7 +474,7 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (!result.canceled && result.assets?.[0]) {
         toast("Capturing image...");
         await uploadImageToSupabase(result.assets[0], noteId, onSuccess);
 
@@ -848,171 +631,139 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
     };
   }, []);
 
-  // Handle edit dialog
-  const handleEditNote = () => {
-    setEditTitle(note?.title || "");
-    setEditBody(note?.body || "");
-    setShowEditDialog(true);
-  };
-
-  const handleSaveEdit = async () => {
-    try {
-      setIsUpdating(true);
-      await updateNote(note.id, room.id, editBody, editTitle);
-      setShowEditDialog(false);
-      setTempTitle(editTitle);
-      setNote(editBody);
-    } catch (error) {
-      console.error("Error updating note:", error);
-      toast.error("Failed to update note");
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setShowEditDialog(false);
-    setEditTitle(note?.title || "");
-    setEditBody(note?.body || "");
-  };
-
   return (
     <Card style={styles.noteCard} ref={noteRef}>
-      <Pressable onPress={handleEditNote}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 12,
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <View style={[styles.userAvatar, { backgroundColor: "#EFF6FF" }]}>
-              <FileTextComponent color="#1E40AF" size={20} />
-            </View>
-            <View>
-              <Text style={{ color: "#6B7280", fontSize: 13 }}>
-                {format(new Date(note.updatedAt), "d LLLL	hh:mm a")}
-              </Text>
-            </View>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 12,
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <View style={[styles.userAvatar, { backgroundColor: "#EFF6FF" }]}>
+            <FileText color="#1E40AF" size={20} />
           </View>
-
-          {/* Action buttons moved to the top */}
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <Pressable
-              disabled={isUpdating || imageUploading}
-              onPress={(e) => {
-                e.stopPropagation();
-                handleStart(note.id);
-              }}
-            >
-              {recognizing && note.id == noteId ? (
-                <SquareComponent color="red" size={20} />
-              ) : (
-                <MicComponent color="#1e40af" size={20} />
-              )}
-            </Pressable>
-            <Pressable
-              disabled={isUpdating || imageUploading}
-              onPress={(e) => {
-                e.stopPropagation();
-                handleImageOptions();
-              }}
-            >
-              {imageUploading ? (
-                <ActivityIndicator size="small" color="#1e40af" />
-              ) : (
-                <View style={{ position: "relative" }}>
-                  <CameraComponent color="#1e40af" size={20} />
-                  {note.images && note.images.length > 0 && (
-                    <View style={styles.imageCountBadge}>
-                      <Text style={styles.imageCountText}>
-                        {note.images.length}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              )}
-            </Pressable>
-            
-            {/* 3-dots menu */}
-            <Pressable
-              disabled={isUpdating || imageUploading}
-              onPress={(e) => {
-                e.stopPropagation();
-                Alert.alert(
-                  "Note Options",
-                  "Choose an action",
-                  [
-                    {
-                      text: "Edit Note",
-                      onPress: handleEditNote,
-                    },
-                    {
-                      text: "Add Images",
-                      onPress: handleImageOptions,
-                    },
-                    {
-                      text: "Delete Note",
-                      style: "destructive",
-                      onPress: () => {
-                        Alert.alert(
-                          "Delete Note",
-                          "Are you sure you want to delete this note? This action cannot be undone.",
-                          [
-                            {
-                              text: "Cancel",
-                              style: "cancel",
-                            },
-                            {
-                              text: "Delete",
-                              style: "destructive",
-                              onPress: () => deleteNote(note.id, room.id),
-                            },
-                          ]
-                        );
-                      },
-                    },
-                    {
-                      text: "Cancel",
-                      style: "cancel",
-                    },
-                  ],
-                  { cancelable: true }
-                );
-              }}
-            >
-              <MoreVerticalComponent color="#1e40af" size={20} />
-            </Pressable>
+          <View>
+            <Text style={{ color: "#6B7280", fontSize: 13 }}>
+              {format(new Date(note.updatedAt), "d LLLL	hh:mm a")}
+            </Text>
           </View>
         </View>
 
-        {/* Note Title and Description */}
-        {(tempTitle || tempNote) && (
-          <View style={{ marginBottom: 16 }}>
-            {tempTitle && (
-              <Text style={styles.noteTitle}>{tempTitle}</Text>
+        {/* Action buttons moved to the top */}
+        <View style={{ flexDirection: "row", gap: 0 }}>
+          <Button
+            variant="ghost"
+            className="p-1"
+            disabled={isUpdating || imageUploading}
+            onPress={() => handleStart(note.id)}
+          >
+            {recognizing && note.id == noteId ? (
+              <Square color="red" size={20} />
+            ) : (
+              <Mic color="#1e40af" size={20} />
             )}
-            {tempNote && (
-              <Text style={styles.noteDescription} numberOfLines={3}>
-                {tempNote}
-              </Text>
+          </Button>
+
+          {/* Combined image button for camera and gallery */}
+          <Button
+            variant="ghost"
+            className="p-1"
+            disabled={isUpdating || imageUploading}
+            onPress={handleImageOptions}
+          >
+            {imageUploading ? (
+              <ActivityIndicator size="small" color="#1e40af" />
+            ) : (
+              <Camera color="#1e40af" size={20} />
             )}
-            <View style={styles.editHint}>
-              <Text style={styles.editHintText}>Tap to edit</Text>
-            </View>
+          </Button>
+
+          {/* Delete button with confirmation */}
+          <Button
+            variant="ghost"
+            className="p-1"
+            disabled={isDeleting}
+            onPress={() => {
+              Alert.alert(
+                "Delete Note",
+                "Are you sure you want to delete this note? This action cannot be undone.",
+                [
+                  {
+                    text: "Cancel",
+                    style: "cancel",
+                  },
+                  {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: () => deleteNote(note.id, room.id),
+                  },
+                ]
+              );
+            }}
+          >
+            {isDeleting ? (
+              <ActivityIndicator />
+            ) : (
+              <Trash color="red" size={20} />
+            )}
+          </Button>
+        </View>
+      </View>
+
+      {/* Always show textarea for direct editing */}
+      <View style={{ position: "relative" }}>
+        <Textarea
+          value={tempNote}
+          onChangeText={setNote}
+          placeholder="What's on your mind?"
+          style={{
+            minHeight: 80,
+            marginBottom: 16,
+            padding: 12,
+            borderRadius: 8,
+            backgroundColor: "#F9FAFB",
+            borderWidth: 1,
+            borderColor: isSaving ? "#93C5FD" : "#E5E7EB",
+            fontSize: 16,
+          }}
+          multiline
+          onBlur={() => {
+            // Save changes when focus is lost
+            if (tempNote !== note.body) {
+              updateNote(note.id, room.id, tempNote);
+            }
+          }}
+        />
+        {isSaving && (
+          <View
+            style={{
+              position: "absolute",
+              bottom: 24,
+              right: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "rgba(255,255,255,0.8)",
+              borderRadius: 4,
+              padding: 4,
+            }}
+          >
+            <ActivityIndicator
+              size="small"
+              color="#2563eb"
+              style={{ marginRight: 4 }}
+            />
+            <Text style={{ fontSize: 12, color: "#2563eb" }}>Saving...</Text>
           </View>
         )}
-      </Pressable>
+      </View>
 
       {note.images && note.images.length > 0 && (
         <View style={{ marginBottom: 16, borderRadius: 8, overflow: "hidden" }}>
           {note.images.length === 1 ? (
-            <Pressable onPress={(e) => {
-              e.stopPropagation();
-              handleOpenModal(0);
-            }}>
+            <Pressable onPress={() => handleOpenModal(0)}>
               <OptimizedImage
                 uri={note.images[0].url}
                 style={{
@@ -1033,10 +784,7 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
                 ).map((image, index) => (
                   <Pressable
                     key={`${note.id}-image-${index}`}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      handleOpenModal(index);
-                    }}
+                    onPress={() => handleOpenModal(index)}
                     style={{
                       width:
                         note.images?.length === 2
@@ -1071,10 +819,7 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
               {/* Only show the See More/Less button if we have more than PREVIEW_IMAGE_COUNT images */}
               {note.images.length > PREVIEW_IMAGE_COUNT && (
                 <Pressable
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    setExpandedImageGrid(!expandedImageGrid);
-                  }}
+                  onPress={() => setExpandedImageGrid(!expandedImageGrid)}
                   style={{
                     padding: 8,
                     backgroundColor: "#F3F4F6",
@@ -1092,9 +837,9 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
                       : `Show all ${note.images.length} images`}
                   </Text>
                   {expandedImageGrid ? (
-                    <ChevronUpComponent size={18} color="#1E40AF" />
+                    <ChevronUp size={18} color="#1E40AF" />
                   ) : (
-                    <ChevronDownComponent size={18} color="#1E40AF" />
+                    <ChevronDown size={18} color="#1E40AF" />
                   )}
                 </Pressable>
               )}
@@ -1117,140 +862,6 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
         </Text>
       )}
 
-      {/* Edit Note Dialog */}
-      <Modal
-        visible={showEditDialog}
-        transparent
-        animationType="slide"
-        onRequestClose={handleCancelEdit}
-      >
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center" }}>
-          <View style={styles.editDialogContent}>
-            <View style={styles.editDialogHeader}>
-              <Text style={styles.editDialogTitle}>Edit Note</Text>
-              <Pressable onPress={handleCancelEdit}>
-                <XComponent size={20} color="#64748b" />
-              </Pressable>
-            </View>
-            
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={{ fontSize: 16, fontWeight: "500", marginBottom: 8, color: "#374151" }}>
-                Title
-              </Text>
-              <TextInput
-                style={styles.inputField}
-                value={editTitle}
-                onChangeText={setEditTitle}
-                placeholder="Enter note title..."
-                placeholderTextColor="#9ca3af"
-              />
-              
-              <Text style={{ fontSize: 16, fontWeight: "500", marginBottom: 8, color: "#374151" }}>
-                Content
-              </Text>
-              <TextInput
-                style={styles.textareaField}
-                value={editBody}
-                onChangeText={setEditBody}
-                placeholder="What's on your mind?"
-                placeholderTextColor="#9ca3af"
-                multiline
-                textAlignVertical="top"
-              />
-              
-              {/* Images Section */}
-              <View style={{ marginTop: 16 }}>
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <Text style={{ fontSize: 16, fontWeight: "500", color: "#374151" }}>
-                    Images ({note.images?.length || 0})
-                  </Text>
-                  <Pressable 
-                    onPress={() => {
-                      setShowEditDialog(false);
-                      handleImageOptions()
-                      // setTimeout(() => handleImageOptions(), 300);
-                    }}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      backgroundColor: "#e0e7ff",
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                      borderRadius: 6,
-                    }}
-                  >
-                    <ImagePlusComponent size={16} color="#3b82f6" />
-                    <Text style={{ marginLeft: 4, color: "#3b82f6", fontSize: 14, fontWeight: "500" }}>
-                      Add Images
-                    </Text>
-                  </Pressable>
-                </View>
-                
-                {note.images && note.images.length > 0 && (
-                  <View style={styles.editImageGrid}>
-                    {note.images.map((image, index) => (
-                      <View key={`edit-${note.id}-image-${index}`} style={{ position: "relative", width: "30%", marginBottom: 8 }}>
-                        <Pressable
-                          onPress={() => {
-                            // setShowEditDialog(false);
-                            handleOpenModal(index)
-                            // setTimeout(() => handleOpenModal(index), 300);
-                          }}
-                        >
-                          <OptimizedImage
-                            uri={image.url}
-                            style={{
-                              width: "100%",
-                              height: 100,
-                              borderRadius: 8,
-                            }}
-                            size="medium"
-                          />
-                        </Pressable>
-                      </View>
-                    ))}
-                  </View>
-                )}
-                
-                {(!note.images || note.images.length === 0) && (
-                  <View style={{
-                    borderWidth: 2,
-                    borderColor: "#e5e7eb",
-                    borderStyle: "dashed",
-                    borderRadius: 8,
-                    padding: 20,
-                    alignItems: "center",
-                    backgroundColor: "#f9fafb",
-                  }}>
-                    <ImagePlusComponent size={32} color="#9ca3af" />
-                    <Text style={{ marginTop: 8, color: "#6b7280", fontSize: 14 }}>
-                      No images yet. Tap "Add Images" to get started.
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </ScrollView>
-            
-            <View style={styles.buttonContainer}>
-              <Pressable style={styles.cancelButton} onPress={handleCancelEdit}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </Pressable>
-              <Pressable 
-                style={[styles.saveButton, isUpdating && { opacity: 0.6 }]} 
-                onPress={handleSaveEdit}
-                disabled={isUpdating}
-              >
-                {isUpdating ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <Text style={styles.buttonText}>Save</Text>
-                )}
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
       <ImageGalleryModal
         visible={selectedImageIndex !== null}
         onClose={() => setSelectedImageIndex(null)}
@@ -1270,12 +881,24 @@ const uploadImageToSupabase = async (
   noteId: string,
   onSuccess?: () => void
 ) => {
+  const p = {
+    uri: photo.uri,
+    name: photo.fileName || `${v4()}.jpeg`,
+    type: photo.mimeType || "image/jpeg",
+  };
+
+  const formData = new FormData();
+  if (p) {
+    // @ts-expect-error react-native form data typing issue
+    formData.append("file", p);
+  }
+
   try {
     // Upload to ImageKit
     const uploadResult = await uploadImage(
       {
         uri: photo.uri,
-        type: "image" as any,
+        type: "image/jpeg",
         name: photo.fileName || `${v4()}.jpeg`,
       },
       {
