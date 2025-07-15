@@ -103,6 +103,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Image } from "react-native";
 import { useCameraStore } from "@/lib/state/camera";
 import { uploadImage } from "@/lib/imagekit";
+import ClaimSummaryEditor from "@/components/project/ClaimSummaryEditor";
 
 type TabType = "customer" | "loss" | "insurance";
 
@@ -176,7 +177,7 @@ function LossTypeSelector({ value, onChange, style }: LossTypeSelectorProps) {
         <Text style={[styles.inputText, !value && styles.placeholderText]}>
           {selectedLabel}
         </Text>
-        <ChevronDown size={20} color="#1d1d1d" />
+        <ChevronDownIcon size={20} color="#1d1d1d" />
       </TouchableOpacity>
 
       <Modal isOpen={modalVisible} onClose={() => setModalVisible(false)}>
@@ -184,7 +185,7 @@ function LossTypeSelector({ value, onChange, style }: LossTypeSelectorProps) {
           <HStack justifyContent="space-between" alignItems="center" mb={4}>
             <Text style={styles.modalTitle}>Select Loss Type</Text>
             <Pressable onPress={() => setModalVisible(false)}>
-              <X color="#64748b" size={20} />
+              <XIcon color="#64748b" size={20} />
             </Pressable>
           </HStack>
 
@@ -364,7 +365,7 @@ function WaterDamageClassSelector({
                 }}
               >
                 <HStack space={2} alignItems="center">
-                  <Droplets
+                  <DropletsIcon
                     size={16}
                     color={value === type.value ? "#2563eb" : "#94a3b8"}
                   />
@@ -421,7 +422,7 @@ const DateInput: React.FC<{
         <Text style={styles.dateInputText}>
           {dayjs(value).format("MMM D, YYYY")}
         </Text>
-        <CalendarIcon color="#64748b" size={20} />
+        <CalendarIconType color="#64748b" size={20} />
       </Pressable>
 
       <Modal isOpen={showPicker} onClose={() => setShowPicker(false)}>
@@ -429,7 +430,7 @@ const DateInput: React.FC<{
           <HStack justifyContent="space-between" alignItems="center" mb={4}>
             <Text style={styles.modalTitle}>{label}</Text>
             <Pressable onPress={() => setShowPicker(false)}>
-              <X color="#64748b" size={20} />
+              <XIcon color="#64748b" size={20} />
             </Pressable>
           </HStack>
           <Box style={styles.datePickerContainer}>
@@ -438,8 +439,8 @@ const DateInput: React.FC<{
               minDate={dayjs().subtract(1, "year").toDate()}
               maxDate={dayjs().toDate()}
               components={{
-                IconNext: <ChevronRight color="#1d4ed8" size={28} />,
-                IconPrev: <ChevronLeftIcon color="#1d4ed8" size={28} />,
+                IconNext: <ChevronRightIcon color="#1d4ed8" size={28} />,
+                IconPrev: <ChevronLeftIconType color="#1d4ed8" size={28} />,
               }}
               onChange={(params: { date: DateType }) => {
                 setTempDate(params.date);
@@ -743,6 +744,27 @@ export default function ProjectDetails() {
     }
   };
 
+  const handleChangeClaimSummary = (summary: string) => {
+    if (projectId && summary !== project?.data?.claimSummary) {
+      updateProjectMutation.mutate({
+        id: projectId,
+        data: { claimSummary: summary },
+      });
+    }
+  };
+  const handleChangeClaimSummaryImages = (images: string[]) => {
+    if (
+      projectId &&
+      JSON.stringify(images) !==
+        JSON.stringify(project?.data?.claimSummaryImages || [])
+    ) {
+      updateProjectMutation.mutate({
+        id: projectId,
+        data: { claimSummaryImages: images },
+      });
+    }
+  };
+
   const renderCustomerTab = () => (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <VStack space={4}>
@@ -921,86 +943,31 @@ export default function ProjectDetails() {
               onChangeText={setCatCode}
               containerStyle={styles.inputContainer}
               leftElement={
-                <Hash size={20} color="#94a3b8" style={styles.inputIcon} />
+                <HashIcon size={20} color="#94a3b8" style={styles.inputIcon} />
               }
             />
           )}
-          <FormInput
-            label="Claim Summary"
-            placeholder="Enter claim summary"
-            value={claimSummary}
-            onChangeText={setClaimSummary}
-            multiline
-            numberOfLines={4}
-            containerStyle={styles.inputContainer}
-            leftElement={
-              <FileCheck size={20} color="#94a3b8" style={styles.inputIcon} />
+          {/* Claim Summary Editor Inline */}
+          <ClaimSummaryEditor
+            visible={true}
+            onClose={() => {}}
+            claimSummary={project?.data?.claimSummary || ""}
+            claimSummaryImages={project?.data?.claimSummaryImages || []}
+            onChangeSummary={handleChangeClaimSummary}
+            onChangeImages={handleChangeClaimSummaryImages}
+            projectId={projectId}
+            asModal={false}
+            onTakePhoto={() =>
+              router.push({
+                pathname: `/projects/${projectId}/camera`,
+                params: { mode: "claimSummary" },
+              })
             }
           />
-          <View
-            style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 8 }}
-          >
-            {claimSummaryImages.map((url, idx) => (
-              <View
-                key={idx}
-                style={{
-                  position: "relative",
-                  width: 60,
-                  height: 60,
-                  marginRight: 8,
-                  marginBottom: 8,
-                }}
-              >
-                <Image
-                  source={{ uri: url }}
-                  style={{
-                    width: 60,
-                    height: 60,
-                    borderRadius: 8,
-                  }}
-                />
-                <TouchableOpacity
-                  onPress={() => handleRemoveClaimSummaryImage(idx)}
-                  style={{
-                    position: "absolute",
-                    top: -8,
-                    right: -8,
-                    backgroundColor: "#fff",
-                    borderRadius: 12,
-                    width: 24,
-                    height: 24,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 2,
-                    elevation: 2,
-                  }}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <X size={16} color="#ef4444" />
-                </TouchableOpacity>
-              </View>
-            ))}
-            <TouchableOpacity
-              onPress={handleAddClaimSummaryImage}
-              style={{
-                width: 60,
-                height: 60,
-                backgroundColor: "#eee",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 8,
-              }}
-            >
-              <Text style={{ fontSize: 32, color: "#888" }}>+</Text>
-            </TouchableOpacity>
-          </View>
         </View>
         <View style={styles.section}>
           <HStack space={2} alignItems="center" mb={4}>
-            <Building2 size={24} color="#2563eb" />
+            <Building2Icon size={24} color="#2563eb" />
             <Text style={styles.sectionTitle}>Project Information</Text>
           </HStack>
           <FormInput
@@ -1010,7 +977,11 @@ export default function ProjectDetails() {
             onChangeText={setProjectName}
             containerStyle={styles.inputContainer}
             leftElement={
-              <FileText size={20} color="#94a3b8" style={styles.inputIcon} />
+              <FileTextIcon
+                size={20}
+                color="#94a3b8"
+                style={styles.inputIcon}
+              />
             }
           />
           <FormInput
@@ -1020,7 +991,11 @@ export default function ProjectDetails() {
             onChangeText={setManagerName}
             containerStyle={styles.inputContainer}
             leftElement={
-              <UserCircle size={20} color="#94a3b8" style={styles.inputIcon} />
+              <UserCircleIcon
+                size={20}
+                color="#94a3b8"
+                style={styles.inputIcon}
+              />
             }
           />
           <FormInput
@@ -1030,7 +1005,11 @@ export default function ProjectDetails() {
             onChangeText={setCompanyName}
             containerStyle={styles.inputContainer}
             leftElement={
-              <Building size={20} color="#94a3b8" style={styles.inputIcon} />
+              <BuildingIcon
+                size={20}
+                color="#94a3b8"
+                style={styles.inputIcon}
+              />
             }
           />
         </View>
@@ -1043,7 +1022,7 @@ export default function ProjectDetails() {
       <VStack space={4}>
         <View style={styles.section}>
           <HStack space={2} alignItems="center" mb={4}>
-            <Shield size={24} color="#2563eb" />
+            <ShieldIcon size={24} color="#2563eb" />
             <Text style={styles.sectionTitle}>Insurance Information</Text>
           </HStack>
           <FormInput
@@ -1053,7 +1032,11 @@ export default function ProjectDetails() {
             onChangeText={setInsuranceCompanyName}
             containerStyle={styles.inputContainer}
             leftElement={
-              <Building2 size={20} color="#94a3b8" style={styles.inputIcon} />
+              <Building2Icon
+                size={20}
+                color="#94a3b8"
+                style={styles.inputIcon}
+              />
             }
           />
           <FormInput
@@ -1063,7 +1046,7 @@ export default function ProjectDetails() {
             onChangeText={setAdjusterName}
             containerStyle={styles.inputContainer}
             leftElement={
-              <User size={20} color="#94a3b8" style={styles.inputIcon} />
+              <UserIcon size={20} color="#94a3b8" style={styles.inputIcon} />
             }
           />
           <FormInput
@@ -1083,7 +1066,7 @@ export default function ProjectDetails() {
             onChangeText={setAdjusterPhoneNumber}
             containerStyle={styles.inputContainer}
             leftElement={
-              <Phone size={20} color="#94a3b8" style={styles.inputIcon} />
+              <PhoneIcon size={20} color="#94a3b8" style={styles.inputIcon} />
             }
             rightElement={
               <TouchableOpacity
@@ -1092,7 +1075,7 @@ export default function ProjectDetails() {
                 disabled={!adjusterPhoneNumber}
               >
                 <HStack space={1} alignItems="center">
-                  <PhoneCall
+                  <PhoneCallIcon
                     size={16}
                     color={adjusterPhoneNumber ? "#2563eb" : "#94a3b8"}
                   />
@@ -1115,7 +1098,11 @@ export default function ProjectDetails() {
             onChangeText={setInsuranceClaimId}
             containerStyle={styles.inputContainer}
             leftElement={
-              <FileText size={20} color="#94a3b8" style={styles.inputIcon} />
+              <FileTextIcon
+                size={20}
+                color="#94a3b8"
+                style={styles.inputIcon}
+              />
             }
           />
           <FormInput
@@ -1125,7 +1112,11 @@ export default function ProjectDetails() {
             onChangeText={setPolicyNumber}
             containerStyle={styles.inputContainer}
             leftElement={
-              <FileText size={20} color="#94a3b8" style={styles.inputIcon} />
+              <FileTextIcon
+                size={20}
+                color="#94a3b8"
+                style={styles.inputIcon}
+              />
             }
           />
         </View>
@@ -1144,7 +1135,7 @@ export default function ProjectDetails() {
             onPress={() => router.back()}
             style={styles.backButton}
           >
-            <ChevronLeft size={24} color="#fff" />
+            <ChevronLeftIconType size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Project Details</Text>
           <View style={styles.saveButton} />
@@ -1177,7 +1168,7 @@ export default function ProjectDetails() {
             onPress={() => router.back()}
             style={styles.backButton}
           >
-            <ChevronLeft size={24} color="#fff" />
+            <ChevronLeftIconType size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Project Details</Text>
           <TouchableOpacity onPress={updateProject} style={styles.saveButton}>
@@ -1185,7 +1176,7 @@ export default function ProjectDetails() {
               <Spinner size="sm" color="#fff" />
             ) : (
               <HStack space={1} alignItems="center">
-                <Save size={20} color="#fff" />
+                <SaveIcon size={20} color="#fff" />
                 <Text style={styles.saveText}>Save</Text>
               </HStack>
             )}
@@ -1217,7 +1208,7 @@ export default function ProjectDetails() {
             onPress={() => setActiveTab("loss")}
           >
             <HStack space={2} alignItems="center">
-              <AlertCircle
+              <AlertCircleIcon
                 size={20}
                 color={activeTab === "loss" ? "#2563eb" : "#94a3b8"}
               />
@@ -1236,7 +1227,7 @@ export default function ProjectDetails() {
             onPress={() => setActiveTab("insurance")}
           >
             <HStack space={2} alignItems="center">
-              <Shield
+              <ShieldIcon
                 size={20}
                 color={activeTab === "insurance" ? "#2563eb" : "#94a3b8"}
               />

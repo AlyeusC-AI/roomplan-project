@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TextInput, Image } from "react-native";
 import { AlertTriangle } from "lucide-react-native";
+import ClaimSummaryEditor from "@/components/project/ClaimSummaryEditor";
 
 // Type assertions for Lucide icons
 const XIcon = X as any;
@@ -133,6 +134,31 @@ export default function CopilotScreen() {
   const updateProject = useUpdateProject();
   const updateRoom = useUpdateRoom();
 
+  // Claim summary modal state
+  const [showClaimSummaryModal, setShowClaimSummaryModal] = useState(false);
+
+  // Handlers for claim summary/images auto-save
+  const handleChangeClaimSummary = (summary: string) => {
+    if (projectId && summary !== project?.data?.claimSummary) {
+      updateProject.mutate({
+        id: projectId,
+        data: { claimSummary: summary },
+      });
+    }
+  };
+  const handleChangeClaimSummaryImages = (images: string[]) => {
+    if (
+      projectId &&
+      JSON.stringify(images) !==
+        JSON.stringify(project?.data?.claimSummaryImages || [])
+    ) {
+      updateProject.mutate({
+        id: projectId,
+        data: { claimSummaryImages: images },
+      });
+    }
+  };
+
   // Compute projectTasks from real data
   const projectData = project?.data;
   // Check if a Work Auth document exists
@@ -173,8 +199,13 @@ export default function CopilotScreen() {
       onPress: () =>
         router.push({ pathname: "../documents", params: { projectId } }),
     },
+    {
+      label: "Document source of loss",
+      done: !!projectData?.claimSummary,
+      onPress: () => setShowClaimSummaryModal(true),
+    },
     // The rest of the tasks
-    ...WATER_PROJECT_TASKS.slice(3).map((label) => ({
+    ...WATER_PROJECT_TASKS.slice(4).map((label) => ({
       label,
       done: false,
       onPress: () => {},
@@ -609,6 +640,25 @@ export default function CopilotScreen() {
           </View>
         </View>
       </Modal>
+      {/* Claim Summary Editor Modal */}
+      <ClaimSummaryEditor
+        visible={showClaimSummaryModal}
+        onClose={() => setShowClaimSummaryModal(false)}
+        claimSummary={project?.data?.claimSummary || ""}
+        claimSummaryImages={project?.data?.claimSummaryImages || []}
+        onChangeSummary={handleChangeClaimSummary}
+        onChangeImages={handleChangeClaimSummaryImages}
+        projectId={projectId}
+        onTakePhoto={() => {
+          setShowClaimSummaryModal(false);
+          setTimeout(() => {
+            router.push({
+              pathname: `/projects/${projectId}/camera`,
+              params: { mode: "claimSummary" },
+            });
+          }, 200);
+        }}
+      />
     </>
   );
 }
