@@ -3,6 +3,8 @@ import { z } from "zod";
 
 const RoomsFilterQueryParam = z.array(z.string()).optional();
 const OnlySelectedFilterQueryParam = z.boolean().optional();
+const CreatedAfterQueryParam = z.string().optional();
+const CreatedBeforeQueryParam = z.string().optional();
 const SortDirectionQueryParam = z
   .union([z.literal("asc"), z.literal("desc")])
   .optional();
@@ -14,7 +16,8 @@ const useFilterParams = () => {
   let parsedOnlySelected: z.infer<typeof OnlySelectedFilterQueryParam> =
     undefined;
   let parsedSortDirection: z.infer<typeof SortDirectionQueryParam> = undefined;
-
+  let parsedCreatedAfter: z.infer<typeof CreatedAfterQueryParam> = undefined;
+  let parsedCreatedBefore: z.infer<typeof CreatedBeforeQueryParam> = undefined;
   if (router.get("rooms")) {
     try {
       parsedRooms = RoomsFilterQueryParam.parse(
@@ -44,10 +47,30 @@ const useFilterParams = () => {
       console.error(e);
     }
   }
+  if (router.get("createdAfter")) {
+    try {
+      parsedCreatedAfter = CreatedAfterQueryParam.parse(
+        router.get("createdAfter") as string
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  if (router.get("createdBefore")) {
+    try {
+      parsedCreatedBefore = CreatedBeforeQueryParam.parse(
+        router.get("createdBefore") as string
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  }
   return {
     rooms: parsedRooms,
     onlySelected: parsedOnlySelected,
     sortDirection: parsedSortDirection,
+    createdAfter: parsedCreatedAfter,
+    createdBefore: parsedCreatedBefore,
   };
 };
 

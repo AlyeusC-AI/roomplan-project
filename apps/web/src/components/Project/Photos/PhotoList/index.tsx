@@ -13,7 +13,7 @@ import { LoadingPlaceholder } from "@components/ui/spinner";
 import { Button } from "@components/ui/button";
 import { Badge } from "@components/ui/badge";
 import TagsModal from "@components/tags/TagsModal";
-import { Trash2, FolderInput, X, Loader2, Star, Tag } from "lucide-react";
+import { Trash2, FolderInput, X, Loader2, Star, Tag, Check } from "lucide-react";
 import {
   Image,
   useBulkUpdateImages,
@@ -351,25 +351,26 @@ const PhotoList = ({
           <div className="flex justify-between">
             <div className="space-y-3">
               <div className='flex flex-wrap gap-2'>
-                <Button
+                {/* <Button
                   variant={selectedTagFilters.length === 0 ? "default" : "outline"}
                   size='sm'
                   onClick={clearAllTagFilters}
-                  className='flex items-center gap-2'
+                  className='flex items-center gap-2 h-8 rounded-full'
                 >
                   <Tag className='h-4 w-4' />
+                  
                   All Photos ({photos.length})
-                </Button>
+                </Button> */}
                 <Button
                   variant={
-                    selectedTagFilters.includes("untagged") ? "default" : "outline"
+                    selectedTagFilters.includes("untagged") ? "secondary" : "outline"
                   }
                   size='sm'
                   onClick={() => handleTagFilterToggle("untagged")}
-                  className='flex items-center gap-2'
+                  className='flex items-center gap-2 h-8 rounded-full'
                 >
-                  Untagged (
-                  {photos.filter((p) => !p.tags || p.tags.length === 0).length})
+                  <Tag className='h-4 w-4' />
+                  Untagged ({photos.filter((p) => !p.tags || p.tags.length === 0).length})
                 </Button>
                 {allTags.map((tag) => {
                   const count = photos.filter(
@@ -379,27 +380,29 @@ const PhotoList = ({
                   return (
                     <Button
                       key={tag.id}
-                      variant={isSelected ? "default" : "outline"}
+                      variant={isSelected ? "secondary" : "outline"}
                       size='sm'
                       onClick={() => handleTagFilterToggle(tag.name)}
-                      className='flex items-center gap-2'
-                      style={
-                        isSelected && tag.color
-                          ? {
-                            backgroundColor: tag.color,
-                            borderColor: tag.color,
-                            color: "white",
-                          }
-                          : tag.color
-                            ? {
-                              backgroundColor: `${tag.color}15`,
-                              borderColor: tag.color,
-                              color: tag.color,
-                            }
-                            : {}
-                      }
+                      className='flex items-center gap-2 h-8 rounded-full'
+                      // style={
+                      //   isSelected && tag.color
+                      //     ? {
+                      //       backgroundColor: tag.color,
+                      //       borderColor: tag.color,
+                      //       color: "white",
+                      //     }
+                      //     : tag.color
+                      //       ? {
+                      //         backgroundColor: `${tag.color}15`,
+                      //         borderColor: tag.color,
+                      //         color: tag.color,
+                      //       }
+                      //       : {}
+                      // }
                     >
-                      {tag.name} ({count})
+                      {isSelected ? <Check className='h-4 w-4' /> :<Tag className='h-4 w-4' />}
+                      {tag.name}
+                      {/* ({count}) */}
                     </Button>
                   );
                 })}
