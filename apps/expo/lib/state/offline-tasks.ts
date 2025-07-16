@@ -280,9 +280,7 @@ export const useOfflineTasksStore = create<OfflineTasksState>()(
             // Auto-clear completed tasks after a short delay
             setTimeout(() => {
               set((state) => ({
-                tasks: state.tasks.filter(
-                  (task) => task.status !== "completed"
-                ),
+                tasks: [],
               }));
             }, 1000);
           }, 3000);
@@ -293,6 +291,7 @@ export const useOfflineTasksStore = create<OfflineTasksState>()(
       },
 
       syncWithExistingStores: () => {
+        return;
         const uploadsStore = useOfflineUploadsStore.getState();
         const readingsStore = useOfflineReadingsStore.getState();
         const notesStore = useOfflineNotesStore.getState();

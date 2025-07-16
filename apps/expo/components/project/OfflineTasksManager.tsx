@@ -82,7 +82,7 @@ export default function OfflineTasksManager({
   // Sync with existing stores on mount
   useEffect(() => {
     syncWithExistingStores();
-  }, [syncWithExistingStores]);
+  }, []);
 
   const filteredTasks = projectId ? getTasksByProject(projectId) : tasks;
   const pendingTasks = filteredTasks.filter(

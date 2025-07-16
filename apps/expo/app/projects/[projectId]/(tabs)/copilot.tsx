@@ -205,7 +205,13 @@ export default function CopilotScreen() {
       onPress: () => setShowClaimSummaryModal(true),
     },
     // The rest of the tasks
-    ...WATER_PROJECT_TASKS.slice(4).map((label) => ({
+    {
+      label: "Make lidar sketch",
+      done: Array.isArray(rooms) && rooms.some((room) => !!room.roomPlanSVG),
+      onPress: () =>
+        router.push({ pathname: `../lidar/rooms`, params: { projectId } }),
+    },
+    ...WATER_PROJECT_TASKS.slice(5).map((label) => ({
       label,
       done: false,
       onPress: () => {},
