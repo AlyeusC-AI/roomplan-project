@@ -265,7 +265,7 @@ model Chamber {
   id           String        @id @default(uuid())
   name         String
   projectId    String
-  project      Project       @relation(fields: [projectId], references: [id])
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   roomChambers RoomChamber[]
@@ -274,9 +274,9 @@ model Chamber {
 model RoomChamber {
   id         String  @id @default(uuid())
   roomId     String
-  room       Room    @relation(fields: [roomId], references: [id])
+  room       Room    @relation(fields: [roomId], references: [id], onDelete: Cascade)
   chamberId  String
-  chamber    Chamber @relation(fields: [chamberId], references: [id])
+  chamber    Chamber @relation(fields: [chamberId], references: [id], onDelete: Cascade)
   isEffected Boolean @default(false)
 }
 

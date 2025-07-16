@@ -15,6 +15,7 @@ export class ChambersService {
       include: { roomChambers: { include: { room: true } } };
     }>
   > {
+    console.log('🚀 ~ ChambersService ~ data:', data);
     return this.prisma.chamber.create({
       data: {
         name: data.name,
