@@ -9,16 +9,21 @@ import {
   View,
   ScrollView,
   Alert,
+  StatusBar,
 } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Trash2, Save } from "lucide-react-native";
+import { ChevronLeft, Trash2, Save, Plus, Check, X } from "lucide-react-native";
 
 // Type assertions to fix ReactNode compatibility
 const ChevronLeftIcon = ChevronLeft as any;
 const Trash2Icon = Trash2 as any;
 const SaveIcon = Save as any;
+const PlusIcon = Plus as any;
+const CheckIcon = Check as any;
+const XIcon = X as any;
+
 import {
   useCreateChamber,
   useUpdateChamber,
@@ -33,6 +38,8 @@ export default function ChamberCreationScreen() {
   const [selectedRooms, setSelectedRooms] = useState<
     { roomId: string; isEffected: boolean }[]
   >([]);
+  console.log("🚀 ~ ChamberCreationScreen ~ selectedRooms:", selectedRooms);
+
   const router = useRouter();
   const { mutate: createChamberMutation } = useCreateChamber();
   const { mutate: updateChamberMutation } = useUpdateChamber();
@@ -172,82 +179,214 @@ export default function ChamberCreationScreen() {
     setLoading(false);
   };
 
-  return (
-    <ScrollView className="flex-1 bg-white">
-      <View className="p-6">
-        <View className="flex flex-row items-center w-full mb-8">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="p-2 rounded-full bg-gray-100"
-          >
-            <ChevronLeftIcon color="black" size={24} />
-          </TouchableOpacity>
-          <Text className="text-2xl ml-4 font-bold flex-1">
-            {chamberIdParam ? "Edit Chamber" : "Create Chamber"}
-          </Text>
-          {chamberIdParam && (
-            <TouchableOpacity
-              onPress={handleDelete}
-              disabled={loading}
-              className="p-2 rounded-full bg-red-50"
-            >
-              {loading ? (
-                <ActivityIndicator color="red" />
-              ) : (
-                <Trash2Icon color="red" size={20} />
-              )}
-            </TouchableOpacity>
-          )}
-        </View>
+  const selectedRoomsCount = selectedRooms.length;
+  const totalRoomsCount = rooms?.length || 0;
 
-        <View style={{ gap: 16 }}>
-          <View>
-            <Label nativeID="Chamber Name" className="text-lg font-medium mb-2">
-              Chamber Name
-            </Label>
-            <Input
-              placeholder="Enter chamber name"
-              value={chamberName}
-              onChangeText={(text) => setChamberName(text)}
-              className="h-12 text-lg "
-            />
+  return (
+    <View className="flex-1 bg-gradient-to-b from-blue-50 to-white">
+      <StatusBar barStyle="dark-content" backgroundColor="#EBF8FF" />
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <View className="p-6">
+          {/* Header Section */}
+          <View className="flex flex-row items-center w-full mb-8">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="p-3 rounded-full bg-white shadow-sm border border-gray-100"
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3,
+              }}
+            >
+              <ChevronLeftIcon color="#374151" size={24} />
+            </TouchableOpacity>
+            <View className="ml-4 flex-1">
+              <Text className="text-2xl font-bold text-gray-900">
+                {chamberIdParam ? "Edit Chamber" : "Create Chamber"}
+              </Text>
+              <Text className="text-sm text-gray-500 mt-1">
+                {chamberIdParam
+                  ? "Update chamber details and room assignments"
+                  : "Set up a new chamber for your project"}
+              </Text>
+            </View>
+            {chamberIdParam && (
+              <TouchableOpacity
+                onPress={handleDelete}
+                disabled={loading}
+                className="p-3 rounded-full bg-red-50 border border-red-200"
+                style={{
+                  shadowColor: "#EF4444",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                  elevation: 3,
+                }}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#EF4444" />
+                ) : (
+                  <Trash2Icon color="#EF4444" size={20} />
+                )}
+              </TouchableOpacity>
+            )}
           </View>
 
-          <View>
-            <Label className="text-lg font-medium mb-2">Select Rooms</Label>
-            <View style={{ gap: 8 }}>
-              {rooms?.map((room) => {
-                const isSelected = selectedRooms.some(
-                  (sr) => sr.roomId === room.id
-                );
-                const selectedRoom = selectedRooms.find(
-                  (sr) => sr.roomId === room.id
-                );
+          <View style={{ gap: 24 }}>
+            {/* Chamber Name Section */}
+            <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <View className="flex-row items-center mb-4">
+                <View className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center mr-3">
+                  <Text className="text-blue-600 font-bold text-sm">1</Text>
+                </View>
+                <Label
+                  nativeID="Chamber Name"
+                  className="text-lg font-semibold text-gray-900"
+                >
+                  Chamber Name
+                </Label>
+              </View>
+              <Input
+                placeholder="Enter a descriptive chamber name..."
+                value={chamberName}
+                onChangeText={(text) => setChamberName(text)}
+                className="h-14 text-lg bg-gray-50 border-gray-200 rounded-xl px-4"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 2,
+                  elevation: 1,
+                }}
+              />
+              <Text className="text-xs text-gray-500 mt-2 ml-1">
+                Minimum 3 characters required
+              </Text>
+            </View>
 
-                return (
-                  <TouchableOpacity
-                    key={room.id}
-                    onPress={() => {
-                      if (isSelected) {
-                        setSelectedRooms((prev) =>
-                          prev.filter((sr) => sr.roomId !== room.id)
-                        );
-                      } else {
-                        setSelectedRooms((prev) => [
-                          ...prev,
-                          { roomId: room.id, isEffected: false },
-                        ]);
-                      }
-                    }}
-                    className={`p-3 rounded-lg border ${
-                      isSelected
-                        ? "bg-blue-50 border-blue-300"
-                        : "bg-gray-50 border-gray-200"
-                    }`}
-                  >
-                    <View className="flex-row items-center justify-between">
-                      <Text className="text-base font-medium">{room.name}</Text>
-                      <View className="flex-row items-center gap-2">
+            {/* Room Selection Section */}
+            <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <View className="flex-row items-center justify-between mb-4">
+                <View className="flex-row items-center">
+                  <View className="w-8 h-8 bg-green-100 rounded-full items-center justify-center mr-3">
+                    <Text className="text-green-600 font-bold text-sm">2</Text>
+                  </View>
+                  <Label className="text-lg font-semibold text-gray-900">
+                    Select Rooms
+                  </Label>
+                </View>
+                <View className="bg-blue-50 px-3 py-1 rounded-full">
+                  <Text className="text-sm font-medium text-blue-700">
+                    {selectedRoomsCount}/{totalRoomsCount} selected
+                  </Text>
+                </View>
+              </View>
+
+              <Text className="text-sm text-gray-600 mb-4">
+                Choose which rooms belong to this chamber and mark their damage
+                status
+              </Text>
+
+              <View style={{ gap: 12 }}>
+                {rooms?.map((room) => {
+                  const isSelected = selectedRooms.some(
+                    (sr) => sr.roomId === room.id
+                  );
+                  const selectedRoom = selectedRooms.find(
+                    (sr) => sr.roomId === room.id
+                  );
+
+                  const roomCardStyle = {
+                    padding: 16,
+                    borderRadius: 12,
+                    borderWidth: 2,
+                    backgroundColor: isSelected ? "#EBF8FF" : "#F9FAFB",
+                    borderColor: isSelected ? "#93C5FD" : "#E5E7EB",
+                    shadowColor: isSelected ? "#3B82F6" : "#000",
+                    shadowOffset: { width: 0, height: isSelected ? 2 : 0 },
+                    shadowOpacity: isSelected ? 0.1 : 0,
+                    shadowRadius: isSelected ? 4 : 0,
+                    elevation: isSelected ? 3 : 0,
+                  };
+
+                  const checkboxStyle = {
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    borderWidth: 2,
+                    alignItems: "center" as const,
+                    justifyContent: "center" as const,
+                    marginRight: 12,
+                    backgroundColor: isSelected ? "#3B82F6" : "transparent",
+                    borderColor: isSelected ? "#3B82F6" : "#D1D5DB",
+                  };
+
+                  const roomNameStyle = {
+                    fontSize: 16,
+                    fontWeight: "500" as const,
+                    color: isSelected ? "#1E3A8A" : "#374151",
+                  };
+
+                  const statusButtonStyle = {
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    flexDirection: "row" as const,
+                    alignItems: "center" as const,
+                    backgroundColor: selectedRoom?.isEffected
+                      ? "#FEE2E2"
+                      : "#D1FAE5",
+                    borderWidth: 1,
+                    borderColor: selectedRoom?.isEffected
+                      ? "#FCA5A5"
+                      : "#A7F3D0",
+                  };
+
+                  const statusDotStyle = {
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    marginRight: 8,
+                    backgroundColor: selectedRoom?.isEffected
+                      ? "#EF4444"
+                      : "#10B981",
+                  };
+
+                  const statusTextStyle = {
+                    fontSize: 14,
+                    fontWeight: "500" as const,
+                    color: selectedRoom?.isEffected ? "#B91C1C" : "#047857",
+                  };
+
+                  return (
+                    <TouchableOpacity
+                      key={room.id}
+                      onPress={() => {
+                        if (isSelected) {
+                          setSelectedRooms((prev) =>
+                            prev.filter((sr) => sr.roomId !== room.id)
+                          );
+                        } else {
+                          setSelectedRooms((prev) => [
+                            ...prev,
+                            { roomId: room.id, isEffected: false },
+                          ]);
+                        }
+                      }}
+                      style={roomCardStyle}
+                    >
+                      <View className="flex-row items-center justify-between">
+                        <View className="flex-row items-center flex-1">
+                          <View style={checkboxStyle}>
+                            {isSelected && (
+                              <CheckIcon color="white" size={12} />
+                            )}
+                          </View>
+                          <Text style={roomNameStyle}>{room.name}</Text>
+                        </View>
+
                         {isSelected && (
                           <TouchableOpacity
                             onPress={() => {
@@ -259,19 +398,10 @@ export default function ChamberCreationScreen() {
                                 )
                               );
                             }}
-                            className={`px-3 py-1 rounded-full ${
-                              selectedRoom?.isEffected
-                                ? "bg-red-100 border border-red-300"
-                                : "bg-green-100 border border-green-300"
-                            }`}
+                            style={statusButtonStyle}
                           >
-                            <Text
-                              className={`text-sm font-medium ${
-                                selectedRoom?.isEffected
-                                  ? "text-red-700"
-                                  : "text-green-700"
-                              }`}
-                            >
+                            <View style={statusDotStyle} />
+                            <Text style={statusTextStyle}>
                               {selectedRoom?.isEffected
                                 ? "Affected"
                                 : "Not Affected"}
@@ -279,31 +409,56 @@ export default function ChamberCreationScreen() {
                           </TouchableOpacity>
                         )}
                       </View>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {rooms?.length === 0 && (
+                <View className="bg-gray-50 rounded-xl p-6 items-center">
+                  <Text className="text-gray-500 text-center">
+                    No rooms available for this project
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Action Button */}
+            <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <Button
+                disabled={loading}
+                onPress={chamberIdParam ? updateChamber : createChamber}
+                className="h-14 rounded-xl"
+                style={{
+                  backgroundColor: loading ? "#9CA3AF" : "#3B82F6",
+                  shadowColor: "#3B82F6",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: loading ? 0 : 0.2,
+                  shadowRadius: 8,
+                  elevation: loading ? 0 : 6,
+                }}
+              >
+                {loading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <View className="flex-row items-center justify-center gap-3">
+                    <SaveIcon color="white" size={20} />
+                    <Text className="text-white font-semibold text-lg">
+                      {chamberIdParam ? "Save Changes" : "Create Chamber"}
+                    </Text>
+                  </View>
+                )}
+              </Button>
+
+              <Text className="text-xs text-gray-500 text-center mt-3">
+                {chamberIdParam
+                  ? "Your changes will be saved immediately"
+                  : "This will create a new chamber for your project"}
+              </Text>
             </View>
           </View>
-
-          <Button
-            disabled={loading}
-            onPress={chamberIdParam ? updateChamber : createChamber}
-            className="h-12"
-          >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <View className="flex-row items-center justify-center gap-2">
-                <SaveIcon color="white" size={20} />
-                <Text className="text-white font-medium">
-                  {chamberIdParam ? "Save Changes" : "Create Chamber"}
-                </Text>
-              </View>
-            )}
-          </Button>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }

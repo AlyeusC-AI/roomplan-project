@@ -21,10 +21,12 @@ export class ChambersService {
         projectId: data.projectId,
         roomChambers: data.rooms
           ? {
-              create: data.rooms.map((room) => ({
-                roomId: room.roomId,
-                isEffected: room.isEffected,
-              })),
+              createMany: {
+                data: data.rooms.map((room) => ({
+                  roomId: room.roomId,
+                  isEffected: room.isEffected,
+                })),
+              },
             }
           : undefined,
       },
