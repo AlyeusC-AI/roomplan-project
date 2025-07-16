@@ -8,6 +8,10 @@ export default function Project() {
         options={{ presentation: "modal", headerTitle: "Create Room" }}
       />
       <Stack.Screen
+        name="chambers/create"
+        options={{ presentation: "modal", headerTitle: "Create Chamber" }}
+      />
+      <Stack.Screen
         name="edit-insurance"
         options={{
           headerShown: true,

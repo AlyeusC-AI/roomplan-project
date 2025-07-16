@@ -6,13 +6,28 @@ import { Prisma } from '@prisma/client';
 export class ChambersService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: { name: string; projectId: string }): Promise<
+  async create(data: {
+    name: string;
+    projectId: string;
+    rooms?: { roomId: string; isEffected: boolean }[];
+  }): Promise<
     Prisma.ChamberGetPayload<{
       include: { roomChambers: { include: { room: true } } };
     }>
   > {
     return this.prisma.chamber.create({
-      data,
+      data: {
+        name: data.name,
+        projectId: data.projectId,
+        roomChambers: data.rooms
+          ? {
+              create: data.rooms.map((room) => ({
+                roomId: room.roomId,
+                isEffected: room.isEffected,
+              })),
+            }
+          : undefined,
+      },
       include: {
         roomChambers: {
           include: {
@@ -63,7 +78,10 @@ export class ChambersService {
 
   async update(
     id: string,
-    data: { name?: string },
+    data: {
+      name?: string;
+      rooms?: { roomId: string; isEffected: boolean }[];
+    },
   ): Promise<
     Prisma.ChamberGetPayload<{
       include: { roomChambers: { include: { room: true } } };
@@ -74,7 +92,18 @@ export class ChambersService {
 
     return this.prisma.chamber.update({
       where: { id },
-      data,
+      data: {
+        name: data.name,
+        roomChambers: data.rooms
+          ? {
+              deleteMany: {},
+              create: data.rooms.map((room) => ({
+                roomId: room.roomId,
+                isEffected: room.isEffected,
+              })),
+            }
+          : undefined,
+      },
       include: {
         roomChambers: {
           include: {

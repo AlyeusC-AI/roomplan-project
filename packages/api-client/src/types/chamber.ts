@@ -20,8 +20,10 @@ export interface RoomChamber {
 export interface CreateChamberDto {
   name: string;
   projectId: string;
+  rooms?: { roomId: string; isEffected: boolean }[];
 }
 
 export interface UpdateChamberDto {
   name?: string;
+  rooms?: { roomId: string; isEffected: boolean }[];
 }

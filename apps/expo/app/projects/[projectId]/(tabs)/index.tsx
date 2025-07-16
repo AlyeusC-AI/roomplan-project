@@ -75,6 +75,7 @@ import {
   useGetProjectById,
   useGetProjectMembers,
   useGetRooms,
+  useGetChambers,
 } from "@service-geek/api-client";
 import { Button } from "@/components/ui/button";
 import ImageTagsModal from "@/components/pictures/ImageTagsModal";
@@ -83,6 +84,7 @@ import DamageBadge from "@/components/project/damageBadge";
 import AddRoomButton from "@/components/project/AddRoomButton";
 import StatusBadge from "@/components/project/statusBadge";
 import FloatingButtonOption from "@/components/project/floatingButtonOption";
+import ChambersEmpty from "@/components/project/ChambersEmpty";
 
 // Utility to add opacity to hex color
 function addOpacityToColor(color: string, opacityHex: string = "33") {
@@ -280,6 +282,9 @@ export default function ProjectOverview() {
   };
 
   const { data: rooms, isLoading: loadingRooms } = useGetRooms(projectId);
+  const { data: chambers, isLoading: loadingChambers } =
+    useGetChambers(projectId);
+  const [viewMode, setViewMode] = useState<"rooms" | "chambers">("rooms");
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -950,89 +955,229 @@ export default function ProjectOverview() {
               </View>
 
               <View className="w-full mt-2">
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    marginBottom: 8,
-                  }}
-                >
-                  <Text className="text-lg font-semibold ml-1">
-                    {rooms?.length || 0} Rooms
-                  </Text>
-                  <AddRoomButton
-                    showText={false}
-                    size="sm"
-                    className="rounded-full w-9 h-9 justify-center items-center bg-blue-50 border border-blue-200"
-                    onPress={() => router.push(`./rooms/create`)}
-                  />
-                </View>
-                <View
-                  style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}
-                >
-                  {rooms?.map((room) => (
+                {/* Enhanced Toggle between Rooms and Chambers */}
+                <View className="flex-row items-center justify-between mb-6">
+                  <View className="flex-row bg-gray-200 rounded-xl p-1 shadow-sm">
                     <TouchableOpacity
-                      key={room.id}
+                      onPress={() => setViewMode("rooms")}
+                      className={`px-6 py-3 rounded-lg flex-row items-center`}
                       style={{
-                        width: "48%",
-                        aspectRatio: 1,
-                        marginBottom: 12,
-                        borderRadius: 12,
-                        height: 70,
-                        backgroundColor: "#f3f4f6",
+                        backgroundColor:
+                          viewMode === "rooms" ? "#2563eb" : "transparent",
+                        shadowColor:
+                          viewMode === "rooms" ? "#2563eb" : "transparent",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: viewMode === "rooms" ? 0.3 : 0,
+                        shadowRadius: 4,
+                        elevation: viewMode === "rooms" ? 4 : 0,
                       }}
-                      onPress={() => router.push(`./rooms/${room.id}`)}
-                      activeOpacity={0.85}
                     >
-                      {room.images && room.images.length > 0 ? (
-                        <Image
-                          source={{ uri: room.images[0].url }}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            position: "absolute",
-                          }}
-                          resizeMode="cover"
-                        />
-                      ) : (
+                      <View
+                        className="w-2 h-2 rounded-full mr-2"
+                        style={{
+                          backgroundColor:
+                            viewMode === "rooms" ? "#ffffff" : "#6b7280",
+                        }}
+                      />
+                      <Text
+                        className="font-semibold text-sm"
+                        style={{
+                          color: viewMode === "rooms" ? "#ffffff" : "#374151",
+                        }}
+                      >
+                        Rooms ({rooms?.length || 0})
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => setViewMode("chambers")}
+                      className={`px-6 py-3 rounded-lg flex-row items-center`}
+                      style={{
+                        backgroundColor:
+                          viewMode === "chambers" ? "#2563eb" : "transparent",
+                        shadowColor:
+                          viewMode === "chambers" ? "#2563eb" : "transparent",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: viewMode === "chambers" ? 0.3 : 0,
+                        shadowRadius: 4,
+                        elevation: viewMode === "chambers" ? 4 : 0,
+                      }}
+                    >
+                      <View
+                        className="w-2 h-2 rounded-full mr-2"
+                        style={{
+                          backgroundColor:
+                            viewMode === "chambers" ? "#ffffff" : "#6b7280",
+                        }}
+                      />
+                      <Text
+                        className="font-semibold text-sm"
+                        style={{
+                          color:
+                            viewMode === "chambers" ? "#ffffff" : "#374151",
+                        }}
+                      >
+                        Chambers ({chambers?.length || 0})
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {viewMode === "rooms" ? (
+                    <AddRoomButton
+                      showText={false}
+                      size="sm"
+                      className="rounded-full w-9 h-9 justify-center items-center bg-blue-50 border border-blue-200"
+                      onPress={() => router.push(`./rooms/create`)}
+                    />
+                  ) : (
+                    <TouchableOpacity
+                      onPress={() => router.push(`./chambers/create`)}
+                      className="rounded-full w-9 h-9 justify-center items-center bg-blue-50 border border-blue-200"
+                    >
+                      <Plus size={20} color="#2563eb" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+                {viewMode === "rooms" ? (
+                  <View
+                    style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}
+                  >
+                    {rooms?.map((room) => (
+                      <TouchableOpacity
+                        key={room.id}
+                        style={{
+                          width: "48%",
+                          aspectRatio: 1,
+                          marginBottom: 12,
+                          borderRadius: 12,
+                          height: 70,
+                          backgroundColor: "#f3f4f6",
+                        }}
+                        onPress={() => router.push(`./rooms/${room.id}`)}
+                        activeOpacity={0.85}
+                      >
+                        {room.images && room.images.length > 0 ? (
+                          <Image
+                            source={{ uri: room.images[0].url }}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              position: "absolute",
+                            }}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View
+                            style={{
+                              flex: 1,
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <ImageIcon
+                              size={36}
+                              color="#9ca3af"
+                              style={{ opacity: 0.6 }}
+                            />
+                          </View>
+                        )}
                         <View
                           style={{
-                            flex: 1,
+                            position: "absolute",
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: "rgba(0,0,0,0.45)",
+                            paddingVertical: 8,
+                            paddingHorizontal: 10,
                             alignItems: "center",
                             justifyContent: "center",
                           }}
                         >
-                          <ImageIcon
-                            size={36}
-                            color="#9ca3af"
-                            style={{ opacity: 0.6 }}
-                          />
+                          <Text
+                            className="text-base font-medium text-white"
+                            numberOfLines={1}
+                          >
+                            {room.name}
+                          </Text>
                         </View>
-                      )}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                ) : (
+                  <>
+                    {chambers && chambers.length > 0 ? (
                       <View
                         style={{
-                          position: "absolute",
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          backgroundColor: "rgba(0,0,0,0.45)",
-                          paddingVertical: 8,
-                          paddingHorizontal: 10,
-                          alignItems: "center",
-                          justifyContent: "center",
+                          flexDirection: "row",
+                          flexWrap: "wrap",
+                          gap: 12,
                         }}
                       >
-                        <Text
-                          className="text-base font-medium text-white"
-                          numberOfLines={1}
-                        >
-                          {room.name}
-                        </Text>
+                        {chambers.map((chamber) => (
+                          <TouchableOpacity
+                            key={chamber.id}
+                            style={{
+                              width: "48%",
+                              aspectRatio: 1,
+                              marginBottom: 12,
+                              borderRadius: 12,
+                              height: 70,
+                              backgroundColor: "#f3f4f6",
+                            }}
+                            onPress={() =>
+                              router.push(
+                                `./chambers/create?chamberId=${chamber.id}&chamberName=${chamber.name}`
+                              )
+                            }
+                            activeOpacity={0.85}
+                          >
+                            <View
+                              style={{
+                                flex: 1,
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <Text className="text-2xl font-bold text-gray-400">
+                                {chamber.name.charAt(0).toUpperCase()}
+                              </Text>
+                            </View>
+                            <View
+                              style={{
+                                position: "absolute",
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: "rgba(0,0,0,0.45)",
+                                paddingVertical: 8,
+                                paddingHorizontal: 10,
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <Text
+                                className="text-base font-medium text-white"
+                                numberOfLines={1}
+                              >
+                                {chamber.name}
+                              </Text>
+                              <Text
+                                className="text-xs text-gray-200"
+                                numberOfLines={1}
+                              >
+                                {chamber.roomChambers.length} rooms
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                        ))}
                       </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                    ) : (
+                      <ChambersEmpty
+                        onPress={() => router.push(`./chambers/create`)}
+                      />
+                    )}
+                  </>
+                )}
               </View>
 
               {/* <View className="py-4">
@@ -1082,6 +1227,11 @@ export default function ProjectOverview() {
             {
               label: "Create Room",
               onPress: () => router.push("./rooms/create"),
+              icon: Plus,
+            },
+            {
+              label: "Create Chamber",
+              onPress: () => router.push("./chambers/create"),
               icon: Plus,
             },
           ]}

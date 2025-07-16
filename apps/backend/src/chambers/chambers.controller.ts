@@ -23,7 +23,14 @@ export class ChambersController {
   constructor(private readonly chambersService: ChambersService) {}
 
   @Post()
-  async create(@Body() data: { name: string; projectId: string }): Promise<
+  async create(
+    @Body()
+    data: {
+      name: string;
+      projectId: string;
+      rooms?: { roomId: string; isEffected: boolean }[];
+    },
+  ): Promise<
     Prisma.ChamberGetPayload<{
       include: { roomChambers: { include: { room: true } } };
     }>
@@ -50,7 +57,11 @@ export class ChambersController {
   @Put(':id')
   async update(
     @Param('id') id: string,
-    @Body() data: { name?: string },
+    @Body()
+    data: {
+      name?: string;
+      rooms?: { roomId: string; isEffected: boolean }[];
+    },
   ): Promise<
     Prisma.ChamberGetPayload<{
       include: { roomChambers: { include: { room: true } } };
