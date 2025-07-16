@@ -69,6 +69,8 @@ import { uploadImage } from "@/lib/imagekit";
 import { useOfflineUploadsStore } from "@/lib/state/offline-uploads";
 import { useNetworkStatus } from "@/lib/providers/QueryProvider";
 
+import ProjectCoverModal from "@/components/project/ProjectCoverModal";
+
 // Type assertions to fix ReactNode compatibility
 const CameraIconComponent = CameraIcon as any;
 const ImagePlusComponent = ImagePlus as any;
@@ -609,87 +611,11 @@ export default function ProjectPhotos() {
         </View>
       </Modal>
 
-      <Modal
+      <ProjectCoverModal
         visible={showCoverModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowCoverModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <View style={styles.modalHeaderContent}>
-                <HomeComponent size={24} color="#2563eb" />
-                <Text style={styles.modalTitle}>Project Cover</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setShowCoverModal(false)}
-              >
-                <XCircleComponent size={24} color="#64748b" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.modalBody}>
-              {mainImage ? (
-                <View style={styles.coverPreview}>
-                  <ExpoImageComponent
-                    source={{ uri: mainImage }}
-                    style={styles.coverImage}
-                    contentFit="cover"
-                    cachePolicy="memory-disk"
-                  />
-                  <View style={styles.coverOverlay}>
-                    <Text style={styles.coverOverlayText}>Current Cover</Text>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.coverPlaceholder}>
-                  <HomeComponent size={48} color="#94a3b8" />
-                  <Text style={styles.coverPlaceholderText}>
-                    No cover image set
-                  </Text>
-                </View>
-              )}
-
-              <View className="flex-row gap-1">
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.cameraButton]}
-                  className="bg-accent rounded-full border border-gray-200 "
-                  onPress={() => handleSetMainImage(true)}
-                  disabled={isUploadingMainImage}
-                >
-                  {isUploadingMainImage ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <View style={styles.actionButtonContent}>
-                      <CameraIconComponent size={20} color="#fff" />
-                      <Text style={styles.actionButtonText}>Take Photo</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.libraryButton]}
-                  onPress={() => handleSetMainImage(false)}
-                  disabled={isUploadingMainImage}
-                >
-                  {isUploadingMainImage ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <View style={styles.actionButtonContent}>
-                      <ImageIconComponent size={20} color="#fff" />
-                      <Text style={styles.actionButtonText}>
-                        Choose from Library
-                      </Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowCoverModal(false)}
+        projectId={projectId}
+      />
     </View>
   );
 }

@@ -5,10 +5,22 @@ import {
   ScrollView,
   Modal,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Text } from "@/components/ui/text";
-import { X, ChevronRight, ChevronDown, ChevronUp } from "lucide-react-native";
+import {
+  X,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Home,
+  XCircle,
+  Camera,
+  Image as ImageIcon,
+} from "lucide-react-native";
+import { Image as ExpoImage } from "expo-image";
+
 import {
   useGetProjectById,
   useGetRooms,
@@ -24,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import { TextInput, Image } from "react-native";
 import { AlertTriangle } from "lucide-react-native";
 import ClaimSummaryEditor from "@/components/project/ClaimSummaryEditor";
+import ProjectCoverModal from "@/components/project/ProjectCoverModal";
 
 // Type assertions for Lucide icons
 const XIcon = X as any;
@@ -31,6 +44,11 @@ const ChevronRightIcon = ChevronRight as any;
 const ChevronDownIcon = ChevronDown as any;
 const ChevronUpIcon = ChevronUp as any;
 const AlertTriangleIcon = AlertTriangle as any;
+const HomeIcon = Home as any;
+const XCircleIcon = XCircle as any;
+const CameraIcon = Camera as any;
+const ImageIconComponent = ImageIcon as any;
+const ExpoImageComponent = ExpoImage as any;
 
 const WATER_PROJECT_TASKS = [
   "Take Cover Photo",
@@ -137,6 +155,9 @@ export default function CopilotScreen() {
   // Claim summary modal state
   const [showClaimSummaryModal, setShowClaimSummaryModal] = useState(false);
 
+  // Main image modal state
+  const [showMainImageModal, setShowMainImageModal] = useState(false);
+
   // Handlers for claim summary/images auto-save
   const handleChangeClaimSummary = (summary: string) => {
     if (projectId && summary !== project?.data?.claimSummary) {
@@ -175,8 +196,7 @@ export default function CopilotScreen() {
     {
       label: "Take Cover Photo",
       done: !!projectData?.mainImage,
-      onPress: () =>
-        router.push({ pathname: "../pictures", params: { projectId } }),
+      onPress: () => setShowMainImageModal(true),
     },
     {
       label: "Enter Job & Insurance Info",
@@ -664,6 +684,11 @@ export default function CopilotScreen() {
             });
           }, 200);
         }}
+      />
+      <ProjectCoverModal
+        visible={showMainImageModal}
+        onClose={() => setShowMainImageModal(false)}
+        projectId={projectId}
       />
     </>
   );

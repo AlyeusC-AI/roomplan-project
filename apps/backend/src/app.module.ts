@@ -26,6 +26,7 @@ import { SpaceModule } from './space/space.module';
 import { TagsModule } from './tags/tags.module';
 import { ChatModule } from './chat/chat.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { ChambersModule } from './chambers/chambers.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     TagsModule,
     ChatModule,
     NotificationsModule,
+    ChambersModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

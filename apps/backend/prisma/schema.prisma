@@ -219,6 +219,7 @@ model Project {
   tags            Tag[]
   chat            Chat?
   copilotProgress Json? // Stores project-level checklist progress
+  chambers        Chamber[]
 }
 
 model Room {
@@ -255,8 +256,28 @@ model Room {
   ceilingAffected AreaAffected?      @relation("CeilingAffected", fields: [ceilingRoomId], references: [id])
   ceilingRoomId   String?            @unique
   copilotProgress Json? // Stores room-level checklist progress
+  roomChambers    RoomChamber[]
 
   @@index([projectId])
+}
+
+model Chamber {
+  id           String        @id @default(uuid())
+  name         String
+  projectId    String
+  project      Project       @relation(fields: [projectId], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  roomChambers RoomChamber[]
+}
+
+model RoomChamber {
+  id         String  @id @default(uuid())
+  roomId     String
+  room       Room    @relation(fields: [roomId], references: [id])
+  chamberId  String
+  chamber    Chamber @relation(fields: [chamberId], references: [id])
+  isEffected Boolean @default(false)
 }
 
 model AreaAffected {
