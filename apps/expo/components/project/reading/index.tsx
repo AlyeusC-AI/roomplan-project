@@ -92,7 +92,7 @@ const RoomReading: React.FC<RoomReadingProps> = ({
         onPress={() => setIsCollapsed((o) => !o)}
         // className="mb-4"
       >
-        <View className="flex flex-row justify-between w-full items-center px-3 py-1.5">
+        <View className="flex flex-row justify-between w-full items-center py-1.5">
           {/* Date on the left, readings on the right */}
           <View className="flex flex-row items-center flex-1 justify-between">
             {/* Date (left) */}
@@ -137,9 +137,9 @@ const RoomReading: React.FC<RoomReadingProps> = ({
             </View>
           )}
           {!isCollapsed ? (
-            <ChevronDownComponent color="#1d4ed8" size={18} />
+            <ChevronDownComponent color="#1d4ed8" size={18} className="mx-2" />
           ) : (
-            <ChevronUpComponent color="#1d4ed8" size={18} />
+            <ChevronUpComponent color="#1d4ed8" size={18} className="mx-2" />
           )}
         </View>
       </Button>
