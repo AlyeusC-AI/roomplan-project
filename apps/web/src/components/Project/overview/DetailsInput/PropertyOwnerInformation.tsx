@@ -292,7 +292,7 @@ export default function ProjectOwnerInformation() {
                   </FormDescription>
                   <FormMessage />
                   {/* Elegant Claim Summary Images UI */}
-                  <div className='mt-4'>
+                  {/* <div className='mt-4'>
                     <label className='mb-1 block text-sm font-medium text-gray-700'>
                       Claim Summary Images
                     </label>
@@ -351,7 +351,7 @@ export default function ProjectOwnerInformation() {
                         </span>
                       )}
                     </div>
-                  </div>
+                  </div> */}
                 </FormItem>
               )}
             />

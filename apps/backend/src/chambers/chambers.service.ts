@@ -50,10 +50,16 @@ export class ChambersService {
       }
     }
 
+    // Use project's catCode and waterClass as initial values if not provided
+    const catCode = data.catCode || project.catCode;
+    const waterClass = data.waterClass || project.waterClass;
+
     return this.prisma.chamber.create({
       data: {
         name: data.name,
         projectId: data.projectId,
+        catCode,
+        waterClass,
         roomChambers: data.rooms
           ? {
               createMany: {
@@ -151,6 +157,8 @@ export class ChambersService {
       where: { id },
       data: {
         name: data.name,
+        catCode: data.catCode,
+        waterClass: data.waterClass,
         roomChambers: data.rooms
           ? {
               deleteMany: {},

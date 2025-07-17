@@ -146,8 +146,8 @@ export default function ProjectInformation() {
               </FormItem>
             )}
           />
-          <div className='mt-6'>
-            <label className='block text-sm font-medium text-gray-700'>
+          {/* <div className='mt-6'>
+           <label className='block text-sm font-medium text-gray-700'>
               Claim Summary Images
             </label>
             <input
@@ -168,7 +168,7 @@ export default function ProjectInformation() {
                 />
               ))}
             </div>
-          </div>
+          </div> */}
           <div className='flex justify-end'>
             <Button type='submit' className='ml-auto'>
               {loading ? <LoadingSpinner /> : "Save"}

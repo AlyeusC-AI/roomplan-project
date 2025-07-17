@@ -269,6 +269,8 @@ model Chamber {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   roomChambers RoomChamber[]
+  catCode      String?
+  waterClass   String?
 }
 
 model RoomChamber {

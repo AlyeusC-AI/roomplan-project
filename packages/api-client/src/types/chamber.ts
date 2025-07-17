@@ -7,6 +7,8 @@ export interface Chamber {
   createdAt: string;
   updatedAt: string;
   roomChambers: RoomChamber[];
+  catCode?: string;
+  waterClass?: string;
 }
 
 export interface RoomChamber {
@@ -21,9 +23,13 @@ export interface CreateChamberDto {
   name: string;
   projectId: string;
   rooms?: { roomId: string; isEffected: boolean }[];
+  catCode?: string;
+  waterClass?: string;
 }
 
 export interface UpdateChamberDto {
   name?: string;
   rooms?: { roomId: string; isEffected: boolean }[];
+  catCode?: string;
+  waterClass?: string;
 }

@@ -14,7 +14,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, Trash2, Save, Plus, Check, X } from "lucide-react-native";
+import {
+  ChevronLeft,
+  Trash2,
+  Save,
+  Plus,
+  Check,
+  X,
+  Droplets,
+} from "lucide-react-native";
 
 // Type assertions to fix ReactNode compatibility
 const ChevronLeftIcon = ChevronLeft as any;
@@ -23,6 +31,7 @@ const SaveIcon = Save as any;
 const PlusIcon = Plus as any;
 const CheckIcon = Check as any;
 const XIcon = X as any;
+const DropletsIcon = Droplets as any;
 
 import {
   useCreateChamber,
@@ -30,7 +39,44 @@ import {
   useDeleteChamber,
   useGetRooms,
   useGetChamber,
+  useGetProjectById,
 } from "@service-geek/api-client";
+
+// Define WaterDamageClass type
+type WaterDamageClass = "Class 1" | "Class 2" | "Class 3" | "Class 4";
+
+// Water damage categories with descriptions
+const WATER_DAMAGE_CATEGORIES = [
+  {
+    label: "Category 1",
+    value: "Category 1",
+    description:
+      "Water from a clean and sanitary source that poses no health risk through skin contact, ingestion, or inhalation.",
+  },
+  {
+    label: "Category 2",
+    value: "Category 2",
+    description:
+      "Water that is moderately contaminated and may cause illness if touched or consumed.",
+  },
+  {
+    label: "Category 3",
+    value: "Category 3",
+    description:
+      "Heavily contaminated water containing harmful agents such as pathogens or toxins. Can cause serious health effects if touched or ingested.",
+  },
+];
+
+// Water damage classes with descriptions
+const WATER_DAMAGE_CLASSES = [
+  { label: "Class 1 – Minimal Damage", value: "Class 1" as WaterDamageClass },
+  {
+    label: "Class 2 – Significant Damage",
+    value: "Class 2" as WaterDamageClass,
+  },
+  { label: "Class 3 – Extensive Damage", value: "Class 3" as WaterDamageClass },
+  { label: "Class 4 – Specialty Drying", value: "Class 4" as WaterDamageClass },
+];
 
 export default function ChamberCreationScreen() {
   const [chamberName, setChamberName] = useState("");
@@ -38,6 +84,8 @@ export default function ChamberCreationScreen() {
   const [selectedRooms, setSelectedRooms] = useState<
     { roomId: string; isEffected: boolean }[]
   >([]);
+  const [waterDamageCategory, setWaterDamageCategory] = useState("");
+  const [waterClass, setWaterClass] = useState<WaterDamageClass | undefined>();
   console.log("🚀 ~ ChamberCreationScreen ~ selectedRooms:", selectedRooms);
 
   const router = useRouter();
@@ -59,6 +107,7 @@ export default function ChamberCreationScreen() {
 
   const { data: rooms } = useGetRooms(projectId || "");
   const { data: existingChamber } = useGetChamber(chamberIdParam || "");
+  const { data: project } = useGetProjectById(projectId || "");
 
   useEffect(() => {
     if (chamberNameParam) {
@@ -76,8 +125,22 @@ export default function ChamberCreationScreen() {
           isEffected: rc.isEffected,
         }))
       );
+      setWaterDamageCategory(existingChamber.catCode || "");
+      setWaterClass(existingChamber.waterClass as WaterDamageClass);
     }
   }, [existingChamber]);
+
+  // Set initial values from project if creating new chamber
+  useEffect(() => {
+    if (!chamberIdParam && project?.data) {
+      if (project.data.catCode) {
+        setWaterDamageCategory(project.data.catCode);
+      }
+      if (project.data.waterClass) {
+        setWaterClass(project.data.waterClass as WaterDamageClass);
+      }
+    }
+  }, [project?.data, chamberIdParam]);
 
   const handleDelete = () => {
     Alert.alert(
@@ -118,6 +181,8 @@ export default function ChamberCreationScreen() {
         data: {
           name: chamberName,
           rooms: selectedRooms,
+          catCode: waterDamageCategory,
+          waterClass: waterClass,
         },
       });
 
@@ -167,6 +232,8 @@ export default function ChamberCreationScreen() {
         name: chamberName,
         projectId: projectId,
         rooms: selectedRooms,
+        catCode: waterDamageCategory,
+        waterClass: waterClass,
       });
 
       router.dismiss();
@@ -421,6 +488,151 @@ export default function ChamberCreationScreen() {
                   </Text>
                 </View>
               )}
+            </View>
+
+            {/* Water Damage Category Section */}
+            <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <View className="flex-row items-center mb-4">
+                <View className="w-8 h-8 bg-purple-100 rounded-full items-center justify-center mr-3">
+                  <Text className="text-purple-600 font-bold text-sm">3</Text>
+                </View>
+                <Label className="text-lg font-semibold text-gray-900">
+                  Water Damage Category
+                </Label>
+              </View>
+              <Text className="text-sm text-gray-600 mb-4">
+                Select the category of water damage for this chamber
+              </Text>
+
+              <View style={{ gap: 12 }}>
+                {WATER_DAMAGE_CATEGORIES.map((category) => {
+                  const isSelected = waterDamageCategory === category.value;
+
+                  const categoryCardStyle = {
+                    padding: 16,
+                    borderRadius: 12,
+                    borderWidth: 2,
+                    backgroundColor: isSelected ? "#F3E8FF" : "#F9FAFB",
+                    borderColor: isSelected ? "#A855F7" : "#E5E7EB",
+                    shadowColor: isSelected ? "#A855F7" : "#000",
+                    shadowOffset: { width: 0, height: isSelected ? 2 : 0 },
+                    shadowOpacity: isSelected ? 0.1 : 0,
+                    shadowRadius: isSelected ? 4 : 0,
+                    elevation: isSelected ? 3 : 0,
+                  };
+
+                  const checkboxStyle = {
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    borderWidth: 2,
+                    alignItems: "center" as const,
+                    justifyContent: "center" as const,
+                    marginRight: 12,
+                    backgroundColor: isSelected ? "#A855F7" : "transparent",
+                    borderColor: isSelected ? "#A855F7" : "#D1D5DB",
+                  };
+
+                  return (
+                    <TouchableOpacity
+                      key={category.value}
+                      onPress={() => setWaterDamageCategory(category.value)}
+                      style={categoryCardStyle}
+                    >
+                      <View className="flex-row items-start">
+                        <View style={checkboxStyle}>
+                          {isSelected && <CheckIcon color="white" size={12} />}
+                        </View>
+                        <View className="flex-1">
+                          <View className="flex-row items-center mb-2">
+                            <DropletsIcon
+                              size={16}
+                              color={isSelected ? "#A855F7" : "#94A3B8"}
+                            />
+                            <Text className="ml-2 text-base font-semibold text-gray-900">
+                              {category.label}
+                            </Text>
+                          </View>
+                          <Text className="text-sm text-gray-600 leading-5">
+                            {category.description}
+                          </Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Water Class Section */}
+            <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <View className="flex-row items-center mb-4">
+                <View className="w-8 h-8 bg-orange-100 rounded-full items-center justify-center mr-3">
+                  <Text className="text-orange-600 font-bold text-sm">4</Text>
+                </View>
+                <Label className="text-lg font-semibold text-gray-900">
+                  Water Damage Class
+                </Label>
+              </View>
+              <Text className="text-sm text-gray-600 mb-4">
+                Select the class of water damage for this chamber
+              </Text>
+
+              <View style={{ gap: 12 }}>
+                {WATER_DAMAGE_CLASSES.map((waterClassOption) => {
+                  const isSelected = waterClass === waterClassOption.value;
+
+                  const classCardStyle = {
+                    padding: 16,
+                    borderRadius: 12,
+                    borderWidth: 2,
+                    backgroundColor: isSelected ? "#FEF3C7" : "#F9FAFB",
+                    borderColor: isSelected ? "#F59E0B" : "#E5E7EB",
+                    shadowColor: isSelected ? "#F59E0B" : "#000",
+                    shadowOffset: { width: 0, height: isSelected ? 2 : 0 },
+                    shadowOpacity: isSelected ? 0.1 : 0,
+                    shadowRadius: isSelected ? 4 : 0,
+                    elevation: isSelected ? 3 : 0,
+                  };
+
+                  const checkboxStyle = {
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    borderWidth: 2,
+                    alignItems: "center" as const,
+                    justifyContent: "center" as const,
+                    marginRight: 12,
+                    backgroundColor: isSelected ? "#F59E0B" : "transparent",
+                    borderColor: isSelected ? "#F59E0B" : "#D1D5DB",
+                  };
+
+                  return (
+                    <TouchableOpacity
+                      key={waterClassOption.value}
+                      onPress={() => setWaterClass(waterClassOption.value)}
+                      style={classCardStyle}
+                    >
+                      <View className="flex-row items-start">
+                        <View style={checkboxStyle}>
+                          {isSelected && <CheckIcon color="white" size={12} />}
+                        </View>
+                        <View className="flex-1">
+                          <View className="flex-row items-center mb-2">
+                            <DropletsIcon
+                              size={16}
+                              color={isSelected ? "#F59E0B" : "#94A3B8"}
+                            />
+                            <Text className="ml-2 text-base font-semibold text-gray-900">
+                              {waterClassOption.label}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
 
             {/* Action Button */}
