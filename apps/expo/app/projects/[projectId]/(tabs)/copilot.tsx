@@ -158,28 +158,6 @@ export default function CopilotScreen() {
   // Main image modal state
   const [showMainImageModal, setShowMainImageModal] = useState(false);
 
-  // Handlers for claim summary/images auto-save
-  const handleChangeClaimSummary = (summary: string) => {
-    if (projectId && summary !== project?.data?.claimSummary) {
-      updateProject.mutate({
-        id: projectId,
-        data: { claimSummary: summary },
-      });
-    }
-  };
-  const handleChangeClaimSummaryImages = (images: string[]) => {
-    if (
-      projectId &&
-      JSON.stringify(images) !==
-        JSON.stringify(project?.data?.claimSummaryImages || [])
-    ) {
-      updateProject.mutate({
-        id: projectId,
-        data: { claimSummaryImages: images },
-      });
-    }
-  };
-
   // Compute projectTasks from real data
   const projectData = project?.data;
   // Check if a Work Auth document exists
@@ -221,7 +199,7 @@ export default function CopilotScreen() {
     },
     {
       label: "Document source of loss",
-      done: !!projectData?.claimSummary,
+      done: !!projectData?.claimSummary && !!projectData?.catCode,
       onPress: () => setShowClaimSummaryModal(true),
     },
     // The rest of the tasks
@@ -670,20 +648,16 @@ export default function CopilotScreen() {
       <ClaimSummaryEditor
         visible={showClaimSummaryModal}
         onClose={() => setShowClaimSummaryModal(false)}
-        claimSummary={project?.data?.claimSummary || ""}
-        claimSummaryImages={project?.data?.claimSummaryImages || []}
-        onChangeSummary={handleChangeClaimSummary}
-        onChangeImages={handleChangeClaimSummaryImages}
         projectId={projectId}
-        onTakePhoto={() => {
-          setShowClaimSummaryModal(false);
-          setTimeout(() => {
-            router.push({
-              pathname: `/projects/${projectId}/camera`,
-              params: { mode: "claimSummary" },
-            });
-          }, 200);
-        }}
+        // onTakePhoto={() => {
+        //   setShowClaimSummaryModal(false);
+        //   setTimeout(() => {
+        //     router.push({
+        //       pathname: `/projects/${projectId}/camera`,
+        //       params: { mode: "claimSummary" },
+        //     });
+        //   }, 200);
+        // }}
       />
       <ProjectCoverModal
         visible={showMainImageModal}

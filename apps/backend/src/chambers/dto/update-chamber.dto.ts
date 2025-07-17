@@ -25,4 +25,14 @@ export class UpdateChamberDto {
   @ValidateNested({ each: true })
   @Type(() => RoomChamberDto)
   rooms?: RoomChamberDto[];
+
+  @ApiPropertyOptional({ description: 'Category code for water damage' })
+  @IsOptional()
+  @IsString()
+  catCode?: string;
+
+  @ApiPropertyOptional({ description: 'Water class classification' })
+  @IsOptional()
+  @IsString()
+  waterClass?: string;
 }

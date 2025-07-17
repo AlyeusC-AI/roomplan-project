@@ -13,6 +13,7 @@ import {
   Pressable,
   ActionSheetIOS,
   Alert,
+  TextInput,
 } from "react-native";
 import { FormInput } from "@/components/ui/form";
 import { Box, VStack, HStack, Button, Spinner, FormControl } from "native-base";
@@ -108,24 +109,21 @@ import ClaimSummaryEditor from "@/components/project/ClaimSummaryEditor";
 type TabType = "customer" | "loss" | "insurance";
 
 // Water damage classification types
-type WaterDamageCategory =
-  | "Category 1 (Clean)"
-  | "Category 2 (Gray)"
-  | "Category 3 (Black)";
+type WaterDamageCategory = "Category 1" | "Category 2" | "Category 3";
 type WaterDamageClass = "Class 1" | "Class 2" | "Class 3" | "Class 4";
 
-const WATER_DAMAGE_CATEGORIES = [
+export const WATER_DAMAGE_CATEGORIES = [
   {
     label: "Category 1 (Clean Water)",
-    value: "Category 1 (Clean)" as WaterDamageCategory,
+    value: "Category 1" as WaterDamageCategory,
   },
   {
     label: "Category 2 (Gray Water)",
-    value: "Category 2 (Gray)" as WaterDamageCategory,
+    value: "Category 2" as WaterDamageCategory,
   },
   {
     label: "Category 3 (Black Water)",
-    value: "Category 3 (Black)" as WaterDamageCategory,
+    value: "Category 3" as WaterDamageCategory,
   },
 ] as const;
 
@@ -229,7 +227,7 @@ function LossTypeSelector({ value, onChange, style }: LossTypeSelectorProps) {
   );
 }
 
-interface WaterDamageTypeSelectorProps {
+export interface WaterDamageTypeSelectorProps {
   value?: WaterDamageCategory;
   onChange: (value: WaterDamageCategory) => void;
   style?: any;
@@ -422,7 +420,7 @@ const DateInput: React.FC<{
         <Text style={styles.dateInputText}>
           {dayjs(value).format("MMM D, YYYY")}
         </Text>
-        <CalendarIconType color="#64748b" size={20} />
+        <CalendarIcon color="#64748b" size={20} />
       </Pressable>
 
       <Modal isOpen={showPicker} onClose={() => setShowPicker(false)}>
@@ -564,13 +562,7 @@ export default function ProjectDetails() {
       // Parse catCode for water damage type if it's a water damage project
       if (project.data?.lossType === LossType.WATER && project.data?.catCode) {
         const waterType = project.data.catCode as WaterDamageCategory;
-        if (
-          [
-            "Category 1 (Clean)",
-            "Category 2 (Gray)",
-            "Category 3 (Black)",
-          ].includes(waterType)
-        ) {
+        if (["Category 1", "Category 2", "Category 3"].includes(waterType)) {
           setCatCode(waterType);
         } else {
           setCatCode(project.data.catCode || "");
@@ -622,11 +614,7 @@ export default function ProjectDetails() {
     if (
       lossType === LossType.WATER &&
       catCode &&
-      [
-        "Category 1 (Clean)",
-        "Category 2 (Gray)",
-        "Category 3 (Black)",
-      ].includes(catCode)
+      ["Category 1", "Category 2", "Category 3"].includes(catCode)
     ) {
       return catCode as WaterDamageCategory;
     }
@@ -947,8 +935,25 @@ export default function ProjectDetails() {
               }
             />
           )}
+          <FormInput
+            label="Claim Summary"
+            placeholder="Enter claim summary"
+            value={claimSummary}
+            onChangeText={setClaimSummary}
+            containerStyle={styles.inputContainer}
+            multiline
+            numberOfLines={4}
+            leftElement={
+              <FileTextIcon
+                size={20}
+                color="#94a3b8"
+                style={styles.inputIcon}
+              />
+            }
+          />
+
           {/* Claim Summary Editor Inline */}
-          <ClaimSummaryEditor
+          {/* <ClaimSummaryEditor
             visible={true}
             onClose={() => {}}
             claimSummary={project?.data?.claimSummary || ""}
@@ -963,7 +968,7 @@ export default function ProjectDetails() {
                 params: { mode: "claimSummary" },
               })
             }
-          />
+          /> */}
         </View>
         <View style={styles.section}>
           <HStack space={2} alignItems="center" mb={4}>
