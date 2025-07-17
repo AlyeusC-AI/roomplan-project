@@ -358,7 +358,7 @@ export default function CopilotScreen() {
           paddingHorizontal: 16,
           // paddingTop: 48,
           paddingBottom: 16,
-          backgroundColor: "#2563eb",
+          backgroundColor: "#F8FAFC",
           // color: "white",
         }}
       >
@@ -397,7 +397,7 @@ export default function CopilotScreen() {
         </TouchableOpacity>
       </View>
       {/* Instructional Text */}
-      <ScrollView style={{ flex: 1, backgroundColor: "#2563eb" }}>
+      <ScrollView style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
         {/* Project Tasks Checklist */}
         {!showRoomTasks && (
           <Card style={{ marginHorizontal: 16, marginBottom: 16 }}>
@@ -435,7 +435,7 @@ export default function CopilotScreen() {
                 >
                   <Text
                     style={{
-                      color: "#2563eb",
+                      color: "#F8FAFC",
                       fontSize: 14,
                       fontWeight: "500",
                       textDecorationLine: "underline",
@@ -755,7 +755,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#e5e7eb",
   },
   selectedRoom: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#F8FAFC",
   },
   roomOptionText: {
     fontSize: 16,
