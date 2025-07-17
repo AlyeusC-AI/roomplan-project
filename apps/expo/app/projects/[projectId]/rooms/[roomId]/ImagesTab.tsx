@@ -478,7 +478,7 @@ export default function ImagesTab({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f7fa",
+    backgroundColor: "transparent",
     // position: "relative",
   },
   emptyContainer: {

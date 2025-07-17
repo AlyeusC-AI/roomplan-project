@@ -740,7 +740,7 @@ export default function FilteredImagesGallery({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "transparent",
   },
 
   searchContainer: {

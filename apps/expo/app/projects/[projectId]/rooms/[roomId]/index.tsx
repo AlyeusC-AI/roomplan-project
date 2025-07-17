@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
   tabContent: {
     flex: 1,
     marginTop: 2,
-    backgroundColor: "white",
+    backgroundColor: "#f8fafc",
   },
   // FAB Styles
   fabContainer: {
