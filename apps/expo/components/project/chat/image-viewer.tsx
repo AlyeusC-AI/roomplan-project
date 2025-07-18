@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     // borderColor: "white"
   },
   downloadButton: {
-    // backgroundColor: "#2563eb",
+    // backgroundColor: "#15438e",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     borderRadius: 20,
     paddingHorizontal: 16,

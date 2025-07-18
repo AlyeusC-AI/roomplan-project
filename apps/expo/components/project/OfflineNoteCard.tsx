@@ -407,10 +407,10 @@ export default function OfflineNoteCard({
             >
               <ActivityIndicator
                 size="small"
-                color="#2563eb"
+                color="#15438e"
                 style={{ marginRight: 4 }}
               />
-              <Text style={{ fontSize: 12, color: "#2563eb" }}>Saving...</Text>
+              <Text style={{ fontSize: 12, color: "#15438e" }}>Saving...</Text>
             </View>
           )}
         </View>
@@ -598,7 +598,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(37, 99, 235, 0.3)",
   },
   imageActionText: {
-    color: "#2563eb",
+    color: "#15438e",
     fontWeight: "500",
   },
   loadingText: {

@@ -123,8 +123,8 @@ const styles = StyleSheet.create({
     borderColor: "#e2e8f0",
   },
   selectedRoomOption: {
-    backgroundColor: "#2563eb",
-    borderColor: "#2563eb",
+    backgroundColor: "#15438e",
+    borderColor: "#15438e",
   },
   roomOptionContent: {
     flex: 1,

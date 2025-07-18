@@ -117,7 +117,7 @@ const RoomReading: React.FC<RoomReadingProps> = ({
               </View>
               {/* Humidity */}
               <View className="flex flex-row items-center ">
-                <DropletComponent size={16} color="#2563eb" fill="#2563eb"  style={{marginRight: 2}}/>
+                <DropletComponent size={16} color="#15438e" fill="#15438e"  style={{marginRight: 2}}/>
                 <Text className="text-gray-600 font-medium">
                   {reading.humidity}%
                 </Text>

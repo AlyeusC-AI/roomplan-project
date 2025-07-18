@@ -311,10 +311,14 @@ export default function ProjectOverview() {
   const TimerIcon = Timer as any;
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView>
-          <View className="flex-1" style={{ backgroundColor: "#F8FAFC" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View>
             {/* Enhanced Project Info Card */}
 
             <Card style={{ marginTop: 16, marginBottom: 16, backgroundColor: '#fff', borderRadius: 16, marginHorizontal: 16, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4, padding: 0, overflow: 'hidden' }}>
@@ -372,7 +376,7 @@ export default function ProjectOverview() {
                       }}
                       style={{ opacity: project?.data?.clientEmail ? 1 : 0.4 }}
                     >
-                      <MailIcon size={22} color="#2563eb" />
+                      <MailIcon size={22} color="#15438e" />
                     </TouchableOpacity>
                     {/* Call Icon */}
                     <TouchableOpacity
@@ -384,7 +388,7 @@ export default function ProjectOverview() {
                       }}
                       style={{ opacity: project?.data?.clientPhoneNumber ? 1 : 0.4 }}
                     >
-                      <PhoneIcon size={22} color="#2563eb" />
+                      <PhoneIcon size={22} color="#15438e" />
                     </TouchableOpacity>
                   
                   </View>
@@ -404,7 +408,7 @@ export default function ProjectOverview() {
                       {project.data.location}
                     </Text>
                     <TouchableOpacity onPress={()=>setShowDirectionsModal(true)} style={{ marginLeft: 8 }}>
-                      <MapPinIcon size={22} color="#2563eb" />
+                      <MapPinIcon size={22} color="#15438e" />
                     </TouchableOpacity>
                   </View>
                 )}
@@ -438,7 +442,7 @@ export default function ProjectOverview() {
                   Customer Information
                 </Text>
                 <TouchableOpacity onPress={() => setShowClientInfo(true)} style={{ marginLeft: 8 }}>
-                  <ChevronRightCircle size={22} color="#2563eb" />
+                  {React.createElement(ChevronRightCircle as any, { size: 22, color: "#15438e" })}
                 </TouchableOpacity>
               </View>
               </View>
@@ -564,7 +568,7 @@ export default function ProjectOverview() {
                             onPress={() => copyText(project?.data?.clientEmail)}
                             className="p-2"
                           >
-                            {React.createElement(Files, {
+                            {React.createElement(Files as any, {
                               size: 18,
                               color: "#000",
                               className: "text-primary-dark",
@@ -602,7 +606,7 @@ export default function ProjectOverview() {
                             }
                             className="p-2"
                           >
-                            {React.createElement(Files, {
+                            {React.createElement(Files as any, {
                               size: 18,
                               color: "#000",
                               className: "text-primary-dark",
@@ -751,7 +755,7 @@ export default function ProjectOverview() {
                       onPress={copyAddress}
                     >
                       <View className="bg-green-500 p-2 rounded-lg mr-3">
-                        {React.createElement(Files, {
+                        {React.createElement(Files as any, {
                           size: 20,
                           color: "#fff",
                         })}
@@ -771,7 +775,7 @@ export default function ProjectOverview() {
             </Modal>
             <Card style={{ marginBottom: 10, backgroundColor: 'white', borderRadius: 16, marginHorizontal: 16, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 }}>
               <CardHeader style={{ backgroundColor: 'transparent', paddingBottom: 0, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                {/* <CircleDot size={20} color="#2563eb" /> */}
+                {/* <CircleDot size={20} color="#15438e" /> */}
                 <CardTitle style={{ fontSize: 18, fontWeight: '700' }}>Customer Notifications</CardTitle>
               </CardHeader>
               <Separator className="my-2" />
@@ -811,9 +815,9 @@ export default function ProjectOverview() {
                   >
                     <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", paddingVertical: 14, paddingHorizontal: 4 }}>
                       <View style={{ backgroundColor: "#f3f4f6", borderRadius: 999, padding: 8, marginBottom: 6 }}>
-                        <TruckIcon size={30} color="#2563eb" />
+                        <TruckIcon size={30} color="#15438e" />
                       </View>
-                      <Text style={{ color: "#2563eb", fontWeight: "600", fontSize: 12 }}>On My Way</Text>
+                      <Text style={{ color: "#15438e", fontWeight: "600", fontSize: 12 }}>On My Way</Text>
                     </View>
                   </TouchableOpacity>
                 </Animated.View>
@@ -843,9 +847,9 @@ export default function ProjectOverview() {
                   >
                     <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", paddingVertical: 14, paddingHorizontal: 4 }}>
                       <View style={{ backgroundColor: "#f3f4f6", borderRadius: 999, padding: 8, marginBottom: 6 }}>
-                        <TimerIcon size={30} color="#2563eb" />
+                        <TimerIcon size={30} color="#15438e" />
                       </View>
-                      <Text style={{ color: "#2563eb", fontWeight: "600", fontSize: 12 }}>Start</Text>
+                      <Text style={{ color: "#15438e", fontWeight: "600", fontSize: 12 }}>Start</Text>
                     </View>
                   </TouchableOpacity>
                 </Animated.View>
@@ -875,9 +879,9 @@ export default function ProjectOverview() {
                   >
                     <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", paddingVertical: 14, paddingHorizontal: 4 }}>
                       <View style={{ backgroundColor: "#f3f4f6", borderRadius: 999, padding: 8, marginBottom: 6 }}>
-                        <CheckCircleIcon size={30} color="#2563eb" />
+                        <CheckCircleIcon size={30} color="#15438e" />
                       </View>
-                      <Text style={{ color: "#2563eb", fontWeight: "600", fontSize: 12 }}>Complete</Text>
+                      <Text style={{ color: "#15438e", fontWeight: "600", fontSize: 12 }}>Complete</Text>
                     </View>
                   </TouchableOpacity>
                 </Animated.View>
@@ -918,7 +922,7 @@ export default function ProjectOverview() {
                   }}
                 >
                   <View className="bg-primary/10 rounded-full p-2 mr-3">
-                    <ScanIcon size={20} color="#2563eb" />
+                    <ScanIcon size={20} color="#15438e" />
                   </View>
                   <View className="flex-1">
                     <Text className="font-semibold text-base">
@@ -928,7 +932,7 @@ export default function ProjectOverview() {
                       Lidar scans
                     </Text>
                   </View>
-                  <ChevronRightIcon size={20} color="#2563eb" />
+                  <ChevronRightIcon size={20} color="#15438e" />
                 </TouchableOpacity>
                 <TouchableOpacity
                   className="bg-white rounded-lg w-full"
@@ -955,7 +959,7 @@ export default function ProjectOverview() {
                   }
                 >
                   <View className="bg-primary/10 rounded-full p-2 mr-3">
-                    {React.createElement(Bot as any, { size: 20, color: "#2563eb" })}
+                    {React.createElement(Bot as any, { size: 20, color: "#15438e" })}
                   </View>
                   <View className="flex-1">
                     <Text className="font-semibold text-base">
@@ -965,7 +969,7 @@ export default function ProjectOverview() {
                       Project & Room Checklist
                     </Text>
                   </View>
-                  <ChevronRightIcon size={20} color="#2563eb" />
+                  <ChevronRightIcon size={20} color="#15438e" />
                 </TouchableOpacity>
               </View>
 
@@ -1009,7 +1013,7 @@ export default function ProjectOverview() {
                         <View  className="shadow-sm" style={{ backgroundColor: "white", borderRadius: 999, padding: 10, marginBottom: 6, }}>
                           {React.createElement(item.Icon as any, {
                             size: 28,
-                            color: "#2563eb",
+                            color: "#15438e",
                           })}
                         </View>
                         <Text
@@ -1033,9 +1037,9 @@ export default function ProjectOverview() {
                       className={`px-6 py-3 rounded-lg flex-row items-center`}
                       style={{
                         backgroundColor:
-                          viewMode === "rooms" ? "#2563eb" : "transparent",
+                          viewMode === "rooms" ? "#15438e" : "transparent",
                         shadowColor:
-                          viewMode === "rooms" ? "#2563eb" : "transparent",
+                          viewMode === "rooms" ? "#15438e" : "transparent",
                         shadowOffset: { width: 0, height: 2 },
                         shadowOpacity: viewMode === "rooms" ? 0.3 : 0,
                         shadowRadius: 4,
@@ -1063,9 +1067,9 @@ export default function ProjectOverview() {
                       className={`px-6 py-3 rounded-lg flex-row items-center`}
                       style={{
                         backgroundColor:
-                          viewMode === "chambers" ? "#2563eb" : "transparent",
+                          viewMode === "chambers" ? "#15438e" : "transparent",
                         shadowColor:
-                          viewMode === "chambers" ? "#2563eb" : "transparent",
+                          viewMode === "chambers" ? "#15438e" : "transparent",
                         shadowOffset: { width: 0, height: 2 },
                         shadowOpacity: viewMode === "chambers" ? 0.3 : 0,
                         shadowRadius: 4,
@@ -1103,7 +1107,7 @@ export default function ProjectOverview() {
                       onPress={() => router.push(`./chambers/create`)}
                       className="rounded-full w-9 h-9 justify-center items-center bg-blue-50 border border-blue-200"
                     >
-                      <PlusIcon size={20} color="#2563eb" />
+                      <PlusIcon size={20} color="#15438e" />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -1262,31 +1266,31 @@ export default function ProjectOverview() {
               </View>
             </View>
           </View>
-        </ScrollView>
+        </TouchableWithoutFeedback>
+      </ScrollView>
 
-        {/* Floating Action Button Options */}
-        <FloatingButtonOption
-          actions={[
-            {
-              label: "Camera",
-              onPress: () => router.push("./camera"),
-              disabled: !(Array.isArray(rooms) && rooms.length > 0),
-              icon: Camera,
-            },
-            {
-              label: "Create Room",
-              onPress: () => router.push("./rooms/create"),
-              icon: Plus,
-            },
-            {
-              label: "Create Chamber",
-              onPress: () => router.push("./chambers/create"),
-              icon: Plus,
-            },
-          ]}
-        />
-      </SafeAreaView>
-    </TouchableWithoutFeedback>
+      {/* Floating Action Button Options */}
+      <FloatingButtonOption
+        actions={[
+          {
+            label: "Camera",
+            onPress: () => router.push("./camera"),
+            disabled: !(Array.isArray(rooms) && rooms.length > 0),
+            icon: Camera,
+          },
+          {
+            label: "Create Room",
+            onPress: () => router.push("./rooms/create"),
+            icon: Plus,
+          },
+          {
+            label: "Create Chamber",
+            onPress: () => router.push("./chambers/create"),
+            icon: Plus,
+          },
+        ]}
+      />
+    </SafeAreaView>
   );
 }
 

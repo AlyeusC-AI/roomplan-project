@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1f5f9",
   },
   backButtonText: {
-    color: "#2563eb",
+    color: "#15438e",
     fontSize: 16,
     fontWeight: "600",
   },

@@ -418,7 +418,7 @@ export default function NotificationScreen({
 
         {loading && (
           <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#2563eb"  />
+            <ActivityIndicator size="large" color="#15438e"  />
           </View>
         )}
       </KeyboardAvoidingView>
@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
     borderColor: "#e5e7eb",
   },
   statusOptionSelected: {
-    borderColor: "#2563eb" ,
+    borderColor: "#15438e" ,
     backgroundColor: "#eff6ff",
   },
   statusIconContainer: {
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   statusIconContainerSelected: {
-    backgroundColor: "#2563eb" ,
+    backgroundColor: "#15438e" ,
   },
   statusTextContainer: {
     flex: 1,
@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
     borderTopColor: "#e5e7eb",
   },
   sendButton: {
-    backgroundColor: "#2563eb" ,
+    backgroundColor: "#15438e" ,
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: "center",

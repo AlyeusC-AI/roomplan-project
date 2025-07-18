@@ -168,7 +168,7 @@ export default function FilteredImagesScreen() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <ArrowLeftIcon size={24} color="#2563eb" />
+            <ArrowLeftIcon size={24} color="#15438e" />
           </TouchableOpacity>
 
           <View style={styles.headerContent}>
@@ -201,7 +201,7 @@ export default function FilteredImagesScreen() {
               style={styles.filterButton}
               onPress={() => setShowFilters(!showFilters)}
             >
-              <FilterIcon size={20} color="#2563eb" />
+              <FilterIcon size={20} color="#15438e" />
               {(selectedRoomFilter !== "all" ||
                 selectedTagFilters.length > 0) && (
                 <View style={styles.filterBadge}>
@@ -323,12 +323,12 @@ const styles = StyleSheet.create({
     borderColor: "#e2e8f0",
   },
   actionButtonActive: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
   },
   actionButtonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#2563eb",
+    color: "#15438e",
   },
   actionButtonTextActive: {
     color: "#fff",

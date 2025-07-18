@@ -84,7 +84,7 @@ function WaterDamageClassSelector({
                 <HStack space={2} alignItems="center" mb={1}>
                   <DropletsIcon
                     size={16}
-                    color={value === type.value ? "#2563eb" : "#94a3b8"}
+                    color={value === type.value ? "#15438e" : "#94a3b8"}
                   />
                   <Text
                     style={[
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   selectedRadioOption: {
-    borderColor: "#2563eb",
+    borderColor: "#15438e",
     backgroundColor: "#eff6ff",
   },
   radioContainer: {
@@ -240,13 +240,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   selectedRadioButton: {
-    borderColor: "#2563eb",
+    borderColor: "#15438e",
   },
   radioButtonInner: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
   },
   radioContent: {
     flex: 1,
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     color: "#1d1d1d",
   },
   selectedRadioLabel: {
-    color: "#2563eb",
+    color: "#15438e",
   },
   radioDescription: {
     fontSize: 14,
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   continueButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -353,7 +353,7 @@ function WaterDamageCategorySelector({
                 <HStack space={2} alignItems="center" mb={1}>
                   <DropletsIcon
                     size={16}
-                    color={value === type.value ? "#2563eb" : "#94a3b8"}
+                    color={value === type.value ? "#15438e" : "#94a3b8"}
                   />
                   <Text
                     style={[

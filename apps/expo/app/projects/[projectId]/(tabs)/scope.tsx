@@ -38,7 +38,7 @@ const WifiOffComponent = WifiOff as any;
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   viewButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -122,10 +122,10 @@ const styles = StyleSheet.create({
     bottom: 24,
     left: 24,
     right: 24,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#2563eb",
+    shadowColor: "#15438e",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -188,7 +188,7 @@ export default function ScopeScreen() {
   if (isLoading) {
     return (
       <View className="flex items-center justify-center h-full w-full">
-        <ActivityIndicator color="#2563eb" size="large" />
+        <ActivityIndicator color="#15438e" size="large" />
       </View>
     );
   }

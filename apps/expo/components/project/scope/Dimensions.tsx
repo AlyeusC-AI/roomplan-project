@@ -76,7 +76,7 @@ const equipmentOptions = [
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   areaToggleActive: {
     backgroundColor: "#f0f9ff",
-    borderColor: "#2563eb",
+    borderColor: "#15438e",
   },
   areaTabsContainer: {
     flexDirection: "row",
@@ -159,8 +159,8 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   areaTabActive: {
-    backgroundColor: "#2563eb",
-    shadowColor: "#2563eb",
+    backgroundColor: "#15438e",
+    shadowColor: "#15438e",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -478,7 +478,7 @@ export default function Dimensions({ room }: { room: Room }) {
           <View style={styles.cardHeader}>
             <View className="flex-row items-center">
               <View style={styles.iconContainer}>
-                <Ruler size={24} color="#2563eb" />
+                <Ruler size={24} color="#15438e" />
               </View>
               <View>
                 <Text style={styles.sectionTitle}>Room Dimensions</Text>
@@ -725,12 +725,12 @@ export default function Dimensions({ room }: { room: Room }) {
                             borderColor: equipmentUsed.some(
                               (e) => e.id === item.id
                             )
-                              ? "#2563eb"
+                              ? "#15438e"
                               : "#e2e8f0",
                             backgroundColor: equipmentUsed.some(
                               (e) => e.id === item.id
                             )
-                              ? "#2563eb"
+                              ? "#15438e"
                               : "transparent",
                           },
                         ]}
@@ -889,7 +889,7 @@ export default function Dimensions({ room }: { room: Room }) {
           {saving ? (
             <>
               <View
-                style={[styles.saveIndicator, { backgroundColor: "#2563eb" }]}
+                style={[styles.saveIndicator, { backgroundColor: "#15438e" }]}
               />
               <Text style={styles.saveText}>Saving changes...</Text>
             </>

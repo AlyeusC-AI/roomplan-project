@@ -47,7 +47,7 @@ const SearchIcon = Search as any;
 
 // Predefined color palette - 12 carefully chosen colors
 const COLOR_PALETTE = [
-  "#2563eb" , // Blue
+  "#15438e" , // Blue
   "#EF4444", // Red
   "#10B981", // Green
   "#F59E0B", // Amber
@@ -380,7 +380,7 @@ export default function ImageTagsModal({
     if (isLoading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2563eb" />
+          <ActivityIndicator size="large" color="#15438e" />
           <Text style={styles.loadingText}>Loading tags...</Text>
         </View>
       );
@@ -397,7 +397,7 @@ export default function ImageTagsModal({
             Create tags to organize your images
           </Text>
           <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
-            <PlusIcon size={16} color="#2563eb" />
+            <PlusIcon size={16} color="#15438e" />
             <Text style={styles.addButtonText}>Add Tag</Text>
           </TouchableOpacity>
         </View>
@@ -461,9 +461,9 @@ export default function ImageTagsModal({
                   Create "{searchQuery.trim()}"
                 </Text>
                 {isCreatingTag ? (
-                  <ActivityIndicator size={16} color="#2563eb" />
+                  <ActivityIndicator size={16} color="#15438e" />
                 ) : (
-                  <PlusIcon size={16} color="#2563eb" />
+                  <PlusIcon size={16} color="#15438e" />
                 )}
               </TouchableOpacity>
             </View>
@@ -472,7 +472,7 @@ export default function ImageTagsModal({
 
         {!searchQuery.trim() && (
           <TouchableOpacity style={styles.addNewButton} onPress={openAddModal}>
-            <PlusIcon size={16} color="#2563eb" />
+            <PlusIcon size={16} color="#15438e" />
             <Text style={styles.addNewButtonText}>Add New Tag</Text>
           </TouchableOpacity>
         )}
@@ -501,7 +501,7 @@ export default function ImageTagsModal({
                 <XIcon size={24} color="#64748b" />
               </TouchableOpacity>
               <View style={styles.modalHeaderContent}>
-                {/* <TagIcon size={24} color="#2563eb" /> */}
+                {/* <TagIcon size={24} color="#15438e" /> */}
                 <Text style={styles.modalTitle}>
                   {/* Manage {type === "PROJECT" ? "Project" : "Image"} Tags */}
                   Tags
@@ -810,14 +810,14 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#2563eb",
+    borderColor: "#15438e",
     borderStyle: "dashed",
     marginTop: 16,
     gap: 8,
   },
   addNewButtonText: {
     fontSize: 14,
-    color: "#2563eb",
+    color: "#15438e",
     fontWeight: "500",
   },
   addButton: {
@@ -826,7 +826,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 12,
     borderRadius: 8,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     marginTop: 16,
     gap: 8,
   },
@@ -859,7 +859,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
   },
   confirmButtonDisabled: {
     opacity: 0.5,
@@ -1010,7 +1010,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
   },
   nestedSaveButtonText: {
     color: "#fff",
@@ -1085,14 +1085,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#2563eb",
+    borderColor: "#15438e",
     borderStyle: "dashed",
     backgroundColor: "#f0f9ff",
     gap: 8,
   },
   createTagOptionText: {
     fontSize: 14,
-    color: "#2563eb",
+    color: "#15438e",
     flex: 1,
     fontStyle: "italic",
   },

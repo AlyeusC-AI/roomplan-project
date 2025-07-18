@@ -356,7 +356,7 @@ export default function ProjectImageSelector({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerContent}>
-              <ImageIconComponent size={24} color="#2563eb" />
+              <ImageIconComponent size={24} color="#15438e" />
               <Text style={styles.headerTitle}>
                 Select Project Images{" "}
                 {selectedCount > 0 && `(${selectedCount})`}
@@ -477,7 +477,7 @@ export default function ProjectImageSelector({
           <View style={styles.imagesContainer}>
             {isLoading ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2563eb" />
+                <ActivityIndicator size="large" color="#15438e" />
                 <Text style={styles.loadingText}>Loading images...</Text>
               </View>
             ) : filteredImages.length === 0 ? (
@@ -577,7 +577,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   filterTabActive: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
   },
   filterTabText: {
     fontSize: 14,
@@ -652,8 +652,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   filterChipActive: {
-    backgroundColor: "#2563eb",
-    borderColor: "#2563eb",
+    backgroundColor: "#15438e",
+    borderColor: "#15438e",
   },
   filterChipText: {
     fontSize: 14,
@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
   },
   sendButtonText: {
     fontSize: 14,
@@ -741,7 +741,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   imageItemSelected: {
-    borderColor: "#2563eb",
+    borderColor: "#15438e",
     borderWidth: 2,
   },
   imageThumbnail: {
@@ -759,7 +759,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     justifyContent: "center",
     alignItems: "center",
   },

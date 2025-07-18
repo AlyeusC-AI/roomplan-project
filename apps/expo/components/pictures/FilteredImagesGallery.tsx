@@ -778,7 +778,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   filterTabActive: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
   },
   filterTabText: {
     fontSize: 14,
@@ -853,8 +853,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   filterChipActive: {
-    backgroundColor: "#2563eb",
-    borderColor: "#2563eb",
+    backgroundColor: "#15438e",
+    borderColor: "#15438e",
   },
   filterChipText: {
     fontSize: 14,
@@ -959,8 +959,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   selectCircleActive: {
-    backgroundColor: "#2563eb",
-    borderColor: "#2563eb",
+    backgroundColor: "#15438e",
+    borderColor: "#15438e",
   },
   imageCountText: {
     fontSize: 13,
@@ -1007,7 +1007,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    // backgroundColor: "#2563eb" ,
+    // backgroundColor: "#15438e" ,
     backgroundColor: "white",
     justifyContent: "center",
     alignItems: "center",
@@ -1027,7 +1027,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderWidth: 3,
-    borderColor: "#2563eb",
+    borderColor: "#15438e",
     borderRadius: 4,
   },
   tagXIcon: {
