@@ -31,6 +31,7 @@ import {
   DocumentType, // <-- add this
   useGetChambers, // <-- add this
   useSearchImages, // <-- add this
+  useGetRoomReadings, // <-- add this
 } from "@service-geek/api-client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,12 @@ import { TextInput, Image } from "react-native";
 import { AlertTriangle } from "lucide-react-native";
 import ClaimSummaryEditor from "@/components/project/ClaimSummaryEditor";
 import ProjectCoverModal from "@/components/project/ProjectCoverModal";
+// Import ImagesTab for full-screen modal
+import ImagesTab from "../rooms/[roomId]/ImagesTab";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import FabMenu from "../rooms/[roomId]/FabMenu";
+// Import ReadingModal component
+import ReadingModal from "@/components/project/ReadingModal";
 
 // Type assertions for Lucide icons
 const XIcon = X as any;
@@ -136,6 +143,12 @@ export default function CopilotScreen() {
 
   // Add state to control showing room tasks
   const [showRoomTasks, setShowRoomTasks] = useState(false);
+  const { top } = useSafeAreaInsets();
+
+  // Add state for ImagesTab modal
+  const [showImagesTabModal, setShowImagesTabModal] = useState(false);
+  // Add state for reading modal
+  const [showReadingModal, setShowReadingModal] = useState(false);
 
   // Memo: current room object
   const currentRoom = useMemo(
@@ -156,6 +169,9 @@ export default function CopilotScreen() {
     },
     { page: 1, limit: 100 }
   );
+
+  // Add: fetch readings for the current room
+  const { data: roomReadings } = useGetRoomReadings(currentRoom?.id || "");
 
   // Get current room data with copilot progress
   const { data: roomData } = useGetRoom(currentRoom?.id || "");
@@ -260,39 +276,38 @@ export default function CopilotScreen() {
             ...task,
             onPress:
               task.label === "Take 4 photos"
-                ? () => {
-                    // Navigate to pictures screen
-                    router.push({
-                      pathname: "../pictures",
-                      params: { projectId },
-                    });
-                  }
-                : undefined,
+                ? () => setShowImagesTabModal(true)
+                : task.label === "Enter Atmospheric Reading"
+                  ? () => setShowReadingModal(true)
+                  : undefined,
           })
         )
       );
     } else {
       // Check if room has 4 photos
       const hasFourPhotos = (roomImages?.data?.length || 0) >= 4;
+      // Check if room has any readings
+      const hasReadings = (roomReadings?.data?.length || 0) > 0;
 
       setRoomTasks(
         WATER_ROOM_TASKS.map((label) => ({
           label,
-          done: label === "Take 4 photos" ? hasFourPhotos : false,
+          done:
+            label === "Take 4 photos"
+              ? hasFourPhotos
+              : label === "Enter Atmospheric Reading"
+                ? hasReadings
+                : false,
           onPress:
             label === "Take 4 photos"
-              ? () => {
-                  // Navigate to pictures screen
-                  router.push({
-                    pathname: "../pictures",
-                    params: { projectId },
-                  });
-                }
-              : undefined,
+              ? () => setShowImagesTabModal(true)
+              : label === "Enter Atmospheric Reading"
+                ? () => setShowReadingModal(true)
+                : undefined,
         }))
       );
     }
-  }, [roomData, roomImages, projectId, router]);
+  }, [roomData, roomImages, roomReadings, projectId, router]);
 
   useEffect(() => {
     // Handle different possible project data structures
@@ -364,7 +379,12 @@ export default function CopilotScreen() {
         WATER_ROOM_TASKS.map((label) => ({
           label,
           done: false,
-          onPress: undefined,
+          onPress:
+            label === "Take 4 photos"
+              ? () => setShowImagesTabModal(true)
+              : label === "Enter Atmospheric Reading"
+                ? () => setShowReadingModal(true)
+                : undefined,
         }))
       );
     }
@@ -703,6 +723,66 @@ export default function CopilotScreen() {
       <ProjectCoverModal
         visible={showMainImageModal}
         onClose={() => setShowMainImageModal(false)}
+        projectId={projectId}
+      />
+      {/* Full-screen modal for ImagesTab */}
+      <Modal
+        visible={showImagesTabModal}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setShowImagesTabModal(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: "#fff", paddingTop: top }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              padding: 16,
+              backgroundColor: "#F8FAFC",
+              borderBottomWidth: 1,
+              borderBottomColor: "#e5e7eb",
+            }}
+          >
+            <TouchableOpacity onPress={() => setShowImagesTabModal(false)}>
+              <XIcon size={28} />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 18, fontWeight: "bold", marginLeft: 16 }}>
+              {currentRoom?.name} Photos
+            </Text>
+          </View>
+          <ImagesTab
+            projectId={projectId}
+            roomId={currentRoom?.id || ""}
+            room={currentRoom}
+            onTakePhoto={() => {
+              router.push({
+                pathname: "../camera",
+                params: { projectId, roomId: currentRoom?.id || "" },
+              });
+              setShowImagesTabModal(false);
+            }}
+          />
+          <FabMenu
+            projectId={projectId}
+            roomId={currentRoom?.id || ""}
+            noNote={true}
+            noReading={true}
+            onTakePhoto={() => {
+              router.push({
+                pathname: "../camera",
+                params: { projectId, roomId: currentRoom?.id || "" },
+              });
+              setShowImagesTabModal(false);
+            }}
+          />
+        </View>
+      </Modal>
+
+      {/* Reading Modal Component */}
+      <ReadingModal
+        visible={showReadingModal}
+        onClose={() => setShowReadingModal(false)}
+        room={currentRoom}
         projectId={projectId}
       />
     </>

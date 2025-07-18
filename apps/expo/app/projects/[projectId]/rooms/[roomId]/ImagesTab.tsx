@@ -23,11 +23,16 @@ import {
   ImagePlus,
   Wifi,
   WifiOff,
+  CameraIcon,
 } from "lucide-react-native";
 import { Text } from "@/components/ui/text";
 import { toast } from "sonner-native";
 import { useRouter } from "expo-router";
-import { pickMultipleImages, STORAGE_BUCKETS } from "@/lib/utils/imageModule";
+import {
+  pickMultipleImages,
+  STORAGE_BUCKETS,
+  takePhoto,
+} from "@/lib/utils/imageModule";
 import { useOfflineUploadsStore } from "@/lib/state/offline-uploads";
 import { useNetworkStatus } from "@/lib/providers/QueryProvider";
 import dayjs from "dayjs";
@@ -50,10 +55,12 @@ export default function ImagesTab({
   projectId,
   roomId,
   room,
+  onTakePhoto,
 }: {
   projectId: string;
   roomId: string;
   room: any;
+  onTakePhoto?: () => void;
 }) {
   // Filter state
   const [selectedRoomFilter, setSelectedRoomFilter] = useState<string | "all">(
@@ -120,11 +127,16 @@ export default function ImagesTab({
   // Get media summary and latest date
   const { imageCount, videoCount } = countMedia(images);
   let summary = [];
-  if (imageCount > 0) summary.push(`${imageCount} photo${imageCount > 1 ? 's' : ''}`);
-  if (videoCount > 0) summary.push(`${videoCount} video${videoCount > 1 ? 's' : ''}`);
+  if (imageCount > 0)
+    summary.push(`${imageCount} photo${imageCount > 1 ? "s" : ""}`);
+  if (videoCount > 0)
+    summary.push(`${videoCount} video${videoCount > 1 ? "s" : ""}`);
   const mediaSummary = summary.length ? summary.join(", ") : "No media";
   // Find latest date
-  const latestDate = images.length > 0 ? dayjs(images[0].createdAt).format("ddd MMM D, YYYY") : "";
+  const latestDate =
+    images.length > 0
+      ? dayjs(images[0].createdAt).format("ddd MMM D, YYYY")
+      : "";
 
   // Selection mode handlers
   const handleSelectionChange = (selectedKeys: string[]) => {
@@ -305,6 +317,17 @@ export default function ImagesTab({
     }
   };
 
+  const handleTakePhoto = () => {
+    if (onTakePhoto) {
+      onTakePhoto();
+    } else {
+      router.push({
+        pathname: "../camera",
+        params: { projectId, roomId },
+      });
+    }
+  };
+
   if (!images.length) {
     return (
       <View style={styles.emptyContainer}>
@@ -332,6 +355,17 @@ export default function ImagesTab({
               )}
               <Text style={styles.uploadButtonText}>Add Images</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.uploadButton,
+                isUploading && styles.uploadButtonDisabled,
+              ]}
+              onPress={handleTakePhoto}
+              disabled={isUploading}
+            >
+              <CameraIcon size={20} color="#fff" />
+              <Text style={styles.uploadButtonText}>Take Photo</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -348,7 +382,16 @@ export default function ImagesTab({
             <View>
               <Text style={styles.headerTitle}>{mediaSummary}</Text>
               {latestDate ? (
-                <Text style={{ fontSize: 14, color: '#64748b', marginTop: 2, textAlign: 'center' }}>{latestDate}</Text>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: "#64748b",
+                    marginTop: 2,
+                    textAlign: "center",
+                  }}
+                >
+                  {latestDate}
+                </Text>
               ) : null}
             </View>
             {isOffline && (
@@ -593,7 +636,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     // backgroundColor: "#f1f5f9",
-    backgroundColor: "#fff",  
+    backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#e2e8f0",
     position: "relative",
