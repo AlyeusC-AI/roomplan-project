@@ -341,10 +341,10 @@ export default function ProjectOverview() {
               )}
 
               {/* Info Section */}
-              <View style={{ padding: 18, }}>
+              <View style={{ paddingVertical: 18, }}>
                 
                 {/* Project Name Row: Justify between message and call icons */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, marginBottom: 8 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, paddingHorizontal: 18, marginBottom: 8 }}>
                   {/* Project Name (clickable) */}
                   <TouchableOpacity
                     onPress={() => router.push({
@@ -393,7 +393,7 @@ export default function ProjectOverview() {
                   <Text style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }} numberOfLines={1}>{project.data.clientPhoneNumber}</Text>
                 ) : null} */}
                 {/* Location Row: Justify between location text and icon */}
-                <View style={{paddingVertical: 12, marginBottom: 8 }}>
+                <View style={{paddingVertical: 12, paddingHorizontal: 18, marginBottom: 8 }}>
                 {project?.data?.location && (
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                     <Text style={{ fontSize: 14, flex: 1 }} numberOfLines={1}>
@@ -429,7 +429,7 @@ export default function ProjectOverview() {
                 />
                 </View>
                 
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, borderTopWidth: 1, borderTopColor: '#e0e7ef', paddingTop: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, paddingHorizontal: 18, borderTopWidth: 1, borderTopColor: '#e0e7ef', paddingTop: 12 }}>
                 <Text style={{ fontSize: 18, fontWeight: '700', color: '#1e293b', textAlign: 'center' }} numberOfLines={1}>
                   Customer Information
                 </Text>
