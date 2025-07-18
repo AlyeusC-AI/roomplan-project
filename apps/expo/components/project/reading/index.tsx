@@ -90,9 +90,14 @@ const RoomReading: React.FC<RoomReadingProps> = ({
       <Button
         variant="outline"
         onPress={() => setIsCollapsed((o) => !o)}
-        // className="mb-4"
+       
+        style={{
+          borderWidth: 0,
+          borderRadius: 16,
+          height: 58,
+        }}
       >
-        <View className="flex flex-row justify-between w-full items-center py-1.5">
+        <View className="flex flex-row justify-between w-full items-center py-1.5 gap-4 rounded-2xl">
           {/* Date on the left, readings on the right */}
           <View className="flex flex-row items-center flex-1 justify-between">
             {/* Date (left) */}
@@ -104,15 +109,15 @@ const RoomReading: React.FC<RoomReadingProps> = ({
             {/* Readings (right) */}
             <View className="flex flex-row items-center gap-4 ml-4">
               {/* Temperature */}
-              <View className="flex flex-row items-center gap-1">
-                <ThermometerComponent size={16} color="#ef4444" style={{ marginRight: 2 }} />
+              <View className="flex flex-row items-center">
+                <ThermometerComponent size={16} color="#ef4444"  style={{marginRight: 2}}/>
                 <Text className="text-gray-600 font-medium">
                   {reading.temperature}°F
                 </Text>
               </View>
               {/* Humidity */}
-              <View className="flex flex-row items-center gap-1">
-                <DropletComponent size={16} color="#2563eb" fill="#2563eb" style={{ marginRight: 2 }} />
+              <View className="flex flex-row items-center ">
+                <DropletComponent size={16} color="#2563eb" fill="#2563eb"  style={{marginRight: 2}}/>
                 <Text className="text-gray-600 font-medium">
                   {reading.humidity}%
                 </Text>
@@ -139,7 +144,7 @@ const RoomReading: React.FC<RoomReadingProps> = ({
           {!isCollapsed ? (
             <ChevronDownComponent color="#1d4ed8" size={18} className="mx-2" />
           ) : (
-            <ChevronUpComponent color="#1d4ed8" size={18} className="mx-2" />
+            <ChevronRightComponent color="#1d4ed8" size={18} className="mx-2" />
           )}
         </View>
       </Button>

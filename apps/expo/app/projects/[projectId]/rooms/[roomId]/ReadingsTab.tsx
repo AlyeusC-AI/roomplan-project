@@ -148,6 +148,13 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
     marginBottom: 8,
+    borderRadius: 16,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   emptyContainer: {
     flex: 1,

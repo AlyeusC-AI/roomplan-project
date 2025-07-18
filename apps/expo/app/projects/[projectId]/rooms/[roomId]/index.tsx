@@ -220,8 +220,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
     // marginBottom: 4,
     overflow: "hidden",
-    borderBottomWidth: 3,
-    borderBottomColor: "#f4f4f4",
+    // borderBottomWidth: 3,
+    // borderBottomColor: "#f4f4f4",
   },
   tab: {
     flex: 1,

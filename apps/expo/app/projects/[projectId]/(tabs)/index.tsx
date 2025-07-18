@@ -93,6 +93,7 @@ import StatusBadge from "@/components/project/statusBadge";
 import FloatingButtonOption from "@/components/project/floatingButtonOption";
 import ChambersEmpty from "@/components/project/ChambersEmpty";
 import { Separator } from "@/components/ui/separator";
+import CustomerFace from "@/assets/customerFace.png";
 
 // Utility to add opacity to hex color
 function addOpacityToColor(color: string, opacityHex: string = "33") {
@@ -316,11 +317,14 @@ export default function ProjectOverview() {
           <View className="flex-1" style={{ backgroundColor: "#F8FAFC" }}>
             {/* Enhanced Project Info Card */}
 
-            <Card style={{ marginTop: 16, marginBottom: 16, backgroundColor: '#fff', borderRadius: 16, marginHorizontal: 16, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2, padding: 0, overflow: 'hidden' }}>
+            <Card style={{ marginTop: 16, marginBottom: 16, backgroundColor: '#fff', borderRadius: 16, marginHorizontal: 16, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4, padding: 0, overflow: 'hidden' }}>
               {/* CardTitle at the top: Customer Name */}
               <View style={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 8 }}>
               <CardTitle style={{ fontSize: 22, fontWeight: '700',flexDirection: 'row',marginBottom: 10 }}>
-                  <SmileIcon  size={22} color="#000" style={{ marginRight: 8 }} />
+              <Image
+                      source={CustomerFace}
+                      style={{ width: 22, height: 22, resizeMode: "contain" ,marginRight: 8}}
+                    />
                   <Text style={{ fontSize: 18, fontWeight: '700',  }}>Customer</Text>
                 </CardTitle>
                
@@ -765,7 +769,7 @@ export default function ProjectOverview() {
                 </View>
               </View>
             </Modal>
-            <Card style={{ marginBottom: 10, backgroundColor: 'white', borderRadius: 16, marginHorizontal: 16, shadowColor: 'transparent' }}>
+            <Card style={{ marginBottom: 10, backgroundColor: 'white', borderRadius: 16, marginHorizontal: 16, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 }}>
               <CardHeader style={{ backgroundColor: 'transparent', paddingBottom: 0, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 {/* <CircleDot size={20} color="#2563eb" /> */}
                 <CardTitle style={{ fontSize: 18, fontWeight: '700' }}>Customer Notifications</CardTitle>
