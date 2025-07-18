@@ -8,6 +8,9 @@ import {
   ChevronRight,
   ChevronUp,
   WifiOff,
+  Thermometer,
+  Droplets,
+  Droplet,
 } from "lucide-react-native";
 
 // Type assertions to fix ReactNode compatibility
@@ -16,6 +19,8 @@ const ChevronUpComponent = ChevronUp as any;
 const ChevronRightComponent = ChevronRight as any;
 const ChevronLeftComponent = ChevronLeft as any;
 const WifiOffComponent = WifiOff as any;
+const ThermometerComponent = Thermometer as any;
+const DropletComponent = Droplet as any;
 import { TouchableOpacity, Text, View } from "react-native";
 
 // Import refactored components
@@ -32,6 +37,7 @@ import {
   Wall,
   RoomReading as RoomReadingType,
   useUpdateRoomReading,
+  calculateGPP,
 } from "@service-geek/api-client";
 
 // Define the type for the room reading component props
@@ -86,26 +92,54 @@ const RoomReading: React.FC<RoomReadingProps> = ({
         onPress={() => setIsCollapsed((o) => !o)}
         // className="mb-4"
       >
-        <View className="flex flex-row justify-between w-full items-center px-3 py-1.5">
-          <View className="flex flex-row items-center gap-2">
-            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-              <Text className="text-blue-600 font-medium">
+        <View className="flex flex-row justify-between w-full items-center py-1.5">
+          {/* Date on the left, readings on the right */}
+          <View className="flex flex-row items-center flex-1 justify-between">
+            {/* Date (left) */}
+            <TouchableOpacity onPress={() => setShowDatePicker(true)} className="flex-1">
+              <Text className="text-gray-600 font-medium">
                 {format(date, "MM/dd/yyyy")}
               </Text>
             </TouchableOpacity>
-            {isOffline && (
-              <View className="flex flex-row items-center bg-orange-100 px-2 py-1 rounded-full">
-                <WifiOffComponent size={12} color="#f97316" />
-                <Text className="text-orange-600 text-xs font-medium ml-1">
-                  Offline
+            {/* Readings (right) */}
+            <View className="flex flex-row items-center gap-4 ml-4">
+              {/* Temperature */}
+              <View className="flex flex-row items-center gap-1">
+                <ThermometerComponent size={16} color="#ef4444" style={{ marginRight: 2 }} />
+                <Text className="text-gray-600 font-medium">
+                  {reading.temperature}°F
                 </Text>
               </View>
-            )}
+              {/* Humidity */}
+              <View className="flex flex-row items-center gap-1">
+                <DropletComponent size={16} color="#2563eb" fill="#2563eb" style={{ marginRight: 2 }} />
+                <Text className="text-gray-600 font-medium">
+                  {reading.humidity}%
+                </Text>
+              </View>
+              {/* GPP */}
+              <View className="flex flex-row items-center gap-1">
+                <Text className="text-gray-800 font-bold">
+                  Gpp
+                </Text>
+                <Text className="text-gray-600 font-medium">
+                  {calculateGPP(reading.temperature, reading.humidity)?.toString() || "0.0"}
+                </Text>
+              </View>
+            </View>
           </View>
+          {isOffline && (
+            <View className="flex flex-row items-center bg-orange-100 px-2 py-1 rounded-full ml-2">
+              <WifiOffComponent size={12} color="#f97316" />
+              <Text className="text-orange-600 text-xs font-medium ml-1">
+                Offline
+              </Text>
+            </View>
+          )}
           {!isCollapsed ? (
-            <ChevronDownComponent color="#1d4ed8" size={18} />
+            <ChevronDownComponent color="#1d4ed8" size={18} className="mx-2" />
           ) : (
-            <ChevronUpComponent color="#1d4ed8" size={18} />
+            <ChevronUpComponent color="#1d4ed8" size={18} className="mx-2" />
           )}
         </View>
       </Button>

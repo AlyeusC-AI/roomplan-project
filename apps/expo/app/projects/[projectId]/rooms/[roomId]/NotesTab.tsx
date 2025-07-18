@@ -119,7 +119,7 @@ export default function NotesTab({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "transparent",
   },
   header: {
     flexDirection: "row",
