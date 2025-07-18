@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useState, useEffect } from "react";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { toast } from "sonner-native";
 import { Label } from "@/components/ui/label";
 import {
@@ -23,6 +23,7 @@ import {
   X,
   Droplets,
 } from "lucide-react-native";
+import AddRoomButton from "@/components/project/AddRoomButton";
 
 // Type assertions to fix ReactNode compatibility
 const ChevronLeftIcon = ChevronLeft as any;
@@ -105,7 +106,9 @@ export default function ChamberCreationScreen() {
     chamberId: string;
   }>();
 
-  const { data: rooms } = useGetRooms(projectId || "");
+  const { data: rooms, isLoading: isLoadingRooms } = useGetRooms(
+    projectId || ""
+  );
   const { data: existingChamber } = useGetChamber(chamberIdParam || "");
   const { data: project } = useGetProjectById(projectId || "");
 
@@ -250,8 +253,8 @@ export default function ChamberCreationScreen() {
   const totalRoomsCount = rooms?.length || 0;
 
   return (
-    <View className="flex-1 bg-gradient-to-b from-blue-50 to-white">
-      <StatusBar barStyle="dark-content" backgroundColor="#EBF8FF" />
+    <View className="flex-1" style={{ backgroundColor: "#F8FAFC" }}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="p-6">
           {/* Header Section */}
@@ -337,8 +340,8 @@ export default function ChamberCreationScreen() {
             <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <View className="flex-row items-center justify-between mb-4">
                 <View className="flex-row items-center">
-                  <View className="w-8 h-8 bg-green-100 rounded-full items-center justify-center mr-3">
-                    <Text className="text-green-600 font-bold text-sm">2</Text>
+                  <View className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center mr-3">
+                    <Text className="text-blue-600 font-bold text-sm">2</Text>
                   </View>
                   <Label className="text-lg font-semibold text-gray-900">
                     Select Rooms
@@ -356,21 +359,191 @@ export default function ChamberCreationScreen() {
                 status
               </Text>
 
-              <View style={{ gap: 12 }}>
-                {rooms?.map((room) => {
-                  const isSelected = selectedRooms.some(
-                    (sr) => sr.roomId === room.id
-                  );
-                  const selectedRoom = selectedRooms.find(
-                    (sr) => sr.roomId === room.id
-                  );
+              {/* Add Room Button */}
+              <View className="mb-4">
+                <AddRoomButton
+                  variant="outline"
+                  size="default"
+                  showText={true}
+                  className="w-full"
+                  onPress={() => {
+                    router.push(
+                      `../rooms/create?projectId=${projectId}&projectName=${projectName || ""}`
+                    );
+                  }}
+                />
+              </View>
 
-                  const roomCardStyle = {
+              <View style={{ gap: 12 }}>
+                {isLoadingRooms ? (
+                  <View className="bg-gray-50 rounded-xl p-6 items-center">
+                    <ActivityIndicator color="#3B82F6" size="large" />
+                    <Text className="text-gray-500 text-center mt-2">
+                      Loading rooms...
+                    </Text>
+                  </View>
+                ) : (
+                  rooms?.map((room) => {
+                    const isSelected = selectedRooms.some(
+                      (sr) => sr.roomId === room.id
+                    );
+                    const selectedRoom = selectedRooms.find(
+                      (sr) => sr.roomId === room.id
+                    );
+
+                    const roomCardStyle = {
+                      padding: 16,
+                      borderRadius: 12,
+                      borderWidth: 2,
+                      backgroundColor: isSelected ? "#EBF8FF" : "#F9FAFB",
+                      borderColor: isSelected ? "#93C5FD" : "#E5E7EB",
+                      shadowColor: isSelected ? "#3B82F6" : "#000",
+                      shadowOffset: { width: 0, height: isSelected ? 2 : 0 },
+                      shadowOpacity: isSelected ? 0.1 : 0,
+                      shadowRadius: isSelected ? 4 : 0,
+                      elevation: isSelected ? 3 : 0,
+                    };
+
+                    const checkboxStyle = {
+                      width: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      borderWidth: 2,
+                      alignItems: "center" as const,
+                      justifyContent: "center" as const,
+                      marginRight: 12,
+                      backgroundColor: isSelected ? "#3B82F6" : "transparent",
+                      borderColor: isSelected ? "#3B82F6" : "#D1D5DB",
+                    };
+
+                    const roomNameStyle = {
+                      fontSize: 16,
+                      fontWeight: "500" as const,
+                      color: isSelected ? "#1E3A8A" : "#374151",
+                    };
+
+                    const statusButtonStyle = {
+                      paddingHorizontal: 16,
+                      paddingVertical: 8,
+                      borderRadius: 20,
+                      flexDirection: "row" as const,
+                      alignItems: "center" as const,
+                      backgroundColor: selectedRoom?.isEffected
+                        ? "#FEE2E2"
+                        : "#D1FAE5",
+                      borderWidth: 1,
+                      borderColor: selectedRoom?.isEffected
+                        ? "#FCA5A5"
+                        : "#A7F3D0",
+                    };
+
+                    const statusDotStyle = {
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      marginRight: 8,
+                      backgroundColor: selectedRoom?.isEffected
+                        ? "#EF4444"
+                        : "#10B981",
+                    };
+
+                    const statusTextStyle = {
+                      fontSize: 14,
+                      fontWeight: "500" as const,
+                      color: selectedRoom?.isEffected ? "#B91C1C" : "#047857",
+                    };
+
+                    return (
+                      <TouchableOpacity
+                        key={room.id}
+                        onPress={() => {
+                          if (isSelected) {
+                            setSelectedRooms((prev) =>
+                              prev.filter((sr) => sr.roomId !== room.id)
+                            );
+                          } else {
+                            setSelectedRooms((prev) => [
+                              ...prev,
+                              { roomId: room.id, isEffected: true },
+                            ]);
+                          }
+                        }}
+                        style={roomCardStyle}
+                      >
+                        <View className="flex-row items-center justify-between">
+                          <View className="flex-row items-center flex-1">
+                            <View style={checkboxStyle}>
+                              {isSelected && (
+                                <CheckIcon color="white" size={12} />
+                              )}
+                            </View>
+                            <Text style={roomNameStyle}>{room.name}</Text>
+                          </View>
+
+                          {isSelected && (
+                            <TouchableOpacity
+                              onPress={() => {
+                                setSelectedRooms((prev) =>
+                                  prev.map((sr) =>
+                                    sr.roomId === room.id
+                                      ? { ...sr, isEffected: !sr.isEffected }
+                                      : sr
+                                  )
+                                );
+                              }}
+                              style={statusButtonStyle}
+                            >
+                              <View style={statusDotStyle} />
+                              <Text style={statusTextStyle}>
+                                {selectedRoom?.isEffected
+                                  ? "Affected"
+                                  : "Not Affected"}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
+              </View>
+
+              {!isLoadingRooms && rooms?.length === 0 && (
+                <View className="bg-gray-50 rounded-xl p-6 items-center">
+                  <Text className="text-gray-500 text-center mb-4">
+                    No rooms available for this project
+                  </Text>
+                  <Text className="text-sm text-gray-400 text-center">
+                    Add your first room to get started
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Water Damage Category Section */}
+            <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <View className="flex-row items-center mb-4">
+                <View className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center mr-3">
+                  <Text className="text-blue-600 font-bold text-sm">3</Text>
+                </View>
+                <Label className="text-lg font-semibold text-gray-900">
+                  Water Damage Category
+                </Label>
+              </View>
+              <Text className="text-sm text-gray-600 mb-4">
+                Select the category of water damage for this chamber
+              </Text>
+
+              <View style={{ gap: 12 }}>
+                {WATER_DAMAGE_CATEGORIES.map((category) => {
+                  const isSelected = waterDamageCategory === category.value;
+
+                  const categoryCardStyle = {
                     padding: 16,
                     borderRadius: 12,
                     borderWidth: 2,
                     backgroundColor: isSelected ? "#EBF8FF" : "#F9FAFB",
-                    borderColor: isSelected ? "#93C5FD" : "#E5E7EB",
+                    borderColor: isSelected ? "#3B82F6" : "#E5E7EB",
                     shadowColor: isSelected ? "#3B82F6" : "#000",
                     shadowOffset: { width: 0, height: isSelected ? 2 : 0 },
                     shadowOpacity: isSelected ? 0.1 : 0,
@@ -390,149 +563,6 @@ export default function ChamberCreationScreen() {
                     borderColor: isSelected ? "#3B82F6" : "#D1D5DB",
                   };
 
-                  const roomNameStyle = {
-                    fontSize: 16,
-                    fontWeight: "500" as const,
-                    color: isSelected ? "#1E3A8A" : "#374151",
-                  };
-
-                  const statusButtonStyle = {
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
-                    borderRadius: 20,
-                    flexDirection: "row" as const,
-                    alignItems: "center" as const,
-                    backgroundColor: selectedRoom?.isEffected
-                      ? "#FEE2E2"
-                      : "#D1FAE5",
-                    borderWidth: 1,
-                    borderColor: selectedRoom?.isEffected
-                      ? "#FCA5A5"
-                      : "#A7F3D0",
-                  };
-
-                  const statusDotStyle = {
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
-                    marginRight: 8,
-                    backgroundColor: selectedRoom?.isEffected
-                      ? "#EF4444"
-                      : "#10B981",
-                  };
-
-                  const statusTextStyle = {
-                    fontSize: 14,
-                    fontWeight: "500" as const,
-                    color: selectedRoom?.isEffected ? "#B91C1C" : "#047857",
-                  };
-
-                  return (
-                    <TouchableOpacity
-                      key={room.id}
-                      onPress={() => {
-                        if (isSelected) {
-                          setSelectedRooms((prev) =>
-                            prev.filter((sr) => sr.roomId !== room.id)
-                          );
-                        } else {
-                          setSelectedRooms((prev) => [
-                            ...prev,
-                            { roomId: room.id, isEffected: false },
-                          ]);
-                        }
-                      }}
-                      style={roomCardStyle}
-                    >
-                      <View className="flex-row items-center justify-between">
-                        <View className="flex-row items-center flex-1">
-                          <View style={checkboxStyle}>
-                            {isSelected && (
-                              <CheckIcon color="white" size={12} />
-                            )}
-                          </View>
-                          <Text style={roomNameStyle}>{room.name}</Text>
-                        </View>
-
-                        {isSelected && (
-                          <TouchableOpacity
-                            onPress={() => {
-                              setSelectedRooms((prev) =>
-                                prev.map((sr) =>
-                                  sr.roomId === room.id
-                                    ? { ...sr, isEffected: !sr.isEffected }
-                                    : sr
-                                )
-                              );
-                            }}
-                            style={statusButtonStyle}
-                          >
-                            <View style={statusDotStyle} />
-                            <Text style={statusTextStyle}>
-                              {selectedRoom?.isEffected
-                                ? "Affected"
-                                : "Not Affected"}
-                            </Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              {rooms?.length === 0 && (
-                <View className="bg-gray-50 rounded-xl p-6 items-center">
-                  <Text className="text-gray-500 text-center">
-                    No rooms available for this project
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            {/* Water Damage Category Section */}
-            <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <View className="flex-row items-center mb-4">
-                <View className="w-8 h-8 bg-purple-100 rounded-full items-center justify-center mr-3">
-                  <Text className="text-purple-600 font-bold text-sm">3</Text>
-                </View>
-                <Label className="text-lg font-semibold text-gray-900">
-                  Water Damage Category
-                </Label>
-              </View>
-              <Text className="text-sm text-gray-600 mb-4">
-                Select the category of water damage for this chamber
-              </Text>
-
-              <View style={{ gap: 12 }}>
-                {WATER_DAMAGE_CATEGORIES.map((category) => {
-                  const isSelected = waterDamageCategory === category.value;
-
-                  const categoryCardStyle = {
-                    padding: 16,
-                    borderRadius: 12,
-                    borderWidth: 2,
-                    backgroundColor: isSelected ? "#F3E8FF" : "#F9FAFB",
-                    borderColor: isSelected ? "#A855F7" : "#E5E7EB",
-                    shadowColor: isSelected ? "#A855F7" : "#000",
-                    shadowOffset: { width: 0, height: isSelected ? 2 : 0 },
-                    shadowOpacity: isSelected ? 0.1 : 0,
-                    shadowRadius: isSelected ? 4 : 0,
-                    elevation: isSelected ? 3 : 0,
-                  };
-
-                  const checkboxStyle = {
-                    width: 20,
-                    height: 20,
-                    borderRadius: 10,
-                    borderWidth: 2,
-                    alignItems: "center" as const,
-                    justifyContent: "center" as const,
-                    marginRight: 12,
-                    backgroundColor: isSelected ? "#A855F7" : "transparent",
-                    borderColor: isSelected ? "#A855F7" : "#D1D5DB",
-                  };
-
                   return (
                     <TouchableOpacity
                       key={category.value}
@@ -547,7 +577,7 @@ export default function ChamberCreationScreen() {
                           <View className="flex-row items-center mb-2">
                             <DropletsIcon
                               size={16}
-                              color={isSelected ? "#A855F7" : "#94A3B8"}
+                              color={isSelected ? "#3B82F6" : "#94A3B8"}
                             />
                             <Text className="ml-2 text-base font-semibold text-gray-900">
                               {category.label}
@@ -567,8 +597,8 @@ export default function ChamberCreationScreen() {
             {/* Water Class Section */}
             <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <View className="flex-row items-center mb-4">
-                <View className="w-8 h-8 bg-orange-100 rounded-full items-center justify-center mr-3">
-                  <Text className="text-orange-600 font-bold text-sm">4</Text>
+                <View className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center mr-3">
+                  <Text className="text-blue-600 font-bold text-sm">4</Text>
                 </View>
                 <Label className="text-lg font-semibold text-gray-900">
                   Water Damage Class
@@ -586,9 +616,9 @@ export default function ChamberCreationScreen() {
                     padding: 16,
                     borderRadius: 12,
                     borderWidth: 2,
-                    backgroundColor: isSelected ? "#FEF3C7" : "#F9FAFB",
-                    borderColor: isSelected ? "#F59E0B" : "#E5E7EB",
-                    shadowColor: isSelected ? "#F59E0B" : "#000",
+                    backgroundColor: isSelected ? "#EBF8FF" : "#F9FAFB",
+                    borderColor: isSelected ? "#3B82F6" : "#E5E7EB",
+                    shadowColor: isSelected ? "#3B82F6" : "#000",
                     shadowOffset: { width: 0, height: isSelected ? 2 : 0 },
                     shadowOpacity: isSelected ? 0.1 : 0,
                     shadowRadius: isSelected ? 4 : 0,
@@ -603,8 +633,8 @@ export default function ChamberCreationScreen() {
                     alignItems: "center" as const,
                     justifyContent: "center" as const,
                     marginRight: 12,
-                    backgroundColor: isSelected ? "#F59E0B" : "transparent",
-                    borderColor: isSelected ? "#F59E0B" : "#D1D5DB",
+                    backgroundColor: isSelected ? "#3B82F6" : "transparent",
+                    borderColor: isSelected ? "#3B82F6" : "#D1D5DB",
                   };
 
                   return (
@@ -621,7 +651,7 @@ export default function ChamberCreationScreen() {
                           <View className="flex-row items-center mb-2">
                             <DropletsIcon
                               size={16}
-                              color={isSelected ? "#F59E0B" : "#94A3B8"}
+                              color={isSelected ? "#3B82F6" : "#94A3B8"}
                             />
                             <Text className="ml-2 text-base font-semibold text-gray-900">
                               {waterClassOption.label}

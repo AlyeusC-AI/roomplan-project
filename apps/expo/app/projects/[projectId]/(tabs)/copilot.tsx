@@ -29,6 +29,8 @@ import {
   useUpdateRoom,
   useGetDocuments, // <-- add this
   DocumentType, // <-- add this
+  useGetChambers, // <-- add this
+  useSearchImages, // <-- add this
 } from "@service-geek/api-client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -126,6 +128,9 @@ export default function CopilotScreen() {
   // Add: fetch project documents
   const { data: documents } = useGetDocuments(projectId);
 
+  // Add: fetch project chambers
+  const { data: chambers } = useGetChambers(projectId);
+
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [roomDropdownOpen, setRoomDropdownOpen] = useState(false);
 
@@ -136,6 +141,20 @@ export default function CopilotScreen() {
   const currentRoom = useMemo(
     () => rooms?.find((r) => r.id === selectedRoomId) || rooms?.[0] || null,
     [rooms, selectedRoomId]
+  );
+
+  // Add: fetch images for the current room
+  const { data: roomImages } = useSearchImages(
+    projectId,
+    {
+      type: "ROOM",
+      roomIds: currentRoom ? [currentRoom.id] : [],
+    },
+    {
+      direction: "asc",
+      field: "order",
+    },
+    { page: 1, limit: 100 }
   );
 
   // Get current room data with copilot progress
@@ -209,15 +228,22 @@ export default function CopilotScreen() {
       onPress: () =>
         router.push({ pathname: `../lidar/rooms`, params: { projectId } }),
     },
-    ...WATER_PROJECT_TASKS.slice(5).map((label) => ({
-      label,
-      done: false,
-      onPress: () => {},
-    })),
+    {
+      label: "Make Chambers (select/add rooms)",
+      done: Array.isArray(chambers) && chambers.length > 0,
+      onPress: () =>
+        router.push({ pathname: `../chambers/create`, params: { projectId } }),
+    },
   ];
 
   // Checklist state
-  const [roomTasks, setRoomTasks] = useState(
+  const [roomTasks, setRoomTasks] = useState<
+    {
+      label: string;
+      done: boolean;
+      onPress?: (() => void) | undefined;
+    }[]
+  >(
     WATER_ROOM_TASKS.map((label) => ({
       label,
       done: false,
@@ -232,20 +258,41 @@ export default function CopilotScreen() {
         roomData.copilotProgress.map(
           (task: { label: string; done: boolean }) => ({
             ...task,
-            onPress: undefined,
+            onPress:
+              task.label === "Take 4 photos"
+                ? () => {
+                    // Navigate to pictures screen
+                    router.push({
+                      pathname: "../pictures",
+                      params: { projectId },
+                    });
+                  }
+                : undefined,
           })
         )
       );
     } else {
+      // Check if room has 4 photos
+      const hasFourPhotos = (roomImages?.data?.length || 0) >= 4;
+
       setRoomTasks(
         WATER_ROOM_TASKS.map((label) => ({
           label,
-          done: false,
-          onPress: undefined,
+          done: label === "Take 4 photos" ? hasFourPhotos : false,
+          onPress:
+            label === "Take 4 photos"
+              ? () => {
+                  // Navigate to pictures screen
+                  router.push({
+                    pathname: "../pictures",
+                    params: { projectId },
+                  });
+                }
+              : undefined,
         }))
       );
     }
-  }, [roomData]);
+  }, [roomData, roomImages, projectId, router]);
 
   useEffect(() => {
     // Handle different possible project data structures
@@ -334,34 +381,28 @@ export default function CopilotScreen() {
           alignItems: "center",
           justifyContent: "space-between",
           paddingHorizontal: 16,
-          // paddingTop: 48,
+          paddingTop: 32,
           paddingBottom: 16,
           backgroundColor: "#F8FAFC",
           // color: "white",
         }}
       >
         <TouchableOpacity onPress={() => router.back()}>
-          <XIcon size={28} color="white" />
+          <XIcon size={28} />
         </TouchableOpacity>
         <TouchableOpacity
           style={{ flexDirection: "row", alignItems: "center" }}
           onPress={() => setRoomDropdownOpen((v) => !v)}
         >
-          <Text style={{ fontSize: 20, fontWeight: "bold", color: "white" }}>
+          <Text style={{ fontSize: 20, fontWeight: "bold" }}>
             {currentRoom ? currentRoom.name : "Project Tasks"}
           </Text>
           {rooms &&
             rooms.length > 1 &&
             (roomDropdownOpen ? (
-              <ChevronUpIcon
-                size={20}
-                style={{ marginLeft: 4, color: "white" }}
-              />
+              <ChevronUpIcon size={20} style={{ marginLeft: 4 }} />
             ) : (
-              <ChevronDownIcon
-                size={20}
-                style={{ marginLeft: 4, color: "white" }}
-              />
+              <ChevronDownIcon size={20} style={{ marginLeft: 4 }} />
             ))}
         </TouchableOpacity>
         <TouchableOpacity
@@ -370,7 +411,7 @@ export default function CopilotScreen() {
         >
           <ChevronRightIcon
             size={28}
-            color={rooms && currentRoom && rooms.length > 1 ? "white" : "#ccc"}
+            // color={rooms && currentRoom && rooms.length > 1 ? "white" : "#ccc"}
           />
         </TouchableOpacity>
       </View>
@@ -729,7 +770,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#e5e7eb",
   },
   selectedRoom: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#3B82F6",
   },
   roomOptionText: {
     fontSize: 16,
