@@ -39,18 +39,18 @@ export default function Layout() {
   return (
     <Tabs
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: "#2563eb",
+        tabBarActiveTintColor: "#15438e",
         headerTintColor: "white",
         headerStyle: {
-          backgroundColor: "#2563eb",
+          backgroundColor: "#15438e",
         },
         header: ({ navigation, route, options }) =>
           route.name === "chat" || route.name === "copilot" ? (
-            <SafeAreaView style={{ backgroundColor: "#2563eb" }}>
-              <StatusBar barStyle="light-content" backgroundColor="#2563eb" />
+            <SafeAreaView style={{ backgroundColor: "#15438e" }}>
+              <StatusBar barStyle="light-content" backgroundColor="#15438e" />
             </SafeAreaView>
           ) : (
-            <SafeAreaView style={{ backgroundColor: "#2563eb" }}>
+            <SafeAreaView style={{ backgroundColor: "#15438e" }}>
               <StatusBar barStyle="light-content" backgroundColor="# 2563eb" />
               <View
                 style={{

@@ -96,7 +96,7 @@ export default function OfflineTasksManager({
   const getTaskIcon = (type: OfflineTask["type"]) => {
     switch (type) {
       case "upload":
-        return <UploadComponent size={16} color="#2563eb" />;
+        return <UploadComponent size={16} color="#15438e" />;
       case "reading":
         return <BookOpenComponent size={16} color="#059669" />;
       case "edit":
@@ -117,7 +117,7 @@ export default function OfflineTasksManager({
       case "pending":
         return <ClockComponent size={16} color="#f59e0b" />;
       case "processing":
-        return <PlayComponent size={16} color="#2563eb" />;
+        return <PlayComponent size={16} color="#15438e" />;
       case "completed":
         return <CheckCircleComponent size={16} color="#059669" />;
       case "failed":
@@ -229,7 +229,7 @@ export default function OfflineTasksManager({
             onPress={() => handleExecuteTask(task.id)}
             disabled={isProcessing}
           >
-            <PlayComponent size={14} color="#2563eb" />
+            <PlayComponent size={14} color="#15438e" />
             <Text style={styles.actionButtonText}>Execute</Text>
           </TouchableOpacity>
         )}
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: 12,
-    color: "#2563eb",
+    color: "#15438e",
     fontWeight: "500",
   },
   summary: {
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   executeAllButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
   },
   executeAllText: {
     color: "#fff",

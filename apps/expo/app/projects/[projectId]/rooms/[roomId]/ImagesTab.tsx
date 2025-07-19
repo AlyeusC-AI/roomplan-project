@@ -469,9 +469,9 @@ export default function ImagesTab({
             disabled={isUploading}
           >
             {isUploading ? (
-              <ActivityIndicator size="small" color="#2563eb" />
+              <ActivityIndicator size="small" color="#15438e" />
             ) : (
-              <ImagePlusIcon size={20} color="#2563eb" />
+              <ImagePlusIcon size={20} color="#15438e" />
             )}
           </TouchableOpacity> */}
 
@@ -501,7 +501,7 @@ export default function ImagesTab({
             style={styles.filterButton}
             onPress={() => setShowFilters(!showFilters)}
           >
-            <FilterIcon size={20} color="#2563eb" />
+            <FilterIcon size={20} color="#15438e" />
             {selectedTagFilters.length > 0 && (
               <View style={styles.filterBadge}>
                 <Text style={styles.filterBadgeText}>
@@ -654,7 +654,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 12,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     width: "45%",
   },
   uploadButtonDisabled: {
@@ -703,8 +703,8 @@ const styles = StyleSheet.create({
     borderColor: "#e2e8f0",
   },
   actionButtonActive: {
-    backgroundColor: "#2563eb",
-    borderColor: "#2563eb",
+    backgroundColor: "#15438e",
+    borderColor: "#15438e",
   },
   actionButtonDisabled: {
     opacity: 0.5,

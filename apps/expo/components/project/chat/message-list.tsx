@@ -134,7 +134,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
           <RefreshControl
             refreshing={loading}
             onRefresh={onLoadMore}
-            colors={["#2563eb"]}
+            colors={["#15438e"]}
           />
         }
         showsVerticalScrollIndicator={false}

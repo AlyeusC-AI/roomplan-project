@@ -102,7 +102,7 @@ const ProjectCoverModal: React.FC<ProjectCoverModalProps> = ({
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <View style={styles.modalHeaderContent}>
-              <HomeComponent size={24} color="#2563eb" />
+              <HomeComponent size={24} color="#15438e" />
               <Text style={styles.modalTitle}>Project Cover</Text>
             </View>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     borderRadius: 20,
     paddingHorizontal: 8,
     paddingVertical: 8,

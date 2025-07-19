@@ -189,7 +189,7 @@ export default function CertificatePage() {
   if (!id) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color="#15438e" />
       </View>
     );
   }
@@ -214,7 +214,7 @@ export default function CertificatePage() {
         onMessage={handleWebViewMessage}
         renderLoading={() => (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#2563eb" />
+            <ActivityIndicator size="large" color="#15438e" />
           </View>
         )}
         onError={(syntheticEvent) => {

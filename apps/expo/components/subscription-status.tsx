@@ -33,7 +33,7 @@ export function SubscriptionStatus() {
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; color: string }> = {
       active: { label: "Active", color: "#22c55e" },
-      trialing: { label: "Trial", color: "#2563eb"  },
+      trialing: { label: "Trial", color: "#15438e"  },
       past_due: { label: "Past Due", color: "#ef4444" },
       canceled: { label: "Canceled", color: "#ef4444" },
       never: { label: "No Subscription", color: "#ef4444" },
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalButtonPrimary: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     marginRight: 8,
   },
   modalButtonSecondary: {

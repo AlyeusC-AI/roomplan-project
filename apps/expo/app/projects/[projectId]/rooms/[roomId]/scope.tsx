@@ -72,7 +72,7 @@ const equipmentOptions = [
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   },
   areaToggleActive: {
     backgroundColor: "#f0f9ff",
-    borderColor: "#2563eb",
+    borderColor: "#15438e",
   },
   areaTabsContainer: {
     flexDirection: "row",
@@ -155,8 +155,8 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   areaTabActive: {
-    backgroundColor: "#2563eb",
-    shadowColor: "#2563eb",
+    backgroundColor: "#15438e",
+    shadowColor: "#15438e",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,

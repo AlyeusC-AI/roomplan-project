@@ -90,7 +90,7 @@ const VoiceNoteBars = ({ duration }: { duration: string }) => {
       }}
     >
       {/* Optional: Add a mic icon for context */}
-      {/* <MicIcon size={22} color="#2563eb" style={{ marginRight: 10 }} /> */}
+      {/* <MicIcon size={22} color="#15438e" style={{ marginRight: 10 }} /> */}
 
       <View
         style={{
@@ -108,7 +108,7 @@ const VoiceNoteBars = ({ duration }: { duration: string }) => {
             style={{
               width: 3,
               marginHorizontal: 3,
-              backgroundColor: "#2563eb",
+              backgroundColor: "#15438e",
               borderRadius: 3,
               height: anim.interpolate({
                 inputRange: [0.5, 2],
@@ -122,7 +122,7 @@ const VoiceNoteBars = ({ duration }: { duration: string }) => {
       <Text
         style={{
           fontWeight: "bold",
-          color: "#2563eb",
+          color: "#15438e",
           textAlign: "center",
           minWidth: 40,
         }}
@@ -633,7 +633,7 @@ export function ChatInput({
                       {/* <Text style={styles.attachmentIcon}><ImagesIcon /></Text> */}
                       <Image
                       source={RoomIcon}
-                      style={{ width: 25, height: 25, resizeMode: "contain" ,tintColor: "#2563eb" , marginBottom: 4 }}
+                      style={{ width: 25, height: 25, resizeMode: "contain" ,tintColor: "#15438e" , marginBottom: 4 }}
                     />
                     </TouchableOpacity>
                   )}
@@ -799,11 +799,11 @@ const styles = StyleSheet.create({
     maxHeight: 100,
   },
   inputWrapperFocused: {
-    borderColor: "#2563eb",
+    borderColor: "#15438e",
     backgroundColor: "#ffffff",
   },
   inputWrapperRecording: {
-    borderColor: "#2563eb",
+    borderColor: "#15438e",
     backgroundColor: "#ffffff",
   },
   textInput: {
@@ -813,13 +813,13 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   sendButton: {
-    // backgroundColor: "#2563eb",
+    // backgroundColor: "#15438e",
     // borderRadius: 18,
     width: 36,
     height: 36,
     justifyContent: "center",
     alignItems: "center",
-    // shadowColor: "#2563eb",
+    // shadowColor: "#15438e",
     // shadowOffset: { width: 0, height: 2 },
     // shadowOpacity: 0.2,
     // shadowRadius: 4,
@@ -850,7 +850,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     marginRight: 8,
   },
   recordingIcon: {
@@ -866,7 +866,7 @@ const styles = StyleSheet.create({
   },
   cancelRecordingText: {
     fontSize: 12,
-    color: "#2563eb",
+    color: "#15438e",
     fontWeight: "600",
   },
   backButton: {
@@ -881,7 +881,7 @@ const styles = StyleSheet.create({
   },
   backIcon: {
     fontSize: 16,
-    color: "#2563eb",
+    color: "#15438e",
     fontWeight: "600",
   },
 });

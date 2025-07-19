@@ -78,7 +78,7 @@ export function Slider({
     const percentage = (position.value - min) / (max - min);
     return {
       [vertical ? "height" : "width"]: `${percentage * 100}%`,
-      backgroundColor: "#2563eb",
+      backgroundColor: "#15438e",
     };
   });
 
@@ -103,7 +103,7 @@ export function Slider({
         <View className="absolute w-full h-full">
           <Animated.View
             className="absolute top-1/2 -mt-4 -ml-4 w-8 h-8 rounded-full shadow"
-            style={[{ backgroundColor: "#2563eb" }, thumbStyle]}
+            style={[{ backgroundColor: "#15438e" }, thumbStyle]}
           />
         </View>
       </View>

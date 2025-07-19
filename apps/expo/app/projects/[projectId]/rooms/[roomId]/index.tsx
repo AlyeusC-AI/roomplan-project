@@ -130,7 +130,7 @@ export default function RoomScreen() {
                 <View style={styles.tabContentColumn}>
                   <Icon
                     size={22}
-                    color={isActive ? "#2563eb" : "#64748b"}
+                    color={isActive ? "#15438e" : "#64748b"}
                     style={{ marginBottom: 2 }}
                   />
                   <Text
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 3,
-    borderBottomColor: "#2563eb",
+    borderBottomColor: "#15438e",
   },
   tabContentRow: {
     flexDirection: "row",
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   activeTabText: {
-    color: "#2563eb",
+    color: "#15438e",
     fontWeight: "700",
   },
   tabContent: {
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#10b981",
   },
   uploadIcon: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
   },
   noteIcon: {
     backgroundColor: "#f59e0b",

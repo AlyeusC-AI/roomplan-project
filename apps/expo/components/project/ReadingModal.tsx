@@ -253,7 +253,7 @@ export default function ReadingModal({
                   >
                     <DropletComponent
                       size={20}
-                      color="#2563eb"
+                      color="#15438e"
                       style={{ marginRight: 8 }}
                     />
                     <Text

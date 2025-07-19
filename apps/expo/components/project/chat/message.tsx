@@ -329,7 +329,7 @@ export function Message({
                             attachment.fileUrl,
                             attachment.fileName
                           ) ? (
-                            <ActivityIndicator size="small" color="#2563eb" />
+                            <ActivityIndicator size="small" color="#15438e" />
                           ) : (
                             <Text style={styles.downloadIcon}>↓</Text>
                           )}
@@ -371,7 +371,7 @@ export function Message({
           {isSent && (
             <>
               <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
-                <Text style={[styles.actionIcon, { color: "#2563eb" }]}>
+                <Text style={[styles.actionIcon, { color: "#15438e" }]}>
                   <PencilIcon size={16} />
                 </Text>
               </TouchableOpacity>
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
   fileIcon: {
     width: 40,
     height: 40,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
   },
   downloadIcon: {
     fontSize: 16,
-    color: "#2563eb",
+    color: "#15438e",
     fontWeight: "600",
   },
   actionButtons: {

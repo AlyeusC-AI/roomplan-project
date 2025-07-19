@@ -371,7 +371,7 @@ export default function ProjectPhotos() {
   if (loading && !rooms?.length) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color="#15438e" />
       </View>
     );
   }
@@ -431,9 +431,9 @@ export default function ProjectPhotos() {
                 disabled={isUploadingMainImage}
               >
                 {isUploadingMainImage ? (
-                  <LoaderComponent size={20} color="#2563eb" />
+                  <LoaderComponent size={20} color="#15438e" />
                 ) : (
-                  <HomeComponent size={20} color="#2563eb" />
+                  <HomeComponent size={20} color="#15438e" />
                 )}
               </TouchableOpacity>
 
@@ -446,11 +446,11 @@ export default function ProjectPhotos() {
                 disabled={isUpdatingAll || !rooms?.length}
               >
                 {isUpdatingAll ? (
-                  <LoaderComponent size={20} color="#2563eb" />
+                  <LoaderComponent size={20} color="#15438e" />
                 ) : (
                   <StarComponent
                     size={20}
-                    color={areAllImagesIncluded ? "#FBBF24" : "#2563eb"}
+                    color={areAllImagesIncluded ? "#FBBF24" : "#15438e"}
                     fill={areAllImagesIncluded ? "#FBBF24" : "transparent"}
                   />
                 )}
@@ -465,7 +465,7 @@ export default function ProjectPhotos() {
               >
                 <ImagePlusComponent
                   size={20}
-                  color={isOffline ? "#f59e0b" : "#2563eb"}
+                  color={isOffline ? "#f59e0b" : "#15438e"}
                 />
               </TouchableOpacity>
             </View>
@@ -475,7 +475,7 @@ export default function ProjectPhotos() {
                 style={styles.filterButton}
                 onPress={handleNavigateToFilteredImages}
               >
-                <FilterComponent size={18} color="#2563eb" />
+                <FilterComponent size={18} color="#15438e" />
               </TouchableOpacity>
             </View>
           </View>
@@ -563,7 +563,7 @@ export default function ProjectPhotos() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
-                <Building2Component size={24} color="#2563eb" />
+                <Building2Component size={24} color="#15438e" />
                 <Text style={styles.modalTitle}>Select Room</Text>
               </View>
               <TouchableOpacity
@@ -721,7 +721,7 @@ const styles = StyleSheet.create({
     borderColor: "#f59e0b",
   },
   actionButtonActive: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
   },
   roomsContainer: {
     padding: 12,
@@ -783,7 +783,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -897,12 +897,12 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   cameraButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     width: "auto",
     paddingHorizontal: 8,
   },
   libraryButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     width: "auto",
     paddingHorizontal: 8,
   },
@@ -941,7 +941,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#e5e7eb",
   },
   selectedRoom: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
   },
   roomOptionText: {
     fontSize: 16,
@@ -962,7 +962,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 90,
     right: 20,
-    backgroundColor: "#2563eb",
+    backgroundColor: "#15438e",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -1033,7 +1033,7 @@ const styles = StyleSheet.create({
   mainImagePlaceholderText: {
     marginTop: 8,
     fontSize: 16,
-    color: "#2563eb",
+    color: "#15438e",
     fontWeight: "500",
   },
 });

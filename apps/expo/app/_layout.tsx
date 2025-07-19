@@ -66,8 +66,8 @@ export default function AppRoot() {
         200: "#bfdbfe",
         300: "#93c5fd",
         400: "#60a5fa",
-        500: "#2563eb",
-        600: "#2563eb",
+        500: "#15438e",
+        600: "#15438e",
         700: "#1d4ed8",
         800: "#1e40af",
         900: "#1e3a8a",
@@ -143,7 +143,7 @@ export default function AppRoot() {
               <Stack
                 screenOptions={{
                   headerTintColor: "#FFFF",
-                  headerStyle: { backgroundColor: "#2563eb" },
+                  headerStyle: { backgroundColor: "#15438e" },
                 }}
               >
                 <Stack.Screen
