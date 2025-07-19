@@ -18,6 +18,7 @@ export * from "./types/estimate";
 export * from "./types/invoice";
 export * from "./types/chat";
 export * from "./types/chamber";
+export * from "./types/material";
 // Hooks
 export * from "./hooks/useBilling";
 export * from "./hooks/useOrganization";
@@ -37,6 +38,7 @@ export * from "./hooks/useEstimate";
 export * from "./hooks/useInvoice";
 export * from "./hooks/useChat";
 export * from "./hooks/useChamber";
+export * from "./hooks/useMaterials";
 // Services
 export * from "./services/auth";
 export * from "./services/organization";
@@ -59,3 +61,4 @@ export * from "./services/invoice";
 export * from "./services/space";
 export * from "./services/chat";
 export * from "./services/chamber";
+export * from "./services/materials.service";

@@ -23,7 +23,8 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
-    "migrate:supabase": "ts-node prisma/migrations/migrate-from-supabase.ts"
+    "migrate:supabase": "ts-node prisma/migrations/migrate-from-supabase.ts",
+    "seed:materials": "ts-node prisma/seed-materials.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.802.0",

@@ -761,6 +761,7 @@ export default function CopilotScreen() {
               });
               setShowImagesTabModal(false);
             }}
+            divideByDate={true}
           />
           <FabMenu
             projectId={projectId}

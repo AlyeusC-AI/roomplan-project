@@ -23,7 +23,7 @@ import {
   ImagePlus,
   Wifi,
   WifiOff,
-  CameraIcon,
+  Camera,
 } from "lucide-react-native";
 import { Text } from "@/components/ui/text";
 import { toast } from "sonner-native";
@@ -44,6 +44,7 @@ const XIcon = X as any;
 const ImagePlusIcon = ImagePlus as any;
 const WifiIcon = Wifi as any;
 const WifiOffIcon = WifiOff as any;
+const CameraIcon = Camera as any;
 
 // Import the enhanced components
 import FilteredImagesGallery from "@/components/pictures/FilteredImagesGallery";
@@ -56,11 +57,13 @@ export default function ImagesTab({
   roomId,
   room,
   onTakePhoto,
+  divideByDate = false,
 }: {
   projectId: string;
   roomId: string;
   room: any;
   onTakePhoto?: () => void;
+  divideByDate?: boolean;
 }) {
   // Filter state
   const [selectedRoomFilter, setSelectedRoomFilter] = useState<string | "all">(
@@ -68,6 +71,9 @@ export default function ImagesTab({
   );
   const [selectedTagFilters, setSelectedTagFilters] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Date filter state
+  const [dateFilter, setDateFilter] = useState<"today" | "all">("today");
 
   // Selection mode state
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -109,6 +115,19 @@ export default function ImagesTab({
     [imagesData, roomId]
   );
 
+  // Filter images by date when divideByDate is true
+  const filteredImages = useMemo(() => {
+    if (!divideByDate || dateFilter === "all") {
+      return images;
+    }
+
+    const today = dayjs().startOf("day");
+    return images.filter((img) => {
+      const imageDate = dayjs(img.createdAt).startOf("day");
+      return imageDate.isSame(today);
+    });
+  }, [images, divideByDate, dateFilter]);
+
   // Utility to count images and videos by file extension
   function countMedia(items: any[]) {
     let imageCount = 0;
@@ -124,8 +143,8 @@ export default function ImagesTab({
     return { imageCount, videoCount };
   }
 
-  // Get media summary and latest date
-  const { imageCount, videoCount } = countMedia(images);
+  // Get media summary and latest date for filtered images
+  const { imageCount, videoCount } = countMedia(filteredImages);
   let summary = [];
   if (imageCount > 0)
     summary.push(`${imageCount} photo${imageCount > 1 ? "s" : ""}`);
@@ -134,8 +153,8 @@ export default function ImagesTab({
   const mediaSummary = summary.length ? summary.join(", ") : "No media";
   // Find latest date
   const latestDate =
-    images.length > 0
-      ? dayjs(images[0].createdAt).format("ddd MMM D, YYYY")
+    filteredImages.length > 0
+      ? dayjs(filteredImages[0].createdAt).format("ddd MMM D, YYYY")
       : "";
 
   // Selection mode handlers
@@ -374,6 +393,44 @@ export default function ImagesTab({
 
   return (
     <View style={styles.container}>
+      {/* Date Filter Tabs - only show when divideByDate is true */}
+      {divideByDate && (
+        <View style={styles.dateFilterContainer}>
+          <TouchableOpacity
+            style={[
+              styles.dateFilterTab,
+              dateFilter === "today" && styles.dateFilterTabActive,
+            ]}
+            onPress={() => setDateFilter("today")}
+          >
+            <Text
+              style={[
+                styles.dateFilterText,
+                dateFilter === "today" && styles.dateFilterTextActive,
+              ]}
+            >
+              Today
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.dateFilterTab,
+              dateFilter === "all" && styles.dateFilterTabActive,
+            ]}
+            onPress={() => setDateFilter("all")}
+          >
+            <Text
+              style={[
+                styles.dateFilterText,
+                dateFilter === "all" && styles.dateFilterTextActive,
+              ]}
+            >
+              All Photos
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Header with selection and filter controls */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -478,7 +535,7 @@ export default function ImagesTab({
 
       {/* Images Gallery with filtering and selection */}
       <FilteredImagesGallery
-        images={images}
+        images={filteredImages}
         selectable={isSelectionMode}
         onSelectionChange={handleSelectionChange}
         initialSelectedKeys={selectedPhotos.map((p) => p.id)}
@@ -523,6 +580,37 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "transparent",
     // position: "relative",
+  },
+  dateFilterContainer: {
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "#f8fafc",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
+  },
+  dateFilterTab: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginHorizontal: 4,
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    alignItems: "center",
+  },
+  dateFilterTabActive: {
+    backgroundColor: "#2563eb",
+    borderColor: "#2563eb",
+  },
+  dateFilterText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#64748b",
+  },
+  dateFilterTextActive: {
+    color: "#fff",
   },
   emptyContainer: {
     flex: 1,

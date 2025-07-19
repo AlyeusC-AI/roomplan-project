@@ -79,6 +79,7 @@ model Organization {
   invoiceItems    InvoiceItem[]
   Tag             Tag[]
   chats           Chat[]
+  Material        Material[]
 }
 
 enum MemberStatus {
@@ -202,12 +203,12 @@ model Project {
   roofSpecs       String?
   rcvValue        String?
   actualValue     String?
-  status          ProjectStatus? @relation(fields: [statusId], references: [id])
+  status          ProjectStatus?    @relation(fields: [statusId], references: [id])
   statusId        String?
   mainImage       String?
   policyNumber    String?
   dateOfLoss      DateTime?
-  organization    Organization   @relation(fields: [organizationId], references: [id])
+  organization    Organization      @relation(fields: [organizationId], references: [id])
   organizationId  String
   rooms           Room[]
   images          Image[]
@@ -220,6 +221,7 @@ model Project {
   chat            Chat?
   copilotProgress Json? // Stores project-level checklist progress
   chambers        Chamber[]
+  ProjectMaterial ProjectMaterial[]
 }
 
 model Room {
@@ -345,15 +347,17 @@ model GenericRoomReading {
 }
 
 model WallReading {
-  id            String       @id @default(uuid())
-  wallId        String
-  wall          Wall         @relation(fields: [wallId], references: [id], onDelete: Cascade)
-  reading       Int
-  images        String[]
-  roomReading   RoomReading? @relation(fields: [roomReadingId], references: [id])
-  roomReadingId String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id                String           @id @default(uuid())
+  wallId            String
+  wall              Wall             @relation(fields: [wallId], references: [id], onDelete: Cascade)
+  reading           Int
+  images            String[]
+  roomReading       RoomReading?     @relation(fields: [roomReadingId], references: [id])
+  roomReadingId     String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  ProjectMaterial   ProjectMaterial? @relation(fields: [projectMaterialId], references: [id])
+  projectMaterialId String?
 
   @@unique([wallId, roomReadingId])
 }
@@ -854,4 +858,50 @@ model Notification {
   @@index([type])
   @@index([isSeen])
   @@index([createdAt])
+}
+
+model Material {
+  id               String            @id @default(uuid())
+  name             String
+  description      String?
+  image            String?
+  variance         Float
+  isDefault        Boolean           @default(false) // Indicates if this is a default material available to all orgs
+  organizationId   String? // null for default materials, organization ID for custom materials
+  organization     Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectMaterials ProjectMaterial[] // Link to project-specific configurations
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@unique([name, organizationId]) // Ensure unique names within an organization
+  @@index([organizationId])
+}
+
+model ProjectMaterial {
+  id         String   @id @default(uuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  materialId String
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  // Override default variance for this project
+  customVariance Float?
+
+  // Moisture content and dry goal data
+  initialMoisture Float? // Initial moisture content (%)
+  currentMoisture Float? // Current moisture content (%)
+  dryGoal         Float? // Target dry goal (%)
+
+  // Dry standard compliance
+  isDryStandardCompliant Boolean @default(false)
+
+  // Link to wall readings for moisture points
+  wallReadings WallReading[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, materialId]) // One material config per project
+  @@index([projectId])
+  @@index([materialId])
 }
