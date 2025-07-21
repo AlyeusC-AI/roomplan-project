@@ -1055,7 +1055,7 @@ export default function ProjectOverview() {
             <View className="px-4 ">
               {/* Action buttons with text below icons for better responsiveness */}
 
-              <AssigneeSelect />
+              {/* <AssigneeSelect /> */}
 
               {/* Offline Tasks Manager */}
               <OfflineTasksManager projectId={projectId} />
