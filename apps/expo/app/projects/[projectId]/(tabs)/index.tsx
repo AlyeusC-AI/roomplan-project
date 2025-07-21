@@ -246,18 +246,12 @@ export default function ProjectOverview() {
   };
 
   const navigationItems = [
-    // {
-    //   path: "./details",
-    //   params: { activeTab: "insurance" },
-    //   Icon: Cog,
-    //   title: "Insurance Adjuster",
-    //   description: "Manage insurance details",
-    // },
     {
       path: "./chat",
       Icon: MessageCircle,
       title: "Chat",
       description: "Project conversation",
+      color: "#2563eb", // blue
     },
     {
       path: "./documents",
@@ -268,49 +262,27 @@ export default function ProjectOverview() {
       ),
       title: "Files",
       description: "Manage project files",
+      color: "#059669", // green
     },
     {
       path: "./scope",
       Icon: Ruler,
       title: "Scope ",
       description: "Manage scope of work",
+      color: "#f59e42", // orange
     },
     {
       path: "./forms",
       Icon: FileText,
       title: "Forms",
       description: "Manage project forms",
+      color: "#a21caf", // purple
     },
-
-    // {
-    //   path: "./lidar/rooms",
-    //   Icon: Video,
-    //   title: "Lidar Scan",
-    //   description: "View 3D scans",
-    // },
-
-    // {
-    //   path: "./pictures",
-    //   Icon: Camera,
-    //   title: "Photos",
-    //   description: "Project documentation",
-    // },
-    // {
-    //   path: "./readings",
-    //   Icon: Book,
-    //   title: "Readings",
-    //   description: "View measurements",
-    // },
-    // {
-    //   path: "./notes",
-    //   Icon: StickyNote,
-    //   title: "Notes",
-    //   description: "Project notes",
-    // },
     {
       Icon: Files,
       title: "Report",
       description: "Generate project report",
+      color: "#e11d48", // red
       onPress: () =>
         Linking.openURL(
           `${process.env.EXPO_PUBLIC_BASE_URL}/projects/${projectId}/report`
@@ -321,6 +293,7 @@ export default function ProjectOverview() {
       Icon: CheckCircle as any,
       title: "Dry Standard",
       description: "Manage dry standard goals",
+      color: "#0ea5e9", // sky blue
     },
   ];
 
@@ -406,6 +379,185 @@ export default function ProjectOverview() {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View>
+            <Card style={styles.notificationsCard}>
+              <CardHeader style={styles.notificationsCardHeader}>
+                <CircleDot
+                  size={20}
+                  style={{ marginBottom: 8 }}
+                  color={Colors.light.text}
+                />
+                <CardTitle style={styles.notificationsCardTitle}>
+                  Customer Notifications
+                </CardTitle>
+              </CardHeader>
+              <Separator className="my-2" />
+              <View style={styles.notificationsButtonRow}>
+                {/* ARRIVAL BUTTON */}
+                <Animated.View
+                  style={[
+                    styles.notificationButton,
+                    { transform: [{ scale: arrivalScale }] },
+                  ]}
+                >
+                  <TouchableOpacity
+                    style={{
+                      // backgroundColor: "#f3f4f6", // light gray
+                      borderRadius: 12,
+                      overflow: "hidden",
+                      shadowColor: "#000",
+                      shadowOpacity: 0.05,
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowRadius: 2,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    onPress={handleArrivalPress}
+                    activeOpacity={0.7}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingVertical: 14,
+                        paddingHorizontal: 4,
+                      }}
+                    >
+                      <View
+                        style={{
+                          backgroundColor: "#f3f4f6",
+                          borderRadius: 999,
+                          padding: 8,
+                          marginBottom: 6,
+                        }}
+                      >
+                        <TruckIcon size={30} color={Colors.light.primary} />
+                      </View>
+                      <Text
+                        style={{
+                          color: Colors.light.primary,
+                          fontWeight: "600",
+                          fontSize: 12,
+                        }}
+                      >
+                        On My Way
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </Animated.View>
+
+                {/* START BUTTON */}
+                <Animated.View
+                  style={[
+                    styles.notificationButton,
+                    { transform: [{ scale: startScale }] },
+                  ]}
+                >
+                  <TouchableOpacity
+                    style={{
+                      // backgroundColor: "#f3f4f6",
+                      borderRadius: 12,
+                      overflow: "hidden",
+                      shadowColor: "#000",
+                      shadowOpacity: 0.05,
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowRadius: 2,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    onPress={handleStartPress}
+                    activeOpacity={0.7}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingVertical: 14,
+                        paddingHorizontal: 4,
+                      }}
+                    >
+                      <View
+                        style={{
+                          backgroundColor: "#f3f4f6",
+                          borderRadius: 999,
+                          padding: 8,
+                          marginBottom: 6,
+                        }}
+                      >
+                        <TimerIcon size={30} color={Colors.light.primary} />
+                      </View>
+                      <Text
+                        style={{
+                          color: Colors.light.primary,
+                          fontWeight: "600",
+                          fontSize: 12,
+                        }}
+                      >
+                        Start
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </Animated.View>
+
+                {/* COMPLETE BUTTON */}
+                <Animated.View
+                  style={[
+                    styles.notificationButton,
+                    { transform: [{ scale: completeScale }] },
+                  ]}
+                >
+                  <TouchableOpacity
+                    style={{
+                      // backgroundColor: "#f3f4f6",
+                      borderRadius: 12,
+                      overflow: "hidden",
+                      shadowColor: "#000",
+                      shadowOpacity: 0.05,
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowRadius: 2,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    onPress={handleCompletePress}
+                    activeOpacity={0.7}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingVertical: 14,
+                        paddingHorizontal: 4,
+                      }}
+                    >
+                      <View
+                        style={{
+                          backgroundColor: "#f3f4f6",
+                          borderRadius: 999,
+                          padding: 8,
+                          marginBottom: 6,
+                        }}
+                      >
+                        <CheckCircleIcon
+                          size={30}
+                          color={Colors.light.primary}
+                        />
+                      </View>
+                      <Text
+                        style={{
+                          color: Colors.light.primary,
+                          fontWeight: "600",
+                          fontSize: 12,
+                        }}
+                      >
+                        Complete
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </Animated.View>
+              </View>
+            </Card>
             {/* Enhanced Project Info Card */}
 
             <Card style={styles.projectCard}>
@@ -604,9 +756,9 @@ export default function ProjectOverview() {
                       <Text className="text-xl font-bold text-foreground capitalize">
                         {project?.data?.name}
                       </Text>
-                      {project?.data?.lossType && (
+                      {/* {project?.data?.lossType && (
                         <DamageBadge lossType={project.data.lossType} />
-                      )}
+                      )} */}
                     </View>
                     <View className="flex-row items-center space-x-2">
                       <Button
@@ -899,181 +1051,6 @@ export default function ProjectOverview() {
                 </View>
               </View>
             </Modal>
-            <Card style={styles.notificationsCard}>
-              <CardHeader style={styles.notificationsCardHeader}>
-                <CircleDot size={20} color={Colors.light.primary} />
-                <CardTitle style={styles.notificationsCardTitle}>
-                  Customer Notifications
-                </CardTitle>
-              </CardHeader>
-              <Separator className="my-2" />
-              <View style={styles.notificationsButtonRow}>
-                {/* ARRIVAL BUTTON */}
-                <Animated.View
-                  style={[
-                    styles.notificationButton,
-                    { transform: [{ scale: arrivalScale }] },
-                  ]}
-                >
-                  <TouchableOpacity
-                    style={{
-                      // backgroundColor: "#f3f4f6", // light gray
-                      borderRadius: 12,
-                      overflow: "hidden",
-                      shadowColor: "#000",
-                      shadowOpacity: 0.05,
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowRadius: 2,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                    onPress={handleArrivalPress}
-                    activeOpacity={0.7}
-                  >
-                    <View
-                      style={{
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        paddingVertical: 14,
-                        paddingHorizontal: 4,
-                      }}
-                    >
-                      <View
-                        style={{
-                          backgroundColor: "#f3f4f6",
-                          borderRadius: 999,
-                          padding: 8,
-                          marginBottom: 6,
-                        }}
-                      >
-                        <TruckIcon size={30} color={Colors.light.primary} />
-                      </View>
-                      <Text
-                        style={{
-                          color: Colors.light.primary,
-                          fontWeight: "600",
-                          fontSize: 12,
-                        }}
-                      >
-                        On My Way
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                </Animated.View>
-
-                {/* START BUTTON */}
-                <Animated.View
-                  style={[
-                    styles.notificationButton,
-                    { transform: [{ scale: startScale }] },
-                  ]}
-                >
-                  <TouchableOpacity
-                    style={{
-                      // backgroundColor: "#f3f4f6",
-                      borderRadius: 12,
-                      overflow: "hidden",
-                      shadowColor: "#000",
-                      shadowOpacity: 0.05,
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowRadius: 2,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                    onPress={handleStartPress}
-                    activeOpacity={0.7}
-                  >
-                    <View
-                      style={{
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        paddingVertical: 14,
-                        paddingHorizontal: 4,
-                      }}
-                    >
-                      <View
-                        style={{
-                          backgroundColor: "#f3f4f6",
-                          borderRadius: 999,
-                          padding: 8,
-                          marginBottom: 6,
-                        }}
-                      >
-                        <TimerIcon size={30} color={Colors.light.primary} />
-                      </View>
-                      <Text
-                        style={{
-                          color: Colors.light.primary,
-                          fontWeight: "600",
-                          fontSize: 12,
-                        }}
-                      >
-                        Start
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                </Animated.View>
-
-                {/* COMPLETE BUTTON */}
-                <Animated.View
-                  style={[
-                    styles.notificationButton,
-                    { transform: [{ scale: completeScale }] },
-                  ]}
-                >
-                  <TouchableOpacity
-                    style={{
-                      // backgroundColor: "#f3f4f6",
-                      borderRadius: 12,
-                      overflow: "hidden",
-                      shadowColor: "#000",
-                      shadowOpacity: 0.05,
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowRadius: 2,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                    onPress={handleCompletePress}
-                    activeOpacity={0.7}
-                  >
-                    <View
-                      style={{
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        paddingVertical: 14,
-                        paddingHorizontal: 4,
-                      }}
-                    >
-                      <View
-                        style={{
-                          backgroundColor: "#f3f4f6",
-                          borderRadius: 999,
-                          padding: 8,
-                          marginBottom: 6,
-                        }}
-                      >
-                        <CheckCircleIcon
-                          size={30}
-                          color={Colors.light.primary}
-                        />
-                      </View>
-                      <Text
-                        style={{
-                          color: Colors.light.primary,
-                          fontWeight: "600",
-                          fontSize: 12,
-                        }}
-                      >
-                        Complete
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                </Animated.View>
-              </View>
-            </Card>
 
             <View className="px-4 ">
               {/* Action buttons with text below icons for better responsiveness */}
@@ -1180,10 +1157,12 @@ export default function ProjectOverview() {
                         >
                           {React.createElement(item.Icon as any, {
                             size: 30,
-                            color: Colors.light.primary,
+                            color: item.color,
                           })}
                         </View>
-                        <Text numberOfLines={1}>{item.title}</Text>
+                        <Text numberOfLines={1} style={{ fontWeight: "600" }}>
+                          {item.title}
+                        </Text>
                       </View>
                     </TouchableOpacity>
                   ))}
@@ -1255,13 +1234,52 @@ export default function ProjectOverview() {
                   <View
                     style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}
                   >
+                    {/* Create Room Card */}
+                    <TouchableOpacity
+                      style={{
+                        width: "48%",
+                        aspectRatio: 1,
+                        height: 110,
+                        borderRadius: 12,
+                        borderWidth: 4,
+                        borderColor: "white",
+                        backgroundColor: "#e0e7ef",
+                        overflow: "hidden",
+                        shadowColor: "#000",
+                        shadowOpacity: 0.05,
+                        shadowOffset: { width: 0, height: 1 },
+                        shadowRadius: 2,
+                        elevation: 2,
+                        marginBottom: 8,
+                        marginRight: 4,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                      onPress={() => router.push("./rooms/create")}
+                      activeOpacity={0.85}
+                    >
+                      {React.createElement(PlusIcon, {
+                        size: 36,
+                        color: Colors.light.primary,
+                        style: { marginBottom: 8 },
+                      })}
+                      <Text
+                        style={{
+                          fontWeight: "700",
+                          color: Colors.light.primary,
+                        }}
+                      >
+                        Create Room
+                      </Text>
+                    </TouchableOpacity>
+                    {/* Existing Room Cards */}
                     {rooms?.map((room) => (
                       <TouchableOpacity
                         key={room.id}
                         style={{
-                          width: "32%",
+                          width: "48%", // 2 columns
                           aspectRatio: 1,
-                          height: 70,
+                          height: 110,
                           borderRadius: 12,
                           borderWidth: 4,
                           borderColor: "white",
@@ -1272,6 +1290,8 @@ export default function ProjectOverview() {
                           shadowOffset: { width: 0, height: 1 },
                           shadowRadius: 2,
                           elevation: 2,
+                          marginBottom: 8,
+                          marginRight: 4,
                         }}
                         onPress={() => router.push(`./rooms/${room.id}`)}
                         activeOpacity={0.85}
@@ -1313,8 +1333,6 @@ export default function ProjectOverview() {
                             paddingHorizontal: 10,
                             alignItems: "center",
                             justifyContent: "center",
-                            // borderTopLeftRadius: 24,
-                            // borderTopRightRadius: 24,
                           }}
                         >
                           <Text
@@ -1337,13 +1355,52 @@ export default function ProjectOverview() {
                           gap: 4,
                         }}
                       >
+                        {/* Create Chamber Card */}
+                        <TouchableOpacity
+                          style={{
+                            width: "48%",
+                            aspectRatio: 1,
+                            height: 110,
+                            borderRadius: 12,
+                            borderWidth: 4,
+                            borderColor: "white",
+                            backgroundColor: "#e0e7ef",
+                            overflow: "hidden",
+                            shadowColor: "#000",
+                            shadowOpacity: 0.05,
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowRadius: 2,
+                            elevation: 2,
+                            marginBottom: 8,
+                            marginRight: 4,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                          onPress={() => router.push("./chambers/create")}
+                          activeOpacity={0.85}
+                        >
+                          {React.createElement(PlusIcon, {
+                            size: 36,
+                            color: Colors.light.primary,
+                            style: { marginBottom: 8 },
+                          })}
+                          <Text
+                            style={{
+                              fontWeight: "700",
+                              color: Colors.light.primary,
+                            }}
+                          >
+                            Create Chamber
+                          </Text>
+                        </TouchableOpacity>
+                        {/* Existing Chamber Cards */}
                         {chambers.map((chamber) => (
                           <TouchableOpacity
                             key={chamber.id}
                             style={{
-                              width: "32%",
+                              width: "48%", // 2 columns
                               aspectRatio: 1,
-                              height: 70,
+                              height: 110,
                               borderRadius: 12,
                               borderWidth: 4,
                               borderColor: "white",
@@ -1354,7 +1411,8 @@ export default function ProjectOverview() {
                               shadowOffset: { width: 0, height: 1 },
                               shadowRadius: 2,
                               elevation: 2,
-                              marginBottom: 4,
+                              marginBottom: 8,
+                              marginRight: 4,
                             }}
                             onPress={() =>
                               router.push(
@@ -1560,7 +1618,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   projectCard: {
-    marginTop: 16,
+    // marginTop: 16,
     marginBottom: 16,
     backgroundColor: "#fff",
     borderRadius: 16,
@@ -1719,7 +1777,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   notificationsCard: {
-    marginBottom: 10,
+    marginTop: 16,
+    marginBottom: 16,
     backgroundColor: "white",
     borderRadius: 16,
     marginHorizontal: 16,

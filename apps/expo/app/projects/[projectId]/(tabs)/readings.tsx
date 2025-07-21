@@ -429,7 +429,10 @@ export default function RoomReadings() {
               />
             )}
             extraData={refreshFlag}
-            contentContainerStyle={{ padding: 16 }}
+            contentContainerStyle={{
+              paddingVertical: 16,
+              paddingHorizontal: 8,
+            }}
             showsVerticalScrollIndicator={false}
             w="full"
             h="full"

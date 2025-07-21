@@ -22,6 +22,7 @@ import {
   ArrowUp,
   Camera,
   CameraIcon,
+  HomeIcon,
   Image as ImageIcon,
   Images,
   Mic,
@@ -650,7 +651,7 @@ export function ChatInput({
                         onPress={() => setShowProjectImageSelector(true)}
                       >
                         {/* <Text style={styles.attachmentIcon}><ImagesIcon /></Text> */}
-                        <Image
+                        {/* <Image
                           source={RoomIcon}
                           style={{
                             width: 25,
@@ -659,7 +660,14 @@ export function ChatInput({
                             tintColor: Colors.light.primary,
                             marginBottom: 4,
                           }}
-                        />
+                        /> */}
+                        <Text style={styles.attachmentIcon}>
+                          <HomeIcon
+                            width={25}
+                            height={25}
+                            color={Colors.light.primary}
+                          />
+                        </Text>
                       </TouchableOpacity>
                     )}
                   </View>
