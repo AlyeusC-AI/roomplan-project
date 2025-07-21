@@ -32,6 +32,7 @@ import {
   useGetChambers, // <-- add this
   useSearchImages, // <-- add this
   useGetRoomReadings, // <-- add this
+  useGetProjectMaterials, // <-- add this
 } from "@service-geek/api-client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -137,6 +138,9 @@ export default function CopilotScreen() {
 
   // Add: fetch project chambers
   const { data: chambers } = useGetChambers(projectId);
+
+  // Add: fetch project materials
+  const { data: projectMaterials } = useGetProjectMaterials(projectId);
 
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [roomDropdownOpen, setRoomDropdownOpen] = useState(false);
@@ -249,6 +253,12 @@ export default function CopilotScreen() {
       done: Array.isArray(chambers) && chambers.length > 0,
       onPress: () =>
         router.push({ pathname: `../chambers/create`, params: { projectId } }),
+    },
+    {
+      label: "Set Dry Standard",
+      done: Array.isArray(projectMaterials) && projectMaterials.length > 0,
+      onPress: () =>
+        router.push({ pathname: `../dry-standard`, params: { projectId } }),
     },
   ];
 

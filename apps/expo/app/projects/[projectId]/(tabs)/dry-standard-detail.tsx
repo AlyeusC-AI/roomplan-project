@@ -46,6 +46,17 @@ export default function DryStandardDetailScreen() {
     }
   }, [projectMaterial]);
 
+  const selectedMaterial =
+    materials?.find((m) => m.id === form.materialId) ||
+    projectMaterial?.material;
+  const effectiveVariance =
+    form.customVariance !== ""
+      ? parseFloat(form.customVariance)
+      : (selectedMaterial?.variance ?? 0);
+  const moistureNum =
+    form.moistureContent !== "" ? parseFloat(form.moistureContent) : 0;
+  const dryGoalValue = moistureNum * (1 + effectiveVariance / 100);
+
   const handleUpdate = () => {
     updateMutation.mutate(
       {
@@ -57,7 +68,7 @@ export default function DryStandardDetailScreen() {
           moistureContent: form.moistureContent
             ? parseFloat(form.moistureContent)
             : undefined,
-          dryGoal: form.dryGoal ? parseFloat(form.dryGoal) : undefined,
+          dryGoal: dryGoalValue,
         },
       },
       {
@@ -102,12 +113,44 @@ export default function DryStandardDetailScreen() {
         onChangeText={(v) => setForm((f) => ({ ...f, moistureContent: v }))}
         keyboardType="numeric"
       />
-      <Text>Dry Goal (%)</Text>
+      <Text>Custom Variance (%)</Text>
       <Input
-        value={form.dryGoal}
-        onChangeText={(v) => setForm((f) => ({ ...f, dryGoal: v }))}
+        value={form.customVariance}
+        onChangeText={(v) => setForm((f) => ({ ...f, customVariance: v }))}
         keyboardType="numeric"
       />
+      <Text>Dry Goal (%)</Text>
+      <View
+        style={{
+          padding: 16,
+          backgroundColor: "#f0f9ff",
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: "#0ea5e9",
+          marginBottom: 12,
+          alignItems: "center",
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: "700",
+            color: "#0c4a6e",
+            marginBottom: 4,
+          }}
+        >
+          Dry Goal (%)
+        </Text>
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: "bold",
+            color: "#0c4a6e",
+          }}
+        >
+          {isNaN(dryGoalValue) ? "-" : dryGoalValue.toFixed(2)}
+        </Text>
+      </View>
       <View style={{ flexDirection: "row", marginTop: 24 }}>
         <Button
           title="Update"
@@ -123,11 +166,6 @@ export default function DryStandardDetailScreen() {
         />
       </View>
       {/* Show dry standard if available */}
-      {projectMaterial.material.dryStandard !== undefined && (
-        <Text style={{ color: "#0c4a6e", fontWeight: "600" }}>
-          Dry Standard: {projectMaterial.material.dryStandard}%
-        </Text>
-      )}
     </ScrollView>
   );
 }

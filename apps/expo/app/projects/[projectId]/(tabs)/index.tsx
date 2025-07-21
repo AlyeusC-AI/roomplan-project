@@ -121,9 +121,11 @@ export default function ProjectOverview() {
   const [showClientInfo, setShowClientInfo] = useState(false);
   // Add state to control directions modal visibility
   const [showDirectionsModal, setShowDirectionsModal] = useState(false);
-  
+
   // Add state for street view image
-  const [streetViewImageUrl, setStreetViewImageUrl] = useState<string | null>(null);
+  const [streetViewImageUrl, setStreetViewImageUrl] = useState<string | null>(
+    null
+  );
   const [isLoadingStreetView, setIsLoadingStreetView] = useState(false);
 
   // Animation refs for button press effects
@@ -135,7 +137,10 @@ export default function ProjectOverview() {
 
   // Function to get Google Street View image
   const getStreetViewImage = async () => {
-    if (!project?.data?.location || !process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY) {
+    if (
+      !project?.data?.location ||
+      !process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+    ) {
       return;
     }
 
@@ -166,7 +171,7 @@ export default function ProjectOverview() {
   // Function to open street view in Google Maps app
   const openStreetViewInMaps = () => {
     if (!project?.data?.location) return;
-    
+
     if (project.data.lat && project.data.lng) {
       // Use coordinates for more precise location
       Linking.openURL(
@@ -301,12 +306,6 @@ export default function ProjectOverview() {
           `${process.env.EXPO_PUBLIC_BASE_URL}/projects/${projectId}/report`
         ),
     },
-    {
-      path: "./dry-standard",
-      Icon: CheckCircle as any,
-      title: "Dry Standard",
-      description: "Manage dry standard goals",
-    },
   ];
 
   const handleArrivalPress = () => {
@@ -430,42 +429,96 @@ export default function ProjectOverview() {
               <TouchableOpacity
                 onPress={openStreetViewInMaps}
                 activeOpacity={0.9}
-                style={{ width: '100%', height: 160, backgroundColor: '#e0e7ef' }}
+                style={{
+                  width: "100%",
+                  height: 160,
+                  backgroundColor: "#e0e7ef",
+                }}
               >
                 {isLoadingStreetView ? (
-                  <View style={{ width: '100%', height: 160, justifyContent: 'center', alignItems: 'center' }}>
+                  <View
+                    style={{
+                      width: "100%",
+                      height: 160,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
                     <ActivityIndicator size="large" color="#15438e" />
-                    <Text style={{ marginTop: 8, fontSize: 14, color: '#64748b' }}>Loading street view...</Text>
+                    <Text
+                      style={{ marginTop: 8, fontSize: 14, color: "#64748b" }}
+                    >
+                      Loading street view...
+                    </Text>
                   </View>
                 ) : streetViewImageUrl ? (
-                  <View style={{ width: '100%', height: 160, position: 'relative' }}>
+                  <View
+                    style={{ width: "100%", height: 160, position: "relative" }}
+                  >
                     <Animated.Image
                       source={{ uri: streetViewImageUrl }}
-                      style={{ width: '100%', height: 160, resizeMode: 'cover' }}
+                      style={{
+                        width: "100%",
+                        height: 160,
+                        resizeMode: "cover",
+                      }}
                     />
                   </View>
                 ) : project?.data?.mainImage ? (
-                  <View style={{ width: '100%', height: 160, position: 'relative' }}>
+                  <View
+                    style={{ width: "100%", height: 160, position: "relative" }}
+                  >
                     <Animated.Image
                       source={{ uri: project.data.mainImage }}
-                      style={{ width: '100%', height: 160, resizeMode: 'cover' }}
+                      style={{
+                        width: "100%",
+                        height: 160,
+                        resizeMode: "cover",
+                      }}
                     />
                     {/* Overlay indicating it's a project image */}
-                    <View style={{ 
-                      position: 'absolute', 
-                      top: 8, 
-                      right: 8, 
-                      backgroundColor: 'rgba(0,0,0,0.7)', 
-                      borderRadius: 6, 
-                      paddingHorizontal: 8, 
-                      paddingVertical: 4 
-                    }}>
-                      <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>Project Image</Text>
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        backgroundColor: "rgba(0,0,0,0.7)",
+                        borderRadius: 6,
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "white",
+                          fontSize: 12,
+                          fontWeight: "600",
+                        }}
+                      >
+                        Project Image
+                      </Text>
                     </View>
                   </View>
                 ) : (
-                  <View style={{ width: '100%', height: 160, backgroundColor: '#e0e7ef', justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 48, fontWeight: '700', lineHeight: 48, color: '#64748b' }}>{project?.data?.name?.[0] || '?'}</Text>
+                  <View
+                    style={{
+                      width: "100%",
+                      height: 160,
+                      backgroundColor: "#e0e7ef",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 48,
+                        fontWeight: "700",
+                        lineHeight: 48,
+                        color: "#64748b",
+                      }}
+                    >
+                      {project?.data?.name?.[0] || "?"}
+                    </Text>
                   </View>
                 )}
               </TouchableOpacity>

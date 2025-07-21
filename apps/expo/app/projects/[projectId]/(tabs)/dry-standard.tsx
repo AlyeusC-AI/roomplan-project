@@ -15,6 +15,9 @@ import {
   useGetMaterials,
   useCreateProjectMaterial,
   useDeleteProjectMaterial,
+  useCreateMaterial,
+  useUpdateProjectMaterial,
+  useGetProjectMaterial,
 } from "@service-geek/api-client";
 import { Text } from "@/components/ui/text";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -24,6 +27,47 @@ import { X } from "lucide-react-native";
 import { Select } from "@/components/ui/select";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { Material } from "@service-geek/api-client";
+
+// 1. Add MaterialSelector component above the main function
+type MaterialSelectorProps = {
+  materials: Material[] | undefined;
+  value: string | undefined;
+  onChange: (value: string) => void;
+  onAddNew: () => void;
+  disabled?: boolean;
+};
+
+function MaterialSelector({
+  materials,
+  value,
+  onChange,
+  onAddNew,
+  disabled,
+}: MaterialSelectorProps) {
+  return (
+    <View style={{ marginBottom: 12 }}>
+      <Select
+        value={value || ""}
+        onValueChange={onChange}
+        placeholder="Select material"
+        options={
+          materials
+            ? materials.map((m: Material) => ({ value: m.id, name: m.name }))
+            : []
+        }
+      />
+      <Button
+        variant="outline"
+        onPress={onAddNew}
+        style={{ marginTop: 8, borderRadius: 8 }}
+        disabled={disabled}
+      >
+        <Text style={{ fontWeight: "700" }}>+ Add New Material</Text>
+      </Button>
+    </View>
+  );
+}
 
 export default function DryStandardScreen() {
   const { projectId } = useLocalSearchParams();
@@ -32,10 +76,14 @@ export default function DryStandardScreen() {
     data: dryStandards,
     isLoading,
     isError,
+    refetch,
   } = useGetProjectMaterials(projectId as string);
   const { data: materials } = useGetMaterials();
   const createMutation = useCreateProjectMaterial();
   const deleteMutation = useDeleteProjectMaterial();
+  const createMaterialMutation = useCreateMaterial();
+  const updateProjectMaterialMutation = useUpdateProjectMaterial();
+  const [editId, setEditId] = useState<string | null>(null);
 
   const [modalVisible, setModalVisible] = useState(false);
   // Remove currentMoisture from form state
@@ -44,6 +92,13 @@ export default function DryStandardScreen() {
     customVariance: "",
     moistureContent: "",
     dryGoal: "",
+  });
+
+  // 2. In DryStandardScreen, add state for addNewMaterialMode and newMaterialForm
+  const [addNewMaterialMode, setAddNewMaterialMode] = useState(false);
+  const [newMaterialForm, setNewMaterialForm] = useState({
+    name: "",
+    variance: "",
   });
 
   // Helper to get selected material
@@ -77,27 +132,62 @@ export default function DryStandardScreen() {
     setModalVisible(true);
   };
 
+  const handleEdit = (item: any) => {
+    setForm({
+      materialId: item.materialId,
+      customVariance: item.customVariance?.toString() ?? "",
+      moistureContent: item.moistureContent?.toString() ?? "",
+      dryGoal: item.dryGoal?.toString() ?? "",
+    });
+    setEditId(item.id);
+    setModalVisible(true);
+  };
+
   const handleSubmit = () => {
     if (!form.materialId) {
       Alert.alert("Please select a material");
       return;
     }
-    createMutation.mutate(
-      {
-        projectId: projectId as string,
-        materialId: form.materialId,
-        customVariance: form.customVariance
-          ? parseFloat(form.customVariance)
-          : undefined,
-        moistureContent: form.moistureContent
-          ? parseFloat(form.moistureContent)
-          : undefined,
-        dryGoal: dryGoalValue,
-      },
-      {
-        onSuccess: () => setModalVisible(false),
-      }
-    );
+    if (editId) {
+      updateProjectMaterialMutation.mutate(
+        {
+          id: editId,
+          data: {
+            customVariance: form.customVariance
+              ? parseFloat(form.customVariance)
+              : undefined,
+            moistureContent: form.moistureContent
+              ? parseFloat(form.moistureContent)
+              : undefined,
+            dryGoal: dryGoalValue,
+          },
+        },
+        {
+          onSuccess: () => {
+            setModalVisible(false);
+            setEditId(null);
+            refetch();
+          },
+        }
+      );
+    } else {
+      createMutation.mutate(
+        {
+          projectId: projectId as string,
+          materialId: form.materialId,
+          customVariance: form.customVariance
+            ? parseFloat(form.customVariance)
+            : undefined,
+          moistureContent: form.moistureContent
+            ? parseFloat(form.moistureContent)
+            : undefined,
+          dryGoal: dryGoalValue,
+        },
+        {
+          onSuccess: () => setModalVisible(false),
+        }
+      );
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -131,56 +221,59 @@ export default function DryStandardScreen() {
             Add Dry Standard
           </Text>
         </Button>
-        <ScrollView>
-          {dryStandards && dryStandards.length > 0 ? (
-            dryStandards.map((item) => (
-              <Card key={item.id} style={{ marginBottom: 16 }}>
-                <TouchableOpacity
-                  onPress={() =>
-                    router.push(
-                      `dry-standard-detail?id=${item.id}&projectId=${projectId}`
-                    )
-                  }
-                  style={{ padding: 0 }}
-                  activeOpacity={0.8}
-                >
-                  <CardHeader style={{ paddingBottom: 8 }}>
-                    <CardTitle>{item.material.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent style={{ paddingTop: 0 }}>
-                    <Text>
-                      Variance: {item.customVariance ?? item.material.variance}%
-                    </Text>
-                    <Text>Moisture Content: {item.moistureContent ?? "-"}</Text>
-                    <Text>Dry Goal: {item.dryGoal ?? "-"}</Text>
-                    <View style={{ flexDirection: "row", marginTop: 12 }}>
-                      <Button
-                        variant="destructive"
-                        onPress={() => handleDelete(item.id)}
-                        style={{ flex: 1 }}
-                      >
-                        <Text style={{ color: "#fff", fontWeight: "700" }}>
-                          Delete
-                        </Text>
-                      </Button>
-                    </View>
-                  </CardContent>
-                </TouchableOpacity>
-              </Card>
-            ))
-          ) : (
+        <FlatList
+          data={dryStandards || []}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <Card key={item.id} style={{ marginBottom: 16 }}>
+              <TouchableOpacity
+                onPress={() => handleEdit(item)}
+                style={{ padding: 0 }}
+                activeOpacity={0.8}
+              >
+                <CardHeader style={{ paddingBottom: 8 }}>
+                  <CardTitle>{item.material.name}</CardTitle>
+                </CardHeader>
+                <CardContent style={{ paddingTop: 0 }}>
+                  <Text>
+                    Variance: {item.customVariance ?? item.material.variance}%
+                  </Text>
+                  <Text>Moisture Content: {item.moistureContent ?? "-"}</Text>
+                  <Text>Dry Goal: {item.dryGoal ?? "-"}</Text>
+                  <View style={{ flexDirection: "row", marginTop: 12 }}>
+                    <Button
+                      variant="destructive"
+                      onPress={() => handleDelete(item.id)}
+                      style={{ flex: 1 }}
+                    >
+                      <Text style={{ color: "#fff", fontWeight: "700" }}>
+                        Delete
+                      </Text>
+                    </Button>
+                  </View>
+                </CardContent>
+              </TouchableOpacity>
+            </Card>
+          )}
+          ListEmptyComponent={
             <Text style={{ textAlign: "center", marginTop: 32 }}>
               No dry standards yet.
             </Text>
-          )}
-        </ScrollView>
+          }
+          refreshing={isLoading}
+          onRefresh={refetch}
+          contentContainerStyle={{ flexGrow: 1 }}
+        />
       </View>
       {/* Add Modal */}
       <Modal
         visible={modalVisible}
         animationType="slide"
         presentationStyle="fullScreen"
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => {
+          setModalVisible(false);
+          setEditId(null);
+        }}
       >
         <View style={{ flex: 1, backgroundColor: "#f8fafc", paddingTop: top }}>
           {/* Header */}
@@ -217,7 +310,7 @@ export default function DryStandardScreen() {
                 color: "#1e293b",
               }}
             >
-              Add Dry Standard
+              {editId ? "Edit Dry Standard" : "Add Dry Standard"}
             </Text>
           </View>
           <ScrollView contentContainerStyle={{ padding: 20 }}>
@@ -236,18 +329,78 @@ export default function DryStandardScreen() {
                   >
                     {selectedMaterial?.name}
                   </Text>
+                ) : addNewMaterialMode ? (
+                  <View style={{ marginBottom: 12 }}>
+                    <Input
+                      placeholder="Material Name"
+                      value={newMaterialForm.name}
+                      onChangeText={(v) =>
+                        setNewMaterialForm((f) => ({ ...f, name: v }))
+                      }
+                      style={{ marginBottom: 8 }}
+                    />
+                    <Input
+                      placeholder="Variance (%)"
+                      value={newMaterialForm.variance}
+                      onChangeText={(v) =>
+                        setNewMaterialForm((f) => ({ ...f, variance: v }))
+                      }
+                      keyboardType="numeric"
+                      style={{ marginBottom: 8 }}
+                    />
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      <Button
+                        onPress={async () => {
+                          if (
+                            !newMaterialForm.name ||
+                            !newMaterialForm.variance
+                          )
+                            return;
+                          try {
+                            const result =
+                              await createMaterialMutation.mutateAsync({
+                                name: newMaterialForm.name,
+                                variance: parseFloat(newMaterialForm.variance),
+                              });
+                            setAddNewMaterialMode(false);
+                            setNewMaterialForm({ name: "", variance: "" });
+                            // Auto-select the new material
+                            setForm((f) => ({ ...f, materialId: result.id }));
+                          } catch (e) {
+                            Alert.alert("Error", "Failed to add material");
+                          }
+                        }}
+                        style={{ flex: 1 }}
+                        disabled={createMaterialMutation.isPending}
+                      >
+                        <Text style={{ color: "#fff", fontWeight: "700" }}>
+                          {createMaterialMutation.isPending
+                            ? "Saving..."
+                            : "Save"}
+                        </Text>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onPress={() => setAddNewMaterialMode(false)}
+                        style={{ flex: 1 }}
+                        disabled={createMaterialMutation.isPending}
+                      >
+                        <Text style={{ fontWeight: "700" }}>Cancel</Text>
+                      </Button>
+                    </View>
+                    {createMaterialMutation.isError && (
+                      <Text style={{ color: "red", marginTop: 8 }}>
+                        Failed to add material.
+                      </Text>
+                    )}
+                  </View>
                 ) : (
-                  <Select
-                    value={form.materialId || ""}
-                    onValueChange={(v) =>
-                      setForm((f) => ({ ...f, materialId: v }))
-                    }
-                    placeholder="Select material"
-                    options={
-                      materials
-                        ? materials.map((m) => ({ value: m.id, name: m.name }))
-                        : []
-                    }
+                  <MaterialSelector
+                    materials={materials}
+                    value={form.materialId}
+                    onChange={(v) => setForm((f) => ({ ...f, materialId: v }))}
+                    onAddNew={() => setAddNewMaterialMode(true)}
+                    disabled={!!editId}
                   />
                 )}
               </CardContent>
@@ -345,7 +498,10 @@ export default function DryStandardScreen() {
               <>
                 <Button
                   onPress={handleSubmit}
-                  disabled={createMutation.status === "pending"}
+                  disabled={
+                    createMutation.status === "pending" ||
+                    updateProjectMaterialMutation.status === "pending"
+                  }
                   style={{
                     width: "100%",
                     paddingVertical: 16,
@@ -355,7 +511,13 @@ export default function DryStandardScreen() {
                   <Text
                     style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}
                   >
-                    {createMutation.status === "pending" ? "Adding..." : "Add"}
+                    {editId
+                      ? updateProjectMaterialMutation.status === "pending"
+                        ? "Saving..."
+                        : "Edit"
+                      : createMutation.status === "pending"
+                        ? "Adding..."
+                        : "Add"}
                   </Text>
                 </Button>
                 <Button
