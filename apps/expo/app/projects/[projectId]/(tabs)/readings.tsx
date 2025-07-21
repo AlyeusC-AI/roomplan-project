@@ -14,17 +14,19 @@ import Empty from "@/components/project/empty";
 import {
   Building,
   Plus,
-  ChevronDown,
+  ChevronRight,
   Wifi,
   WifiOff,
+  Trash2,
 } from "lucide-react-native";
 
 // Type assertions to fix ReactNode compatibility
 const BuildingComponent = Building as any;
 const PlusComponent = Plus as any;
-const ChevronDownComponent = ChevronDown as any;
+const ChevronRightComponent = ChevronRight as any;
 const WifiComponent = Wifi as any;
 const WifiOffComponent = WifiOff as any;
+const Trash2Component = Trash2 as any;
 import { Button } from "@/components/ui/button";
 import {
   ActivityIndicator,
@@ -34,6 +36,7 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   TouchableWithoutFeedback,
+  Alert,
 } from "react-native";
 import AddRoomButton from "@/components/project/AddRoomButton";
 import { Text } from "@/components/ui/text";
@@ -43,6 +46,7 @@ import {
   useCreateRoomReading,
   useGetRoomReadings,
   useGetRooms,
+  useDeleteRoom,
 } from "@service-geek/api-client";
 import { useOfflineReadingsStore } from "@/lib/state/offline-readings";
 import { useNetworkStatus } from "@/lib/providers/QueryProvider";
@@ -52,7 +56,13 @@ import {
 } from "@/lib/hooks/useOfflineReadings";
 import { toast } from "sonner-native";
 
-const RoomReadingItem = ({ room }: { room: Room }) => {
+const RoomReadingItem = ({
+  room,
+  onRoomDeleted,
+}: {
+  room: Room;
+  onRoomDeleted: () => void;
+}) => {
   const { projectId } = useGlobalSearchParams<{
     projectId: string;
   }>();
@@ -67,6 +77,33 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
   const { offlineReadings, offlineEdits, hasOfflineData } = useOfflineReadings(
     room.id
   );
+  const [expanded, setExpanded] = useState(false);
+  const { mutate: deleteRoom, isPending: isDeletingRoom } = useDeleteRoom();
+
+  const handleDeleteRoom = () => {
+    Alert.alert(
+      "Delete Room",
+      `Are you sure you want to delete the room '${room.name}'? This cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            deleteRoom(room.id, {
+              onSuccess: () => {
+                toast.success("Room deleted");
+                onRoomDeleted();
+              },
+              onError: () => {
+                toast.error("Failed to delete room");
+              },
+            });
+          },
+        },
+      ]
+    );
+  };
 
   console.log("🚀 ~ RoomReadingItem ~ roomReadings:", roomReadings?.data);
   console.log("🚀 ~ RoomReadingItem ~ offlineReadings:", offlineReadings);
@@ -98,16 +135,29 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
         justifyContent="space-between"
         alignItems="center"
         direction="row"
-        mb={4}
+        mb={0}
+        style={{
+          backgroundColor: "#f3f4f6",
+          borderTopLeftRadius: 12,
+          borderTopRightRadius: 12,
+          borderBottomLeftRadius: expanded ? 0 : 12,
+          borderBottomRightRadius: expanded ? 0 : 12,
+          borderWidth: 1,
+          borderColor: "#e2e8f0",
+          paddingHorizontal: 12,
+          paddingVertical: 14,
+        }}
       >
         <TouchableOpacity
-          onPress={() =>
-            router.push(
-              `/projects/${projectId}/rooms/create?roomId=${room.id}&roomName=${room.name}`
-            )
-          }
+          onPress={() => setExpanded((prev) => !prev)}
+          style={{ flex: 1 }}
         >
           <HStack alignItems="center" space={2}>
+            <ChevronRightComponent
+              color="#1e40af"
+              size={22}
+              style={{ transform: [{ rotate: expanded ? "90deg" : "0deg" }] }}
+            />
             <Heading size="md">{room.name}</Heading>
           </HStack>
         </TouchableOpacity>
@@ -117,6 +167,7 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
           }}
           size="sm"
           variant="outline"
+          style={{ marginRight: 8 }}
         >
           {isCreatingRoomReading ? (
             <ActivityIndicator />
@@ -127,56 +178,78 @@ const RoomReadingItem = ({ room }: { room: Room }) => {
             </View>
           )}
         </Button>
+        <TouchableOpacity
+          onPress={handleDeleteRoom}
+          disabled={isDeletingRoom}
+          style={{ marginLeft: 4 }}
+        >
+          <Trash2Component color="#ef4444" size={22} />
+        </TouchableOpacity>
       </HStack>
-      <VStack w="100%" space={0}>
-        {isLoadingRoomReadings ? (
-          <Center w="full" py={4}>
-            <ActivityIndicator />
-          </Center>
-        ) : roomReadings?.data?.length === 0 && offlineReadings.length === 0 ? (
-          <Center w="full" py={4}>
-            <Heading size="sm" color="gray.400">
-              No readings yet
-            </Heading>
-          </Center>
-        ) : (
-          <>
-            {/* Show online readings */}
-            {roomReadings?.data?.map((reading: RoomReadingType) => (
-              <RoomReading
-                room={room}
-                key={reading.id}
-                reading={reading}
-                projectId={projectId}
-                isOffline={false}
-              />
-            ))}
-
-            {/* Show offline new readings */}
-            {offlineReadings
-              .filter((reading) => reading.type === "new")
-              .map((reading) => (
+      {expanded && (
+        <VStack
+          w="100%"
+          space={4}
+          style={{
+            // backgroundColor: "white",
+            borderBottomLeftRadius: 12,
+            borderBottomRightRadius: 12,
+            padding: 12,
+            borderWidth: 1,
+            borderColor: "#f3f4f6",
+            borderTopWidth: 0,
+          }}
+        >
+          {isLoadingRoomReadings ? (
+            <Center w="full" py={4}>
+              <ActivityIndicator />
+            </Center>
+          ) : roomReadings?.data?.length === 0 &&
+            offlineReadings.length === 0 ? (
+            <Center w="full" py={4}>
+              <Heading size="sm" color="gray.400">
+                No readings yet
+              </Heading>
+            </Center>
+          ) : (
+            <>
+              {/* Show online readings */}
+              {roomReadings?.data?.map((reading: RoomReadingType) => (
                 <RoomReading
                   room={room}
                   key={reading.id}
-                  reading={{
-                    id: reading.id,
-                    roomId: reading.roomId,
-                    date: reading.date,
-                    temperature: reading.temperature,
-                    humidity: reading.humidity,
-                    wallReadings: [],
-                    genericRoomReading: [],
-                    createdAt: reading.createdAt,
-                    updatedAt: reading.createdAt,
-                  }}
+                  reading={reading}
                   projectId={projectId}
-                  isOffline={true}
+                  isOffline={false}
                 />
               ))}
-          </>
-        )}
-      </VStack>
+
+              {/* Show offline new readings */}
+              {offlineReadings
+                .filter((reading) => reading.type === "new")
+                .map((reading) => (
+                  <RoomReading
+                    room={room}
+                    key={reading.id}
+                    reading={{
+                      id: reading.id,
+                      roomId: reading.roomId,
+                      date: reading.date,
+                      temperature: reading.temperature,
+                      humidity: reading.humidity,
+                      wallReadings: [],
+                      genericRoomReading: [],
+                      createdAt: reading.createdAt,
+                      updatedAt: reading.createdAt,
+                    }}
+                    projectId={projectId}
+                    isOffline={true}
+                  />
+                ))}
+            </>
+          )}
+        </VStack>
+      )}
     </View>
   );
 };
@@ -193,6 +266,7 @@ export default function RoomReadings() {
     "all"
   );
   const [showRoomSelector, setShowRoomSelector] = useState(false);
+  const [refreshFlag, setRefreshFlag] = useState(0);
 
   // Set initial selected room when rooms data is loaded
   // React.useEffect(() => {
@@ -292,7 +366,7 @@ export default function RoomReadings() {
                     ? "View All"
                     : rooms?.find((r) => r.id === selectedRoom)?.name}
                 </Text>
-                <ChevronDownComponent color="#1e40af" size={18} />
+                <ChevronRightComponent color="#1e40af" size={18} />
               </Pressable>
 
               {showRoomSelector && (
@@ -348,8 +422,13 @@ export default function RoomReadings() {
             data={filteredRooms}
             keyExtractor={(room) => room.id}
             renderItem={({ item: room }) => (
-              <RoomReadingItem room={room} key={room.id} />
+              <RoomReadingItem
+                room={room}
+                key={room.id}
+                onRoomDeleted={() => setRefreshFlag((f) => f + 1)}
+              />
             )}
+            extraData={refreshFlag}
             contentContainerStyle={{ padding: 16 }}
             showsVerticalScrollIndicator={false}
             w="full"

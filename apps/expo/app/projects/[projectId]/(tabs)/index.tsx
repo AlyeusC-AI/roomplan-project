@@ -11,6 +11,9 @@ import {
   FlatList,
   RefreshControl,
   ActivityIndicator,
+  Easing,
+  Dimensions,
+  StyleSheet,
 } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
 import * as Clipboard from "expo-clipboard";
@@ -121,9 +124,11 @@ export default function ProjectOverview() {
   const [showClientInfo, setShowClientInfo] = useState(false);
   // Add state to control directions modal visibility
   const [showDirectionsModal, setShowDirectionsModal] = useState(false);
-  
+
   // Add state for street view image
-  const [streetViewImageUrl, setStreetViewImageUrl] = useState<string | null>(null);
+  const [streetViewImageUrl, setStreetViewImageUrl] = useState<string | null>(
+    null
+  );
   const [isLoadingStreetView, setIsLoadingStreetView] = useState(false);
 
   // Animation refs for button press effects
@@ -133,9 +138,14 @@ export default function ProjectOverview() {
   const directionsScale = useRef(new Animated.Value(1)).current;
   const router = useRouter();
 
+  const lat = 40.689247;
+  const lng = -74.044502;
   // Function to get Google Street View image
   const getStreetViewImage = async () => {
-    if (!project?.data?.location || !process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY) {
+    if (
+      !project?.data?.location ||
+      !process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+    ) {
       return;
     }
 
@@ -166,7 +176,7 @@ export default function ProjectOverview() {
   // Function to open street view in Google Maps app
   const openStreetViewInMaps = () => {
     if (!project?.data?.location) return;
-    
+
     if (project.data.lat && project.data.lng) {
       // Use coordinates for more precise location
       Linking.openURL(
@@ -250,7 +260,11 @@ export default function ProjectOverview() {
     },
     {
       path: "./documents",
-      Icon: File,
+      Icon: (props: any) => (
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          {React.createElement(File as any, { ...props })}
+        </View>
+      ),
       title: "Files",
       description: "Manage project files",
     },
@@ -353,6 +367,20 @@ export default function ProjectOverview() {
     useGetChambers(projectId);
   const [viewMode, setViewMode] = useState<"rooms" | "chambers">("rooms");
 
+  const tabWidth = (Dimensions.get("window").width - 32) / 2; // 16px margin on each side
+  const indicatorAnim = useRef(
+    new Animated.Value(viewMode === "rooms" ? 0 : 1)
+  ).current;
+
+  useEffect(() => {
+    Animated.timing(indicatorAnim, {
+      toValue: viewMode === "rooms" ? 0 : 1,
+      duration: 250,
+      easing: Easing.out(Easing.exp),
+      useNativeDriver: false,
+    }).start();
+  }, [viewMode]);
+
   // Type assertion for Lucide icons for React Native compatibility
   const MapPinIcon = MapPin as any;
   const PlayCircleIcon = PlayCircle as any;
@@ -369,60 +397,22 @@ export default function ProjectOverview() {
   const TimerIcon = Timer as any;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
+    <SafeAreaView style={styles.safeArea}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 20 }}
+        contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View>
             {/* Enhanced Project Info Card */}
 
-            <Card
-              style={{
-                marginTop: 16,
-                marginBottom: 16,
-                backgroundColor: "#fff",
-                borderRadius: 16,
-                marginHorizontal: 16,
-                shadowColor: "#000",
-                shadowOpacity: 0.12,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 4 },
-                elevation: 4,
-                padding: 0,
-                overflow: "hidden",
-              }}
-            >
+            <Card style={styles.projectCard}>
               {/* CardTitle at the top: Customer Name */}
-              <View
-                style={{
-                  paddingHorizontal: 18,
-                  paddingTop: 18,
-                  paddingBottom: 8,
-                }}
-              >
-                <CardTitle
-                  style={{
-                    fontSize: 22,
-                    fontWeight: "700",
-                    flexDirection: "row",
-                    marginBottom: 10,
-                  }}
-                >
-                  <Image
-                    source={CustomerFace}
-                    style={{
-                      width: 22,
-                      height: 22,
-                      resizeMode: "contain",
-                      marginRight: 8,
-                    }}
-                  />
-                  <Text style={{ fontSize: 18, fontWeight: "700" }}>
-                    Customer
-                  </Text>
+              <View style={styles.cardTitleContainer}>
+                <CardTitle style={styles.cardTitle}>
+                  <Image source={CustomerFace} style={styles.customerFace} />
+                  <Text style={styles.customerText}>Customer</Text>
                 </CardTitle>
               </View>
 
@@ -430,89 +420,79 @@ export default function ProjectOverview() {
               <TouchableOpacity
                 onPress={openStreetViewInMaps}
                 activeOpacity={0.9}
-                style={{ width: '100%', height: 160, backgroundColor: '#e0e7ef' }}
+                style={styles.streetViewTouchable}
               >
                 {isLoadingStreetView ? (
-                  <View style={{ width: '100%', height: 160, justifyContent: 'center', alignItems: 'center' }}>
+                  <View style={styles.streetViewLoadingContainer}>
                     <ActivityIndicator size="large" color="#15438e" />
-                    <Text style={{ marginTop: 8, fontSize: 14, color: '#64748b' }}>Loading street view...</Text>
+                    <Text style={styles.streetViewLoadingText}>
+                      Loading street view...
+                    </Text>
                   </View>
                 ) : streetViewImageUrl ? (
-                  <View style={{ width: '100%', height: 160, position: 'relative' }}>
+                  <View style={styles.streetViewImageContainer}>
                     <Animated.Image
                       source={{ uri: streetViewImageUrl }}
-                      style={{ width: '100%', height: 160, resizeMode: 'cover' }}
+                      style={styles.streetViewImage}
                     />
                   </View>
                 ) : project?.data?.mainImage ? (
-                  <View style={{ width: '100%', height: 160, position: 'relative' }}>
+                  <View style={styles.streetViewImageContainer}>
                     <Animated.Image
                       source={{ uri: project.data.mainImage }}
-                      style={{ width: '100%', height: 160, resizeMode: 'cover' }}
+                      style={styles.streetViewImage}
                     />
                     {/* Overlay indicating it's a project image */}
-                    <View style={{ 
-                      position: 'absolute', 
-                      top: 8, 
-                      right: 8, 
-                      backgroundColor: 'rgba(0,0,0,0.7)', 
-                      borderRadius: 6, 
-                      paddingHorizontal: 8, 
-                      paddingVertical: 4 
-                    }}>
-                      <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>Project Image</Text>
+                    <View style={styles.projectImageOverlay}>
+                      <Text style={styles.projectImageOverlayText}>
+                        Project Image
+                      </Text>
                     </View>
                   </View>
                 ) : (
-                  <View style={{ width: '100%', height: 160, backgroundColor: '#e0e7ef', justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 48, fontWeight: '700', lineHeight: 48, color: '#64748b' }}>{project?.data?.name?.[0] || '?'}</Text>
+                  <View style={styles.streetViewFallback}>
+                    <Text style={styles.streetViewFallbackText}>
+                      {project?.data?.name?.[0] || "?"}
+                    </Text>
                   </View>
                 )}
               </TouchableOpacity>
 
               {/* Info Section */}
-              <View style={{ paddingVertical: 18 }}>
+              <View style={styles.infoSection}>
                 {/* Project Name Row: Justify between message and call icons */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    paddingVertical: 12,
-                    paddingHorizontal: 18,
-                    marginBottom: 8,
-                  }}
-                >
-                  {/* Project Name (clickable) */}
-                  <TouchableOpacity
-                    onPress={() =>
-                      router.push({
-                        pathname: "./details",
-                        params: { activeTab: "customer" },
-                      })
-                    }
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 18,
-                        fontWeight: "700",
-                        color: "#1e293b",
-                        textAlign: "center",
-                        textTransform: "capitalize",
-                      }}
-                      numberOfLines={1}
+                <View style={styles.projectNameRow}>
+                  <View style={styles.projectNameLeft}>
+                    {/* Project Name (clickable) */}
+                    <TouchableOpacity
+                      onPress={() =>
+                        router.push({
+                          pathname: "./details",
+                          params: { activeTab: "customer" },
+                        })
+                      }
+                      activeOpacity={0.7}
                     >
-                      {project?.data?.name}
-                    </Text>
-                  </TouchableOpacity>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 10,
-                    }}
-                  >
+                      <Text style={styles.projectNameText} numberOfLines={1}>
+                        {project?.data?.name}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Status, Damage, Tags */}
+                    <View style={styles.statusDamageTagsRow}>
+                      {/* {project?.data?.status?.label && (
+                      <StatusBadge status={project.data.status} />
+                    )} */}
+                      {project?.data?.lossType && (
+                        <DamageBadge lossType={project.data.lossType} />
+                      )}
+                      {/* <ProjectTags
+                      tags={project?.data?.tags}
+                      onAddTags={() => setShowTagsModal(true)}
+                    /> */}
+                    </View>
+                  </View>
+                  <View style={styles.projectNameRight}>
                     {/* Message Icon */}
                     <TouchableOpacity
                       disabled={!project?.data?.clientEmail}
@@ -521,7 +501,10 @@ export default function ProjectOverview() {
                           Linking.openURL(`mailto:${project.data.clientEmail}`);
                         }
                       }}
-                      style={{ opacity: project?.data?.clientEmail ? 1 : 0.4 }}
+                      style={[
+                        styles.iconButton,
+                        { opacity: project?.data?.clientEmail ? 1 : 0.4 },
+                      ]}
                     >
                       <MailIcon size={22} color="#15438e" />
                     </TouchableOpacity>
@@ -535,9 +518,10 @@ export default function ProjectOverview() {
                           );
                         }
                       }}
-                      style={{
-                        opacity: project?.data?.clientPhoneNumber ? 1 : 0.4,
-                      }}
+                      style={[
+                        styles.iconButton,
+                        { opacity: project?.data?.clientPhoneNumber ? 1 : 0.4 },
+                      ]}
                     >
                       <PhoneIcon size={22} color="#15438e" />
                     </TouchableOpacity>
@@ -551,98 +535,34 @@ export default function ProjectOverview() {
                   <Text style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }} numberOfLines={1}>{project.data.clientPhoneNumber}</Text>
                 ) : null} */}
                 {/* Location Row: Justify between location text and icon */}
-                <View
-                  style={{
-                    paddingVertical: 12,
-                    paddingHorizontal: 18,
-                    marginBottom: 8,
-                  }}
-                >
+                <View style={styles.locationRow}>
                   {project?.data?.location && (
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        marginBottom: 8,
-                      }}
-                    >
-                      <Text style={{ fontSize: 14, flex: 1 }} numberOfLines={1}>
+                    <View style={styles.locationRowInner}>
+                      <Text style={styles.locationText} numberOfLines={1}>
                         {project.data.location}
                       </Text>
                       <TouchableOpacity
                         onPress={() => setShowDirectionsModal(true)}
-                        style={{ marginLeft: 8 }}
+                        style={styles.locationIconButton}
                       >
                         <MapPinIcon size={22} color="#15438e" />
                       </TouchableOpacity>
                     </View>
                   )}
-                  {/* Status, Damage, Tags */}
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      flexWrap: "wrap",
-                      gap: 8,
-                    }}
-                  >
-                    {project?.data?.status?.label && (
-                      <StatusBadge status={project.data.status} />
-                    )}
-                    {project?.data?.lossType && (
-                      <DamageBadge lossType={project.data.lossType} />
-                    )}
-                    <ProjectTags
-                      tags={project?.data?.tags}
-                      onAddTags={() => setShowTagsModal(true)}
-                    />
-                  </View>
-                  <ImageTagsModal
-                    visible={showTagsModal}
-                    type="PROJECT"
-                    onClose={() => setShowTagsModal(false)}
-                    projectId={project?.data?.id}
-                    currentTags={project?.data?.tags || []}
-                    onTagsUpdated={() => {
-                      refetch();
-                    }}
-                  />
                 </View>
 
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    marginBottom: 6,
-                    paddingHorizontal: 18,
-                    borderTopWidth: 1,
-                    borderTopColor: "#e0e7ef",
-                    paddingTop: 12,
-                  }}
+                <TouchableOpacity
+                  onPress={() => setShowClientInfo(true)}
+                  style={styles.customerInfoButton}
                 >
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: "700",
-                      color: "#1e293b",
-                      textAlign: "center",
-                    }}
-                    numberOfLines={1}
-                  >
+                  <Text style={styles.customerInfoButtonText} numberOfLines={1}>
                     Customer Information
                   </Text>
-                  <TouchableOpacity
-                    onPress={() => setShowClientInfo(true)}
-                    style={{ marginLeft: 8 }}
-                  >
-                    {React.createElement(ChevronRightCircle as any, {
-                      size: 22,
-                      color: "#15438e",
-                    })}
-                  </TouchableOpacity>
-                </View>
+                  {React.createElement(ChevronRightCircle as any, {
+                    size: 22,
+                    color: "#15438e",
+                  })}
+                </TouchableOpacity>
               </View>
             </Card>
             {/* Client Info Button (TouchableOpacity) */}
@@ -656,6 +576,16 @@ export default function ProjectOverview() {
             <ChevronDown size={20} className="ml-2 text-foreground" />
         </TouchableOpacity> */}
 
+            <ImageTagsModal
+              visible={showTagsModal}
+              type="PROJECT"
+              onClose={() => setShowTagsModal(false)}
+              projectId={project?.data?.id}
+              currentTags={project?.data?.tags || []}
+              onTagsUpdated={() => {
+                refetch();
+              }}
+            />
             {/* Client Info Modal */}
             <Modal
               animationType="slide"
@@ -666,29 +596,12 @@ export default function ProjectOverview() {
               <View className="flex-1 justify-end bg-black/50">
                 <View className="bg-background rounded-t-3xl p-5">
                   <View className="flex-row justify-between items-start mb-4">
-                    <View className="flex-col items-start">
-                      <Text className="text-xl font-bold text-foreground">
-                        {project?.data?.clientName}
+                    <View className="flex-row items-center gap-2">
+                      <Text className="text-xl font-bold text-foreground capitalize">
+                        {project?.data?.name}
                       </Text>
                       {project?.data?.lossType && (
-                        <View className="flex flex-row items-center">
-                          <View className="bg-primary/10 p-2 rounded-lg">
-                            {React.createElement(AlertTriangle as any, {
-                              height: 16,
-                              width: 16,
-                              color: "#000",
-                              className: "text-primary",
-                            })}
-                          </View>
-                          <View className="ml-3 flex-1">
-                            <Text className="text-sm text-muted-foreground">
-                              Damage Type
-                            </Text>
-                            <Text className="text-base text-foreground capitalize">
-                              {project?.data?.lossType.replace(/_/g, " ")}
-                            </Text>
-                          </View>
-                        </View>
+                        <DamageBadge lossType={project.data.lossType} />
                       )}
                     </View>
                     <View className="flex-row items-center space-x-2">
@@ -831,9 +744,12 @@ export default function ProjectOverview() {
                     {project?.data?.clientPhoneNumber && (
                       <View className="flex-row space-x-2 w-full justify-between">
                         <Button
-                          // variant="secondary"
-                          variant="secondary"
-                          className=" flex-row gap-2"
+                          style={{
+                            backgroundColor: "#f3f4f6",
+                            flexDirection: "row",
+                            alignItems: "center",
+                          }}
+                          className="flex-1 mr-2"
                           onPress={() =>
                             Linking.openURL(
                               `sms:${project?.data?.clientPhoneNumber}`
@@ -842,15 +758,19 @@ export default function ProjectOverview() {
                         >
                           {React.createElement(MessageSquare, {
                             size: 18,
-                            color: "#000",
-                            className: "mr-2",
+                            color: "#f3f4f6",
+                            fill: "#374151",
+                            style: { marginRight: 6 },
                           })}
-                          <Text>Message</Text>
+                          <Text style={{ color: "#374151" }}>Message</Text>
                         </Button>
                         <Button
-                          // variant="secondary"
-                          variant="secondary"
-                          className=" flex-row gap-2"
+                          style={{
+                            backgroundColor: "#f3f4f6",
+                            flexDirection: "row",
+                            alignItems: "center",
+                          }}
+                          className="flex-1 mx-1"
                           onPress={() =>
                             Linking.openURL(
                               `tel:${project?.data?.clientPhoneNumber}`
@@ -859,17 +779,21 @@ export default function ProjectOverview() {
                         >
                           {React.createElement(PhoneIcon, {
                             size: 18,
-                            color: "#000",
-                            className: "mr-2",
+                            color: "#f3f4f6",
+                            fill: "#374151",
+                            style: { marginRight: 6 },
                           })}
-                          <Text>Call</Text>
+                          <Text style={{ color: "#374151" }}>Call</Text>
                         </Button>
 
                         {project?.data?.clientEmail && (
                           <Button
-                            // variant="secondary"
-                            variant="secondary"
-                            className=" flex-row gap-2 text-gray-500"
+                            style={{
+                              backgroundColor: "#f3f4f6",
+                              flexDirection: "row",
+                              alignItems: "center",
+                            }}
+                            className="flex-1 ml-2"
                             onPress={() =>
                               Linking.openURL(
                                 `mailto:${project?.data?.clientEmail}`
@@ -878,10 +802,11 @@ export default function ProjectOverview() {
                           >
                             {React.createElement(MailIcon, {
                               size: 18,
-                              color: "#000",
-                              className: "mr-2",
+                              color: "#f3f4f6",
+                              fill: "#374151",
+                              style: { marginRight: 6 },
                             })}
-                            <Text>Send Email</Text>
+                            <Text style={{ color: "#374151" }}>Send Email</Text>
                           </Button>
                         )}
                       </View>
@@ -970,52 +895,21 @@ export default function ProjectOverview() {
                 </View>
               </View>
             </Modal>
-            <Card
-              style={{
-                marginBottom: 10,
-                backgroundColor: "white",
-                borderRadius: 16,
-                marginHorizontal: 16,
-                shadowColor: "#000",
-                shadowOpacity: 0.12,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 4 },
-                elevation: 4,
-              }}
-            >
-              <CardHeader
-                style={{
-                  backgroundColor: "transparent",
-                  paddingBottom: 0,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
-                }}
-              >
-                {/* <CircleDot size={20} color="#15438e" /> */}
-                <CardTitle style={{ fontSize: 18, fontWeight: "700" }}>
+            <Card style={styles.notificationsCard}>
+              <CardHeader style={styles.notificationsCardHeader}>
+                <CircleDot size={20} color="#15438e" />
+                <CardTitle style={styles.notificationsCardTitle}>
                   Customer Notifications
                 </CardTitle>
               </CardHeader>
               <Separator className="my-2" />
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-around",
-                  gap: 10,
-                  width: "100%",
-                  flex: 1,
-                  paddingHorizontal: 4,
-                  // paddingBottom: 10,
-                }}
-              >
+              <View style={styles.notificationsButtonRow}>
                 {/* ARRIVAL BUTTON */}
                 <Animated.View
-                  style={{
-                    marginBottom: 12,
-                    width: "23%",
-                    transform: [{ scale: arrivalScale }],
-                  }}
+                  style={[
+                    styles.notificationButton,
+                    { transform: [{ scale: arrivalScale }] },
+                  ]}
                 >
                   <TouchableOpacity
                     style={{
@@ -1066,11 +960,10 @@ export default function ProjectOverview() {
 
                 {/* START BUTTON */}
                 <Animated.View
-                  style={{
-                    width: "23%",
-                    marginBottom: 12,
-                    transform: [{ scale: startScale }],
-                  }}
+                  style={[
+                    styles.notificationButton,
+                    { transform: [{ scale: startScale }] },
+                  ]}
                 >
                   <TouchableOpacity
                     style={{
@@ -1121,11 +1014,10 @@ export default function ProjectOverview() {
 
                 {/* COMPLETE BUTTON */}
                 <Animated.View
-                  style={{
-                    width: "23%",
-                    marginBottom: 0,
-                    transform: [{ scale: completeScale }],
-                  }}
+                  style={[
+                    styles.notificationButton,
+                    { transform: [{ scale: completeScale }] },
+                  ]}
                 >
                   <TouchableOpacity
                     style={{
@@ -1184,7 +1076,7 @@ export default function ProjectOverview() {
               {/* Offline Tasks Manager */}
               <OfflineTasksManager projectId={projectId} />
 
-              <View className="gap-2 mt-4 mb-2 w-full">
+              <View style={styles.actionButtonGroup}>
                 <TouchableOpacity
                   className="bg-white rounded-lg w-full mb-2"
                   onPress={() => {
@@ -1194,20 +1086,9 @@ export default function ProjectOverview() {
                     });
                   }}
                   activeOpacity={0.85}
-                  style={{
-                    paddingVertical: 12,
-                    paddingHorizontal: 14,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    minHeight: 48,
-                    shadowColor: "#000",
-                    shadowOpacity: 0.05,
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowRadius: 2,
-                    elevation: 2,
-                  }}
+                  style={styles.actionButton}
                 >
-                  <View className="bg-primary/10 rounded-full p-2 mr-3">
+                  <View style={styles.actionButtonIconContainer}>
                     <ScanIcon size={20} color="#15438e" />
                   </View>
                   <View className="flex-1">
@@ -1220,19 +1101,7 @@ export default function ProjectOverview() {
                   className="bg-white rounded-lg w-full"
                   activeOpacity={1}
                   // disabled
-                  style={{
-                    paddingVertical: 12,
-                    paddingHorizontal: 14,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    minHeight: 48,
-                    opacity: 1,
-                    shadowColor: "#000",
-                    shadowOpacity: 0.05,
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowRadius: 2,
-                    elevation: 2,
-                  }}
+                  style={styles.actionButton}
                   onPress={() =>
                     router.push({
                       pathname: `./copilot`,
@@ -1240,7 +1109,7 @@ export default function ProjectOverview() {
                     })
                   }
                 >
-                  <View className="bg-primary/10 rounded-full p-2 mr-3">
+                  <View style={styles.actionButtonIconContainer}>
                     {React.createElement(Bot as any, {
                       size: 20,
                       color: "#15438e",
@@ -1274,7 +1143,7 @@ export default function ProjectOverview() {
                       style={{
                         width: 80,
                         height: 100,
-                        padding: 12,
+                        padding: 18,
                       }}
                       onPress={() => {
                         if (item.onPress) {
@@ -1303,11 +1172,11 @@ export default function ProjectOverview() {
                           }}
                         >
                           {React.createElement(item.Icon as any, {
-                            size: 28,
+                            size: 30,
                             color: "#15438e",
                           })}
                         </View>
-                        <Text numberOfLines={2}>{item.title}</Text>
+                        <Text numberOfLines={1}>{item.title}</Text>
                       </View>
                     </TouchableOpacity>
                   ))}
@@ -1316,98 +1185,75 @@ export default function ProjectOverview() {
 
               <View className="w-full mt-2">
                 {/* Enhanced Toggle between Rooms and Chambers */}
-                <View className="flex-row items-center justify-between mb-6">
-                  <View className="flex-row bg-gray-200 rounded-xl p-1 shadow-sm">
+                <View style={styles.toggleContainer}>
+                  <View style={styles.toggleRow}>
+                    {/* Sliding Indicator */}
+                    <Animated.View
+                      style={[
+                        styles.toggleIndicator,
+                        {
+                          left: indicatorAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [4, tabWidth + 4],
+                          }),
+                          width: tabWidth - 8,
+                        },
+                      ]}
+                    />
+                    {/* Rooms Tab */}
                     <TouchableOpacity
                       onPress={() => setViewMode("rooms")}
-                      className={`px-6 py-3 rounded-lg flex-row items-center`}
-                      style={{
-                        backgroundColor:
-                          viewMode === "rooms" ? "#15438e" : "transparent",
-                        shadowColor:
-                          viewMode === "rooms" ? "#15438e" : "transparent",
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: viewMode === "rooms" ? 0.3 : 0,
-                        shadowRadius: 4,
-                        elevation: viewMode === "rooms" ? 4 : 0,
-                      }}
+                      style={[styles.toggleTab, { width: tabWidth - 8 }]}
+                      activeOpacity={0.85}
                     >
-                      <View
-                        className="w-2 h-2 rounded-full mr-2"
-                        style={{
-                          backgroundColor:
-                            viewMode === "rooms" ? "#ffffff" : "#6b7280",
-                        }}
-                      />
+                      {React.createElement(Home as any, {
+                        size: 18,
+                        color: viewMode === "rooms" ? "#fff" : "#374151",
+                        style: { marginRight: 6 },
+                      })}
                       <Text
-                        className="font-semibold text-sm"
-                        style={{
-                          color: viewMode === "rooms" ? "#ffffff" : "#374151",
-                        }}
+                        style={[
+                          styles.toggleTabText,
+                          { color: viewMode === "rooms" ? "#fff" : "#374151" },
+                        ]}
                       >
                         Rooms ({rooms?.length || 0})
                       </Text>
                     </TouchableOpacity>
+                    {/* Chambers Tab */}
                     <TouchableOpacity
                       onPress={() => setViewMode("chambers")}
-                      className={`px-6 py-3 rounded-lg flex-row items-center`}
-                      style={{
-                        backgroundColor:
-                          viewMode === "chambers" ? "#15438e" : "transparent",
-                        shadowColor:
-                          viewMode === "chambers" ? "#15438e" : "transparent",
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: viewMode === "chambers" ? 0.3 : 0,
-                        shadowRadius: 4,
-                        elevation: viewMode === "chambers" ? 4 : 0,
-                      }}
+                      style={[styles.toggleTab, { width: tabWidth - 8 }]}
+                      activeOpacity={0.85}
                     >
-                      <View
-                        className="w-2 h-2 rounded-full mr-2"
-                        style={{
-                          backgroundColor:
-                            viewMode === "chambers" ? "#ffffff" : "#6b7280",
-                        }}
-                      />
+                      {React.createElement(Grid2X2 as any, {
+                        size: 18,
+                        color: viewMode === "chambers" ? "#fff" : "#374151",
+                        style: { marginRight: 6 },
+                      })}
                       <Text
-                        className="font-semibold text-sm"
-                        style={{
-                          color:
-                            viewMode === "chambers" ? "#ffffff" : "#374151",
-                        }}
+                        style={[
+                          styles.toggleTabText,
+                          {
+                            color: viewMode === "chambers" ? "#fff" : "#374151",
+                          },
+                        ]}
                       >
                         Chambers ({chambers?.length || 0})
                       </Text>
                     </TouchableOpacity>
                   </View>
-
-                  {viewMode === "rooms" ? (
-                    <AddRoomButton
-                      showText={false}
-                      size="sm"
-                      className="rounded-full w-9 h-9 justify-center items-center bg-blue-50 border border-blue-200"
-                      onPress={() => router.push(`./rooms/create`)}
-                    />
-                  ) : (
-                    <TouchableOpacity
-                      onPress={() => router.push(`./chambers/create`)}
-                      className="rounded-full w-9 h-9 justify-center items-center bg-blue-50 border border-blue-200"
-                    >
-                      <PlusIcon size={20} color="#15438e" />
-                    </TouchableOpacity>
-                  )}
                 </View>
                 {viewMode === "rooms" ? (
                   <View
-                    style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}
+                    style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}
                   >
                     {rooms?.map((room) => (
                       <TouchableOpacity
                         key={room.id}
                         style={{
-                          width: "30%",
+                          width: "32%",
                           aspectRatio: 1,
-                          marginBottom: 12,
                           height: 70,
                           borderRadius: 12,
                           borderWidth: 4,
@@ -1481,19 +1327,27 @@ export default function ProjectOverview() {
                         style={{
                           flexDirection: "row",
                           flexWrap: "wrap",
-                          gap: 12,
+                          gap: 4,
                         }}
                       >
                         {chambers.map((chamber) => (
                           <TouchableOpacity
                             key={chamber.id}
                             style={{
-                              width: "48%",
+                              width: "32%",
                               aspectRatio: 1,
-                              marginBottom: 12,
-                              borderRadius: 12,
                               height: 70,
+                              borderRadius: 12,
+                              borderWidth: 4,
+                              borderColor: "white",
                               backgroundColor: "#f3f4f6",
+                              overflow: "hidden",
+                              shadowColor: "#000",
+                              shadowOpacity: 0.05,
+                              shadowOffset: { width: 0, height: 1 },
+                              shadowRadius: 2,
+                              elevation: 2,
+                              marginBottom: 4,
                             }}
                             onPress={() =>
                               router.push(
@@ -1518,8 +1372,8 @@ export default function ProjectOverview() {
                                 position: "absolute",
                                 left: 0,
                                 right: 0,
-                                bottom: 0,
-                                backgroundColor: "rgba(0,0,0,0.45)",
+                                top: 0,
+                                backgroundColor: "rgba(0,0,0,0.25)",
                                 paddingVertical: 8,
                                 paddingHorizontal: 10,
                                 alignItems: "center",
@@ -1689,3 +1543,279 @@ function GridCell({
     </TouchableOpacity>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  projectCard: {
+    marginTop: 16,
+    marginBottom: 16,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    marginHorizontal: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+    padding: 0,
+  },
+  cardTitleContainer: {
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 8,
+  },
+  cardTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    flexDirection: "row",
+    marginBottom: 10,
+  },
+  customerFace: {
+    width: 22,
+    height: 22,
+    resizeMode: "contain",
+    marginRight: 8,
+  },
+  customerText: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  streetViewTouchable: {
+    width: "100%",
+    height: 160,
+    backgroundColor: "#e0e7ef",
+  },
+  streetViewLoadingContainer: {
+    width: "100%",
+    height: 160,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  streetViewLoadingText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: "#64748b",
+  },
+  streetViewImageContainer: {
+    width: "100%",
+    height: 160,
+    position: "relative",
+  },
+  streetViewImage: {
+    width: "100%",
+    height: 160,
+    resizeMode: "cover",
+  },
+  projectImageOverlay: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  projectImageOverlayText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  streetViewFallback: {
+    width: "100%",
+    height: 160,
+    backgroundColor: "#e0e7ef",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  streetViewFallbackText: {
+    fontSize: 48,
+    fontWeight: "700",
+    lineHeight: 48,
+    color: "#64748b",
+  },
+  infoSection: {
+    paddingVertical: 18,
+  },
+  projectNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    marginBottom: 8,
+  },
+  projectNameLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  projectNameText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1e293b",
+    textAlign: "center",
+    textTransform: "capitalize",
+  },
+  statusDamageTagsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  projectNameRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  iconButton: {
+    // Styles for icon buttons
+  },
+  locationRow: {
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    marginBottom: 8,
+  },
+  locationRowInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  locationText: {
+    fontSize: 16,
+    flex: 1,
+  },
+  locationIconButton: {
+    marginLeft: 8,
+  },
+  customerInfoButton: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 6,
+    paddingHorizontal: 18,
+    borderTopWidth: 1,
+    borderTopColor: "#e0e7ef",
+    paddingTop: 12,
+  },
+  customerInfoButtonText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1e293b",
+    textAlign: "center",
+  },
+  notificationsCard: {
+    marginBottom: 10,
+    backgroundColor: "white",
+    borderRadius: 16,
+    marginHorizontal: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  notificationsCardHeader: {
+    backgroundColor: "transparent",
+    paddingBottom: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  notificationsCardTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  notificationsButtonRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    gap: 10,
+    width: "100%",
+    flex: 1,
+    paddingHorizontal: 4,
+  },
+  notificationButton: {
+    marginBottom: 12,
+    width: "23%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionButtonGroup: {
+    gap: 2,
+    marginTop: 4,
+    marginBottom: 2,
+    width: "100%",
+  },
+  actionButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 78,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+    backgroundColor: "white",
+    borderRadius: 16,
+  },
+  actionButtonIconContainer: {
+    backgroundColor: "#e0e7ef",
+    borderRadius: 999,
+    padding: 8,
+    marginRight: 6,
+  },
+  toggleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 24,
+    position: "relative",
+  },
+  toggleRow: {
+    flexDirection: "row",
+    backgroundColor: "#e5e7eb",
+    borderRadius: 16,
+    padding: 4,
+    position: "relative",
+    width: "100%",
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  toggleIndicator: {
+    position: "absolute",
+    top: 4,
+    borderRadius: 12,
+    zIndex: 0,
+    shadowColor: "#15438e",
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+    backgroundColor: "#15438e",
+    height: 44,
+  },
+  toggleTab: {
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    zIndex: 1,
+  },
+  toggleTabText: {
+    fontWeight: "700",
+    fontSize: 15,
+  },
+});
