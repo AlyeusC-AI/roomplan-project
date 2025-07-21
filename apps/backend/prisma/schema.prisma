@@ -888,8 +888,7 @@ model ProjectMaterial {
   customVariance Float?
 
   // Moisture content and dry goal data
-  initialMoisture Float? // Initial moisture content (%)
-  currentMoisture Float? // Current moisture content (%)
+  moistureContent Float? // Combined moisture content (%)
   dryGoal         Float? // Target dry goal (%)
 
   // Dry standard compliance

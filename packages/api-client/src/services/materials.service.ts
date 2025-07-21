@@ -116,14 +116,4 @@ export const materialsService = {
     );
     return response.data;
   },
-
-  async calculateDryGoal(
-    materialId: string,
-    initialMoisture: number
-  ): Promise<number> {
-    const response = await apiClient.get<number>(
-      `/materials/calculate-dry-goal/${materialId}/${initialMoisture}`
-    );
-    return response.data;
-  },
 };

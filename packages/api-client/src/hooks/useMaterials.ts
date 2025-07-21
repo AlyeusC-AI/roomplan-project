@@ -178,15 +178,3 @@ export const useCheckDryGoalCompliance = (id: string) => {
     enabled: !!id,
   });
 };
-
-export const useCalculateDryGoal = (
-  materialId: string,
-  initialMoisture: number
-) => {
-  return useQuery({
-    queryKey: [...materialKeys.detail(materialId), "dryGoal", initialMoisture],
-    queryFn: () =>
-      materialsService.calculateDryGoal(materialId, initialMoisture),
-    enabled: !!materialId && !isNaN(initialMoisture),
-  });
-};

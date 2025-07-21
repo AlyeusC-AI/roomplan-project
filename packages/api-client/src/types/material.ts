@@ -45,8 +45,7 @@ export interface ProjectMaterial {
   material: Material;
   project: any; // Project type
   customVariance?: number;
-  initialMoisture?: number;
-  currentMoisture?: number;
+  moistureContent?: number;
   dryGoal?: number;
   isDryStandardCompliant: boolean;
   wallReadings: any[]; // WallReading type
@@ -58,15 +57,13 @@ export interface CreateProjectMaterialDto {
   projectId: string;
   materialId: string;
   customVariance?: number;
-  initialMoisture?: number;
-  currentMoisture?: number;
+  moistureContent?: number;
   dryGoal?: number;
 }
 
 export interface UpdateProjectMaterialDto {
   customVariance?: number;
-  initialMoisture?: number;
-  currentMoisture?: number;
+  moistureContent?: number;
   dryGoal?: number;
 }
 

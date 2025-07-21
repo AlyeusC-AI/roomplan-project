@@ -109,16 +109,4 @@ export class MaterialsController {
   async checkDryGoalCompliance(@Param('id') id: string): Promise<any> {
     return this.materialsService.checkDryGoalCompliance(id);
   }
-
-  @Get('calculate-dry-goal/:materialId/:initialMoisture')
-  async calculateDryGoal(
-    @Param('materialId') materialId: string,
-    @Param('initialMoisture') initialMoisture: string,
-  ): Promise<any> {
-    const moisture = parseFloat(initialMoisture);
-    if (isNaN(moisture)) {
-      throw new Error('Invalid initial moisture value');
-    }
-    return this.materialsService.calculateDryGoal(materialId, moisture);
-  }
 }
