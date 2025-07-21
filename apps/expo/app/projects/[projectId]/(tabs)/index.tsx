@@ -249,6 +249,12 @@ export default function ProjectOverview() {
           `${process.env.EXPO_PUBLIC_BASE_URL}/projects/${projectId}/report`
         ),
     },
+    {
+      path: "./dry-standard",
+      Icon: CheckCircle as any,
+      title: "Dry Standard",
+      description: "Manage dry standard goals",
+    },
   ];
 
   const handleArrivalPress = () => {
@@ -312,7 +318,7 @@ export default function ProjectOverview() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 20 }}
         keyboardShouldPersistTaps="handled"
@@ -321,51 +327,133 @@ export default function ProjectOverview() {
           <View>
             {/* Enhanced Project Info Card */}
 
-            <Card style={{ marginTop: 16, marginBottom: 16, backgroundColor: '#fff', borderRadius: 16, marginHorizontal: 16, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4, padding: 0, overflow: 'hidden' }}>
+            <Card
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                backgroundColor: "#fff",
+                borderRadius: 16,
+                marginHorizontal: 16,
+                shadowColor: "#000",
+                shadowOpacity: 0.12,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 4,
+                padding: 0,
+                overflow: "hidden",
+              }}
+            >
               {/* CardTitle at the top: Customer Name */}
-              <View style={{ paddingHorizontal: 18, paddingTop: 18, paddingBottom: 8 }}>
-              <CardTitle style={{ fontSize: 22, fontWeight: '700',flexDirection: 'row',marginBottom: 10 }}>
-              <Image
-                      source={CustomerFace}
-                      style={{ width: 22, height: 22, resizeMode: "contain" ,marginRight: 8}}
-                    />
-                  <Text style={{ fontSize: 18, fontWeight: '700',  }}>Customer</Text>
+              <View
+                style={{
+                  paddingHorizontal: 18,
+                  paddingTop: 18,
+                  paddingBottom: 8,
+                }}
+              >
+                <CardTitle
+                  style={{
+                    fontSize: 22,
+                    fontWeight: "700",
+                    flexDirection: "row",
+                    marginBottom: 10,
+                  }}
+                >
+                  <Image
+                    source={CustomerFace}
+                    style={{
+                      width: 22,
+                      height: 22,
+                      resizeMode: "contain",
+                      marginRight: 8,
+                    }}
+                  />
+                  <Text style={{ fontSize: 18, fontWeight: "700" }}>
+                    Customer
+                  </Text>
                 </CardTitle>
-               
               </View>
 
               {/* Project Image (full width, below title) */}
               {project?.data?.mainImage ? (
-                <View style={{ width: '100%', height: 160, backgroundColor: '#e0e7ef' }}>
+                <View
+                  style={{
+                    width: "100%",
+                    height: 160,
+                    backgroundColor: "#e0e7ef",
+                  }}
+                >
                   <Animated.Image
                     source={{ uri: project.data.mainImage }}
-                    style={{ width: '100%', height: 160, resizeMode: 'cover' }}
+                    style={{ width: "100%", height: 160, resizeMode: "cover" }}
                   />
                 </View>
               ) : (
-                <View style={{ width: '100%', height: 160, backgroundColor: '#e0e7ef', justifyContent: 'center', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 48, fontWeight: '700', lineHeight: 48, color: '#64748b' }}>{project?.data?.name?.[0] || '?'}</Text>
+                <View
+                  style={{
+                    width: "100%",
+                    height: 160,
+                    backgroundColor: "#e0e7ef",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 48,
+                      fontWeight: "700",
+                      lineHeight: 48,
+                      color: "#64748b",
+                    }}
+                  >
+                    {project?.data?.name?.[0] || "?"}
+                  </Text>
                 </View>
               )}
 
               {/* Info Section */}
-              <View style={{ paddingVertical: 18, }}>
-                
+              <View style={{ paddingVertical: 18 }}>
                 {/* Project Name Row: Justify between message and call icons */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, paddingHorizontal: 18, marginBottom: 8 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    paddingVertical: 12,
+                    paddingHorizontal: 18,
+                    marginBottom: 8,
+                  }}
+                >
                   {/* Project Name (clickable) */}
                   <TouchableOpacity
-                    onPress={() => router.push({
-                      pathname: "./details",
-                      params: { activeTab: "customer" },
-                    })}
+                    onPress={() =>
+                      router.push({
+                        pathname: "./details",
+                        params: { activeTab: "customer" },
+                      })
+                    }
                     activeOpacity={0.7}
                   >
-                    <Text style={{ fontSize: 18, fontWeight: '700', color: '#1e293b', textAlign: 'center', textTransform: "capitalize" }} numberOfLines={1}>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "700",
+                        color: "#1e293b",
+                        textAlign: "center",
+                        textTransform: "capitalize",
+                      }}
+                      numberOfLines={1}
+                    >
                       {project?.data?.name}
                     </Text>
                   </TouchableOpacity>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 10,
+                    }}
+                  >
                     {/* Message Icon */}
                     <TouchableOpacity
                       disabled={!project?.data?.clientEmail}
@@ -383,14 +471,17 @@ export default function ProjectOverview() {
                       disabled={!project?.data?.clientPhoneNumber}
                       onPress={() => {
                         if (project?.data?.clientPhoneNumber) {
-                          Linking.openURL(`tel:${project.data.clientPhoneNumber}`);
+                          Linking.openURL(
+                            `tel:${project.data.clientPhoneNumber}`
+                          );
                         }
                       }}
-                      style={{ opacity: project?.data?.clientPhoneNumber ? 1 : 0.4 }}
+                      style={{
+                        opacity: project?.data?.clientPhoneNumber ? 1 : 0.4,
+                      }}
                     >
                       <PhoneIcon size={22} color="#15438e" />
                     </TouchableOpacity>
-                  
                   </View>
                 </View>
                 {/* Customer Email and Phone */}
@@ -401,50 +492,98 @@ export default function ProjectOverview() {
                   <Text style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }} numberOfLines={1}>{project.data.clientPhoneNumber}</Text>
                 ) : null} */}
                 {/* Location Row: Justify between location text and icon */}
-                <View style={{paddingVertical: 12, paddingHorizontal: 18, marginBottom: 8 }}>
-                {project?.data?.location && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <Text style={{ fontSize: 14, flex: 1 }} numberOfLines={1}>
-                      {project.data.location}
-                    </Text>
-                    <TouchableOpacity onPress={()=>setShowDirectionsModal(true)} style={{ marginLeft: 8 }}>
-                      <MapPinIcon size={22} color="#15438e" />
-                    </TouchableOpacity>
+                <View
+                  style={{
+                    paddingVertical: 12,
+                    paddingHorizontal: 18,
+                    marginBottom: 8,
+                  }}
+                >
+                  {project?.data?.location && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: 8,
+                      }}
+                    >
+                      <Text style={{ fontSize: 14, flex: 1 }} numberOfLines={1}>
+                        {project.data.location}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => setShowDirectionsModal(true)}
+                        style={{ marginLeft: 8 }}
+                      >
+                        <MapPinIcon size={22} color="#15438e" />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  {/* Status, Damage, Tags */}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: 8,
+                    }}
+                  >
+                    {project?.data?.status?.label && (
+                      <StatusBadge status={project.data.status} />
+                    )}
+                    {project?.data?.lossType && (
+                      <DamageBadge lossType={project.data.lossType} />
+                    )}
+                    <ProjectTags
+                      tags={project?.data?.tags}
+                      onAddTags={() => setShowTagsModal(true)}
+                    />
                   </View>
-                )}
-                {/* Status, Damage, Tags */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8,}}>
-                  {project?.data?.status?.label && (
-                    <StatusBadge status={project.data.status} />
-                  )}
-                  {project?.data?.lossType && (
-                    <DamageBadge lossType={project.data.lossType} />
-                  )}
-                  <ProjectTags
-                    tags={project?.data?.tags}
-                    onAddTags={() => setShowTagsModal(true)}
+                  <ImageTagsModal
+                    visible={showTagsModal}
+                    type="PROJECT"
+                    onClose={() => setShowTagsModal(false)}
+                    projectId={project?.data?.id}
+                    currentTags={project?.data?.tags || []}
+                    onTagsUpdated={() => {
+                      refetch();
+                    }}
                   />
                 </View>
-                <ImageTagsModal
-                  visible={showTagsModal}
-                  type="PROJECT"
-                  onClose={() => setShowTagsModal(false)}
-                  projectId={project?.data?.id}
-                  currentTags={project?.data?.tags || []}
-                  onTagsUpdated={() => {
-                    refetch();
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 6,
+                    paddingHorizontal: 18,
+                    borderTopWidth: 1,
+                    borderTopColor: "#e0e7ef",
+                    paddingTop: 12,
                   }}
-                />
+                >
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "700",
+                      color: "#1e293b",
+                      textAlign: "center",
+                    }}
+                    numberOfLines={1}
+                  >
+                    Customer Information
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setShowClientInfo(true)}
+                    style={{ marginLeft: 8 }}
+                  >
+                    {React.createElement(ChevronRightCircle as any, {
+                      size: 22,
+                      color: "#15438e",
+                    })}
+                  </TouchableOpacity>
                 </View>
-                
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, paddingHorizontal: 18, borderTopWidth: 1, borderTopColor: '#e0e7ef', paddingTop: 12 }}>
-                <Text style={{ fontSize: 18, fontWeight: '700', color: '#1e293b', textAlign: 'center' }} numberOfLines={1}>
-                  Customer Information
-                </Text>
-                <TouchableOpacity onPress={() => setShowClientInfo(true)} style={{ marginLeft: 8 }}>
-                  {React.createElement(ChevronRightCircle as any, { size: 22, color: "#15438e" })}
-                </TouchableOpacity>
-              </View>
               </View>
             </Card>
             {/* Client Info Button (TouchableOpacity) */}
@@ -457,7 +596,6 @@ export default function ProjectOverview() {
             </Text>
             <ChevronDown size={20} className="ml-2 text-foreground" />
         </TouchableOpacity> */}
-
 
             {/* Client Info Modal */}
             <Modal
@@ -773,10 +911,32 @@ export default function ProjectOverview() {
                 </View>
               </View>
             </Modal>
-            <Card style={{ marginBottom: 10, backgroundColor: 'white', borderRadius: 16, marginHorizontal: 16, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 }}>
-              <CardHeader style={{ backgroundColor: 'transparent', paddingBottom: 0, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Card
+              style={{
+                marginBottom: 10,
+                backgroundColor: "white",
+                borderRadius: 16,
+                marginHorizontal: 16,
+                shadowColor: "#000",
+                shadowOpacity: 0.12,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 4,
+              }}
+            >
+              <CardHeader
+                style={{
+                  backgroundColor: "transparent",
+                  paddingBottom: 0,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
                 {/* <CircleDot size={20} color="#15438e" /> */}
-                <CardTitle style={{ fontSize: 18, fontWeight: '700' }}>Customer Notifications</CardTitle>
+                <CardTitle style={{ fontSize: 18, fontWeight: "700" }}>
+                  Customer Notifications
+                </CardTitle>
               </CardHeader>
               <Separator className="my-2" />
               <View
@@ -813,11 +973,34 @@ export default function ProjectOverview() {
                     onPress={handleArrivalPress}
                     activeOpacity={0.7}
                   >
-                    <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", paddingVertical: 14, paddingHorizontal: 4 }}>
-                      <View style={{ backgroundColor: "#f3f4f6", borderRadius: 999, padding: 8, marginBottom: 6 }}>
+                    <View
+                      style={{
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingVertical: 14,
+                        paddingHorizontal: 4,
+                      }}
+                    >
+                      <View
+                        style={{
+                          backgroundColor: "#f3f4f6",
+                          borderRadius: 999,
+                          padding: 8,
+                          marginBottom: 6,
+                        }}
+                      >
                         <TruckIcon size={30} color="#15438e" />
                       </View>
-                      <Text style={{ color: "#15438e", fontWeight: "600", fontSize: 12 }}>On My Way</Text>
+                      <Text
+                        style={{
+                          color: "#15438e",
+                          fontWeight: "600",
+                          fontSize: 12,
+                        }}
+                      >
+                        On My Way
+                      </Text>
                     </View>
                   </TouchableOpacity>
                 </Animated.View>
@@ -845,11 +1028,34 @@ export default function ProjectOverview() {
                     onPress={handleStartPress}
                     activeOpacity={0.7}
                   >
-                    <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", paddingVertical: 14, paddingHorizontal: 4 }}>
-                      <View style={{ backgroundColor: "#f3f4f6", borderRadius: 999, padding: 8, marginBottom: 6 }}>
+                    <View
+                      style={{
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingVertical: 14,
+                        paddingHorizontal: 4,
+                      }}
+                    >
+                      <View
+                        style={{
+                          backgroundColor: "#f3f4f6",
+                          borderRadius: 999,
+                          padding: 8,
+                          marginBottom: 6,
+                        }}
+                      >
                         <TimerIcon size={30} color="#15438e" />
                       </View>
-                      <Text style={{ color: "#15438e", fontWeight: "600", fontSize: 12 }}>Start</Text>
+                      <Text
+                        style={{
+                          color: "#15438e",
+                          fontWeight: "600",
+                          fontSize: 12,
+                        }}
+                      >
+                        Start
+                      </Text>
                     </View>
                   </TouchableOpacity>
                 </Animated.View>
@@ -877,16 +1083,37 @@ export default function ProjectOverview() {
                     onPress={handleCompletePress}
                     activeOpacity={0.7}
                   >
-                    <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", paddingVertical: 14, paddingHorizontal: 4 }}>
-                      <View style={{ backgroundColor: "#f3f4f6", borderRadius: 999, padding: 8, marginBottom: 6 }}>
+                    <View
+                      style={{
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingVertical: 14,
+                        paddingHorizontal: 4,
+                      }}
+                    >
+                      <View
+                        style={{
+                          backgroundColor: "#f3f4f6",
+                          borderRadius: 999,
+                          padding: 8,
+                          marginBottom: 6,
+                        }}
+                      >
                         <CheckCircleIcon size={30} color="#15438e" />
                       </View>
-                      <Text style={{ color: "#15438e", fontWeight: "600", fontSize: 12 }}>Complete</Text>
+                      <Text
+                        style={{
+                          color: "#15438e",
+                          fontWeight: "600",
+                          fontSize: 12,
+                        }}
+                      >
+                        Complete
+                      </Text>
                     </View>
                   </TouchableOpacity>
                 </Animated.View>
-
-            
               </View>
             </Card>
 
@@ -925,12 +1152,8 @@ export default function ProjectOverview() {
                     <ScanIcon size={20} color="#15438e" />
                   </View>
                   <View className="flex-1">
-                    <Text className="font-semibold text-base">
-                      Floor Plan
-                    </Text>
-                    <Text className="text-xs mt-0.5">
-                      Lidar scans
-                    </Text>
+                    <Text className="font-semibold text-base">Floor Plan</Text>
+                    <Text className="text-xs mt-0.5">Lidar scans</Text>
                   </View>
                   <ChevronRightIcon size={20} color="#15438e" />
                 </TouchableOpacity>
@@ -959,12 +1182,13 @@ export default function ProjectOverview() {
                   }
                 >
                   <View className="bg-primary/10 rounded-full p-2 mr-3">
-                    {React.createElement(Bot as any, { size: 20, color: "#15438e" })}
+                    {React.createElement(Bot as any, {
+                      size: 20,
+                      color: "#15438e",
+                    })}
                   </View>
                   <View className="flex-1">
-                    <Text className="font-semibold text-base">
-                      Co-Pilot
-                    </Text>
+                    <Text className="font-semibold text-base">Co-Pilot</Text>
                     <Text className="text-xs mt-0.5">
                       Project & Room Checklist
                     </Text>
@@ -1010,18 +1234,21 @@ export default function ProjectOverview() {
                       activeOpacity={0.7}
                     >
                       <View className="flex-1 items-center justify-center">
-                        <View  className="shadow-sm" style={{ backgroundColor: "white", borderRadius: 999, padding: 10, marginBottom: 6, }}>
+                        <View
+                          className="shadow-sm"
+                          style={{
+                            backgroundColor: "white",
+                            borderRadius: 999,
+                            padding: 10,
+                            marginBottom: 6,
+                          }}
+                        >
                           {React.createElement(item.Icon as any, {
                             size: 28,
                             color: "#15438e",
                           })}
                         </View>
-                        <Text
-                          
-                          numberOfLines={2}
-                        >
-                          {item.title}
-                        </Text>
+                        <Text numberOfLines={2}>{item.title}</Text>
                       </View>
                     </TouchableOpacity>
                   ))}
@@ -1119,11 +1346,11 @@ export default function ProjectOverview() {
                       <TouchableOpacity
                         key={room.id}
                         style={{
-                          width: "30%", 
+                          width: "30%",
                           aspectRatio: 1,
                           marginBottom: 12,
                           height: 70,
-                          borderRadius: 12, 
+                          borderRadius: 12,
                           borderWidth: 4,
                           borderColor: "white",
                           backgroundColor: "#f3f4f6",

@@ -23,6 +23,8 @@ import {
 import { projectStore } from "@/lib/state/project";
 import { userStore } from "@/lib/state/user";
 import { useGetProjectById } from "@service-geek/api-client";
+import DryStandardScreen from "./dry-standard";
+import DryStandardDetailScreen from "./dry-standard-detail";
 export default function Layout() {
   const { projectId } = useGlobalSearchParams();
 
@@ -202,6 +204,20 @@ export default function Layout() {
         name="copilot"
         options={{
           title: "Copilot",
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="dry-standard"
+        options={{
+          title: "Dry Standard",
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="dry-standard-detail"
+        options={{
+          title: "Dry Standard Detail",
           href: null,
         }}
       />
