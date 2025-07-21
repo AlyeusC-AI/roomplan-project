@@ -31,8 +31,7 @@ export default function DryStandardDetailScreen() {
   const [form, setForm] = useState({
     materialId: "",
     customVariance: "",
-    initialMoisture: "",
-    currentMoisture: "",
+    moistureContent: "",
     dryGoal: "",
   });
 
@@ -41,8 +40,7 @@ export default function DryStandardDetailScreen() {
       setForm({
         materialId: projectMaterial.materialId,
         customVariance: projectMaterial.customVariance?.toString() ?? "",
-        initialMoisture: projectMaterial.initialMoisture?.toString() ?? "",
-        currentMoisture: projectMaterial.currentMoisture?.toString() ?? "",
+        moistureContent: projectMaterial.moistureContent?.toString() ?? "",
         dryGoal: projectMaterial.dryGoal?.toString() ?? "",
       });
     }
@@ -56,11 +54,8 @@ export default function DryStandardDetailScreen() {
           customVariance: form.customVariance
             ? parseFloat(form.customVariance)
             : undefined,
-          initialMoisture: form.initialMoisture
-            ? parseFloat(form.initialMoisture)
-            : undefined,
-          currentMoisture: form.currentMoisture
-            ? parseFloat(form.currentMoisture)
+          moistureContent: form.moistureContent
+            ? parseFloat(form.moistureContent)
             : undefined,
           dryGoal: form.dryGoal ? parseFloat(form.dryGoal) : undefined,
         },
@@ -101,22 +96,10 @@ export default function DryStandardDetailScreen() {
         Dry Standard Details
       </Text>
       <Text>Material: {projectMaterial.material.name}</Text>
-      <Text>Custom Variance (%)</Text>
+      <Text>Moisture Content (%)</Text>
       <Input
-        value={form.customVariance}
-        onChangeText={(v) => setForm((f) => ({ ...f, customVariance: v }))}
-        keyboardType="numeric"
-      />
-      <Text>Initial Moisture (%)</Text>
-      <Input
-        value={form.initialMoisture}
-        onChangeText={(v) => setForm((f) => ({ ...f, initialMoisture: v }))}
-        keyboardType="numeric"
-      />
-      <Text>Current Moisture (%)</Text>
-      <Input
-        value={form.currentMoisture}
-        onChangeText={(v) => setForm((f) => ({ ...f, currentMoisture: v }))}
+        value={form.moistureContent}
+        onChangeText={(v) => setForm((f) => ({ ...f, moistureContent: v }))}
         keyboardType="numeric"
       />
       <Text>Dry Goal (%)</Text>
@@ -139,6 +122,12 @@ export default function DryStandardDetailScreen() {
           disabled={deleteMutation.status === "pending"}
         />
       </View>
+      {/* Show dry standard if available */}
+      {projectMaterial.material.dryStandard !== undefined && (
+        <Text style={{ color: "#0c4a6e", fontWeight: "600" }}>
+          Dry Standard: {projectMaterial.material.dryStandard}%
+        </Text>
+      )}
     </ScrollView>
   );
 }

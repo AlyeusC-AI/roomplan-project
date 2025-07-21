@@ -23,7 +23,7 @@ export class CreateProjectMaterialDto {
   customVariance?: number;
 
   @ApiPropertyOptional({
-    description: 'Initial moisture content (%)',
+    description: 'Moisture content (%)',
     minimum: 0,
     maximum: 100,
     example: 25.5,
@@ -32,19 +32,7 @@ export class CreateProjectMaterialDto {
   @Min(0)
   @Max(100)
   @IsOptional()
-  initialMoisture?: number;
-
-  @ApiPropertyOptional({
-    description: 'Current moisture content (%)',
-    minimum: 0,
-    maximum: 100,
-    example: 18.2,
-  })
-  @IsNumber()
-  @Min(0)
-  @Max(100)
-  @IsOptional()
-  currentMoisture?: number;
+  moistureContent?: number;
 
   @ApiPropertyOptional({
     description: 'Target dry goal (%)',

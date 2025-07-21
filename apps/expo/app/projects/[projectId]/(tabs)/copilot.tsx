@@ -438,7 +438,7 @@ export default function CopilotScreen() {
       {/* Instructional Text */}
       <ScrollView style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
         {/* Project Tasks Checklist */}
-        {!showRoomTasks && (
+        {showRoomTasks && (
           <Card style={{ marginHorizontal: 16, marginBottom: 16 }}>
             <CardHeader
               style={{

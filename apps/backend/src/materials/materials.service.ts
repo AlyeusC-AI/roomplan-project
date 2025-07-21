@@ -126,19 +126,11 @@ export class MaterialsService {
   ): Promise<Prisma.ProjectMaterialGetPayload<{}>> {
     // Validate moisture values
     if (
-      data.initialMoisture !== undefined &&
-      (data.initialMoisture < 0 || data.initialMoisture > 100)
+      data.moistureContent !== undefined &&
+      (data.moistureContent < 0 || data.moistureContent > 100)
     ) {
       throw new BadRequestException(
-        'Initial moisture must be between 0 and 100',
-      );
-    }
-    if (
-      data.currentMoisture !== undefined &&
-      (data.currentMoisture < 0 || data.currentMoisture > 100)
-    ) {
-      throw new BadRequestException(
-        'Current moisture must be between 0 and 100',
+        'Moisture content must be between 0 and 100',
       );
     }
     if (
@@ -166,8 +158,7 @@ export class MaterialsService {
         projectId: data.projectId,
         materialId: data.materialId,
         customVariance: data.customVariance,
-        initialMoisture: data.initialMoisture,
-        currentMoisture: data.currentMoisture,
+        moistureContent: data.moistureContent,
         dryGoal: data.dryGoal,
         isDryStandardCompliant,
       },
@@ -230,19 +221,11 @@ export class MaterialsService {
 
     // Validate moisture values
     if (
-      data.initialMoisture !== undefined &&
-      (data.initialMoisture < 0 || data.initialMoisture > 100)
+      data.moistureContent !== undefined &&
+      (data.moistureContent < 0 || data.moistureContent > 100)
     ) {
       throw new BadRequestException(
-        'Initial moisture must be between 0 and 100',
-      );
-    }
-    if (
-      data.currentMoisture !== undefined &&
-      (data.currentMoisture < 0 || data.currentMoisture > 100)
-    ) {
-      throw new BadRequestException(
-        'Current moisture must be between 0 and 100',
+        'Moisture content must be between 0 and 100',
       );
     }
     if (
@@ -273,8 +256,7 @@ export class MaterialsService {
       where: { id },
       data: {
         customVariance: data.customVariance,
-        initialMoisture: data.initialMoisture,
-        currentMoisture: data.currentMoisture,
+        moistureContent: data.moistureContent,
         dryGoal: data.dryGoal,
         ...(isDryStandardCompliant !== undefined && { isDryStandardCompliant }),
       },
@@ -303,19 +285,6 @@ export class MaterialsService {
     });
   }
 
-  // Helper method to calculate dry goal based on material variance
-  async calculateDryGoal(
-    materialId: string,
-    initialMoisture: number,
-  ): Promise<number> {
-    const material = await this.findOne(materialId);
-    const variance = material.variance;
-
-    // Dry goal calculation: initial moisture - variance
-    // This ensures the material reaches the dry standard threshold
-    return Math.max(0, initialMoisture - variance);
-  }
-
   // Helper method to check if current moisture meets dry goal
   async checkDryGoalCompliance(projectMaterialId: string): Promise<{
     isCompliant: boolean;
@@ -325,19 +294,19 @@ export class MaterialsService {
   }> {
     const projectMaterial = await this.getProjectMaterial(projectMaterialId);
 
-    if (!projectMaterial.currentMoisture || !projectMaterial.dryGoal) {
+    if (!projectMaterial.moistureContent || !projectMaterial.dryGoal) {
       throw new BadRequestException(
-        'Current moisture and dry goal must be set',
+        'Moisture content and dry goal must be set',
       );
     }
 
     const difference =
-      projectMaterial.currentMoisture - projectMaterial.dryGoal;
+      projectMaterial.moistureContent - projectMaterial.dryGoal;
     const isCompliant = difference <= 0; // Current moisture should be <= dry goal
 
     return {
       isCompliant,
-      currentMoisture: projectMaterial.currentMoisture,
+      currentMoisture: projectMaterial.moistureContent,
       dryGoal: projectMaterial.dryGoal,
       difference: Math.abs(difference),
     };
