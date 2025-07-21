@@ -29,6 +29,7 @@ import { useOfflineTasksStore, OfflineTask } from "@/lib/state/offline-tasks";
 import { useNetworkStatus } from "@/lib/providers/QueryProvider";
 import { toast } from "sonner-native";
 import { offlineNotesProcessor } from "@/lib/services/offline-notes-processor";
+import { Colors } from "@/constants/Colors";
 
 // Type assertion to fix ReactNode compatibility
 const ExpoImageComponent = ExpoImage as any;
@@ -96,7 +97,7 @@ export default function OfflineTasksManager({
   const getTaskIcon = (type: OfflineTask["type"]) => {
     switch (type) {
       case "upload":
-        return <UploadComponent size={16} color="#15438e" />;
+        return <UploadComponent size={16} color={Colors.light.primary} />;
       case "reading":
         return <BookOpenComponent size={16} color="#059669" />;
       case "edit":
@@ -117,7 +118,7 @@ export default function OfflineTasksManager({
       case "pending":
         return <ClockComponent size={16} color="#f59e0b" />;
       case "processing":
-        return <PlayComponent size={16} color="#15438e" />;
+        return <PlayComponent size={16} color={Colors.light.primary} />;
       case "completed":
         return <CheckCircleComponent size={16} color="#059669" />;
       case "failed":
@@ -229,7 +230,7 @@ export default function OfflineTasksManager({
             onPress={() => handleExecuteTask(task.id)}
             disabled={isProcessing}
           >
-            <PlayComponent size={14} color="#15438e" />
+            <PlayComponent size={14} color={Colors.light.primary} />
             <Text style={styles.actionButtonText}>Execute</Text>
           </TouchableOpacity>
         )}
@@ -481,7 +482,7 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: 12,
-    color: "#15438e",
+    color: Colors.light.primary,
     fontWeight: "500",
   },
   summary: {
@@ -511,7 +512,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   executeAllButton: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
   executeAllText: {
     color: "#fff",

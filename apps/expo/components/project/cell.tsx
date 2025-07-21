@@ -86,14 +86,16 @@ export default function ProjectCell({ project }: { project: Project }) {
             //   <Text className="text-xs font-semibold text-white"
             //   style={{
             //     color: status?.data.color?.toLowerCase() === 'cyan' ? 'black' : "white"
-                
+
             //   }}>
             //     {status?.data.label}
             //   </Text>
             // </View>
             <StatusBadge status={status?.data} />
           )}
-          <Text style={[styles.cardTitle,{marginTop:4}]}>{`${project.name}`}</Text>
+          <Text
+            style={[styles.cardTitle, { marginTop: 4 }]}
+          >{`${project.name}`}</Text>
           <Text style={styles.cardSubTitle}>{project.location}</Text>
           {/* <Text style={[styles.cardTag, { color: status?.data.color }]}>
             {status?.data.label}
@@ -185,12 +187,12 @@ const styles = StyleSheet.create({
   cardImgContainer: {
     borderRadius: 12,
     marginRight: 0,
-    backgroundColor: '#fff', // Optional: helps shadow visibility
+    backgroundColor: "#fff", // Optional: helps shadow visibility
     borderWidth: 1,
-    borderColor: '#fff',
+    borderColor: "#fff",
   },
   shadow: {
-    shadowColor: '#000', // Ensure shadow is black
+    shadowColor: "#000", // Ensure shadow is black
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
@@ -319,7 +321,7 @@ const styles = StyleSheet.create({
 //         </HStack>
 //         <HStack justifyContent="space-between" mt="4">
 //           <HStack color="coolGray.700" maxW="1/2">
-//             <Map width={24} height={24} stroke="#15438e" />
+//             <Map width={24} height={24} stroke={Colors.light.primary} />
 //             <View marginLeft={2}>
 //               <Address address={project.location} />
 //             </View>

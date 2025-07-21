@@ -27,6 +27,7 @@ import {
   useActiveOrganization,
   useGetProjectById,
 } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 export type NotificationType = "arrival" | "start_work" | "complete_work";
 
@@ -418,7 +419,7 @@ export default function NotificationScreen({
 
         {loading && (
           <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#15438e"  />
+            <ActivityIndicator size="large" color={Colors.light.primary} />
           </View>
         )}
       </KeyboardAvoidingView>
@@ -539,7 +540,7 @@ const styles = StyleSheet.create({
     borderColor: "#e5e7eb",
   },
   statusOptionSelected: {
-    borderColor: "#15438e" ,
+    borderColor: Colors.light.primary,
     backgroundColor: "#eff6ff",
   },
   statusIconContainer: {
@@ -552,7 +553,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   statusIconContainerSelected: {
-    backgroundColor: "#15438e" ,
+    backgroundColor: Colors.light.primary,
   },
   statusTextContainer: {
     flex: 1,
@@ -635,7 +636,7 @@ const styles = StyleSheet.create({
     borderTopColor: "#e5e7eb",
   },
   sendButton: {
-    backgroundColor: "#15438e" ,
+    backgroundColor: Colors.light.primary,
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: "center",

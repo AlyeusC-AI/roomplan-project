@@ -21,6 +21,7 @@ import {
   useCurrentUser,
 } from "@service-geek/api-client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Colors } from "@/constants/Colors";
 
 const styles = StyleSheet.create({
   container: {
@@ -48,7 +49,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1f5f9",
   },
   backButtonText: {
-    color: "#15438e",
+    color: Colors.light.primary,
     fontSize: 16,
     fontWeight: "600",
   },

@@ -48,6 +48,7 @@ import {
 import Dimensions from "@/components/project/scope/Dimensions";
 import AffectedArea from "@/components/project/scope/affectedArea";
 import { useNetworkStatus } from "@/lib/providers/QueryProvider";
+import { Colors } from "@/constants/Colors";
 
 // Type assertions to fix ReactNode compatibility
 const ArrowLeftComponent = ArrowLeft as any;
@@ -72,7 +73,7 @@ const equipmentOptions = [
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
   },
   areaToggleActive: {
     backgroundColor: "#f0f9ff",
-    borderColor: "#15438e",
+    borderColor: Colors.light.primary,
   },
   areaTabsContainer: {
     flexDirection: "row",
@@ -155,8 +156,8 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   areaTabActive: {
-    backgroundColor: "#15438e",
-    shadowColor: "#15438e",
+    backgroundColor: Colors.light.primary,
+    shadowColor: Colors.light.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,

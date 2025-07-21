@@ -23,6 +23,7 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ChevronRight } from "@/lib/icons/ChevronRight";
 import { formatDistanceToNow } from "date-fns";
+import { Colors } from "@/constants/Colors";
 
 const styles = StyleSheet.create({
   container: {
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     justifyContent: "center",
     alignItems: "center",
     elevation: 4,
@@ -437,7 +438,7 @@ export default function ChatListScreen() {
   if (chatsLoading || membersLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator color="#15438e" size="large" />
+        <ActivityIndicator color={Colors.light.primary} size="large" />
       </View>
     );
   }

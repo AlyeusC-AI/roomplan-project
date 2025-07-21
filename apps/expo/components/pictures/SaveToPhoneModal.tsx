@@ -11,6 +11,7 @@ import { Text } from "@/components/ui/text";
 import { X, Download } from "lucide-react-native";
 import * as MediaLibrary from "expo-media-library";
 import { toast } from "sonner-native";
+import { Colors } from "@/constants/Colors";
 
 // Type assertion to fix ReactNode compatibility
 const XIcon = X as any;
@@ -94,7 +95,7 @@ export default function SaveToPhoneModal({
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <View style={styles.modalHeaderContent}>
-              <DownloadIcon size={24} color="#15438e" />
+              <DownloadIcon size={24} color={Colors.light.primary} />
               <Text style={styles.modalTitle}>{getTitle()}</Text>
             </View>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -107,7 +108,7 @@ export default function SaveToPhoneModal({
 
             {isSaving && (
               <View style={styles.progressContainer}>
-                <ActivityIndicator size="large" color="#15438e" />
+                <ActivityIndicator size="large" color={Colors.light.primary} />
                 <Text style={styles.progressText}>
                   Saving {savedCount} of {selectedPhotos.length} images...
                 </Text>
@@ -230,7 +231,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
   confirmButtonDisabled: {
     opacity: 0.5,

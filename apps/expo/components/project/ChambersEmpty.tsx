@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Building2, Plus } from "lucide-react-native";
+import { Colors } from "@/constants/Colors";
 
 // Type assertions to fix ReactNode compatibility
 const Building2Icon = Building2 as any;
@@ -14,7 +15,7 @@ export default function ChambersEmpty({ onPress }: ChambersEmptyProps) {
   return (
     <View className="flex-1 items-center justify-center py-12">
       <View className="w-20 h-20 rounded-full bg-blue-50 items-center justify-center mb-6">
-        <Building2Icon size={32} color="#15438e" />
+        <Building2Icon size={32} color={Colors.light.primary} />
       </View>
 
       <Text className="text-xl font-semibold text-gray-900 mb-2 text-center">
@@ -30,7 +31,7 @@ export default function ChambersEmpty({ onPress }: ChambersEmptyProps) {
         onPress={onPress}
         className="flex-row items-center bg-blue-600 px-6 py-3 rounded-lg shadow-sm"
         style={{
-          shadowColor: "#15438e",
+          shadowColor: Colors.light.primary,
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.3,
           shadowRadius: 4,

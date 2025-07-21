@@ -57,6 +57,7 @@ import ImageEditorModal from "../project/ImageEditorModal";
 import ImageTagsModal from "./ImageTagsModal";
 import { uploadAsync } from "expo-file-system";
 import * as FileSystem from "expo-file-system";
+import { Colors } from "@/constants/Colors";
 
 // Type assertion to fix ReactNode compatibility
 const ChevronLeftIcon = ChevronLeft as any;
@@ -215,7 +216,7 @@ const styles = StyleSheet.create({
   },
   activeThumbnail: {
     borderWidth: 2,
-    borderColor: "#15438e",
+    borderColor: Colors.light.primary,
   },
   thumbnailImage: {
     width: "100%",
@@ -240,7 +241,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -5,
     right: -5,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -5,
     right: -5,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -327,7 +328,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
@@ -375,7 +376,7 @@ const styles = StyleSheet.create({
     minHeight: 40,
   },
   submitNoteButton: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -403,7 +404,7 @@ const styles = StyleSheet.create({
     // paddingBottom: 250,
     // borderTopWidth: 1,
     // borderBottomWidth: 1,
-    // borderColor: "#15438e",
+    // borderColor: Colors.light.primary,
   },
   descriptionContainer: {
     marginBottom: 8,
@@ -447,7 +448,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   saveButton: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
   descriptionButtonText: {
     color: "#fff",
@@ -495,7 +496,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   descriptionModalSaveButton: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -516,7 +517,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   readMoreText: {
-    color: "#15438e",
+    color: Colors.light.primary,
     fontSize: 14,
     fontWeight: "500",
   },
@@ -1151,7 +1152,6 @@ const ModalItem = ({
           // Refresh the image data
           // This will trigger a re-render with updated tags
         }}
-        
       />
 
       <ImageEditorModal

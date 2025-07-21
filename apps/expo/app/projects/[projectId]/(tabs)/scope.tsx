@@ -26,6 +26,7 @@ import {
   useGetRooms,
 } from "@service-geek/api-client";
 import { useNetworkStatus } from "@/lib/providers/QueryProvider";
+import { Colors } from "@/constants/Colors";
 
 // Type assertions to fix ReactNode compatibility
 const RulerComponent = Ruler as any;
@@ -38,7 +39,7 @@ const WifiOffComponent = WifiOff as any;
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   viewButton: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -122,10 +123,10 @@ const styles = StyleSheet.create({
     bottom: 24,
     left: 24,
     right: 24,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#15438e",
+    shadowColor: Colors.light.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -188,7 +189,7 @@ export default function ScopeScreen() {
   if (isLoading) {
     return (
       <View className="flex items-center justify-center h-full w-full">
-        <ActivityIndicator color="#15438e" size="large" />
+        <ActivityIndicator color={Colors.light.primary} size="large" />
       </View>
     );
   }

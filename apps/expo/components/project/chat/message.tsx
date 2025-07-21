@@ -13,6 +13,7 @@ import { Text } from "@/components/ui/text";
 import { format } from "date-fns";
 import { AudioPlayer } from "./AudioPlayer";
 import { House, PencilIcon, ReplyIcon, Trash2Icon } from "lucide-react-native";
+import { Colors } from "@/constants/Colors";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -324,7 +325,10 @@ export function Message({
                             attachment.fileUrl,
                             attachment.fileName
                           ) ? (
-                            <ActivityIndicator size="small" color="#15438e" />
+                            <ActivityIndicator
+                              size="small"
+                              color={Colors.light.primary}
+                            />
                           ) : (
                             <Text style={styles.downloadIcon}>↓</Text>
                           )}
@@ -368,7 +372,9 @@ export function Message({
           {isSent && (
             <>
               <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
-                <Text style={[styles.actionIcon, { color: "#15438e" }]}>
+                <Text
+                  style={[styles.actionIcon, { color: Colors.light.primary }]}
+                >
                   <PencilIcon size={16} />
                 </Text>
               </TouchableOpacity>

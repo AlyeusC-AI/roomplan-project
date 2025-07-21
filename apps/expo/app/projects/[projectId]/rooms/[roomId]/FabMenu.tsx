@@ -26,6 +26,7 @@ import {
 import { useOfflineUploadsStore } from "@/lib/state/offline-uploads";
 import { useAddImage } from "@service-geek/api-client";
 import { router } from "expo-router";
+import { Colors } from "@/constants/Colors";
 
 const PlusIcon = Plus as any;
 const CameraIcon = Camera as any;
@@ -307,7 +308,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -358,7 +359,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#10b981",
   },
   uploadIcon: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
   noteIcon: {
     backgroundColor: "#f59e0b",

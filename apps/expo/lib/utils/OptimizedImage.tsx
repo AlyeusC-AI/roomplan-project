@@ -18,6 +18,7 @@ import {
   STORAGE_BUCKETS,
   deleteImage,
 } from "./imageModule";
+import { Colors } from "@/constants/Colors";
 
 // Type assertions to fix ReactNode compatibility
 const ImageIconComponent = ImageIcon as any;
@@ -77,7 +78,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "rgba(30, 136, 229, 0.3)",
     borderWidth: 3,
-    borderColor: "#15438e",
+    borderColor: Colors.light.primary,
     borderRadius: 8,
   },
   imageInfo: {
@@ -96,7 +97,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     borderRadius: 4,
   },
   retryText: {
@@ -262,7 +263,7 @@ export function OptimizedImage({
 
       {loading && !error && (
         <View style={[styles.loadingContainer, style]}>
-          <ActivityIndicator size="large" color="#15438e" />
+          <ActivityIndicator size="large" color={Colors.light.primary} />
         </View>
       )}
 

@@ -1,3 +1,4 @@
+import { Colors } from "@/constants/Colors";
 import { router, Tabs } from "expo-router";
 import {
   Calendar,
@@ -22,22 +23,28 @@ export default function Layout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#15438e",
+        tabBarActiveTintColor: Colors.light.primary,
         headerTintColor: "#FFFF",
-        headerStyle: { backgroundColor: "#15438e" },
+        headerStyle: { backgroundColor: Colors.light.primary },
         header: ({ navigation, route, options }) =>
           route.name === "chats/[chatId]" || route.name === "chats/new" ? (
-            <SafeAreaView style={{ backgroundColor: "#15438e" }}>
-              <StatusBar barStyle="light-content" backgroundColor="#15438e" />
+            <SafeAreaView style={{ backgroundColor: Colors.light.primary }}>
+              <StatusBar
+                barStyle="light-content"
+                backgroundColor={Colors.light.primary}
+              />
             </SafeAreaView>
           ) : (
-            <SafeAreaView style={{ backgroundColor: "#15438e" }}>
-              <StatusBar barStyle="light-content" backgroundColor="#15438e" />
+            <SafeAreaView style={{ backgroundColor: Colors.light.primary }}>
+              <StatusBar
+                barStyle="light-content"
+                backgroundColor={Colors.light.primary}
+              />
               <View
                 style={{
                   paddingTop:
                     Platform.OS === "android" ? StatusBar.currentHeight : 0,
-                  backgroundColor: "#15438e",
+                  backgroundColor: Colors.light.primary,
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.1,

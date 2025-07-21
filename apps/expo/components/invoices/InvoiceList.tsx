@@ -30,6 +30,7 @@ import { showToast } from "@/utils/toast";
 import { formatCurrency } from "@/utils/formatters";
 import { format } from "date-fns";
 import { Invoice, useGetInvoices } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 // Status badge component
 const StatusBadge = ({ status }: { status: string }) => {
@@ -43,7 +44,7 @@ const StatusBadge = ({ status }: { status: string }) => {
       break;
     case "sent":
       backgroundColor = "#dbeafe"; // Light blue
-      textColor = "#15438e";
+      textColor = Colors.light.primary;
       break;
     case "paid":
       backgroundColor = "#dcfce7"; // Light green
@@ -352,7 +353,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: "#15438e",
+    borderBottomColor: Colors.light.primary,
   },
   tabText: {
     fontSize: 16,
@@ -360,7 +361,7 @@ const styles = StyleSheet.create({
     color: "#64748b",
   },
   activeTabText: {
-    color: "#15438e",
+    color: Colors.light.primary,
     fontWeight: "600",
   },
   sectionHeader: {
@@ -453,7 +454,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   retryButton: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 4,
@@ -477,7 +478,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   emptyStateButton: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 4,
@@ -503,7 +504,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 24,
     right: 24,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     width: 56,
     height: 56,
     borderRadius: 28,

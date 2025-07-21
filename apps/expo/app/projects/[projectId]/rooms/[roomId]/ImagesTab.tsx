@@ -51,6 +51,7 @@ import FilteredImagesGallery from "@/components/pictures/FilteredImagesGallery";
 import SelectionMode from "@/components/pictures/SelectionMode";
 import BulkActionsModal from "@/components/pictures/BulkActionsModal";
 import SaveToPhoneModal from "@/components/pictures/SaveToPhoneModal";
+import { Colors } from "@/constants/Colors";
 
 export default function ImagesTab({
   projectId,
@@ -469,9 +470,9 @@ export default function ImagesTab({
             disabled={isUploading}
           >
             {isUploading ? (
-              <ActivityIndicator size="small" color="#15438e" />
+              <ActivityIndicator size="small" color={Colors.light.primary} />
             ) : (
-              <ImagePlusIcon size={20} color="#15438e" />
+              <ImagePlusIcon size={20} color={Colors.light.primary} />
             )}
           </TouchableOpacity> */}
 
@@ -501,7 +502,7 @@ export default function ImagesTab({
             style={styles.filterButton}
             onPress={() => setShowFilters(!showFilters)}
           >
-            <FilterIcon size={20} color="#15438e" />
+            <FilterIcon size={20} color={Colors.light.primary} />
             {selectedTagFilters.length > 0 && (
               <View style={styles.filterBadge}>
                 <Text style={styles.filterBadgeText}>
@@ -654,7 +655,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 12,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     width: "45%",
   },
   uploadButtonDisabled: {
@@ -703,8 +704,8 @@ const styles = StyleSheet.create({
     borderColor: "#e2e8f0",
   },
   actionButtonActive: {
-    backgroundColor: "#15438e",
-    borderColor: "#15438e",
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
   },
   actionButtonDisabled: {
     opacity: 0.5,

@@ -25,6 +25,7 @@ import {
 } from "lucide-react-native";
 import ModalImagesWithNotes from "./modalImagesWithNotes";
 import { Image } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 // Type assertions to fix ReactNode compatibility
 const SearchIcon = Search as any;
@@ -778,7 +779,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   filterTabActive: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
   filterTabText: {
     fontSize: 14,
@@ -853,8 +854,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   filterChipActive: {
-    backgroundColor: "#15438e",
-    borderColor: "#15438e",
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
   },
   filterChipText: {
     fontSize: 14,
@@ -959,8 +960,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   selectCircleActive: {
-    backgroundColor: "#15438e",
-    borderColor: "#15438e",
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
   },
   imageCountText: {
     fontSize: 13,
@@ -972,7 +973,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     paddingHorizontal: 6,
     gap: 6,
-    marginTop: 4
+    marginTop: 4,
   },
   imageItem: {
     width: ITEM_SIZE,
@@ -1007,7 +1008,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    // backgroundColor: "#15438e" ,
+    // backgroundColor: Colors.light.primary ,
     backgroundColor: "white",
     justifyContent: "center",
     alignItems: "center",
@@ -1027,7 +1028,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderWidth: 3,
-    borderColor: "#15438e",
+    borderColor: Colors.light.primary,
     borderRadius: 4,
   },
   tagXIcon: {

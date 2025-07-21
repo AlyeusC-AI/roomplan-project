@@ -98,6 +98,7 @@ import FloatingButtonOption from "@/components/project/floatingButtonOption";
 import ChambersEmpty from "@/components/project/ChambersEmpty";
 import { Separator } from "@/components/ui/separator";
 import CustomerFace from "@/assets/customerFace.png";
+import { Colors } from "@/constants/Colors";
 
 // Utility to add opacity to hex color
 function addOpacityToColor(color: string, opacityHex: string = "33") {
@@ -424,7 +425,10 @@ export default function ProjectOverview() {
               >
                 {isLoadingStreetView ? (
                   <View style={styles.streetViewLoadingContainer}>
-                    <ActivityIndicator size="large" color="#15438e" />
+                    <ActivityIndicator
+                      size="large"
+                      color={Colors.light.primary}
+                    />
                     <Text style={styles.streetViewLoadingText}>
                       Loading street view...
                     </Text>
@@ -506,7 +510,7 @@ export default function ProjectOverview() {
                         { opacity: project?.data?.clientEmail ? 1 : 0.4 },
                       ]}
                     >
-                      <MailIcon size={22} color="#15438e" />
+                      <MailIcon size={22} color={Colors.light.primary} />
                     </TouchableOpacity>
                     {/* Call Icon */}
                     <TouchableOpacity
@@ -523,7 +527,7 @@ export default function ProjectOverview() {
                         { opacity: project?.data?.clientPhoneNumber ? 1 : 0.4 },
                       ]}
                     >
-                      <PhoneIcon size={22} color="#15438e" />
+                      <PhoneIcon size={22} color={Colors.light.primary} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -545,7 +549,7 @@ export default function ProjectOverview() {
                         onPress={() => setShowDirectionsModal(true)}
                         style={styles.locationIconButton}
                       >
-                        <MapPinIcon size={22} color="#15438e" />
+                        <MapPinIcon size={22} color={Colors.light.primary} />
                       </TouchableOpacity>
                     </View>
                   )}
@@ -560,7 +564,7 @@ export default function ProjectOverview() {
                   </Text>
                   {React.createElement(ChevronRightCircle as any, {
                     size: 22,
-                    color: "#15438e",
+                    color: Colors.light.primary,
                   })}
                 </TouchableOpacity>
               </View>
@@ -897,7 +901,7 @@ export default function ProjectOverview() {
             </Modal>
             <Card style={styles.notificationsCard}>
               <CardHeader style={styles.notificationsCardHeader}>
-                <CircleDot size={20} color="#15438e" />
+                <CircleDot size={20} color={Colors.light.primary} />
                 <CardTitle style={styles.notificationsCardTitle}>
                   Customer Notifications
                 </CardTitle>
@@ -943,11 +947,11 @@ export default function ProjectOverview() {
                           marginBottom: 6,
                         }}
                       >
-                        <TruckIcon size={30} color="#15438e" />
+                        <TruckIcon size={30} color={Colors.light.primary} />
                       </View>
                       <Text
                         style={{
-                          color: "#15438e",
+                          color: Colors.light.primary,
                           fontWeight: "600",
                           fontSize: 12,
                         }}
@@ -997,11 +1001,11 @@ export default function ProjectOverview() {
                           marginBottom: 6,
                         }}
                       >
-                        <TimerIcon size={30} color="#15438e" />
+                        <TimerIcon size={30} color={Colors.light.primary} />
                       </View>
                       <Text
                         style={{
-                          color: "#15438e",
+                          color: Colors.light.primary,
                           fontWeight: "600",
                           fontSize: 12,
                         }}
@@ -1051,11 +1055,14 @@ export default function ProjectOverview() {
                           marginBottom: 6,
                         }}
                       >
-                        <CheckCircleIcon size={30} color="#15438e" />
+                        <CheckCircleIcon
+                          size={30}
+                          color={Colors.light.primary}
+                        />
                       </View>
                       <Text
                         style={{
-                          color: "#15438e",
+                          color: Colors.light.primary,
                           fontWeight: "600",
                           fontSize: 12,
                         }}
@@ -1089,13 +1096,13 @@ export default function ProjectOverview() {
                   style={styles.actionButton}
                 >
                   <View style={styles.actionButtonIconContainer}>
-                    <ScanIcon size={20} color="#15438e" />
+                    <ScanIcon size={20} color={Colors.light.primary} />
                   </View>
                   <View className="flex-1">
                     <Text className="font-semibold text-base">Floor Plan</Text>
                     <Text className="text-xs mt-0.5">Lidar scans</Text>
                   </View>
-                  <ChevronRightIcon size={20} color="#15438e" />
+                  <ChevronRightIcon size={20} color={Colors.light.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   className="bg-white rounded-lg w-full"
@@ -1112,7 +1119,7 @@ export default function ProjectOverview() {
                   <View style={styles.actionButtonIconContainer}>
                     {React.createElement(Bot as any, {
                       size: 20,
-                      color: "#15438e",
+                      color: Colors.light.primary,
                     })}
                   </View>
                   <View className="flex-1">
@@ -1121,7 +1128,7 @@ export default function ProjectOverview() {
                       Project & Room Checklist
                     </Text>
                   </View>
-                  <ChevronRightIcon size={20} color="#15438e" />
+                  <ChevronRightIcon size={20} color={Colors.light.primary} />
                 </TouchableOpacity>
               </View>
 
@@ -1173,7 +1180,7 @@ export default function ProjectOverview() {
                         >
                           {React.createElement(item.Icon as any, {
                             size: 30,
-                            color: "#15438e",
+                            color: Colors.light.primary,
                           })}
                         </View>
                         <Text numberOfLines={1}>{item.title}</Text>
@@ -1798,12 +1805,12 @@ const styles = StyleSheet.create({
     top: 4,
     borderRadius: 12,
     zIndex: 0,
-    shadowColor: "#15438e",
+    shadowColor: Colors.light.primary,
     shadowOpacity: 0.15,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     height: 44,
   },
   toggleTab: {

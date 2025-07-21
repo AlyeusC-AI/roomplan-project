@@ -105,6 +105,7 @@ import { Image } from "react-native";
 import { useCameraStore } from "@/lib/state/camera";
 import { uploadImage } from "@/lib/imagekit";
 import ClaimSummaryEditor from "@/components/project/ClaimSummaryEditor";
+import { Colors } from "@/constants/Colors";
 
 type TabType = "customer" | "loss" | "insurance";
 
@@ -281,7 +282,9 @@ function WaterDamageCategorySelector({
                 <HStack space={2} alignItems="center">
                   <DropletsIcon
                     size={16}
-                    color={value === type.value ? "#15438e" : "#94a3b8"}
+                    color={
+                      value === type.value ? Colors.light.primary : "#94a3b8"
+                    }
                   />
                   <Text
                     style={[
@@ -365,7 +368,9 @@ function WaterDamageClassSelector({
                 <HStack space={2} alignItems="center">
                   <DropletsIcon
                     size={16}
-                    color={value === type.value ? "#15438e" : "#94a3b8"}
+                    color={
+                      value === type.value ? Colors.light.primary : "#94a3b8"
+                    }
                   />
                   <Text
                     style={[
@@ -758,7 +763,7 @@ export default function ProjectDetails() {
       <VStack space={4}>
         <View style={styles.section}>
           <HStack space={2} alignItems="center" mb={4}>
-            <UserCircleIcon size={24} color="#15438e" />
+            <UserCircleIcon size={24} color={Colors.light.primary} />
             <Text style={styles.sectionTitle}>Contact Information</Text>
           </HStack>
           <FormInput
@@ -789,7 +794,7 @@ export default function ProjectDetails() {
                 <HStack space={1} alignItems="center">
                   <PhoneCallIcon
                     size={16}
-                    color={clientPhoneNumber ? "#15438e" : "#94a3b8"}
+                    color={clientPhoneNumber ? Colors.light.primary : "#94a3b8"}
                   />
                   <Text
                     style={[
@@ -821,7 +826,7 @@ export default function ProjectDetails() {
 
         <View style={styles.section}>
           <HStack space={2} alignItems="center" mb={4}>
-            <MapPinIcon size={24} color="#15438e" />
+            <MapPinIcon size={24} color={Colors.light.primary} />
             <Text style={styles.sectionTitle}>Location</Text>
           </HStack>
           <Box style={styles.addressContainer}>
@@ -896,7 +901,7 @@ export default function ProjectDetails() {
       <VStack space={4}>
         <View style={styles.section}>
           <HStack space={2} alignItems="center" mb={4}>
-            <AlertTriangleIcon size={24} color="#15438e" />
+            <AlertTriangleIcon size={24} color={Colors.light.primary} />
             <Text style={styles.sectionTitle}>Loss Details</Text>
           </HStack>
           <LossTypeSelector
@@ -972,7 +977,7 @@ export default function ProjectDetails() {
         </View>
         <View style={styles.section}>
           <HStack space={2} alignItems="center" mb={4}>
-            <Building2Icon size={24} color="#15438e" />
+            <Building2Icon size={24} color={Colors.light.primary} />
             <Text style={styles.sectionTitle}>Project Information</Text>
           </HStack>
           <FormInput
@@ -1027,7 +1032,7 @@ export default function ProjectDetails() {
       <VStack space={4}>
         <View style={styles.section}>
           <HStack space={2} alignItems="center" mb={4}>
-            <ShieldIcon size={24} color="#15438e" />
+            <ShieldIcon size={24} color={Colors.light.primary} />
             <Text style={styles.sectionTitle}>Insurance Information</Text>
           </HStack>
           <FormInput
@@ -1082,7 +1087,9 @@ export default function ProjectDetails() {
                 <HStack space={1} alignItems="center">
                   <PhoneCallIcon
                     size={16}
-                    color={adjusterPhoneNumber ? "#15438e" : "#94a3b8"}
+                    color={
+                      adjusterPhoneNumber ? Colors.light.primary : "#94a3b8"
+                    }
                   />
                   <Text
                     style={[
@@ -1134,7 +1141,7 @@ export default function ProjectDetails() {
   if (isLoadingProject) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        <StatusBar backgroundColor="#15438e" />
+        <StatusBar backgroundColor={Colors.light.primary} />
         <View style={[styles.header, { paddingTop: top }]}>
           <TouchableOpacity
             onPress={() => router.back()}
@@ -1146,7 +1153,7 @@ export default function ProjectDetails() {
           <View style={styles.saveButton} />
         </View>
         <View style={styles.loadingContent}>
-          <Spinner size="lg" color="#15438e" />
+          <Spinner size="lg" color={Colors.light.primary} />
           <Text style={styles.loadingText}>Loading project details...</Text>
         </View>
       </View>
@@ -1160,7 +1167,7 @@ export default function ProjectDetails() {
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
       <View style={styles.container}>
-        <StatusBar backgroundColor="#15438e" />
+        <StatusBar backgroundColor={Colors.light.primary} />
         <View
           style={[
             styles.header,
@@ -1196,7 +1203,9 @@ export default function ProjectDetails() {
             <HStack space={2} alignItems="center">
               <UserCircle
                 size={20}
-                color={activeTab === "customer" ? "#15438e" : "#94a3b8"}
+                color={
+                  activeTab === "customer" ? Colors.light.primary : "#94a3b8"
+                }
               />
               <Text
                 style={[
@@ -1215,7 +1224,7 @@ export default function ProjectDetails() {
             <HStack space={2} alignItems="center">
               <AlertCircleIcon
                 size={20}
-                color={activeTab === "loss" ? "#15438e" : "#94a3b8"}
+                color={activeTab === "loss" ? Colors.light.primary : "#94a3b8"}
               />
               <Text
                 style={[
@@ -1234,7 +1243,9 @@ export default function ProjectDetails() {
             <HStack space={2} alignItems="center">
               <ShieldIcon
                 size={20}
-                color={activeTab === "insurance" ? "#15438e" : "#94a3b8"}
+                color={
+                  activeTab === "insurance" ? Colors.light.primary : "#94a3b8"
+                }
               />
               <Text
                 style={[
@@ -1275,7 +1286,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     paddingBottom: 10,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -1334,7 +1345,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: "#15438e",
+    borderBottomColor: Colors.light.primary,
   },
   tabText: {
     fontSize: 16,
@@ -1342,7 +1353,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   activeTabText: {
-    color: "#15438e",
+    color: Colors.light.primary,
     fontWeight: "600",
   },
   content: {
@@ -1402,7 +1413,7 @@ const styles = StyleSheet.create({
   callText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#15438e",
+    color: Colors.light.primary,
   },
   callTextDisabled: {
     color: "#94a3b8",
@@ -1520,7 +1531,7 @@ const styles = StyleSheet.create({
     color: "#1d1d1d",
   },
   selectedOptionText: {
-    color: "#15438e",
+    color: Colors.light.primary,
     fontWeight: "600",
   },
   inputText: {

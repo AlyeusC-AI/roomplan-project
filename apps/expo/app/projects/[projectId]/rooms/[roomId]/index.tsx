@@ -40,6 +40,7 @@ import {
 import { useOfflineUploadsStore } from "@/lib/state/offline-uploads";
 import { useAddImage } from "@service-geek/api-client";
 import FabMenu from "./FabMenu";
+import { Colors } from "@/constants/Colors";
 
 // Type assertions to fix ReactNode compatibility
 const ChevronLeftIcon = ChevronLeft as any;
@@ -130,7 +131,7 @@ export default function RoomScreen() {
                 <View style={styles.tabContentColumn}>
                   <Icon
                     size={22}
-                    color={isActive ? "#15438e" : "#64748b"}
+                    color={isActive ? Colors.light.primary : "#64748b"}
                     style={{ marginBottom: 2 }}
                   />
                   <Text
@@ -232,7 +233,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 3,
-    borderBottomColor: "#15438e",
+    borderBottomColor: Colors.light.primary,
   },
   tabContentRow: {
     flexDirection: "row",
@@ -250,7 +251,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   activeTabText: {
-    color: "#15438e",
+    color: Colors.light.primary,
     fontWeight: "700",
   },
   tabContent: {
@@ -268,7 +269,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#10b981",
   },
   uploadIcon: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
   noteIcon: {
     backgroundColor: "#f59e0b",

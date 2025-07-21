@@ -12,6 +12,7 @@ import { AlertCircle, Clock } from "lucide-react-native";
 import { Progress } from "./ui/progress";
 import { api } from "@/lib/api";
 import { useGetSubscriptionInfo } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 export function SubscriptionStatus() {
   const [showWarningModal, setShowWarningModal] = useState(false);
@@ -33,7 +34,7 @@ export function SubscriptionStatus() {
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; color: string }> = {
       active: { label: "Active", color: "#22c55e" },
-      trialing: { label: "Trial", color: "#15438e"  },
+      trialing: { label: "Trial", color: Colors.light.primary },
       past_due: { label: "Past Due", color: "#ef4444" },
       canceled: { label: "Canceled", color: "#ef4444" },
       never: { label: "No Subscription", color: "#ef4444" },
@@ -297,7 +298,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalButtonPrimary: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     marginRight: 8,
   },
   modalButtonSecondary: {

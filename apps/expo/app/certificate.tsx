@@ -12,6 +12,7 @@ import { toast } from "sonner-native";
 import { Download } from "lucide-react-native";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
+import { Colors } from "@/constants/Colors";
 
 export default function CertificatePage() {
   const { id, type, isRep } = useLocalSearchParams<{
@@ -189,7 +190,7 @@ export default function CertificatePage() {
   if (!id) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#15438e" />
+        <ActivityIndicator size="large" color={Colors.light.primary} />
       </View>
     );
   }
@@ -214,7 +215,7 @@ export default function CertificatePage() {
         onMessage={handleWebViewMessage}
         renderLoading={() => (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#15438e" />
+            <ActivityIndicator size="large" color={Colors.light.primary} />
           </View>
         )}
         onError={(syntheticEvent) => {

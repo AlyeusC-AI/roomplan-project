@@ -21,6 +21,7 @@ import {
   useRemoveProjectMember,
   User,
 } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 const AssigneeSelect = () => {
   const { projectId } = useGlobalSearchParams<{ projectId: string }>();
@@ -124,7 +125,7 @@ const AssigneeSelect = () => {
         <View className="mt-6 space-y-3">
           {isLoading ? (
             <View className="items-center justify-center py-8">
-              <ActivityIndicator size="large" color="#15438e" />
+              <ActivityIndicator size="large" color={Colors.light.primary} />
             </View>
           ) : (
             filteredMembers.map((member) => {

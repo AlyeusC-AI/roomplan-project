@@ -39,6 +39,7 @@ import {
   useUpdateRoomReading,
   calculateGPP,
 } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 // Define the type for the room reading component props
 interface RoomReadingProps {
@@ -126,8 +127,8 @@ const RoomReading: React.FC<RoomReadingProps> = ({
               <View className="flex flex-row items-center ">
                 <DropletComponent
                   size={16}
-                  color="#15438e"
-                  fill="#15438e"
+                  color={Colors.light.primary}
+                  fill={Colors.light.primary}
                   style={{ marginRight: 2 }}
                 />
                 <Text className="text-gray-600 font-medium">

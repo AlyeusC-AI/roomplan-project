@@ -25,6 +25,7 @@ import { userStore } from "@/lib/state/user";
 import { useGetProjectById } from "@service-geek/api-client";
 import DryStandardScreen from "./dry-standard";
 import DryStandardDetailScreen from "./dry-standard-detail";
+import { Colors } from "@/constants/Colors";
 export default function Layout() {
   const { projectId } = useGlobalSearchParams();
 
@@ -41,18 +42,21 @@ export default function Layout() {
   return (
     <Tabs
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: "#15438e",
+        tabBarActiveTintColor: Colors.light.primary,
         headerTintColor: "white",
         headerStyle: {
-          backgroundColor: "#15438e",
+          backgroundColor: Colors.light.primary,
         },
         header: ({ navigation, route, options }) =>
           route.name === "chat" || route.name === "copilot" ? (
-            <SafeAreaView style={{ backgroundColor: "#15438e" }}>
-              <StatusBar barStyle="light-content" backgroundColor="#15438e" />
+            <SafeAreaView style={{ backgroundColor: Colors.light.primary }}>
+              <StatusBar
+                barStyle="light-content"
+                backgroundColor={Colors.light.primary}
+              />
             </SafeAreaView>
           ) : (
-            <SafeAreaView style={{ backgroundColor: "#15438e" }}>
+            <SafeAreaView style={{ backgroundColor: Colors.light.primary }}>
               <StatusBar barStyle="light-content" backgroundColor="# 2563eb" />
               <View
                 style={{

@@ -14,6 +14,7 @@ import * as ImagePicker from "expo-image-picker";
 import { toast } from "sonner-native";
 import { uploadImage } from "@/lib/imagekit";
 import { useGetProjectById, useUpdateProject } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 // Type assertions for Lucide icons
 const HomeComponent = Home as any;
@@ -102,7 +103,7 @@ const ProjectCoverModal: React.FC<ProjectCoverModalProps> = ({
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <View style={styles.modalHeaderContent}>
-              <HomeComponent size={24} color="#15438e" />
+              <HomeComponent size={24} color={Colors.light.primary} />
               <Text style={styles.modalTitle}>Project Cover</Text>
             </View>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -266,7 +267,7 @@ const styles = StyleSheet.create({
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     borderRadius: 20,
     paddingHorizontal: 8,
     paddingVertical: 8,
