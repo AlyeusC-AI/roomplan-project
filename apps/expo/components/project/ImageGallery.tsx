@@ -49,6 +49,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Image, Room, useUpdateImagesOrder } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 // Get screen dimensions for responsive sizing
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -533,7 +534,7 @@ const styles = StyleSheet.create({
   },
   activeThumbnail: {
     borderWidth: 2,
-    borderColor: "#15438e",
+    borderColor: Colors.light.primary,
   },
   thumbnailImage: {
     width: "100%",
@@ -558,7 +559,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -5,
     right: -5,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -628,7 +629,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
@@ -676,7 +677,7 @@ const styles = StyleSheet.create({
     minHeight: 40,
   },
   submitNoteButton: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -719,7 +720,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 16,
     right: 16,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,

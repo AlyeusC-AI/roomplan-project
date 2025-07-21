@@ -1,3 +1,4 @@
+import { Colors } from "@/constants/Colors";
 import { View, StyleSheet } from "react-native";
 
 interface ProgressProps {
@@ -22,6 +23,6 @@ const styles = StyleSheet.create({
   },
   progress: {
     height: "100%",
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
 });

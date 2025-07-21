@@ -35,6 +35,7 @@ import {
 } from "@service-geek/api-client";
 import { toast } from "sonner-native";
 import { Checkbox } from "../ui/checkbox";
+import { Colors } from "@/constants/Colors";
 
 // Type assertion to fix ReactNode compatibility
 const XIcon = X as any;
@@ -47,7 +48,7 @@ const SearchIcon = Search as any;
 
 // Predefined color palette - 12 carefully chosen colors
 const COLOR_PALETTE = [
-  "#15438e" , // Blue
+  Colors.light.primary, // Blue
   "#EF4444", // Red
   "#10B981", // Green
   "#F59E0B", // Amber
@@ -84,10 +85,12 @@ export default function ImageTagsModal({
   const { mutate: createTag, isPending: isCreatingTag } = useCreateTag();
   const { mutate: updateTag, isPending: isUpdatingTag } = useUpdateTag();
   const { mutate: deleteTag, isPending: isDeletingTag } = useDeleteTag();
-  const { mutate: addImageTags, isPending: isAddingImageTags } = useAddImageTags();
+  const { mutate: addImageTags, isPending: isAddingImageTags } =
+    useAddImageTags();
   const { mutate: removeImageTags, isPending: isRemovingImageTags } =
     useRemoveImageTags();
-  const { mutate: addProjectTags, isPending: isAddingProjectTags } = useAddProjectTags();
+  const { mutate: addProjectTags, isPending: isAddingProjectTags } =
+    useAddProjectTags();
   const { mutate: removeProjectTags, isPending: isRemovingProjectTags } =
     useRemoveProjectTags();
 
@@ -153,7 +156,7 @@ export default function ImageTagsModal({
         {
           name: editValue.trim(),
           color: editColor,
-          type:  type === "PROJECT" ? "PROJECT" : "IMAGE",
+          type: type === "PROJECT" ? "PROJECT" : "IMAGE",
         },
         {
           onSuccess: () => {
@@ -255,7 +258,7 @@ export default function ImageTagsModal({
 
     // Determine the entity ID based on type
     const entityId = type === "PROJECT" ? projectId : imageId;
-    
+
     if (!entityId) {
       toast.error("Missing entity ID");
       return;
@@ -380,7 +383,7 @@ export default function ImageTagsModal({
     if (isLoading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#15438e" />
+          <ActivityIndicator size="large" color={Colors.light.primary} />
           <Text style={styles.loadingText}>Loading tags...</Text>
         </View>
       );
@@ -397,7 +400,7 @@ export default function ImageTagsModal({
             Create tags to organize your images
           </Text>
           <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
-            <PlusIcon size={16} color="#15438e" />
+            <PlusIcon size={16} color={Colors.light.primary} />
             <Text style={styles.addButtonText}>Add Tag</Text>
           </TouchableOpacity>
         </View>
@@ -417,7 +420,7 @@ export default function ImageTagsModal({
               style={[
                 styles.tagItem,
                 idx !== tagsToShow.length - 1 && styles.tagItemDivider, // Add divider except last
-                { backgroundColor: 'transparent' }, // Remove background
+                { backgroundColor: "transparent" }, // Remove background
               ]}
             >
               <Checkbox
@@ -461,9 +464,9 @@ export default function ImageTagsModal({
                   Create "{searchQuery.trim()}"
                 </Text>
                 {isCreatingTag ? (
-                  <ActivityIndicator size={16} color="#15438e" />
+                  <ActivityIndicator size={16} color={Colors.light.primary} />
                 ) : (
-                  <PlusIcon size={16} color="#15438e" />
+                  <PlusIcon size={16} color={Colors.light.primary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -472,7 +475,7 @@ export default function ImageTagsModal({
 
         {!searchQuery.trim() && (
           <TouchableOpacity style={styles.addNewButton} onPress={openAddModal}>
-            <PlusIcon size={16} color="#15438e" />
+            <PlusIcon size={16} color={Colors.light.primary} />
             <Text style={styles.addNewButtonText}>Add New Tag</Text>
           </TouchableOpacity>
         )}
@@ -491,40 +494,53 @@ export default function ImageTagsModal({
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <View style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}>
-
-              <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                <XIcon size={24} color="#64748b" />
-              </TouchableOpacity>
-              <View style={styles.modalHeaderContent}>
-                {/* <TagIcon size={24} color="#15438e" /> */}
-                <Text style={styles.modalTitle}>
-                  {/* Manage {type === "PROJECT" ? "Project" : "Image"} Tags */}
-                  Tags
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={[
-                  styles.confirmButton,
-                  (isAddingImageTags || isRemovingImageTags || isAddingProjectTags || isRemovingProjectTags || isLoading) &&
-                    styles.confirmButtonDisabled,
-                ]}
-                onPress={handleAssignTags}
-                disabled={isAddingImageTags || isRemovingImageTags || isAddingProjectTags || isRemovingProjectTags || isLoading}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
               >
-                 {isAddingImageTags || isRemovingImageTags || isAddingProjectTags || isRemovingProjectTags ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) :(
-
-                  <Text style={styles.confirmButtonText}>Save</Text>
-                )}
-              </TouchableOpacity>
-               </View>
-                {/* Search Input */}
+                <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                  <XIcon size={24} color="#64748b" />
+                </TouchableOpacity>
+                <View style={styles.modalHeaderContent}>
+                  {/* <TagIcon size={24} color={Colors.light.primary} /> */}
+                  <Text style={styles.modalTitle}>
+                    {/* Manage {type === "PROJECT" ? "Project" : "Image"} Tags */}
+                    Tags
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[
+                    styles.confirmButton,
+                    (isAddingImageTags ||
+                      isRemovingImageTags ||
+                      isAddingProjectTags ||
+                      isRemovingProjectTags ||
+                      isLoading) &&
+                      styles.confirmButtonDisabled,
+                  ]}
+                  onPress={handleAssignTags}
+                  disabled={
+                    isAddingImageTags ||
+                    isRemovingImageTags ||
+                    isAddingProjectTags ||
+                    isRemovingProjectTags ||
+                    isLoading
+                  }
+                >
+                  {isAddingImageTags ||
+                  isRemovingImageTags ||
+                  isAddingProjectTags ||
+                  isRemovingProjectTags ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Text style={styles.confirmButtonText}>Save</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+              {/* Search Input */}
               <View style={styles.searchContainer}>
                 <View style={styles.searchInputContainer}>
                   <SearchIcon
@@ -548,9 +564,7 @@ export default function ImageTagsModal({
                     </TouchableOpacity>
                   )}
                 </View>
-                
               </View>
-             
             </View>
 
             <View style={styles.modalBody}>
@@ -558,19 +572,17 @@ export default function ImageTagsModal({
                 Select tags to assign to this {type === "PROJECT" ? "project" : "image"}
               </Text> */}
 
-            
-
               {/* Selected Tags Section */}
               {selectedTags.length > 0 && (
                 <View style={styles.selectedTagsSection}>
                   {/* <Text style={styles.selectedTagsTitle}>Selected Tags:</Text> */}
-                  <ScrollView 
-                    horizontal 
+                  <ScrollView
+                    horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.selectedTagsContainer}
                   >
                     {selectedTags.map((tagName) => {
-                      const tag = availableTags.find(t => t.name === tagName);
+                      const tag = availableTags.find((t) => t.name === tagName);
                       return (
                         <TouchableOpacity
                           key={tagName}
@@ -649,7 +661,9 @@ export default function ImageTagsModal({
                   <TouchableOpacity
                     style={styles.nestedDeleteButton}
                     onPress={() => {
-                      const tagToDelete = availableTags.find(tag => tag.id === editId);
+                      const tagToDelete = availableTags.find(
+                        (tag) => tag.id === editId
+                      );
                       if (tagToDelete) {
                         setShowEditModal(false);
                         handleDelete(tagToDelete);
@@ -761,7 +775,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingBottom: 12
+    paddingBottom: 12,
   },
   tagItemDivider: {
     borderBottomWidth: 1,
@@ -810,14 +824,14 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#15438e",
+    borderColor: Colors.light.primary,
     borderStyle: "dashed",
     marginTop: 16,
     gap: 8,
   },
   addNewButtonText: {
     fontSize: 14,
-    color: "#15438e",
+    color: Colors.light.primary,
     fontWeight: "500",
   },
   addButton: {
@@ -826,7 +840,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 12,
     borderRadius: 8,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     marginTop: 16,
     gap: 8,
   },
@@ -859,7 +873,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
   confirmButtonDisabled: {
     opacity: 0.5,
@@ -1010,7 +1024,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
   nestedSaveButtonText: {
     color: "#fff",
@@ -1085,14 +1099,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#15438e",
+    borderColor: Colors.light.primary,
     borderStyle: "dashed",
     backgroundColor: "#f0f9ff",
     gap: 8,
   },
   createTagOptionText: {
     fontSize: 14,
-    color: "#15438e",
+    color: Colors.light.primary,
     flex: 1,
     fontStyle: "italic",
   },

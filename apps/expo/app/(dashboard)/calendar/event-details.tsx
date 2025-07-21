@@ -35,6 +35,7 @@ import {
   useGetProjectById,
   useGetProjectStatus,
 } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 export default function EventDetailsScreen() {
   const params = useLocalSearchParams();
@@ -255,7 +256,7 @@ export default function EventDetailsScreen() {
       >
         {isLoadingProject ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#15438e"  />
+            <ActivityIndicator size="large" color={Colors.light.primary} />
           </View>
         ) : (
           <>
@@ -269,7 +270,7 @@ export default function EventDetailsScreen() {
                     <Text style={styles.viewProjectText}>
                       View project details
                     </Text>
-                    <ChevronRight size={16} color="#15438e"  />
+                    <ChevronRight size={16} color={Colors.light.primary} />
                   </View>
                 </TouchableOpacity>
 
@@ -280,7 +281,7 @@ export default function EventDetailsScreen() {
                   >
                     <Mail
                       size={18}
-                      color="#15438e" 
+                      color={Colors.light.primary}
                       style={styles.contactIcon}
                     />
                     <Text style={styles.contactText}>
@@ -296,7 +297,7 @@ export default function EventDetailsScreen() {
                   >
                     <Phone
                       size={18}
-                      color="#15438e" 
+                      color={Colors.light.primary}
                       style={styles.contactIcon}
                     />
                     <Text style={styles.contactText}>
@@ -372,7 +373,10 @@ export default function EventDetailsScreen() {
                   <View style={styles.mapPreview}>
                     {isLoadingMap ? (
                       <View style={styles.mapLoading}>
-                        <ActivityIndicator size="small" color="#15438e"  />
+                        <ActivityIndicator
+                          size="small"
+                          color={Colors.light.primary}
+                        />
                       </View>
                     ) : mapImageUrl ? (
                       <Image
@@ -605,7 +609,7 @@ const styles = StyleSheet.create({
   },
   contactText: {
     fontSize: 16,
-    color: "#15438e" ,
+    color: Colors.light.primary,
   },
   contactTextSecondary: {
     fontSize: 16,
@@ -792,7 +796,7 @@ const styles = StyleSheet.create({
   },
   viewProjectText: {
     fontSize: 14,
-    color: "#15438e" ,
+    color: Colors.light.primary,
     marginRight: 4,
   },
 });

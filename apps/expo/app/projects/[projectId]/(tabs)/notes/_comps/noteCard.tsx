@@ -79,6 +79,7 @@ import { useNetworkStatus } from "@/lib/providers/QueryProvider";
 import ImageGalleryModal, { OptimizedImage } from "./notesGallery";
 import { useQueryClient } from "@tanstack/react-query";
 import { SvgProps } from "react-native-svg";
+import { Colors } from "@/constants/Colors";
 
 // Type assertions to fix ReactNode compatibility
 const FileTextComponent = FileText as any;
@@ -752,10 +753,12 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
           >
             <ActivityIndicator
               size="small"
-              color="#15438e"
+              color={Colors.light.primary}
               style={{ marginRight: 4 }}
             />
-            <Text style={{ fontSize: 12, color: "#15438e" }}>Saving...</Text>
+            <Text style={{ fontSize: 12, color: Colors.light.primary }}>
+              Saving...
+            </Text>
           </View>
         )}
       </View>
@@ -770,7 +773,9 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
                   ...styles.singleImage,
                   borderWidth: highlightedImageIndex === 0 ? 3 : 0,
                   borderColor:
-                    highlightedImageIndex === 0 ? "#15438e" : "transparent",
+                    highlightedImageIndex === 0
+                      ? Colors.light.primary
+                      : "transparent",
                 }}
                 size="large"
               />
@@ -807,7 +812,7 @@ export default function NoteCard({ note, room }: { note: Note; room: Room }) {
                         borderWidth: highlightedImageIndex === index ? 3 : 0,
                         borderColor:
                           highlightedImageIndex === index
-                            ? "#15438e"
+                            ? Colors.light.primary
                             : "transparent",
                       }}
                       size="medium"

@@ -29,6 +29,7 @@ import {
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { uploadImage } from "@/lib/imagekit";
+import { Colors } from "@/constants/Colors";
 
 const styles = StyleSheet.create({
   container: {
@@ -87,7 +88,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveButton: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
   cancelButton: {
     backgroundColor: "#f1f5f9",
@@ -522,7 +523,7 @@ export default function ChatScreen() {
   if (loading || messagesLoading || !chatId) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator color="#15438e" size="large" />
+        <ActivityIndicator color={Colors.light.primary} size="large" />
       </View>
     );
   }

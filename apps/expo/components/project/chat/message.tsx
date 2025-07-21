@@ -12,7 +12,8 @@ import {
 import { Text } from "@/components/ui/text";
 import { format } from "date-fns";
 import { AudioPlayer } from "./AudioPlayer";
-import { PencilIcon, ReplyIcon, Trash2Icon } from "lucide-react-native";
+import { House, PencilIcon, ReplyIcon, Trash2Icon } from "lucide-react-native";
+import { Colors } from "@/constants/Colors";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -233,11 +234,9 @@ export function Message({
       {/* Message Bubble */}
       <TouchableOpacity
         onLongPress={() => {
-
           onLongPress();
         }}
         onPress={() => {
-
           if (Platform.OS !== "web") {
             setShowTime(true);
             if (timerRef.current) clearTimeout(timerRef.current);
@@ -246,7 +245,7 @@ export function Message({
             }, 1500);
           }
 
-          onPress()
+          onPress();
         }}
         activeOpacity={0.8}
       >
@@ -290,20 +289,23 @@ export function Message({
                         duration={attachment.fileSize}
                       />
                     ) : !isImage(attachment) ? (
-                      <View style={styles.fileContainer}>
-                        <View style={styles.fileIcon}>
-                          <Text style={styles.fileIconText}>
-                            {attachment.fileName
-                              .split(".")
-                              .pop()
-                              ?.toUpperCase() || "FILE"}
-                          </Text>
+                      <View style={styles.messengerFileBubble}>
+                        <View style={styles.messengerFileIconCircle}>
+                          {/* <Text style={styles.messengerFileIcon}>📄</Text> */}
+                          {React.createElement(House as any, {
+                            size: 20,
+                            color: "#fff",
+                          })}
                         </View>
-                        <View style={styles.fileInfo}>
-                          <Text style={styles.fileName} numberOfLines={1}>
+                        <View style={styles.messengerFileTextContainer}>
+                          <Text
+                            style={styles.messengerFileName}
+                            numberOfLines={1}
+                            ellipsizeMode="middle"
+                          >
                             {attachment.fileName}
                           </Text>
-                          <Text style={styles.fileSize}>
+                          <Text style={styles.messengerFileSize}>
                             {attachment.fileSize
                               ? formatFileSize(attachment.fileSize)
                               : ""}
@@ -313,13 +315,7 @@ export function Message({
                           onPress={() =>
                             onDownload(attachment.fileUrl, attachment.fileName)
                           }
-                          style={[
-                            styles.downloadButton,
-                            isDownloading(
-                              attachment.fileUrl,
-                              attachment.fileName
-                            ) && styles.downloadButtonLoading,
-                          ]}
+                          style={styles.messengerFileDownloadButton}
                           disabled={isDownloading(
                             attachment.fileUrl,
                             attachment.fileName
@@ -329,7 +325,10 @@ export function Message({
                             attachment.fileUrl,
                             attachment.fileName
                           ) ? (
-                            <ActivityIndicator size="small" color="#15438e" />
+                            <ActivityIndicator
+                              size="small"
+                              color={Colors.light.primary}
+                            />
                           ) : (
                             <Text style={styles.downloadIcon}>↓</Text>
                           )}
@@ -353,10 +352,10 @@ export function Message({
       {/* Show time on long press (mobile only) */}
       {showTime && Platform.OS !== "web" && (
         <Text
-        style={[
-          styles.messageTime,
-          isSent ? styles.messageTimeSent : styles.messageTimeReceived,
-        ]}
+          style={[
+            styles.messageTime,
+            isSent ? styles.messageTimeSent : styles.messageTimeReceived,
+          ]}
         >
           {formatMessageTime(new Date(message.createdAt))}
         </Text>
@@ -366,12 +365,16 @@ export function Message({
       {isSelected && !message.isDeleted && (
         <View style={[styles.actionButtons, styles.actionButtonsVisible]}>
           <TouchableOpacity style={styles.actionButton} onPress={onReply}>
-            <Text style={[styles.actionIcon, { color: "#22c55e" }]}><ReplyIcon size={16} /></Text>
+            <Text style={[styles.actionIcon, { color: "#22c55e" }]}>
+              <ReplyIcon size={16} />
+            </Text>
           </TouchableOpacity>
           {isSent && (
             <>
               <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
-                <Text style={[styles.actionIcon, { color: "#15438e" }]}>
+                <Text
+                  style={[styles.actionIcon, { color: Colors.light.primary }]}
+                >
                   <PencilIcon size={16} />
                 </Text>
               </TouchableOpacity>
@@ -530,59 +533,53 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 250,
   },
-  fileContainer: {
+  messengerFileBubble: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f8fafc",
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    marginHorizontal: 16,
-  },
-  fileIcon: {
-    width: 40,
-    height: 40,
-    backgroundColor: "#15438e",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  fileIconText: {
-    color: "#ffffff",
-    fontSize: 10,
-    fontWeight: "600",
-  },
-  fileInfo: {
-    flex: 1,
-  },
-  fileName: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#1e293b",
-    marginBottom: 2,
-  },
-  fileSize: {
-    fontSize: 11,
-    color: "#64748b",
-  },
-  downloadButton: {
-    padding: 8,
     backgroundColor: "#f1f5f9",
-    borderRadius: 8,
-    width: 32,
-    height: 32,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginHorizontal: 0,
+    marginBottom: 2,
+    minWidth: 160,
+    maxWidth: screenWidth * 0.7,
+  },
+  messengerFileIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#e2e8f0",
     justifyContent: "center",
     alignItems: "center",
+    marginRight: 10,
   },
-  downloadButtonLoading: {
-    backgroundColor: "#e2e8f0",
+  messengerFileIcon: {
+    fontSize: 20,
   },
-  downloadIcon: {
-    fontSize: 16,
-    color: "#15438e",
+  messengerFileTextContainer: {
+    flex: 1,
+    minWidth: 0,
+  },
+  messengerFileName: {
     fontWeight: "600",
+    fontSize: 15,
+    color: "#1e293b",
+  },
+  messengerFileSize: {
+    fontSize: 12,
+    color: "#64748b",
+    marginTop: 1,
+  },
+  messengerFileDownloadButton: {
+    marginLeft: 8,
+    padding: 6,
+    borderRadius: 12,
+    backgroundColor: "transparent",
+    minWidth: 28,
+    minHeight: 28,
+    justifyContent: "center",
+    alignItems: "center",
   },
   actionButtons: {
     position: "absolute",

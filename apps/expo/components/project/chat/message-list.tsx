@@ -16,6 +16,7 @@ import { Text } from "@/components/ui/text";
 import { Empty } from "@/components/ui/empty";
 import { Message } from "./message";
 import { format, isToday, isYesterday } from "date-fns";
+import { Colors } from "@/constants/Colors";
 
 interface MessageListProps {
   messages: any[];
@@ -134,7 +135,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
           <RefreshControl
             refreshing={loading}
             onRefresh={onLoadMore}
-            colors={["#15438e"]}
+            colors={[Colors.light.primary]}
           />
         }
         showsVerticalScrollIndicator={false}

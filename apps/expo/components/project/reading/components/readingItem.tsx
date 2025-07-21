@@ -236,7 +236,7 @@ const RoomReadingItem = ({
   };
 
   return (
-    <Pressable onPress={() => {}} style={{ flex: 1 }}>
+    <Pressable onPress={() => {}} style={{ flex: 1, backgroundColor: "#fff" }}>
       <Box
         key={reading.id}
         w="full"
@@ -246,7 +246,12 @@ const RoomReadingItem = ({
         className="gap-y-2"
       >
         {/* Header with offline indicator */}
-        <HStack justifyContent="space-between" alignItems="center" mb={2} px={2}>
+        <HStack
+          justifyContent="space-between"
+          alignItems="center"
+          mb={2}
+          px={2}
+        >
           <Button
             onPress={confirmDeleteReading}
             className="flex-row items-center w-full justify-center bg-white rounded-lg py-1.5 px-3 border border-red-300 my-4"

@@ -43,6 +43,7 @@ import {
   useSaveInvoiceItem,
   useUpdateInvoice,
 } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 export default function InvoiceDetailsScreen() {
   const { publicId } = useLocalSearchParams<{ publicId: string }>();
@@ -70,7 +71,7 @@ export default function InvoiceDetailsScreen() {
       case "draft":
         return { bg: "#e2e8f0", text: "#64748b" };
       case "sent":
-        return { bg: "#dbeafe", text: "#15438e" };
+        return { bg: "#dbeafe", text: Colors.light.primary };
       case "paid":
         return { bg: "#dcfce7", text: "#16a34a" };
       case "partial":

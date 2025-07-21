@@ -17,7 +17,6 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const DownloadIcon = Download as any;
 const XIcon = X as any;
 
-
 interface ImageViewerProps {
   visible: boolean;
   image: any;
@@ -80,14 +79,13 @@ export function ImageViewer({
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
-
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <Text style={styles.closeIcon}>
-                <XIcon  />
+                <XIcon />
               </Text>
             </TouchableOpacity>
-             {/* Image counter for multiple images */}
-             {imageList.length > 1 && (
+            {/* Image counter for multiple images */}
+            {imageList.length > 1 && (
               <View style={styles.imageCounter}>
                 <Text style={styles.counterText}>
                   {currentImageIndex + 1} / {imageList.length}
@@ -108,16 +106,12 @@ export function ImageViewer({
                 <ActivityIndicator size="small" color="#ffffff" />
               ) : (
                 <>
-                <DownloadIcon />
+                  <DownloadIcon />
                   {/* <Text style={styles.downloadIcon}>↓</Text> */}
                   {/* <Text style={styles.downloadText}>Download</Text> */}
                 </>
               )}
             </TouchableOpacity>
-
-           
-
-            
           </View>
 
           {/* Images with horizontal scrolling */}
@@ -216,7 +210,7 @@ const styles = StyleSheet.create({
     // borderColor: "white"
   },
   downloadButton: {
-    // backgroundColor: "#15438e",
+    // backgroundColor: Colors.light.primary,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     borderRadius: 20,
     paddingHorizontal: 16,
@@ -228,7 +222,6 @@ const styles = StyleSheet.create({
   downloadButtonLoading: {
     // backgroundColor: "#1976d2",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
-
   },
   downloadIcon: {
     fontSize: 16,

@@ -27,6 +27,7 @@ import {
   useAddImageTags,
 } from "@service-geek/api-client";
 import { toast } from "sonner-native";
+import { Colors } from "@/constants/Colors";
 
 export default function FilteredImagesScreen() {
   const { projectId, projectName } = useGlobalSearchParams<{
@@ -168,7 +169,7 @@ export default function FilteredImagesScreen() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <ArrowLeftIcon size={24} color="#15438e" />
+            <ArrowLeftIcon size={24} color={Colors.light.primary} />
           </TouchableOpacity>
 
           <View style={styles.headerContent}>
@@ -201,7 +202,7 @@ export default function FilteredImagesScreen() {
               style={styles.filterButton}
               onPress={() => setShowFilters(!showFilters)}
             >
-              <FilterIcon size={20} color="#15438e" />
+              <FilterIcon size={20} color={Colors.light.primary} />
               {(selectedRoomFilter !== "all" ||
                 selectedTagFilters.length > 0) && (
                 <View style={styles.filterBadge}>
@@ -323,12 +324,12 @@ const styles = StyleSheet.create({
     borderColor: "#e2e8f0",
   },
   actionButtonActive: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
   actionButtonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#15438e",
+    color: Colors.light.primary,
   },
   actionButtonTextActive: {
     color: "#fff",

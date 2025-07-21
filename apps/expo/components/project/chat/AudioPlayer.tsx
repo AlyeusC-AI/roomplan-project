@@ -8,7 +8,14 @@ import {
 } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Audio } from "expo-av";
-import { CirclePauseIcon, CircleStopIcon, PauseIcon, PlayCircleIcon, PlayIcon } from "lucide-react-native";
+import {
+  CirclePauseIcon,
+  CircleStopIcon,
+  PauseIcon,
+  PlayCircleIcon,
+  PlayIcon,
+} from "lucide-react-native";
+import { Colors } from "@/constants/Colors";
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -84,7 +91,6 @@ export function AudioPlayer({
 
   const playAudio = async () => {
     if (!sound) return;
-    
 
     try {
       if (isPlaying) {
@@ -160,7 +166,9 @@ export function AudioPlayer({
           onPress={playAudio}
           disabled={isLoading}
         >
-          <Text style={styles.playIcon}>{isPlaying ? <CirclePauseIcon /> : <PlayCircleIcon />}</Text>
+          <Text style={styles.playIcon}>
+            {isPlaying ? <CirclePauseIcon /> : <PlayCircleIcon />}
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.progressContainer}>
@@ -176,7 +184,9 @@ export function AudioPlayer({
 
         {isPlaying && (
           <TouchableOpacity style={styles.stopButton} onPress={stopAudio}>
-            <Text style={styles.stopIcon}><CircleStopIcon /></Text>
+            <Text style={styles.stopIcon}>
+              <CircleStopIcon />
+            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -212,7 +222,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   playButton: {
-    borderColor: "#15438e",
+    borderColor: Colors.light.primary,
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -238,7 +248,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     borderRadius: 2,
   },
   stopButton: {

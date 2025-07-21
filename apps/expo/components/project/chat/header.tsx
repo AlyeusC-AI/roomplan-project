@@ -1,6 +1,7 @@
 import React from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { Text } from "@/components/ui/text";
+import { Colors } from "@/constants/Colors";
 
 interface ChatHeaderProps {
   title: string;
@@ -46,7 +47,7 @@ export function ChatHeader({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     borderBottomWidth: 1,
     borderBottomColor: "#1976d2",
   },

@@ -46,6 +46,7 @@ import {
 import { useOfflineUpdateAreaAffected } from "@/lib/hooks/useOfflineScope";
 import { useNetworkStatus } from "@/lib/providers/QueryProvider";
 import { RoomReadingInput } from "../reading";
+import { Colors } from "@/constants/Colors";
 
 // Constants for area types and equipment
 const areaAffectedTitle = {
@@ -65,7 +66,7 @@ const equipmentOptions = [
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -132,7 +133,7 @@ const styles = StyleSheet.create({
   },
   areaToggleActive: {
     backgroundColor: "#f0f9ff",
-    borderColor: "#15438e",
+    borderColor: Colors.light.primary,
   },
   areaTabsContainer: {
     flexDirection: "row",
@@ -148,8 +149,8 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   areaTabActive: {
-    backgroundColor: "#15438e",
-    shadowColor: "#15438e",
+    backgroundColor: Colors.light.primary,
+    shadowColor: Colors.light.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -522,7 +523,7 @@ export default function AffectedArea({ room }: { room: Room }) {
                     value={isChecked}
                     onValueChange={(value) => handleAreaToggle(type, value)}
                     trackColor={{ false: "#e2e8f0", true: "#93c5fd" }}
-                    thumbColor={isChecked ? "#15438e" : "#ffffff"}
+                    thumbColor={isChecked ? Colors.light.primary : "#ffffff"}
                   />
                 </View>
               );

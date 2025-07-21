@@ -39,6 +39,7 @@ import {
   useUpdateRoomReading,
   calculateGPP,
 } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 // Define the type for the room reading component props
 interface RoomReadingProps {
@@ -90,18 +91,21 @@ const RoomReading: React.FC<RoomReadingProps> = ({
       <Button
         variant="outline"
         onPress={() => setIsCollapsed((o) => !o)}
-       
         style={{
           borderWidth: 0,
           borderRadius: 16,
           height: 58,
+          backgroundColor: "#fff",
         }}
       >
         <View className="flex flex-row justify-between w-full items-center py-1.5 gap-4 rounded-2xl">
           {/* Date on the left, readings on the right */}
           <View className="flex flex-row items-center flex-1 justify-between">
             {/* Date (left) */}
-            <TouchableOpacity onPress={() => setShowDatePicker(true)} className="flex-1">
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(true)}
+              className="flex-1"
+            >
               <Text className="text-gray-600 font-medium">
                 {format(date, "MM/dd/yyyy")}
               </Text>
@@ -110,25 +114,35 @@ const RoomReading: React.FC<RoomReadingProps> = ({
             <View className="flex flex-row items-center gap-4 ml-4">
               {/* Temperature */}
               <View className="flex flex-row items-center">
-                <ThermometerComponent size={16} color="#ef4444"  style={{marginRight: 2}}/>
+                <ThermometerComponent
+                  size={16}
+                  color="#ef4444"
+                  style={{ marginRight: 2 }}
+                />
                 <Text className="text-gray-600 font-medium">
                   {reading.temperature}°F
                 </Text>
               </View>
               {/* Humidity */}
               <View className="flex flex-row items-center ">
-                <DropletComponent size={16} color="#15438e" fill="#15438e"  style={{marginRight: 2}}/>
+                <DropletComponent
+                  size={16}
+                  color={Colors.light.primary}
+                  fill={Colors.light.primary}
+                  style={{ marginRight: 2 }}
+                />
                 <Text className="text-gray-600 font-medium">
                   {reading.humidity}%
                 </Text>
               </View>
               {/* GPP */}
               <View className="flex flex-row items-center gap-1">
-                <Text className="text-gray-800 font-bold">
-                  Gpp
-                </Text>
+                <Text className="text-gray-800 font-bold">Gpp</Text>
                 <Text className="text-gray-600 font-medium">
-                  {calculateGPP(reading.temperature, reading.humidity)?.toString() || "0.0"}
+                  {calculateGPP(
+                    reading.temperature,
+                    reading.humidity
+                  )?.toString() || "0.0"}
                 </Text>
               </View>
             </View>

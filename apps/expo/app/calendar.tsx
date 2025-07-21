@@ -36,6 +36,7 @@ import {
   useDeleteCalendarEvent,
   useGetCalendarEvents,
 } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 const { width } = Dimensions.get("window");
 
@@ -122,7 +123,7 @@ export default function CalendarScreen() {
 
     if (daysDifference > 30) {
       status = "Future";
-      color = "#15438e" ; // blue
+      color = Colors.light.primary; // blue
     } else if (daysDifference > 7) {
       status = "Upcoming";
       color = "#10b981"; // green
@@ -220,7 +221,7 @@ export default function CalendarScreen() {
   if (isDeleting) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#15438e" />
+        <ActivityIndicator size="large" color={Colors.light.primary} />
         <Text style={{ marginTop: 10, color: "#64748b" }}>
           Deleting event...
         </Text>
@@ -238,7 +239,7 @@ export default function CalendarScreen() {
             style={styles.todayButton}
             onPress={() => setSelectedDate(new Date())}
           >
-            <CalendarIcon size={16} color="#15438e" />
+            <CalendarIcon size={16} color={Colors.light.primary} />
             <Text style={styles.todayButtonText}>Today</Text>
           </TouchableOpacity>
         </View>
@@ -434,7 +435,7 @@ export default function CalendarScreen() {
 // Function to generate consistent colors for projects
 const getProjectColor = (projectId: number): string => {
   const colors = [
-    "#15438e" , // blue
+    Colors.light.primary, // blue
     "#10b981", // emerald
     "#8b5cf6", // violet
     "#f97316", // orange
@@ -472,7 +473,7 @@ const styles = StyleSheet.create({
   },
   todayButtonText: {
     marginLeft: 4,
-    color: "#15438e",
+    color: Colors.light.primary,
     fontWeight: "600",
     fontSize: 14,
   },
@@ -548,7 +549,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   addEventButtonText: {
-    color: "#15438e",
+    color: Colors.light.primary,
     fontWeight: "600",
   },
   eventCard: {
@@ -632,8 +633,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 20,
-    backgroundColor: "#15438e",
-    shadowColor: "#15438e",
+    backgroundColor: Colors.light.primary,
+    shadowColor: Colors.light.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -661,9 +662,9 @@ const customStyles = StyleSheet.create({
     backgroundColor: "#93c5fd", // light blue
   },
   selectedDay: {
-    backgroundColor: "#15438e", // "#3b82f6"
+    backgroundColor: Colors.light.primary, // "#3b82f6"
     transform: [{ scale: 1.05 }],
-    shadowColor: "#15438e",
+    shadowColor: Colors.light.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,

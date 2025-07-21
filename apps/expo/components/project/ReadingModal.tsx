@@ -21,6 +21,7 @@ import { RoomReadingInput } from "@/components/project/reading/components/RoomRe
 import DateTimePicker, { useDefaultStyles } from "react-native-ui-datepicker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Room, useCreateRoomReading } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 // Type assertions for Lucide icons
 const XIcon = X as any;
@@ -253,7 +254,7 @@ export default function ReadingModal({
                   >
                     <DropletComponent
                       size={20}
-                      color="#15438e"
+                      color={Colors.light.primary}
                       style={{ marginRight: 8 }}
                     />
                     <Text

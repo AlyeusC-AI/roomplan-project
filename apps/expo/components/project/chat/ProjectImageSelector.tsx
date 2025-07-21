@@ -23,6 +23,7 @@ import {
   useGetRooms,
   useGetTags,
 } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 // Type assertions to fix ReactNode compatibility
 const XIcon = X as any;
@@ -356,7 +357,7 @@ export default function ProjectImageSelector({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerContent}>
-              <ImageIconComponent size={24} color="#15438e" />
+              <ImageIconComponent size={24} color={Colors.light.primary} />
               <Text style={styles.headerTitle}>
                 Select Project Images{" "}
                 {selectedCount > 0 && `(${selectedCount})`}
@@ -477,7 +478,7 @@ export default function ProjectImageSelector({
           <View style={styles.imagesContainer}>
             {isLoading ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#15438e" />
+                <ActivityIndicator size="large" color={Colors.light.primary} />
                 <Text style={styles.loadingText}>Loading images...</Text>
               </View>
             ) : filteredImages.length === 0 ? (
@@ -577,7 +578,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   filterTabActive: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
   filterTabText: {
     fontSize: 14,
@@ -652,8 +653,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   filterChipActive: {
-    backgroundColor: "#15438e",
-    borderColor: "#15438e",
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
   },
   filterChipText: {
     fontSize: 14,
@@ -692,7 +693,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
   sendButtonText: {
     fontSize: 14,
@@ -741,7 +742,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   imageItemSelected: {
-    borderColor: "#15438e",
+    borderColor: Colors.light.primary,
     borderWidth: 2,
   },
   imageThumbnail: {
@@ -759,7 +760,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     justifyContent: "center",
     alignItems: "center",
   },

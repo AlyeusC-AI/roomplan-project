@@ -18,9 +18,21 @@ import { toast } from "sonner-native";
 import ProjectImageSelector from "./ProjectImageSelector";
 import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
-import { ArrowUp, Camera, CameraIcon, Image as ImageIcon, Images, Mic, Paperclip, Send, SendHorizontal, Trash2 } from "lucide-react-native";
+import {
+  ArrowUp,
+  Camera,
+  CameraIcon,
+  HomeIcon,
+  Image as ImageIcon,
+  Images,
+  Mic,
+  Paperclip,
+  Send,
+  SendHorizontal,
+  Trash2,
+} from "lucide-react-native";
 import RoomIcon from "@/assets/roomIcon.png";
-
+import { Colors } from "@/constants/Colors";
 
 const SendHorizontalIcon = SendHorizontal as any;
 const MicIcon = Mic as any;
@@ -44,7 +56,10 @@ interface ChatInputProps {
 }
 
 const VoiceNoteBars = ({ duration }: { duration: string }) => {
-  const barAnims = Array.from({ length: 25 }, () => useRef(new Animated.Value(1)).current);
+  const barAnims = Array.from(
+    { length: 25 },
+    () => useRef(new Animated.Value(1)).current
+  );
 
   useEffect(() => {
     const animations = barAnims.map((anim, i) =>
@@ -90,7 +105,7 @@ const VoiceNoteBars = ({ duration }: { duration: string }) => {
       }}
     >
       {/* Optional: Add a mic icon for context */}
-      {/* <MicIcon size={22} color="#15438e" style={{ marginRight: 10 }} /> */}
+      {/* <MicIcon size={22} color={Colors.light.primary} style={{ marginRight: 10 }} /> */}
 
       <View
         style={{
@@ -108,7 +123,7 @@ const VoiceNoteBars = ({ duration }: { duration: string }) => {
             style={{
               width: 3,
               marginHorizontal: 3,
-              backgroundColor: "#15438e",
+              backgroundColor: Colors.light.primary,
               borderRadius: 3,
               height: anim.interpolate({
                 inputRange: [0.5, 2],
@@ -122,7 +137,7 @@ const VoiceNoteBars = ({ duration }: { duration: string }) => {
       <Text
         style={{
           fontWeight: "bold",
-          color: "#15438e",
+          color: Colors.light.primary,
           textAlign: "center",
           minWidth: 40,
         }}
@@ -563,8 +578,6 @@ export function ChatInput({
             </View>
           )}
 
-
-
           <View style={styles.inputRow}>
             {/* Recording Indicator */}
             {isRecording ? (
@@ -573,83 +586,104 @@ export function ChatInput({
                   style={styles.cancelRecordingButton}
                   onPress={cancelRecording}
                 >
-                  <Text style={styles.cancelRecordingText}><Trash2Icon /></Text>
+                  <Text style={styles.cancelRecordingText}>
+                    <Trash2Icon />
+                  </Text>
                 </TouchableOpacity>
                 {/* Animated bars in a box with duration below */}
                 <VoiceNoteBars duration={formatTime(recordingTime)} />
               </View>
-            ) : <>
-              {/* Attachment Buttons - Hidden when input is focused */}
-              {!isFocused && (
-                <View style={styles.attachmentButtons}>
-                  {/* Camera Button */}
-                  <TouchableOpacity
-                    style={[
-                      styles.attachmentButton,
-                      isUploading && styles.attachmentButtonDisabled,
-                    ]}
-                    disabled={!connected || isUploading || isRecording}
-                    onPress={handleCamera}
-                  >
-                    <Text style={styles.attachmentIcon}><CameraIcon /></Text>
-                  </TouchableOpacity>
-
-                  {/* Gallery Button */}
-                  <TouchableOpacity
-                    style={[
-                      styles.attachmentButton,
-                      isUploading && styles.attachmentButtonDisabled,
-                    ]}
-                    disabled={!connected || isUploading || isRecording}
-                    onPress={handleImagePicker}
-                  >
-                    <Text style={styles.attachmentIcon}>
-                      <ImageIcon />
-                    </Text>
-                  </TouchableOpacity>
-
-                  {/* Document Button */}
-                  <TouchableOpacity
-                    style={[
-                      styles.attachmentButton,
-                      isUploading && styles.attachmentButtonDisabled,
-                    ]}
-                    disabled={!connected || isUploading || isRecording}
-                    onPress={handleDocumentPicker}
-                  >
-                    <Text style={styles.attachmentIcon}><PaperclipIcon /></Text>
-                  </TouchableOpacity>
-
-                  {/* Project Images Button (only if projectId exists) */}
-                  {projectId && (
+            ) : (
+              <>
+                {/* Attachment Buttons - Hidden when input is focused */}
+                {!isFocused && (
+                  <View style={styles.attachmentButtons}>
+                    {/* Camera Button */}
                     <TouchableOpacity
                       style={[
                         styles.attachmentButton,
                         isUploading && styles.attachmentButtonDisabled,
                       ]}
                       disabled={!connected || isUploading || isRecording}
-                      onPress={() => setShowProjectImageSelector(true)}
+                      onPress={handleCamera}
                     >
-                      {/* <Text style={styles.attachmentIcon}><ImagesIcon /></Text> */}
-                      <Image
-                      source={RoomIcon}
-                      style={{ width: 25, height: 25, resizeMode: "contain" ,tintColor: "#15438e" , marginBottom: 4 }}
-                    />
+                      <Text style={styles.attachmentIcon}>
+                        <CameraIcon />
+                      </Text>
                     </TouchableOpacity>
-                  )}
-                </View>
-              )}
 
-              {/* Back Button - Only shown when input is focused */}
-              {isFocused && (
-                <TouchableOpacity
-                  style={styles.backButton}
-                  onPress={() => setIsFocused(false)}
-                >
-                  <Text style={styles.backIcon}>←</Text>
-                </TouchableOpacity>
-              )}
-            </>}
+                    {/* Gallery Button */}
+                    <TouchableOpacity
+                      style={[
+                        styles.attachmentButton,
+                        isUploading && styles.attachmentButtonDisabled,
+                      ]}
+                      disabled={!connected || isUploading || isRecording}
+                      onPress={handleImagePicker}
+                    >
+                      <Text style={styles.attachmentIcon}>
+                        <ImageIcon />
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Document Button */}
+                    <TouchableOpacity
+                      style={[
+                        styles.attachmentButton,
+                        isUploading && styles.attachmentButtonDisabled,
+                      ]}
+                      disabled={!connected || isUploading || isRecording}
+                      onPress={handleDocumentPicker}
+                    >
+                      <Text style={styles.attachmentIcon}>
+                        <PaperclipIcon />
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Project Images Button (only if projectId exists) */}
+                    {projectId && (
+                      <TouchableOpacity
+                        style={[
+                          styles.attachmentButton,
+                          isUploading && styles.attachmentButtonDisabled,
+                        ]}
+                        disabled={!connected || isUploading || isRecording}
+                        onPress={() => setShowProjectImageSelector(true)}
+                      >
+                        {/* <Text style={styles.attachmentIcon}><ImagesIcon /></Text> */}
+                        {/* <Image
+                          source={RoomIcon}
+                          style={{
+                            width: 25,
+                            height: 25,
+                            resizeMode: "contain",
+                            tintColor: Colors.light.primary,
+                            marginBottom: 4,
+                          }}
+                        /> */}
+                        <Text style={styles.attachmentIcon}>
+                          <HomeIcon
+                            width={25}
+                            height={25}
+                            color={Colors.light.primary}
+                          />
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
+
+                {/* Back Button - Only shown when input is focused */}
+                {isFocused && (
+                  <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => setIsFocused(false)}
+                  >
+                    <Text style={styles.backIcon}>←</Text>
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
             {/* Text Input */}
             {isRecording ? null : (
               <View
@@ -686,14 +720,16 @@ export function ChatInput({
                 style={[styles.sendButton, styles.recordingButton]}
                 onPress={stopRecording}
               >
-                <Text style={styles.sendIcon}><SendHorizontalIcon /></Text>
+                <Text style={styles.sendIcon}>
+                  <SendHorizontalIcon />
+                </Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
                 style={[
                   styles.sendButton,
                   (!message.trim() || !connected || isUploading) &&
-                  styles.sendButtonDisabled,
+                    styles.sendButtonDisabled,
                 ]}
                 onPress={message.trim() ? handleSend : startRecording}
                 disabled={!connected || isUploading}
@@ -799,11 +835,11 @@ const styles = StyleSheet.create({
     maxHeight: 100,
   },
   inputWrapperFocused: {
-    borderColor: "#15438e",
+    borderColor: Colors.light.primary,
     backgroundColor: "#ffffff",
   },
   inputWrapperRecording: {
-    borderColor: "#15438e",
+    borderColor: Colors.light.primary,
     backgroundColor: "#ffffff",
   },
   textInput: {
@@ -813,13 +849,13 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   sendButton: {
-    // backgroundColor: "#15438e",
+    // backgroundColor: Colors.light.primary,
     // borderRadius: 18,
     width: 36,
     height: 36,
     justifyContent: "center",
     alignItems: "center",
-    // shadowColor: "#15438e",
+    // shadowColor: Colors.light.primary,
     // shadowOffset: { width: 0, height: 2 },
     // shadowOpacity: 0.2,
     // shadowRadius: 4,
@@ -832,7 +868,6 @@ const styles = StyleSheet.create({
   },
   recordingButton: {
     // backgroundColor: "#dc2626",
-
   },
   sendIcon: {
     fontSize: 16,
@@ -850,7 +885,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     marginRight: 8,
   },
   recordingIcon: {
@@ -866,7 +901,7 @@ const styles = StyleSheet.create({
   },
   cancelRecordingText: {
     fontSize: 12,
-    color: "#15438e",
+    color: Colors.light.primary,
     fontWeight: "600",
   },
   backButton: {
@@ -881,7 +916,7 @@ const styles = StyleSheet.create({
   },
   backIcon: {
     fontSize: 16,
-    color: "#15438e",
+    color: Colors.light.primary,
     fontWeight: "600",
   },
 });

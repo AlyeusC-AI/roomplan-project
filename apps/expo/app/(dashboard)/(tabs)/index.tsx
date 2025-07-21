@@ -34,6 +34,7 @@ import {
 } from "@service-geek/api-client";
 import type { PaginatedResponse } from "@service-geek/api-client/src/types/common";
 import { OrganizationSwitcher } from "@/components/OrganizationSwitcher";
+import { Colors } from "@/constants/Colors";
 // import { Platform } from "react-native";
 // import Constants from "expo-constants";
 
@@ -168,7 +169,7 @@ export default function Dashboard() {
   //           >
   //             <ChevronLeft
   //               size={16}
-  //               color={currentPage === 1 ? "#9CA3AF" : "#15438e"}
+  //               color={currentPage === 1 ? "#9CA3AF" : Colors.light.primary}
   //             />
   //           </TouchableOpacity>
 
@@ -244,7 +245,7 @@ export default function Dashboard() {
   //           >
   //             <ChevronRight
   //               size={16}
-  //               color={currentPage === totalPages ? "#9CA3AF" : "#15438e"}
+  //               color={currentPage === totalPages ? "#9CA3AF" : Colors.light.primary}
   //             />
   //           </TouchableOpacity>
   //         </View>
@@ -256,7 +257,7 @@ export default function Dashboard() {
   if (isLoadingUser) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#15438e" />
+        <ActivityIndicator size="large" color={Colors.light.primary} />
       </View>
     );
   }
@@ -294,7 +295,7 @@ export default function Dashboard() {
   if (isLoading && !data?.data) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#15438e" />
+        <ActivityIndicator size="large" color={Colors.light.primary} />
       </View>
     );
   }
@@ -311,13 +312,13 @@ export default function Dashboard() {
               onPress={() => setOrgModalVisible(true)}
               style={styles.orgButton}
             >
-              <Building2 size={16} color="#15438e" style={{ marginRight: 4 }} />
+              <Building2 size={16} color={Colors.light.primary} style={{ marginRight: 4 }} />
               <Text style={styles.orgButtonText}>
                 {activeOrganization?.name || "Select Org"}
               </Text>
               <ChevronRight
                 size={16}
-                color="#15438e"
+                color={Colors.light.primary}
                 style={{ marginLeft: 2 }}
               />
             </TouchableOpacity> */}
@@ -352,8 +353,8 @@ export default function Dashboard() {
               <RefreshControl
                 refreshing={isRefreshing}
                 onRefresh={resetAndFetch}
-                colors={["#15438e"]}
-                tintColor="#15438e"
+                colors={[Colors.light.primary]}
+                tintColor={Colors.light.primary}
               />
             }
             ListEmptyComponent={renderEmpty}
@@ -427,7 +428,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   orgButtonText: {
-    color: "#15438e",
+    color: Colors.light.primary,
     fontWeight: "bold",
     fontSize: 14,
   },
@@ -474,7 +475,7 @@ const styles = StyleSheet.create({
     height: 24,
   },
   pageButtonActive: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
   pageButtonDisabled: {
     opacity: 0.5,
@@ -491,7 +492,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     borderRadius: 6,
   },
   retryButtonText: {
@@ -511,7 +512,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 1,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     borderRadius: 100,
   },
   fabButtonText: {

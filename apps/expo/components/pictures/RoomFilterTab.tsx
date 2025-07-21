@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Check } from "lucide-react-native";
 import { Image, Room } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 interface RoomFilterTabProps {
   rooms: Room[];
@@ -123,8 +124,8 @@ const styles = StyleSheet.create({
     borderColor: "#e2e8f0",
   },
   selectedRoomOption: {
-    backgroundColor: "#15438e",
-    borderColor: "#15438e",
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
   },
   roomOptionContent: {
     flex: 1,

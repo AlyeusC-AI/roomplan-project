@@ -16,6 +16,7 @@ import {
   useNetworkStatus,
 } from "../lib/providers/QueryProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Colors } from "@/constants/Colors";
 
 console.log("App initialization started");
 
@@ -66,8 +67,8 @@ export default function AppRoot() {
         200: "#bfdbfe",
         300: "#93c5fd",
         400: "#60a5fa",
-        500: "#15438e",
-        600: "#15438e",
+        500: Colors.light.primary,
+        600: Colors.light.primary,
         700: "#1d4ed8",
         800: "#1e40af",
         900: "#1e3a8a",
@@ -143,7 +144,7 @@ export default function AppRoot() {
               <Stack
                 screenOptions={{
                   headerTintColor: "#FFFF",
-                  headerStyle: { backgroundColor: "#15438e" },
+                  headerStyle: { backgroundColor: Colors.light.primary },
                 }}
               >
                 <Stack.Screen

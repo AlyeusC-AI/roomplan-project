@@ -9,6 +9,11 @@ import {
   ClipboardList,
   Ruler,
   FileText,
+  User,
+  Clock,
+  Share2,
+  Edit2,
+  FileClock,
 } from "lucide-react-native";
 import { router, Tabs, useGlobalSearchParams } from "expo-router";
 import {
@@ -19,12 +24,30 @@ import {
   SafeAreaView,
   Platform,
   StatusBar,
+  Image,
 } from "react-native";
 import { projectStore } from "@/lib/state/project";
 import { userStore } from "@/lib/state/user";
 import { useGetProjectById } from "@service-geek/api-client";
 import DryStandardScreen from "./dry-standard";
 import DryStandardDetailScreen from "./dry-standard-detail";
+import { Colors } from "@/constants/Colors";
+import ShareIcon from "@/assets/share.png";
+
+// Type assertions for lucide-react-native icons
+const ArrowLeftIcon = ArrowLeft as any;
+const HouseIcon = House as any;
+const ImagesIcon = Images as any;
+const BookOpenIcon = BookOpen as any;
+const StickyNoteIcon = StickyNote as any;
+const ClipboardListIcon = ClipboardList as any;
+const RulerIcon = Ruler as any;
+const FileTextIcon = FileText as any;
+const UserIcon = User as any;
+const ClockIcon = FileClock as any;
+const Share2Icon = Share2 as any;
+const Edit2Icon = Edit2 as any;
+
 export default function Layout() {
   const { projectId } = useGlobalSearchParams();
 
@@ -41,24 +64,27 @@ export default function Layout() {
   return (
     <Tabs
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: "#15438e",
+        tabBarActiveTintColor: Colors.light.primary,
         headerTintColor: "white",
         headerStyle: {
-          backgroundColor: "#15438e",
+          backgroundColor: Colors.light.primary,
         },
         header: ({ navigation, route, options }) =>
           route.name === "chat" || route.name === "copilot" ? (
-            <SafeAreaView style={{ backgroundColor: "#15438e" }}>
-              <StatusBar barStyle="light-content" backgroundColor="#15438e" />
+            <SafeAreaView style={{ backgroundColor: Colors.light.primary }}>
+              <StatusBar
+                barStyle="light-content"
+                backgroundColor={Colors.light.primary}
+              />
             </SafeAreaView>
           ) : (
-            <SafeAreaView style={{ backgroundColor: "#15438e" }}>
-              <StatusBar barStyle="light-content" backgroundColor="# 2563eb" />
+            <SafeAreaView style={{ backgroundColor: "#fff" }}>
+              <StatusBar barStyle="dark-content" backgroundColor="#fff" />
               <View
                 style={{
                   paddingTop:
                     Platform.OS === "android" ? StatusBar.currentHeight : 0,
-                  backgroundColor: "# 2563eb",
+                  backgroundColor: "#fff",
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.1,
@@ -67,58 +93,128 @@ export default function Layout() {
                 }}
               >
                 <View className="px-4 py-3 flex-row items-center justify-between">
-                  <View className="flex-row items-center">
-                    <TouchableOpacity
-                      onPress={() => router.back()}
-                      className="mr-4 p-2 bg-white/10 rounded-full"
+                  <TouchableOpacity
+                    onPress={() => router.back()}
+                    className="mr-4 flex-row items-center gap-2 rounded-full text-primary"
+                  >
+                    <ArrowLeftIcon color={Colors.light.primary} size={20} />
+                    <Text
+                      className="font-medium text-center text-lg"
+                      style={{
+                        color: Colors.light.primary,
+                      }}
                     >
-                      <ArrowLeft color="white" size={20} />
-                    </TouchableOpacity>
-                    <Text className="text-white text-lg font-semibold">
-                      {route.name === "scope"
-                        ? "Scope"
-                        : project?.data.clientName || "Project"}
+                      Back
                     </Text>
-                  </View>
-                  {route.name === "index" && (
-                    <TouchableOpacity
-                      // onPress={() => router.push({ pathname: "./edit" })}
-                      onPress={() =>
-                        router.push({
-                          pathname: "./details",
-                          params: { activeTab: "loss" },
-                        })
-                      }
-                      className="bg-white/10 px-4 py-2 rounded-full"
+                  </TouchableOpacity>
+                  <Text className="text-black text-2xl font-semibold flex-1 text-center">
+                    {route.name === "scope"
+                      ? "Scope"
+                      : project?.data.name || "Project"}
+                  </Text>
+                  <View style={{ width: 44 }} />
+                  {/* Spacer to balance the back button */}
+                </View>
+                {/* Four options below */}
+                <View className="flex-row justify-around py-2">
+                  <TouchableOpacity className="gap-2">
+                    <UserIcon
+                      size={28}
+                      fill={Colors.light.primary}
+                      // color={"#f"}
+                    />
+                    <Text
+                      className="text-black font-medium text-center"
+                      style={{
+                        color: Colors.light.primary,
+                      }}
                     >
-                      <Text className="text-white font-medium">Edit</Text>
-                    </TouchableOpacity>
-                  )}
+                      User
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity className="gap-2">
+                    <ClockIcon
+                      size={28}
+                      fill={Colors.light.primary}
+                      color={"#fff"}
+                    />
+                    <Text
+                      className="text-black font-medium text-center"
+                      style={{
+                        color: Colors.light.primary,
+                      }}
+                    >
+                      Time
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity className="gap-2">
+                    <Image
+                      source={ShareIcon}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        resizeMode: "contain",
+                        tintColor: Colors.light.primary,
+                        // marginBottom: 4,
+                      }}
+                    />
+                    <Text
+                      className="text-black font-medium text-center"
+                      style={{
+                        color: Colors.light.primary,
+                      }}
+                    >
+                      Share
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push({
+                        pathname: "./details",
+                        params: { activeTab: "loss" },
+                      })
+                    }
+                    className="gap-2"
+                  >
+                    <Edit2Icon
+                      size={28}
+                      fill={Colors.light.primary}
+                      color={"#fff"}
+                    />
+                    <Text
+                      className="text-black font-medium text-center"
+                      style={{
+                        color: Colors.light.primary,
+                      }}
+                    >
+                      Edit
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             </SafeAreaView>
           ),
         tabBarIcon: ({ color }) => {
           if (route.name === "index") {
-            return <House size={24} color={color} />;
+            return <HouseIcon size={24} color={color} />;
           }
           if (route.name === "pictures") {
-            return <Images size={24} color={color} />;
+            return <ImagesIcon size={24} color={color} />;
           }
           if (route.name === "readings") {
-            return <BookOpen size={24} color={color} />;
+            return <BookOpenIcon size={24} color={color} />;
           }
           if (route.name === "notes/index") {
-            return <StickyNote size={24} color={color} />;
+            return <StickyNoteIcon size={24} color={color} />;
           }
           if (route.name === "forms") {
-            return <ClipboardList size={24} color={color} />;
+            return <ClipboardListIcon size={24} color={color} />;
           }
           if (route.name === "scope") {
-            return <Ruler size={24} color={color} />;
+            return <RulerIcon size={24} color={color} />;
           }
           if (route.name === "documents") {
-            return <FileText size={24} color={color} />;
+            return <FileTextIcon size={24} color={color} />;
           }
           return null;
         },

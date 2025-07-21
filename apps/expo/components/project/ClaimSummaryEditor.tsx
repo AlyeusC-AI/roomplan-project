@@ -24,6 +24,7 @@ import {
 import { Box, FormControl, HStack, VStack } from "native-base";
 import { Pressable } from "react-native";
 import { useGetProjectById, useUpdateProject } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 const XIcon = X as any;
 const ChevronDownIcon = ChevronDown as any;
@@ -84,7 +85,9 @@ function WaterDamageClassSelector({
                 <HStack space={2} alignItems="center" mb={1}>
                   <DropletsIcon
                     size={16}
-                    color={value === type.value ? "#15438e" : "#94a3b8"}
+                    color={
+                      value === type.value ? Colors.light.primary : "#94a3b8"
+                    }
                   />
                   <Text
                     style={[
@@ -221,7 +224,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   selectedRadioOption: {
-    borderColor: "#15438e",
+    borderColor: Colors.light.primary,
     backgroundColor: "#eff6ff",
   },
   radioContainer: {
@@ -240,13 +243,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   selectedRadioButton: {
-    borderColor: "#15438e",
+    borderColor: Colors.light.primary,
   },
   radioButtonInner: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
   radioContent: {
     flex: 1,
@@ -257,7 +260,7 @@ const styles = StyleSheet.create({
     color: "#1d1d1d",
   },
   selectedRadioLabel: {
-    color: "#15438e",
+    color: Colors.light.primary,
   },
   radioDescription: {
     fontSize: 14,
@@ -280,7 +283,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   continueButton: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -353,7 +356,9 @@ function WaterDamageCategorySelector({
                 <HStack space={2} alignItems="center" mb={1}>
                   <DropletsIcon
                     size={16}
-                    color={value === type.value ? "#15438e" : "#94a3b8"}
+                    color={
+                      value === type.value ? Colors.light.primary : "#94a3b8"
+                    }
                   />
                   <Text
                     style={[

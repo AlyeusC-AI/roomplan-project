@@ -13,6 +13,7 @@ import {
   useSetActiveOrganization,
 } from "@service-geek/api-client";
 import { Check } from "lucide-react-native";
+import { Colors } from "@/constants/Colors";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -119,7 +120,7 @@ export function OrganizationSwitcher({
                   {item.name}
                 </Text>
                 {activeOrganization?.id === item.id && (
-                  <Check size={20} color="#15438e" />
+                  <Check size={20} color={Colors.light.primary} />
                 )}
               </TouchableOpacity>
             )}
@@ -149,7 +150,11 @@ export function OrganizationSwitcher({
             }}
           >
             <Text
-              style={{ color: "#15438e", fontWeight: "bold", fontSize: 16 }}
+              style={{
+                color: Colors.light.primary,
+                fontWeight: "bold",
+                fontSize: 16,
+              }}
             >
               Close
             </Text>

@@ -2,6 +2,7 @@ import React from "react";
 import { View, TouchableOpacity } from "react-native";
 import { Text } from "@/components/ui/text";
 import { LucideIcon } from "lucide-react-native";
+import { Colors } from "@/constants/Colors";
 
 interface EmptyProps {
   title: string;
@@ -24,7 +25,7 @@ export function Empty({
     <View className="flex-1 items-center justify-center p-8 bg-muted/5 rounded-lg">
       {Icon && (
         <View className="mb-4 p-4 rounded-full bg-primary/10">
-          <Icon size={32} color="#15438e" />
+          <Icon size={32} color={Colors.light.primary} />
         </View>
       )}
       <Text className="text-xl font-semibold text-center mb-2">{title}</Text>
@@ -44,4 +45,4 @@ export function Empty({
       )}
     </View>
   );
-} 
+}

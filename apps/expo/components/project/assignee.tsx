@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { TouchableOpacity, ActivityIndicator } from "react-native";
+import { TouchableOpacity, ActivityIndicator, Image } from "react-native";
 import { Text } from "../ui/text";
 import { View } from "react-native";
 import { Card } from "../ui/card";
@@ -21,6 +21,8 @@ import {
   useRemoveProjectMember,
   User,
 } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
+import ShareIcon from "@/assets/share.png";
 
 const AssigneeSelect = () => {
   const { projectId } = useGlobalSearchParams<{ projectId: string }>();
@@ -90,7 +92,17 @@ const AssigneeSelect = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger className="flex flex-row items-center space-x-2 p-2 gap-2 rounded-lg hover:bg-gray-100">
-        <Users height={24} width={24} className="text-black" color="#000" />
+        {/* <Users height={24} width={24} className="text-black" color="#000" /> */}
+        <Image
+          source={ShareIcon}
+          style={{
+            width: 24,
+            height: 24,
+            resizeMode: "contain",
+            tintColor: Colors.light.primary,
+            // marginBottom: 4,
+          }}
+        />
         <View className="flex-row items-center gap-2">
           {projectMembers.length > 0 ? (
             <>
@@ -124,7 +136,7 @@ const AssigneeSelect = () => {
         <View className="mt-6 space-y-3">
           {isLoading ? (
             <View className="items-center justify-center py-8">
-              <ActivityIndicator size="large" color="#15438e" />
+              <ActivityIndicator size="large" color={Colors.light.primary} />
             </View>
           ) : (
             filteredMembers.map((member) => {

@@ -12,6 +12,7 @@ import { Text } from "@/components/ui/text";
 import { Filter, X } from "lucide-react-native";
 import RoomFilterTab from "./RoomFilterTab";
 import TagFilterTab from "./TagFilterTab";
+import { Colors } from "@/constants/Colors";
 
 interface FilterModalProps {
   visible: boolean;
@@ -61,7 +62,7 @@ export default function FilterModal({
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Filter size={24} color="#15438e" />
+            <Filter size={24} color={Colors.light.primary} />
             <Text style={styles.headerTitle}>Filters</Text>
           </View>
           <View style={styles.headerRight}>
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   clearButtonText: {
-    color: "#15438e",
+    color: Colors.light.primary,
     fontSize: 14,
     fontWeight: "500",
   },
@@ -216,7 +217,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   activeTab: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
   },
   tabText: {
     fontSize: 16,
@@ -251,7 +252,7 @@ const styles = StyleSheet.create({
     borderTopColor: "#e5e7eb",
   },
   applyButton: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",

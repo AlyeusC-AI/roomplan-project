@@ -35,6 +35,7 @@ import { useOfflineNotesStore, OfflineNote } from "@/lib/state/offline-notes";
 import { useOfflineUploadsStore } from "@/lib/state/offline-uploads";
 import { useNetworkStatus } from "@/lib/providers/QueryProvider";
 import { format } from "date-fns";
+import { Colors } from "@/constants/Colors";
 
 // Type assertions to fix ReactNode compatibility
 const ExpoImageComponent = ExpoImage as any;
@@ -407,10 +408,12 @@ export default function OfflineNoteCard({
             >
               <ActivityIndicator
                 size="small"
-                color="#15438e"
+                color={Colors.light.primary}
                 style={{ marginRight: 4 }}
               />
-              <Text style={{ fontSize: 12, color: "#15438e" }}>Saving...</Text>
+              <Text style={{ fontSize: 12, color: Colors.light.primary }}>
+                Saving...
+              </Text>
             </View>
           )}
         </View>
@@ -598,7 +601,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(37, 99, 235, 0.3)",
   },
   imageActionText: {
-    color: "#15438e",
+    color: Colors.light.primary,
     fontWeight: "500",
   },
   loadingText: {

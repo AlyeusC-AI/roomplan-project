@@ -96,11 +96,23 @@
 import { useDebounce } from "@/utils/debounce";
 import { Filter, Search, X as LucideX, Calendar } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, TextInput, TouchableOpacity, Modal, SafeAreaView, Text } from "react-native";
+import {
+  StyleSheet,
+  View,
+  TextInput,
+  TouchableOpacity,
+  Modal,
+  SafeAreaView,
+  Text,
+} from "react-native";
 import { router } from "expo-router";
-import DateTimePicker, { DateType, useDefaultStyles } from 'react-native-ui-datepicker';
-import dayjs from 'dayjs';
-import MemberSelector from '@/components/calendar/member-selector';
+import DateTimePicker, {
+  DateType,
+  useDefaultStyles,
+} from "react-native-ui-datepicker";
+import dayjs from "dayjs";
+import MemberSelector from "@/components/calendar/member-selector";
+import { Colors } from "@/constants/Colors";
 
 const FilterIcon = Filter as any;
 const XIcon = LucideX as any;
@@ -166,7 +178,7 @@ export default function Header({
         />
         {searchTerm ? (
           <TouchableOpacity
-            style={{ position: 'absolute', right: 10, top: 10 }}
+            style={{ position: "absolute", right: 10, top: 10 }}
             onPress={() => setSearchTerm("")}
           >
             <XIcon size={18} color="#778599" />
@@ -174,196 +186,352 @@ export default function Header({
         ) : null}
       </View>
       <TouchableOpacity
-      onPress={() => setVisible(true)}
-      className="bg-white p-2  shadow-sm rounded-lg py-2"
+        onPress={() => setVisible(true)}
+        className="bg-white p-2  shadow-sm rounded-lg py-2"
       >
         <FilterIcon size={21} />
-        </TouchableOpacity>
+      </TouchableOpacity>
 
-        <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="fullScreen"
-      onRequestClose={() => setVisible(false)}
-    >
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-        <View style={{ flex: 1, padding: 20 }}>
-          <View style={{ marginBottom: 20 }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Filters</Text>
-            {/* Start Date Picker */}
-            <Text style={{ fontSize: 16, marginBottom: 4 }}>Start Date</Text>
-            <TouchableOpacity
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                backgroundColor: 'white',
-                borderRadius: 8,
-                padding: 12,
-                borderWidth: 1,
-                borderColor: '#e2e8f0',
-                marginBottom: 12,
-              }}
-              onPress={() => {
-                setTempStartDate(startDate);
-                setShowStartPicker(true);
-              }}
-            >
-              <Text style={{ fontSize: 16, color: '#1d1d1d' }}>
-                {startDate ? dayjs(startDate).format('MMM D, YYYY') : 'Select start date'}
+      <Modal
+        visible={visible}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setVisible(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+          <View style={{ flex: 1, padding: 20 }}>
+            <View style={{ marginBottom: 20 }}>
+              <Text
+                style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}
+              >
+                Filters
               </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {startDate && (
-                  <TouchableOpacity onPress={e => { e.stopPropagation?.(); setStartDate(null); }}>
-                    <XIcon size={18} color="#778599" style={{ marginRight: 4 }} />
-                  </TouchableOpacity>
-                )}
-                <Calendar size={20} />
-              </View>
-            </TouchableOpacity>
-            <Modal
-              visible={showStartPicker}
-              transparent
-              animationType="fade"
-              onRequestClose={() => setShowStartPicker(false)}
-            >
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
-                <View style={{ backgroundColor: 'white', borderRadius: 12, padding: 20, width: 340, maxWidth: '90%' }}>
-                  <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Select Start Date</Text>
-                  <DateTimePicker
-                    mode="single"
-                    date={tempStartDate || new Date()}
-                    onChange={({ date }) => setTempStartDate(date)}
-                    styles={defaultStyles}
-                  />
-                  <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 16 }}>
+              {/* Start Date Picker */}
+              <Text style={{ fontSize: 16, marginBottom: 4 }}>Start Date</Text>
+              <TouchableOpacity
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  backgroundColor: "white",
+                  borderRadius: 8,
+                  padding: 12,
+                  borderWidth: 1,
+                  borderColor: "#e2e8f0",
+                  marginBottom: 12,
+                }}
+                onPress={() => {
+                  setTempStartDate(startDate);
+                  setShowStartPicker(true);
+                }}
+              >
+                <Text style={{ fontSize: 16, color: "#1d1d1d" }}>
+                  {startDate
+                    ? dayjs(startDate).format("MMM D, YYYY")
+                    : "Select start date"}
+                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  {startDate && (
                     <TouchableOpacity
-                      style={{ padding: 10, borderRadius: 8, backgroundColor: '#e5e7eb', marginRight: 8 }}
-                      onPress={() => setShowStartPicker(false)}
-                    >
-                      <Text style={{ color: "#15438e", fontWeight: '600' }}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{ padding: 10, borderRadius: 8, backgroundColor: "#15438e" }}
-                      onPress={() => {
-                        setStartDate(tempStartDate);
-                        setShowStartPicker(false);
+                      onPress={(e) => {
+                        e.stopPropagation?.();
+                        setStartDate(null);
                       }}
                     >
-                      <Text style={{ color: '#fff', fontWeight: '600' }}>Confirm</Text>
+                      <XIcon
+                        size={18}
+                        color="#778599"
+                        style={{ marginRight: 4 }}
+                      />
                     </TouchableOpacity>
-                  </View>
+                  )}
+                  <Calendar size={20} />
                 </View>
-              </View>
-            </Modal>
-            {/* End Date Picker */}
-            <Text style={{ fontSize: 16, marginBottom: 4 }}>End Date</Text>
-            <TouchableOpacity
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                backgroundColor: 'white',
-                borderRadius: 8,
-                padding: 12,
-                borderWidth: 1,
-                borderColor: '#e2e8f0',
-                marginBottom: 12,
-              }}
-              onPress={() => {
-                setTempEndDate(endDate);
-                setShowEndPicker(true);
-              }}
-            >
-              <Text style={{ fontSize: 16, color: '#1d1d1d' }}>
-                {endDate ? dayjs(endDate).format('MMM D, YYYY') : 'Select end date'}
-              </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {endDate && (
-                  <TouchableOpacity onPress={e => { e.stopPropagation?.(); setEndDate(null); }}>
-                    <XIcon size={18} color="#778599" style={{ marginRight: 4 }} />
-                  </TouchableOpacity>
-                )}
-                <Calendar size={20} />
-              </View>
-            </TouchableOpacity>
-            <Modal
-              visible={showEndPicker}
-              transparent
-              animationType="fade"
-              onRequestClose={() => setShowEndPicker(false)}
-            >
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
-                <View style={{ backgroundColor: 'white', borderRadius: 12, padding: 20, width: 340, maxWidth: '90%' }}>
-                  <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Select End Date</Text>
-                  <DateTimePicker
-                    mode="single"
-                    date={tempEndDate || new Date()}
-                    onChange={({ date }) => setTempEndDate(date)}
-                    styles={defaultStyles}
-                  />
-                  <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 16 }}>
-                    <TouchableOpacity
-                      style={{ padding: 10, borderRadius: 8, backgroundColor: '#e5e7eb', marginRight: 8 }}
-                      onPress={() => setShowEndPicker(false)}
-                    >
-                      <Text style={{ color: "#15438e", fontWeight: '600' }}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{ padding: 10, borderRadius: 8, backgroundColor: "#15438e" }}
-                      onPress={() => {
-                        setEndDate(tempEndDate);
-                        setShowEndPicker(false);
+              </TouchableOpacity>
+              <Modal
+                visible={showStartPicker}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowStartPicker(false)}
+              >
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "rgba(0,0,0,0.3)",
+                  }}
+                >
+                  <View
+                    style={{
+                      backgroundColor: "white",
+                      borderRadius: 12,
+                      padding: 20,
+                      width: 340,
+                      maxWidth: "90%",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "bold",
+                        marginBottom: 10,
                       }}
                     >
-                      <Text style={{ color: '#fff', fontWeight: '600' }}>Confirm</Text>
-                    </TouchableOpacity>
+                      Select Start Date
+                    </Text>
+                    <DateTimePicker
+                      mode="single"
+                      date={tempStartDate || new Date()}
+                      onChange={({ date }) => setTempStartDate(date)}
+                      styles={defaultStyles}
+                    />
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "flex-end",
+                        gap: 12,
+                        marginTop: 16,
+                      }}
+                    >
+                      <TouchableOpacity
+                        style={{
+                          padding: 10,
+                          borderRadius: 8,
+                          backgroundColor: "#e5e7eb",
+                          marginRight: 8,
+                        }}
+                        onPress={() => setShowStartPicker(false)}
+                      >
+                        <Text
+                          style={{
+                            color: Colors.light.primary,
+                            fontWeight: "600",
+                          }}
+                        >
+                          Cancel
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={{
+                          padding: 10,
+                          borderRadius: 8,
+                          backgroundColor: Colors.light.primary,
+                        }}
+                        onPress={() => {
+                          setStartDate(tempStartDate);
+                          setShowStartPicker(false);
+                        }}
+                      >
+                        <Text style={{ color: "#fff", fontWeight: "600" }}>
+                          Confirm
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
+              </Modal>
+              {/* End Date Picker */}
+              <Text style={{ fontSize: 16, marginBottom: 4 }}>End Date</Text>
+              <TouchableOpacity
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  backgroundColor: "white",
+                  borderRadius: 8,
+                  padding: 12,
+                  borderWidth: 1,
+                  borderColor: "#e2e8f0",
+                  marginBottom: 12,
+                }}
+                onPress={() => {
+                  setTempEndDate(endDate);
+                  setShowEndPicker(true);
+                }}
+              >
+                <Text style={{ fontSize: 16, color: "#1d1d1d" }}>
+                  {endDate
+                    ? dayjs(endDate).format("MMM D, YYYY")
+                    : "Select end date"}
+                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  {endDate && (
+                    <TouchableOpacity
+                      onPress={(e) => {
+                        e.stopPropagation?.();
+                        setEndDate(null);
+                      }}
+                    >
+                      <XIcon
+                        size={18}
+                        color="#778599"
+                        style={{ marginRight: 4 }}
+                      />
+                    </TouchableOpacity>
+                  )}
+                  <Calendar size={20} />
+                </View>
+              </TouchableOpacity>
+              <Modal
+                visible={showEndPicker}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowEndPicker(false)}
+              >
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "rgba(0,0,0,0.3)",
+                  }}
+                >
+                  <View
+                    style={{
+                      backgroundColor: "white",
+                      borderRadius: 12,
+                      padding: 20,
+                      width: 340,
+                      maxWidth: "90%",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "bold",
+                        marginBottom: 10,
+                      }}
+                    >
+                      Select End Date
+                    </Text>
+                    <DateTimePicker
+                      mode="single"
+                      date={tempEndDate || new Date()}
+                      onChange={({ date }) => setTempEndDate(date)}
+                      styles={defaultStyles}
+                    />
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "flex-end",
+                        gap: 12,
+                        marginTop: 16,
+                      }}
+                    >
+                      <TouchableOpacity
+                        style={{
+                          padding: 10,
+                          borderRadius: 8,
+                          backgroundColor: "#e5e7eb",
+                          marginRight: 8,
+                        }}
+                        onPress={() => setShowEndPicker(false)}
+                      >
+                        <Text
+                          style={{
+                            color: Colors.light.primary,
+                            fontWeight: "600",
+                          }}
+                        >
+                          Cancel
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={{
+                          padding: 10,
+                          borderRadius: 8,
+                          backgroundColor: Colors.light.primary,
+                        }}
+                        onPress={() => {
+                          setEndDate(tempEndDate);
+                          setShowEndPicker(false);
+                        }}
+                      >
+                        <Text style={{ color: "#fff", fontWeight: "600" }}>
+                          Confirm
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </Modal>
+              {/* User Selector */}
+              <Text style={{ fontSize: 16, marginBottom: 4 }}>Assignees</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: 12,
+                }}
+              >
+                <MemberSelector
+                  selectedUserIds={selectedUserIds}
+                  onChange={setSelectedUserIds}
+                />
+                {selectedUserIds.length > 0 && (
+                  <TouchableOpacity
+                    onPress={() => setSelectedUserIds([])}
+                    style={{ marginLeft: 8 }}
+                  >
+                    <XIcon size={18} color="#778599" />
+                  </TouchableOpacity>
+                )}
               </View>
-            </Modal>
-            {/* User Selector */}
-            <Text style={{ fontSize: 16, marginBottom: 4 }}>Assignees</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-              <MemberSelector selectedUserIds={selectedUserIds} onChange={setSelectedUserIds} />
-              {selectedUserIds.length > 0 && (
-                <TouchableOpacity onPress={() => setSelectedUserIds([])} style={{ marginLeft: 8 }}>
-                  <XIcon size={18} color="#778599" />
-                </TouchableOpacity>
-              )}
             </View>
           </View>
-        </View>
-        <View style={{ flexDirection: 'row', gap: 12, padding: 20 }}>
-          <TouchableOpacity
-            style={{ flex: 1, backgroundColor: '#e5e7eb', padding: 16, borderRadius: 8, alignItems: 'center' }}
-            onPress={() => {
-              setVisible(false);
-              setStartDate(filterObj.startDate || null);
-              setEndDate(filterObj.endDate || null);
-              setSelectedUserIds(filterObj.assigneeIds || []);
-            }}
-          >
-            <Text style={{ color: "#15438e", fontSize: 16, fontWeight: '600' }}>Cancel</Text>
-          </TouchableOpacity>
-         
-          <TouchableOpacity
-            style={{ flex: 1, backgroundColor: "#15438e", padding: 16, borderRadius: 8, alignItems: 'center' }}
-            onPress={() => {
-              setVisible(false);
-              setFilterObj({
-                ...filterObj,
-                startDate,
-                endDate,
-                assigneeIds: selectedUserIds,
-              });
-            }}
-          >
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Apply Filters</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    </Modal>
+          <View style={{ flexDirection: "row", gap: 12, padding: 20 }}>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                backgroundColor: "#e5e7eb",
+                padding: 16,
+                borderRadius: 8,
+                alignItems: "center",
+              }}
+              onPress={() => {
+                setVisible(false);
+                setStartDate(filterObj.startDate || null);
+                setEndDate(filterObj.endDate || null);
+                setSelectedUserIds(filterObj.assigneeIds || []);
+              }}
+            >
+              <Text
+                style={{
+                  color: Colors.light.primary,
+                  fontSize: 16,
+                  fontWeight: "600",
+                }}
+              >
+                Cancel
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                backgroundColor: Colors.light.primary,
+                padding: 16,
+                borderRadius: 8,
+                alignItems: "center",
+              }}
+              onPress={() => {
+                setVisible(false);
+                setFilterObj({
+                  ...filterObj,
+                  startDate,
+                  endDate,
+                  assigneeIds: selectedUserIds,
+                });
+              }}
+            >
+              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
+                Apply Filters
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Modal>
 
       {/* <View style={styles.headerAction}>
         <TouchableOpacity
@@ -384,7 +552,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 24,
     marginTop: 10,
-    gap:4
+    gap: 4,
   },
   headerSearch: {
     position: "relative",

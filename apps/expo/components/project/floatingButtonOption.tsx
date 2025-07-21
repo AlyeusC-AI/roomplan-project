@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import type { LucideIcon } from "lucide-react-native";
 import React from "react";
+import { Colors } from "@/constants/Colors";
 
 // Add icon property to Action type
 // icon: LucideIcon (component)
@@ -21,7 +22,11 @@ type Action = {
   disabled?: boolean;
 };
 
-export default function FloatingButtonOption({ actions }: { actions: Action[] }) {
+export default function FloatingButtonOption({
+  actions,
+}: {
+  actions: Action[];
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -59,7 +64,7 @@ export default function FloatingButtonOption({ actions }: { actions: Action[] })
                 onPress={() => setOpen(false)}
                 activeOpacity={0.8}
               >
-                {React.createElement(X as any, { size: 28, color: '#fff' })}
+                {React.createElement(X as any, { size: 28, color: "#fff" })}
                 <Text style={styles.closeOptionLabel}>Close</Text>
               </TouchableOpacity>
             </View>
@@ -85,7 +90,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   fab: {
-    backgroundColor: "#15438e",
+    backgroundColor: Colors.light.primary,
     width: 64,
     height: 64,
     borderRadius: 32,
@@ -123,7 +128,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     minWidth: 120,
     minHeight: 48,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
@@ -137,36 +142,36 @@ const styles = StyleSheet.create({
     color: "#1e293b",
   },
   closeFab: {
-    backgroundColor: '#15438e',
+    backgroundColor: "#15438e",
     borderRadius: 32,
     width: 64,
     height: 64,
-    position: 'absolute',
+    position: "absolute",
     bottom: 30,
     right: 30,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 5,
     zIndex: 1001,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   closeLabel: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 8,
   },
   closeOption: {
-    backgroundColor: '#15438e',
+    backgroundColor: "#15438e",
   },
   closeOptionLabel: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
     marginTop: 2,
   },
 });

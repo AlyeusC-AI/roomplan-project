@@ -62,6 +62,7 @@ import {
   CalendarEvent,
   Project,
 } from "@service-geek/api-client";
+import { Colors } from "@/constants/Colors";
 
 const Header: React.FC<{ isEditMode: boolean }> = ({ isEditMode }) => {
   const router = useRouter();
@@ -385,7 +386,7 @@ export default function NewEvent() {
   if (loading || isDeleting) {
     return (
       <Box className="w-full h-full flex justify-center items-center">
-        <ActivityIndicator size="large" color="#15438e" />
+        <ActivityIndicator size="large" color={Colors.light.primary} />
         <Text style={{ marginTop: 10, color: "#64748b" }}>
           {isDeleting
             ? "Deleting event..."
