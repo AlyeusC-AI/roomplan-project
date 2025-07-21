@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   FlatList,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
 import * as Clipboard from "expo-clipboard";
@@ -120,6 +121,10 @@ export default function ProjectOverview() {
   const [showClientInfo, setShowClientInfo] = useState(false);
   // Add state to control directions modal visibility
   const [showDirectionsModal, setShowDirectionsModal] = useState(false);
+  
+  // Add state for street view image
+  const [streetViewImageUrl, setStreetViewImageUrl] = useState<string | null>(null);
+  const [isLoadingStreetView, setIsLoadingStreetView] = useState(false);
 
   // Animation refs for button press effects
   const arrivalScale = useRef(new Animated.Value(1)).current;
@@ -127,6 +132,53 @@ export default function ProjectOverview() {
   const completeScale = useRef(new Animated.Value(1)).current;
   const directionsScale = useRef(new Animated.Value(1)).current;
   const router = useRouter();
+
+  // Function to get Google Street View image
+  const getStreetViewImage = async () => {
+    if (!project?.data?.location || !process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY) {
+      return;
+    }
+
+    try {
+      setIsLoadingStreetView(true);
+      let streetViewUrl = "";
+      if (project.data.lat && project.data.lng) {
+        streetViewUrl = `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${project.data.lat},${project.data.lng}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+      } else {
+        streetViewUrl = `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${encodeURIComponent(project.data.location)}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+      }
+      console.log("Street View URL:", streetViewUrl);
+      setStreetViewImageUrl(streetViewUrl);
+    } catch (error) {
+      console.error("Error getting street view image:", error);
+    } finally {
+      setIsLoadingStreetView(false);
+    }
+  };
+
+  // Load street view image when project data is available
+  useEffect(() => {
+    if (project?.data?.location) {
+      getStreetViewImage();
+    }
+  }, [project?.data?.location]);
+
+  // Function to open street view in Google Maps app
+  const openStreetViewInMaps = () => {
+    if (!project?.data?.location) return;
+    
+    if (project.data.lat && project.data.lng) {
+      // Use coordinates for more precise location
+      Linking.openURL(
+        `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${project.data.lat},${project.data.lng}`
+      );
+    } else {
+      // Use address
+      Linking.openURL(
+        `https://www.google.com/maps/@?api=1&map_action=pano&query=${encodeURIComponent(project.data.location)}`
+      );
+    }
+  };
 
   const openInMaps = () => {
     animateButton(directionsScale);
@@ -334,19 +386,49 @@ export default function ProjectOverview() {
                
               </View>
 
-              {/* Project Image (full width, below title) */}
-              {project?.data?.mainImage ? (
-                <View style={{ width: '100%', height: 160, backgroundColor: '#e0e7ef' }}>
-                  <Animated.Image
-                    source={{ uri: project.data.mainImage }}
-                    style={{ width: '100%', height: 160, resizeMode: 'cover' }}
-                  />
-                </View>
-              ) : (
-                <View style={{ width: '100%', height: 160, backgroundColor: '#e0e7ef', justifyContent: 'center', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 48, fontWeight: '700', lineHeight: 48, color: '#64748b' }}>{project?.data?.name?.[0] || '?'}</Text>
-                </View>
-              )}
+              {/* Street View Image (full width, below title) */}
+              <TouchableOpacity
+                onPress={openStreetViewInMaps}
+                activeOpacity={0.9}
+                style={{ width: '100%', height: 160, backgroundColor: '#e0e7ef' }}
+              >
+                {isLoadingStreetView ? (
+                  <View style={{ width: '100%', height: 160, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color="#15438e" />
+                    <Text style={{ marginTop: 8, fontSize: 14, color: '#64748b' }}>Loading street view...</Text>
+                  </View>
+                ) : streetViewImageUrl ? (
+                  <View style={{ width: '100%', height: 160, position: 'relative' }}>
+                    <Animated.Image
+                      source={{ uri: streetViewImageUrl }}
+                      style={{ width: '100%', height: 160, resizeMode: 'cover' }}
+                    />
+                  </View>
+                ) : project?.data?.mainImage ? (
+                  <View style={{ width: '100%', height: 160, position: 'relative' }}>
+                    <Animated.Image
+                      source={{ uri: project.data.mainImage }}
+                      style={{ width: '100%', height: 160, resizeMode: 'cover' }}
+                    />
+                    {/* Overlay indicating it's a project image */}
+                    <View style={{ 
+                      position: 'absolute', 
+                      top: 8, 
+                      right: 8, 
+                      backgroundColor: 'rgba(0,0,0,0.7)', 
+                      borderRadius: 6, 
+                      paddingHorizontal: 8, 
+                      paddingVertical: 4 
+                    }}>
+                      <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>Project Image</Text>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={{ width: '100%', height: 160, backgroundColor: '#e0e7ef', justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ fontSize: 48, fontWeight: '700', lineHeight: 48, color: '#64748b' }}>{project?.data?.name?.[0] || '?'}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
 
               {/* Info Section */}
               <View style={{ paddingVertical: 18, }}>
@@ -773,6 +855,7 @@ export default function ProjectOverview() {
                 </View>
               </View>
             </Modal>
+
             <Card style={{ marginBottom: 10, backgroundColor: 'white', borderRadius: 16, marginHorizontal: 16, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 }}>
               <CardHeader style={{ backgroundColor: 'transparent', paddingBottom: 0, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 {/* <CircleDot size={20} color="#15438e" /> */}
