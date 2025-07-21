@@ -194,9 +194,15 @@ export class MaterialsService {
     });
   }
 
-  async getProjectMaterial(
-    id: string,
-  ): Promise<Prisma.ProjectMaterialGetPayload<{}>> {
+  async getProjectMaterial(id: string): Promise<
+    Prisma.ProjectMaterialGetPayload<{
+      include: {
+        material: true;
+        project: true;
+        wallReadings: true;
+      };
+    }>
+  > {
     const projectMaterial = await this.prisma.projectMaterial.findUnique({
       where: { id },
       include: {
