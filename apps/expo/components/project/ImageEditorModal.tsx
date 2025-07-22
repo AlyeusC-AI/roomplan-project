@@ -99,6 +99,7 @@ export default function ImageEditorModal({
     x: number;
     y: number;
   } | null>(null);
+  const [showTextModal, setShowTextModal] = useState(false);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
     null
   );
@@ -227,6 +228,7 @@ export default function ImageEditorModal({
       } else if (selectedTool === "text") {
         setTextInput("");
         setTextPosition({ x, y });
+        setShowTextModal(true);
       }
     },
     [selectedTool, color, brushSize, elements]
@@ -237,11 +239,32 @@ export default function ImageEditorModal({
     (x: number, y: number) => {
       if (selectedTool === "select" && selectedElement && dragOffset) {
         setElements((prev) =>
-          prev.map((el) =>
-            el.id === selectedElement
-              ? { ...el, x: x - dragOffset.x, y: y - dragOffset.y }
-              : el
-          )
+          prev.map((el) => {
+            if (el.id === selectedElement) {
+              if (el.type === "path" && el.path) {
+                // Calculate delta
+                const dx = x - dragOffset.x;
+                const dy = y - dragOffset.y;
+                // Move the path by delta
+                const movedPath = el.path.copy();
+                movedPath.transform([
+                  1,
+                  0,
+                  dx - (el.x || 0),
+                  0,
+                  1,
+                  dy - (el.y || 0),
+                  0,
+                  0,
+                  1,
+                ]);
+                return { ...el, path: movedPath, x: dx, y: dy };
+              } else {
+                return { ...el, x: x - dragOffset.x, y: y - dragOffset.y };
+              }
+            }
+            return el;
+          })
         );
       } else if (isDrawing && selectedTool === "draw" && currentPath) {
         currentPath.lineTo(x, y);
@@ -323,7 +346,7 @@ export default function ImageEditorModal({
             id: Date.now().toString(),
             type: "text",
             x: textPosition.x,
-            y: textPosition.y,
+            y: textPosition.y + fontSize, // Adjust for baseline
             text: textInput.trim(),
             color,
             size: fontSize,
@@ -416,6 +439,7 @@ export default function ImageEditorModal({
     if (!textPosition || !textInput.trim()) {
       setTextPosition(null);
       setTextInput("");
+      setShowTextModal(false);
       return;
     }
 
@@ -423,7 +447,7 @@ export default function ImageEditorModal({
       id: Date.now().toString(),
       type: "text",
       x: textPosition.x,
-      y: textPosition.y,
+      y: textPosition.y + fontSize, // Adjust for baseline
       text: textInput.trim(),
       color,
       size: fontSize,
@@ -432,6 +456,8 @@ export default function ImageEditorModal({
     setElements((prev) => [...prev, newElement]);
     setTextPosition(null);
     setTextInput("");
+    setShowTextModal(false);
+    setSelectedTool("select");
     saveToHistory();
   }, [textPosition, textInput, color, fontSize, saveToHistory]);
 
@@ -440,6 +466,7 @@ export default function ImageEditorModal({
     if (selectedTool !== "text") {
       setTextPosition(null);
       setTextInput("");
+      setShowTextModal(false);
     }
   }, [selectedTool]);
 
@@ -767,32 +794,80 @@ export default function ImageEditorModal({
               </Canvas>
             </View>
 
-            {selectedTool === "text" && textPosition && (
+            {/* Text input modal */}
+            <Modal
+              visible={showTextModal}
+              transparent
+              animationType="fade"
+              onRequestClose={() => {
+                setShowTextModal(false);
+                setTextPosition(null);
+                setTextInput("");
+              }}
+            >
               <View
-                style={[
-                  styles.textInputContainer,
-                  {
-                    position: "absolute",
-                    top: textPosition.y,
-                    left: textPosition.x,
-                    zIndex: 1000,
-                  },
-                ]}
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(0,0,0,0.7)",
+                }}
               >
-                <TextInput
-                  style={styles.textInput}
-                  value={textInput}
-                  onChangeText={handleTextInput}
-                  placeholder="Enter text..."
-                  placeholderTextColor="#666"
-                  autoFocus
-                  onSubmitEditing={handleTextInputComplete}
-                  onBlur={handleTextInputComplete}
-                  returnKeyType="done"
-                  blurOnSubmit={true}
-                />
+                <View
+                  style={{
+                    backgroundColor: "#222",
+                    padding: 20,
+                    borderRadius: 10,
+                    width: 300,
+                  }}
+                >
+                  <Text
+                    style={{ color: "#fff", fontSize: 16, marginBottom: 8 }}
+                  >
+                    Enter text:
+                  </Text>
+                  <TextInput
+                    style={{
+                      color: "#fff",
+                      fontSize: fontSize,
+                      backgroundColor: "#333",
+                      borderRadius: 4,
+                      padding: 8,
+                      marginBottom: 16,
+                    }}
+                    value={textInput}
+                    onChangeText={setTextInput}
+                    placeholder="Enter text..."
+                    placeholderTextColor="#888"
+                    autoFocus
+                    returnKeyType="done"
+                    blurOnSubmit={true}
+                    onSubmitEditing={handleTextInputComplete}
+                  />
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "flex-end",
+                      gap: 8,
+                    }}
+                  >
+                    <Button
+                      variant="outline"
+                      onPress={() => {
+                        setShowTextModal(false);
+                        setTextPosition(null);
+                        setTextInput("");
+                      }}
+                    >
+                      <Text>Cancel</Text>
+                    </Button>
+                    <Button onPress={handleTextInputComplete}>
+                      <Text>Add</Text>
+                    </Button>
+                  </View>
+                </View>
               </View>
-            )}
+            </Modal>
 
             <View style={styles.actionBar}>
               <View style={styles.historyButtons}>
