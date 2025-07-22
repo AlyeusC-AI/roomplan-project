@@ -14,6 +14,7 @@ import {
   Share2,
   Edit2,
   FileClock,
+  MoreVertical, // Add this import
 } from "lucide-react-native";
 import { router, Tabs, useGlobalSearchParams } from "expo-router";
 import {
@@ -47,6 +48,7 @@ const UserIcon = User as any;
 const ClockIcon = FileClock as any;
 const Share2Icon = Share2 as any;
 const Edit2Icon = Edit2 as any;
+const MoreVerticalIcon = MoreVertical as any; // Add this line
 
 export default function Layout() {
   const { projectId } = useGlobalSearchParams();
@@ -129,7 +131,7 @@ export default function Layout() {
                         color: Colors.light.primary,
                       }}
                     >
-                      User
+                      Users
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity className="gap-2">
@@ -176,11 +178,12 @@ export default function Layout() {
                     }
                     className="gap-2"
                   >
-                    <Edit2Icon
+                    {/* <Edit2Icon
                       size={28}
                       fill={Colors.light.primary}
                       color={"#fff"}
-                    />
+                    /> */}
+                    <MoreVerticalIcon size={28} color={Colors.light.primary} />
                     <Text
                       className="text-black font-medium text-center"
                       style={{
