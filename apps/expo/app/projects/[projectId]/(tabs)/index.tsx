@@ -66,6 +66,7 @@ import {
   ChevronRightCircle,
   Timer,
   Truck,
+  MessageSquareText,
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -366,6 +367,7 @@ export default function ProjectOverview() {
   const PlusIcon = Plus as any;
   const SmileIcon = Smile as any;
   const MailIcon = Mail as any;
+  const MessageSquareTextIcon = MessageSquareText as any;
   const PhoneIcon = Phone as any;
   const TruckIcon = Truck as any;
   const TimerIcon = Timer as any;
@@ -435,7 +437,7 @@ export default function ProjectOverview() {
                       </View>
                       <Text
                         style={{
-                          color: Colors.light.primary,
+                          // color: Colors.light.primary,
                           fontWeight: "600",
                           fontSize: 12,
                         }}
@@ -489,7 +491,7 @@ export default function ProjectOverview() {
                       </View>
                       <Text
                         style={{
-                          color: Colors.light.primary,
+                          // color: Colors.light.primary,
                           fontWeight: "600",
                           fontSize: 12,
                         }}
@@ -546,7 +548,7 @@ export default function ProjectOverview() {
                       </View>
                       <Text
                         style={{
-                          color: Colors.light.primary,
+                          // color: Colors.light.primary,
                           fontWeight: "600",
                           fontSize: 12,
                         }}
@@ -591,6 +593,71 @@ export default function ProjectOverview() {
                       source={{ uri: streetViewImageUrl }}
                       style={styles.streetViewImage}
                     />
+                    {/* Overlay: House Details in bottom right */}
+                    <View
+                      style={{
+                        position: "absolute",
+                        bottom: 10,
+                        right: 10,
+                        backgroundColor: "rgba(255,255,255,0.5)", // more transparent
+                        borderRadius: 8,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        shadowColor: "#000",
+                        shadowOpacity: 0.08,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowRadius: 4,
+                        elevation: 2,
+                      }}
+                    >
+                      {/* Beds */}
+                      <View style={{ alignItems: "center", minWidth: 40 }}>
+                        <Text style={{ fontWeight: "700", fontSize: 15 }}>
+                          {project?.data?.beds ?? "-"}
+                        </Text>
+                        <Text style={{ color: "#64748b", fontSize: 11 }}>
+                          Beds
+                        </Text>
+                      </View>
+                      {/* Divider */}
+                      <View
+                        style={{
+                          width: 1,
+                          height: 28,
+                          backgroundColor: "#e5e7eb",
+                          marginHorizontal: 10,
+                        }}
+                      />
+                      {/* Baths */}
+                      <View style={{ alignItems: "center", minWidth: 40 }}>
+                        <Text style={{ fontWeight: "700", fontSize: 15 }}>
+                          {project?.data?.baths ?? "-"}
+                        </Text>
+                        <Text style={{ color: "#64748b", fontSize: 11 }}>
+                          Baths
+                        </Text>
+                      </View>
+                      {/* Divider */}
+                      <View
+                        style={{
+                          width: 1,
+                          height: 28,
+                          backgroundColor: "#e5e7eb",
+                          marginHorizontal: 10,
+                        }}
+                      />
+                      {/* Sq. Ft. */}
+                      <View style={{ alignItems: "center", minWidth: 50 }}>
+                        <Text style={{ fontWeight: "700", fontSize: 15 }}>
+                          {project?.data?.squareFeet ?? "-"}
+                        </Text>
+                        <Text style={{ color: "#64748b", fontSize: 11 }}>
+                          Sq. Ft.
+                        </Text>
+                      </View>
+                    </View>
                   </View>
                 ) : project?.data?.mainImage ? (
                   <View style={styles.streetViewImageContainer}>
@@ -650,6 +717,25 @@ export default function ProjectOverview() {
                   </View>
                   <View style={styles.projectNameRight}>
                     {/* Message Icon */}
+                    <TouchableOpacity
+                      disabled={!project?.data?.clientPhoneNumber}
+                      onPress={() => {
+                        if (project?.data?.clientPhoneNumber) {
+                          Linking.openURL(
+                            `sms:${project.data.clientPhoneNumber}`
+                          );
+                        }
+                      }}
+                      style={[
+                        styles.iconButton,
+                        { opacity: project?.data?.clientPhoneNumber ? 1 : 0.4 },
+                      ]}
+                    >
+                      <MessageSquareTextIcon
+                        size={22}
+                        color={Colors.light.primary}
+                      />
+                    </TouchableOpacity>
                     <TouchableOpacity
                       disabled={!project?.data?.clientEmail}
                       onPress={() => {
@@ -1117,7 +1203,7 @@ export default function ProjectOverview() {
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingHorizontal: 16 }}
+                  // contentContainerStyle={{ paddingHorizontal: 16 }}
                   className="flex-row"
                 >
                   {navigationItems.map((item, index) => (
@@ -1160,9 +1246,7 @@ export default function ProjectOverview() {
                             color: item.color,
                           })}
                         </View>
-                        <Text numberOfLines={1} style={{ fontWeight: "600" }}>
-                          {item.title}
-                        </Text>
+                        <Text numberOfLines={2}>{item.title}</Text>
                       </View>
                     </TouchableOpacity>
                   ))}
