@@ -18,6 +18,9 @@ import {
   XCircle,
   Camera,
   Image as ImageIcon,
+  Grid2x2,
+  CircleDashed,
+  CircleCheck,
 } from "lucide-react-native";
 import { Image as ExpoImage } from "expo-image";
 
@@ -32,7 +35,8 @@ import {
   useGetChambers, // <-- add this
   useSearchImages, // <-- add this
   useGetRoomReadings, // <-- add this
-  useGetProjectMaterials, // <-- add this
+  useGetProjectMaterials,
+  LossType, // <-- add this
 } from "@service-geek/api-client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +51,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FabMenu from "../rooms/[roomId]/FabMenu";
 // Import ReadingModal component
 import ReadingModal from "@/components/project/ReadingModal";
+import { Colors } from "@/constants/Colors";
+import { ChevronLeftIcon } from "lucide-react-native";
+import DamageBadge from "@/components/project/damageBadge";
+import { formatDate } from "@/utils/date";
 
 // Type assertions for Lucide icons
 const XIcon = X as any;
@@ -59,6 +67,8 @@ const XCircleIcon = XCircle as any;
 const CameraIcon = Camera as any;
 const ImageIconComponent = ImageIcon as any;
 const ExpoImageComponent = ExpoImage as any;
+const CircleDashedIcon = CircleDashed as any;
+const CircleCheckIcon = CircleCheck as any;
 
 const WATER_PROJECT_TASKS = [
   "Take Cover Photo",
@@ -80,7 +90,7 @@ const WATER_ROOM_TASKS = [
 ];
 
 // Mock data for tags and notes
-const MOCK_TAGS = ["Water", "Demolition", "+5"];
+const MOCK_TAGS = [LossType.WATER, LossType.MOLD, LossType.FIRE, LossType.WIND];
 const MOCK_NOTES = [
   { id: 1, text: "Checked for visible water damage." },
   { id: 2, text: "Removed baseboards in affected area." },
@@ -108,20 +118,23 @@ const TaskRow: React.FC<TaskRowProps> = ({ label, done, onPress }) => (
   >
     <View
       style={{
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        borderWidth: 2,
-        borderColor: done ? "#22c55e" : "#d1d5db",
-        backgroundColor: done ? "#22c55e" : "#fff",
+        width: 16,
+        height: 16,
+        borderRadius: 8,
         alignItems: "center",
         justifyContent: "center",
         marginRight: 14,
       }}
     >
-      {done && <Text style={{ color: "#fff", fontWeight: "bold" }}>✓</Text>}
+      {done ? (
+        <CircleCheckIcon size={16} color="#22c55e" strokeWidth={2.2} />
+      ) : (
+        <CircleDashedIcon size={16} color="#cbd5e1" strokeWidth={2.2} />
+      )}
     </View>
-    <Text style={{ fontSize: 16, color: done ? "#22c55e" : "#222", flex: 1 }}>
+    <Text
+      style={{ fontSize: 16, color: done ? "#22c55e" : "#64748b", flex: 1 }}
+    >
       {label}
     </Text>
   </TouchableOpacity>
@@ -410,29 +423,42 @@ export default function CopilotScreen() {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingHorizontal: 16,
-          paddingTop: 32,
-          paddingBottom: 16,
-          backgroundColor: "#F8FAFC",
+          padding: 16,
+          backgroundColor: Colors.light.primary,
           // color: "white",
         }}
       >
-        <TouchableOpacity onPress={() => router.back()}>
-          <XIcon size={28} />
+        <TouchableOpacity
+          onPress={() => router.back()}
+          // style={{
+          //   padding: 4,
+          //   borderRadius: 100,
+          //   backgroundColor: "rgba(255, 255, 255, 0.2)",
+          // }}
+        >
+          <XIcon size={28} color={"#fff"} />
         </TouchableOpacity>
         <TouchableOpacity
           style={{ flexDirection: "row", alignItems: "center" }}
           onPress={() => setRoomDropdownOpen((v) => !v)}
         >
-          <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+          <Text style={{ fontSize: 20, fontWeight: "bold", color: "#fff" }}>
             {currentRoom ? currentRoom.name : "Project Tasks"}
           </Text>
           {rooms &&
             rooms.length > 1 &&
             (roomDropdownOpen ? (
-              <ChevronUpIcon size={20} style={{ marginLeft: 4 }} />
+              <ChevronUpIcon
+                size={20}
+                style={{ marginLeft: 4 }}
+                color={"#fff"}
+              />
             ) : (
-              <ChevronDownIcon size={20} style={{ marginLeft: 4 }} />
+              <ChevronDownIcon
+                size={20}
+                style={{ marginLeft: 4 }}
+                color={"#fff"}
+              />
             ))}
         </TouchableOpacity>
         <TouchableOpacity
@@ -441,12 +467,16 @@ export default function CopilotScreen() {
         >
           <ChevronRightIcon
             size={28}
+            color={"#fff"}
             // color={rooms && currentRoom && rooms.length > 1 ? "white" : "#ccc"}
           />
         </TouchableOpacity>
       </View>
       {/* Instructional Text */}
-      <ScrollView style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: "#F8FAFC" }}
+        contentContainerStyle={{ paddingTop: 16 }}
+      >
         {/* Project Tasks Checklist */}
         {showRoomTasks && (
           <Card style={{ marginHorizontal: 16, marginBottom: 16 }}>
@@ -458,58 +488,110 @@ export default function CopilotScreen() {
                 paddingBottom: 0,
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <CardTitle>Project Tasks</CardTitle>
-                <Badge
-                  variant="outline"
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
+                <Grid2x2
+                  size={24}
+                  style={{ marginBottom: 6 }}
+                  color={Colors.light.primary}
+                />
+                <CardTitle style={{ color: Colors.light.primary }}>
+                  Project Tasks
+                </CardTitle>
+                <View
                   style={{
-                    marginLeft: 8,
+                    marginLeft: 6,
                     flexDirection: "row",
                     alignItems: "center",
+                    backgroundColor: "rgba(245, 158, 66, 0.12)",
+                    paddingVertical: 2,
+                    paddingHorizontal: 6,
+                    minHeight: 20,
+                    borderRadius: 6,
+                    borderWidth: 1,
+                    borderColor: "#f59e42",
                   }}
                 >
                   <AlertTriangleIcon
-                    size={14}
+                    size={16}
                     color="#f59e42"
-                    style={{ marginRight: 4 }}
+                    style={{ marginRight: 2 }}
                   />
-                  {`${computedProjectTasks.filter((t) => t.done).length}/${computedProjectTasks.length}`}
-                </Badge>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "bold",
+                      color: "#f59e42",
+                    }}
+                  >
+                    {`${computedProjectTasks.filter((t) => t.done).length}/${computedProjectTasks.length}`}
+                  </Text>
+                </View>
               </View>
               {/* Elegant text-link style for 'Start with Rooms' */}
               {rooms && rooms.length > 0 && (
-                <TouchableOpacity
+                <Button
+                  variant="outline"
                   onPress={() => setShowRoomTasks(true)}
                   style={{ padding: 4 }}
                 >
-                  <Text
-                    style={{
-                      color: "#F8FAFC",
-                      fontSize: 14,
-                      fontWeight: "500",
-                      textDecorationLine: "underline",
-                    }}
-                  >
-                    Start with Rooms
-                  </Text>
-                </TouchableOpacity>
+                  <ChevronDownIcon size={22} />
+                </Button>
               )}
             </CardHeader>
-            <CardContent>
-              <Text style={{ fontWeight: "bold", marginBottom: 8 }}>
+            <CardContent
+              style={{ flexDirection: "column", gap: 12, paddingTop: 16 }}
+            >
+              <Text
+                style={{ fontSize: 16, fontWeight: "600", marginBottom: 4 }}
+              >
+                {/* {formatDate(new Date(), "long")} */}
+                Today
+              </Text>
+              <Text
+                style={{
+                  fontWeight: "bold",
+                  marginBottom: 4,
+                  color: "#64748b",
+                }}
+              >
                 {`${computedProjectTasks.filter((t) => t.done).length}/${computedProjectTasks.length} tasks completed`}
               </Text>
-              {computedProjectTasks.map((task, idx) => (
-                <TaskRow
-                  key={task.label}
-                  label={task.label}
-                  done={task.done}
-                  onPress={task.onPress}
-                />
-              ))}
+              <View
+                style={{
+                  backgroundColor: "#e5e7eb", // light gray
+                  borderRadius: 8,
+                  paddingVertical: 10,
+                  paddingHorizontal: 0,
+                  alignSelf: "stretch",
+                  width: "100%",
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#222",
+                    fontWeight: "500",
+                    textAlign: "center",
+                  }}
+                >
+                  Tap on items to complete tasks
+                </Text>
+              </View>
+              <View style={{ gap: 0 }}>
+                {computedProjectTasks.map((task, idx) => (
+                  <TaskRow
+                    key={task.label}
+                    label={task.label}
+                    done={task.done}
+                    onPress={task.onPress}
+                  />
+                ))}
+              </View>
             </CardContent>
           </Card>
         )}
+
         {/* Room Tasks Checklist (if a room is selected and showRoomTasks is true) */}
         {currentRoom && showRoomTasks && (
           <Card style={{ marginHorizontal: 16, marginBottom: 16 }}>
@@ -555,10 +637,16 @@ export default function CopilotScreen() {
             </CardContent>
           </Card>
         )}
+
         {/* Work Notes Section */}
         <Card style={{ marginHorizontal: 16, marginBottom: 16 }}>
           <CardHeader>
-            <CardTitle>Work Notes</CardTitle>
+            <CardTitle style={{ opacity: 0.7 }}>
+              Work Notes
+              <Text style={{ fontSize: 12, opacity: 0.8 }}>
+                {MOCK_TAGS?.length ? `  (${MOCK_TAGS.length} tags)` : ""}
+              </Text>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <View
@@ -568,15 +656,41 @@ export default function CopilotScreen() {
                 marginBottom: 8,
               }}
             >
-              {MOCK_TAGS.map((tag, i) => (
-                <Badge
+              {MOCK_TAGS.slice(0, 2).map((tag, i) => (
+                <DamageBadge
                   key={i}
-                  variant="secondary"
-                  style={{ marginRight: 8, marginBottom: 8 }}
-                >
-                  {tag}
-                </Badge>
+                  lossType={tag as LossType}
+                  style={{
+                    minHeight: 32,
+                    paddingLeft: 14,
+                    paddingRight: 14,
+                    paddingVertical: 6,
+                    marginRight: 8,
+                    marginBottom: 8,
+                  }}
+                  textStyle={{ fontSize: 16 }}
+                />
               ))}
+              {MOCK_TAGS.length > 2 && (
+                <View
+                  className="flex-row items-center rounded-full px-2 py-0.5"
+                  style={{
+                    backgroundColor: "#e5e7eb",
+                    minHeight: 32,
+                    paddingHorizontal: 14,
+                    paddingVertical: 6,
+                    marginRight: 8,
+                    marginBottom: 8,
+                  }}
+                >
+                  <Text
+                    className="text-xs capitalize font-bold"
+                    style={{ color: "#64748b", fontSize: 16 }}
+                  >
+                    {`+${MOCK_TAGS.length - 2}`}
+                  </Text>
+                </View>
+              )}
             </View>
             <View style={{ marginBottom: 8 }}>
               {notes.map((note) => (
@@ -589,6 +703,15 @@ export default function CopilotScreen() {
               <TextInput
                 value={noteInput}
                 onChangeText={setNoteInput}
+                onSubmitEditing={() => {
+                  if (noteInput.trim()) {
+                    setNotes((prev) => [
+                      ...prev,
+                      { id: Date.now(), text: noteInput },
+                    ]);
+                    setNoteInput("");
+                  }
+                }}
                 placeholder="Add a note"
                 style={{
                   flex: 1,
@@ -599,7 +722,7 @@ export default function CopilotScreen() {
                   marginRight: 8,
                 }}
               />
-              <Button
+              {/* <Button
                 onPress={() => {
                   if (noteInput.trim()) {
                     setNotes((prev) => [
@@ -612,14 +735,17 @@ export default function CopilotScreen() {
                 size="sm"
               >
                 <Text style={{ fontSize: 14, fontWeight: "bold" }}>Add</Text>
-              </Button>
+              </Button> */}
             </View>
           </CardContent>
         </Card>
         {/* Moisture Map Section */}
         <Card style={{ marginHorizontal: 16, marginBottom: 32 }}>
           <CardHeader>
-            <CardTitle>Moisture Map (15 points)</CardTitle>
+            <CardTitle style={{ opacity: 0.7 }}>
+              Moisture Map{" "}
+              <Text style={{ fontSize: 12, opacity: 0.8 }}>(15 points)</Text>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <View

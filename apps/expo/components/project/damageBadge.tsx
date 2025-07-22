@@ -9,6 +9,7 @@ import {
   AlertCircle,
   HelpCircle,
 } from "lucide-react-native";
+import type { ViewStyle, TextStyle } from "react-native";
 
 const DAMAGE_TYPES = [
   {
@@ -55,22 +56,26 @@ const DAMAGE_TYPES = [
   },
 ] as const;
 
-const DamageBadge = ({ lossType }: { lossType: LossType }) => {
+type DamageBadgeProps = {
+  lossType: LossType;
+  style?: ViewStyle;
+  textStyle?: TextStyle;
+};
+
+const DamageBadge = ({ lossType, style, textStyle }: DamageBadgeProps) => {
   const type = DAMAGE_TYPES.find((type) => type.value === lossType);
   const Icon = type?.icon as any; // Cast to any for React Native JSX compatibility
   return (
     <View
       className="flex-row items-center rounded-full px-2 py-0.5"
-      style={{
-        backgroundColor: type?.bgColor,
-      }}
+      style={[{ backgroundColor: type?.bgColor }, style]}
     >
       {Icon && (
         <Icon size={14} color={type?.color} style={{ marginRight: 4 }} />
       )}
       <Text
         className="text-xs capitalize font-bold"
-        style={{ color: type?.color }}
+        style={[{ color: type?.color }, textStyle]}
       >
         {type?.label}
       </Text>
