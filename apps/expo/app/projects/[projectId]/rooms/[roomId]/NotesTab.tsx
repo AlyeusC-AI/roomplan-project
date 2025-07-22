@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { useGetNotes, Note } from "@service-geek/api-client";
 import NoteCard from "../../(tabs)/notes/_comps/noteCard";
@@ -57,62 +59,68 @@ export default function NotesTab({
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header with Add Note button */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Room Notes</Text>
-          {isOffline && (
-            <View style={styles.offlineIndicator}>
-              <WifiOffComponent size={16} color="#ef4444" />
-              <Text style={styles.offlineText}>Offline</Text>
-            </View>
-          )}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 200 : 0}
+      style={{ flex: 1 }}
+    >
+      <ScrollView style={styles.container}>
+        {/* Header with Add Note button */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Room Notes</Text>
+            {isOffline && (
+              <View style={styles.offlineIndicator}>
+                <WifiOffComponent size={16} color="#ef4444" />
+                <Text style={styles.offlineText}>Offline</Text>
+              </View>
+            )}
+          </View>
+          <Button
+            onPress={addNote}
+            size="sm"
+            variant="outline"
+            disabled={isCreatingNote}
+          >
+            {isCreatingNote ? (
+              <ActivityIndicator />
+            ) : (
+              <View style={styles.buttonContent}>
+                <PlusComponent color="#1e40af" height={18} width={18} />
+                <Text style={styles.buttonText}>Add Note</Text>
+              </View>
+            )}
+          </Button>
         </View>
-        <Button
-          onPress={addNote}
-          size="sm"
-          variant="outline"
-          disabled={isCreatingNote}
-        >
-          {isCreatingNote ? (
-            <ActivityIndicator />
-          ) : (
-            <View style={styles.buttonContent}>
-              <PlusComponent color="#1e40af" height={18} width={18} />
-              <Text style={styles.buttonText}>Add Note</Text>
-            </View>
-          )}
-        </Button>
-      </View>
 
-      {/* Notes list */}
-      {!notes?.length && offlineNotes.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No notes for this room yet.</Text>
-        </View>
-      ) : (
-        <View style={styles.notesList}>
-          {/* Show offline notes first */}
-          {offlineNotes.map((offlineNote) => (
-            <View key={offlineNote.id} style={styles.card}>
-              <OfflineNoteCard
-                note={offlineNote}
-                roomId={roomId}
-                projectId={projectId}
-              />
-            </View>
-          ))}
+        {/* Notes list */}
+        {!notes?.length && offlineNotes.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No notes for this room yet.</Text>
+          </View>
+        ) : (
+          <View style={styles.notesList}>
+            {/* Show offline notes first */}
+            {offlineNotes.map((offlineNote) => (
+              <View key={offlineNote.id} style={styles.card}>
+                <OfflineNoteCard
+                  note={offlineNote}
+                  roomId={roomId}
+                  projectId={projectId}
+                />
+              </View>
+            ))}
 
-          {/* Show online notes */}
-          {notes?.map((note: Note) => (
-            <View key={note.id} style={styles.card}>
-              <NoteCard note={note} room={room} />
-            </View>
-          ))}
-        </View>
-      )}
-    </ScrollView>
+            {/* Show online notes */}
+            {notes?.map((note: Note) => (
+              <View key={note.id} style={styles.card}>
+                <NoteCard note={note} room={room} />
+              </View>
+            ))}
+          </View>
+        )}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

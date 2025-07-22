@@ -301,8 +301,8 @@ const FabMenu: React.FC<FabMenuProps> = ({
 const styles = StyleSheet.create({
   fabContainer: {
     position: "absolute",
-    bottom: 20,
-    right: 20,
+    bottom: 50,
+    right: 30,
   },
   fab: {
     width: 60,
