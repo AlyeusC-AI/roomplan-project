@@ -64,15 +64,15 @@ export default function SelectionMode({
             onPress={onAssignRoom}
             disabled={isAssigningRoom}
           >
-            <FolderInput size={16} color="#fff" />
+            <FolderInput size={20} color="#fff" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionButton} onPress={onAssignTags}>
-            <Tag size={16} color="#fff" />
+            <Tag size={20} color="#fff" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionButton} onPress={onSaveToPhone}>
-            <Download size={16} color="#fff" />
+            <Download size={20} color="#fff" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -80,7 +80,7 @@ export default function SelectionMode({
             onPress={handleDeletePress}
             disabled={isDeleting}
           >
-            <Trash2 size={16} color="#fff" />
+            <Trash2 size={20} color="#fff" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -88,7 +88,7 @@ export default function SelectionMode({
             onPress={onClearSelection}
             disabled={isDeleting || isAssigningRoom}
           >
-            <X size={16} color="#fff" />
+            <X size={20} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
@@ -111,6 +111,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 5,
+    paddingVertical: 8,
   },
   content: {
     flexDirection: "row",
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
   actionsSection: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 8,
   },
   actionButton: {
     width: 32,
