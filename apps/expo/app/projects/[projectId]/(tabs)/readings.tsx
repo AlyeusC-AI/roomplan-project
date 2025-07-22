@@ -77,7 +77,7 @@ const RoomReadingItem = ({
   const { offlineReadings, offlineEdits, hasOfflineData } = useOfflineReadings(
     room.id
   );
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const { mutate: deleteRoom, isPending: isDeletingRoom } = useDeleteRoom();
 
   const handleDeleteRoom = () => {

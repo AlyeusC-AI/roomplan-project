@@ -72,7 +72,9 @@ export default function Layout() {
           backgroundColor: Colors.light.primary,
         },
         header: ({ navigation, route, options }) =>
-          route.name === "chat" || route.name === "copilot" ? (
+          route.name === "chat" ||
+          route.name === "copilot" ||
+          route.name === "assign-users" ? (
             <SafeAreaView style={{ backgroundColor: Colors.light.primary }}>
               <StatusBar
                 barStyle="light-content"
@@ -119,7 +121,14 @@ export default function Layout() {
                 </View>
                 {/* Four options below */}
                 <View className="flex-row justify-around py-2">
-                  <TouchableOpacity className="gap-2">
+                  <TouchableOpacity
+                    className="gap-2"
+                    onPress={() =>
+                      router.push({
+                        pathname: "./assign-users",
+                      })
+                    }
+                  >
                     <UserIcon
                       size={28}
                       fill={Colors.light.primary}
@@ -317,6 +326,13 @@ export default function Layout() {
         name="dry-standard-detail"
         options={{
           title: "Dry Standard Detail",
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="assign-users"
+        options={{
+          title: "Assign Users",
           href: null,
         }}
       />
