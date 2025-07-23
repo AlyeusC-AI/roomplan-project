@@ -5,6 +5,7 @@ export interface Equipment {
   quantity: number;
   image?: string;
   organizationId: string;
+  categoryId: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -29,6 +30,7 @@ export interface CreateEquipmentDto {
   description?: string;
   quantity: number;
   image?: string;
+  categoryId: string;
 }
 
 export interface UpdateEquipmentDto {
@@ -36,6 +38,7 @@ export interface UpdateEquipmentDto {
   description?: string;
   quantity?: number;
   image?: string;
+  categoryId?: string;
 }
 
 export interface AssignEquipmentDto {

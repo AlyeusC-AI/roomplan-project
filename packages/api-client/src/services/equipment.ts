@@ -12,10 +12,10 @@ class EquipmentService {
     return apiClient.post<Equipment>("/equipment", data);
   }
 
-  async findAll(organizationId: string) {
-    return apiClient.get<Equipment[]>(
-      `/equipment/organization/${organizationId}`
-    );
+  async findAll(organizationId: string, categoryId?: string) {
+    let url = `/equipment/organization/${organizationId}`;
+    if (categoryId) url += `?categoryId=${categoryId}`;
+    return apiClient.get<Equipment[]>(url);
   }
 
   async findOne(id: string) {

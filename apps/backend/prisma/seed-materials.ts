@@ -220,9 +220,36 @@ async function seedMaterials() {
   console.log('🎉 Default materials seeding completed!');
 }
 
+// Add seeding for EquipmentCategory
+async function seedEquipmentCategories(prisma) {
+  const defaultCategories = ['Dehumidifiers', 'Air Movers', 'Air Scrubbers'];
+
+  const organizations = await prisma.organization.findMany();
+
+  for (const org of organizations) {
+    for (const name of defaultCategories) {
+      await prisma.equipmentCategory.upsert({
+        where: {
+          name_organizationId: {
+            name,
+            organizationId: org.id,
+          },
+        },
+        update: {},
+        create: {
+          name,
+          organizationId: org.id,
+          isDefault: true,
+        },
+      });
+    }
+  }
+}
+
 async function main() {
   try {
     await seedMaterials();
+    await seedEquipmentCategories(prisma);
   } catch (error) {
     console.error('Error during seeding:', error);
     process.exit(1);

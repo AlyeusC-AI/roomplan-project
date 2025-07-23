@@ -43,7 +43,11 @@ export class EquipmentService {
     });
   }
 
-  async findAll(organizationId: string, userId: string): Promise<Equipment[]> {
+  async findAll(
+    organizationId: string,
+    userId: string,
+    categoryId?: string,
+  ): Promise<Equipment[]> {
     // Check if user is a member of the organization
     const member = await this.prisma.organizationMember.findFirst({
       where: {
@@ -62,6 +66,7 @@ export class EquipmentService {
     return this.prisma.equipment.findMany({
       where: {
         organizationId,
+        ...(categoryId ? { categoryId } : {}),
       },
     });
   }

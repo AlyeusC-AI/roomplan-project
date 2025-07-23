@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { EquipmentService } from './equipment.service';
 import { Equipment, EquipmentProject } from '@prisma/client';
@@ -60,9 +61,14 @@ export class EquipmentController {
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   findAll(
     @Param('organizationId') organizationId: string,
+    @Query('categoryId') categoryId: string,
     @Request() req: RequestWithUser,
   ): Promise<Equipment[]> {
-    return this.equipmentService.findAll(organizationId, req.user.userId);
+    return this.equipmentService.findAll(
+      organizationId,
+      req.user.userId,
+      categoryId,
+    );
   }
 
   @Get(':id')

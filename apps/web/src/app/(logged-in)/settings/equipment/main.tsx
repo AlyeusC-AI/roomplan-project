@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Form,
@@ -45,25 +45,43 @@ import {
   TableHeaderGroup,
   TableProvider,
   TableRow,
-} from "@/components/roadmap-ui/table";
+} from "@components/roadmap-ui/table";
 import { Label } from "@components/ui/label";
-import { Pencil, Trash, Upload, Plus, Image as ImageIcon } from "lucide-react";
+import {
+  Pencil,
+  Trash,
+  Upload,
+  Plus,
+  Image as ImageIcon,
+  X,
+  Edit,
+  Check,
+  Trash2,
+} from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 import {
   useCreateEquipment,
   useDeleteEquipment,
-  useGetEquipment,
   useUpdateEquipment,
   Equipment,
 } from "@service-geek/api-client";
 import { uploadImage } from "@service-geek/api-client";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import {
+  useGetEquipmentCategories,
+  useCreateEquipmentCategory,
+  useUpdateEquipmentCategory,
+  useDeleteEquipmentCategory,
+} from "@service-geek/api-client/src/hooks/useEquipmentCategory";
+import type { EquipmentCategory } from "@service-geek/api-client/src/services/equipmentCategory";
+import { useGetEquipment } from "@service-geek/api-client";
 
 const newEquipmentSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   quantity: z.number().min(1, "Quantity must be at least 1"),
   image: z.string().optional(),
+  categoryId: z.string().min(1, "Category is required"),
 });
 
 type NewEquipmentValues = z.infer<typeof newEquipmentSchema>;
@@ -73,13 +91,47 @@ export function EquipmentPage() {
   const [tempName, setTempName] = useState<string>("");
   const [tempQuantity, setTempQuantity] = useState<number>(1);
   const [tempImage, setTempImage] = useState<string>("");
+  const [tempCategoryId, setTempCategoryId] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [equipmentToDelete, setEquipmentToDelete] = useState<Equipment | null>(
     null
   );
+  const [selectedCategory, setSelectedCategory] =
+    useState<EquipmentCategory | null>(null);
+  const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false);
+  const [categoryEdit, setCategoryEdit] = useState<string | null>(null);
+  const [categoryEditName, setCategoryEditName] = useState<string>("");
+  const [newCategoryName, setNewCategoryName] = useState<string>("");
+  const [categoryToDelete, setCategoryToDelete] =
+    useState<EquipmentCategory | null>(null);
 
-  const { data: equipment = [], isLoading: fetching } = useGetEquipment();
+  const { data: categories = [], isLoading: loadingCategories } =
+    useGetEquipmentCategories();
+  const { mutate: createCategory, isPending: isCreatingCategory } =
+    useCreateEquipmentCategory();
+  const { mutate: updateCategory, isPending: isUpdatingCategory } =
+    useUpdateEquipmentCategory();
+  const { mutate: deleteCategory, isPending: isDeletingCategory } =
+    useDeleteEquipmentCategory();
+
+  useEffect(() => {
+    if (!selectedCategory && categories.length > 0) {
+      setSelectedCategory(categories[0] as EquipmentCategory);
+    } else if (
+      selectedCategory &&
+      !categories.some(
+        (c: EquipmentCategory) => c.id === selectedCategory.id
+      ) &&
+      categories.length > 0
+    ) {
+      setSelectedCategory(categories[0] as EquipmentCategory);
+    }
+  }, [categories, selectedCategory]);
+
+  const { data: equipment = [], isLoading: fetching } = useGetEquipment(
+    selectedCategory?.id
+  );
   const { mutate: createEquipment, isPending: isAddingEquipment } =
     useCreateEquipment();
   const { mutate: updateEquipment, isPending: isUpdating } =
@@ -94,8 +146,15 @@ export function EquipmentPage() {
       name: "",
       quantity: 1,
       image: "",
+      categoryId: selectedCategory?.id || "",
     },
   });
+
+  useEffect(() => {
+    if (isAdding && selectedCategory) {
+      form.setValue("categoryId", selectedCategory.id);
+    }
+  }, [isAdding, selectedCategory, form]);
 
   const handleImageUpload = async (file: File) => {
     try {
@@ -118,11 +177,19 @@ export function EquipmentPage() {
       toast.error("Name must be at least 3 characters.");
       return;
     }
-
+    if (!tempCategoryId) {
+      toast.error("Category is required.");
+      return;
+    }
     updateEquipment(
       {
         id: isOpen.id,
-        data: { name: tempName, quantity: tempQuantity, image: tempImage },
+        data: {
+          name: tempName,
+          quantity: tempQuantity,
+          image: tempImage,
+          categoryId: tempCategoryId,
+        },
       },
       {
         onSuccess: () => {
@@ -131,6 +198,7 @@ export function EquipmentPage() {
           setTempName("");
           setTempQuantity(1);
           setTempImage("");
+          setTempCategoryId("");
         },
       }
     );
@@ -142,7 +210,6 @@ export function EquipmentPage() {
 
   const handleDelete = async () => {
     if (!equipmentToDelete) return;
-
     deleteEquipment(equipmentToDelete.id, {
       onSuccess: () => {
         toast.success("Equipment deleted successfully");
@@ -237,6 +304,7 @@ export function EquipmentPage() {
               setTempName(row.original.name);
               setTempQuantity(row.original.quantity);
               setTempImage(row.original.image || "");
+              setTempCategoryId(row.original.categoryId);
             }}
             className='hover:bg-gray-100'
           >
@@ -261,6 +329,7 @@ export function EquipmentPage() {
       {
         ...data,
         description: "",
+        categoryId: data.categoryId,
       },
       {
         onSuccess: () => {
@@ -272,6 +341,46 @@ export function EquipmentPage() {
     );
   }
 
+  // Category Management Handlers
+  const handleAddCategory = () => {
+    if (!newCategoryName.trim()) return;
+    createCategory(newCategoryName, {
+      onSuccess: () => {
+        toast.success("Category added");
+        setNewCategoryName("");
+      },
+    });
+  };
+  const handleEditCategory = (cat: EquipmentCategory) => {
+    setCategoryEdit(cat.id);
+    setCategoryEditName(cat.name);
+  };
+  const handleSaveEditCategory = (cat: EquipmentCategory) => {
+    if (!categoryEditName.trim()) return;
+    updateCategory(
+      { id: cat.id, name: categoryEditName },
+      {
+        onSuccess: () => {
+          toast.success("Category updated");
+          setCategoryEdit(null);
+          setCategoryEditName("");
+        },
+      }
+    );
+  };
+  const handleDeleteCategory = (cat: EquipmentCategory) => {
+    setCategoryToDelete(cat);
+  };
+  const confirmDeleteCategory = () => {
+    if (!categoryToDelete) return;
+    deleteCategory(categoryToDelete.id, {
+      onSuccess: () => {
+        toast.success("Category deleted");
+        setCategoryToDelete(null);
+      },
+    });
+  };
+
   return (
     <div className='space-y-8 p-6'>
       <div className='flex items-center justify-between'>
@@ -282,11 +391,27 @@ export function EquipmentPage() {
           onClick={() => setIsAdding(true)}
           className='flex items-center gap-2'
         >
-          <Plus className='h-4 w-4' />
-          Add Equipment
+          <Plus className='h-4 w-4' /> Add Equipment
         </Button>
       </div>
 
+      {/* Category Tabs */}
+      <div className='mb-4 flex gap-2'>
+        {categories.map((cat: EquipmentCategory) => (
+          <Button
+            key={cat.id}
+            variant={selectedCategory?.id === cat.id ? "default" : "outline"}
+            onClick={() => setSelectedCategory(cat)}
+          >
+            {cat.name}
+          </Button>
+        ))}
+        <Button variant='ghost' onClick={() => setManageCategoriesOpen(true)}>
+          Manage
+        </Button>
+      </div>
+
+      {/* Add Equipment Dialog */}
       <Dialog open={isAdding} onOpenChange={setIsAdding}>
         <DialogContent className='sm:max-w-[500px]'>
           <DialogHeader>
@@ -330,6 +455,30 @@ export function EquipmentPage() {
                     <FormDescription>
                       Enter the quantity of this equipment.
                     </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='categoryId'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <select
+                        {...field}
+                        className='w-full rounded border px-2 py-1'
+                        required
+                      >
+                        <option value=''>Select category</option>
+                        {categories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </option>
+                        ))}
+                      </select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -398,6 +547,7 @@ export function EquipmentPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Equipment Table */}
       <Card>
         <CardHeader>
           <CardTitle>Equipment List</CardTitle>
@@ -427,6 +577,7 @@ export function EquipmentPage() {
         </CardContent>
       </Card>
 
+      {/* Edit Equipment Dialog */}
       <Dialog open={isOpen !== null} onOpenChange={() => setIsOpen(null)}>
         <DialogContent className='sm:max-w-[500px]'>
           <DialogHeader>
@@ -453,6 +604,23 @@ export function EquipmentPage() {
                 value={tempQuantity}
                 onChange={(e) => setTempQuantity(Number(e.target.value))}
               />
+            </div>
+            <div className='grid gap-2'>
+              <Label htmlFor='category'>Category</Label>
+              <select
+                id='category'
+                className='w-full rounded border px-2 py-1'
+                value={tempCategoryId}
+                onChange={(e) => setTempCategoryId(e.target.value)}
+                required
+              >
+                <option value=''>Select category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className='grid gap-2'>
               <Label htmlFor='image'>Image</Label>
@@ -501,6 +669,7 @@ export function EquipmentPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Delete Equipment Alert */}
       <AlertDialog
         open={equipmentToDelete !== null}
         onOpenChange={() => setEquipmentToDelete(null)}
@@ -523,6 +692,116 @@ export function EquipmentPage() {
               disabled={isDeleting}
             >
               {isDeleting ? <LoadingSpinner /> : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Category Management Modal */}
+      <Dialog
+        open={manageCategoriesOpen}
+        onOpenChange={setManageCategoriesOpen}
+      >
+        <DialogContent className='sm:max-w-[500px]'>
+          <DialogHeader>
+            <DialogTitle>Manage Equipment Categories</DialogTitle>
+            <DialogDescription>
+              Add, rename, or delete equipment categories for your organization.
+            </DialogDescription>
+          </DialogHeader>
+          <div className='space-y-4'>
+            <div className='flex gap-2'>
+              <Input
+                placeholder='New category name'
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleAddCategory();
+                }}
+              />
+              <Button onClick={handleAddCategory} disabled={isCreatingCategory}>
+                <Plus className='h-4 w-4' />
+              </Button>
+            </div>
+            <div className='divide-y rounded border'>
+              {categories.map((cat) => (
+                <div key={cat.id} className='flex items-center gap-2 px-2 py-2'>
+                  {categoryEdit === cat.id ? (
+                    <>
+                      <Input
+                        value={categoryEditName}
+                        onChange={(e) => setCategoryEditName(e.target.value)}
+                        className='flex-1'
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSaveEditCategory(cat);
+                        }}
+                      />
+                      <Button
+                        size='icon'
+                        variant='ghost'
+                        onClick={() => handleSaveEditCategory(cat)}
+                        disabled={isUpdatingCategory}
+                      >
+                        <Check className='h-4 w-4' />
+                      </Button>
+                      <Button
+                        size='icon'
+                        variant='ghost'
+                        onClick={() => setCategoryEdit(null)}
+                      >
+                        <X className='h-4 w-4' />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <span className='flex-1'>{cat.name}</span>
+                      <Button
+                        size='icon'
+                        variant='ghost'
+                        onClick={() => handleEditCategory(cat)}
+                      >
+                        <Edit className='h-4 w-4' />
+                      </Button>
+                      {!cat.isDefault && (
+                        <Button
+                          size='icon'
+                          variant='ghost'
+                          onClick={() => handleDeleteCategory(cat)}
+                          disabled={isDeletingCategory}
+                        >
+                          <Trash2 className='h-4 w-4 text-red-600' />
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Confirm Delete Category Dialog */}
+      <AlertDialog
+        open={categoryToDelete !== null}
+        onOpenChange={() => setCategoryToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Category?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the category
+              {categoryToDelete && ` "${categoryToDelete.name}"`} and all
+              equipment in it. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteCategory}
+              className='bg-red-600 hover:bg-red-700'
+              disabled={isDeletingCategory}
+            >
+              {isDeletingCategory ? <LoadingSpinner /> : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
