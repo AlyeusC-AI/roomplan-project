@@ -122,7 +122,7 @@ export default function Layout() {
                 {/* Four options below */}
                 <View className="flex-row justify-around py-2">
                   <TouchableOpacity
-                    className="gap-2"
+                    className="gap-2 items-center"
                     onPress={() =>
                       router.push({
                         pathname: "./assign-users",
@@ -143,7 +143,7 @@ export default function Layout() {
                       Users
                     </Text>
                   </TouchableOpacity>
-                  <TouchableOpacity className="gap-2">
+                  <TouchableOpacity className="gap-2 items-center">
                     <ClockIcon
                       size={28}
                       fill={Colors.light.primary}
@@ -158,7 +158,7 @@ export default function Layout() {
                       Time
                     </Text>
                   </TouchableOpacity>
-                  <TouchableOpacity className="gap-2">
+                  <TouchableOpacity className="gap-2 items-center">
                     <Image
                       source={ShareIcon}
                       style={{
@@ -185,7 +185,7 @@ export default function Layout() {
                         params: { activeTab: "loss" },
                       })
                     }
-                    className="gap-2"
+                    className="gap-2 items-center"
                   >
                     {/* <Edit2Icon
                       size={28}
