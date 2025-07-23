@@ -20,6 +20,10 @@ export class CreateEquipmentDto {
   @IsOptional()
   image?: string;
 
+  @ApiProperty({ description: 'Category ID for the equipment' })
+  @IsString()
+  categoryId: string;
+
   @ApiProperty({ description: 'Organization ID' })
   @IsUUID()
   organizationId: string;

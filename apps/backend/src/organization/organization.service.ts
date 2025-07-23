@@ -76,6 +76,28 @@ export class OrganizationService {
       },
     });
 
+    // Create default equipment categories
+    await this.prisma.equipmentCategory.createMany({
+      data: [
+        {
+          name: 'Dehumidifiers',
+          organizationId: organization.id,
+          isDefault: true,
+        },
+        {
+          name: 'Air Movers',
+          organizationId: organization.id,
+          isDefault: true,
+        },
+        {
+          name: 'Air Scrubbers',
+          organizationId: organization.id,
+          isDefault: true,
+        },
+      ],
+      skipDuplicates: true,
+    });
+
     return organization;
   }
 

@@ -68,18 +68,19 @@ model Organization {
   supabaseId              String?   @unique
 
   // Relationships
-  members         OrganizationMember[]
-  projectStatuses ProjectStatus[]
-  equipments      Equipment[]
-  calendarEvents  CalendarEvent[]
-  projects        Project[]
-  forms           Form[]
-  invoices        Invoice[]
-  estimates       Estimate[]
-  invoiceItems    InvoiceItem[]
-  Tag             Tag[]
-  chats           Chat[]
-  Material        Material[]
+  members           OrganizationMember[]
+  projectStatuses   ProjectStatus[]
+  equipments        Equipment[]
+  calendarEvents    CalendarEvent[]
+  projects          Project[]
+  forms             Form[]
+  invoices          Invoice[]
+  estimates         Estimate[]
+  invoiceItems      InvoiceItem[]
+  Tag               Tag[]
+  chats             Chat[]
+  Material          Material[]
+  EquipmentCategory EquipmentCategory[]
 }
 
 enum MemberStatus {
@@ -142,6 +143,20 @@ enum LossType {
   OTHER
 }
 
+model EquipmentCategory {
+  id             String       @id @default(uuid())
+  name           String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  equipments     Equipment[]
+  isDefault      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([name, organizationId])
+  @@index([organizationId])
+}
+
 model Equipment {
   id               String             @id @default(uuid())
   name             String
@@ -153,8 +168,11 @@ model Equipment {
   organizationId   String
   organization     Organization       @relation(fields: [organizationId], references: [id])
   EquipmentProject EquipmentProject[]
+  categoryId       String?
+  category         EquipmentCategory? @relation(fields: [categoryId], references: [id])
 
   @@index([organizationId])
+  @@index([categoryId])
 }
 
 model Project {
