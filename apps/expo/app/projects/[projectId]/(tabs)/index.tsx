@@ -100,6 +100,15 @@ import ChambersEmpty from "@/components/project/ChambersEmpty";
 import { Separator } from "@/components/ui/separator";
 import CustomerFace from "@/assets/customerFace.png";
 import { Colors } from "@/constants/Colors";
+import FastDelivery from "@/assets/fast-delivery.png";
+import StartIcon from "@/assets/start.png";
+import RingIcon from "@/assets/ring.png";
+
+// Add the following at the top or after imports to declare PNG modules for TypeScript
+// @ts-expect-error: PNG module declaration for FastDelivery
+import FastDeliveryPNG from "@/assets/fast-delivery.png";
+// @ts-expect-error: PNG module declaration for StartIcon
+import StartIconPNG from "@/assets/start.png";
 
 // Utility to add opacity to hex color
 function addOpacityToColor(color: string, opacityHex: string = "33") {
@@ -369,8 +378,8 @@ export default function ProjectOverview() {
   const MailIcon = Mail as any;
   const MessageSquareTextIcon = MessageSquareText as any;
   const PhoneIcon = Phone as any;
-  const TruckIcon = Truck as any;
-  const TimerIcon = Timer as any;
+  // const TruckIcon = Truck as any;
+  // const TimerIcon = Timer as any;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -380,14 +389,18 @@ export default function ProjectOverview() {
         keyboardShouldPersistTaps="handled"
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View>
+          <View className="gap-8 px-4 pt-4 ">
             <Card style={styles.notificationsCard}>
               <CardHeader style={styles.notificationsCardHeader}>
-                <CircleDot
+                <Image
+                  source={RingIcon}
+                  style={{ width: 20, height: 20, marginRight: 4 }}
+                />
+                {/* <CircleDot
                   size={20}
                   style={{ marginBottom: 8 }}
                   color={Colors.light.text}
-                />
+                /> */}
                 <CardTitle style={styles.notificationsCardTitle}>
                   Customer Notifications
                 </CardTitle>
@@ -427,18 +440,26 @@ export default function ProjectOverview() {
                     >
                       <View
                         style={{
-                          backgroundColor: "#f3f4f6",
-                          borderRadius: 999,
+                          // backgroundColor: "#f3f4f6",
+                          // borderRadius: 999,
                           padding: 8,
                           marginBottom: 6,
                         }}
                       >
-                        <TruckIcon size={30} color={Colors.light.primary} />
+                        <Image
+                          source={FastDelivery}
+                          style={{
+                            width: 30,
+                            height: 30,
+                            resizeMode: "contain",
+                            tintColor: Colors.light.primary,
+                          }}
+                        />
                       </View>
                       <Text
                         style={{
                           // color: Colors.light.primary,
-                          fontWeight: "600",
+                          fontWeight: "500",
                           fontSize: 12,
                         }}
                       >
@@ -481,18 +502,26 @@ export default function ProjectOverview() {
                     >
                       <View
                         style={{
-                          backgroundColor: "#f3f4f6",
-                          borderRadius: 999,
+                          // backgroundColor: "#f3f4f6",
+                          // borderRadius: 999,
                           padding: 8,
                           marginBottom: 6,
                         }}
                       >
-                        <TimerIcon size={30} color={Colors.light.primary} />
+                        <Image
+                          source={StartIcon}
+                          style={{
+                            width: 30,
+                            height: 30,
+                            resizeMode: "contain",
+                            tintColor: Colors.light.primary,
+                          }}
+                        />
                       </View>
                       <Text
                         style={{
                           // color: Colors.light.primary,
-                          fontWeight: "600",
+                          fontWeight: "500",
                           fontSize: 12,
                         }}
                       >
@@ -535,8 +564,8 @@ export default function ProjectOverview() {
                     >
                       <View
                         style={{
-                          backgroundColor: "#f3f4f6",
-                          borderRadius: 999,
+                          // backgroundColor: "#f3f4f6",
+                          // borderRadius: 999,
                           padding: 8,
                           marginBottom: 6,
                         }}
@@ -549,7 +578,7 @@ export default function ProjectOverview() {
                       <Text
                         style={{
                           // color: Colors.light.primary,
-                          fontWeight: "600",
+                          fontWeight: "500",
                           fontSize: 12,
                         }}
                       >
@@ -614,7 +643,7 @@ export default function ProjectOverview() {
                     >
                       {/* Beds */}
                       <View style={{ alignItems: "center", minWidth: 40 }}>
-                        <Text style={{ fontWeight: "700", fontSize: 15 }}>
+                        <Text style={{ fontWeight: "500", fontSize: 15 }}>
                           {project?.data?.beds ?? "-"}
                         </Text>
                         <Text style={{ color: "#64748b", fontSize: 11 }}>
@@ -632,7 +661,7 @@ export default function ProjectOverview() {
                       />
                       {/* Baths */}
                       <View style={{ alignItems: "center", minWidth: 40 }}>
-                        <Text style={{ fontWeight: "700", fontSize: 15 }}>
+                        <Text style={{ fontWeight: "500", fontSize: 15 }}>
                           {project?.data?.baths ?? "-"}
                         </Text>
                         <Text style={{ color: "#64748b", fontSize: 11 }}>
@@ -650,7 +679,7 @@ export default function ProjectOverview() {
                       />
                       {/* Sq. Ft. */}
                       <View style={{ alignItems: "center", minWidth: 50 }}>
-                        <Text style={{ fontWeight: "700", fontSize: 15 }}>
+                        <Text style={{ fontWeight: "500", fontSize: 15 }}>
                           {project?.data?.squareFeet ?? "-"}
                         </Text>
                         <Text style={{ color: "#64748b", fontSize: 11 }}>
@@ -839,7 +868,7 @@ export default function ProjectOverview() {
                 <View className="bg-background rounded-t-3xl p-5">
                   <View className="flex-row justify-between items-start mb-4">
                     <View className="flex-row items-center gap-2">
-                      <Text className="text-xl font-bold text-foreground capitalize">
+                      <Text className="text-xl font-medium text-foreground capitalize">
                         {project?.data?.name}
                       </Text>
                       {/* {project?.data?.lossType && (
@@ -1068,7 +1097,7 @@ export default function ProjectOverview() {
               <View className="flex-1 justify-end bg-black/50 mb-8">
                 <View className="bg-background rounded-t-3xl p-5">
                   <View className="flex-row justify-between items-center mb-4">
-                    <Text className="text-xl font-bold text-foreground">
+                    <Text className="text-xl font-medium text-foreground">
                       Get Directions
                     </Text>
                     <TouchableOpacity
@@ -1088,7 +1117,7 @@ export default function ProjectOverview() {
                         {React.createElement(Map, { size: 20, color: "#fff" })}
                       </View>
                       <View className="flex-1">
-                        <Text className="text-base font-semibold text-foreground">
+                        <Text className="text-base font-medium text-foreground">
                           Google Maps
                         </Text>
                         <Text className="text-sm text-muted-foreground">
@@ -1105,7 +1134,7 @@ export default function ProjectOverview() {
                         {React.createElement(Map, { size: 20, color: "#fff" })}
                       </View>
                       <View className="flex-1">
-                        <Text className="text-base font-semibold text-foreground">
+                        <Text className="text-base font-medium text-foreground">
                           Apple Maps
                         </Text>
                         <Text className="text-sm text-muted-foreground">
@@ -1125,7 +1154,7 @@ export default function ProjectOverview() {
                         })}
                       </View>
                       <View className="flex-1">
-                        <Text className="text-base font-semibold text-foreground">
+                        <Text className="text-base font-medium text-foreground">
                           Copy Address
                         </Text>
                         <Text className="text-sm text-muted-foreground">
@@ -1138,82 +1167,83 @@ export default function ProjectOverview() {
               </View>
             </Modal>
 
-            <View className="px-4 ">
-              {/* Action buttons with text below icons for better responsiveness */}
+            {/* Action buttons with text below icons for better responsiveness */}
 
-              {/* <AssigneeSelect /> */}
+            {/* <AssigneeSelect /> */}
 
-              {/* Offline Tasks Manager */}
-              <OfflineTasksManager projectId={projectId} />
+            {/* Offline Tasks Manager */}
+            <OfflineTasksManager projectId={projectId} />
 
-              <View style={styles.actionButtonGroup}>
-                <TouchableOpacity
-                  className="bg-white rounded-lg w-full mb-2"
-                  onPress={() => {
-                    router.push({
-                      pathname: "./lidar/rooms",
-                      params: { projectId },
-                    });
-                  }}
-                  activeOpacity={0.85}
-                  style={styles.actionButton}
-                >
-                  <View style={styles.actionButtonIconContainer}>
-                    <ScanIcon size={20} color={Colors.light.primary} />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-semibold text-base">Floor Plan</Text>
-                    <Text className="text-xs mt-0.5">Lidar scans</Text>
-                  </View>
-                  <ChevronRightIcon size={20} color={Colors.light.primary} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className="bg-white rounded-lg w-full"
-                  activeOpacity={1}
-                  // disabled
-                  style={styles.actionButton}
-                  onPress={() =>
-                    router.push({
-                      pathname: `./copilot`,
-                      params: { projectId },
-                    })
-                  }
-                >
-                  <View style={styles.actionButtonIconContainer}>
-                    {React.createElement(Bot as any, {
-                      size: 20,
-                      color: Colors.light.primary,
-                    })}
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-semibold text-base">Co-Pilot</Text>
-                    <Text className="text-xs mt-0.5">
-                      Project & Room Checklist
-                    </Text>
-                  </View>
-                  <ChevronRightIcon size={20} color={Colors.light.primary} />
-                </TouchableOpacity>
-              </View>
+            {/* <View style={styles.actionButtonGroup}> */}
+            <Card style={styles.projectCard}>
+              <TouchableOpacity
+                className="bg-white rounded-lg w-full mb-2"
+                onPress={() => {
+                  router.push({
+                    pathname: "./lidar/rooms",
+                    params: { projectId },
+                  });
+                }}
+                activeOpacity={0.85}
+                style={styles.actionButton}
+              >
+                {/* <View style={styles.actionButtonIconContainer}>
+                </View> */}
+                <ScanIcon size={26} color={Colors.light.primary} />
+                <View className="flex-1">
+                  <Text className="font-medium text-base">Floor Plan</Text>
+                  <Text className="text-xs mt-0.5">Lidar scans</Text>
+                </View>
+                <ChevronRightIcon size={20} color={Colors.light.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="bg-white rounded-lg w-full"
+                activeOpacity={1}
+                // disabled
+                style={styles.actionButton}
+                onPress={() =>
+                  router.push({
+                    pathname: `./copilot`,
+                    params: { projectId },
+                  })
+                }
+              >
+                {/* <View style={styles.actionButtonIconContainer}>
+                </View> */}
+                {React.createElement(Bot as any, {
+                  size: 26,
+                  color: Colors.light.primary,
+                })}
+                <View className="flex-1">
+                  <Text className="font-medium text-base">Co-Pilot</Text>
+                  <Text className="text-xs mt-0.5">
+                    Project & Room Checklist
+                  </Text>
+                </View>
+                <ChevronRightIcon size={20} color={Colors.light.primary} />
+              </TouchableOpacity>
+            </Card>
 
-              {/* Navigation Items Horizontal Scroll */}
-              <View className="mt-6 mb-4">
-                <Text className="text-lg font-bold ml-1 mb-3">
+            {/* Navigation Items Horizontal Scroll */}
+            <Card style={styles.projectCard}>
+              <View className="p-4">
+                <Text className="text-lg font-medium ml-1 mb-3">
                   Quick Actions
                 </Text>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   // contentContainerStyle={{ paddingHorizontal: 16 }}
-                  className="flex-row"
+                  className="flex-row "
                 >
                   {navigationItems.map((item, index) => (
                     <TouchableOpacity
                       key={index}
                       className="  "
                       style={{
-                        width: 80,
+                        width: 70,
                         height: 100,
-                        padding: 18,
+                        // padding: 18,
                       }}
                       onPress={() => {
                         if (item.onPress) {
@@ -1233,11 +1263,11 @@ export default function ProjectOverview() {
                     >
                       <View className="flex-1 items-center justify-center">
                         <View
-                          className="shadow-sm"
+                          // className="shadow-sm"
                           style={{
-                            backgroundColor: "white",
-                            borderRadius: 999,
-                            padding: 10,
+                            // backgroundColor: "white",
+                            // borderRadius: 999,
+                            // padding: 10,
                             marginBottom: 6,
                           }}
                         >
@@ -1252,83 +1282,124 @@ export default function ProjectOverview() {
                   ))}
                 </ScrollView>
               </View>
+            </Card>
 
-              <View className="w-full mt-2">
-                {/* Enhanced Toggle between Rooms and Chambers */}
-                <View style={styles.toggleContainer}>
-                  <View style={styles.toggleRow}>
-                    {/* Sliding Indicator */}
-                    <Animated.View
+            <View className="w-full  mb-20">
+              {/* Enhanced Toggle between Rooms and Chambers */}
+              <View style={styles.toggleContainer}>
+                <View style={styles.toggleRow}>
+                  {/* Sliding Indicator */}
+                  <Animated.View
+                    style={[
+                      styles.toggleIndicator,
+                      {
+                        left: indicatorAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [4, tabWidth + 4],
+                        }),
+                        width: tabWidth - 8,
+                      },
+                    ]}
+                  />
+                  {/* Rooms Tab */}
+                  <TouchableOpacity
+                    onPress={() => setViewMode("rooms")}
+                    style={[styles.toggleTab, { width: tabWidth - 8 }]}
+                    activeOpacity={0.85}
+                  >
+                    {React.createElement(Home as any, {
+                      size: 18,
+                      color: viewMode === "rooms" ? "#fff" : "#374151",
+                      style: { marginRight: 6 },
+                    })}
+                    <Text
                       style={[
-                        styles.toggleIndicator,
+                        styles.toggleTabText,
+                        { color: viewMode === "rooms" ? "#fff" : "#374151" },
+                      ]}
+                    >
+                      Rooms ({rooms?.length || 0})
+                    </Text>
+                  </TouchableOpacity>
+                  {/* Chambers Tab */}
+                  <TouchableOpacity
+                    onPress={() => setViewMode("chambers")}
+                    style={[styles.toggleTab, { width: tabWidth - 8 }]}
+                    activeOpacity={0.85}
+                  >
+                    {React.createElement(Grid2X2 as any, {
+                      size: 18,
+                      color: viewMode === "chambers" ? "#fff" : "#374151",
+                      style: { marginRight: 6 },
+                    })}
+                    <Text
+                      style={[
+                        styles.toggleTabText,
                         {
-                          left: indicatorAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [4, tabWidth + 4],
-                          }),
-                          width: tabWidth - 8,
+                          color: viewMode === "chambers" ? "#fff" : "#374151",
                         },
                       ]}
-                    />
-                    {/* Rooms Tab */}
-                    <TouchableOpacity
-                      onPress={() => setViewMode("rooms")}
-                      style={[styles.toggleTab, { width: tabWidth - 8 }]}
-                      activeOpacity={0.85}
                     >
-                      {React.createElement(Home as any, {
-                        size: 18,
-                        color: viewMode === "rooms" ? "#fff" : "#374151",
-                        style: { marginRight: 6 },
-                      })}
-                      <Text
-                        style={[
-                          styles.toggleTabText,
-                          { color: viewMode === "rooms" ? "#fff" : "#374151" },
-                        ]}
-                      >
-                        Rooms ({rooms?.length || 0})
-                      </Text>
-                    </TouchableOpacity>
-                    {/* Chambers Tab */}
-                    <TouchableOpacity
-                      onPress={() => setViewMode("chambers")}
-                      style={[styles.toggleTab, { width: tabWidth - 8 }]}
-                      activeOpacity={0.85}
-                    >
-                      {React.createElement(Grid2X2 as any, {
-                        size: 18,
-                        color: viewMode === "chambers" ? "#fff" : "#374151",
-                        style: { marginRight: 6 },
-                      })}
-                      <Text
-                        style={[
-                          styles.toggleTabText,
-                          {
-                            color: viewMode === "chambers" ? "#fff" : "#374151",
-                          },
-                        ]}
-                      >
-                        Chambers ({chambers?.length || 0})
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
+                      Chambers ({chambers?.length || 0})
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-                {viewMode === "rooms" ? (
-                  <View
-                    style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}
+              </View>
+              {viewMode === "rooms" ? (
+                <View
+                  style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}
+                >
+                  {/* Create Room Card */}
+                  <TouchableOpacity
+                    style={{
+                      width: "48%",
+                      aspectRatio: 1,
+                      height: 110,
+                      borderRadius: 12,
+                      borderWidth: 4,
+                      borderColor: "white",
+                      backgroundColor: "#e0e7ef",
+                      overflow: "hidden",
+                      shadowColor: "#000",
+                      shadowOpacity: 0.05,
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowRadius: 2,
+                      elevation: 2,
+                      marginBottom: 8,
+                      marginRight: 4,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    onPress={() => router.push("./rooms/create")}
+                    activeOpacity={0.85}
                   >
-                    {/* Create Room Card */}
-                    <TouchableOpacity
+                    {React.createElement(PlusIcon, {
+                      size: 36,
+                      color: Colors.light.primary,
+                      style: { marginBottom: 8 },
+                    })}
+                    <Text
                       style={{
-                        width: "48%",
+                        fontWeight: "500",
+                        color: Colors.light.primary,
+                      }}
+                    >
+                      Create Room
+                    </Text>
+                  </TouchableOpacity>
+                  {/* Existing Room Cards */}
+                  {rooms?.map((room) => (
+                    <TouchableOpacity
+                      key={room.id}
+                      style={{
+                        width: "48%", // 2 columns
                         aspectRatio: 1,
                         height: 110,
                         borderRadius: 12,
                         borderWidth: 4,
                         borderColor: "white",
-                        backgroundColor: "#e0e7ef",
-                        overflow: "hidden",
+                        backgroundColor: "#f3f4f6",
+                        overflow: "hidden", // ensures children respect border radius
                         shadowColor: "#000",
                         shadowOpacity: 0.05,
                         shadowOffset: { width: 0, height: 1 },
@@ -1336,39 +1407,80 @@ export default function ProjectOverview() {
                         elevation: 2,
                         marginBottom: 8,
                         marginRight: 4,
-                        alignItems: "center",
-                        justifyContent: "center",
                       }}
-                      onPress={() => router.push("./rooms/create")}
+                      onPress={() => router.push(`./rooms/${room.id}`)}
                       activeOpacity={0.85}
                     >
-                      {React.createElement(PlusIcon, {
-                        size: 36,
-                        color: Colors.light.primary,
-                        style: { marginBottom: 8 },
-                      })}
-                      <Text
+                      {room.images && room.images.length > 0 ? (
+                        <Image
+                          source={{ uri: room.images[0].url }}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            position: "absolute",
+                          }}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View
+                          style={{
+                            flex: 1,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {React.createElement(ImageIcon as any, {
+                            size: 36,
+                            color: "#9ca3af",
+                            style: { opacity: 0.6 },
+                          })}
+                        </View>
+                      )}
+                      {/* Room name at the top overlay */}
+                      <View
                         style={{
-                          fontWeight: "700",
-                          color: Colors.light.primary,
+                          position: "absolute",
+                          left: 0,
+                          right: 0,
+                          top: 0,
+                          backgroundColor: "rgba(0,0,0,0.25)",
+                          paddingVertical: 8,
+                          paddingHorizontal: 10,
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
                       >
-                        Create Room
-                      </Text>
+                        <Text
+                          className="text-base font-medium text-white"
+                          numberOfLines={1}
+                        >
+                          {room.name}
+                        </Text>
+                      </View>
                     </TouchableOpacity>
-                    {/* Existing Room Cards */}
-                    {rooms?.map((room) => (
+                  ))}
+                </View>
+              ) : (
+                <>
+                  {chambers && chambers.length > 0 ? (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                        gap: 4,
+                      }}
+                    >
+                      {/* Create Chamber Card */}
                       <TouchableOpacity
-                        key={room.id}
                         style={{
-                          width: "48%", // 2 columns
+                          width: "48%",
                           aspectRatio: 1,
                           height: 110,
                           borderRadius: 12,
                           borderWidth: 4,
                           borderColor: "white",
-                          backgroundColor: "#f3f4f6",
-                          overflow: "hidden", // ensures children respect border radius
+                          backgroundColor: "#e0e7ef",
+                          overflow: "hidden",
                           shadowColor: "#000",
                           shadowOpacity: 0.05,
                           shadowOffset: { width: 0, height: 1 },
@@ -1376,79 +1488,38 @@ export default function ProjectOverview() {
                           elevation: 2,
                           marginBottom: 8,
                           marginRight: 4,
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
-                        onPress={() => router.push(`./rooms/${room.id}`)}
+                        onPress={() => router.push("./chambers/create")}
                         activeOpacity={0.85}
                       >
-                        {room.images && room.images.length > 0 ? (
-                          <Image
-                            source={{ uri: room.images[0].url }}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              position: "absolute",
-                            }}
-                            resizeMode="cover"
-                          />
-                        ) : (
-                          <View
-                            style={{
-                              flex: 1,
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            {React.createElement(ImageIcon as any, {
-                              size: 36,
-                              color: "#9ca3af",
-                              style: { opacity: 0.6 },
-                            })}
-                          </View>
-                        )}
-                        {/* Room name at the top overlay */}
-                        <View
+                        {React.createElement(PlusIcon, {
+                          size: 36,
+                          color: Colors.light.primary,
+                          style: { marginBottom: 8 },
+                        })}
+                        <Text
                           style={{
-                            position: "absolute",
-                            left: 0,
-                            right: 0,
-                            top: 0,
-                            backgroundColor: "rgba(0,0,0,0.25)",
-                            paddingVertical: 8,
-                            paddingHorizontal: 10,
-                            alignItems: "center",
-                            justifyContent: "center",
+                            fontWeight: "500",
+                            color: Colors.light.primary,
                           }}
                         >
-                          <Text
-                            className="text-base font-medium text-white"
-                            numberOfLines={1}
-                          >
-                            {room.name}
-                          </Text>
-                        </View>
+                          Create Chamber
+                        </Text>
                       </TouchableOpacity>
-                    ))}
-                  </View>
-                ) : (
-                  <>
-                    {chambers && chambers.length > 0 ? (
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          flexWrap: "wrap",
-                          gap: 4,
-                        }}
-                      >
-                        {/* Create Chamber Card */}
+                      {/* Existing Chamber Cards */}
+                      {chambers.map((chamber) => (
                         <TouchableOpacity
+                          key={chamber.id}
                           style={{
-                            width: "48%",
+                            width: "48%", // 2 columns
                             aspectRatio: 1,
                             height: 110,
                             borderRadius: 12,
                             borderWidth: 4,
                             borderColor: "white",
-                            backgroundColor: "#e0e7ef",
+                            backgroundColor: "#f3f4f6",
                             overflow: "hidden",
                             shadowColor: "#000",
                             shadowOpacity: 0.05,
@@ -1457,102 +1528,61 @@ export default function ProjectOverview() {
                             elevation: 2,
                             marginBottom: 8,
                             marginRight: 4,
-                            alignItems: "center",
-                            justifyContent: "center",
                           }}
-                          onPress={() => router.push("./chambers/create")}
+                          onPress={() =>
+                            router.push(
+                              `./chambers/create?chamberId=${chamber.id}&chamberName=${chamber.name}`
+                            )
+                          }
                           activeOpacity={0.85}
                         >
-                          {React.createElement(PlusIcon, {
-                            size: 36,
-                            color: Colors.light.primary,
-                            style: { marginBottom: 8 },
-                          })}
-                          <Text
+                          <View
                             style={{
-                              fontWeight: "700",
-                              color: Colors.light.primary,
+                              flex: 1,
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
                           >
-                            Create Chamber
-                          </Text>
+                            <Text className="text-2xl text-gray-400">
+                              {chamber.name.charAt(0).toUpperCase()}
+                            </Text>
+                          </View>
+                          <View
+                            style={{
+                              position: "absolute",
+                              left: 0,
+                              right: 0,
+                              top: 0,
+                              backgroundColor: "rgba(0,0,0,0.25)",
+                              paddingVertical: 8,
+                              paddingHorizontal: 10,
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Text
+                              className="text-base font-medium text-white"
+                              numberOfLines={1}
+                            >
+                              {chamber.name}
+                            </Text>
+                            <Text
+                              className="text-xs text-gray-200"
+                              numberOfLines={1}
+                            >
+                              {chamber.roomChambers.length} rooms
+                            </Text>
+                          </View>
                         </TouchableOpacity>
-                        {/* Existing Chamber Cards */}
-                        {chambers.map((chamber) => (
-                          <TouchableOpacity
-                            key={chamber.id}
-                            style={{
-                              width: "48%", // 2 columns
-                              aspectRatio: 1,
-                              height: 110,
-                              borderRadius: 12,
-                              borderWidth: 4,
-                              borderColor: "white",
-                              backgroundColor: "#f3f4f6",
-                              overflow: "hidden",
-                              shadowColor: "#000",
-                              shadowOpacity: 0.05,
-                              shadowOffset: { width: 0, height: 1 },
-                              shadowRadius: 2,
-                              elevation: 2,
-                              marginBottom: 8,
-                              marginRight: 4,
-                            }}
-                            onPress={() =>
-                              router.push(
-                                `./chambers/create?chamberId=${chamber.id}&chamberName=${chamber.name}`
-                              )
-                            }
-                            activeOpacity={0.85}
-                          >
-                            <View
-                              style={{
-                                flex: 1,
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                            >
-                              <Text className="text-2xl font-bold text-gray-400">
-                                {chamber.name.charAt(0).toUpperCase()}
-                              </Text>
-                            </View>
-                            <View
-                              style={{
-                                position: "absolute",
-                                left: 0,
-                                right: 0,
-                                top: 0,
-                                backgroundColor: "rgba(0,0,0,0.25)",
-                                paddingVertical: 8,
-                                paddingHorizontal: 10,
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                            >
-                              <Text
-                                className="text-base font-medium text-white"
-                                numberOfLines={1}
-                              >
-                                {chamber.name}
-                              </Text>
-                              <Text
-                                className="text-xs text-gray-200"
-                                numberOfLines={1}
-                              >
-                                {chamber.roomChambers.length} rooms
-                              </Text>
-                            </View>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    ) : (
-                      <ChambersEmpty
-                        onPress={() => router.push(`./chambers/create`)}
-                      />
-                    )}
-                  </>
-                )}
-              </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <ChambersEmpty
+                      onPress={() => router.push(`./chambers/create`)}
+                    />
+                  )}
+                </>
+              )}
             </View>
           </View>
         </TouchableWithoutFeedback>
@@ -1628,7 +1658,7 @@ function NavigationCell({
             })}
           </View>
           <View className="flex-1 ml-4">
-            <Text className="text-base font-semibold text-foreground">
+            <Text className="text-base font-medium text-foreground">
               {title}
             </Text>
             <Text className="text-sm text-muted-foreground">{description}</Text>
@@ -1684,7 +1714,7 @@ function GridCell({
               color: "#000",
             })}
           </View>
-          <Text className="text-sm font-semibold text-center text-foreground">
+          <Text className="text-sm font-medium text-center text-foreground">
             {title}
           </Text>
         </View>
@@ -1692,7 +1722,6 @@ function GridCell({
     </TouchableOpacity>
   );
 }
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -1703,10 +1732,10 @@ const styles = StyleSheet.create({
   },
   projectCard: {
     // marginTop: 16,
-    marginBottom: 16,
+    // marginBottom: 16,
     backgroundColor: "#fff",
     borderRadius: 16,
-    marginHorizontal: 16,
+    // marginHorizontal: 16,
     shadowColor: "#000",
     shadowOpacity: 0.12,
     shadowRadius: 12,
@@ -1721,7 +1750,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 22,
-    fontWeight: "700",
+    fontWeight: "500",
     flexDirection: "row",
     marginBottom: 10,
   },
@@ -1733,7 +1762,7 @@ const styles = StyleSheet.create({
   },
   customerText: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   streetViewTouchable: {
     width: "100%",
@@ -1773,7 +1802,7 @@ const styles = StyleSheet.create({
   projectImageOverlayText: {
     color: "white",
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: "500",
   },
   streetViewFallback: {
     width: "100%",
@@ -1784,7 +1813,7 @@ const styles = StyleSheet.create({
   },
   streetViewFallbackText: {
     fontSize: 48,
-    fontWeight: "700",
+    fontWeight: "500",
     lineHeight: 48,
     color: "#64748b",
   },
@@ -1806,7 +1835,7 @@ const styles = StyleSheet.create({
   },
   projectNameText: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: "500",
     color: "#1e293b",
     textAlign: "center",
     textTransform: "capitalize",
@@ -1856,16 +1885,14 @@ const styles = StyleSheet.create({
   },
   customerInfoButtonText: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: "500",
     color: "#1e293b",
     textAlign: "center",
   },
   notificationsCard: {
-    marginTop: 16,
-    marginBottom: 16,
     backgroundColor: "white",
     borderRadius: 16,
-    marginHorizontal: 16,
+    // marginHorizontal: 16,
     shadowColor: "#000",
     shadowOpacity: 0.12,
     shadowRadius: 12,
@@ -1881,7 +1908,7 @@ const styles = StyleSheet.create({
   },
   notificationsCardTitle: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   notificationsButtonRow: {
     flexDirection: "row",
@@ -1908,14 +1935,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
-    minHeight: 78,
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
-    backgroundColor: "white",
-    borderRadius: 16,
+    minHeight: 68,
+    gap: 16,
+    // shadowColor: "#000",
+    // shadowOpacity: 0.12,
+    // shadowRadius: 12,
+    // shadowOffset: { width: 0, height: 4 },
+    // elevation: 4,
+    // backgroundColor: "white",
+    // borderRadius: 16,
   },
   actionButtonIconContainer: {
     backgroundColor: "#e0e7ef",
@@ -1945,8 +1973,8 @@ const styles = StyleSheet.create({
   },
   toggleIndicator: {
     position: "absolute",
-    top: 4,
-    borderRadius: 12,
+    top: 6, // was 4, move down a bit for taller tab
+    borderRadius: 14, // was 12
     zIndex: 0,
     shadowColor: Colors.light.primary,
     shadowOpacity: 0.15,
@@ -1954,18 +1982,18 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
     backgroundColor: Colors.light.primary,
-    height: 44,
+    height: 52, // was 44, make indicator taller
   },
   toggleTab: {
-    height: 44,
-    borderRadius: 12,
+    height: 52, // was 44, make tab taller
+    borderRadius: 14, // was 12
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
     zIndex: 1,
   },
   toggleTabText: {
-    fontWeight: "700",
-    fontSize: 15,
+    fontWeight: "600", // was 500
+    fontSize: 17, // was 15, make text larger
   },
 });

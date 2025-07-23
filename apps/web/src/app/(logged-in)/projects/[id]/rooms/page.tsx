@@ -14,6 +14,7 @@ import {
   FileText,
   Ruler,
   BookOpen,
+  PlusCircle,
 } from "lucide-react";
 import { useGetRooms } from "@service-geek/api-client";
 import { LoadingPlaceholder } from "@/components/ui/spinner";
@@ -48,7 +49,7 @@ export default function RoomsPage() {
         </div>
         <div className='flex gap-2'>
           <Button onClick={handleCreateRoom} size='sm'>
-            <Plus className='mr-2 h-4 w-4' />
+            <PlusCircle className='mr-2 h-4 w-4' />
             Create Room
           </Button>
         </div>

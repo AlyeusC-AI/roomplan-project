@@ -82,12 +82,12 @@ export default function Layout({ children }: React.PropsWithChildren) {
       href: `/projects/${id}/files`,
     },
     {
-      title: "Rooms",
-      href: `/projects/${id}/rooms`,
-    },
-    {
       title: "Photos",
       href: `/projects/${id}/photos`,
+    },
+    {
+      title: "Rooms",
+      href: `/projects/${id}/rooms`,
     },
     {
       title: "Mitigation",
@@ -319,16 +319,16 @@ export default function Layout({ children }: React.PropsWithChildren) {
               {/* Navigation */}
               <div className='pt-4'>
                 {/* <SidebarNav items={sidebarNavItems()} /> */}
-                <div className='flex border-b border-gray-200'>
+                <div className='flex justify-between border-b border-gray-200'>
                   {sidebarNavItems().map((item) => {
                     const isActive =
-                      typeof window !== "undefined" &&
-                      window.location.pathname.startsWith(item.href);
+                      pathname === item.href ||
+                      pathname.startsWith(item.href + "/");
                     return (
                       <Link
                         key={item.title}
                         href={item.href}
-                        className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors duration-150 ${
+                        className={`-mb-px grow border-b-2 px-4 py-2 text-center text-sm font-medium transition-colors duration-150 ${
                           isActive
                             ? "border-black text-black"
                             : "border-gray-200 text-gray-500 hover:border-gray-400 hover:text-black"
@@ -436,26 +436,13 @@ const ProjectTags = ({ currentProjectTags, projectData }: ProjectTagsProps) => {
   return (
     <>
       <div className='flex flex-wrap items-center gap-2'>
-        {currentProjectTags.length ===
-        0 ? //   <TagIcon className='mx-auto mb-2 h-6 w-6 opacity-50' /> // <div className='py-4 text-center text-muted-foreground'>
-        //   <p className='text-sm'>No tags assigned</p>
-        //   <Button
-        //     variant='outline'
-        //     size='sm'
-        //     onClick={() => setIsTagsModalOpen(true)}
-        //     className='mt-2'
-        //     disabled={isAddingTags || isRemovingTags}
-        //   >
-
-        //   </Button>
-        // </div>
-        null : (
+        {currentProjectTags.length === 0 ? null : ( // </div> //   </Button> //   > //     disabled={isAddingTags || isRemovingTags} //     className='mt-2' //     onClick={() => setIsTagsModalOpen(true)} //     size='sm' //     variant='outline' //   <Button //   <p className='text-sm'>No tags assigned</p> //   <TagIcon className='mx-auto mb-2 h-6 w-6 opacity-50' /> // <div className='py-4 text-center text-muted-foreground'>
           <div className='flex flex-wrap gap-2'>
             {currentProjectTags.map((tag) => (
               <Badge
                 key={tag.id}
                 variant='secondary'
-                className='cursor-pointer rounded-full text-sm transition-all hover:bg-destructive/10 hover:text-destructive'
+                className='cursor-pointer rounded-full text-xs transition-all hover:bg-destructive/10 hover:text-destructive'
                 onClick={() => handleRemoveTag(tag.name)}
                 style={
                   tag.color
@@ -477,10 +464,10 @@ const ProjectTags = ({ currentProjectTags, projectData }: ProjectTagsProps) => {
           variant='default'
           size='sm'
           onClick={() => setIsTagsModalOpen(true)}
-          className='h-7 rounded-full'
+          className='h-6 rounded-full text-xs'
           disabled={isAddingTags || isRemovingTags}
         >
-          <Plus className='h-4 w-4' />
+          <Plus className='h-2 w-2' />
           Add Labels
         </Button>
       </div>
