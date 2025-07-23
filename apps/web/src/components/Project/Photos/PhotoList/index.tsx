@@ -13,7 +13,15 @@ import { LoadingPlaceholder } from "@components/ui/spinner";
 import { Button } from "@components/ui/button";
 import { Badge } from "@components/ui/badge";
 import TagsModal from "@components/tags/TagsModal";
-import { Trash2, FolderInput, X, Loader2, Star, Tag, Check } from "lucide-react";
+import {
+  Trash2,
+  FolderInput,
+  X,
+  Loader2,
+  Star,
+  Tag,
+  Check,
+} from "lucide-react";
 import {
   Image,
   useBulkUpdateImages,
@@ -27,9 +35,11 @@ import { userPreferenceStore } from "@state/user-prefrence";
 const PhotoList = ({
   photos,
   refetch,
+  hideEmptyRooms = false,
 }: {
   photos?: Image[];
   refetch: () => void;
+  hideEmptyRooms?: boolean;
 }) => {
   const { id } = useParams<{ id: string }>();
   const [theaterModeIndex, setTheaterModeIndex] = useState(0);
@@ -201,6 +211,11 @@ const PhotoList = ({
           (photo) => photo.roomId === room.id
         );
 
+        // Skip empty rooms if hideEmptyRooms is true
+        if (hideEmptyRooms && images.length === 0) {
+          return prev;
+        }
+
         return {
           ...prev,
           [room.name]: images,
@@ -312,7 +327,7 @@ const PhotoList = ({
   };
 
   return (
-    <div className='flex flex-col gap-4 '>
+    <div className='flex flex-col gap-4'>
       {/* <div className='flex justify-end'>
         <Button
           size='sm'
@@ -348,8 +363,8 @@ const PhotoList = ({
               </Button>
             )}
           </div> */}
-          <div className="flex justify-between">
-            <div className="space-y-3">
+          <div className='flex justify-between'>
+            <div className='space-y-3'>
               <div className='flex flex-wrap gap-2'>
                 {/* <Button
                   variant={selectedTagFilters.length === 0 ? "default" : "outline"}
@@ -363,14 +378,17 @@ const PhotoList = ({
                 </Button> */}
                 <Button
                   variant={
-                    selectedTagFilters.includes("untagged") ? "secondary" : "outline"
+                    selectedTagFilters.includes("untagged")
+                      ? "secondary"
+                      : "outline"
                   }
                   size='sm'
                   onClick={() => handleTagFilterToggle("untagged")}
-                  className='flex items-center gap-2 h-8 rounded-full'
+                  className='flex h-8 items-center gap-2 rounded-full'
                 >
                   <Tag className='h-4 w-4' />
-                  Untagged ({photos.filter((p) => !p.tags || p.tags.length === 0).length})
+                  Untagged (
+                  {photos.filter((p) => !p.tags || p.tags.length === 0).length})
                 </Button>
                 {allTags.map((tag) => {
                   const count = photos.filter(
@@ -383,7 +401,7 @@ const PhotoList = ({
                       variant={isSelected ? "secondary" : "outline"}
                       size='sm'
                       onClick={() => handleTagFilterToggle(tag.name)}
-                      className='flex items-center gap-2 h-8 rounded-full'
+                      className='flex h-8 items-center gap-2 rounded-full'
                       // style={
                       //   isSelected && tag.color
                       //     ? {
@@ -400,7 +418,11 @@ const PhotoList = ({
                       //       : {}
                       // }
                     >
-                      {isSelected ? <Check className='h-4 w-4' /> :<Tag className='h-4 w-4' />}
+                      {isSelected ? (
+                        <Check className='h-4 w-4' />
+                      ) : (
+                        <Tag className='h-4 w-4' />
+                      )}
                       {tag.name}
                       {/* ({count}) */}
                     </Button>
@@ -424,15 +446,15 @@ const PhotoList = ({
                     ))}
                   </div>
                   {selectedTagFilters.length > 0 && (
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={clearAllTagFilters}
-                className='text-xs'
-              >
-                Clear All
-              </Button>
-            )}
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={clearAllTagFilters}
+                      className='text-xs'
+                    >
+                      Clear All
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
@@ -461,7 +483,7 @@ const PhotoList = ({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className='bg-mint fixed left-[240px] right-4 top-4 z-50 rounded-lg border border-gray-200 p-4 shadow-lg'
+            className='fixed left-[240px] right-4 top-4 z-50 rounded-lg border border-gray-200 bg-mint p-4 shadow-lg'
           >
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-3'>
@@ -580,7 +602,7 @@ const PhotoList = ({
               onPhotoClick={onPhotoClick}
               onSelectPhoto={onSelectPhoto}
               selectedPhotos={selectedPhotos}
-            // setPhotos={setPhotos}
+              // setPhotos={setPhotos}
             />
           </motion.div>
         ))}

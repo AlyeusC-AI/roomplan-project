@@ -68,7 +68,6 @@ export default function Layout({ children }: React.PropsWithChildren) {
     });
   }
 
-
   const sidebarNavItems = () => [
     {
       title: "Overview",
@@ -81,6 +80,10 @@ export default function Layout({ children }: React.PropsWithChildren) {
     {
       title: "Files",
       href: `/projects/${id}/files`,
+    },
+    {
+      title: "Rooms",
+      href: `/projects/${id}/rooms`,
     },
     {
       title: "Photos",
@@ -98,17 +101,15 @@ export default function Layout({ children }: React.PropsWithChildren) {
       title: "Forms",
       href: `/projects/${id}/forms`,
     },
-    {
-      title: "Weather",
-      href: `/projects/${id}/weather`,
-    },
+    // {
+    //   title: "Weather",
+    //   href: `/projects/${id}/weather`,
+    // },
     {
       title: "Report",
       href: `/projects/${id}/report`,
     },
   ];
-
-
 
   if (
     (!project?.data || project?.data?.organizationId !== org?.id) &&
@@ -188,7 +189,8 @@ export default function Layout({ children }: React.PropsWithChildren) {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete Project</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to delete this project? This action cannot be undone.
+                      Are you sure you want to delete this project? This action
+                      cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -210,7 +212,6 @@ export default function Layout({ children }: React.PropsWithChildren) {
           {/* Project Header */}
           <div className='top-0 z-20 w-full space-y-6 bg-background py-4'>
             <div className='space-y-4'>
-
               {/* Main Project Info with Image */}
               <div className='flex items-center gap-6'>
                 {/* Project Image */}
@@ -315,8 +316,6 @@ export default function Layout({ children }: React.PropsWithChildren) {
                 </div>
               </div>
 
-
-
               {/* Navigation */}
               <div className='pt-4'>
                 {/* <SidebarNav items={sidebarNavItems()} /> */}
@@ -329,10 +328,11 @@ export default function Layout({ children }: React.PropsWithChildren) {
                       <Link
                         key={item.title}
                         href={item.href}
-                        className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors duration-150 ${isActive
-                          ? "border-black text-black"
-                          : "border-gray-200 text-gray-500 hover:border-gray-400 hover:text-black"
-                          }`}
+                        className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors duration-150 ${
+                          isActive
+                            ? "border-black text-black"
+                            : "border-gray-200 text-gray-500 hover:border-gray-400 hover:text-black"
+                        }`}
                         prefetch={false}
                       >
                         {item.title}
@@ -349,7 +349,6 @@ export default function Layout({ children }: React.PropsWithChildren) {
           <div className='bg-background p-4'>{children}</div>
         </div>
 
-
         {/* Right Sidebar */}
         {pathname.includes("report") ? null : (
           <div className='col-sp relative'>
@@ -363,7 +362,6 @@ export default function Layout({ children }: React.PropsWithChildren) {
                 <ChevronLeft size={24} />
               </button>
             ) : (
-
               <button
                 className='absolute left-3 top-0 flex h-10 w-10 items-center justify-center rounded-lg border-0 bg-accent'
                 onClick={() => setIsCollapsed(true)}
@@ -373,7 +371,10 @@ export default function Layout({ children }: React.PropsWithChildren) {
                 <ChevronRight size={24} />
               </button>
             )}
-            <InfoSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+            <InfoSidebar
+              isCollapsed={isCollapsed}
+              setIsCollapsed={setIsCollapsed}
+            />
           </div>
         )}
       </div>
@@ -389,7 +390,8 @@ interface ProjectTagsProps {
 const ProjectTags = ({ currentProjectTags, projectData }: ProjectTagsProps) => {
   const [isTagsModalOpen, setIsTagsModalOpen] = useState(false);
 
-  const { mutate: addProjectTags, isPending: isAddingTags } = useAddProjectTags();
+  const { mutate: addProjectTags, isPending: isAddingTags } =
+    useAddProjectTags();
   const { mutate: removeProjectTags, isPending: isRemovingTags } =
     useRemoveProjectTags();
   const handleAddTags = (tagNames: string[]) => {
@@ -399,7 +401,7 @@ const ProjectTags = ({ currentProjectTags, projectData }: ProjectTagsProps) => {
       {
         projectId: projectData.id,
         tagNames,
-      },
+      }
       // {
       //   onSuccess: () => {
       //     toast.success("Tags added successfully");
@@ -413,14 +415,13 @@ const ProjectTags = ({ currentProjectTags, projectData }: ProjectTagsProps) => {
   };
 
   const handleRemoveTag = (tagName: string) => {
-
     if (!projectData) return;
 
     removeProjectTags(
       {
         projectId: projectData.id,
         tagNames: [tagName],
-      },
+      }
       // {
       //   onSuccess: () => {
       //     toast.success("Tag removed successfully");
@@ -432,13 +433,11 @@ const ProjectTags = ({ currentProjectTags, projectData }: ProjectTagsProps) => {
       // }
     );
   };
-  return (<>
-    <div className='flex flex-wrap items-center gap-2'>
-
-
-      {currentProjectTags.length === 0 ? (
-        // <div className='py-4 text-center text-muted-foreground'>
-        //   <TagIcon className='mx-auto mb-2 h-6 w-6 opacity-50' />
+  return (
+    <>
+      <div className='flex flex-wrap items-center gap-2'>
+        {currentProjectTags.length ===
+        0 ? //   <TagIcon className='mx-auto mb-2 h-6 w-6 opacity-50' /> // <div className='py-4 text-center text-muted-foreground'>
         //   <p className='text-sm'>No tags assigned</p>
         //   <Button
         //     variant='outline'
@@ -450,53 +449,51 @@ const ProjectTags = ({ currentProjectTags, projectData }: ProjectTagsProps) => {
 
         //   </Button>
         // </div>
-        null
-      ) : (
-        <div className='flex flex-wrap gap-2'>
-          {currentProjectTags.map((tag) => (
-            <Badge
-              key={tag.id}
-              variant='secondary'
-              className='text-sm  rounded-full cursor-pointer transition-all hover:bg-destructive/10 hover:text-destructive'
-              onClick={() => handleRemoveTag(tag.name)}
-              style={
-                tag.color
-                  ? {
-                    backgroundColor: tag.color,
-                    color: "white",
-                  }
-                  : {}
-              }
+        null : (
+          <div className='flex flex-wrap gap-2'>
+            {currentProjectTags.map((tag) => (
+              <Badge
+                key={tag.id}
+                variant='secondary'
+                className='cursor-pointer rounded-full text-sm transition-all hover:bg-destructive/10 hover:text-destructive'
+                onClick={() => handleRemoveTag(tag.name)}
+                style={
+                  tag.color
+                    ? {
+                        backgroundColor: tag.color,
+                        color: "white",
+                      }
+                    : {}
+                }
+              >
+                {tag.name}
+                <X className='ml-1 h-3 w-3' />
+              </Badge>
+            ))}
+          </div>
+        )}
 
-            >
-              {tag.name}
-              <X className='ml-1 h-3 w-3' />
-            </Badge>
-          ))}
-        </div>
-      )}
-
-
-      <Button
-        variant='default'
-        size='sm'
-        onClick={() => setIsTagsModalOpen(true)}
-        className="h-7 rounded-full"
-        disabled={isAddingTags || isRemovingTags}
-      >
-        <Plus className='h-4 w-4' />
-        Add Labels
-      </Button>
-    </div>
-    <TagsModal
-      tagType='PROJECT'
-      open={isTagsModalOpen}
-      onOpenChange={setIsTagsModalOpen}
-      title='Project Labels'
-      description='Select labels to add to this project'
-      onAssignTags={handleAddTags}
-      isAssignMode={true}
-      currentTags={currentProjectTags}
-    />
-  </>);
+        <Button
+          variant='default'
+          size='sm'
+          onClick={() => setIsTagsModalOpen(true)}
+          className='h-7 rounded-full'
+          disabled={isAddingTags || isRemovingTags}
+        >
+          <Plus className='h-4 w-4' />
+          Add Labels
+        </Button>
+      </div>
+      <TagsModal
+        tagType='PROJECT'
+        open={isTagsModalOpen}
+        onOpenChange={setIsTagsModalOpen}
+        title='Project Labels'
+        description='Select labels to add to this project'
+        onAssignTags={handleAddTags}
+        isAssignMode={true}
+        currentTags={currentProjectTags}
+      />
+    </>
+  );
 };
