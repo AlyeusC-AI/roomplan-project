@@ -389,7 +389,7 @@ export default function ProjectOverview() {
         keyboardShouldPersistTaps="handled"
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View className="gap-2">
+          <View className="gap-8 px-4 pt-4 ">
             <Card style={styles.notificationsCard}>
               <CardHeader style={styles.notificationsCardHeader}>
                 <Image
@@ -1171,10 +1171,8 @@ export default function ProjectOverview() {
 
             {/* <AssigneeSelect /> */}
 
-            <View className="px-4 ">
-              {/* Offline Tasks Manager */}
-              <OfflineTasksManager projectId={projectId} />
-            </View>
+            {/* Offline Tasks Manager */}
+            <OfflineTasksManager projectId={projectId} />
 
             {/* <View style={styles.actionButtonGroup}> */}
             <Card style={styles.projectCard}>
@@ -1286,7 +1284,7 @@ export default function ProjectOverview() {
               </View>
             </Card>
 
-            <View className="w-full mt-2 px-4 mb-20">
+            <View className="w-full  mb-20">
               {/* Enhanced Toggle between Rooms and Chambers */}
               <View style={styles.toggleContainer}>
                 <View style={styles.toggleRow}>
@@ -1734,10 +1732,10 @@ const styles = StyleSheet.create({
   },
   projectCard: {
     // marginTop: 16,
-    marginBottom: 16,
+    // marginBottom: 16,
     backgroundColor: "#fff",
     borderRadius: 16,
-    marginHorizontal: 16,
+    // marginHorizontal: 16,
     shadowColor: "#000",
     shadowOpacity: 0.12,
     shadowRadius: 12,
@@ -1892,11 +1890,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   notificationsCard: {
-    marginTop: 16,
-    marginBottom: 16,
     backgroundColor: "white",
     borderRadius: 16,
-    marginHorizontal: 16,
+    // marginHorizontal: 16,
     shadowColor: "#000",
     shadowOpacity: 0.12,
     shadowRadius: 12,

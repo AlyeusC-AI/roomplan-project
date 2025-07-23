@@ -441,7 +441,7 @@ export default function ImageTagsModal({
                 style={styles.editButtonGhost}
                 onPress={() => openEditModal(tag)}
               >
-                <PencilIcon size={16} color="#64748b" />
+                <PencilIcon size={24} color="#64748b" />
               </TouchableOpacity>
             </View>
           ))}
@@ -586,23 +586,47 @@ export default function ImageTagsModal({
                       return (
                         <TouchableOpacity
                           key={tagName}
-                          style={styles.selectedTagChip}
+                          style={[styles.selectedTagChip]}
                           onPress={() => toggleTag(tagName)}
                         >
                           {/* <View
-                            style={[
+                            style=[
                               styles.selectedTagColor,
                               { backgroundColor: tag?.color || "#6b7280" }
-                            ]}
+                            ]
                           /> */}
-                          <Text style={styles.selectedTagText}>{tagName}</Text>
-                          <XIcon size={12} color="#64748b" />
+                          <Text
+                            style={[styles.selectedTagText, { color: "#fff" }]}
+                          >
+                            {tagName}
+                          </Text>
+                          <XIcon size={12} color="#fff" />
                         </TouchableOpacity>
                       );
                     })}
                   </ScrollView>
                 </View>
               )}
+
+              <View
+                style={{
+                  backgroundColor: "#e5e7eb", // light gray
+                  // borderRadius: 8,
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                  marginBottom: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#1e293b", // black-ish
+                    fontWeight: "600",
+                    fontSize: 14,
+                  }}
+                >
+                  ALL
+                </Text>
+              </View>
 
               {renderTagList()}
             </View>
@@ -873,13 +897,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: Colors.light.primary,
+    // backgroundColor: Colors.light.primary,
   },
   confirmButtonDisabled: {
     opacity: 0.5,
   },
   confirmButtonText: {
-    color: "#fff",
+    color: Colors.light.primary,
     fontSize: 14,
     fontWeight: "500",
   },
@@ -1052,10 +1076,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
-    backgroundColor: "#f1f5f9",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderRadius: 999,
+    backgroundColor: Colors.light.primary,
+    // borderWidth: 1,
+    // borderColor: "#e2e8f0",
     gap: 6,
   },
   selectedTagColor: {
@@ -1065,7 +1089,7 @@ const styles = StyleSheet.create({
   },
   selectedTagText: {
     fontSize: 12,
-    color: "#1e293b",
+    color: "#fff",
     fontWeight: "500",
   },
   searchInputContainer: {
