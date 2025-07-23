@@ -42,12 +42,15 @@ export function useUpdateEquipment() {
   });
 }
 
-export function useGetEquipment() {
+export function useGetEquipment({ categoryId }: { categoryId?: string }) {
   const org = useActiveOrganization();
   const options: UseQueryOptions<Equipment[], Error> = {
-    queryKey: ["equipment", org?.id],
+    queryKey: ["equipment", org?.id, categoryId],
     queryFn: async () => {
-      const response = await equipmentService.findAll(org?.id ?? "");
+      const response = await equipmentService.findAll(
+        org?.id ?? "",
+        categoryId
+      );
       return response.data;
     },
     enabled: !!org?.id && !!useAuthStore.getState().token,

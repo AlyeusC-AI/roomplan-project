@@ -55,7 +55,6 @@ import {
   Image as ImageIcon,
   X,
   Edit,
-  Check,
   Trash2,
 } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
@@ -64,6 +63,8 @@ import {
   useDeleteEquipment,
   useUpdateEquipment,
   Equipment,
+  useEquipmentNames,
+  EQUIPMENT_NAMES,
 } from "@service-geek/api-client";
 import { uploadImage } from "@service-geek/api-client";
 import Image from "next/image";
@@ -76,12 +77,30 @@ import {
 } from "@service-geek/api-client/src/hooks/useEquipmentCategory";
 import type { EquipmentCategory } from "@service-geek/api-client/src/services/equipmentCategory";
 import { useGetEquipment } from "@service-geek/api-client";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ChevronsUpDown } from "lucide-react";
+import { Check } from "lucide-react";
 
 const newEquipmentSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   quantity: z.number().min(1, "Quantity must be at least 1"),
   image: z.string().optional(),
-  categoryId: z.string().min(1, "Category is required"),
+  namePrefix: z.string().optional(),
+  repeatCount: z.number().min(1).max(100).default(1),
+  startNumber: z.number().min(0).default(1),
+  numberLength: z.number().min(1).max(5).default(2),
 });
 
 type NewEquipmentValues = z.infer<typeof newEquipmentSchema>;
@@ -105,9 +124,11 @@ export function EquipmentPage() {
   const [newCategoryName, setNewCategoryName] = useState<string>("");
   const [categoryToDelete, setCategoryToDelete] =
     useState<EquipmentCategory | null>(null);
+  const [equipmentNameOpen, setEquipmentNameOpen] = useState(false);
 
   const { data: categories = [], isLoading: loadingCategories } =
     useGetEquipmentCategories();
+  const { getEquipmentNamesByCategory } = useEquipmentNames();
   const { mutate: createCategory, isPending: isCreatingCategory } =
     useCreateEquipmentCategory();
   const { mutate: updateCategory, isPending: isUpdatingCategory } =
@@ -129,9 +150,9 @@ export function EquipmentPage() {
     }
   }, [categories, selectedCategory]);
 
-  const { data: equipment = [], isLoading: fetching } = useGetEquipment(
-    selectedCategory?.id
-  );
+  const { data: equipment = [], isLoading: fetching } = useGetEquipment({
+    categoryId: selectedCategory?.id || undefined,
+  });
   const { mutate: createEquipment, isPending: isAddingEquipment } =
     useCreateEquipment();
   const { mutate: updateEquipment, isPending: isUpdating } =
@@ -146,15 +167,12 @@ export function EquipmentPage() {
       name: "",
       quantity: 1,
       image: "",
-      categoryId: selectedCategory?.id || "",
+      namePrefix: "",
+      repeatCount: 1,
+      startNumber: 1,
+      numberLength: 2,
     },
   });
-
-  useEffect(() => {
-    if (isAdding && selectedCategory) {
-      form.setValue("categoryId", selectedCategory.id);
-    }
-  }, [isAdding, selectedCategory, form]);
 
   const handleImageUpload = async (file: File) => {
     try {
@@ -325,20 +343,36 @@ export function EquipmentPage() {
   ];
 
   async function onSubmit(data: NewEquipmentValues) {
-    createEquipment(
-      {
-        ...data,
+    const repeat = data.repeatCount || 1;
+    const prefix = data.namePrefix || "";
+    const start = data.startNumber || 1;
+    const numberLength = data.numberLength || 2;
+
+    for (let i = 0; i < repeat; i++) {
+      const number = String(start + i).padStart(numberLength, "0");
+      createEquipment({
+        // ...data,
+        quantity: data.quantity,
+        image: data.image,
+        name:
+          repeat > 1
+            ? `${data.name} ${prefix}${number}`
+            : `${prefix}${data.name}`,
         description: "",
-        categoryId: data.categoryId,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Equipment added successfully");
-          form.reset();
-          setIsAdding(false);
-        },
-      }
-    );
+        categoryId: selectedCategory?.id || "", // always use selected category
+      });
+    }
+
+    try {
+      toast.success(
+        `${repeat} equipment item${repeat > 1 ? "s" : ""} added successfully`
+      );
+      form.reset();
+      setIsAdding(false);
+      setEquipmentNameOpen(false);
+    } catch {
+      toast.error("Failed to add all equipment items");
+    }
   }
 
   // Category Management Handlers
@@ -412,138 +446,319 @@ export function EquipmentPage() {
       </div>
 
       {/* Add Equipment Dialog */}
-      <Dialog open={isAdding} onOpenChange={setIsAdding}>
-        <DialogContent className='sm:max-w-[500px]'>
-          <DialogHeader>
+      <Dialog
+        open={isAdding}
+        onOpenChange={(open) => {
+          setIsAdding(open);
+          if (!open) {
+            form.reset();
+            setEquipmentNameOpen(false);
+          }
+        }}
+      >
+        <DialogContent className='flex max-h-[90vh] flex-col p-0 sm:max-w-[500px]'>
+          <DialogHeader className='px-6 pb-2 pt-6'>
             <DialogTitle>Add New Equipment</DialogTitle>
             <DialogDescription>
               Fill in the details to add a new equipment to your inventory.
             </DialogDescription>
           </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
-              <FormField
-                control={form.control}
-                name='name'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder='Dehumidifier #001' {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Enter a descriptive name for the equipment.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='quantity'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantity</FormLabel>
-                    <FormControl>
-                      <Input
-                        type='number'
-                        min={1}
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Enter the quantity of this equipment.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='categoryId'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <FormControl>
-                      <select
-                        {...field}
-                        className='w-full rounded border px-2 py-1'
-                        required
-                      >
-                        <option value=''>Select category</option>
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='image'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image</FormLabel>
-                    <FormControl>
-                      <div className='flex items-center gap-4'>
-                        <div className='flex-1'>
-                          <Input
-                            type='file'
-                            accept='image/*'
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                try {
-                                  const imageUrl =
-                                    await handleImageUpload(file);
-                                  field.onChange(imageUrl);
-                                  toast.success("Image uploaded successfully");
-                                } catch (error) {
-                                  console.error("Upload failed:", error);
-                                }
+          {/* Category summary */}
+          <div className='mb-2 flex items-center gap-2 rounded bg-blue-50 px-6 py-2 text-blue-800'>
+            <span className='font-semibold'>Category:</span>
+            <span className='truncate font-medium'>
+              {selectedCategory?.name}
+            </span>
+          </div>
+          <div className='flex-1 overflow-y-auto px-6 pb-6 pt-2'>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className='space-y-8'
+              >
+                {/* Basic Info Section */}
+                <div>
+                  <div className='mb-2 border-b pb-1 text-base font-semibold text-gray-700'>
+                    Basic Info
+                  </div>
+                  <div className='space-y-4'>
+                    <FormField
+                      control={form.control}
+                      name='name'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name</FormLabel>
+                          <FormControl>
+                            {selectedCategory &&
+                            getEquipmentNamesByCategory(selectedCategory.name)
+                              .length > 0 ? (
+                              <Popover
+                                open={equipmentNameOpen}
+                                onOpenChange={setEquipmentNameOpen}
+                              >
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant='outline'
+                                    role='combobox'
+                                    aria-expanded={equipmentNameOpen}
+                                    className='w-full justify-between'
+                                  >
+                                    {field.value
+                                      ? field.value
+                                      : "Select equipment name..."}
+                                    <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className='w-full p-0'>
+                                  <Command>
+                                    <CommandInput placeholder='Search equipment names...' />
+                                    <CommandList>
+                                      <CommandEmpty>
+                                        No equipment name found.
+                                      </CommandEmpty>
+                                      <CommandGroup>
+                                        {getEquipmentNamesByCategory(
+                                          selectedCategory.name
+                                        ).map((name) => (
+                                          <CommandItem
+                                            key={name}
+                                            value={name}
+                                            onSelect={(currentValue) => {
+                                              field.onChange(currentValue);
+                                              setEquipmentNameOpen(false);
+                                            }}
+                                          >
+                                            <Check
+                                              className={cn(
+                                                "mr-2 h-4 w-4",
+                                                field.value === name
+                                                  ? "opacity-100"
+                                                  : "opacity-0"
+                                              )}
+                                            />
+                                            {name}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </CommandList>
+                                  </Command>
+                                </PopoverContent>
+                              </Popover>
+                            ) : (
+                              <Input
+                                placeholder='Enter equipment name manually'
+                                {...field}
+                              />
+                            )}
+                          </FormControl>
+                          <FormDescription>
+                            {selectedCategory &&
+                            getEquipmentNamesByCategory(selectedCategory.name)
+                              .length > 0
+                              ? `Select from predefined equipment names for ${selectedCategory.name}.`
+                              : "No predefined names available for this category. Enter the equipment name manually."}
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name='quantity'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Quantity</FormLabel>
+                          <FormControl>
+                            <Input
+                              type='number'
+                              min={1}
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
                               }
-                            }}
-                          />
-                        </div>
-                        {field.value && (
-                          <div className='relative h-20 w-20 overflow-hidden rounded-lg border border-gray-200'>
-                            <Image
-                              src={field.value}
-                              alt='Equipment'
-                              fill
-                              className='object-cover'
                             />
-                          </div>
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      Upload an image for the equipment (optional).
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button
-                  type='submit'
-                  disabled={isAddingEquipment || isUploading}
-                  className='w-full'
-                >
-                  {isAddingEquipment || isUploading ? (
-                    <LoadingSpinner />
-                  ) : (
-                    "Add Equipment"
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
+                          </FormControl>
+                          <FormDescription>
+                            Enter the quantity of this equipment.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name='image'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Image</FormLabel>
+                          <FormControl>
+                            <div className='flex items-center gap-4'>
+                              <div className='flex-1'>
+                                <Input
+                                  type='file'
+                                  accept='image/*'
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      try {
+                                        const imageUrl =
+                                          await handleImageUpload(file);
+                                        field.onChange(imageUrl);
+                                        toast.success(
+                                          "Image uploaded successfully"
+                                        );
+                                      } catch (error) {
+                                        console.error("Upload failed:", error);
+                                      }
+                                    }
+                                  }}
+                                />
+                              </div>
+                              {field.value && (
+                                <div className='relative h-20 w-20 overflow-hidden rounded-lg border border-gray-200'>
+                                  <Image
+                                    src={field.value}
+                                    alt='Equipment'
+                                    fill
+                                    className='object-cover'
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormDescription>
+                            Upload an image for the equipment (optional).
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                {/* Divider */}
+                <div className='my-2 border-t' />
+                {/* Multi-Add Section */}
+                <div>
+                  <div className='mb-2 flex items-center gap-2 border-b pb-1 text-base font-semibold text-gray-700'>
+                    <span>Multi-Add Options</span>
+                    <span
+                      className='text-xs text-gray-400'
+                      title='Add multiple equipment items with a prefix and padded number (e.g. Dehu-01, Dehu-02)'
+                    >
+                      ?
+                    </span>
+                  </div>
+                  <div className='grid grid-cols-2 gap-4'>
+                    <FormField
+                      control={form.control}
+                      name='namePrefix'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name Prefix</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder='Prefix (e.g. Dehu-)'
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Optional prefix for each equipment name. Used for
+                            multi-add.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name='repeatCount'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Repeat</FormLabel>
+                          <FormControl>
+                            <Input
+                              type='number'
+                              min={1}
+                              max={100}
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            How many equipment items to add at once?
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name='startNumber'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Start Number</FormLabel>
+                          <FormControl>
+                            <Input
+                              type='number'
+                              min={0}
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            The number to start from (e.g. 1 for Dehu-01).
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name='numberLength'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Number Length</FormLabel>
+                          <FormControl>
+                            <Input
+                              type='number'
+                              min={1}
+                              max={5}
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            How many digits for the number (e.g. 2 for 01, 3 for
+                            001).
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                <DialogFooter className='pt-4'>
+                  <Button
+                    type='submit'
+                    disabled={isAddingEquipment || isUploading}
+                    className='w-full'
+                  >
+                    {isAddingEquipment || isUploading ? (
+                      <LoadingSpinner />
+                    ) : (
+                      "Add Equipment"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -589,11 +804,61 @@ export function EquipmentPage() {
           <div className='grid gap-6 py-4'>
             <div className='grid gap-2'>
               <Label htmlFor='name'>Name</Label>
-              <Input
-                id='name'
-                value={tempName}
-                onChange={(e) => setTempName(e.target.value)}
-              />
+              {tempCategoryId &&
+              getEquipmentNamesByCategory(
+                categories.find((cat) => cat.id === tempCategoryId)?.name || ""
+              ).length > 0 ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant='outline'
+                      role='combobox'
+                      className='w-full justify-between'
+                    >
+                      {tempName || "Select equipment name..."}
+                      <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className='w-full p-0'>
+                    <Command>
+                      <CommandInput placeholder='Search equipment names...' />
+                      <CommandList>
+                        <CommandEmpty>No equipment name found.</CommandEmpty>
+                        <CommandGroup>
+                          {getEquipmentNamesByCategory(
+                            categories.find((cat) => cat.id === tempCategoryId)
+                              ?.name || ""
+                          ).map((name) => (
+                            <CommandItem
+                              key={name}
+                              value={name}
+                              onSelect={(currentValue) => {
+                                setTempName(currentValue);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  tempName === name
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              {name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <Input
+                  placeholder='Enter equipment name manually'
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                />
+              )}
             </div>
             <div className='grid gap-2'>
               <Label htmlFor='quantity'>Quantity</Label>
