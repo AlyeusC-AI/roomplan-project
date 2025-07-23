@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Thermometer, Droplet } from "lucide-react";
 import RoomReadingCell from "./room-reading-cell";
 import {
   Room,
   useGetRoomReadings,
   RoomReading,
+  calculateGPP,
 } from "@service-geek/api-client";
 
 const Readings = ({ room }: { room: Room }) => {
@@ -83,14 +84,53 @@ const Readings = ({ room }: { room: Room }) => {
                 onClick={() => toggleReading(r.id)}
                 className='flex w-full items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700'
               >
-                <span className='font-medium dark:text-white'>
-                  {new Date(r.date).toLocaleDateString()}
+                <span className='flex w-full items-center justify-between font-medium dark:text-white'>
+                  <span>{new Date(r.date).toLocaleDateString()}</span>
+                  <span className='flex flex-row items-center gap-4'>
+                    {/* Temperature */}
+                    <span className='flex flex-row items-center'>
+                      <Thermometer
+                        size={16}
+                        color='#ef4444'
+                        style={{ marginRight: 2 }}
+                      />
+                      <span className='font-medium text-gray-600'>
+                        {r.temperature}&deg;F
+                      </span>
+                    </span>
+                    {/* Humidity */}
+                    <span className='flex flex-row items-center'>
+                      <Droplet
+                        size={16}
+                        color='#3b82f6'
+                        fill='#3b82f6'
+                        style={{ marginRight: 2 }}
+                      />
+                      <span className='font-medium text-gray-600'>
+                        {r.humidity}%
+                      </span>
+                    </span>
+                    {/* GPP */}
+                    <span className='flex flex-row items-center gap-1'>
+                      <span className='font-bold text-gray-800'>Gpp</span>
+                      <span className='font-medium text-gray-600'>
+                        {r.temperature && r.humidity
+                          ? calculateGPP(
+                              Number(r.temperature),
+                              Number(r.humidity)
+                            )
+                          : "0.0"}
+                      </span>
+                    </span>
+                    <span className='ml-4'>
+                      {isExpanded ? (
+                        <ChevronDown className='h-4 w-4 dark:text-gray-400' />
+                      ) : (
+                        <ChevronRight className='h-4 w-4 dark:text-gray-400' />
+                      )}
+                    </span>
+                  </span>
                 </span>
-                {isExpanded ? (
-                  <ChevronDown className='h-4 w-4 dark:text-gray-400' />
-                ) : (
-                  <ChevronRight className='h-4 w-4 dark:text-gray-400' />
-                )}
               </button>
               <div
                 className={`overflow-hidden transition-all duration-200 ${

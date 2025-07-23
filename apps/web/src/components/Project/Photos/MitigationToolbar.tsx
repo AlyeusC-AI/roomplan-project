@@ -120,16 +120,16 @@ export default function MitigationToolbar() {
   return (
     <div className='flex flex-wrap items-center gap-4'>
       {/* Inline Filters: Start Date, End Date, Rooms */}
-      <div className='flex items-end gap-4'>
+      <div className='flex items-end gap-2'>
         {/* Start Date */}
         <div className='flex flex-col'>
-          <div className='relative'>
+          <div className='relative shadow'>
             <Popover open={startPopoverOpen} onOpenChange={setStartPopoverOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant='outline'
                   className={cn(
-                    "w-full pr-8 text-left font-normal",
+                    "w-full !border-border pr-8 text-left font-normal",
                     !startDate && "text-muted-foreground"
                   )}
                 >
@@ -146,7 +146,10 @@ export default function MitigationToolbar() {
                   mode='single'
                   selected={startDate ? new Date(startDate) : undefined}
                   onSelect={(date) => {
-                    setDateFilter("createdAfter", date ? date.toISOString() : "");
+                    setDateFilter(
+                      "createdAfter",
+                      date ? date.toISOString() : ""
+                    );
                     setStartPopoverOpen(false);
                   }}
                   initialFocus
@@ -167,13 +170,13 @@ export default function MitigationToolbar() {
         </div>
         {/* End Date */}
         <div className='flex flex-col'>
-          <div className='relative'>
+          <div className='relative shadow'>
             <Popover open={endPopoverOpen} onOpenChange={setEndPopoverOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant='outline'
                   className={cn(
-                    "w-full pr-8 text-left font-normal",
+                    "w-full !border-border pr-8 text-left font-normal",
                     !endDate && "text-muted-foreground"
                   )}
                 >
@@ -190,7 +193,10 @@ export default function MitigationToolbar() {
                   mode='single'
                   selected={endDate ? new Date(endDate) : undefined}
                   onSelect={(date) => {
-                    setDateFilter("createdBefore", date ? date.toISOString() : "");
+                    setDateFilter(
+                      "createdBefore",
+                      date ? date.toISOString() : ""
+                    );
                     setEndPopoverOpen(false);
                   }}
                   initialFocus
@@ -216,9 +222,8 @@ export default function MitigationToolbar() {
             options={roomsOptions}
             isMulti
             value={defaultRooms}
-            onChange={
-              (newValue) =>
-                setRoomFilter(newValue.map((value) => value.value))
+            onChange={(newValue) =>
+              setRoomFilter(newValue.map((value) => value.value))
             }
             className='text-sm'
             styles={{
@@ -240,7 +245,7 @@ export default function MitigationToolbar() {
           />
         </div>
       </div>
-    
+
       {/* Rest of the toolbar (View, Upload, Add Room, etc.) */}
       <div className='ml-auto flex flex-row gap-4'>
         <DropdownMenu>
@@ -291,7 +296,7 @@ export default function MitigationToolbar() {
             />
           )}
         </Modal>
-         {/* <CreateAccessLink />
+        {/* <CreateAccessLink />
         <DownloadAllRoomImages /> */}
       </div>
     </div>

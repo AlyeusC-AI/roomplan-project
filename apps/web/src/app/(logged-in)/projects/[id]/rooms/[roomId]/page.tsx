@@ -13,6 +13,7 @@ import {
   Ruler,
   Plus,
   Camera,
+  PlusCircle,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useGetRooms, useSearchImages } from "@service-geek/api-client";
@@ -83,16 +84,18 @@ export default function RoomPage() {
     <div className='space-y-6'>
       {/* Header */}
       <div className='flex items-center justify-between'>
-        <div className='flex items-center gap-4'>
-          <Button variant='ghost' size='sm' asChild>
-            <Link href={`/projects/${id}/rooms`}>
-              <ChevronLeft className='mr-2 h-4 w-4' />
-              Back
-            </Link>
-          </Button>
+        <div className='flex flex-col gap-4'>
+          <Link
+            href={`/projects/${id}/rooms`}
+            className='flex items-center gap-2'
+          >
+            <ChevronLeft size={18} />
+            Back
+          </Link>
+
           <div>
-            <h1 className='text-2xl font-bold tracking-tight'>{room.name}</h1>
-            <p className='text-muted-foreground'>
+            <h1 className='text-lg font-medium tracking-tight'>{room.name}</h1>
+            <p className='text-sm text-muted-foreground'>
               Manage room details, photos, readings, and scope
             </p>
           </div>
@@ -113,7 +116,7 @@ export default function RoomPage() {
       </div>
 
       {/* Room Info Card */}
-      <Card>
+      {/* <Card>
         <CardContent className='p-6'>
           <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4'>
             <div className='space-y-2'>
@@ -146,7 +149,7 @@ export default function RoomPage() {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -175,7 +178,7 @@ export default function RoomPage() {
             >
               <DialogTrigger asChild>
                 <Button size='sm'>
-                  <Plus className='mr-2 h-4 w-4' />
+                  <PlusCircle className='mr-2 h-4 w-4' />
                   Add Image
                 </Button>
               </DialogTrigger>
