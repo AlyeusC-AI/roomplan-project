@@ -212,15 +212,52 @@ export class EquipmentService {
       );
     }
 
-    // Create equipment project assignment
+    // Calculate total currently assigned quantity for this equipment (only ACTIVE assignments)
+    const currentAssignments = await this.prisma.equipmentProject.findMany({
+      where: {
+        equipmentId: assignEquipmentDto.equipmentId,
+        status: 'ACTIVE', // Only count active assignments
+      },
+    });
+
+    const totalCurrentlyAssigned = currentAssignments.reduce(
+      (sum, assignment) => sum + assignment.quantity,
+      0,
+    );
+
+    // Check if the new assignment would exceed the available quantity
+    const requestedQuantity = assignEquipmentDto.quantity;
+    const availableQuantity = equipment.quantity - totalCurrentlyAssigned;
+
+    if (requestedQuantity > availableQuantity) {
+      throw new BadRequestException(
+        `Cannot assign ${requestedQuantity} units. Only ${availableQuantity} units available out of ${equipment.quantity} total.`,
+      );
+    }
+
+    // Create equipment project assignment with user tracking
     return this.prisma.equipmentProject.create({
       data: {
         equipmentId: assignEquipmentDto.equipmentId,
         projectId: assignEquipmentDto.projectId,
         quantity: assignEquipmentDto.quantity,
+        userId: userId,
+        status: 'ACTIVE',
         ...(assignEquipmentDto.roomId
           ? { roomId: assignEquipmentDto.roomId }
           : {}),
+      },
+      include: {
+        equipment: true,
+        room: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
       },
     });
   }
@@ -255,11 +292,23 @@ export class EquipmentService {
     }
 
     return this.prisma.equipmentProject.findMany({
-      where: { projectId },
+      where: {
+        projectId,
+        status: 'ACTIVE', // Only return active assignments
+      },
       include: {
         equipment: true,
         room: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
       },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -294,8 +343,130 @@ export class EquipmentService {
       );
     }
 
-    return this.prisma.equipmentProject.delete({
+    // Soft delete by updating status to REMOVED
+    return this.prisma.equipmentProject.update({
       where: { id: assignmentId },
+      data: { status: 'REMOVED' },
+      include: {
+        equipment: true,
+        room: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getEquipmentHistory(
+    equipmentId: string,
+    userId: string,
+  ): Promise<EquipmentProject[]> {
+    const equipment = await this.prisma.equipment.findUnique({
+      where: { id: equipmentId },
+    });
+
+    if (!equipment) {
+      throw new NotFoundException('Equipment not found');
+    }
+
+    // Check if user has permission
+    const member = await this.prisma.organizationMember.findFirst({
+      where: {
+        organizationId: equipment.organizationId,
+        userId,
+        status: MemberStatus.ACTIVE,
+      },
+    });
+
+    if (!member) {
+      throw new BadRequestException(
+        'You do not have permission to view equipment history in this organization',
+      );
+    }
+
+    return this.prisma.equipmentProject.findMany({
+      where: { equipmentId },
+      include: {
+        equipment: true,
+        room: true,
+        project: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getEquipmentHistoryWithStatus(
+    equipmentId: string,
+    userId: string,
+    status?: string,
+  ): Promise<EquipmentProject[]> {
+    const equipment = await this.prisma.equipment.findUnique({
+      where: { id: equipmentId },
+    });
+
+    if (!equipment) {
+      throw new NotFoundException('Equipment not found');
+    }
+
+    // Check if user has permission
+    const member = await this.prisma.organizationMember.findFirst({
+      where: {
+        organizationId: equipment.organizationId,
+        userId,
+        status: MemberStatus.ACTIVE,
+      },
+    });
+
+    if (!member) {
+      throw new BadRequestException(
+        'You do not have permission to view equipment history in this organization',
+      );
+    }
+
+    const whereClause: any = { equipmentId };
+    if (status) {
+      whereClause.status = status;
+    }
+
+    return this.prisma.equipmentProject.findMany({
+      where: whereClause,
+      include: {
+        equipment: true,
+        room: true,
+        project: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 }

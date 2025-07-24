@@ -177,6 +177,12 @@ class EquipmentService {
     return apiClient.delete<EquipmentProject>(`/equipment/assignment/${id}`);
   }
 
+  async getEquipmentHistory(equipmentId: string) {
+    return apiClient.get<EquipmentProject[]>(
+      `/equipment/${equipmentId}/history`
+    );
+  }
+
   // Get predefined equipment names by category
   getEquipmentNamesByCategory(categoryName: string): string[] {
     return EQUIPMENT_NAMES[categoryName as keyof typeof EQUIPMENT_NAMES] || [];

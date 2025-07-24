@@ -191,4 +191,21 @@ export class EquipmentController {
   ): Promise<EquipmentProject> {
     return this.equipmentService.removeEquipmentAssignment(id, req.user.userId);
   }
+
+  @Get(':id/history')
+  @ApiOperation({ summary: 'Get equipment assignment history' })
+  @ApiParam({ name: 'id', description: 'Equipment ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return equipment assignment history.',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Equipment not found.' })
+  getEquipmentHistory(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ): Promise<EquipmentProject[]> {
+    return this.equipmentService.getEquipmentHistory(id, req.user.userId);
+  }
 }

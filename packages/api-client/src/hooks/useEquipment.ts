@@ -108,3 +108,11 @@ export function useRemoveEquipmentAssignment() {
     },
   });
 }
+
+export function useGetEquipmentHistory(equipmentId: string) {
+  return useQuery({
+    queryKey: ["equipment-history", equipmentId],
+    queryFn: () => equipmentService.getEquipmentHistory(equipmentId),
+    enabled: !!equipmentId && !!useAuthStore.getState().token,
+  });
+}

@@ -33,12 +33,13 @@ model User {
   calendarEventReminders  CalendarEventReminder[]
 
   // Add direct many-to-many relationship with Project
-  projects         Project[]         @relation("ProjectMembers")
+  projects         Project[]          @relation("ProjectMembers")
   comments         Comment[]
   images           Image[]
   chatMessages     ChatMessage[]
   chatParticipants ChatParticipant[]
   Notification     Notification[]
+  EquipmentProject EquipmentProject[]
 }
 
 model Organization {
@@ -443,6 +444,9 @@ model EquipmentProject {
   projectId   String
   project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   quantity    Int
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  status      String    @default("ACTIVE") // ACTIVE, INACTIVE, REMOVED
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   roomId      String?
@@ -450,6 +454,8 @@ model EquipmentProject {
 
   @@index([equipmentId])
   @@index([projectId])
+  @@index([userId])
+  @@index([status])
 }
 
 model CalendarEvent {
