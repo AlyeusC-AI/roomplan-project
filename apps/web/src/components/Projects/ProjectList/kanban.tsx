@@ -132,7 +132,11 @@ export function ProjectKanban() {
   return (
     <KanbanProvider onDragEnd={handleDragEnd} className='p-4'>
       {columnQueries.map(({ status, isLoading, hasNextPage, projects }) => (
-        <KanbanBoard key={status.id} id={status.id} className='min-w-56'>
+        <KanbanBoard
+          key={status.id}
+          id={status.id}
+          className='min-w-56 bg-background/50'
+        >
           <KanbanHeader name={status.label || ""} color={status.color || ""} />
           <KanbanCards>
             {isLoading && pageStates[status.id] === 1 ? (

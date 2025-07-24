@@ -95,7 +95,7 @@ export default function InvoiceList() {
     <>
       <div
         className={cn(
-          "z-10 bg-background lg:pr-6",
+          "z-10 lg:pr-6",
           "md:w-[calc(100vw-var(--sidebar-width)-48px)]"
         )}
       >

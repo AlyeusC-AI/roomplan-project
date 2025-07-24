@@ -29,14 +29,23 @@ export default function InfoSidebar({
   if (pathname.includes("report")) return null;
 
   return (
-    <div className={clsx("", isCollapsed ? "w-5 min-w-5" : "w-[400px] w-full")}>
+    <div className={clsx("", isCollapsed ? "w-5 min-w-5" : "w-[360px]")}>
       <div
         className={clsx(
           "fixed right-0 top-0 z-30 h-screen overflow-y-auto bg-accent",
           isCollapsed
             ? "w-12 min-w-12"
-            : "w-[200px] lg:w-[240px] xl:w-[300px] 2xl:w-[400px]"
+            : "w-[200px] lg:w-[240px] xl:w-[320px] 2xl:w-[400px]"
         )}
+        // className={clsx(
+        //   "fixed right-0 top-0 z-30 h-screen overflow-y-auto bg-accent",
+        //   isCollapsed ? "w-12 min-w-12" : ""
+        // )}
+        // style={
+        //   isCollapsed
+        //     ? undefined
+        //     : { width: "clamp(200px, calc(400px * (100vw / 1024)), 400px)" }
+        // }
       >
         {!isCollapsed && (
           <div className='space-y-4 p-4'>
