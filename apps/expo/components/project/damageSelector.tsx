@@ -8,6 +8,7 @@ import {
   Pressable,
   StyleProp,
   ViewStyle,
+  TextStyle,
 } from "react-native";
 import { ChevronDown } from "lucide-react-native";
 import { LossType } from "@service-geek/api-client";
@@ -30,6 +31,7 @@ interface DamageTypeSelectorProps {
   style?: StyleProp<ViewStyle>;
   bodyStyle?: StyleProp<ViewStyle>;
   disabled?: boolean;
+  labelStyle?: StyleProp<TextStyle>;
 }
 
 export function DamageTypeSelector({
@@ -38,6 +40,7 @@ export function DamageTypeSelector({
   style,
   bodyStyle,
   disabled = false,
+  labelStyle,
 }: DamageTypeSelectorProps) {
   const [modalVisible, setModalVisible] = useState(false);
   const selectedLabel = value
@@ -46,7 +49,7 @@ export function DamageTypeSelector({
 
   return (
     <View style={[styles.section, bodyStyle]}>
-      <Text style={styles.sectionTitle}>Damage Type</Text>
+      <Text style={[styles.sectionTitle, labelStyle]}>Damage Type</Text>
 
       <View style={styles.sectionBody}>
         <TouchableOpacity

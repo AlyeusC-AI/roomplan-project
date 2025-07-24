@@ -24,6 +24,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ChevronRight } from "@/lib/icons/ChevronRight";
 import { formatDistanceToNow } from "date-fns";
 import { Colors } from "@/constants/Colors";
+import { Plus } from "lucide-react-native";
 
 const styles = StyleSheet.create({
   container: {
@@ -159,20 +160,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   newChatButton: {
-    position: "absolute",
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.light.primary,
-    justifyContent: "center",
     alignItems: "center",
-    elevation: 4,
+    justifyContent: "center",
+    width: 60,
+    position: "absolute",
+    bottom: 20,
+    right: 15,
+    height: 60,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 1,
+    backgroundColor: Colors.light.primary,
+    borderRadius: 100,
   },
 });
 
@@ -529,9 +529,7 @@ export default function ChatListScreen() {
         style={styles.newChatButton}
         onPress={() => router.push("/chats/new")}
       >
-        <Text style={{ color: "#ffffff", fontSize: 24, fontWeight: "bold" }}>
-          +
-        </Text>
+        <Plus size={30} color="#fff" />
       </TouchableOpacity>
     </View>
   );
