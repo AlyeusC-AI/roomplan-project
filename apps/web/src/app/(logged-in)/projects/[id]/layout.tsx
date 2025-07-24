@@ -158,7 +158,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
     <>
       <div
         className={clsx("relative grid gap-2", {
-          "grid-cols-[24fr_360px]": !isCollapsed,
+          "grid-cols-[24fr_370px]": !isCollapsed,
           "grid-cols-[24fr_48px]": isCollapsed,
         })}
       >
@@ -166,7 +166,9 @@ export default function Layout({ children }: React.PropsWithChildren) {
         <div className={clsx(!pathname.includes("report") && "")}>
           <div className='flex items-center justify-between'>
             <Link href='/projects' className='mb-4 flex items-center gap-2'>
-              <ChevronLeft size={24} />
+              <span className='flex items-center justify-center rounded-lg border bg-white/20 p-1'>
+                <ChevronLeft size={24} />
+              </span>
               <span className='font-medium'>Projects</span>
             </Link>
             {/* 3-dot menu with AlertDialog */}
@@ -179,7 +181,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
                   <Button
                     variant='ghost'
                     size='icon'
-                    className='rounded-full'
+                    className='border bg-white/20'
                     onClick={() => setIsDeleteDialogOpen(true)}
                   >
                     <MoreHorizontal className='text-gray-400' />
@@ -210,7 +212,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
             </div>
           </div>
 
-          <div className='mb-10'>
+          <div className='mb-5'>
             <h1 className='text-[40px] font-bold capitalize tracking-tight'>
               {projectData?.name}
             </h1>
@@ -277,7 +279,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
           <div className='col-sp relative'>
             {isCollapsed ? (
               <button
-                className='absolute left-3 top-0 flex h-10 w-10 items-center justify-center rounded-lg border-0 bg-accent'
+                className='absolute left-3 top-0 flex h-10 w-10 items-center justify-center rounded-lg border bg-white/20'
                 onClick={() => setIsCollapsed(false)}
                 aria-label='Expand sidebar'
                 style={{ zIndex: 40 }}
@@ -286,7 +288,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
               </button>
             ) : (
               <button
-                className='absolute -left-4 top-0 flex h-10 w-10 items-center justify-center rounded-lg border-0 bg-accent'
+                className='absolute -left-1 top-0 flex h-10 w-10 items-center justify-center rounded-lg border bg-white/20'
                 onClick={() => setIsCollapsed(true)}
                 aria-label='Collapse sidebar'
                 style={{ zIndex: 40 }}
@@ -365,7 +367,7 @@ const ProjectTags = ({ currentProjectTags, projectData }: ProjectTagsProps) => {
               <Badge
                 key={tag.id}
                 variant='secondary'
-                className='cursor-pointer rounded-full text-xs transition-all hover:bg-destructive/10 hover:text-destructive'
+                className='cursor-pointer rounded text-xs transition-all hover:bg-destructive/10 hover:text-destructive'
                 onClick={() => handleRemoveTag(tag.name)}
                 style={
                   tag.color
@@ -387,7 +389,7 @@ const ProjectTags = ({ currentProjectTags, projectData }: ProjectTagsProps) => {
           variant='default'
           size='sm'
           onClick={() => setIsTagsModalOpen(true)}
-          className='h-6 rounded-full text-xs'
+          className='h-6 rounded text-xs'
           disabled={isAddingTags || isRemovingTags}
         >
           <Plus className='h-2 w-2' />

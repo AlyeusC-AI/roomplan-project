@@ -43,6 +43,7 @@ import {
   CalendarIcon,
   X,
   RotateCw,
+  Search, // <-- Add this import
 } from "lucide-react";
 import { ColumnDef, Row } from "@tanstack/react-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
@@ -78,6 +79,7 @@ import { Calendar } from "@components/ui/calendar";
 import { format } from "date-fns";
 import DamageBadge from "@components/Project/DamageBadge";
 import StatusBadge from "@components/Project/StatusBadge";
+import UserAvatar from "@components/DesignSystem/UserAvatar";
 
 export default function ProjectList() {
   const [isCreatingNewProject, setIsCreatingNewProject] = useState(false);
@@ -163,6 +165,8 @@ export default function ProjectList() {
     },
   ];
 
+  console.log("data", data);
+
   return (
     <>
       <div
@@ -181,12 +185,17 @@ export default function ProjectList() {
               Select a project to manage files and estimates.
             </p> */}
             </div>
-            <Input
-              placeholder='Search projects...'
-              onChange={(e) => handleSearch(e.target.value)}
-              className='h-10 w-full lg:max-w-64'
-              defaultValue={query}
-            />
+            <div className='relative w-full lg:max-w-64'>
+              <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'>
+                <Search className='h-5 w-5' />
+              </span>
+              <Input
+                placeholder='Search projects...'
+                onChange={(e) => handleSearch(e.target.value)}
+                className='h-10 w-full border border-gray-300 pl-10'
+                defaultValue={query}
+              />
+            </div>
           </div>
           <div className='ml-auto flex min-w-[100px] flex-col space-y-4'>
             <Button onClick={() => setIsCreatingNewProject((i) => !i)}>
@@ -203,7 +212,13 @@ export default function ProjectList() {
             >
               <TabsList className='hidden lg:block'>
                 {filterTabsList.map((tab) => (
-                  <TabsTrigger key={tab.value} value={tab.value}>
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    style={{
+                      fontSize: "12px",
+                    }}
+                  >
                     {tab.label}
                   </TabsTrigger>
                 ))}
@@ -230,7 +245,7 @@ export default function ProjectList() {
               />
             </ToggleFilter>
             <Button variant={"outline"} onClick={() => refetch()}>
-              <RotateCw />
+              <RotateCw size={12} />
             </Button>
           </div>
           <Tabs
@@ -238,8 +253,12 @@ export default function ProjectList() {
             onValueChange={(e) => changeDashboardView(e)}
           >
             <TabsList className='hidden lg:block'>
-              <TabsTrigger value={"listView"}>List View</TabsTrigger>
-              <TabsTrigger value={"boardView"}>Board View</TabsTrigger>
+              <TabsTrigger value={"listView"} className='text-sm'>
+                List View
+              </TabsTrigger>
+              <TabsTrigger value={"boardView"} className='text-sm'>
+                Board View
+              </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -546,6 +565,24 @@ const List = ({ projects }: { projects: any[] }) => {
                   <span className='text-xs text-muted-foreground'>Docs</span>
                   <span className='text-lg'>
                     {project._count.documents?.length || 0}
+                  </span>
+                </div>
+                <div className='flex flex-col items-center gap-2 px-2'>
+                  <span className='text-xs text-muted-foreground'>
+                    Recent users
+                  </span>
+                  <span className='flex flex-row gap-1'>
+                    {project.members?.map((user: any) => (
+                      <UserAvatar
+                        key={user.id}
+                        firstName={user.firstName}
+                        lastName={user.lastName}
+                        email={user.email}
+                        avatar={user.avatar}
+                        textSize='text-xs'
+                        className='mb-1 size-7 min-h-7 min-w-7'
+                      />
+                    ))}
                   </span>
                 </div>
               </div>

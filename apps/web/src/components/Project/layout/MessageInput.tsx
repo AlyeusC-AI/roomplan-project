@@ -18,6 +18,7 @@ interface MessageInputProps {
   projectId: string;
   replyingTo?: any;
   onCancelReply?: () => void;
+  canFocus?: boolean;
 }
 
 export default function MessageInput({
@@ -26,6 +27,7 @@ export default function MessageInput({
   projectId,
   replyingTo,
   onCancelReply,
+  canFocus = true,
 }: MessageInputProps) {
   const [message, setMessage] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -34,7 +36,7 @@ export default function MessageInput({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (inputRef.current) {
+    if (inputRef.current && canFocus) {
       inputRef.current.focus();
       inputRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
