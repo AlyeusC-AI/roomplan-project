@@ -183,7 +183,7 @@ export default function NewProject() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f8f8" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
         <View style={styles.header}>
           <View style={styles.headerAction}>
             <TouchableOpacity onPress={() => router.back()}>
@@ -396,10 +396,11 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   sectionInput: {
-    backgroundColor: "#fff",
+    backgroundColor: "#f3f4f6",
     height: 60,
     paddingHorizontal: 16,
     borderRadius: 12,
+    color: "#000",
     // fontSize: 17,
     // fontWeight: "500",
     // color: "#1d1d1d",

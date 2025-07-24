@@ -1180,7 +1180,7 @@ export default function ProjectOverview() {
             <OfflineTasksManager projectId={projectId} />
 
             {/* <View style={styles.actionButtonGroup}> */}
-            <View style={styles.actionButtonCard}>
+            <View style={[styles.actionButtonCard, { marginTop: 16 }]}>
               <TouchableOpacity
                 className="bg-white rounded-lg w-full mb-2"
                 onPress={() => {
@@ -1202,7 +1202,7 @@ export default function ProjectOverview() {
                 <ChevronRightIcon size={20} color={Colors.light.primary} />
               </TouchableOpacity>
             </View>
-            <View style={styles.actionButtonCard}>
+            <View style={[styles.actionButtonCard, { marginBottom: 16 }]}>
               <TouchableOpacity
                 className="bg-white rounded-lg w-full"
                 activeOpacity={1}
@@ -1232,7 +1232,7 @@ export default function ProjectOverview() {
             </View>
 
             {/* Navigation Items Horizontal Scroll */}
-            <Card style={styles.projectCard}>
+            <Card style={[styles.projectCard, { marginBottom: 16 }]}>
               <View className="p-4">
                 <Text className="text-lg font-medium ml-1 mb-3">
                   Quick Actions
@@ -1989,10 +1989,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
     backgroundColor: Colors.light.primary,
-    height: 44, // was 44, make indicator taller
+    height: 38, // was 44, make indicator taller
   },
   toggleTab: {
-    height: 40,
+    height: 34,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
@@ -2011,6 +2011,5 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
-    marginBottom: 12,
   },
 });
