@@ -94,13 +94,11 @@ import { ChevronsUpDown } from "lucide-react";
 import { Check } from "lucide-react";
 
 const newEquipmentSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters"),
-  quantity: z.number().min(1, "Quantity must be at least 1"),
+  name: z.string().min(1, "Brand and model are required"),
   image: z.string().optional(),
   namePrefix: z.string().optional(),
   repeatCount: z.number().min(1).max(100).default(1),
   startNumber: z.number().min(0).default(1),
-  numberLength: z.number().min(1).max(5).default(2),
 });
 
 type NewEquipmentValues = z.infer<typeof newEquipmentSchema>;
@@ -125,10 +123,13 @@ export function EquipmentPage() {
   const [categoryToDelete, setCategoryToDelete] =
     useState<EquipmentCategory | null>(null);
   const [equipmentNameOpen, setEquipmentNameOpen] = useState(false);
+  const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [selectedModel, setSelectedModel] = useState<string>("");
 
   const { data: categories = [], isLoading: loadingCategories } =
     useGetEquipmentCategories();
-  const { getEquipmentNamesByCategory } = useEquipmentNames();
+  const { getEquipmentBrandsByCategory, getEquipmentModelsByCategoryAndBrand } =
+    useEquipmentNames();
   const { mutate: createCategory, isPending: isCreatingCategory } =
     useCreateEquipmentCategory();
   const { mutate: updateCategory, isPending: isUpdatingCategory } =
@@ -165,12 +166,10 @@ export function EquipmentPage() {
     mode: "onChange",
     defaultValues: {
       name: "",
-      quantity: 1,
       image: "",
       namePrefix: "",
       repeatCount: 1,
       startNumber: 1,
-      numberLength: 2,
     },
   });
 
@@ -275,26 +274,6 @@ export function EquipmentPage() {
       ),
     },
     {
-      accessorKey: "quantity",
-      header: ({ column }) => (
-        <TableColumnHeader column={column} title='Quantity' />
-      ),
-      cell: ({ row }) => (
-        <div className='flex items-center'>
-          <span
-            className={cn(
-              "rounded-full px-2 py-1 text-sm font-medium",
-              row.original?.quantity > 0
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            )}
-          >
-            {row.original?.quantity}
-          </span>
-        </div>
-      ),
-    },
-    {
       accessorKey: "createdAt",
       header: ({ column }) => (
         <TableColumnHeader column={column} title='Created' />
@@ -320,7 +299,6 @@ export function EquipmentPage() {
             onClick={() => {
               setIsOpen(row.original);
               setTempName(row.original.name);
-              setTempQuantity(row.original.quantity);
               setTempImage(row.original.image || "");
               setTempCategoryId(row.original.categoryId);
             }}
@@ -346,20 +324,15 @@ export function EquipmentPage() {
     const repeat = data.repeatCount || 1;
     const prefix = data.namePrefix || "";
     const start = data.startNumber || 1;
-    const numberLength = data.numberLength || 2;
 
     for (let i = 0; i < repeat; i++) {
-      const number = String(start + i).padStart(numberLength, "0");
+      const number = start + i;
       createEquipment({
-        // ...data,
-        quantity: data.quantity,
         image: data.image,
-        name:
-          repeat > 1
-            ? `${data.name} ${prefix}${number}`
-            : `${prefix}${data.name}`,
+        name: `${data.name} ${prefix}${number}`,
         description: "",
-        categoryId: selectedCategory?.id || "", // always use selected category
+        categoryId: selectedCategory?.id || "",
+        quantity: 1, // required by API
       });
     }
 
@@ -456,7 +429,7 @@ export function EquipmentPage() {
           }
         }}
       >
-        <DialogContent className='flex max-h-[90vh] flex-col p-0 sm:max-w-[500px]'>
+        <DialogContent className='flex max-h-[90vh] flex-col p-0 sm:max-w-[700px]'>
           <DialogHeader className='px-6 pb-2 pt-6'>
             <DialogTitle>Add New Equipment</DialogTitle>
             <DialogDescription>
@@ -482,109 +455,86 @@ export function EquipmentPage() {
                     Basic Info
                   </div>
                   <div className='space-y-4'>
+                    {/* Brand & Model Select */}
                     <FormField
                       control={form.control}
                       name='name'
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Name</FormLabel>
-                          <FormControl>
-                            {selectedCategory &&
-                            getEquipmentNamesByCategory(selectedCategory.name)
-                              .length > 0 ? (
-                              <Popover
-                                open={equipmentNameOpen}
-                                onOpenChange={setEquipmentNameOpen}
-                              >
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant='outline'
-                                    role='combobox'
-                                    aria-expanded={equipmentNameOpen}
-                                    className='w-full justify-between'
-                                  >
-                                    {field.value
-                                      ? field.value
-                                      : "Select equipment name..."}
-                                    <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className='w-full p-0'>
-                                  <Command>
-                                    <CommandInput placeholder='Search equipment names...' />
-                                    <CommandList>
-                                      <CommandEmpty>
-                                        No equipment name found.
-                                      </CommandEmpty>
-                                      <CommandGroup>
-                                        {getEquipmentNamesByCategory(
-                                          selectedCategory.name
-                                        ).map((name) => (
-                                          <CommandItem
-                                            key={name}
-                                            value={name}
-                                            onSelect={(currentValue) => {
-                                              field.onChange(currentValue);
-                                              setEquipmentNameOpen(false);
-                                            }}
-                                          >
-                                            <Check
-                                              className={cn(
-                                                "mr-2 h-4 w-4",
-                                                field.value === name
-                                                  ? "opacity-100"
-                                                  : "opacity-0"
-                                              )}
-                                            />
-                                            {name}
-                                          </CommandItem>
+                      render={({ field }) => {
+                        const brands = selectedCategory
+                          ? getEquipmentBrandsByCategory(selectedCategory.name)
+                          : [];
+                        const models =
+                          selectedCategory && selectedBrand
+                            ? getEquipmentModelsByCategoryAndBrand(
+                                selectedCategory.name,
+                                selectedBrand
+                              )
+                            : [];
+                        return (
+                          <FormItem>
+                            <FormLabel>Name</FormLabel>
+                            <FormControl>
+                              <div>
+                                {brands.length > 0 && (
+                                  <div className='flex gap-2'>
+                                    <select
+                                      className='w-1/2 rounded border px-2 py-1'
+                                      value={selectedBrand}
+                                      onChange={(e) => {
+                                        setSelectedBrand(e.target.value);
+                                        setSelectedModel("");
+                                        field.onChange(""); // clear name when brand changes
+                                      }}
+                                    >
+                                      <option value=''>Select brand</option>
+                                      {brands.map((brand) => (
+                                        <option key={brand} value={brand}>
+                                          {brand}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    {models.length > 0 && (
+                                      <select
+                                        className='w-1/2 rounded border px-2 py-1'
+                                        value={selectedModel}
+                                        onChange={(e) => {
+                                          setSelectedModel(e.target.value);
+                                          if (selectedBrand && e.target.value) {
+                                            field.onChange(
+                                              `${selectedBrand} ${e.target.value}`
+                                            );
+                                          } else {
+                                            field.onChange("");
+                                          }
+                                        }}
+                                        disabled={!selectedBrand}
+                                      >
+                                        <option value=''>Select model</option>
+                                        {models.map((model) => (
+                                          <option key={model} value={model}>
+                                            {model}
+                                          </option>
                                         ))}
-                                      </CommandGroup>
-                                    </CommandList>
-                                  </Command>
-                                </PopoverContent>
-                              </Popover>
-                            ) : (
-                              <Input
-                                placeholder='Enter equipment name manually'
-                                {...field}
-                              />
-                            )}
-                          </FormControl>
-                          <FormDescription>
-                            {selectedCategory &&
-                            getEquipmentNamesByCategory(selectedCategory.name)
-                              .length > 0
-                              ? `Select from predefined equipment names for ${selectedCategory.name}.`
-                              : "No predefined names available for this category. Enter the equipment name manually."}
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                                      </select>
+                                    )}
+                                  </div>
+                                )}
+                                <Input
+                                  className='mt-2'
+                                  placeholder='Enter equipment name'
+                                  value={field.value}
+                                  onChange={(e) =>
+                                    field.onChange(e.target.value)
+                                  }
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
-                    <FormField
-                      control={form.control}
-                      name='quantity'
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Quantity</FormLabel>
-                          <FormControl>
-                            <Input
-                              type='number'
-                              min={1}
-                              {...field}
-                              onChange={(e) =>
-                                field.onChange(Number(e.target.value))
-                              }
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Enter the quantity of this equipment.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Quantity, Image, etc. remain unchanged */}
                     <FormField
                       control={form.control}
                       name='image'
@@ -640,41 +590,15 @@ export function EquipmentPage() {
                 {/* Multi-Add Section */}
                 <div>
                   <div className='mb-2 flex items-center gap-2 border-b pb-1 text-base font-semibold text-gray-700'>
-                    <span>Multi-Add Options</span>
-                    <span
-                      className='text-xs text-gray-400'
-                      title='Add multiple equipment items with a prefix and padded number (e.g. Dehu-01, Dehu-02)'
-                    >
-                      ?
-                    </span>
+                    <span>Multi-Add</span>
                   </div>
-                  <div className='grid grid-cols-2 gap-4'>
-                    <FormField
-                      control={form.control}
-                      name='namePrefix'
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Name Prefix</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder='Prefix (e.g. Dehu-)'
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Optional prefix for each equipment name. Used for
-                            multi-add.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <div className='flex gap-4'>
                     <FormField
                       control={form.control}
                       name='repeatCount'
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Repeat</FormLabel>
+                        <FormItem className='w-1/3'>
+                          <FormLabel>Quantity</FormLabel>
                           <FormControl>
                             <Input
                               type='number'
@@ -686,10 +610,18 @@ export function EquipmentPage() {
                               }
                             />
                           </FormControl>
-                          <FormDescription>
-                            How many equipment items to add at once?
-                          </FormDescription>
-                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name='namePrefix'
+                      render={({ field }) => (
+                        <FormItem className='w-1/3'>
+                          <FormLabel>Prefix</FormLabel>
+                          <FormControl>
+                            <Input placeholder='e.g. Dehu-' {...field} />
+                          </FormControl>
                         </FormItem>
                       )}
                     />
@@ -697,8 +629,8 @@ export function EquipmentPage() {
                       control={form.control}
                       name='startNumber'
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Start Number</FormLabel>
+                        <FormItem className='w-1/3'>
+                          <FormLabel>Start #</FormLabel>
                           <FormControl>
                             <Input
                               type='number'
@@ -709,35 +641,6 @@ export function EquipmentPage() {
                               }
                             />
                           </FormControl>
-                          <FormDescription>
-                            The number to start from (e.g. 1 for Dehu-01).
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name='numberLength'
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Number Length</FormLabel>
-                          <FormControl>
-                            <Input
-                              type='number'
-                              min={1}
-                              max={5}
-                              {...field}
-                              onChange={(e) =>
-                                field.onChange(Number(e.target.value))
-                              }
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            How many digits for the number (e.g. 2 for 01, 3 for
-                            001).
-                          </FormDescription>
-                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -805,7 +708,7 @@ export function EquipmentPage() {
             <div className='grid gap-2'>
               <Label htmlFor='name'>Name</Label>
               {tempCategoryId &&
-              getEquipmentNamesByCategory(
+              getEquipmentBrandsByCategory(
                 categories.find((cat) => cat.id === tempCategoryId)?.name || ""
               ).length > 0 ? (
                 <Popover>
@@ -825,7 +728,7 @@ export function EquipmentPage() {
                       <CommandList>
                         <CommandEmpty>No equipment name found.</CommandEmpty>
                         <CommandGroup>
-                          {getEquipmentNamesByCategory(
+                          {getEquipmentBrandsByCategory(
                             categories.find((cat) => cat.id === tempCategoryId)
                               ?.name || ""
                           ).map((name) => (
@@ -860,16 +763,7 @@ export function EquipmentPage() {
                 />
               )}
             </div>
-            <div className='grid gap-2'>
-              <Label htmlFor='quantity'>Quantity</Label>
-              <Input
-                id='quantity'
-                type='number'
-                min={1}
-                value={tempQuantity}
-                onChange={(e) => setTempQuantity(Number(e.target.value))}
-              />
-            </div>
+            {/* Remove Quantity field from edit dialog */}
             <div className='grid gap-2'>
               <Label htmlFor='category'>Category</Label>
               <select

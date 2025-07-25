@@ -1,6 +1,7 @@
 export interface Equipment {
   id: string;
   name: string;
+  model?: string;
   description?: string;
   quantity: number;
   image?: string;
@@ -27,6 +28,7 @@ export interface EquipmentProject {
 
 export interface CreateEquipmentDto {
   name: string;
+  model?: string;
   description?: string;
   quantity: number;
   image?: string;
@@ -35,6 +37,7 @@ export interface CreateEquipmentDto {
 
 export interface UpdateEquipmentDto {
   name?: string;
+  model?: string;
   description?: string;
   quantity?: number;
   image?: string;

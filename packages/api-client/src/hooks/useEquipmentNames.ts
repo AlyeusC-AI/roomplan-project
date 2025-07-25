@@ -1,8 +1,18 @@
 import { equipmentService } from "../services/equipment";
 
 export function useEquipmentNames() {
-  const getEquipmentNamesByCategory = (categoryName: string): string[] => {
-    return equipmentService.getEquipmentNamesByCategory(categoryName);
+  const getEquipmentBrandsByCategory = (categoryName: string): string[] => {
+    return equipmentService.getEquipmentBrandsByCategory(categoryName);
+  };
+
+  const getEquipmentModelsByCategoryAndBrand = (
+    categoryName: string,
+    brand: string
+  ): string[] => {
+    return equipmentService.getEquipmentModelsByCategoryAndBrand(
+      categoryName,
+      brand
+    );
   };
 
   const getAvailableCategories = (): string[] => {
@@ -10,7 +20,8 @@ export function useEquipmentNames() {
   };
 
   return {
-    getEquipmentNamesByCategory,
+    getEquipmentBrandsByCategory,
+    getEquipmentModelsByCategoryAndBrand,
     getAvailableCategories,
   };
 }

@@ -8,6 +8,7 @@ import {
   TextInput,
   Alert,
   Dimensions,
+  Image,
 } from "react-native";
 import { Text } from "@/components/ui/text";
 import {
@@ -31,6 +32,7 @@ import {
   Equipment,
   EquipmentProject,
 } from "@service-geek/api-client";
+import { useGetEquipmentCategories } from "@service-geek/api-client/src/hooks/useEquipmentCategory";
 import { toast } from "sonner-native";
 
 // Type assertions for Lucide icons
@@ -55,6 +57,100 @@ interface EquipmentTabProps {
   projectId: string;
   roomId: string;
   room: any;
+}
+
+// Equipment Calculations Header UI Component
+function EquipmentCalculationsHeader() {
+  return (
+    <View
+      style={{
+        backgroundColor: "#f1f5f9",
+        borderTopLeftRadius: 8,
+        borderTopRightRadius: 8,
+        borderBottomWidth: 1,
+        borderColor: "#cbd5e1",
+        padding: 8,
+        marginBottom: 16,
+      }}
+    >
+      <Text
+        style={{
+          fontWeight: "600",
+          color: "#64748b",
+          marginBottom: 8,
+          fontSize: 15,
+        }}
+      >
+        Equipment Calculations
+      </Text>
+      <View style={{ flexDirection: "row", gap: 12 }}>
+        {/* Dehumidifier Recommendation Card */}
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "#fff",
+            borderRadius: 8,
+            padding: 12,
+            alignItems: "flex-start",
+            borderWidth: 1,
+            borderColor: "#e5e7eb",
+          }}
+        >
+          <Image
+            source={require("@/assets/equipments/dehumidifier.png")}
+            style={{ width: 32, height: 32, marginBottom: 6 }}
+          />
+          <Text
+            style={{
+              fontWeight: "600",
+              color: "#334155",
+              fontSize: 14,
+              marginBottom: 2,
+            }}
+          >
+            Dehumidifier Recommendation
+          </Text>
+          <Text style={{ color: "#64748b", fontSize: 13, marginBottom: 2 }}>
+            0 of 95.3 pints placed
+          </Text>
+          <Text style={{ color: "#64748b", fontSize: 13 }}>0 units placed</Text>
+        </View>
+        {/* Air Mover Recommendation Card */}
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "#fff",
+            borderRadius: 8,
+            padding: 12,
+            alignItems: "flex-start",
+            borderWidth: 1,
+            borderColor: "#e5e7eb",
+          }}
+        >
+          <Image
+            source={require("@/assets/equipments/airMover.png")}
+            style={{ width: 32, height: 32, marginBottom: 6 }}
+          />
+          <Text
+            style={{
+              fontWeight: "600",
+              color: "#334155",
+              fontSize: 14,
+              marginBottom: 2,
+            }}
+          >
+            Air Mover Recommendation
+          </Text>
+          <Text style={{ color: "#64748b", fontSize: 13, marginBottom: 2 }}>
+            0 of 3 rooms met
+          </Text>
+          <Text style={{ color: "#64748b", fontSize: 13 }}>
+            0 of (6 - 7) units placed
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
 }
 
 export default function EquipmentTab({
@@ -83,6 +179,7 @@ export default function EquipmentTab({
   const assignments = assignmentsResponse?.data || [];
   const assignEquipment = useAssignEquipment();
   const removeAssignment = useRemoveEquipmentAssignment();
+  const { data: categories = [] } = useGetEquipmentCategories();
 
   // Filter equipment based on search query
   const filteredEquipment = useMemo(() => {
@@ -174,6 +271,12 @@ export default function EquipmentTab({
     if (selectedItems.length === 0) return;
 
     try {
+      console.log(
+        "🚀 ~ handleAssignEquipment ~ selectedItems:",
+        selectedItems,
+        selectedItems.map((item) => item.equipment.id)
+      );
+
       // Assign all selected equipment
       const promises = selectedItems.map((item) =>
         assignEquipment.mutateAsync({
@@ -233,6 +336,7 @@ export default function EquipmentTab({
 
   return (
     <View style={styles.container}>
+      <EquipmentCalculationsHeader />
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -294,7 +398,7 @@ export default function EquipmentTab({
           </Card>
         ) : (
           <Card style={styles.sectionCard}>
-            <CardContent style={styles.emptyState}>
+            <CardContent style={styles.emptyState} className="pt-4">
               <Text style={styles.emptyStateText}>
                 No equipment assigned to this room yet
               </Text>
@@ -334,170 +438,329 @@ export default function EquipmentTab({
             >
               <XIcon size={24} color="#64748b" />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Add Equipment</Text>
+            <Text style={styles.modalTitle}>Equipment</Text>
             <View style={styles.placeholder} />
           </View>
 
           <ScrollView style={styles.modalBody}>
-            <View style={styles.equipmentSelection}>
-              <Text style={styles.sectionTitle}>Select Equipment</Text>
-              {equipmentWithHistory.map(
-                (
-                  eq: EquipmentWithHistory & {
-                    totalAssigned: number;
-                    availableQuantity: number;
+            {/* Group equipment by categoryId and map to category name */}
+            {Object.entries(
+              equipmentWithHistory.reduce(
+                (acc, eq) => {
+                  const cat =
+                    categories.find(
+                      (c: { id: string; name: string }) =>
+                        c.id === eq.categoryId
+                    )?.name || "Other";
+                  acc[cat] = acc[cat] || [];
+                  acc[cat].push(eq);
+                  return acc;
+                },
+                {} as Record<string, typeof equipmentWithHistory>
+              )
+            )
+              .sort(([a], [b]) => {
+                if (a === "Dehumidifiers") return -1;
+                if (b === "Dehumidifiers") return 1;
+                if (a === "Other") return 1;
+                if (b === "Other") return -1;
+                return a.localeCompare(b);
+              })
+              .map(([category, items]) => {
+                // Progress calculation: include both assigned and selected (pending) equipment
+                const total = items.reduce((sum, eq) => sum + eq.quantity, 0);
+                // Sum assigned
+                let placed = items.reduce(
+                  (sum, eq) => sum + eq.totalAssigned,
+                  0
+                );
+                // Add selected (pending) equipment for this category
+                placed += selectedItems
+                  .filter((item) => {
+                    const cat =
+                      categories.find(
+                        (c: { id: string; name: string }) =>
+                          c.id === item.equipment.categoryId
+                      )?.name || "Other";
+                    return cat === category;
+                  })
+                  .reduce((sum, item) => sum + item.quantity, 0);
+                // Icon mapping
+                const iconMap: Record<string, any> = {
+                  Dehumidifiers: require("@/assets/equipments/dehumidifier.png"),
+                  "Air Movers": require("@/assets/equipments/airMover.png"),
+                  "Air Scrubbers": require("@/assets/equipments/airScrubber.png"),
+                  Heater: require("@/assets/equipments/heatBoostBar.png"),
+                  "Drying Matts": require("@/assets/equipments/dryingMatts.png"),
+                  "Ozone Generator": require("@/assets/equipments/oZoneGenerator.png"),
+                  "Wall Cavity Dryer": require("@/assets/equipments/wallCavitydryer.png"),
+                };
+                const icon =
+                  iconMap[category] || require("@/assets/equipments/6.png");
+                // Handler to add one unit of the first available equipment in this category
+                const handleAddOne = () => {
+                  // Find the first equipment in this category that is not fully selected
+                  const firstAvailable = items.find((eq) => {
+                    const selected = selectedItems.find(
+                      (item) => item.equipment.id === eq.id
+                    );
+                    // If not selected at all, it's available
+                    if (!selected) return eq.availableQuantity > 0;
+                    // If selected, only available if not at max
+                    return selected.quantity < eq.availableQuantity;
+                  });
+                  if (!firstAvailable) {
+                    toast.error(`No more available equipment in ${category}`);
+                    console.log(`No more available equipment in ${category}`);
+                    return;
                   }
-                ) => {
-                  const isSelected = isEquipmentSelected(eq.id);
-                  const selectedQuantity = getSelectedQuantity(eq.id);
-                  const isFullyAssigned = eq.availableQuantity <= 0;
-
-                  return (
-                    <View
-                      key={eq.id}
-                      style={styles.equipmentSelectionContainer}
-                    >
-                      <TouchableOpacity
-                        style={[
-                          styles.equipmentSelectionItem,
-                          isSelected && styles.selectedEquipment,
-                          isFullyAssigned && styles.disabledEquipment,
-                        ]}
-                        onPress={() =>
-                          !isFullyAssigned && handleEquipmentSelection(eq)
-                        }
-                        disabled={isFullyAssigned}
-                      >
-                        <View style={styles.equipmentInfo}>
-                          <Text
-                            style={[
-                              styles.equipmentName,
-                              isFullyAssigned && styles.disabledText,
-                            ]}
-                          >
-                            {eq.name}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.equipmentDescription,
-                              isFullyAssigned && styles.disabledText,
-                            ]}
-                          >
-                            {eq.description || "No description"}
-                          </Text>
-                          <View style={styles.quantityInfo}>
-                            <Text
-                              style={[
-                                styles.availableQuantity,
-                                isFullyAssigned && styles.disabledText,
-                              ]}
-                            >
-                              Available: {eq.availableQuantity} of {eq.quantity}
-                            </Text>
-                            {eq.currentAssignments &&
-                              eq.currentAssignments.length > 0 && (
-                                <Text style={styles.assignedInfo}>
-                                  Currently assigned: {eq.totalAssigned}
-                                </Text>
-                              )}
-                          </View>
-                        </View>
-                        {isSelected && (
-                          <View style={styles.selectedIndicator}>
-                            <CheckIcon size={16} color="#fff" />
-                          </View>
-                        )}
-                        {isFullyAssigned && (
-                          <View style={styles.disabledIndicator}>
-                            <Text style={styles.disabledIndicatorText}>
-                              FULL
-                            </Text>
-                          </View>
-                        )}
-                      </TouchableOpacity>
-
-                      {isSelected && (
-                        <View style={styles.quantityRow}>
-                          <Text style={styles.quantityLabel}>Quantity:</Text>
-                          <View style={styles.quantityControls}>
-                            <TouchableOpacity
-                              style={styles.quantityButton}
-                              onPress={() =>
-                                handleQuantityChange(
-                                  eq.id,
-                                  selectedQuantity - 1
-                                )
-                              }
-                            >
-                              <MinusIcon size={16} color="#64748b" />
-                            </TouchableOpacity>
-                            <Text style={styles.quantityValue}>
-                              {selectedQuantity}
-                            </Text>
-                            <TouchableOpacity
-                              style={[
-                                styles.quantityButton,
-                                selectedQuantity >= eq.availableQuantity &&
-                                  styles.disabledQuantityButton,
-                              ]}
-                              onPress={() =>
-                                handleQuantityChange(
-                                  eq.id,
-                                  selectedQuantity + 1
-                                )
-                              }
-                              disabled={
-                                selectedQuantity >= eq.availableQuantity
-                              }
-                            >
-                              <PlusIcon
-                                size={16}
-                                color={
-                                  selectedQuantity >= eq.availableQuantity
-                                    ? "#cbd5e1"
-                                    : "#64748b"
-                                }
-                              />
-                            </TouchableOpacity>
-                          </View>
-                          <Text style={styles.maxQuantityText}>
-                            Max: {eq.availableQuantity}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
+                  const alreadySelected = selectedItems.find(
+                    (item) => item.equipment.id === firstAvailable.id
                   );
-                }
-              )}
-            </View>
+                  if (alreadySelected) {
+                    // Increment quantity if not exceeding available
+                    if (
+                      alreadySelected.quantity <
+                      firstAvailable.availableQuantity
+                    ) {
+                      setSelectedItems((prev) =>
+                        prev.map((item) =>
+                          item.equipment.id === firstAvailable.id
+                            ? { ...item, quantity: item.quantity + 1 }
+                            : item
+                        )
+                      );
+                      toast.success(`Added 1 more ${firstAvailable.name}`);
+                      console.log(`Incremented ${firstAvailable.name}`);
+                    } else {
+                      toast.error(
+                        `No more available units for ${firstAvailable.name}`
+                      );
+                      console.log(
+                        `No more available units for ${firstAvailable.name}`
+                      );
+                    }
+                  } else {
+                    setSelectedItems((prev) => [
+                      ...prev,
+                      { equipment: firstAvailable, quantity: 1 },
+                    ]);
+                    toast.success(`Added 1 ${firstAvailable.name}`);
+                    console.log(`Added 1 ${firstAvailable.name}`);
+                  }
+                };
+                return (
+                  <View key={category} style={{ marginBottom: 24 }}>
+                    {/* Category Header */}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginBottom: 8,
+                      }}
+                    >
+                      <Text
+                        style={{ fontWeight: "700", fontSize: 16, flex: 1 }}
+                      >
+                        {category}
+                      </Text>
+                      <View style={{ flex: 1, marginRight: 8 }}>
+                        <View
+                          style={{
+                            height: 6,
+                            backgroundColor: "#e5e7eb",
+                            borderRadius: 3,
+                          }}
+                        >
+                          <View
+                            style={{
+                              width: `${total ? (placed / total) * 100 : 0}%`,
+                              height: 6,
+                              backgroundColor: Colors.light.primary,
+                              borderRadius: 3,
+                            }}
+                          />
+                        </View>
+                        <Text style={{ fontSize: 11, color: "#64748b" }}>
+                          {placed} of {total} units placed
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: Colors.light.primary,
+                          borderRadius: 8,
+                          padding: 4,
+                        }}
+                        onPress={handleAddOne}
+                      >
+                        <PlusIcon size={18} color="#fff" />
+                      </TouchableOpacity>
+                    </View>
+                    {/* Show only selected equipment for this category */}
+                    {selectedItems
+                      .filter((item) => {
+                        const cat =
+                          categories.find(
+                            (c: { id: string; name: string }) =>
+                              c.id === item.equipment.categoryId
+                          )?.name || "Other";
+                        return cat === category;
+                      })
+                      .map((item) => {
+                        const eq = item.equipment;
+                        const selectedQuantity = item.quantity;
+                        return (
+                          <View
+                            key={eq.id}
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              backgroundColor: "#fff",
+                              borderRadius: 8,
+                              borderWidth: 1,
+                              borderColor: "#e5e7eb",
+                              marginBottom: 8,
+                              padding: 10,
+                            }}
+                          >
+                            <Image
+                              source={icon}
+                              style={{ width: 24, height: 24, marginRight: 8 }}
+                            />
+                            <View style={{ flex: 1 }}>
+                              <Text
+                                style={{ fontWeight: "600", color: "#1e293b" }}
+                              >
+                                {eq.name}
+                              </Text>
+                              {/* Special UI for Dehumidifiers (pints selector) */}
+                              {category === "Dehumidifiers" && (
+                                <View
+                                  style={{ flexDirection: "row", marginTop: 4 }}
+                                >
+                                  {[60, 120, 180].map((val) => (
+                                    <TouchableOpacity
+                                      key={val}
+                                      style={{
+                                        backgroundColor:
+                                          selectedQuantity === val
+                                            ? Colors.light.primary
+                                            : "#f1f5f9",
+                                        borderRadius: 6,
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 4,
+                                        marginRight: 6,
+                                      }}
+                                      onPress={() =>
+                                        handleQuantityChange(eq.id, val)
+                                      }
+                                    >
+                                      <Text
+                                        style={{
+                                          color:
+                                            selectedQuantity === val
+                                              ? "#fff"
+                                              : "#1e293b",
+                                        }}
+                                      >
+                                        {val}
+                                      </Text>
+                                    </TouchableOpacity>
+                                  ))}
+                                  <TouchableOpacity
+                                    style={{
+                                      backgroundColor: "#f1f5f9",
+                                      borderRadius: 6,
+                                      paddingHorizontal: 10,
+                                      paddingVertical: 4,
+                                    }}
+                                    onPress={() =>
+                                      handleQuantityChange(eq.id, 1)
+                                    }
+                                  >
+                                    <Text style={{ color: "#1e293b" }}>
+                                      Custom
+                                    </Text>
+                                  </TouchableOpacity>
+                                </View>
+                              )}
+                            </View>
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  fontWeight: "600",
+                                  color: "#1e293b",
+                                  marginRight: 8,
+                                }}
+                              >
+                                {selectedQuantity}
+                              </Text>
+                              <TouchableOpacity
+                                style={{ marginLeft: 8 }}
+                                onPress={() =>
+                                  setSelectedItems((prev) =>
+                                    prev.filter((i) => i.equipment.id !== eq.id)
+                                  )
+                                }
+                              >
+                                <MinusIcon size={18} color="#ef4444" />
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        );
+                      })}
+                  </View>
+                );
+              })}
           </ScrollView>
 
-          {selectedItems.length > 0 && (
-            <View style={styles.modalFooter}>
-              <View style={styles.selectedSummary}>
-                <Text style={styles.selectedCount}>
-                  {selectedItems.length} item
-                  {selectedItems.length !== 1 ? "s" : ""} selected
-                </Text>
-                <Text style={styles.totalQuantity}>
-                  Total:{" "}
-                  {selectedItems.reduce((sum, item) => sum + item.quantity, 0)}{" "}
-                  units
-                </Text>
-              </View>
-              <Button
-                onPress={handleAssignEquipment}
-                disabled={assignEquipment.isPending}
-                style={styles.addButton}
-              >
-                <Text style={styles.addButtonText}>
-                  {assignEquipment.isPending
-                    ? "Adding..."
-                    : `Add ${selectedItems.length} Item${selectedItems.length !== 1 ? "s" : ""}`}
-                </Text>
-              </Button>
-            </View>
-          )}
+          {/* Footer with View Selected and Place buttons */}
+          <View
+            style={{
+              flexDirection: "row",
+              padding: 16,
+              backgroundColor: "#fff",
+              borderTopWidth: 1,
+              borderTopColor: "#e5e7eb",
+              paddingBottom: 40,
+            }}
+          >
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                backgroundColor: "#fff",
+                borderWidth: 1,
+                borderColor: Colors.light.primary,
+                borderRadius: 8,
+                marginRight: 8,
+                padding: 12,
+                alignItems: "center",
+              }}
+              onPress={() => {}}
+            >
+              <Text style={{ color: Colors.light.primary, fontWeight: "600" }}>
+                View Selected ({selectedItems.length})
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                backgroundColor: Colors.light.primary,
+                borderRadius: 8,
+                padding: 12,
+                alignItems: "center",
+              }}
+              onPress={handleAssignEquipment}
+              disabled={assignEquipment.isPending}
+            >
+              <Text style={{ color: "#fff", fontWeight: "600" }}>Place</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
 

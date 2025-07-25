@@ -1982,7 +1982,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNSVG (15.8.0):
+  - RNSVG (15.12.0):
     - React-Core
   - SDWebImage (5.19.7):
     - SDWebImage/Core (= 5.19.7)
@@ -2503,7 +2503,7 @@ SPEC CHECKSUMS:
   RNImageCropPicker: 67035f598b8894fee90e3b1518fd4ea37df775c2
   RNReanimated: 82bf292e3c590d2d9886039f83e1baf0c1b2cdc4
   RNScreens: 295d9c0aaeb7f680d03d7e9b476569a4959aae89
-  RNSVG: 8542aa11770b27563714bbd8494a8436385fc85f
+  RNSVG: df335373ea2cb29876864e6a2ea8c86aad305838
   SDWebImage: 8a6b7b160b4d710e2a22b6900e25301075c34cb3
   SDWebImageAVIFCoder: 00310d246aab3232ce77f1d8f0076f8c4b021d90
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
