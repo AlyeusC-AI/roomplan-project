@@ -229,6 +229,26 @@ export class EquipmentController {
     );
   }
 
+  @Get('assignment/:id/status-history')
+  @ApiOperation({ summary: 'Get equipment assignment status change history' })
+  @ApiParam({ name: 'id', description: 'Equipment Assignment ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return equipment assignment status change history.',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Equipment assignment not found.' })
+  getEquipmentStatusChangeHistory(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ): Promise<any[]> {
+    return this.equipmentService.getEquipmentStatusChangeHistory(
+      id,
+      req.user.userId,
+    );
+  }
+
   @Get(':id/history')
   @ApiOperation({ summary: 'Get equipment assignment history' })
   @ApiParam({ name: 'id', description: 'Equipment ID' })

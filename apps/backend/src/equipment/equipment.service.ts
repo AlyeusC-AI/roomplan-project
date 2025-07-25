@@ -394,7 +394,10 @@ export class EquipmentService {
       );
     }
 
-    return this.prisma.equipmentProject.update({
+    const oldStatus = assignment.status;
+
+    // Update the assignment status
+    const updatedAssignment = await this.prisma.equipmentProject.update({
       where: { id: assignmentId },
       data: { status },
       include: {
@@ -410,6 +413,18 @@ export class EquipmentService {
         },
       },
     });
+
+    // Log the status change
+    await this.prisma.equipmentStatusChange.create({
+      data: {
+        equipmentProjectId: assignmentId,
+        oldStatus,
+        newStatus: status,
+        changedByUserId: userId,
+      },
+    });
+
+    return updatedAssignment;
   }
 
   async getEquipmentHistory(
@@ -517,6 +532,52 @@ export class EquipmentService {
         },
       },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getEquipmentStatusChangeHistory(
+    assignmentId: string,
+    userId: string,
+  ): Promise<any[]> {
+    const assignment = await this.prisma.equipmentProject.findUnique({
+      where: { id: assignmentId },
+      include: {
+        equipment: true,
+      },
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Equipment assignment not found');
+    }
+
+    // Check if user has permission
+    const member = await this.prisma.organizationMember.findFirst({
+      where: {
+        organizationId: assignment.equipment.organizationId,
+        userId,
+        status: MemberStatus.ACTIVE,
+      },
+    });
+
+    if (!member) {
+      throw new BadRequestException(
+        'You do not have permission to view equipment status history in this organization',
+      );
+    }
+
+    return this.prisma.equipmentStatusChange.findMany({
+      where: { equipmentProjectId: assignmentId },
+      include: {
+        changedByUser: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { changedAt: 'desc' },
     });
   }
 }

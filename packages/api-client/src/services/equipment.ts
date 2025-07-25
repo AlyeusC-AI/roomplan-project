@@ -172,6 +172,12 @@ class EquipmentService {
     );
   }
 
+  async getEquipmentStatusChangeHistory(assignmentId: string) {
+    return apiClient.get<any[]>(
+      `/equipment/assignment/${assignmentId}/status-history`
+    );
+  }
+
   async getEquipmentHistory(equipmentId: string) {
     return apiClient.get<EquipmentProject[]>(
       `/equipment/${equipmentId}/history`

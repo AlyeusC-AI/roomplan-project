@@ -126,6 +126,15 @@ export function useUpdateEquipmentAssignmentStatus() {
   });
 }
 
+export function useGetEquipmentStatusChangeHistory(assignmentId: string) {
+  return useQuery({
+    queryKey: ["equipment-status-history", assignmentId],
+    queryFn: () =>
+      equipmentService.getEquipmentStatusChangeHistory(assignmentId),
+    enabled: !!assignmentId,
+  });
+}
+
 export function useGetEquipmentHistory(equipmentId: string) {
   return useQuery({
     queryKey: ["equipment-history", equipmentId],

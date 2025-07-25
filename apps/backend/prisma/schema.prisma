@@ -33,13 +33,14 @@ model User {
   calendarEventReminders  CalendarEventReminder[]
 
   // Add direct many-to-many relationship with Project
-  projects         Project[]          @relation("ProjectMembers")
-  comments         Comment[]
-  images           Image[]
-  chatMessages     ChatMessage[]
-  chatParticipants ChatParticipant[]
-  Notification     Notification[]
-  EquipmentProject EquipmentProject[]
+  projects              Project[]               @relation("ProjectMembers")
+  comments              Comment[]
+  images                Image[]
+  chatMessages          ChatMessage[]
+  chatParticipants      ChatParticipant[]
+  Notification          Notification[]
+  EquipmentProject      EquipmentProject[]
+  EquipmentStatusChange EquipmentStatusChange[]
 }
 
 model Organization {
@@ -446,16 +447,34 @@ model EquipmentProject {
   quantity    Int
   userId      String?
   user        User?     @relation(fields: [userId], references: [id])
-  status      String    @default("ACTIVE") // ACTIVE, INACTIVE, REMOVED
+  status      String    @default("PLACED") // PLACED, ACTIVE, REMOVED
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   roomId      String?
   room        Room?     @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
+  // Status change history
+  statusChanges EquipmentStatusChange[]
+
   @@index([equipmentId])
   @@index([projectId])
   @@index([userId])
   @@index([status])
+}
+
+model EquipmentStatusChange {
+  id                 String           @id @default(uuid())
+  equipmentProjectId String
+  equipmentProject   EquipmentProject @relation(fields: [equipmentProjectId], references: [id], onDelete: Cascade)
+  oldStatus          String?
+  newStatus          String
+  changedByUserId    String
+  changedByUser      User             @relation(fields: [changedByUserId], references: [id])
+  changedAt          DateTime         @default(now())
+  notes              String?
+
+  @@index([equipmentProjectId])
+  @@index([changedByUserId])
 }
 
 model CalendarEvent {

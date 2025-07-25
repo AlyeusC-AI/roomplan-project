@@ -31,6 +31,7 @@ import {
   useAssignEquipment,
   useRemoveEquipmentAssignment,
   useUpdateEquipmentAssignmentStatus,
+  useGetEquipmentStatusChangeHistory,
   Equipment,
   EquipmentProject,
 } from "@service-geek/api-client";
@@ -173,6 +174,8 @@ export default function EquipmentTab({
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [selectedAssignment, setSelectedAssignment] =
     useState<EquipmentProject | null>(null);
+  const [selectedAssignmentForHistory, setSelectedAssignmentForHistory] =
+    useState<EquipmentProject | null>(null);
   const [filterCategory, setFilterCategory] = useState<string | undefined>(
     undefined
   );
@@ -190,6 +193,11 @@ export default function EquipmentTab({
   const removeAssignment = useRemoveEquipmentAssignment();
   const updateAssignmentStatus = useUpdateEquipmentAssignmentStatus();
   const { data: categories = [] } = useGetEquipmentCategories();
+
+  // Status change history
+  const { data: statusChangeHistoryResponse } =
+    useGetEquipmentStatusChangeHistory(selectedAssignmentForHistory?.id || "");
+  const statusChangeHistory = statusChangeHistoryResponse?.data || [];
 
   // Filter equipment based on search query
   const filteredEquipment = useMemo(() => {
@@ -369,6 +377,7 @@ export default function EquipmentTab({
       toast.success(`Assignment status updated to ${newStatus}`);
       setShowOptionsModal(false);
       setSelectedAssignment(null);
+      setOptionsAssignment(null);
     } catch (error: any) {
       if (error?.response?.data?.message) {
         toast.error(error.response.data.message);
@@ -377,6 +386,17 @@ export default function EquipmentTab({
       }
       console.error("Error updating assignment status:", error);
     }
+  };
+
+  // Handle opening history modal
+  const handleOpenHistory = (assignment: EquipmentProject) => {
+    console.log("Opening history for assignment:", assignment);
+    console.log("Equipment:", assignment.equipment);
+    Alert.alert("Debug", "History button clicked!");
+    setSelectedEquipment(assignment.equipment || null);
+    setSelectedAssignmentForHistory(assignment);
+    setShowHistoryModal(true);
+    setOptionsAssignment(null);
   };
 
   return (
@@ -425,10 +445,7 @@ export default function EquipmentTab({
                       <TouchableOpacity
                         style={styles.equipmentInfoContainer}
                         onPress={() => {
-                          if (assignment.equipment) {
-                            setSelectedEquipment(assignment.equipment);
-                            setShowHistoryModal(true);
-                          }
+                          handleOpenHistory(assignment);
                         }}
                       >
                         <View style={styles.equipmentInfo}>
@@ -834,6 +851,64 @@ export default function EquipmentTab({
               <Text style={styles.modalSubtitle}>
                 {selectedEquipment?.name}
               </Text>
+
+              {/* Status Change History */}
+              {selectedAssignmentForHistory && (
+                <View style={{ marginBottom: 16 }}>
+                  <Text style={styles.historySectionTitle}>Status Changes</Text>
+                  <ScrollView style={styles.historyList}>
+                    {statusChangeHistory.length > 0 ? (
+                      statusChangeHistory.map((change: any) => (
+                        <View key={change.id} style={styles.historyItem}>
+                          <View style={styles.historyInfo}>
+                            <View style={styles.historyHeader}>
+                              <Text style={styles.historyStatusChange}>
+                                {change.oldStatus || "Initial"} →{" "}
+                                {change.newStatus}
+                              </Text>
+                              <View
+                                style={[
+                                  styles.statusBadge,
+                                  change.newStatus === "PLACED"
+                                    ? styles.placedStatusBadge
+                                    : change.newStatus === "ACTIVE"
+                                      ? styles.activeStatusBadge
+                                      : styles.removedStatusBadge,
+                                ]}
+                              >
+                                <Text style={styles.statusText}>
+                                  {change.newStatus}
+                                </Text>
+                              </View>
+                            </View>
+                            <Text style={styles.historyDate}>
+                              Changed:{" "}
+                              {new Date(change.changedAt).toLocaleDateString()}{" "}
+                              at{" "}
+                              {new Date(change.changedAt).toLocaleTimeString()}
+                            </Text>
+                            {change.changedByUser && (
+                              <Text style={styles.historyUser}>
+                                By: {change.changedByUser.firstName}{" "}
+                                {change.changedByUser.lastName}
+                              </Text>
+                            )}
+                          </View>
+                        </View>
+                      ))
+                    ) : (
+                      <View style={styles.historyItem}>
+                        <Text style={styles.historyDate}>
+                          No status changes recorded
+                        </Text>
+                      </View>
+                    )}
+                  </ScrollView>
+                </View>
+              )}
+
+              {/* Assignment History */}
+              <Text style={styles.historySectionTitle}>Assignment History</Text>
               <ScrollView style={styles.historyList}>
                 {(
                   selectedEquipment as EquipmentWithHistory
@@ -936,9 +1011,7 @@ export default function EquipmentTab({
             <TouchableOpacity
               style={styles.optionItem}
               onPress={() => {
-                setSelectedEquipment(optionsAssignment?.equipment || null);
-                setShowHistoryModal(true);
-                setOptionsAssignment(null);
+                handleOpenHistory(optionsAssignment!);
               }}
             >
               <Text style={styles.optionText}>View History</Text>
@@ -1228,6 +1301,10 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     overflow: "hidden",
   },
+  modalBody: {
+    padding: 16,
+    maxHeight: 400,
+  },
   modalSubtitle: {
     fontSize: 16,
     fontWeight: "600",
@@ -1268,6 +1345,17 @@ const styles = StyleSheet.create({
   historyUser: {
     fontSize: 12,
     color: "#64748b",
+  },
+  historyStatusChange: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1e293b",
+  },
+  historySectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1e293b",
+    marginBottom: 8,
   },
   removedHistoryItem: {
     opacity: 0.7,
@@ -1330,8 +1418,11 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    // paddingVertical: 4,
     borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
   },
   placedStatusBadge: {
     backgroundColor: "#d1fae5",
