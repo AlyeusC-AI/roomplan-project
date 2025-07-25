@@ -170,7 +170,14 @@ export default function Notes() {
       style={{ flex: 1 }}
       keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
     >
-      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{
+          padding: 16,
+          paddingTop: 32,
+          backgroundColor: "#F8FAFC",
+        }}
+      >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           {roomsLoading ? (
             <View

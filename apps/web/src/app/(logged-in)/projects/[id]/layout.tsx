@@ -212,8 +212,8 @@ export default function Layout({ children }: React.PropsWithChildren) {
             </div>
           </div>
 
-          <div className='mb-5'>
-            <h1 className='text-[40px] font-bold capitalize tracking-tight'>
+          <div className='mb-3'>
+            <h1 className='text-3xl font-bold capitalize tracking-tight'>
               {projectData?.name}
             </h1>
             {projectData?.location && (

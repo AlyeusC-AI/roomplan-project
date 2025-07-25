@@ -1182,7 +1182,7 @@ export default function ProjectOverview() {
             {/* <View style={styles.actionButtonGroup}> */}
             <View style={[styles.actionButtonCard, { marginTop: 16 }]}>
               <TouchableOpacity
-                className="bg-white rounded-lg w-full mb-2"
+                className="bg-white rounded-lg w-full"
                 onPress={() => {
                   router.push({
                     pathname: "./lidar/rooms",
@@ -1274,7 +1274,7 @@ export default function ProjectOverview() {
                           style={{
                             // backgroundColor: "white",
                             // borderRadius: 999,
-                            padding: 10,
+                            padding: 18,
                             marginBottom: 6,
                           }}
                         >
@@ -1291,7 +1291,7 @@ export default function ProjectOverview() {
               </View>
             </Card>
 
-            <View className="w-full  mb-20 mt-4">
+            <View className="w-full  mb-20 mt-8">
               {/* Enhanced Toggle between Rooms and Chambers */}
               <View style={styles.toggleContainer}>
                 <View style={styles.toggleRow}>
@@ -1962,7 +1962,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 24,
+    marginBottom: 12,
     position: "relative",
   },
   toggleRow: {

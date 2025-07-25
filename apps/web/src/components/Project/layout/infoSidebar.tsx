@@ -13,6 +13,7 @@ import DescriptionCard from "./DescriptionCard";
 import TasksCard from "./TasksCard";
 import ProjectConversationCard from "./ProjectConversationCard";
 import clsx from "clsx";
+import FullScreenChatRoom from "../Chat/fullScreenChatRoom";
 
 export default function InfoSidebar({
   isCollapsed,
@@ -58,7 +59,8 @@ export default function InfoSidebar({
             <div className='rounded-lg border border-border bg-background p-4'>
               <TasksCard />
             </div>
-            <div className='rounded-lg border border-border bg-background p-4'>
+            <div className='flex flex-col gap-4 rounded-lg border border-border bg-background p-4'>
+              <FullScreenChatRoom projectId={projectData.id} />
               <ProjectConversationCard projectId={projectData.id} />
             </div>
           </div>
