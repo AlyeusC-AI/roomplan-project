@@ -19,6 +19,7 @@ import {
   Filter,
   X,
   Check,
+  MoreHorizontal,
 } from "lucide-react-native";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ const SearchIcon = Search as any;
 const FilterIcon = Filter as any;
 const XIcon = X as any;
 const CheckIcon = Check as any;
+const MoreHorizontalIcon = MoreHorizontal as any;
 
 interface EquipmentWithHistory extends Equipment {
   currentAssignments?: EquipmentProject[];
@@ -170,6 +172,9 @@ export default function EquipmentTab({
   const [filterCategory, setFilterCategory] = useState<string | undefined>(
     undefined
   );
+  const [optionsAssignment, setOptionsAssignment] = useState<
+    null | (typeof currentRoomAssignments)[0]
+  >(null);
 
   // API hooks
   const { data: equipment = [] } = useGetEquipment({
@@ -343,11 +348,21 @@ export default function EquipmentTab({
       >
         {/* Current Room Equipment */}
         {currentRoomAssignments.length > 0 ? (
-          <Card style={styles.sectionCard}>
-            <CardHeader>
-              <CardTitle>Current Equipment</CardTitle>
-            </CardHeader>
-            <CardContent>
+          // Removed Card wrapper
+          <View style={styles.sectionCard}>
+            <View
+              style={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "600",
+                  color: "#1e293b",
+                  marginBottom: 12,
+                }}
+              >
+                Current Equipment
+              </Text>
               {currentRoomAssignments.map((assignment) => (
                 <View key={assignment.id} style={styles.equipmentItem}>
                   <TouchableOpacity
@@ -369,33 +384,17 @@ export default function EquipmentTab({
                     </View>
                     <View style={styles.equipmentActions}>
                       <TouchableOpacity
-                        style={styles.historyButton}
-                        onPress={() => {
-                          if (assignment.equipment) {
-                            setSelectedEquipment(assignment.equipment);
-                            setShowHistoryModal(true);
-                          }
-                        }}
+                        style={styles.optionsButton}
+                        onPress={() => setOptionsAssignment(assignment)}
                       >
-                        <ClockIcon size={16} color="#64748b" />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.removeButton}
-                        onPress={() =>
-                          handleRemoveEquipment(
-                            assignment.id,
-                            assignment.equipment?.name || "Equipment"
-                          )
-                        }
-                      >
-                        <MinusIcon size={16} color="#ef4444" />
+                        <MoreHorizontalIcon size={20} color="#64748b" />
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>
                 </View>
               ))}
-            </CardContent>
-          </Card>
+            </View>
+          </View>
         ) : (
           <Card style={styles.sectionCard}>
             <CardContent style={styles.emptyState} className="pt-4">
@@ -441,7 +440,7 @@ export default function EquipmentTab({
             <Text style={styles.modalTitle}>Equipment</Text>
             <View style={styles.placeholder} />
           </View>
-
+          <EquipmentCalculationsHeader />
           <ScrollView style={styles.modalBody}>
             {/* Group equipment by categoryId and map to category name */}
             {Object.entries(
@@ -549,27 +548,39 @@ export default function EquipmentTab({
                     console.log(`Added 1 ${firstAvailable.name}`);
                   }
                 };
+                // Get selected items for this category
+                const selectedForCategory = selectedItems.filter((item) => {
+                  const cat =
+                    categories.find(
+                      (c: { id: string; name: string }) =>
+                        c.id === item.equipment.categoryId
+                    )?.name || "Other";
+                  return cat === category;
+                });
                 return (
                   <View key={category} style={{ marginBottom: 24 }}>
-                    {/* Category Header */}
+                    {/* Category Header Row: left is flex column, right is add button */}
                     <View
                       style={{
                         flexDirection: "row",
                         alignItems: "center",
+                        justifyContent: "space-between",
                         marginBottom: 8,
+                        gap: 8,
                       }}
                     >
-                      <Text
-                        style={{ fontWeight: "700", fontSize: 16, flex: 1 }}
-                      >
-                        {category}
-                      </Text>
-                      <View style={{ flex: 1, marginRight: 8 }}>
+                      {/* Left: flex column */}
+                      <View style={{ flex: 1, flexDirection: "column" }}>
+                        <Text style={{ fontWeight: "700", fontSize: 16 }}>
+                          {category}
+                        </Text>
                         <View
                           style={{
                             height: 6,
                             backgroundColor: "#e5e7eb",
                             borderRadius: 3,
+                            marginBottom: 2,
+                            marginTop: 4,
                           }}
                         >
                           <View
@@ -581,127 +592,83 @@ export default function EquipmentTab({
                             }}
                           />
                         </View>
-                        <Text style={{ fontSize: 11, color: "#64748b" }}>
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            color: "#64748b",
+                            marginTop: 2,
+                          }}
+                        >
                           {placed} of {total} units placed
                         </Text>
                       </View>
+                      {/* Right: add button */}
                       <TouchableOpacity
                         style={{
                           backgroundColor: Colors.light.primary,
                           borderRadius: 8,
-                          padding: 4,
+                          padding: 8,
+                          height: 32,
+                          width: 32,
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
                         onPress={handleAddOne}
                       >
-                        <PlusIcon size={18} color="#fff" />
+                        <PlusIcon size={24} color="#fff" />
                       </TouchableOpacity>
                     </View>
-                    {/* Show only selected equipment for this category */}
-                    {selectedItems
-                      .filter((item) => {
-                        const cat =
-                          categories.find(
-                            (c: { id: string; name: string }) =>
-                              c.id === item.equipment.categoryId
-                          )?.name || "Other";
-                        return cat === category;
-                      })
-                      .map((item) => {
-                        const eq = item.equipment;
-                        const selectedQuantity = item.quantity;
-                        return (
-                          <View
-                            key={eq.id}
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              backgroundColor: "#fff",
-                              borderRadius: 8,
-                              borderWidth: 1,
-                              borderColor: "#e5e7eb",
-                              marginBottom: 8,
-                              padding: 10,
-                            }}
-                          >
-                            <Image
-                              source={icon}
-                              style={{ width: 24, height: 24, marginRight: 8 }}
-                            />
-                            <View style={{ flex: 1 }}>
-                              <Text
-                                style={{ fontWeight: "600", color: "#1e293b" }}
-                              >
-                                {eq.name}
-                              </Text>
-                              {/* Special UI for Dehumidifiers (pints selector) */}
-                              {category === "Dehumidifiers" && (
-                                <View
-                                  style={{ flexDirection: "row", marginTop: 4 }}
-                                >
-                                  {[60, 120, 180].map((val) => (
-                                    <TouchableOpacity
-                                      key={val}
-                                      style={{
-                                        backgroundColor:
-                                          selectedQuantity === val
-                                            ? Colors.light.primary
-                                            : "#f1f5f9",
-                                        borderRadius: 6,
-                                        paddingHorizontal: 10,
-                                        paddingVertical: 4,
-                                        marginRight: 6,
-                                      }}
-                                      onPress={() =>
-                                        handleQuantityChange(eq.id, val)
-                                      }
-                                    >
-                                      <Text
-                                        style={{
-                                          color:
-                                            selectedQuantity === val
-                                              ? "#fff"
-                                              : "#1e293b",
-                                        }}
-                                      >
-                                        {val}
-                                      </Text>
-                                    </TouchableOpacity>
-                                  ))}
-                                  <TouchableOpacity
-                                    style={{
-                                      backgroundColor: "#f1f5f9",
-                                      borderRadius: 6,
-                                      paddingHorizontal: 10,
-                                      paddingVertical: 4,
-                                    }}
-                                    onPress={() =>
-                                      handleQuantityChange(eq.id, 1)
-                                    }
-                                  >
-                                    <Text style={{ color: "#1e293b" }}>
-                                      Custom
-                                    </Text>
-                                  </TouchableOpacity>
-                                </View>
-                              )}
-                            </View>
+                    {/* Selected Items List for this category */}
+                    {selectedForCategory.length > 0 && (
+                      <View style={{ marginBottom: 8 }}>
+                        {selectedForCategory.map((item, idx) => {
+                          const eq = item.equipment;
+                          const selectedQuantity = item.quantity;
+                          return (
                             <View
+                              key={eq.id}
                               style={{
                                 flexDirection: "row",
                                 alignItems: "center",
+                                justifyContent: "space-between",
+                                backgroundColor: "#fff",
+                                borderRadius: 8,
+                                borderWidth: 1,
+                                borderColor: "#e5e7eb",
+                                marginBottom: 4,
+                                padding: 10,
                               }}
                             >
-                              <Text
+                              <View
                                 style={{
-                                  fontWeight: "600",
-                                  color: "#1e293b",
-                                  marginRight: 8,
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  flex: 1,
                                 }}
                               >
-                                {selectedQuantity}
-                              </Text>
+                                <Image
+                                  source={icon}
+                                  style={{
+                                    width: 26,
+                                    height: 26,
+                                    marginRight: 8,
+                                  }}
+                                />
+                                <Text
+                                  style={{
+                                    fontWeight: "600",
+                                    color: "#1e293b",
+                                  }}
+                                >
+                                  {`${category} ${idx + 1}`}
+                                </Text>
+                                {/* <Text
+                                  style={{ marginLeft: 8, color: "#64748b" }}
+                                >
+                                  x{selectedQuantity}
+                                </Text> */}
+                              </View>
                               <TouchableOpacity
-                                style={{ marginLeft: 8 }}
                                 onPress={() =>
                                   setSelectedItems((prev) =>
                                     prev.filter((i) => i.equipment.id !== eq.id)
@@ -711,9 +678,11 @@ export default function EquipmentTab({
                                 <MinusIcon size={18} color="#ef4444" />
                               </TouchableOpacity>
                             </View>
-                          </View>
-                        );
-                      })}
+                          );
+                        })}
+                      </View>
+                    )}
+                    {/* Optionally, you can show the add UI for this category here if needed */}
                   </View>
                 );
               })}
@@ -839,6 +808,49 @@ export default function EquipmentTab({
             </View>
           </View>
         </View>
+      </Modal>
+
+      {/* Options Modal for Equipment Actions */}
+      <Modal
+        visible={!!optionsAssignment}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOptionsAssignment(null)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPressOut={() => setOptionsAssignment(null)}
+        >
+          <View style={styles.optionsModal}>
+            <TouchableOpacity
+              style={styles.optionItem}
+              onPress={() => {
+                setSelectedEquipment(optionsAssignment?.equipment || null);
+                setShowHistoryModal(true);
+                setOptionsAssignment(null);
+              }}
+            >
+              <Text style={styles.optionText}>View History</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.optionItem}
+              onPress={() => {
+                if (optionsAssignment) {
+                  handleRemoveEquipment(
+                    optionsAssignment.id,
+                    optionsAssignment.equipment?.name || "Equipment"
+                  );
+                }
+                setOptionsAssignment(null);
+              }}
+            >
+              <Text style={[styles.optionText, { color: "#ef4444" }]}>
+                Remove
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -1206,5 +1218,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#94a3b8",
     marginLeft: 10,
+  },
+  optionsButton: {
+    padding: 8,
+  },
+  optionsModal: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    position: "absolute",
+    bottom: 40,
+    left: 20,
+    right: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  optionItem: {
+    paddingVertical: 12,
+  },
+  optionText: {
+    fontSize: 16,
+    color: "#1e293b",
+    textAlign: "center",
   },
 });
