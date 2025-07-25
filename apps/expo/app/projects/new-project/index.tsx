@@ -199,7 +199,7 @@ export default function NewProject() {
         </View>
 
         <KeyboardAvoidingView style={styles.content}>
-          <View style={{ gap: 24 }}>
+          <View style={{ gap: 16, marginTop: 8 }}>
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Client Name</Text>
 

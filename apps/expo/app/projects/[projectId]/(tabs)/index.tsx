@@ -1291,7 +1291,7 @@ export default function ProjectOverview() {
               </View>
             </Card>
 
-            <View className="w-full  mb-20 mt-4">
+            <View className="w-full  mb-20 mt-8">
               {/* Enhanced Toggle between Rooms and Chambers */}
               <View style={styles.toggleContainer}>
                 <View style={styles.toggleRow}>
