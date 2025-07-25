@@ -266,7 +266,7 @@ export class RoomsService {
     }>
   > {
     let roomId = data.roomId;
-    if (!roomId) {
+    if (!roomId && !data.noteId) {
       const room = await this.prisma.room.findFirst({
         where: {
           name: 'Untitled Room',

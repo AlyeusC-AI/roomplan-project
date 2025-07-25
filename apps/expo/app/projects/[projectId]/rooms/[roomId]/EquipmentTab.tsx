@@ -392,7 +392,6 @@ export default function EquipmentTab({
   const handleOpenHistory = (assignment: EquipmentProject) => {
     console.log("Opening history for assignment:", assignment);
     console.log("Equipment:", assignment.equipment);
-    Alert.alert("Debug", "History button clicked!");
     setSelectedEquipment(assignment.equipment || null);
     setSelectedAssignmentForHistory(assignment);
     setShowHistoryModal(true);
@@ -1300,10 +1299,6 @@ const styles = StyleSheet.create({
     width: "90%",
     maxWidth: 400,
     overflow: "hidden",
-  },
-  modalBody: {
-    padding: 16,
-    maxHeight: 400,
   },
   modalSubtitle: {
     fontSize: 16,

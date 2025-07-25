@@ -128,6 +128,9 @@ const RoomReadingItem = ({
     }
   };
 
+  // Only show offline readings when offline
+  const visibleOfflineReadings = isOffline ? offlineReadings : [];
+
   return (
     <View className="mt-3">
       <HStack
@@ -205,7 +208,7 @@ const RoomReadingItem = ({
               <ActivityIndicator />
             </Center>
           ) : roomReadings?.data?.length === 0 &&
-            offlineReadings.length === 0 ? (
+            visibleOfflineReadings.length === 0 ? (
             <Center w="full" py={4}>
               <Heading size="sm" color="gray.400">
                 No readings yet
@@ -232,8 +235,8 @@ const RoomReadingItem = ({
                 </View>
               ))}
 
-              {/* Show offline new readings */}
-              {offlineReadings
+              {/* Show offline new readings only when offline */}
+              {visibleOfflineReadings
                 .filter((reading) => reading.type === "new")
                 .map((reading) => (
                   <RoomReading
@@ -298,21 +301,15 @@ export default function RoomReadings() {
   if (!loading && rooms?.length === 0) {
     return (
       <Empty
-        title="There are no rooms yet"
-        description="Start by creating a new room to add readings."
+        title="No Rooms"
+        description="Create a room to add readings to it."
         buttonText="Create a room"
+        icon={<BuildingComponent height={50} width={50} />}
+        secondaryIcon={
+          <PlusComponent height={20} width={20} color="#fff" className="ml-4" />
+        }
         onPress={onCreateRoom}
-        icon={<BuildingComponent size={64} />}
-        secondaryIcon={<PlusComponent color="#FFF" height={24} width={24} />}
       />
-    );
-  }
-
-  if (loading) {
-    return (
-      <View className="flex items-center justify-center h-full w-full">
-        <ActivityIndicator />
-      </View>
     );
   }
 
@@ -320,142 +317,87 @@ export default function RoomReadings() {
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 120 : 0}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <Box flex={1} bg="gray.50" pt={8}>
-          <Box
-            px={4}
-            py={3}
-            bg="white"
-            borderBottomWidth={1}
-            borderBottomColor="gray.100"
-          >
-            <VStack space={3}>
-              <HStack justifyContent="space-between" alignItems="center">
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-                >
-                  <Heading size="lg">Room Readings</Heading>
-                  {isOffline && (
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        backgroundColor: "#fef2f2",
-                        paddingHorizontal: 8,
-                        paddingVertical: 4,
-                        borderRadius: 12,
-                        gap: 4,
-                      }}
-                    >
-                      <WifiOffComponent size={16} color="#ef4444" />
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          color: "#ef4444",
-                          fontWeight: "500",
-                        }}
-                      >
-                        Offline
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                <AddRoomButton showText={false} size="sm" />
-              </HStack>
-
-              <Pressable
-                onPress={() => setShowRoomSelector(!showRoomSelector)}
-                className="bg-blue-50 px-4 py-3 rounded-lg flex-row items-center justify-between"
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "#F8FAFC",
+          paddingTop: 32,
+        }}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={{ flex: 1 }}>
+            {/* Header */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 16,
+                paddingHorizontal: 16,
+              }}
+            >
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
               >
-                <Text className="text-blue-700 font-medium">
-                  {selectedRoom === "all"
-                    ? "View All"
-                    : rooms?.find((r) => r.id === selectedRoom)?.name}
+                <Text
+                  style={{
+                    fontSize: 24,
+                    fontWeight: "bold",
+                    color: "#1e293b",
+                    paddingTop: 8,
+                  }}
+                >
+                  Readings
                 </Text>
-                <ChevronRightComponent color="#1e40af" size={18} />
-              </Pressable>
-
-              {showRoomSelector && (
-                <Box bg="white" rounded="lg" shadow={2}>
-                  <Pressable
-                    onPress={() => {
-                      setSelectedRoom("all");
-                      setShowRoomSelector(false);
+                {isOffline && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      backgroundColor: "#fef2f2",
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      borderRadius: 12,
+                      gap: 4,
                     }}
-                    className={`px-4 py-3 border-b border-gray-100 ${
-                      selectedRoom === "all" ? "bg-blue-50" : ""
-                    }`}
                   >
+                    <WifiOffComponent size={16} color="#ef4444" />
                     <Text
-                      className={`${
-                        selectedRoom === "all"
-                          ? "text-blue-700 font-medium"
-                          : "text-gray-700"
-                      }`}
-                    >
-                      View All
-                    </Text>
-                  </Pressable>
-                  {rooms?.map((room) => (
-                    <Pressable
-                      key={room.id}
-                      onPress={() => {
-                        setSelectedRoom(room.id);
-                        setShowRoomSelector(false);
+                      style={{
+                        fontSize: 12,
+                        color: "#ef4444",
+                        fontWeight: "500",
                       }}
-                      className={`px-4 py-3 border-b border-gray-100 ${
-                        room.id === selectedRoom ? "bg-blue-50" : ""
-                      }`}
                     >
-                      <Text
-                        className={`${
-                          room.id === selectedRoom
-                            ? "text-blue-700 font-medium"
-                            : "text-gray-700"
-                        }`}
-                      >
-                        {room.name}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </Box>
-              )}
-            </VStack>
-          </Box>
+                      Offline
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <AddRoomButton showText={false} size="sm" />
+            </View>
 
-          <FlatList
-            refreshing={loading}
-            data={filteredRooms}
-            keyExtractor={(room) => room.id}
-            renderItem={({ item: room }) => (
-              <RoomReadingItem
-                room={room}
-                key={room.id}
-                onRoomDeleted={() => setRefreshFlag((f) => f + 1)}
-              />
-            )}
-            extraData={refreshFlag}
-            contentContainerStyle={{
-              paddingVertical: 16,
-              paddingHorizontal: 8,
-            }}
-            showsVerticalScrollIndicator={false}
-            w="full"
-            h="full"
-            // nestedScrollEnabled={true}
-            // scrollEnabled={true}
-            // removeClippedSubviews={false}
-            // bounces={true}
-            // overScrollMode="always"
-            // scrollEventThrottle={16}
-            // onScrollBeginDrag={() => {
-            //   Keyboard.dismiss();
-            // }}
-          />
-        </Box>
-      </TouchableWithoutFeedback>
+            {/* Room Readings List */}
+            <FlatList
+              data={filteredRooms}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <RoomReadingItem
+                  room={item}
+                  onRoomDeleted={() => setRefreshFlag((prev) => prev + 1)}
+                />
+              )}
+              contentContainerStyle={{
+                paddingHorizontal: 16,
+                paddingBottom: 32,
+              }}
+              showsVerticalScrollIndicator={false}
+            />
+          </View>
+        </TouchableWithoutFeedback>
+      </View>
     </KeyboardAvoidingView>
   );
 }
