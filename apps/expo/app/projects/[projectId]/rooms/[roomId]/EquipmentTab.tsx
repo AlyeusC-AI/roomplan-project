@@ -9,6 +9,7 @@ import {
   Alert,
   Dimensions,
   Image,
+  RefreshControl, // <-- add this
 } from "react-native";
 import { Text } from "@/components/ui/text";
 import {
@@ -182,12 +183,17 @@ export default function EquipmentTab({
   const [optionsAssignment, setOptionsAssignment] = useState<
     null | (typeof currentRoomAssignments)[0]
   >(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // API hooks
   const { data: equipment = [] } = useGetEquipment({
     categoryId: filterCategory,
   });
-  const { data: assignmentsResponse } = useGetEquipmentAssignments(projectId);
+  const {
+    data: assignmentsResponse,
+    refetch: refetchAssignments,
+    isFetching,
+  } = useGetEquipmentAssignments(projectId);
   const assignments = assignmentsResponse?.data || [];
   const assignEquipment = useAssignEquipment();
   const removeAssignment = useRemoveEquipmentAssignment();
@@ -390,12 +396,16 @@ export default function EquipmentTab({
 
   // Handle opening history modal
   const handleOpenHistory = (assignment: EquipmentProject) => {
-    console.log("Opening history for assignment:", assignment);
-    console.log("Equipment:", assignment.equipment);
     setSelectedEquipment(assignment.equipment || null);
     setSelectedAssignmentForHistory(assignment);
     setShowHistoryModal(true);
     setOptionsAssignment(null);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetchAssignments();
+    setRefreshing(false);
   };
 
   return (
@@ -404,6 +414,12 @@ export default function EquipmentTab({
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing || isFetching}
+            onRefresh={onRefresh}
+          />
+        }
       >
         {/* Current Room Equipment */}
         {currentRoomAssignments.length > 0 ? (
@@ -422,75 +438,70 @@ export default function EquipmentTab({
               >
                 Current Equipment
               </Text>
-              {currentRoomAssignments
-                .filter((assignment) => {
-                  const status = (assignment as any).status || "PLACED";
-                  return status === "PLACED" || status === "ACTIVE";
-                })
-                .map((assignment) => {
-                  const status = (assignment as any).status || "PLACED";
-                  const isPlaced = status === "PLACED";
-                  const isActive = status === "ACTIVE";
-                  const isRemoved = status === "REMOVED";
+              {currentRoomAssignments.map((assignment) => {
+                const status = (assignment as any).status || "PLACED";
+                const isPlaced = status === "PLACED";
+                const isActive = status === "ACTIVE";
+                const isRemoved = status === "REMOVED";
 
-                  return (
-                    <View
-                      key={assignment.id}
-                      style={[
-                        styles.equipmentItem,
-                        isRemoved && styles.removedEquipmentItem,
-                      ]}
+                return (
+                  <View
+                    key={assignment.id}
+                    style={[
+                      styles.equipmentItem,
+                      isRemoved && styles.removedEquipmentItem,
+                    ]}
+                  >
+                    <TouchableOpacity
+                      style={styles.equipmentInfoContainer}
+                      onPress={() => {
+                        handleOpenHistory(assignment);
+                      }}
                     >
-                      <TouchableOpacity
-                        style={styles.equipmentInfoContainer}
-                        onPress={() => {
-                          handleOpenHistory(assignment);
-                        }}
-                      >
-                        <View style={styles.equipmentInfo}>
-                          <View style={styles.equipmentHeader}>
-                            <Text
-                              style={[
-                                styles.equipmentName,
-                                isRemoved && styles.removedText,
-                              ]}
-                            >
-                              {assignment.equipment?.name}
-                            </Text>
-                            <View
-                              style={[
-                                styles.statusBadge,
-                                isPlaced
-                                  ? styles.placedStatusBadge
-                                  : isActive
-                                    ? styles.activeStatusBadge
-                                    : styles.removedStatusBadge,
-                              ]}
-                            >
-                              <Text style={styles.statusText}>{status}</Text>
-                            </View>
-                          </View>
+                      <View style={styles.equipmentInfo}>
+                        <View style={styles.equipmentHeader}>
                           <Text
                             style={[
-                              styles.equipmentQuantity,
+                              styles.equipmentName,
                               isRemoved && styles.removedText,
                             ]}
                           >
-                            Qty: {assignment.quantity}
+                            {assignment.equipment?.name}
                           </Text>
-                        </View>
-                        <View style={styles.equipmentActions}>
-                          <TouchableOpacity
-                            style={styles.optionsButton}
-                            onPress={() => setOptionsAssignment(assignment)}
+                          <View
+                            style={[
+                              styles.statusBadge,
+                              isPlaced
+                                ? styles.placedStatusBadge
+                                : isActive
+                                  ? styles.activeStatusBadge
+                                  : styles.removedStatusBadge,
+                            ]}
                           >
-                            <MoreHorizontalIcon size={20} color="#64748b" />
-                          </TouchableOpacity>
+                            <Text style={styles.statusText}>{status}</Text>
+                          </View>
                         </View>
-                      </TouchableOpacity>
-                    </View>
-                  );
-                })}
+                        <Text
+                          style={[
+                            styles.equipmentQuantity,
+                            isRemoved && styles.removedText,
+                          ]}
+                        >
+                          Qty: {assignment.quantity}
+                        </Text>
+                      </View>
+                      <View style={styles.equipmentActions}>
+                        <TouchableOpacity
+                          style={styles.optionsButton}
+                          onPress={() => setOptionsAssignment(assignment)}
+                        >
+                          <MoreHorizontalIcon size={20} color="#64748b" />
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
             </View>
           </View>
         ) : (
@@ -840,13 +851,13 @@ export default function EquipmentTab({
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
+            <View style={styles.historyModalHeader}>
               <Text style={styles.modalTitle}>Equipment History</Text>
               <TouchableOpacity onPress={() => setShowHistoryModal(false)}>
                 <XIcon size={24} color="#64748b" />
               </TouchableOpacity>
             </View>
-            <View style={styles.modalBody}>
+            <View style={styles.historyModalBody}>
               <Text style={styles.modalSubtitle}>
                 {selectedEquipment?.name}
               </Text>
@@ -1010,7 +1021,10 @@ export default function EquipmentTab({
             <TouchableOpacity
               style={styles.optionItem}
               onPress={() => {
-                handleOpenHistory(optionsAssignment!);
+                setOptionsAssignment(null);
+                setTimeout(() => {
+                  handleOpenHistory(optionsAssignment!);
+                }, 100);
               }}
             >
               <Text style={styles.optionText}>View History</Text>
@@ -1162,6 +1176,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
   },
+  historyModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
   closeButton: {
     padding: 8,
   },
@@ -1176,6 +1200,10 @@ const styles = StyleSheet.create({
   modalBody: {
     flex: 1,
     padding: 16,
+  },
+  historyModalBody: {
+    padding: 16,
+    maxHeight: 400,
   },
   equipmentSelection: {
     marginBottom: 24,

@@ -236,7 +236,7 @@ export class EquipmentService {
     }
 
     // Create equipment project assignment with user tracking
-    return this.prisma.equipmentProject.create({
+    const assignment = await this.prisma.equipmentProject.create({
       data: {
         equipmentId: assignEquipmentDto.equipmentId,
         projectId: assignEquipmentDto.projectId,
@@ -260,6 +260,18 @@ export class EquipmentService {
         },
       },
     });
+
+    // Record the initial status change
+    await this.prisma.equipmentStatusChange.create({
+      data: {
+        equipmentProjectId: assignment.id,
+        oldStatus: null, // Initial assignment, no previous status
+        newStatus: 'PLACED',
+        changedByUserId: userId,
+      },
+    });
+
+    return assignment;
   }
 
   async getEquipmentAssignments(
@@ -294,7 +306,7 @@ export class EquipmentService {
     return this.prisma.equipmentProject.findMany({
       where: {
         projectId,
-        status: { in: ['PLACED', 'ACTIVE'] }, // Return PLACED and ACTIVE assignments
+        // Return all assignments including REMOVED ones
       },
       include: {
         equipment: true,
@@ -343,8 +355,10 @@ export class EquipmentService {
       );
     }
 
+    const oldStatus = assignment.status;
+
     // Soft delete by updating status to REMOVED
-    return this.prisma.equipmentProject.update({
+    const updatedAssignment = await this.prisma.equipmentProject.update({
       where: { id: assignmentId },
       data: { status: 'REMOVED' },
       include: {
@@ -360,6 +374,18 @@ export class EquipmentService {
         },
       },
     });
+
+    // Record the status change
+    await this.prisma.equipmentStatusChange.create({
+      data: {
+        equipmentProjectId: assignmentId,
+        oldStatus,
+        newStatus: 'REMOVED',
+        changedByUserId: userId,
+      },
+    });
+
+    return updatedAssignment;
   }
 
   async updateEquipmentAssignmentStatus(
