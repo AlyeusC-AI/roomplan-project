@@ -199,7 +199,7 @@ export default function NewProject() {
         </View>
 
         <KeyboardAvoidingView style={styles.content}>
-          <View style={{ gap: 16, marginTop: 8 }}>
+          <View style={{ gap: 16 }}>
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Client Name</Text>
 
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: "#1e40af",
     borderColor: "#1e40af",
-    marginTop: 200,
+    marginTop: 16,
     marginHorizontal: 24,
   },
   btnText: {

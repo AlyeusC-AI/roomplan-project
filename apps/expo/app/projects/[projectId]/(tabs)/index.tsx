@@ -1250,6 +1250,7 @@ export default function ProjectOverview() {
                       style={{
                         width: 70,
                         height: 100,
+                        marginRight: 4,
                         // padding: 18,
                       }}
                       onPress={() => {
