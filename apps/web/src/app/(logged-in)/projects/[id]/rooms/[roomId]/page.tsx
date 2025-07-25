@@ -212,32 +212,24 @@ export default function RoomPage() {
               </Dialog>
             </div>
           ) : (
-            <div className='rounded-lg border'>
-              <PhotoList
-                photos={imagesData.data}
-                refetch={refetchImages}
-                hideEmptyRooms={true}
-              />
-            </div>
+            <PhotoList
+              photos={imagesData.data}
+              refetch={refetchImages}
+              hideEmptyRooms={true}
+            />
           )}
         </TabsContent>
 
         <TabsContent value='readings' className='space-y-4'>
-          <div className='rounded-lg border'>
-            <ReadingsRoomTable room={room} />
-          </div>
+          <ReadingsRoomTable room={room} />
         </TabsContent>
 
         <TabsContent value='notes' className='space-y-4'>
-          <div className='rounded-lg border'>
-            <NoteList room={room} />
-          </div>
+          <NoteList room={room} />
         </TabsContent>
 
         <TabsContent value='scope' className='space-y-4'>
-          <div className='rounded-lg border'>
-            <AreasAffected room={room} />
-          </div>
+          <AreasAffected room={room} />
         </TabsContent>
       </Tabs>
     </div>
