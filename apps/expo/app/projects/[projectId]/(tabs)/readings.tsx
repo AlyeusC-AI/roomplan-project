@@ -323,7 +323,7 @@ export default function RoomReadings() {
       keyboardVerticalOffset={Platform.OS === "ios" ? 120 : 0}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <Box flex={1} bg="gray.50">
+        <Box flex={1} bg="gray.50" pt={8}>
           <Box
             px={4}
             py={3}
