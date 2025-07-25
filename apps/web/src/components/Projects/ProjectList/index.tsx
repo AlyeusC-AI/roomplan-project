@@ -35,7 +35,16 @@ import {
   KanbanHeader,
   KanbanProvider,
 } from "@/components/ui/kibo-ui/kanban";
-import { AlertTriangle, ChevronRightIcon, CirclePlus, FileImage, CalendarIcon, X, RotateCw } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronRightIcon,
+  CirclePlus,
+  FileImage,
+  CalendarIcon,
+  X,
+  RotateCw,
+  Search, // <-- Add this import
+} from "lucide-react";
 import { ColumnDef, Row } from "@tanstack/react-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
 import { Badge } from "@components/ui/badge";
@@ -61,11 +70,16 @@ import {
   SelectItem,
   SelectValue,
 } from "@components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@components/ui/popover";
 import { Calendar } from "@components/ui/calendar";
 import { format } from "date-fns";
 import DamageBadge from "@components/Project/DamageBadge";
 import StatusBadge from "@components/Project/StatusBadge";
+import UserAvatar from "@components/DesignSystem/UserAvatar";
 
 export default function ProjectList() {
   const [isCreatingNewProject, setIsCreatingNewProject] = useState(false);
@@ -99,8 +113,12 @@ export default function ProjectList() {
       sortOrder: "desc",
       search: query,
       assigneeIds: filterObj.assigneeIds,
-      startDate: filterObj?.startDate ? filterObj?.startDate?.toISOString() : undefined,
-      endDate: filterObj?.endDate ? filterObj?.endDate?.toISOString() : undefined,
+      startDate: filterObj?.startDate
+        ? filterObj?.startDate?.toISOString()
+        : undefined,
+      endDate: filterObj?.endDate
+        ? filterObj?.endDate?.toISOString()
+        : undefined,
     },
   });
 
@@ -126,7 +144,6 @@ export default function ProjectList() {
     updatePreference({ savedDashboardView: view });
   }
 
-
   const [filterQuery, setFilterQuery] = useState("");
 
   const filterTabsList = [
@@ -146,31 +163,39 @@ export default function ProjectList() {
       label: "Archived",
       value: "Archived",
     },
-  ]
+  ];
+
+  console.log("data", data);
 
   return (
     <>
       <div
         className={cn(
-          "z-10 bg-background lg:pr-6",
+          "z-10 lg:pr-6",
           "md:w-[calc(100vw-var(--sidebar-width)-48px)]"
         )}
       >
         <div className='flex w-full justify-between space-x-6'>
-          <div className='z-10 w-11/12 flex flex-col md:flex-row md:items-center gap-2 space-x-4'>
-            <div className=" space-y-0.5">
-
-              <h2 className='text-2xl md:text-4xl font-bold tracking-tight'>Projects</h2>
+          <div className='z-10 flex w-11/12 flex-col gap-2 space-x-4 md:flex-row md:items-center'>
+            <div className='space-y-0.5'>
+              <h2 className='text-2xl font-bold tracking-tight md:text-4xl'>
+                Projects
+              </h2>
               {/* <p className='hidden text-muted-foreground lg:block'>
               Select a project to manage files and estimates.
             </p> */}
             </div>
-            <Input
-              placeholder="Search projects..."
-              onChange={e => handleSearch(e.target.value)}
-              className="w-full lg:max-w-64 h-10"
-              defaultValue={query}
-            />
+            <div className='relative w-full lg:max-w-64'>
+              <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'>
+                <Search className='h-5 w-5' />
+              </span>
+              <Input
+                placeholder='Search projects...'
+                onChange={(e) => handleSearch(e.target.value)}
+                className='h-10 w-full border border-gray-300 pl-10'
+                defaultValue={query}
+              />
+            </div>
           </div>
           <div className='ml-auto flex min-w-[100px] flex-col space-y-4'>
             <Button onClick={() => setIsCreatingNewProject((i) => !i)}>
@@ -180,15 +205,22 @@ export default function ProjectList() {
           </div>
         </div>
         <div className='mt-5 flex justify-between'>
-          <div className="flex items-center gap-2">
-
+          <div className='flex items-center gap-2'>
             <Tabs
               defaultValue={"all"}
               onValueChange={(e) => changeDashboardView(e)}
             >
               <TabsList className='hidden lg:block'>
                 {filterTabsList.map((tab) => (
-                  <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    style={{
+                      fontSize: "12px",
+                    }}
+                  >
+                    {tab.label}
+                  </TabsTrigger>
                 ))}
               </TabsList>
             </Tabs>
@@ -200,7 +232,9 @@ export default function ProjectList() {
                   ...filterObj,
                   startDate: filterDialogState.startDate,
                   endDate: filterDialogState.endDate,
-                  assigneeIds: filterDialogState.assigneeId ? [filterDialogState.assigneeId] : [],
+                  assigneeIds: filterDialogState.assigneeId
+                    ? [filterDialogState.assigneeId]
+                    : [],
                 });
               }}
             >
@@ -210,13 +244,8 @@ export default function ProjectList() {
                 organizationMembers={organizationMembers}
               />
             </ToggleFilter>
-            <Button
-              variant={"outline"}
-
-              onClick={() => refetch()}
-            >
-              <RotateCw />
-
+            <Button variant={"outline"} onClick={() => refetch()}>
+              <RotateCw size={12} />
             </Button>
           </div>
           <Tabs
@@ -224,8 +253,12 @@ export default function ProjectList() {
             onValueChange={(e) => changeDashboardView(e)}
           >
             <TabsList className='hidden lg:block'>
-              <TabsTrigger value={"listView"}>List View</TabsTrigger>
-              <TabsTrigger value={"boardView"}>Board View</TabsTrigger>
+              <TabsTrigger value={"listView"} className='text-sm'>
+                List View
+              </TabsTrigger>
+              <TabsTrigger value={"boardView"} className='text-sm'>
+                Board View
+              </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -302,10 +335,17 @@ export const Table = ({ projects }: { projects: any[] }) => {
         return (
           <div className='flex items-center gap-2'>
             <div className='relative'>
-              {row.original.mainImage ? <img src={row.original.mainImage} alt={row.original.clientName} className='md:size-24 size-16 rrounded-xl border-2 border-border' /> :
-                <div className='flex items-center justify-center md:size-24 size-16 rounded-xl border-2 border-border  bg-background' >
+              {row.original.mainImage ? (
+                <img
+                  src={row.original.mainImage}
+                  alt={row.original.clientName}
+                  className='rrounded-xl size-16 border-2 border-border md:size-24'
+                />
+              ) : (
+                <div className='flex size-16 items-center justify-center rounded-xl border-2 border-border bg-background md:size-24'>
                   <FileImage size={45} />
-                </div>}
+                </div>
+              )}
               {/* <Avatar className='size-16 rounded-full'>
                 <AvatarImage
                   src={row.original.mainImage}
@@ -325,25 +365,32 @@ export const Table = ({ projects }: { projects: any[] }) => {
                 }}
               /> */}
             </div>
-            <div className="flex flex-col justify-between h-full gap-1">
-              <span className='font-medium text-lg capitalize'>{row.original?.name}</span>
-              <div className='hidden items-center text-sm gap-1 text-muted-foreground lg:flex'>
+            <div className='flex h-full flex-col justify-between gap-1'>
+              <span className='text-lg font-medium capitalize'>
+                {row.original?.name}
+              </span>
+              <div className='hidden items-center gap-1 text-sm text-muted-foreground lg:flex'>
                 <span>{row.original?.location}</span>
                 <ChevronRightIcon size={12} />
                 <span>{row.original?.clientName}</span>
-
               </div>
-              <span className="text-muted-foreground text-xs">Last updated {formatDate(new Date(row.original?.createdAt))}</span>
-              <div className="flex items-center gap-2">
-
-
-                <Badge style={{ backgroundColor: status?.color || "green", width: "fit-content", marginTop: 2 }}>
+              <span className='text-xs text-muted-foreground'>
+                Last updated {formatDate(new Date(row.original?.createdAt))}
+              </span>
+              <div className='flex items-center gap-2'>
+                <Badge
+                  style={{
+                    backgroundColor: status?.color || "green",
+                    width: "fit-content",
+                    marginTop: 2,
+                  }}
+                >
                   {status?.label}
                 </Badge>
                 {row.original.lossType && (
                   <Badge
                     variant='secondary'
-                    className='border-red-200 bg-red-100 text-xs text-red-700 w-fit'
+                    className='w-fit border-red-200 bg-red-100 text-xs text-red-700'
                   >
                     <AlertTriangle className='mr-1 h-3 w-3' />
                     {row.original.lossType}
@@ -360,27 +407,34 @@ export const Table = ({ projects }: { projects: any[] }) => {
       header: ({ column }) => (
         <TableColumnHeader column={column} title='Images' />
       ),
-      cell: ({ row }) =>
-        <div className="flex justify-between items-center gap-4">
+      cell: ({ row }) => (
+        <div className='flex items-center justify-between gap-4'>
           {/* TO_DO: Add images and docs count */}
-          <div className="flex divide-x divide-gray-200">
-            <div className="flex flex-col items-center gap-2 px-2">
-              <span className="text-muted-foreground text-xs">Images</span>
-              <span className="text-lg">{row.original._count.images}</span>
+          <div className='flex divide-x divide-gray-200'>
+            <div className='flex flex-col items-center gap-2 px-2'>
+              <span className='text-xs text-muted-foreground'>Images</span>
+              <span className='text-lg'>{row.original._count.images}</span>
             </div>
-            <div className="flex flex-col items-center gap-2 px-2">
-              <span className="text-muted-foreground text-xs">Docs</span>
-              <span className="text-lg">{row.original._count.documents?.length || 0}</span>
+            <div className='flex flex-col items-center gap-2 px-2'>
+              <span className='text-xs text-muted-foreground'>Docs</span>
+              <span className='text-lg'>
+                {row.original._count.documents?.length || 0}
+              </span>
             </div>
           </div>
-          <div className="grow flex items-center  gap-2">
-            {row.original.images?.map((image: any) =>
-              <img src={image.url} alt={row.original.name || "image"} height={64} width={64} className='md:size-24 size-16 rounded-xl border-2 border-border' />
-            )}
-
-
+          <div className='flex grow items-center gap-2'>
+            {row.original.images?.map((image: any) => (
+              <img
+                src={image.url}
+                alt={row.original.name || "image"}
+                height={64}
+                width={64}
+                className='size-16 rounded-xl border-2 border-border md:size-24'
+              />
+            ))}
           </div>
         </div>
+      ),
     },
     // {
     //   accessorKey: "createdAt",
@@ -444,73 +498,105 @@ const List = ({ projects }: { projects: any[] }) => {
   const router = useRouter();
 
   return (
-    <div className="flex flex-col gap-4 ">
+    <div className='flex flex-col gap-4'>
       {projects.map((project) => {
-        const status = statuses?.find((status) => status.id === project.statusId);
+        const status = statuses?.find(
+          (status) => status.id === project.statusId
+        );
         return (
           <div
             key={project.id}
-            className="flex flex-col lg:flex-row lg:items-center gap-4 p-4 border rounded-lg shadow hover:shadow-xl cursor-pointer transition-colors group"
+            className='group flex cursor-pointer flex-col gap-4 rounded-lg border bg-background/50 p-4 shadow transition-colors hover:bg-background hover:shadow-xl lg:flex-row lg:items-center'
             onClick={() => router.push(`/projects/${project.id}/overview`)}
             tabIndex={0}
-            role="button"
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.push(`/projects/${project.id}/overview`); }}
+            role='button'
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ")
+                router.push(`/projects/${project.id}/overview`);
+            }}
           >
-            <div className="flex flex-col md:flex-row divide-y md:divide-y-0 space-y-4 md:space-y-0 justify-between md:items-center grow">
-              <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className="relative">
+            <div className='flex grow flex-col justify-between space-y-4 divide-y md:flex-row md:items-center md:space-y-0 md:divide-y-0'>
+              <div className='flex min-w-0 flex-1 items-center gap-4'>
+                <div className='relative'>
                   {project.mainImage ? (
                     <img
                       src={project.mainImage}
                       alt={project.clientName}
-                      className="md:size-24 size-16 rounded-xl border-2 border-border object-cover bg-white"
+                      className='size-16 rounded-xl border-2 border-border bg-white object-cover md:size-24'
                     />
                   ) : (
-                    <div className="flex items-center justify-center md:size-24 size-16 rounded-xl border-2 border-border bg-background">
+                    <div className='flex size-16 items-center justify-center rounded-xl border-2 border-border bg-background md:size-24'>
                       <FileImage size={45} />
                     </div>
                   )}
                 </div>
-                <div className="flex flex-col justify-between h-full gap-1 min-w-0">
-                  <span className="font-medium text-lg capitalize truncate">{project?.name}</span>
-                  <div className="flex items-center text-sm gap-1 text-muted-foreground min-w-0">
-                    <span className="truncate">{project?.location}</span>
+                <div className='flex h-full min-w-0 flex-col justify-between gap-1'>
+                  <span className='truncate text-lg font-medium capitalize'>
+                    {project?.name}
+                  </span>
+                  <div className='flex min-w-0 items-center gap-1 text-sm text-muted-foreground'>
+                    <span className='truncate'>{project?.location}</span>
                     <ChevronRightIcon size={12} />
-                    <span className="truncate">{project?.clientName}</span>
+                    <span className='truncate'>{project?.clientName}</span>
                   </div>
-                  <span className="text-muted-foreground text-xs">Last updated {formatDate(new Date(project?.createdAt))}</span>
-                  <div className="flex items-center gap-2 mt-1">
+                  <span className='text-xs text-muted-foreground'>
+                    Last updated {formatDate(new Date(project?.createdAt))}
+                  </span>
+                  <div className='mt-1 flex items-center gap-2'>
                     {/* <Badge style={{ backgroundColor: status?.color || project.status?.color || 'green', width: 'fit-content' }}>
                       {status?.label || project.status?.label}
                     </Badge> */}
-                    <StatusBadge label={status?.label || project.status?.label} color={status?.color || project.status?.color}/>
+                    <StatusBadge
+                      label={status?.label || project.status?.label}
+                      color={status?.color || project.status?.color}
+                    />
                     {project.lossType && (
                       <DamageBadge lossType={project.lossType} />
                     )}
                   </div>
                 </div>
               </div>
-              <div className="flex divide-x divide-gray-200 rounded-lg p-2">
-                <div className="flex flex-col items-center gap-2 px-2">
-                  <span className="text-muted-foreground text-xs">Images</span>
-                  <span className="text-lg">{project._count.images}</span>
+              <div className='flex divide-x divide-gray-200 rounded-lg p-2'>
+                <div className='flex flex-col items-center gap-2 px-2'>
+                  <span className='text-xs text-muted-foreground'>Images</span>
+                  <span className='text-lg'>{project._count.images}</span>
                 </div>
-                <div className="flex flex-col items-center gap-2 px-2">
-                  <span className="text-muted-foreground text-xs">Docs</span>
-                  <span className="text-lg">{project._count.documents?.length || 0}</span>
+                <div className='flex flex-col items-center gap-2 px-2'>
+                  <span className='text-xs text-muted-foreground'>Docs</span>
+                  <span className='text-lg'>
+                    {project._count.documents?.length || 0}
+                  </span>
+                </div>
+                <div className='flex flex-col items-center gap-2 px-2'>
+                  <span className='text-xs text-muted-foreground'>
+                    Recent users
+                  </span>
+                  <span className='flex flex-row gap-1'>
+                    {project.members?.map((user: any) => (
+                      <UserAvatar
+                        key={user.id}
+                        firstName={user.firstName}
+                        lastName={user.lastName}
+                        email={user.email}
+                        avatar={user.avatar}
+                        textSize='text-xs'
+                        className='mb-1 size-7 min-h-7 min-w-7'
+                      />
+                    ))}
+                  </span>
                 </div>
               </div>
             </div>
-            <div className="w-full grid grid-cols-5 items-center gap-2  w-fit lg:w-auto basis-1/3">
+            <div className='grid w-fit w-full basis-1/3 grid-cols-5 items-center gap-2 lg:w-auto'>
               {project.images?.map((image: any) => (
-                <div key={image.url} className="relative md:h-24 h-16 min-w-16">
+                <div key={image.url} className='relative h-16 min-w-16 md:h-24'>
                   <img
                     key={image.url}
                     src={image.url}
-                    alt={project.name || 'image'}
+                    alt={project.name || "image"}
                     height={48}
                     width={48}
-                    className="w-full h-full absolute top-0 left-0 rounded-xl border-2 border-border object-cover bg-white"
+                    className='absolute left-0 top-0 h-full w-full rounded-xl border-2 border-border bg-white object-cover'
                   />
                 </div>
               ))}
@@ -599,88 +685,106 @@ const ProjectFilterForm = ({
 }) => {
   return (
     <div className='flex flex-col gap-4'>
-      <div className="grid grid-cols-2 gap-4">
-        <div >
-          <label className='text-sm font-medium mb-2'>Start Date</label>
-          <div className="relative">
+      <div className='grid grid-cols-2 gap-4'>
+        <div>
+          <label className='mb-2 text-sm font-medium'>Start Date</label>
+          <div className='relative'>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant={"outline"}
                   className={cn(
-                    "w-full justify-start text-left font-normal pr-8",
+                    "w-full justify-start pr-8 text-left font-normal",
                     !filterObj.startDate && "text-muted-foreground"
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {filterObj.startDate ? format(filterObj.startDate, "PPP") : <span>Pick a date</span>}
+                  <CalendarIcon className='mr-2 h-4 w-4' />
+                  {filterObj.startDate ? (
+                    format(filterObj.startDate, "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className='w-auto p-0'>
                 <Calendar
-                  mode="single"
+                  mode='single'
                   selected={filterObj.startDate || undefined}
-                  onSelect={(date) => setFilterObj(obj => ({ ...obj, startDate: date }))}
+                  onSelect={(date) =>
+                    setFilterObj((obj) => ({ ...obj, startDate: date }))
+                  }
                   initialFocus
                 />
               </PopoverContent>
             </Popover>
             {filterObj.startDate && (
               <Button
-                variant="ghost"
-                size="sm"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
-                onClick={() => setFilterObj(obj => ({ ...obj, startDate: null }))}
+                variant='ghost'
+                size='sm'
+                className='absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 p-0 hover:bg-muted'
+                onClick={() =>
+                  setFilterObj((obj) => ({ ...obj, startDate: null }))
+                }
               >
-                <X className="h-3 w-3" />
+                <X className='h-3 w-3' />
               </Button>
             )}
           </div>
         </div>
         <div>
-          <label className='text-sm font-medium mb-2'>End Date</label>
-          <div className="relative">
+          <label className='mb-2 text-sm font-medium'>End Date</label>
+          <div className='relative'>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant={"outline"}
                   className={cn(
-                    "w-full justify-start text-left font-normal pr-8",
+                    "w-full justify-start pr-8 text-left font-normal",
                     !filterObj.endDate && "text-muted-foreground"
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {filterObj.endDate ? format(filterObj.endDate, "PPP") : <span>Pick a date</span>}
+                  <CalendarIcon className='mr-2 h-4 w-4' />
+                  {filterObj.endDate ? (
+                    format(filterObj.endDate, "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className='w-auto p-0'>
                 <Calendar
-                  mode="single"
+                  mode='single'
                   selected={filterObj.endDate || undefined}
-                  onSelect={(date) => setFilterObj(obj => ({ ...obj, endDate: date }))}
+                  onSelect={(date) =>
+                    setFilterObj((obj) => ({ ...obj, endDate: date }))
+                  }
                   initialFocus
                 />
               </PopoverContent>
             </Popover>
             {filterObj.endDate && (
               <Button
-                variant="ghost"
-                size="sm"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
-                onClick={() => setFilterObj(obj => ({ ...obj, endDate: null }))}
+                variant='ghost'
+                size='sm'
+                className='absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 p-0 hover:bg-muted'
+                onClick={() =>
+                  setFilterObj((obj) => ({ ...obj, endDate: null }))
+                }
               >
-                <X className="h-3 w-3" />
+                <X className='h-3 w-3' />
               </Button>
             )}
           </div>
         </div>
       </div>
       <div>
-        <label className='text-sm font-medium mb-2'>User</label>
-        <div className="relative">
+        <label className='mb-2 text-sm font-medium'>User</label>
+        <div className='relative'>
           <Select
             value={filterObj.user}
-            onValueChange={val => setFilterObj(obj => ({ ...obj, user: val }))}
+            onValueChange={(val) =>
+              setFilterObj((obj) => ({ ...obj, user: val }))
+            }
           >
             <SelectTrigger className='w-full pr-8'>
               <SelectValue placeholder='Select user' />
@@ -688,19 +792,20 @@ const ProjectFilterForm = ({
             <SelectContent>
               {organizationMembers?.data?.map((member: any) => (
                 <SelectItem key={member.user?.id} value={member.user?.id}>
-                  {member.user?.firstName} {member.user?.lastName} ({member.user?.email})
+                  {member.user?.firstName} {member.user?.lastName} (
+                  {member.user?.email})
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {filterObj.user && (
             <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
-              onClick={() => setFilterObj(obj => ({ ...obj, user: "" }))}
+              variant='ghost'
+              size='sm'
+              className='absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 p-0 hover:bg-muted'
+              onClick={() => setFilterObj((obj) => ({ ...obj, user: "" }))}
             >
-              <X className="h-3 w-3" />
+              <X className='h-3 w-3' />
             </Button>
           )}
         </div>

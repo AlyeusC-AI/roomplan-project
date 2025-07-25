@@ -191,7 +191,7 @@ const RoomReadingItem = ({
           w="100%"
           space={4}
           style={{
-            // backgroundColor: "white",
+            backgroundColor: "#f3f4f6",
             borderBottomLeftRadius: 12,
             borderBottomRightRadius: 12,
             padding: 12,
@@ -215,13 +215,21 @@ const RoomReadingItem = ({
             <>
               {/* Show online readings */}
               {roomReadings?.data?.map((reading: RoomReadingType) => (
-                <RoomReading
-                  room={room}
+                <View
                   key={reading.id}
-                  reading={reading}
-                  projectId={projectId}
-                  isOffline={false}
-                />
+                  style={{
+                    backgroundColor: "#fff",
+                    borderRadius: 12,
+                  }}
+                >
+                  <RoomReading
+                    room={room}
+                    key={reading.id}
+                    reading={reading}
+                    projectId={projectId}
+                    isOffline={false}
+                  />
+                </View>
               ))}
 
               {/* Show offline new readings */}

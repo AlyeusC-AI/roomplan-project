@@ -37,7 +37,7 @@ export default function RootLayout({ children }: React.PropsWithChildren) {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <html lang='en' dir='ltr' suppressHydrationWarning>
-        <body className={clsx("h-screen bg-background")}>
+        <body className={clsx("h-screen bg-accent")}>
           <Providers>
             <AuthRedirect>{children}</AuthRedirect>
           </Providers>

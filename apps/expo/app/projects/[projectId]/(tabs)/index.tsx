@@ -389,12 +389,17 @@ export default function ProjectOverview() {
         keyboardShouldPersistTaps="handled"
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View className="gap-8 px-4 pt-4 ">
+          <View className="gap-4 px-4 pt-8 ">
             <Card style={styles.notificationsCard}>
               <CardHeader style={styles.notificationsCardHeader}>
                 <Image
                   source={RingIcon}
-                  style={{ width: 20, height: 20, marginRight: 4 }}
+                  style={{
+                    width: 20,
+                    height: 20,
+                    marginRight: 4,
+                    marginBottom: 4,
+                  }}
                 />
                 {/* <CircleDot
                   size={20}
@@ -1175,7 +1180,7 @@ export default function ProjectOverview() {
             <OfflineTasksManager projectId={projectId} />
 
             {/* <View style={styles.actionButtonGroup}> */}
-            <Card style={styles.projectCard}>
+            <View style={[styles.actionButtonCard, { marginTop: 16 }]}>
               <TouchableOpacity
                 className="bg-white rounded-lg w-full mb-2"
                 onPress={() => {
@@ -1196,6 +1201,8 @@ export default function ProjectOverview() {
                 </View>
                 <ChevronRightIcon size={20} color={Colors.light.primary} />
               </TouchableOpacity>
+            </View>
+            <View style={[styles.actionButtonCard, { marginBottom: 16 }]}>
               <TouchableOpacity
                 className="bg-white rounded-lg w-full"
                 activeOpacity={1}
@@ -1222,10 +1229,10 @@ export default function ProjectOverview() {
                 </View>
                 <ChevronRightIcon size={20} color={Colors.light.primary} />
               </TouchableOpacity>
-            </Card>
+            </View>
 
             {/* Navigation Items Horizontal Scroll */}
-            <Card style={styles.projectCard}>
+            <Card style={[styles.projectCard, { marginBottom: 16 }]}>
               <View className="p-4">
                 <Text className="text-lg font-medium ml-1 mb-3">
                   Quick Actions
@@ -1267,7 +1274,7 @@ export default function ProjectOverview() {
                           style={{
                             // backgroundColor: "white",
                             // borderRadius: 999,
-                            // padding: 10,
+                            padding: 10,
                             marginBottom: 6,
                           }}
                         >
@@ -1284,7 +1291,7 @@ export default function ProjectOverview() {
               </View>
             </Card>
 
-            <View className="w-full  mb-20">
+            <View className="w-full  mb-20 mt-4">
               {/* Enhanced Toggle between Rooms and Chambers */}
               <View style={styles.toggleContainer}>
                 <View style={styles.toggleRow}>
@@ -1973,7 +1980,7 @@ const styles = StyleSheet.create({
   },
   toggleIndicator: {
     position: "absolute",
-    top: 6, // was 4, move down a bit for taller tab
+    top: 4, // was 4, move down a bit for taller tab
     borderRadius: 14, // was 12
     zIndex: 0,
     shadowColor: Colors.light.primary,
@@ -1982,18 +1989,27 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
     backgroundColor: Colors.light.primary,
-    height: 52, // was 44, make indicator taller
+    height: 38, // was 44, make indicator taller
   },
   toggleTab: {
-    height: 52, // was 44, make tab taller
-    borderRadius: 14, // was 12
+    height: 34,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
     zIndex: 1,
   },
   toggleTabText: {
-    fontWeight: "600", // was 500
-    fontSize: 17, // was 15, make text larger
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  actionButtonCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
 });

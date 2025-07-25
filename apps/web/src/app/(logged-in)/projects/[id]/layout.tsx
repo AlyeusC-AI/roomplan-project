@@ -158,7 +158,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
     <>
       <div
         className={clsx("relative grid gap-2", {
-          "grid-cols-[24fr_400px]": !isCollapsed,
+          "grid-cols-[24fr_370px]": !isCollapsed,
           "grid-cols-[24fr_48px]": isCollapsed,
         })}
       >
@@ -166,7 +166,9 @@ export default function Layout({ children }: React.PropsWithChildren) {
         <div className={clsx(!pathname.includes("report") && "")}>
           <div className='flex items-center justify-between'>
             <Link href='/projects' className='mb-4 flex items-center gap-2'>
-              <ChevronLeft size={24} />
+              <span className='flex items-center justify-center rounded-lg border bg-white/20 p-1'>
+                <ChevronLeft size={24} />
+              </span>
               <span className='font-medium'>Projects</span>
             </Link>
             {/* 3-dot menu with AlertDialog */}
@@ -179,7 +181,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
                   <Button
                     variant='ghost'
                     size='icon'
-                    className='rounded-full'
+                    className='border bg-white/20'
                     onClick={() => setIsDeleteDialogOpen(true)}
                   >
                     <MoreHorizontal className='text-gray-400' />
@@ -209,144 +211,67 @@ export default function Layout({ children }: React.PropsWithChildren) {
               </AlertDialog>
             </div>
           </div>
-          {/* Project Header */}
-          <div className='top-0 z-20 w-full space-y-6 bg-background py-4'>
-            <div className='space-y-4'>
-              {/* Main Project Info with Image */}
-              <div className='flex items-center gap-6'>
-                {/* Project Image */}
-                {projectData?.mainImage ? (
-                  <div className='relative h-36 w-36 flex-shrink-0 overflow-hidden rounded-xl border-2 border-border shadow-sm'>
-                    <img
-                      src={projectData.mainImage}
-                      alt={projectData.name}
-                      className='h-full w-full object-cover'
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className='relative flex h-36 w-36 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-border bg-background shadow-sm'>
-                    <FileImage size={45} />
-                  </div>
-                )}
-                {/* Project Details */}
-                <div className='flex-1 space-y-3'>
-                  <div>
-                    <h1 className='text-[40px] font-bold capitalize tracking-tight'>
-                      {projectData?.name}
-                    </h1>
-                    {projectData?.location && (
-                      <div className='flex items-center gap-1'>
-                        {/* <MapPin className='h-4 w-4 text-blue-500' /> */}
-                        <a
-                          className='underline'
-                          href={`https://www.google.com/maps/search/?api=1&query=${projectData.location}`}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                        >
-                          {projectData.location}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                  {/* <div className='flex items-center gap-3'>
-                    <h1 className='text-[40px] font-bold capitalize tracking-tight'>
-                      {projectData?.name}
-                    </h1>
-                   
-                  </div> */}
 
-                  {/* <div className='flex flex-wrap items-center gap-4 text-sm text-muted-foreground'>
-                    {projectData?.location && (
-                      <div className='flex items-center gap-1'>
-                        <MapPin className='h-4 w-4 text-blue-500' />
-                        <a
-                          className='underline'
-                          href={`https://www.google.com/maps/search/?api=1&query=${projectData.location}`}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                        >
-                          {projectData.location}
-                        </a>
-                      </div>
-                    )}
-
-                    {projectData?.dateOfLoss && (
-                        <div className='flex items-center gap-1'>
-                          <Calendar className='h-4 w-4 text-orange-500' />
-                          <span>
-                            Loss:{" "}
-                            {format(
-                              new Date(projectData.dateOfLoss),
-                              "MMM dd, yyyy"
-                            )}
-                          </span>
-                        </div>
-                      )}
-
-                    
-                  </div> */}
-                  <div className='flex items-center gap-2'>
-                    {projectData?.status && (
-                      <StatusBadge
-                        label={projectData.status.label}
-                        color={projectData.status.color}
-                      />
-                    )}
-                    {projectData?.lossType && (
-                      // <Badge
-                      //   variant='secondary'
-                      //   className='border-red-200 bg-red-100 text-xs text-red-700'
-                      // >
-                      //   <AlertTriangle className='mr-1 h-3 w-3' />
-                      //   {projectData.lossType}
-                      // </Badge>
-                      <DamageBadge lossType={projectData.lossType} />
-                    )}
-                    {projectData && (
-                      <ProjectTags
-                        currentProjectTags={currentProjectTags}
-                        projectData={projectData}
-                      />
-                    )}
-                  </div>
-                  {/* Tags Section */}
-                </div>
-              </div>
-
-              {/* Navigation */}
-              <div className='pt-4'>
-                {/* <SidebarNav items={sidebarNavItems()} /> */}
-                <div className='flex justify-between border-b border-gray-200'>
-                  {sidebarNavItems().map((item) => {
-                    const isActive =
-                      pathname === item.href ||
-                      pathname.startsWith(item.href + "/");
-                    return (
-                      <Link
-                        key={item.title}
-                        href={item.href}
-                        className={`-mb-px grow border-b-2 px-4 py-2 text-center text-sm font-medium transition-colors duration-150 ${
-                          isActive
-                            ? "border-black text-black"
-                            : "border-gray-200 text-gray-500 hover:border-gray-400 hover:text-black"
-                        }`}
-                        prefetch={false}
-                      >
-                        {item.title}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-              {/* <Separator /> */}
+          <div className='mb-5'>
+            <h1 className='text-[40px] font-bold capitalize tracking-tight'>
+              {projectData?.name}
+            </h1>
+            {projectData?.location && (
+              <a
+                className='underline'
+                href={`https://www.google.com/maps/search/?api=1&query=${projectData.location}`}
+                target='_blank'
+                rel='noopener noreferrer'
+              >
+                {projectData.location}
+              </a>
+            )}
+            <div className='mt-2 flex items-center gap-2'>
+              {projectData?.status && (
+                <StatusBadge
+                  label={projectData.status.label}
+                  color={projectData.status.color}
+                />
+              )}
+              {projectData?.lossType && (
+                <DamageBadge lossType={projectData.lossType} />
+              )}
+              {projectData && (
+                <ProjectTags
+                  currentProjectTags={currentProjectTags}
+                  projectData={projectData}
+                />
+              )}
             </div>
           </div>
+          <div className='rounded-lg border bg-background'>
+            {/* Project Header */}
 
-          {/* Page Content */}
-          <div className='bg-background p-4'>{children}</div>
+            <div className='flex justify-between py-4'>
+              {sidebarNavItems().map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  pathname.startsWith(item.href + "/");
+                return (
+                  <Link
+                    key={item.title}
+                    href={item.href}
+                    className={`-mb-px grow border-b-2 px-4 py-2 text-center text-sm font-medium transition-colors duration-150 ${
+                      isActive
+                        ? "border-black text-black"
+                        : "border-gray-200 text-gray-500 hover:border-gray-400 hover:text-black"
+                    }`}
+                    prefetch={false}
+                  >
+                    {item.title}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Page Content */}
+            <div className='p-4'>{children}</div>
+          </div>
         </div>
 
         {/* Right Sidebar */}
@@ -354,7 +279,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
           <div className='col-sp relative'>
             {isCollapsed ? (
               <button
-                className='absolute left-3 top-0 flex h-10 w-10 items-center justify-center rounded-lg border-0 bg-accent'
+                className='absolute left-3 top-0 flex h-10 w-10 items-center justify-center rounded-lg border bg-white/20'
                 onClick={() => setIsCollapsed(false)}
                 aria-label='Expand sidebar'
                 style={{ zIndex: 40 }}
@@ -363,7 +288,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
               </button>
             ) : (
               <button
-                className='absolute left-3 top-0 flex h-10 w-10 items-center justify-center rounded-lg border-0 bg-accent'
+                className='absolute -left-1 top-0 flex h-10 w-10 items-center justify-center rounded-lg border bg-white/20'
                 onClick={() => setIsCollapsed(true)}
                 aria-label='Collapse sidebar'
                 style={{ zIndex: 40 }}
@@ -442,7 +367,7 @@ const ProjectTags = ({ currentProjectTags, projectData }: ProjectTagsProps) => {
               <Badge
                 key={tag.id}
                 variant='secondary'
-                className='cursor-pointer rounded-full text-xs transition-all hover:bg-destructive/10 hover:text-destructive'
+                className='cursor-pointer rounded text-xs transition-all hover:bg-destructive/10 hover:text-destructive'
                 onClick={() => handleRemoveTag(tag.name)}
                 style={
                   tag.color
@@ -464,7 +389,7 @@ const ProjectTags = ({ currentProjectTags, projectData }: ProjectTagsProps) => {
           variant='default'
           size='sm'
           onClick={() => setIsTagsModalOpen(true)}
-          className='h-6 rounded-full text-xs'
+          className='h-6 rounded text-xs'
           disabled={isAddingTags || isRemovingTags}
         >
           <Plus className='h-2 w-2' />

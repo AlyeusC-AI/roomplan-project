@@ -44,7 +44,7 @@ export default function Layout({ children }: React.PropsWithChildren) {
           </p>
         </div>
         <Separator className='my-6' />
-        <div className=''>
+        <div className='rounded-lg border bg-background p-4'>
           <aside className=''>
             <SidebarNav items={sidebarNavItems} />
           </aside>

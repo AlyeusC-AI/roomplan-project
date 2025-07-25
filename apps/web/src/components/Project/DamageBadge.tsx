@@ -61,9 +61,7 @@ const DamageBadge = ({ lossType }: { lossType: LossType }) => {
   return (
     <Badge
       variant='outline'
-      className={
-        "flex items-center gap-1 rounded-full bg-opacity-15 text-[10px]"
-      }
+      className={"flex items-center gap-1 rounded bg-opacity-15 text-[10px]"}
       style={{
         // borderColor: type?.color,
         backgroundColor: type?.bgColor,
