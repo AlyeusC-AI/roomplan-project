@@ -212,11 +212,11 @@ export class EquipmentService {
       );
     }
 
-    // Calculate total currently assigned quantity for this equipment (only ACTIVE assignments)
+    // Calculate total currently assigned quantity for this equipment (only PLACED and ACTIVE assignments)
     const currentAssignments = await this.prisma.equipmentProject.findMany({
       where: {
         equipmentId: assignEquipmentDto.equipmentId,
-        status: 'ACTIVE', // Only count active assignments
+        status: { in: ['PLACED', 'ACTIVE'] }, // Count PLACED and ACTIVE assignments
       },
     });
 
@@ -242,7 +242,7 @@ export class EquipmentService {
         projectId: assignEquipmentDto.projectId,
         quantity: assignEquipmentDto.quantity,
         userId: userId,
-        status: 'ACTIVE',
+        status: 'PLACED',
         ...(assignEquipmentDto.roomId
           ? { roomId: assignEquipmentDto.roomId }
           : {}),
@@ -294,7 +294,7 @@ export class EquipmentService {
     return this.prisma.equipmentProject.findMany({
       where: {
         projectId,
-        status: 'ACTIVE', // Only return active assignments
+        status: { in: ['PLACED', 'ACTIVE'] }, // Return PLACED and ACTIVE assignments
       },
       include: {
         equipment: true,
@@ -347,6 +347,56 @@ export class EquipmentService {
     return this.prisma.equipmentProject.update({
       where: { id: assignmentId },
       data: { status: 'REMOVED' },
+      include: {
+        equipment: true,
+        room: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+    });
+  }
+
+  async updateEquipmentAssignmentStatus(
+    assignmentId: string,
+    status: 'PLACED' | 'ACTIVE' | 'REMOVED',
+    userId: string,
+  ): Promise<EquipmentProject> {
+    const assignment = await this.prisma.equipmentProject.findUnique({
+      where: { id: assignmentId },
+      include: {
+        equipment: true,
+      },
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Equipment assignment not found');
+    }
+
+    // Check if user has permission
+    const member = await this.prisma.organizationMember.findFirst({
+      where: {
+        organizationId: assignment.equipment.organizationId,
+        userId,
+        status: MemberStatus.ACTIVE,
+        role: { in: [Role.OWNER, Role.ADMIN, Role.PROJECT_MANAGER] },
+      },
+    });
+
+    if (!member) {
+      throw new BadRequestException(
+        'You do not have permission to update equipment assignments in this organization',
+      );
+    }
+
+    return this.prisma.equipmentProject.update({
+      where: { id: assignmentId },
+      data: { status },
       include: {
         equipment: true,
         room: true,

@@ -160,6 +160,18 @@ class EquipmentService {
     return apiClient.delete<EquipmentProject>(`/equipment/assignment/${id}`);
   }
 
+  async updateEquipmentAssignmentStatus(
+    id: string,
+    status: "PLACED" | "ACTIVE" | "REMOVED"
+  ) {
+    return apiClient.patch<EquipmentProject>(
+      `/equipment/assignment/${id}/status`,
+      {
+        status,
+      }
+    );
+  }
+
   async getEquipmentHistory(equipmentId: string) {
     return apiClient.get<EquipmentProject[]>(
       `/equipment/${equipmentId}/history`

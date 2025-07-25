@@ -30,6 +30,7 @@ import {
   useGetEquipmentAssignments,
   useAssignEquipment,
   useRemoveEquipmentAssignment,
+  useUpdateEquipmentAssignmentStatus,
   Equipment,
   EquipmentProject,
 } from "@service-geek/api-client";
@@ -169,6 +170,9 @@ export default function EquipmentTab({
   const [quantity, setQuantity] = useState(1);
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] =
+    useState<EquipmentProject | null>(null);
   const [filterCategory, setFilterCategory] = useState<string | undefined>(
     undefined
   );
@@ -184,6 +188,7 @@ export default function EquipmentTab({
   const assignments = assignmentsResponse?.data || [];
   const assignEquipment = useAssignEquipment();
   const removeAssignment = useRemoveEquipmentAssignment();
+  const updateAssignmentStatus = useUpdateEquipmentAssignmentStatus();
   const { data: categories = [] } = useGetEquipmentCategories();
 
   // Filter equipment based on search query
@@ -198,6 +203,16 @@ export default function EquipmentTab({
     return assignments.filter((assignment) => assignment.roomId === roomId);
   }, [assignments, roomId]);
 
+  // Get active room assignments for display
+  const activeRoomAssignments = useMemo(() => {
+    return currentRoomAssignments.filter(
+      (assignment) =>
+        (assignment as any).status === "PLACED" ||
+        (assignment as any).status === "ACTIVE" ||
+        !(assignment as any).status
+    );
+  }, [currentRoomAssignments]);
+
   // Get equipment with history and available quantities
   const equipmentWithHistory = useMemo(() => {
     return filteredEquipment.map((eq) => {
@@ -205,10 +220,12 @@ export default function EquipmentTab({
         (assignment: EquipmentProject) => assignment.equipmentId === eq.id
       );
 
-      // Only count active assignments for available quantity calculation
+      // Only count PLACED and ACTIVE assignments for available quantity calculation
       const activeAssignments = currentAssignments.filter(
         (assignment: any) =>
-          assignment.status === "ACTIVE" || !assignment.status
+          assignment.status === "PLACED" ||
+          assignment.status === "ACTIVE" ||
+          !assignment.status
       );
 
       const totalAssigned = activeAssignments.reduce(
@@ -339,6 +356,29 @@ export default function EquipmentTab({
     );
   };
 
+  // Handle status change for an assignment
+  const handleStatusChange = async (
+    assignmentId: string,
+    newStatus: "PLACED" | "ACTIVE" | "REMOVED"
+  ) => {
+    try {
+      await updateAssignmentStatus.mutateAsync({
+        id: assignmentId,
+        status: newStatus,
+      });
+      toast.success(`Assignment status updated to ${newStatus}`);
+      setShowOptionsModal(false);
+      setSelectedAssignment(null);
+    } catch (error: any) {
+      if (error?.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Failed to update assignment status");
+      }
+      console.error("Error updating assignment status:", error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <EquipmentCalculationsHeader />
@@ -363,36 +403,78 @@ export default function EquipmentTab({
               >
                 Current Equipment
               </Text>
-              {currentRoomAssignments.map((assignment) => (
-                <View key={assignment.id} style={styles.equipmentItem}>
-                  <TouchableOpacity
-                    style={styles.equipmentInfoContainer}
-                    onPress={() => {
-                      if (assignment.equipment) {
-                        setSelectedEquipment(assignment.equipment);
-                        setShowHistoryModal(true);
-                      }
-                    }}
-                  >
-                    <View style={styles.equipmentInfo}>
-                      <Text style={styles.equipmentName}>
-                        {assignment.equipment?.name}
-                      </Text>
-                      <Text style={styles.equipmentQuantity}>
-                        Qty: {assignment.quantity}
-                      </Text>
-                    </View>
-                    <View style={styles.equipmentActions}>
+              {currentRoomAssignments
+                .filter((assignment) => {
+                  const status = (assignment as any).status || "PLACED";
+                  return status === "PLACED" || status === "ACTIVE";
+                })
+                .map((assignment) => {
+                  const status = (assignment as any).status || "PLACED";
+                  const isPlaced = status === "PLACED";
+                  const isActive = status === "ACTIVE";
+                  const isRemoved = status === "REMOVED";
+
+                  return (
+                    <View
+                      key={assignment.id}
+                      style={[
+                        styles.equipmentItem,
+                        isRemoved && styles.removedEquipmentItem,
+                      ]}
+                    >
                       <TouchableOpacity
-                        style={styles.optionsButton}
-                        onPress={() => setOptionsAssignment(assignment)}
+                        style={styles.equipmentInfoContainer}
+                        onPress={() => {
+                          if (assignment.equipment) {
+                            setSelectedEquipment(assignment.equipment);
+                            setShowHistoryModal(true);
+                          }
+                        }}
                       >
-                        <MoreHorizontalIcon size={20} color="#64748b" />
+                        <View style={styles.equipmentInfo}>
+                          <View style={styles.equipmentHeader}>
+                            <Text
+                              style={[
+                                styles.equipmentName,
+                                isRemoved && styles.removedText,
+                              ]}
+                            >
+                              {assignment.equipment?.name}
+                            </Text>
+                            <View
+                              style={[
+                                styles.statusBadge,
+                                isPlaced
+                                  ? styles.placedStatusBadge
+                                  : isActive
+                                    ? styles.activeStatusBadge
+                                    : styles.removedStatusBadge,
+                              ]}
+                            >
+                              <Text style={styles.statusText}>{status}</Text>
+                            </View>
+                          </View>
+                          <Text
+                            style={[
+                              styles.equipmentQuantity,
+                              isRemoved && styles.removedText,
+                            ]}
+                          >
+                            Qty: {assignment.quantity}
+                          </Text>
+                        </View>
+                        <View style={styles.equipmentActions}>
+                          <TouchableOpacity
+                            style={styles.optionsButton}
+                            onPress={() => setOptionsAssignment(assignment)}
+                          >
+                            <MoreHorizontalIcon size={20} color="#64748b" />
+                          </TouchableOpacity>
+                        </View>
                       </TouchableOpacity>
                     </View>
-                  </TouchableOpacity>
-                </View>
-              ))}
+                  );
+                })}
             </View>
           </View>
         ) : (
@@ -756,7 +838,8 @@ export default function EquipmentTab({
                 {(
                   selectedEquipment as EquipmentWithHistory
                 )?.currentAssignments?.map((assignment: EquipmentProject) => {
-                  const status = (assignment as any).status || "ACTIVE";
+                  const status = (assignment as any).status || "PLACED";
+                  const isPlaced = status === "PLACED";
                   const isActive = status === "ACTIVE";
                   const isRemoved = status === "REMOVED";
 
@@ -776,21 +859,21 @@ export default function EquipmentTab({
                           <View
                             style={[
                               styles.statusBadge,
-                              isActive
-                                ? styles.activeStatusBadge
-                                : styles.inactiveStatusBadge,
+                              isPlaced
+                                ? styles.placedStatusBadge
+                                : isActive
+                                  ? styles.activeStatusBadge
+                                  : styles.removedStatusBadge,
                             ]}
                           >
-                            <Text style={styles.statusText}>
-                              {isActive ? "ACTIVE" : status}
-                            </Text>
+                            <Text style={styles.statusText}>{status}</Text>
                           </View>
                         </View>
                         <Text style={styles.historyQuantity}>
                           Quantity: {assignment.quantity}
                         </Text>
                         <Text style={styles.historyDate}>
-                          Added:{" "}
+                          Placed:{" "}
                           {new Date(assignment.createdAt).toLocaleDateString()}
                         </Text>
                         {/* TODO: Uncomment when user types are updated
@@ -823,6 +906,33 @@ export default function EquipmentTab({
           onPressOut={() => setOptionsAssignment(null)}
         >
           <View style={styles.optionsModal}>
+            <TouchableOpacity
+              style={styles.optionItem}
+              onPress={() => {
+                setOptionsAssignment(null);
+                // Show status change options
+                Alert.alert("Change Status", "Select new status:", [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Placed",
+                    onPress: () =>
+                      handleStatusChange(optionsAssignment!.id, "PLACED"),
+                  },
+                  {
+                    text: "Active",
+                    onPress: () =>
+                      handleStatusChange(optionsAssignment!.id, "ACTIVE"),
+                  },
+                  {
+                    text: "Removed",
+                    onPress: () =>
+                      handleStatusChange(optionsAssignment!.id, "REMOVED"),
+                  },
+                ]);
+              }}
+            >
+              <Text style={styles.optionText}>Change Status</Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.optionItem}
               onPress={() => {
@@ -927,11 +1037,18 @@ const styles = StyleSheet.create({
   equipmentInfo: {
     flex: 1,
   },
+  equipmentHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 2,
+  },
   equipmentName: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1e293b",
     marginBottom: 2,
+    flex: 1,
   },
   equipmentDescription: {
     fontSize: 14,
@@ -948,6 +1065,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   historyButton: {
+    padding: 8,
+  },
+  optionsButton: {
     padding: 8,
   },
   removeButton: {
@@ -1137,26 +1257,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1e293b",
   },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  activeStatusBadge: {
-    backgroundColor: "#d1fae5",
-    borderColor: "#10b981",
-    borderWidth: 1,
-  },
-  inactiveStatusBadge: {
-    backgroundColor: "#fef3c7",
-    borderColor: "#f59e0b",
-    borderWidth: 1,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#1e293b",
-  },
   historyQuantity: {
     fontSize: 14,
     color: "#64748b",
@@ -1173,6 +1273,15 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     backgroundColor: "#f0f0f0",
     borderColor: "#e0e0e0",
+  },
+  removedEquipmentItem: {
+    opacity: 0.7,
+    backgroundColor: "#f0f0f0",
+    borderColor: "#e0e0e0",
+  },
+  removedText: {
+    textDecorationLine: "line-through",
+    color: "#94a3b8",
   },
   disabledEquipment: {
     opacity: 0.7,
@@ -1219,8 +1328,30 @@ const styles = StyleSheet.create({
     color: "#94a3b8",
     marginLeft: 10,
   },
-  optionsButton: {
-    padding: 8,
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  placedStatusBadge: {
+    backgroundColor: "#d1fae5",
+    borderColor: "#10b981",
+    borderWidth: 1,
+  },
+  activeStatusBadge: {
+    backgroundColor: "#dbeafe",
+    borderColor: "#3b82f6",
+    borderWidth: 1,
+  },
+  removedStatusBadge: {
+    backgroundColor: "#fef2f2",
+    borderColor: "#ef4444",
+    borderWidth: 1,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#1e293b",
   },
   optionsModal: {
     backgroundColor: "#fff",
