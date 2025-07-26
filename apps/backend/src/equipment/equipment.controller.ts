@@ -192,6 +192,63 @@ export class EquipmentController {
     return this.equipmentService.removeEquipmentAssignment(id, req.user.userId);
   }
 
+  @Patch('assignment/:id/status')
+  @ApiOperation({ summary: 'Update equipment assignment status' })
+  @ApiParam({ name: 'id', description: 'Equipment Assignment ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        status: {
+          type: 'string',
+          enum: ['PLACED', 'ACTIVE', 'REMOVED'],
+          description: 'The new status for the equipment assignment',
+        },
+      },
+      required: ['status'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'The equipment assignment status has been successfully updated.',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Equipment assignment not found.' })
+  updateEquipmentAssignmentStatus(
+    @Param('id') id: string,
+    @Body() body: { status: 'PLACED' | 'ACTIVE' | 'REMOVED' },
+    @Request() req: RequestWithUser,
+  ): Promise<EquipmentProject> {
+    return this.equipmentService.updateEquipmentAssignmentStatus(
+      id,
+      body.status,
+      req.user.userId,
+    );
+  }
+
+  @Get('assignment/:id/status-history')
+  @ApiOperation({ summary: 'Get equipment assignment status change history' })
+  @ApiParam({ name: 'id', description: 'Equipment Assignment ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return equipment assignment status change history.',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Equipment assignment not found.' })
+  getEquipmentStatusChangeHistory(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ): Promise<any[]> {
+    return this.equipmentService.getEquipmentStatusChangeHistory(
+      id,
+      req.user.userId,
+    );
+  }
+
   @Get(':id/history')
   @ApiOperation({ summary: 'Get equipment assignment history' })
   @ApiParam({ name: 'id', description: 'Equipment ID' })

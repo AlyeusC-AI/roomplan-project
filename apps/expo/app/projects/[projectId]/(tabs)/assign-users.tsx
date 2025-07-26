@@ -7,6 +7,7 @@ import {
   FlatList,
   StyleSheet,
   Modal,
+  Alert,
 } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
@@ -21,7 +22,14 @@ import {
 } from "@service-geek/api-client";
 import { Colors } from "@/constants/Colors";
 import { useGlobalSearchParams, useRouter } from "expo-router";
-import { ArrowLeftIcon, ChevronLeft } from "lucide-react-native";
+import {
+  ChevronLeft,
+  UserCheckIcon,
+  MoreHorizontal,
+} from "lucide-react-native";
+const ChevronLeftIcon = ChevronLeft as any;
+const UserCheckIconComp = UserCheckIcon as any;
+const MoreHorizontalIcon = MoreHorizontal as any;
 
 const AssignUsersPage = () => {
   const router = useRouter();
@@ -49,6 +57,10 @@ const AssignUsersPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [confirmUnassign, setConfirmUnassign] = useState<null | {
+    userId: string;
+    userName: string;
+  }>(null);
   const { session } = userStore((state) => state);
   const currentUserId = session?.user?.id;
 
@@ -95,6 +107,19 @@ const AssignUsersPage = () => {
     return user.email?.[0]?.toUpperCase() || "U";
   };
 
+  const handleUserRowPress = (
+    member: any,
+    assigned: boolean,
+    fullName: string
+  ) => {
+    if (!assigned) {
+      onAssignPress(member.user?.id, false);
+    }
+  };
+  const handleMorePress = (member: any, fullName: string) => {
+    setConfirmUnassign({ userId: member.user?.id, userName: fullName });
+  };
+
   const renderUser = ({
     item: member,
     index,
@@ -106,7 +131,7 @@ const AssignUsersPage = () => {
     const fullName =
       `${member.user?.firstName || ""} ${member.user?.lastName || ""}`.trim();
     return (
-      <View>
+      <>
         {index !== 0 && <View style={styles.divider} />}
         <View style={styles.userRow}>
           <View style={styles.avatar}>
@@ -118,20 +143,33 @@ const AssignUsersPage = () => {
             <Text style={styles.userName}>
               {fullName || member.user?.email}
             </Text>
-            {fullName && (
-              <Text style={styles.userEmail}>{member.user?.email}</Text>
-            )}
+            {/* Show Last Activity instead of email */}
+            <Text style={styles.userEmail}>
+              Last activity: {member.user?.lastActivity || 0}
+            </Text>
             {assigned && (
               <View style={styles.assignedBadgeRow}>
                 <View style={styles.assignedBadge}>
-                  <Text style={styles.badgeIcon}>✓</Text>
+                  <UserCheckIconComp size={16} color={Colors.light.primary} />
                   <Text style={styles.assignedBadgeText}>Assigned</Text>
                 </View>
               </View>
             )}
           </View>
+          {/* 3-dots button for assigned users */}
+          {assigned && (
+            <TouchableOpacity
+              onPress={() =>
+                handleMorePress(member, fullName || member.user?.email)
+              }
+              style={{ padding: 8 }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <MoreHorizontalIcon size={22} color={Colors.light.primary} />
+            </TouchableOpacity>
+          )}
         </View>
-      </View>
+      </>
     );
   };
 
@@ -143,7 +181,7 @@ const AssignUsersPage = () => {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <ChevronLeft size={24} color={Colors.light.primary} />
+          <ChevronLeftIcon size={24} color={Colors.light.primary} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.clientName}>{clientName}</Text>
@@ -152,7 +190,7 @@ const AssignUsersPage = () => {
         <View style={{ width: 32 }} />
       </View>
       <FlatList
-        data={teamMembers}
+        data={[...teamMembers, ...teamMembers, ...teamMembers, ...teamMembers]}
         keyExtractor={(item) => item.id}
         renderItem={renderUser}
         ListEmptyComponent={
@@ -247,6 +285,50 @@ const AssignUsersPage = () => {
           </View>
         </View>
       </Modal>
+      {/* Confirmation Modal for Unassign */}
+      {confirmUnassign && (
+        <Modal
+          visible={!!confirmUnassign}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setConfirmUnassign(null)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Unassign User</Text>
+              <Text style={{ marginBottom: 16, textAlign: "center" }}>
+                Are you sure you want to unassign {confirmUnassign.userName}{" "}
+                from this project?
+              </Text>
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <TouchableOpacity
+                  style={[styles.closeButton, { backgroundColor: "#e5e7eb" }]}
+                  onPress={() => setConfirmUnassign(null)}
+                >
+                  <Text
+                    style={[
+                      styles.closeButtonText,
+                      { color: Colors.light.primary },
+                    ]}
+                  >
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={async () => {
+                    setIsLoading(true);
+                    await onAssignPress(confirmUnassign.userId, true);
+                    setConfirmUnassign(null);
+                  }}
+                >
+                  <Text style={styles.closeButtonText}>Unassign</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -261,12 +343,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: 32,
+    paddingTop: 12,
     paddingBottom: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
+    borderBottomColor: "#e5e7eb",
   },
   backButton: {
     width: 32,
@@ -297,6 +379,7 @@ const styles = StyleSheet.create({
     color: "#1e293b",
     textAlign: "center",
     marginTop: 2,
+    transform: "capitalize",
   },
   userCard: {
     // removed background and margin styles
@@ -311,7 +394,6 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: "#e5e7eb",
-    marginLeft: 76, // aligns with start of text after avatar
   },
   userInfo: {
     flexDirection: "row",
@@ -346,7 +428,7 @@ const styles = StyleSheet.create({
   assignedBadgeRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 4,
   },
   assignedBadge: {
     flexDirection: "row",
@@ -355,7 +437,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 8,
-    paddingVertical: 2,
     alignSelf: "flex-start",
     gap: 4,
   },

@@ -232,7 +232,7 @@ export const useOfflineTasksStore = create<OfflineTasksState>()(
                   (task) => task.status !== "completed"
                 ),
               }));
-            }, 1000);
+            }, 2000);
           }, 2000);
         } catch (error: any) {
           console.error(`Error executing task ${id}:`, error);

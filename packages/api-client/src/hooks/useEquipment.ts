@@ -109,6 +109,32 @@ export function useRemoveEquipmentAssignment() {
   });
 }
 
+export function useUpdateEquipmentAssignmentStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: "PLACED" | "ACTIVE" | "REMOVED";
+    }) => equipmentService.updateEquipmentAssignmentStatus(id, status),
+    onSuccess: (_, variables) => {
+      // Invalidate all equipment assignments queries since we don't know the projectId
+      queryClient.invalidateQueries({ queryKey: ["equipment-assignments"] });
+    },
+  });
+}
+
+export function useGetEquipmentStatusChangeHistory(assignmentId: string) {
+  return useQuery({
+    queryKey: ["equipment-status-history", assignmentId],
+    queryFn: () =>
+      equipmentService.getEquipmentStatusChangeHistory(assignmentId),
+    enabled: !!assignmentId,
+  });
+}
+
 export function useGetEquipmentHistory(equipmentId: string) {
   return useQuery({
     queryKey: ["equipment-history", equipmentId],

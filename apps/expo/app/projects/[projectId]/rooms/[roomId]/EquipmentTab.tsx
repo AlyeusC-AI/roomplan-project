@@ -9,6 +9,7 @@ import {
   Alert,
   Dimensions,
   Image,
+  RefreshControl, // <-- add this
 } from "react-native";
 import { Text } from "@/components/ui/text";
 import {
@@ -19,6 +20,7 @@ import {
   Filter,
   X,
   Check,
+  MoreHorizontal,
 } from "lucide-react-native";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +31,8 @@ import {
   useGetEquipmentAssignments,
   useAssignEquipment,
   useRemoveEquipmentAssignment,
+  useUpdateEquipmentAssignmentStatus,
+  useGetEquipmentStatusChangeHistory,
   Equipment,
   EquipmentProject,
 } from "@service-geek/api-client";
@@ -43,6 +47,7 @@ const SearchIcon = Search as any;
 const FilterIcon = Filter as any;
 const XIcon = X as any;
 const CheckIcon = Check as any;
+const MoreHorizontalIcon = MoreHorizontal as any;
 
 interface EquipmentWithHistory extends Equipment {
   currentAssignments?: EquipmentProject[];
@@ -167,19 +172,38 @@ export default function EquipmentTab({
   const [quantity, setQuantity] = useState(1);
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] =
+    useState<EquipmentProject | null>(null);
+  const [selectedAssignmentForHistory, setSelectedAssignmentForHistory] =
+    useState<EquipmentProject | null>(null);
   const [filterCategory, setFilterCategory] = useState<string | undefined>(
     undefined
   );
+  const [optionsAssignment, setOptionsAssignment] = useState<
+    null | (typeof currentRoomAssignments)[0]
+  >(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // API hooks
   const { data: equipment = [] } = useGetEquipment({
     categoryId: filterCategory,
   });
-  const { data: assignmentsResponse } = useGetEquipmentAssignments(projectId);
+  const {
+    data: assignmentsResponse,
+    refetch: refetchAssignments,
+    isFetching,
+  } = useGetEquipmentAssignments(projectId);
   const assignments = assignmentsResponse?.data || [];
   const assignEquipment = useAssignEquipment();
   const removeAssignment = useRemoveEquipmentAssignment();
+  const updateAssignmentStatus = useUpdateEquipmentAssignmentStatus();
   const { data: categories = [] } = useGetEquipmentCategories();
+
+  // Status change history
+  const { data: statusChangeHistoryResponse, refetch: refetchStatusHistory } =
+    useGetEquipmentStatusChangeHistory(selectedAssignmentForHistory?.id || "");
+  const statusChangeHistory = statusChangeHistoryResponse?.data || [];
 
   // Filter equipment based on search query
   const filteredEquipment = useMemo(() => {
@@ -193,6 +217,16 @@ export default function EquipmentTab({
     return assignments.filter((assignment) => assignment.roomId === roomId);
   }, [assignments, roomId]);
 
+  // Get active room assignments for display
+  const activeRoomAssignments = useMemo(() => {
+    return currentRoomAssignments.filter(
+      (assignment) =>
+        (assignment as any).status === "PLACED" ||
+        (assignment as any).status === "ACTIVE" ||
+        !(assignment as any).status
+    );
+  }, [currentRoomAssignments]);
+
   // Get equipment with history and available quantities
   const equipmentWithHistory = useMemo(() => {
     return filteredEquipment.map((eq) => {
@@ -200,10 +234,12 @@ export default function EquipmentTab({
         (assignment: EquipmentProject) => assignment.equipmentId === eq.id
       );
 
-      // Only count active assignments for available quantity calculation
+      // Only count PLACED and ACTIVE assignments for available quantity calculation
       const activeAssignments = currentAssignments.filter(
         (assignment: any) =>
-          assignment.status === "ACTIVE" || !assignment.status
+          assignment.status === "PLACED" ||
+          assignment.status === "ACTIVE" ||
+          !assignment.status
       );
 
       const totalAssigned = activeAssignments.reduce(
@@ -334,68 +370,146 @@ export default function EquipmentTab({
     );
   };
 
+  // Handle status change for an assignment
+  const handleStatusChange = async (
+    assignmentId: string,
+    newStatus: "PLACED" | "ACTIVE" | "REMOVED"
+  ) => {
+    try {
+      await updateAssignmentStatus.mutateAsync({
+        id: assignmentId,
+        status: newStatus,
+      });
+      toast.success(`Assignment status updated to ${newStatus}`);
+
+      // Refetch the status history to show the new change
+      if (selectedAssignmentForHistory?.id === assignmentId) {
+        await refetchStatusHistory();
+      }
+
+      setShowOptionsModal(false);
+      setSelectedAssignment(null);
+      setOptionsAssignment(null);
+    } catch (error: any) {
+      if (error?.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Failed to update assignment status");
+      }
+      console.error("Error updating assignment status:", error);
+    }
+  };
+
+  // Handle opening history modal
+  const handleOpenHistory = (assignment: EquipmentProject) => {
+    setSelectedEquipment(assignment.equipment || null);
+    setSelectedAssignmentForHistory(assignment);
+    setShowHistoryModal(true);
+    setOptionsAssignment(null);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetchAssignments();
+    setRefreshing(false);
+  };
+
   return (
     <View style={styles.container}>
       <EquipmentCalculationsHeader />
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing || isFetching}
+            onRefresh={onRefresh}
+          />
+        }
       >
         {/* Current Room Equipment */}
         {currentRoomAssignments.length > 0 ? (
-          <Card style={styles.sectionCard}>
-            <CardHeader>
-              <CardTitle>Current Equipment</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {currentRoomAssignments.map((assignment) => (
-                <View key={assignment.id} style={styles.equipmentItem}>
-                  <TouchableOpacity
-                    style={styles.equipmentInfoContainer}
-                    onPress={() => {
-                      if (assignment.equipment) {
-                        setSelectedEquipment(assignment.equipment);
-                        setShowHistoryModal(true);
-                      }
-                    }}
+          // Removed Card wrapper
+          <View style={styles.sectionCard}>
+            <View
+              style={{ paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "600",
+                  color: "#1e293b",
+                  marginBottom: 12,
+                }}
+              >
+                Current Equipment
+              </Text>
+              {currentRoomAssignments.map((assignment) => {
+                const status = (assignment as any).status || "PLACED";
+                const isPlaced = status === "PLACED";
+                const isActive = status === "ACTIVE";
+                const isRemoved = status === "REMOVED";
+
+                return (
+                  <View
+                    key={assignment.id}
+                    style={[
+                      styles.equipmentItem,
+                      isRemoved && styles.removedEquipmentItem,
+                    ]}
                   >
-                    <View style={styles.equipmentInfo}>
-                      <Text style={styles.equipmentName}>
-                        {assignment.equipment?.name}
-                      </Text>
-                      <Text style={styles.equipmentQuantity}>
-                        Qty: {assignment.quantity}
-                      </Text>
-                    </View>
-                    <View style={styles.equipmentActions}>
-                      <TouchableOpacity
-                        style={styles.historyButton}
-                        onPress={() => {
-                          if (assignment.equipment) {
-                            setSelectedEquipment(assignment.equipment);
-                            setShowHistoryModal(true);
-                          }
-                        }}
-                      >
-                        <ClockIcon size={16} color="#64748b" />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.removeButton}
-                        onPress={() =>
-                          handleRemoveEquipment(
-                            assignment.id,
-                            assignment.equipment?.name || "Equipment"
-                          )
-                        }
-                      >
-                        <MinusIcon size={16} color="#ef4444" />
-                      </TouchableOpacity>
-                    </View>
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </CardContent>
-          </Card>
+                    <TouchableOpacity
+                      style={styles.equipmentInfoContainer}
+                      onPress={() => {
+                        handleOpenHistory(assignment);
+                      }}
+                    >
+                      <View style={styles.equipmentInfo}>
+                        <View style={styles.equipmentHeader}>
+                          <Text
+                            style={[
+                              styles.equipmentName,
+                              isRemoved && styles.removedText,
+                            ]}
+                          >
+                            {assignment.equipment?.name}
+                          </Text>
+                          <View
+                            style={[
+                              styles.statusBadge,
+                              isPlaced
+                                ? styles.placedStatusBadge
+                                : isActive
+                                  ? styles.activeStatusBadge
+                                  : styles.removedStatusBadge,
+                            ]}
+                          >
+                            <Text style={styles.statusText}>{status}</Text>
+                          </View>
+                        </View>
+                        <Text
+                          style={[
+                            styles.equipmentQuantity,
+                            isRemoved && styles.removedText,
+                          ]}
+                        >
+                          Qty: {assignment.quantity}
+                        </Text>
+                      </View>
+                      <View style={styles.equipmentActions}>
+                        <TouchableOpacity
+                          style={styles.optionsButton}
+                          onPress={() => setOptionsAssignment(assignment)}
+                        >
+                          <MoreHorizontalIcon size={20} color="#64748b" />
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
         ) : (
           <Card style={styles.sectionCard}>
             <CardContent style={styles.emptyState} className="pt-4">
@@ -441,7 +555,7 @@ export default function EquipmentTab({
             <Text style={styles.modalTitle}>Equipment</Text>
             <View style={styles.placeholder} />
           </View>
-
+          <EquipmentCalculationsHeader />
           <ScrollView style={styles.modalBody}>
             {/* Group equipment by categoryId and map to category name */}
             {Object.entries(
@@ -549,27 +663,39 @@ export default function EquipmentTab({
                     console.log(`Added 1 ${firstAvailable.name}`);
                   }
                 };
+                // Get selected items for this category
+                const selectedForCategory = selectedItems.filter((item) => {
+                  const cat =
+                    categories.find(
+                      (c: { id: string; name: string }) =>
+                        c.id === item.equipment.categoryId
+                    )?.name || "Other";
+                  return cat === category;
+                });
                 return (
                   <View key={category} style={{ marginBottom: 24 }}>
-                    {/* Category Header */}
+                    {/* Category Header Row: left is flex column, right is add button */}
                     <View
                       style={{
                         flexDirection: "row",
                         alignItems: "center",
+                        justifyContent: "space-between",
                         marginBottom: 8,
+                        gap: 8,
                       }}
                     >
-                      <Text
-                        style={{ fontWeight: "700", fontSize: 16, flex: 1 }}
-                      >
-                        {category}
-                      </Text>
-                      <View style={{ flex: 1, marginRight: 8 }}>
+                      {/* Left: flex column */}
+                      <View style={{ flex: 1, flexDirection: "column" }}>
+                        <Text style={{ fontWeight: "700", fontSize: 16 }}>
+                          {category}
+                        </Text>
                         <View
                           style={{
                             height: 6,
                             backgroundColor: "#e5e7eb",
                             borderRadius: 3,
+                            marginBottom: 2,
+                            marginTop: 4,
                           }}
                         >
                           <View
@@ -581,127 +707,83 @@ export default function EquipmentTab({
                             }}
                           />
                         </View>
-                        <Text style={{ fontSize: 11, color: "#64748b" }}>
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            color: "#64748b",
+                            marginTop: 2,
+                          }}
+                        >
                           {placed} of {total} units placed
                         </Text>
                       </View>
+                      {/* Right: add button */}
                       <TouchableOpacity
                         style={{
                           backgroundColor: Colors.light.primary,
                           borderRadius: 8,
-                          padding: 4,
+                          padding: 8,
+                          height: 32,
+                          width: 32,
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
                         onPress={handleAddOne}
                       >
-                        <PlusIcon size={18} color="#fff" />
+                        <PlusIcon size={24} color="#fff" />
                       </TouchableOpacity>
                     </View>
-                    {/* Show only selected equipment for this category */}
-                    {selectedItems
-                      .filter((item) => {
-                        const cat =
-                          categories.find(
-                            (c: { id: string; name: string }) =>
-                              c.id === item.equipment.categoryId
-                          )?.name || "Other";
-                        return cat === category;
-                      })
-                      .map((item) => {
-                        const eq = item.equipment;
-                        const selectedQuantity = item.quantity;
-                        return (
-                          <View
-                            key={eq.id}
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              backgroundColor: "#fff",
-                              borderRadius: 8,
-                              borderWidth: 1,
-                              borderColor: "#e5e7eb",
-                              marginBottom: 8,
-                              padding: 10,
-                            }}
-                          >
-                            <Image
-                              source={icon}
-                              style={{ width: 24, height: 24, marginRight: 8 }}
-                            />
-                            <View style={{ flex: 1 }}>
-                              <Text
-                                style={{ fontWeight: "600", color: "#1e293b" }}
-                              >
-                                {eq.name}
-                              </Text>
-                              {/* Special UI for Dehumidifiers (pints selector) */}
-                              {category === "Dehumidifiers" && (
-                                <View
-                                  style={{ flexDirection: "row", marginTop: 4 }}
-                                >
-                                  {[60, 120, 180].map((val) => (
-                                    <TouchableOpacity
-                                      key={val}
-                                      style={{
-                                        backgroundColor:
-                                          selectedQuantity === val
-                                            ? Colors.light.primary
-                                            : "#f1f5f9",
-                                        borderRadius: 6,
-                                        paddingHorizontal: 10,
-                                        paddingVertical: 4,
-                                        marginRight: 6,
-                                      }}
-                                      onPress={() =>
-                                        handleQuantityChange(eq.id, val)
-                                      }
-                                    >
-                                      <Text
-                                        style={{
-                                          color:
-                                            selectedQuantity === val
-                                              ? "#fff"
-                                              : "#1e293b",
-                                        }}
-                                      >
-                                        {val}
-                                      </Text>
-                                    </TouchableOpacity>
-                                  ))}
-                                  <TouchableOpacity
-                                    style={{
-                                      backgroundColor: "#f1f5f9",
-                                      borderRadius: 6,
-                                      paddingHorizontal: 10,
-                                      paddingVertical: 4,
-                                    }}
-                                    onPress={() =>
-                                      handleQuantityChange(eq.id, 1)
-                                    }
-                                  >
-                                    <Text style={{ color: "#1e293b" }}>
-                                      Custom
-                                    </Text>
-                                  </TouchableOpacity>
-                                </View>
-                              )}
-                            </View>
+                    {/* Selected Items List for this category */}
+                    {selectedForCategory.length > 0 && (
+                      <View style={{ marginBottom: 8 }}>
+                        {selectedForCategory.map((item, idx) => {
+                          const eq = item.equipment;
+                          const selectedQuantity = item.quantity;
+                          return (
                             <View
+                              key={eq.id}
                               style={{
                                 flexDirection: "row",
                                 alignItems: "center",
+                                justifyContent: "space-between",
+                                backgroundColor: "#fff",
+                                borderRadius: 8,
+                                borderWidth: 1,
+                                borderColor: "#e5e7eb",
+                                marginBottom: 4,
+                                padding: 10,
                               }}
                             >
-                              <Text
+                              <View
                                 style={{
-                                  fontWeight: "600",
-                                  color: "#1e293b",
-                                  marginRight: 8,
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  flex: 1,
                                 }}
                               >
-                                {selectedQuantity}
-                              </Text>
+                                <Image
+                                  source={icon}
+                                  style={{
+                                    width: 26,
+                                    height: 26,
+                                    marginRight: 8,
+                                  }}
+                                />
+                                <Text
+                                  style={{
+                                    fontWeight: "600",
+                                    color: "#1e293b",
+                                  }}
+                                >
+                                  {`${category} ${idx + 1}`}
+                                </Text>
+                                {/* <Text
+                                  style={{ marginLeft: 8, color: "#64748b" }}
+                                >
+                                  x{selectedQuantity}
+                                </Text> */}
+                              </View>
                               <TouchableOpacity
-                                style={{ marginLeft: 8 }}
                                 onPress={() =>
                                   setSelectedItems((prev) =>
                                     prev.filter((i) => i.equipment.id !== eq.id)
@@ -711,9 +793,11 @@ export default function EquipmentTab({
                                 <MinusIcon size={18} color="#ef4444" />
                               </TouchableOpacity>
                             </View>
-                          </View>
-                        );
-                      })}
+                          );
+                        })}
+                      </View>
+                    )}
+                    {/* Optionally, you can show the add UI for this category here if needed */}
                   </View>
                 );
               })}
@@ -773,21 +857,80 @@ export default function EquipmentTab({
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
+            <View style={styles.historyModalHeader}>
               <Text style={styles.modalTitle}>Equipment History</Text>
               <TouchableOpacity onPress={() => setShowHistoryModal(false)}>
                 <XIcon size={24} color="#64748b" />
               </TouchableOpacity>
             </View>
-            <View style={styles.modalBody}>
+            <View style={styles.historyModalBody}>
               <Text style={styles.modalSubtitle}>
                 {selectedEquipment?.name}
               </Text>
+
+              {/* Status Change History */}
+              {selectedAssignmentForHistory && (
+                <View style={{ marginBottom: 16 }}>
+                  <Text style={styles.historySectionTitle}>Status Changes</Text>
+                  <ScrollView style={styles.historyList}>
+                    {statusChangeHistory.length > 0 ? (
+                      statusChangeHistory.map((change: any) => (
+                        <View key={change.id} style={styles.historyItem}>
+                          <View style={styles.historyInfo}>
+                            <View style={styles.historyHeader}>
+                              <Text style={styles.historyStatusChange}>
+                                {change.oldStatus ? change.oldStatus + "→" : ""}{" "}
+                                {change.newStatus}
+                              </Text>
+                              <View
+                                style={[
+                                  styles.statusBadge,
+                                  change.newStatus === "PLACED"
+                                    ? styles.placedStatusBadge
+                                    : change.newStatus === "ACTIVE"
+                                      ? styles.activeStatusBadge
+                                      : styles.removedStatusBadge,
+                                ]}
+                              >
+                                <Text style={styles.statusText}>
+                                  {change.newStatus}
+                                </Text>
+                              </View>
+                            </View>
+                            <Text style={styles.historyDate}>
+                              Changed:{" "}
+                              {new Date(change.changedAt).toLocaleDateString()}{" "}
+                              at{" "}
+                              {new Date(change.changedAt).toLocaleTimeString()}
+                            </Text>
+                            {change.changedByUser && (
+                              <Text style={styles.historyUser}>
+                                By: {change.changedByUser.firstName}{" "}
+                                {change.changedByUser.lastName}
+                              </Text>
+                            )}
+                          </View>
+                        </View>
+                      ))
+                    ) : (
+                      <View style={styles.historyItem}>
+                        <Text style={styles.historyDate}>
+                          No status changes recorded
+                        </Text>
+                      </View>
+                    )}
+                  </ScrollView>
+                </View>
+              )}
+
+              {/* Assignment History */}
+              <Text style={styles.historySectionTitle}>Assignment History</Text>
               <ScrollView style={styles.historyList}>
                 {(
                   selectedEquipment as EquipmentWithHistory
                 )?.currentAssignments?.map((assignment: EquipmentProject) => {
-                  const status = (assignment as any).status || "ACTIVE";
+                  const status = (assignment as any).status || "PLACED";
+                  const isPlaced = status === "PLACED";
                   const isActive = status === "ACTIVE";
                   const isRemoved = status === "REMOVED";
 
@@ -807,21 +950,21 @@ export default function EquipmentTab({
                           <View
                             style={[
                               styles.statusBadge,
-                              isActive
-                                ? styles.activeStatusBadge
-                                : styles.inactiveStatusBadge,
+                              isPlaced
+                                ? styles.placedStatusBadge
+                                : isActive
+                                  ? styles.activeStatusBadge
+                                  : styles.removedStatusBadge,
                             ]}
                           >
-                            <Text style={styles.statusText}>
-                              {isActive ? "ACTIVE" : status}
-                            </Text>
+                            <Text style={styles.statusText}>{status}</Text>
                           </View>
                         </View>
                         <Text style={styles.historyQuantity}>
                           Quantity: {assignment.quantity}
                         </Text>
                         <Text style={styles.historyDate}>
-                          Added:{" "}
+                          Placed:{" "}
                           {new Date(assignment.createdAt).toLocaleDateString()}
                         </Text>
                         {/* TODO: Uncomment when user types are updated
@@ -839,6 +982,87 @@ export default function EquipmentTab({
             </View>
           </View>
         </View>
+      </Modal>
+
+      {/* Options Modal for Equipment Actions */}
+      <Modal
+        visible={!!optionsAssignment}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOptionsAssignment(null)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPressOut={() => setOptionsAssignment(null)}
+        >
+          <View style={styles.optionsModal}>
+            <TouchableOpacity
+              style={styles.optionItem}
+              onPress={() => {
+                const currentStatus =
+                  (optionsAssignment as any)?.status || "PLACED";
+                const statusOptions = [];
+
+                // Add Cancel option
+                statusOptions.push({
+                  text: "Cancel",
+                  style: "cancel" as const,
+                });
+
+                // Add status options excluding current status
+                if (currentStatus !== "PLACED") {
+                  statusOptions.push({
+                    text: "Placed",
+                    onPress: () =>
+                      handleStatusChange(optionsAssignment!.id, "PLACED"),
+                  });
+                }
+
+                if (currentStatus !== "ACTIVE") {
+                  statusOptions.push({
+                    text: "Active",
+                    onPress: () =>
+                      handleStatusChange(optionsAssignment!.id, "ACTIVE"),
+                  });
+                }
+
+                if (currentStatus !== "REMOVED") {
+                  statusOptions.push({
+                    text: "Removed",
+                    onPress: () =>
+                      handleStatusChange(optionsAssignment!.id, "REMOVED"),
+                  });
+                }
+
+                Alert.alert(
+                  "Change Status",
+                  "Select new status:",
+                  statusOptions
+                );
+              }}
+            >
+              <Text style={styles.optionText}>Change Status</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.optionItem}
+              onPress={() => {
+                if (optionsAssignment) {
+                  handleRemoveEquipment(
+                    optionsAssignment.id,
+                    optionsAssignment.equipment?.name || "Equipment"
+                  );
+                }
+                setOptionsAssignment(null);
+              }}
+            >
+              <Text style={[styles.optionText, { color: "#ef4444" }]}>
+                Remove
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -915,11 +1139,18 @@ const styles = StyleSheet.create({
   equipmentInfo: {
     flex: 1,
   },
+  equipmentHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 2,
+  },
   equipmentName: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1e293b",
     marginBottom: 2,
+    flex: 1,
   },
   equipmentDescription: {
     fontSize: 14,
@@ -936,6 +1167,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   historyButton: {
+    padding: 8,
+  },
+  optionsButton: {
     padding: 8,
   },
   removeButton: {
@@ -958,6 +1192,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
   },
+  historyModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
   closeButton: {
     padding: 8,
   },
@@ -972,6 +1216,10 @@ const styles = StyleSheet.create({
   modalBody: {
     flex: 1,
     padding: 16,
+  },
+  historyModalBody: {
+    padding: 16,
+    maxHeight: 400,
   },
   equipmentSelection: {
     marginBottom: 24,
@@ -1125,26 +1373,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1e293b",
   },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  activeStatusBadge: {
-    backgroundColor: "#d1fae5",
-    borderColor: "#10b981",
-    borderWidth: 1,
-  },
-  inactiveStatusBadge: {
-    backgroundColor: "#fef3c7",
-    borderColor: "#f59e0b",
-    borderWidth: 1,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#1e293b",
-  },
   historyQuantity: {
     fontSize: 14,
     color: "#64748b",
@@ -1157,10 +1385,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#64748b",
   },
+  historyStatusChange: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1e293b",
+  },
+  historySectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1e293b",
+    marginBottom: 8,
+  },
   removedHistoryItem: {
     opacity: 0.7,
     backgroundColor: "#f0f0f0",
     borderColor: "#e0e0e0",
+  },
+  removedEquipmentItem: {
+    opacity: 0.7,
+    backgroundColor: "#f0f0f0",
+    borderColor: "#e0e0e0",
+  },
+  removedText: {
+    textDecorationLine: "line-through",
+    color: "#94a3b8",
   },
   disabledEquipment: {
     opacity: 0.7,
@@ -1206,5 +1454,54 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#94a3b8",
     marginLeft: 10,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    // paddingVertical: 4,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+  },
+  placedStatusBadge: {
+    backgroundColor: "#d1fae5",
+    borderColor: "#10b981",
+    borderWidth: 1,
+  },
+  activeStatusBadge: {
+    backgroundColor: "#dbeafe",
+    borderColor: "#3b82f6",
+    borderWidth: 1,
+  },
+  removedStatusBadge: {
+    backgroundColor: "#fef2f2",
+    borderColor: "#ef4444",
+    borderWidth: 1,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#1e293b",
+  },
+  optionsModal: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    position: "absolute",
+    bottom: 40,
+    left: 20,
+    right: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  optionItem: {
+    paddingVertical: 12,
+  },
+  optionText: {
+    fontSize: 16,
+    color: "#1e293b",
+    textAlign: "center",
   },
 });

@@ -82,16 +82,16 @@ export default function Layout({ children }: React.PropsWithChildren) {
       href: `/projects/${id}/files`,
     },
     {
-      title: "Photos",
-      href: `/projects/${id}/photos`,
-    },
-    {
       title: "Rooms",
       href: `/projects/${id}/rooms`,
     },
     {
       title: "Mitigation",
       href: `/projects/${id}/mitigation`,
+    },
+    {
+      title: "Photos",
+      href: `/projects/${id}/photos`,
     },
     {
       title: "Expenses",

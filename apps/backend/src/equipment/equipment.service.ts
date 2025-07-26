@@ -167,6 +167,10 @@ export class EquipmentService {
     assignEquipmentDto: AssignEquipmentDto,
     userId: string,
   ): Promise<EquipmentProject> {
+    console.log(
+      '🚀 ~ EquipmentService ~ assignEquipment ~ assignEquipmentDto:',
+      assignEquipmentDto,
+    );
     // Check if equipment exists
     const equipment = await this.prisma.equipment.findUnique({
       where: { id: assignEquipmentDto.equipmentId },
@@ -212,11 +216,11 @@ export class EquipmentService {
       );
     }
 
-    // Calculate total currently assigned quantity for this equipment (only ACTIVE assignments)
+    // Calculate total currently assigned quantity for this equipment (only PLACED and ACTIVE assignments)
     const currentAssignments = await this.prisma.equipmentProject.findMany({
       where: {
         equipmentId: assignEquipmentDto.equipmentId,
-        status: 'ACTIVE', // Only count active assignments
+        status: { in: ['PLACED', 'ACTIVE'] }, // Count PLACED and ACTIVE assignments
       },
     });
 
@@ -236,13 +240,13 @@ export class EquipmentService {
     }
 
     // Create equipment project assignment with user tracking
-    return this.prisma.equipmentProject.create({
+    const assignment = await this.prisma.equipmentProject.create({
       data: {
         equipmentId: assignEquipmentDto.equipmentId,
         projectId: assignEquipmentDto.projectId,
         quantity: assignEquipmentDto.quantity,
         userId: userId,
-        status: 'ACTIVE',
+        status: 'PLACED',
         ...(assignEquipmentDto.roomId
           ? { roomId: assignEquipmentDto.roomId }
           : {}),
@@ -260,6 +264,18 @@ export class EquipmentService {
         },
       },
     });
+
+    // Record the initial status change
+    await this.prisma.equipmentStatusChange.create({
+      data: {
+        equipmentProjectId: assignment.id,
+        oldStatus: null, // Initial assignment, no previous status
+        newStatus: 'PLACED',
+        changedByUserId: userId,
+      },
+    });
+
+    return assignment;
   }
 
   async getEquipmentAssignments(
@@ -294,7 +310,7 @@ export class EquipmentService {
     return this.prisma.equipmentProject.findMany({
       where: {
         projectId,
-        status: 'ACTIVE', // Only return active assignments
+        // Return all assignments including REMOVED ones
       },
       include: {
         equipment: true,
@@ -343,8 +359,10 @@ export class EquipmentService {
       );
     }
 
+    const oldStatus = assignment.status;
+
     // Soft delete by updating status to REMOVED
-    return this.prisma.equipmentProject.update({
+    const updatedAssignment = await this.prisma.equipmentProject.update({
       where: { id: assignmentId },
       data: { status: 'REMOVED' },
       include: {
@@ -360,6 +378,83 @@ export class EquipmentService {
         },
       },
     });
+
+    // Record the status change
+    await this.prisma.equipmentStatusChange.create({
+      data: {
+        equipmentProjectId: assignmentId,
+        oldStatus,
+        newStatus: 'REMOVED',
+        changedByUserId: userId,
+      },
+    });
+
+    return updatedAssignment;
+  }
+
+  async updateEquipmentAssignmentStatus(
+    assignmentId: string,
+    status: 'PLACED' | 'ACTIVE' | 'REMOVED',
+    userId: string,
+  ): Promise<EquipmentProject> {
+    const assignment = await this.prisma.equipmentProject.findUnique({
+      where: { id: assignmentId },
+      include: {
+        equipment: true,
+      },
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Equipment assignment not found');
+    }
+
+    // Check if user has permission
+    const member = await this.prisma.organizationMember.findFirst({
+      where: {
+        organizationId: assignment.equipment.organizationId,
+        userId,
+        status: MemberStatus.ACTIVE,
+        role: { in: [Role.OWNER, Role.ADMIN, Role.PROJECT_MANAGER] },
+      },
+    });
+
+    if (!member) {
+      throw new BadRequestException(
+        'You do not have permission to update equipment assignments in this organization',
+      );
+    }
+
+    const oldStatus = assignment.status;
+
+    // Update the assignment status
+    const updatedAssignment = await this.prisma.equipmentProject.update({
+      where: { id: assignmentId },
+      data: { status },
+      include: {
+        equipment: true,
+        room: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    // Log the status change
+    await this.prisma.equipmentStatusChange.create({
+      data: {
+        equipmentProjectId: assignmentId,
+        oldStatus,
+        newStatus: status,
+        changedByUserId: userId,
+      },
+    });
+
+    return updatedAssignment;
   }
 
   async getEquipmentHistory(
@@ -467,6 +562,52 @@ export class EquipmentService {
         },
       },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getEquipmentStatusChangeHistory(
+    assignmentId: string,
+    userId: string,
+  ): Promise<any[]> {
+    const assignment = await this.prisma.equipmentProject.findUnique({
+      where: { id: assignmentId },
+      include: {
+        equipment: true,
+      },
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Equipment assignment not found');
+    }
+
+    // Check if user has permission
+    const member = await this.prisma.organizationMember.findFirst({
+      where: {
+        organizationId: assignment.equipment.organizationId,
+        userId,
+        status: MemberStatus.ACTIVE,
+      },
+    });
+
+    if (!member) {
+      throw new BadRequestException(
+        'You do not have permission to view equipment status history in this organization',
+      );
+    }
+
+    return this.prisma.equipmentStatusChange.findMany({
+      where: { equipmentProjectId: assignmentId },
+      include: {
+        changedByUser: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { changedAt: 'desc' },
     });
   }
 }

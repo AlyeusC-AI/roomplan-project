@@ -34,8 +34,8 @@ const RoomNoteListItem = ({ room }: { room: Room }) => {
   const { getNotesByRoom } = useOfflineNotesStore();
   const { isOffline } = useNetworkStatus();
 
-  // Get offline notes for this room
-  const offlineNotes = getNotesByRoom(room.id);
+  // Get offline notes for this room - only show when offline
+  const offlineNotes = isOffline ? getNotesByRoom(room.id) : [];
 
   const onAdd = async () => {
     await createNote({
@@ -86,44 +86,46 @@ const RoomNoteListItem = ({ room }: { room: Room }) => {
         </Button>
       </View>
 
-      {/* Show offline notes first */}
-      {offlineNotes.map((offlineNote) => (
-        <OfflineNoteCard
-          key={offlineNote.id}
-          note={offlineNote}
-          roomId={room.id}
-          projectId={projectId!}
-        />
-      ))}
+      {/* Show offline notes only when offline */}
+      {isOffline &&
+        offlineNotes.map((offlineNote) => (
+          <OfflineNoteCard
+            key={offlineNote.id}
+            note={offlineNote}
+            roomId={room.id}
+            projectId={projectId!}
+          />
+        ))}
 
       {/* Show online notes */}
       {notes?.map((note) => <NoteCard key={note.id} note={note} room={room} />)}
 
-      {notes?.length === 0 && offlineNotes.length === 0 && (
-        <Card
-          style={{
-            padding: 16,
-            marginBottom: 16,
-            borderRadius: 12,
-            borderStyle: "dashed",
-            borderWidth: 1,
-            borderColor: "#CBD5E1",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ color: "#64748B", marginBottom: 8 }}>
-            No notes for this room
-          </Text>
-          <Button variant="outline" onPress={onAdd}>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-            >
-              <PlusComponent size={16} color="#1e40af" />
-              <Text style={{ color: "#1e40af" }}>Add Note</Text>
-            </View>
-          </Button>
-        </Card>
-      )}
+      {notes?.length === 0 &&
+        (isOffline ? offlineNotes.length === 0 : true) && (
+          <Card
+            style={{
+              padding: 16,
+              marginBottom: 16,
+              borderRadius: 12,
+              borderStyle: "dashed",
+              borderWidth: 1,
+              borderColor: "#CBD5E1",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#64748B", marginBottom: 8 }}>
+              No notes for this room
+            </Text>
+            <Button variant="outline" onPress={onAdd}>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+              >
+                <PlusComponent size={16} color="#1e40af" />
+                <Text style={{ color: "#1e40af" }}>Add Note</Text>
+              </View>
+            </Button>
+          </Card>
+        )}
     </View>
   );
 };

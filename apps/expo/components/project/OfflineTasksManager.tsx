@@ -375,7 +375,7 @@ export default function OfflineTasksManager({
             {completedTasks.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>
-                  Completed ({completedTasks.length}) - Auto-clearing soon
+                  Completed ({completedTasks.length}) - Auto-clearing in 2s
                 </Text>
                 {completedTasks.slice(0, 5).map((task) => (
                   <TaskItem key={task.id} task={task} />
