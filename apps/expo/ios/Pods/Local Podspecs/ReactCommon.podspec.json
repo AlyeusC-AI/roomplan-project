@@ -26,17 +26,39 @@
     {
       "name": "turbomodule",
       "dependencies": {
-        "React-callinvoker": [],
-        "React-perflogger": [],
-        "React-cxxreact": [],
-        "React-jsi": [],
-        "RCT-Folly": [],
-        "React-logger": [],
-        "DoubleConversion": [],
-        "fast_float": [],
-        "fmt": [],
-        "glog": [],
-        "hermes-engine": []
+        "React-callinvoker": [
+
+        ],
+        "React-perflogger": [
+
+        ],
+        "React-cxxreact": [
+
+        ],
+        "React-jsi": [
+
+        ],
+        "RCT-Folly": [
+
+        ],
+        "React-logger": [
+
+        ],
+        "DoubleConversion": [
+
+        ],
+        "fast_float": [
+
+        ],
+        "fmt": [
+
+        ],
+        "glog": [
+
+        ],
+        "hermes-engine": [
+
+        ]
       },
       "subspecs": [
         {
@@ -45,7 +67,9 @@
             "React-jsi": [
               "0.76.9"
             ],
-            "hermes-engine": []
+            "hermes-engine": [
+
+            ]
           },
           "source_files": "react/bridging/**/*.{cpp,h}",
           "exclude_files": "react/bridging/tests",

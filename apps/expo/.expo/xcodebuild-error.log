@@ -1,3 +1,7 @@
---- xcodebuild: WARNING: Using the first of multiple matching destinations:
-{ platform:iOS Simulator, arch:arm64, id:71CFFCAD-B91E-46EF-BA8A-6913D44217AE, OS:18.3.1, name:iPhone 16 Pro }
-{ platform:iOS Simulator, arch:x86_64, id:71CFFCAD-B91E-46EF-BA8A-6913D44217AE, OS:18.3.1, name:iPhone 16 Pro }
+** BUILD FAILED **
+
+
+The following build commands failed:
+	ComputeTargetDependencyGraph
+	Building workspace Restoregeek with scheme Restoregeek and configuration Debug
+(2 failures)

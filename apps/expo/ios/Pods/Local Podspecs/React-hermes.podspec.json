@@ -25,17 +25,41 @@
   },
   "header_dir": "reacthermes",
   "dependencies": {
-    "React-cxxreact": [],
-    "React-jsiexecutor": [],
-    "React-jsinspector": [],
-    "React-perflogger": [],
-    "RCT-Folly": [],
-    "DoubleConversion": [],
-    "fast_float": [],
-    "fmt": [],
-    "glog": [],
-    "hermes-engine": [],
-    "React-jsi": [],
-    "React-runtimeexecutor": []
+    "React-cxxreact": [
+
+    ],
+    "React-jsiexecutor": [
+
+    ],
+    "React-jsinspector": [
+
+    ],
+    "React-perflogger": [
+
+    ],
+    "RCT-Folly": [
+
+    ],
+    "DoubleConversion": [
+
+    ],
+    "fast_float": [
+
+    ],
+    "fmt": [
+
+    ],
+    "glog": [
+
+    ],
+    "hermes-engine": [
+
+    ],
+    "React-jsi": [
+
+    ],
+    "React-runtimeexecutor": [
+
+    ]
   }
 }

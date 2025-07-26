@@ -24,10 +24,20 @@
     "RCT-Folly/Fabric": [
       "2024.10.14.00"
     ],
-    "React-jsi": [],
-    "React-cxxreact": [],
-    "glog": [],
-    "React-debug": [],
-    "hermes-engine": []
+    "React-jsi": [
+
+    ],
+    "React-cxxreact": [
+
+    ],
+    "glog": [
+
+    ],
+    "React-debug": [
+
+    ],
+    "hermes-engine": [
+
+    ]
   }
 }

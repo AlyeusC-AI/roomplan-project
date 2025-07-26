@@ -21,21 +21,51 @@
   },
   "header_dir": "cxxreact",
   "dependencies": {
-    "boost": [],
-    "DoubleConversion": [],
-    "fast_float": [],
-    "fmt": [],
-    "RCT-Folly": [],
-    "glog": [],
-    "React-jsinspector": [],
-    "React-callinvoker": [],
-    "React-runtimeexecutor": [],
-    "React-perflogger": [],
-    "React-jsi": [],
-    "React-logger": [],
-    "React-debug": [],
-    "React-timing": [],
-    "hermes-engine": []
+    "boost": [
+
+    ],
+    "DoubleConversion": [
+
+    ],
+    "fast_float": [
+
+    ],
+    "fmt": [
+
+    ],
+    "RCT-Folly": [
+
+    ],
+    "glog": [
+
+    ],
+    "React-jsinspector": [
+
+    ],
+    "React-callinvoker": [
+
+    ],
+    "React-runtimeexecutor": [
+
+    ],
+    "React-perflogger": [
+
+    ],
+    "React-jsi": [
+
+    ],
+    "React-logger": [
+
+    ],
+    "React-debug": [
+
+    ],
+    "React-timing": [
+
+    ],
+    "hermes-engine": [
+
+    ]
   },
   "resource_bundles": {
     "React-cxxreact_privacy": "PrivacyInfo.xcprivacy"
