@@ -201,7 +201,7 @@ export default function EquipmentTab({
   const { data: categories = [] } = useGetEquipmentCategories();
 
   // Status change history
-  const { data: statusChangeHistoryResponse } =
+  const { data: statusChangeHistoryResponse, refetch: refetchStatusHistory } =
     useGetEquipmentStatusChangeHistory(selectedAssignmentForHistory?.id || "");
   const statusChangeHistory = statusChangeHistoryResponse?.data || [];
 
@@ -381,6 +381,12 @@ export default function EquipmentTab({
         status: newStatus,
       });
       toast.success(`Assignment status updated to ${newStatus}`);
+
+      // Refetch the status history to show the new change
+      if (selectedAssignmentForHistory?.id === assignmentId) {
+        await refetchStatusHistory();
+      }
+
       setShowOptionsModal(false);
       setSelectedAssignment(null);
       setOptionsAssignment(null);
@@ -873,7 +879,7 @@ export default function EquipmentTab({
                           <View style={styles.historyInfo}>
                             <View style={styles.historyHeader}>
                               <Text style={styles.historyStatusChange}>
-                                {change.oldStatus || "Initial"} →{" "}
+                                {change.oldStatus ? change.oldStatus + "→" : ""}{" "}
                                 {change.newStatus}
                               </Text>
                               <View
@@ -994,41 +1000,51 @@ export default function EquipmentTab({
             <TouchableOpacity
               style={styles.optionItem}
               onPress={() => {
-                setOptionsAssignment(null);
-                // Show status change options
-                Alert.alert("Change Status", "Select new status:", [
-                  { text: "Cancel", style: "cancel" },
-                  {
+                const currentStatus =
+                  (optionsAssignment as any)?.status || "PLACED";
+                const statusOptions = [];
+
+                // Add Cancel option
+                statusOptions.push({
+                  text: "Cancel",
+                  style: "cancel" as const,
+                });
+
+                // Add status options excluding current status
+                if (currentStatus !== "PLACED") {
+                  statusOptions.push({
                     text: "Placed",
                     onPress: () =>
                       handleStatusChange(optionsAssignment!.id, "PLACED"),
-                  },
-                  {
+                  });
+                }
+
+                if (currentStatus !== "ACTIVE") {
+                  statusOptions.push({
                     text: "Active",
                     onPress: () =>
                       handleStatusChange(optionsAssignment!.id, "ACTIVE"),
-                  },
-                  {
+                  });
+                }
+
+                if (currentStatus !== "REMOVED") {
+                  statusOptions.push({
                     text: "Removed",
                     onPress: () =>
                       handleStatusChange(optionsAssignment!.id, "REMOVED"),
-                  },
-                ]);
+                  });
+                }
+
+                Alert.alert(
+                  "Change Status",
+                  "Select new status:",
+                  statusOptions
+                );
               }}
             >
               <Text style={styles.optionText}>Change Status</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.optionItem}
-              onPress={() => {
-                setOptionsAssignment(null);
-                setTimeout(() => {
-                  handleOpenHistory(optionsAssignment!);
-                }, 100);
-              }}
-            >
-              <Text style={styles.optionText}>View History</Text>
-            </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.optionItem}
               onPress={() => {

@@ -167,6 +167,10 @@ export class EquipmentService {
     assignEquipmentDto: AssignEquipmentDto,
     userId: string,
   ): Promise<EquipmentProject> {
+    console.log(
+      '🚀 ~ EquipmentService ~ assignEquipment ~ assignEquipmentDto:',
+      assignEquipmentDto,
+    );
     // Check if equipment exists
     const equipment = await this.prisma.equipment.findUnique({
       where: { id: assignEquipmentDto.equipmentId },
