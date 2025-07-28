@@ -222,6 +222,9 @@ export default function Layout() {
           if (route.name === "forms") {
             return <ClipboardListIcon size={24} color={color} />;
           }
+          if (route.name === "reports") {
+            return <FileTextIcon size={24} color={color} />;
+          }
           if (route.name === "scope") {
             return <RulerIcon size={24} color={color} />;
           }
@@ -284,6 +287,13 @@ export default function Layout() {
         name="forms"
         options={{
           title: "Forms",
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="reports"
+        options={{
+          title: "Reports",
           href: null,
         }}
       />

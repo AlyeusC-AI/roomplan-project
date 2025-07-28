@@ -41,6 +41,7 @@ model User {
   Notification          Notification[]
   EquipmentProject      EquipmentProject[]
   EquipmentStatusChange EquipmentStatusChange[]
+  reports               Report[]
 }
 
 model Organization {
@@ -242,6 +243,7 @@ model Project {
   copilotProgress Json? // Stores project-level checklist progress
   chambers        Chamber[]
   ProjectMaterial ProjectMaterial[]
+  reports         Report[]
 }
 
 model Room {
@@ -946,4 +948,34 @@ model ProjectMaterial {
   @@unique([projectId, materialId]) // One material config per project
   @@index([projectId])
   @@index([materialId])
+}
+
+enum ReportStatus {
+  PENDING
+  GENERATING
+  COMPLETED
+  FAILED
+}
+
+model Report {
+  id          String       @id @default(uuid())
+  name        String
+  description String?
+  status      ReportStatus @default(PENDING)
+  fileUrl     String? // URL to the generated PDF file
+  fileSize    Int? // Size of the PDF file in bytes
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  generatedAt DateTime? // When the report was successfully generated
+
+  // Relationships
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  @@index([projectId])
+  @@index([createdById])
+  @@index([status])
 }

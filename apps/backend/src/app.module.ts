@@ -28,6 +28,7 @@ import { ChatModule } from './chat/chat.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ChambersModule } from './chambers/chambers.module';
 import { MaterialsModule } from './materials/materials.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { MaterialsModule } from './materials/materials.module';
     NotificationsModule,
     ChambersModule,
     MaterialsModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

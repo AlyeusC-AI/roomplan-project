@@ -293,10 +293,11 @@ export default function ProjectOverview() {
       title: "Report",
       description: "Generate project report",
       color: "#e11d48", // red
-      onPress: () =>
-        Linking.openURL(
-          `${process.env.EXPO_PUBLIC_BASE_URL}/projects/${projectId}/report`
-        ),
+      path: "./reports",
+      // onPress: () =>
+      //   Linking.openURL(
+      //     `${process.env.EXPO_PUBLIC_BASE_URL}/projects/${projectId}/report`
+      //   ),
     },
     // {
     //   path: "./dry-standard",

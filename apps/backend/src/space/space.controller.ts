@@ -34,7 +34,9 @@ export class SpaceController {
               ? 'image/gif'
               : fileExtension === 'webp'
                 ? 'image/webp'
-                : 'application/octet-stream';
+                : fileExtension === 'pdf'
+                  ? 'application/pdf'
+                  : 'application/octet-stream';
 
       // Create the command to upload the file
       const command = new PutObjectCommand({
