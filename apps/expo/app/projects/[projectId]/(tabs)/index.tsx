@@ -109,7 +109,7 @@ import ReportIcon from "@/assets/icons/report.png";
 import ChatIcon from "@/assets/icons/chat.png";
 import FilesIcon from "@/assets/icons/files.png";
 import ScopeIcon from "@/assets/icons/scope.png";
-import FormsIcon from "@/assets/icons/forms.png";
+import FormsIcon from "@/assets/icons/forms2.png";
 
 // Add the following at the top or after imports to declare PNG modules for TypeScript
 // @ts-expect-error: PNG module declaration for FastDelivery
@@ -1200,11 +1200,11 @@ export default function ProjectOverview() {
                 </View> */}
                 <Image
                   source={FloorPlanIcon}
-                  width={26}
-                  height={26}
+                  width={32}
+                  height={32}
                   style={{
-                    width: 26,
-                    height: 26,
+                    width: 32,
+                    height: 32,
                     resizeMode: "contain",
                   }}
                 />
@@ -1232,11 +1232,11 @@ export default function ProjectOverview() {
                 </View> */}
                 <Image
                   source={RobotIcon}
-                  width={26}
-                  height={26}
+                  width={32}
+                  height={32}
                   style={{
-                    width: 26,
-                    height: 26,
+                    width: 32,
+                    height: 32,
                     resizeMode: "contain",
                   }}
                 />
@@ -1295,16 +1295,16 @@ export default function ProjectOverview() {
                             // backgroundColor: "white",
                             // borderRadius: 999,
                             padding: 18,
-                            marginBottom: 6,
+                            marginBottom: 4,
                           }}
                         >
                           <Image
                             source={item.Icon as any}
-                            width={30}
-                            height={30}
+                            width={36}
+                            height={36}
                             style={{
-                              width: 30,
-                              height: 30,
+                              width: 36,
+                              height: 36,
                               resizeMode: "contain",
                             }}
                           />

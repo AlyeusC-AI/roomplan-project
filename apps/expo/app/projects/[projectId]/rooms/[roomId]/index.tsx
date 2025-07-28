@@ -9,6 +9,7 @@ import {
   StatusBar,
   Modal,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import {
@@ -43,6 +44,7 @@ import { useOfflineUploadsStore } from "@/lib/state/offline-uploads";
 import { useAddImage } from "@service-geek/api-client";
 import FabMenu from "./FabMenu";
 import { Colors } from "@/constants/Colors";
+import EquipmentIcon from "@/assets/equipments/equipment.png";
 
 // Type assertions to fix ReactNode compatibility
 const ChevronLeftIcon = ChevronLeft as any;
@@ -61,7 +63,12 @@ const TABS = [
   { key: "Images", label: "Images", icon: ImageIconComponent },
   { key: "Readings", label: "Readings", icon: BookOpenIconComponent },
   { key: "Scope", label: "Scope", icon: RulerIconComponent },
-  { key: "Equipment", label: "Equipment", icon: SettingsIcon },
+  {
+    key: "Equipment",
+    label: "Equipment",
+    icon: EquipmentIcon,
+    isImage: true,
+  },
   { key: "Notes", label: "Notes", icon: FileTextIconComponent },
 ];
 
@@ -138,11 +145,23 @@ export default function RoomScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.tabContentColumn}>
-                    <Icon
-                      size={22}
-                      color={isActive ? Colors.light.primary : "#64748b"}
-                      style={{ marginBottom: 2 }}
-                    />
+                    {t.isImage ? (
+                      <Image
+                        source={t.icon as any}
+                        width={22}
+                        height={22}
+                        style={{
+                          resizeMode: "contain",
+                          width: 22,
+                          height: 22,
+                        }}
+                      />
+                    ) : (
+                      <Icon
+                        size={22}
+                        color={isActive ? Colors.light.primary : "#64748b"}
+                      />
+                    )}
                     <Text
                       style={[styles.tabText, isActive && styles.activeTabText]}
                     >

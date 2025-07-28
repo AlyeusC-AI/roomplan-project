@@ -69,13 +69,14 @@ function EquipmentCalculationsHeader() {
   return (
     <View
       style={{
-        backgroundColor: "#f1f5f9",
+        // backgroundColor: "#f1f5f9",
         borderTopLeftRadius: 8,
         borderTopRightRadius: 8,
         borderBottomWidth: 1,
         borderColor: "#cbd5e1",
         padding: 8,
         marginBottom: 16,
+        backgroundColor: "#0E6FBE",
       }}
     >
       <Text
@@ -1071,7 +1072,8 @@ export default function EquipmentTab({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    // backgroundColor: "#F8FAFC",
+    backgroundColor: "#0E6FBE",
   },
   scrollView: {
     flex: 1,
