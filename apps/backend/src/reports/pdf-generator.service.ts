@@ -658,7 +658,7 @@ export class PdfGeneratorService {
 
   private async convertHTMLToPDF(html: string): Promise<Buffer> {
     const browser = await puppeteer.launch({
-      headless: 'new',
+      headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 
@@ -677,7 +677,7 @@ export class PdfGeneratorService {
         },
       });
 
-      return pdf;
+      return Buffer.from(pdf);
     } finally {
       await browser.close();
     }
