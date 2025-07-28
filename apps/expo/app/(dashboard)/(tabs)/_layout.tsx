@@ -17,7 +17,9 @@ import {
   TouchableOpacity,
   View,
   Text,
+  Image,
 } from "react-native";
+import ChatIcon from "@/assets/icons/chat.png";
 
 export default function Layout() {
   return (
@@ -105,7 +107,18 @@ export default function Layout() {
         name="chats/index"
         options={{
           title: "Chats",
-          tabBarIcon: ({ color }) => <MessageCircle size={24} color={color} />,
+          tabBarIcon: ({ color }) => (
+            <Image
+              source={ChatIcon as any}
+              width={24}
+              height={24}
+              style={{
+                width: 24,
+                height: 24,
+                resizeMode: "contain",
+              }}
+            />
+          ),
         }}
       />
       <Tabs.Screen

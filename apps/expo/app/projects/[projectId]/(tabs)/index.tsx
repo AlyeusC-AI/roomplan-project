@@ -103,6 +103,13 @@ import { Colors } from "@/constants/Colors";
 import FastDelivery from "@/assets/fast-delivery.png";
 import StartIcon from "@/assets/start.png";
 import RingIcon from "@/assets/ring.png";
+import FloorPlanIcon from "@/assets/icons/floorPlan.png";
+import RobotIcon from "@/assets/icons/robot.png";
+import ReportIcon from "@/assets/icons/report.png";
+import ChatIcon from "@/assets/icons/chat.png";
+import FilesIcon from "@/assets/icons/files.png";
+import ScopeIcon from "@/assets/icons/scope.png";
+import FormsIcon from "@/assets/icons/forms2.png";
 
 // Add the following at the top or after imports to declare PNG modules for TypeScript
 // @ts-expect-error: PNG module declaration for FastDelivery
@@ -258,38 +265,34 @@ export default function ProjectOverview() {
   const navigationItems = [
     {
       path: "./chat",
-      Icon: MessageCircle,
+      Icon: ChatIcon,
       title: "Chat",
       description: "Project conversation",
       color: "#2563eb", // blue
     },
     {
       path: "./documents",
-      Icon: (props: any) => (
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          {React.createElement(File as any, { ...props })}
-        </View>
-      ),
+      Icon: FilesIcon,
       title: "Files",
       description: "Manage project files",
       color: "#059669", // green
     },
     {
       path: "./scope",
-      Icon: Ruler,
+      Icon: ScopeIcon,
       title: "Scope ",
       description: "Manage scope of work",
       color: "#f59e42", // orange
     },
     {
       path: "./forms",
-      Icon: FileText,
+      Icon: FormsIcon,
       title: "Forms",
       description: "Manage project forms",
       color: "#a21caf", // purple
     },
     {
-      Icon: Files,
+      Icon: ReportIcon,
       title: "Report",
       description: "Generate project report",
       color: "#e11d48", // red
@@ -1181,7 +1184,7 @@ export default function ProjectOverview() {
             <OfflineTasksManager projectId={projectId} />
 
             {/* <View style={styles.actionButtonGroup}> */}
-            <View style={[styles.actionButtonCard, { marginTop: 16 }]}>
+            <View style={[styles.actionButtonCard, { marginTop: 32 }]}>
               <TouchableOpacity
                 className="bg-white rounded-lg w-full"
                 onPress={() => {
@@ -1195,7 +1198,16 @@ export default function ProjectOverview() {
               >
                 {/* <View style={styles.actionButtonIconContainer}>
                 </View> */}
-                <ScanIcon size={26} color={Colors.light.primary} />
+                <Image
+                  source={FloorPlanIcon}
+                  width={32}
+                  height={32}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    resizeMode: "contain",
+                  }}
+                />
                 <View className="flex-1">
                   <Text className="font-medium text-base">Floor Plan</Text>
                   <Text className="text-xs mt-0.5">Lidar scans</Text>
@@ -1218,10 +1230,16 @@ export default function ProjectOverview() {
               >
                 {/* <View style={styles.actionButtonIconContainer}>
                 </View> */}
-                {React.createElement(Bot as any, {
-                  size: 26,
-                  color: Colors.light.primary,
-                })}
+                <Image
+                  source={RobotIcon}
+                  width={32}
+                  height={32}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    resizeMode: "contain",
+                  }}
+                />
                 <View className="flex-1">
                   <Text className="font-medium text-base">Co-Pilot</Text>
                   <Text className="text-xs mt-0.5">
@@ -1251,7 +1269,7 @@ export default function ProjectOverview() {
                       style={{
                         width: 70,
                         height: 100,
-                        marginRight: 4,
+                        marginRight: 8,
                         // padding: 18,
                       }}
                       onPress={() => {
@@ -1277,13 +1295,19 @@ export default function ProjectOverview() {
                             // backgroundColor: "white",
                             // borderRadius: 999,
                             padding: 18,
-                            marginBottom: 6,
+                            marginBottom: 4,
                           }}
                         >
-                          {React.createElement(item.Icon as any, {
-                            size: 30,
-                            color: item.color,
-                          })}
+                          <Image
+                            source={item.Icon as any}
+                            width={36}
+                            height={36}
+                            style={{
+                              width: 36,
+                              height: 36,
+                              resizeMode: "contain",
+                            }}
+                          />
                         </View>
                         <Text numberOfLines={2}>{item.title}</Text>
                       </View>

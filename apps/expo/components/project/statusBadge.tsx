@@ -18,11 +18,11 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const textColor = status.color?.toLowerCase() === "cyan" ? "black" : "white";
 
   return (
-    <View
-      className="px-2 py-0.5 rounded-full"
-      style={{ backgroundColor: bgColor }}
-    >
-      <Text className="text-xs font-semibold text-white" style={{ color: textColor }}>
+    <View className="px-2 py-0.5 rounded" style={{ backgroundColor: bgColor }}>
+      <Text
+        className="text-xs font-semibold text-white"
+        style={{ color: textColor }}
+      >
         {status.label.replace(/_/g, " ")}
       </Text>
     </View>

@@ -22,20 +22,10 @@
     "DEFINES_MODULE": "YES"
   },
   "dependencies": {
-    "RCT-Folly": [
-
-    ],
-    "DoubleConversion": [
-
-    ],
-    "fast_float": [
-
-    ],
-    "fmt": [
-
-    ],
-    "React-debug": [
-
-    ]
+    "RCT-Folly": [],
+    "DoubleConversion": [],
+    "fast_float": [],
+    "fmt": [],
+    "React-debug": []
   }
 }

@@ -21,29 +21,13 @@
     "DEFINES_MODULE": "YES"
   },
   "dependencies": {
-    "glog": [
-
-    ],
-    "RCT-Folly": [
-
-    ],
-    "React-featureflags": [
-
-    ],
-    "DoubleConversion": [
-
-    ],
-    "React-runtimeexecutor": [
-
-    ],
-    "React-jsi": [
-
-    ],
-    "React-perflogger": [
-
-    ],
-    "hermes-engine": [
-
-    ]
+    "glog": [],
+    "RCT-Folly": [],
+    "React-featureflags": [],
+    "DoubleConversion": [],
+    "React-runtimeexecutor": [],
+    "React-jsi": [],
+    "React-perflogger": [],
+    "hermes-engine": []
   }
 }

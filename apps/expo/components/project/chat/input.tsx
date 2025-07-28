@@ -608,7 +608,7 @@ export function ChatInput({
                       onPress={handleCamera}
                     >
                       <Text style={styles.attachmentIcon}>
-                        <CameraIcon />
+                        <CameraIcon color={Colors.light.primary} />
                       </Text>
                     </TouchableOpacity>
 
@@ -622,7 +622,7 @@ export function ChatInput({
                       onPress={handleImagePicker}
                     >
                       <Text style={styles.attachmentIcon}>
-                        <ImageIcon />
+                        <ImageIcon color={Colors.light.primary} />
                       </Text>
                     </TouchableOpacity>
 
@@ -636,7 +636,7 @@ export function ChatInput({
                       onPress={handleDocumentPicker}
                     >
                       <Text style={styles.attachmentIcon}>
-                        <PaperclipIcon />
+                        <PaperclipIcon color={Colors.light.primary} />
                       </Text>
                     </TouchableOpacity>
 
@@ -721,7 +721,7 @@ export function ChatInput({
                 onPress={stopRecording}
               >
                 <Text style={styles.sendIcon}>
-                  <SendHorizontalIcon />
+                  <SendHorizontalIcon color={Colors.light.primary} />
                 </Text>
               </TouchableOpacity>
             ) : (
@@ -735,7 +735,11 @@ export function ChatInput({
                 disabled={!connected || isUploading}
               >
                 <Text style={styles.sendIcon}>
-                  {message.trim() ? <SendHorizontalIcon /> : <MicIcon />}
+                  {message.trim() ? (
+                    <SendHorizontalIcon color={Colors.light.primary} />
+                  ) : (
+                    <MicIcon color={Colors.light.primary} />
+                  )}
                 </Text>
               </TouchableOpacity>
             )}

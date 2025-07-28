@@ -9,12 +9,12 @@ import {
   ClipboardList,
   Ruler,
   FileText,
-  User,
-  Clock,
-  Share2,
   Edit2,
   FileClock,
   MoreVertical, // Add this import
+  User,
+  Clock,
+  Share2,
 } from "lucide-react-native";
 import { router, Tabs, useGlobalSearchParams } from "expo-router";
 import {
@@ -34,6 +34,9 @@ import DryStandardScreen from "./dry-standard";
 import DryStandardDetailScreen from "./dry-standard-detail";
 import { Colors } from "@/constants/Colors";
 import ShareIcon from "@/assets/share.png";
+import UsersIcon from "@/assets/icons/group.png";
+import TimeIcon from "@/assets/icons/time.png";
+import ShareSvgIcon from "@/assets/icons/share.png";
 
 // Type assertions for lucide-react-native icons
 const ArrowLeftIcon = ArrowLeft as any;
@@ -44,11 +47,12 @@ const StickyNoteIcon = StickyNote as any;
 const ClipboardListIcon = ClipboardList as any;
 const RulerIcon = Ruler as any;
 const FileTextIcon = FileText as any;
-const UserIcon = User as any;
 const ClockIcon = FileClock as any;
-const Share2Icon = Share2 as any;
 const Edit2Icon = Edit2 as any;
 const MoreVerticalIcon = MoreVertical as any; // Add this line
+// const UserIcon = User as any;
+// const ClockIcon2 = Clock as any;
+// const Share2Icon = Share2 as any;
 
 export default function Layout() {
   const { projectId } = useGlobalSearchParams();
@@ -129,10 +133,15 @@ export default function Layout() {
                       })
                     }
                   >
-                    <UserIcon
-                      size={28}
-                      fill={Colors.light.primary}
-                      // color={"#f"}
+                    <Image
+                      source={UsersIcon}
+                      width={28}
+                      height={28}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        resizeMode: "contain",
+                      }}
                     />
                     <Text
                       className="text-black font-medium text-center"
@@ -144,10 +153,15 @@ export default function Layout() {
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity className="gap-2 items-center">
-                    <ClockIcon
-                      size={28}
-                      fill={Colors.light.primary}
-                      color={"#fff"}
+                    <Image
+                      source={TimeIcon}
+                      width={28}
+                      height={28}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        resizeMode: "contain",
+                      }}
                     />
                     <Text
                       className="text-black font-medium text-center"
@@ -160,13 +174,13 @@ export default function Layout() {
                   </TouchableOpacity>
                   <TouchableOpacity className="gap-2 items-center">
                     <Image
-                      source={ShareIcon}
+                      source={ShareSvgIcon}
+                      width={28}
+                      height={28}
                       style={{
                         width: 28,
                         height: 28,
                         resizeMode: "contain",
-                        tintColor: Colors.light.primary,
-                        // marginBottom: 4,
                       }}
                     />
                     <Text
