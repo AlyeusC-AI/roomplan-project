@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  RefreshControl,
+  Modal,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -22,7 +24,7 @@ import {
   useDeleteReport,
   useGeneratePDF,
 } from "@service-geek/api-client";
-import { ReportStatus } from "@service-geek/api-client";
+import { ReportStatus, ReportType } from "@service-geek/api-client";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Linking from "expo-linking";
 
@@ -43,6 +45,11 @@ export default function ReportsScreen() {
   const { generatePDF } = useGeneratePDF();
   const [isCreating, setIsCreating] = useState(false);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedReportType, setSelectedReportType] = useState<ReportType>(
+    ReportType.PROJECT_SUMMARY
+  );
   const { top } = useSafeAreaInsets();
 
   const handleCreateReport = async () => {
@@ -51,9 +58,11 @@ export default function ReportsScreen() {
       await createReport({
         name: `Report ${new Date().toLocaleDateString()}`,
         description: "Project report",
+        type: selectedReportType,
         projectId: projectId!,
       });
       mutate();
+      setShowCreateModal(false);
     } catch (error) {
       Alert.alert("Error", "Failed to create report");
     } finally {
@@ -150,6 +159,17 @@ export default function ReportsScreen() {
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await mutate();
+    } catch (error) {
+      console.error("Failed to refresh reports:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const getStatusColor = (status: ReportStatus) => {
     switch (status) {
       case ReportStatus.COMPLETED:
@@ -176,6 +196,27 @@ export default function ReportsScreen() {
     }
   };
 
+  const getReportTypeText = (type: ReportType) => {
+    switch (type) {
+      case ReportType.PROJECT_SUMMARY:
+        return "Project Summary";
+      case ReportType.EQUIPMENT:
+        return "Equipment Report";
+      case ReportType.MOISTURE_READINGS:
+        return "Moisture Readings";
+      case ReportType.ROOM_DETAILS:
+        return "Room Details";
+      case ReportType.MATERIAL_ANALYSIS:
+        return "Material Analysis";
+      case ReportType.COST_BREAKDOWN:
+        return "Cost Breakdown";
+      case ReportType.CUSTOM:
+        return "Custom Report";
+      default:
+        return "Project Summary";
+    }
+  };
+
   if (isLoading) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -193,7 +234,7 @@ export default function ReportsScreen() {
           </TouchableOpacity>
           <Text className="text-lg font-semibold text-gray-900">Reports</Text>
           <TouchableOpacity
-            onPress={handleCreateReport}
+            onPress={() => setShowCreateModal(true)}
             disabled={isCreating}
             className="p-2 -mr-2"
           >
@@ -206,7 +247,17 @@ export default function ReportsScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1 px-4 py-6">
+      <ScrollView
+        className="flex-1 px-4 py-6"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#2563eb"]}
+            tintColor="#2563eb"
+          />
+        }
+      >
         {reports.length === 0 ? (
           <View className="flex-1 justify-center items-center py-12">
             <FileTextIcon size={48} color="#9ca3af" />
@@ -228,18 +279,30 @@ export default function ReportsScreen() {
                   <Text className="text-lg font-semibold text-gray-900">
                     {report.name}
                   </Text>
-                  <View
-                    className="px-2 py-1 rounded-full"
-                    style={{
-                      backgroundColor: `${getStatusColor(report.status)}20`,
-                    }}
-                  >
-                    <Text
-                      className="text-xs font-medium"
-                      style={{ color: getStatusColor(report.status) }}
+                  <View className="flex-row items-center space-x-2">
+                    <View
+                      className="px-2 py-1 rounded-full"
+                      style={{
+                        backgroundColor: "#f3f4f6",
+                      }}
                     >
-                      {getStatusText(report.status)}
-                    </Text>
+                      <Text className="text-xs font-medium text-gray-600">
+                        {getReportTypeText(report.type)}
+                      </Text>
+                    </View>
+                    <View
+                      className="px-2 py-1 rounded-full"
+                      style={{
+                        backgroundColor: `${getStatusColor(report.status)}20`,
+                      }}
+                    >
+                      <Text
+                        className="text-xs font-medium"
+                        style={{ color: getStatusColor(report.status) }}
+                      >
+                        {getStatusText(report.status)}
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
@@ -314,6 +377,73 @@ export default function ReportsScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Create Report Modal */}
+      <Modal
+        visible={showCreateModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowCreateModal(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
+          <View className="bg-white rounded-lg p-6 m-4 w-80">
+            <Text className="text-lg font-semibold text-gray-900 mb-4">
+              Create New Report
+            </Text>
+
+            <Text className="text-sm font-medium text-gray-700 mb-2">
+              Report Type
+            </Text>
+            <ScrollView className="max-h-48 mb-4">
+              {Object.values(ReportType).map((type) => (
+                <TouchableOpacity
+                  key={type}
+                  onPress={() => setSelectedReportType(type)}
+                  className={`p-3 rounded-lg mb-2 ${
+                    selectedReportType === type
+                      ? "bg-blue-100 border border-blue-300"
+                      : "bg-gray-50 border border-gray-200"
+                  }`}
+                >
+                  <Text
+                    className={`font-medium ${
+                      selectedReportType === type
+                        ? "text-blue-700"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    {getReportTypeText(type)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <View className="flex-row space-x-3">
+              <TouchableOpacity
+                onPress={() => setShowCreateModal(false)}
+                className="flex-1 p-3 bg-gray-200 rounded-lg"
+              >
+                <Text className="text-center font-medium text-gray-700">
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleCreateReport}
+                disabled={isCreating}
+                className="flex-1 p-3 bg-blue-500 rounded-lg"
+              >
+                {isCreating ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text className="text-center font-medium text-white">
+                    Create
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

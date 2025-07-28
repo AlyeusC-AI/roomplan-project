@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import {
   useReports,
@@ -8,7 +8,7 @@ import {
   useDeleteReport,
   useGeneratePDF,
 } from "@service-geek/api-client";
-import { ReportStatus } from "@service-geek/api-client";
+import { ReportStatus, ReportType } from "@service-geek/api-client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,8 +28,24 @@ import {
   CheckCircle,
   Clock,
   XCircle,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function ReportsPage() {
   const { id: projectId } = useParams<{ id: string }>();
@@ -39,6 +55,19 @@ export default function ReportsPage() {
   const { generatePDF } = useGeneratePDF();
   const [isCreating, setIsCreating] = useState(false);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedReportType, setSelectedReportType] = useState<ReportType>(
+    ReportType.PROJECT_SUMMARY
+  );
+
+  // Auto-refetch reports every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      mutate();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [mutate]);
 
   const handleCreateReport = async () => {
     setIsCreating(true);
@@ -46,9 +75,11 @@ export default function ReportsPage() {
       await createReport({
         name: `Report ${new Date().toLocaleDateString()}`,
         description: "Project report",
+        type: selectedReportType,
         projectId: projectId!,
       });
       mutate();
+      setShowCreateDialog(false);
       toast.success("Report created successfully");
     } catch (error) {
       toast.error("Failed to create report");
@@ -159,6 +190,27 @@ export default function ReportsPage() {
     }
   };
 
+  const getReportTypeText = (type: ReportType) => {
+    switch (type) {
+      case ReportType.PROJECT_SUMMARY:
+        return "Project Summary";
+      case ReportType.EQUIPMENT:
+        return "Equipment Report";
+      case ReportType.MOISTURE_READINGS:
+        return "Moisture Readings";
+      case ReportType.ROOM_DETAILS:
+        return "Room Details";
+      case ReportType.MATERIAL_ANALYSIS:
+        return "Material Analysis";
+      case ReportType.COST_BREAKDOWN:
+        return "Cost Breakdown";
+      case ReportType.CUSTOM:
+        return "Custom Report";
+      default:
+        return "Project Summary";
+    }
+  };
+
   if (isLoading) {
     return (
       <div className='flex h-64 items-center justify-center'>
@@ -176,14 +228,65 @@ export default function ReportsPage() {
             Generate and manage PDF reports for this project
           </p>
         </div>
-        <Button onClick={handleCreateReport} disabled={isCreating}>
-          {isCreating ? (
-            <div className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></div>
-          ) : (
-            <Plus className='mr-2 h-4 w-4' />
-          )}
-          Create Report
-        </Button>
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+          <DialogTrigger asChild>
+            <Button disabled={isCreating}>
+              {isCreating ? (
+                <div className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></div>
+              ) : (
+                <Plus className='mr-2 h-4 w-4' />
+              )}
+              Create Report
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Report</DialogTitle>
+              <DialogDescription>
+                Choose the type of report you want to create.
+              </DialogDescription>
+            </DialogHeader>
+            <div className='space-y-4'>
+              <div>
+                <label className='text-sm font-medium text-gray-700'>
+                  Report Type
+                </label>
+                <Select
+                  value={selectedReportType}
+                  onValueChange={(value) =>
+                    setSelectedReportType(value as ReportType)
+                  }
+                >
+                  <SelectTrigger className='mt-1'>
+                    <SelectValue placeholder='Select report type' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(ReportType).map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {getReportTypeText(type)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className='flex justify-end space-x-2'>
+                <Button
+                  variant='outline'
+                  onClick={() => setShowCreateDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateReport} disabled={isCreating}>
+                  {isCreating ? (
+                    <div className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></div>
+                  ) : (
+                    "Create"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {reports.length === 0 ? (
@@ -196,14 +299,65 @@ export default function ReportsPage() {
             <p className='mb-4 text-gray-600'>
               Create your first report to get started
             </p>
-            <Button onClick={handleCreateReport} disabled={isCreating}>
-              {isCreating ? (
-                <div className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></div>
-              ) : (
-                <Plus className='mr-2 h-4 w-4' />
-              )}
-              Create Report
-            </Button>
+            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+              <DialogTrigger asChild>
+                <Button disabled={isCreating}>
+                  {isCreating ? (
+                    <div className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></div>
+                  ) : (
+                    <Plus className='mr-2 h-4 w-4' />
+                  )}
+                  Create Report
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New Report</DialogTitle>
+                  <DialogDescription>
+                    Choose the type of report you want to create.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className='space-y-4'>
+                  <div>
+                    <label className='text-sm font-medium text-gray-700'>
+                      Report Type
+                    </label>
+                    <Select
+                      value={selectedReportType}
+                      onValueChange={(value) =>
+                        setSelectedReportType(value as ReportType)
+                      }
+                    >
+                      <SelectTrigger className='mt-1'>
+                        <SelectValue placeholder='Select report type' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.values(ReportType).map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {getReportTypeText(type)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className='flex justify-end space-x-2'>
+                    <Button
+                      variant='outline'
+                      onClick={() => setShowCreateDialog(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateReport} disabled={isCreating}>
+                      {isCreating ? (
+                        <div className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></div>
+                      ) : (
+                        "Create"
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
       ) : (
@@ -211,14 +365,19 @@ export default function ReportsPage() {
           {reports.map((report) => (
             <Card key={report.id} className='transition-shadow hover:shadow-lg'>
               <CardHeader>
-                <div className='flex items-center justify-between'>
+                <div className='flex flex-col items-center justify-between'>
                   <CardTitle className='text-lg'>{report.name}</CardTitle>
-                  <Badge className={getStatusColor(report.status)}>
-                    <div className='flex items-center gap-1'>
-                      {getStatusIcon(report.status)}
-                      {getStatusText(report.status)}
-                    </div>
-                  </Badge>
+                  <div className='flex items-center gap-2'>
+                    <Badge variant='outline' className='block'>
+                      {getReportTypeText(report.type)}
+                    </Badge>
+                    <Badge className={getStatusColor(report.status)}>
+                      <div className='flex items-center gap-1'>
+                        {getStatusIcon(report.status)}
+                        {getStatusText(report.status)}
+                      </div>
+                    </Badge>
+                  </div>
                 </div>
                 {report.description && (
                   <CardDescription>{report.description}</CardDescription>

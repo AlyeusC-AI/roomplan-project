@@ -45,10 +45,12 @@ export class ReportsService {
       throw new ForbiddenException('You do not have access to this project');
     }
 
-    return this.prisma.report.create({
+    // Create the report
+    const report = await this.prisma.report.create({
       data: {
         ...createReportDto,
         createdById: userId,
+        status: ReportStatus.GENERATING, // Start in generating status
       },
       include: {
         createdBy: {
@@ -61,6 +63,13 @@ export class ReportsService {
         },
       },
     });
+
+    // Automatically generate PDF in the background
+    this.generatePDFInBackground(report.id, userId).catch((error) => {
+      console.error('Failed to generate PDF in background:', error);
+    });
+
+    return report;
   }
 
   async findAll(projectId: string, userId: string): Promise<Report[]> {
@@ -189,6 +198,7 @@ export class ReportsService {
       const pdfBuffer = await this.pdfGeneratorService.generateProjectPDF(
         report.projectId,
         reportId,
+        report.type,
       );
 
       // Upload PDF to DigitalOcean Spaces
@@ -215,6 +225,53 @@ export class ReportsService {
       });
 
       throw error;
+    }
+  }
+
+  private async generatePDFInBackground(
+    reportId: string,
+    userId: string,
+  ): Promise<void> {
+    try {
+      // Get the report to access projectId and type
+      const report = await this.prisma.report.findUnique({
+        where: { id: reportId },
+        select: { projectId: true, type: true },
+      });
+
+      if (!report) {
+        throw new Error('Report not found');
+      }
+
+      // Generate PDF using the PDF generator service
+      const pdfBuffer = await this.pdfGeneratorService.generateProjectPDF(
+        report.projectId,
+        reportId,
+        report.type,
+      );
+
+      // Upload PDF to DigitalOcean Spaces
+      const fileName = `report-${reportId}.pdf`;
+      const { publicUrl } = await this.uploadPDFToSpace(pdfBuffer, fileName);
+
+      // Update status to completed and save file URL
+      await this.prisma.report.update({
+        where: { id: reportId },
+        data: {
+          status: ReportStatus.COMPLETED,
+          fileUrl: publicUrl,
+          fileSize: pdfBuffer.length,
+          generatedAt: new Date(),
+        },
+      });
+    } catch (error) {
+      // Update status to failed
+      await this.prisma.report.update({
+        where: { id: reportId },
+        data: { status: ReportStatus.FAILED },
+      });
+
+      console.error('Background PDF generation failed:', error);
     }
   }
 

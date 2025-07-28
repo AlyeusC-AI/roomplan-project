@@ -957,10 +957,21 @@ enum ReportStatus {
   FAILED
 }
 
+enum ReportType {
+  PROJECT_SUMMARY
+  EQUIPMENT
+  MOISTURE_READINGS
+  ROOM_DETAILS
+  MATERIAL_ANALYSIS
+  COST_BREAKDOWN
+  CUSTOM
+}
+
 model Report {
   id          String       @id @default(uuid())
   name        String
   description String?
+  type        ReportType   @default(PROJECT_SUMMARY)
   status      ReportStatus @default(PENDING)
   fileUrl     String? // URL to the generated PDF file
   fileSize    Int? // Size of the PDF file in bytes
@@ -978,4 +989,5 @@ model Report {
   @@index([projectId])
   @@index([createdById])
   @@index([status])
+  @@index([type])
 }
