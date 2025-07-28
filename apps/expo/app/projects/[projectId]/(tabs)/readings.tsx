@@ -323,7 +323,7 @@ export default function RoomReadings() {
         style={{
           flex: 1,
           backgroundColor: "#F8FAFC",
-          paddingTop: 32,
+          paddingTop: 16,
         }}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -335,7 +335,9 @@ export default function RoomReadings() {
                 justifyContent: "space-between",
                 alignItems: "center",
                 marginBottom: 16,
-                paddingHorizontal: 16,
+                padding: 16,
+
+                backgroundColor: "#fff",
               }}
             >
               <View

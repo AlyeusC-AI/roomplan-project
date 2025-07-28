@@ -175,8 +175,7 @@ export default function Notes() {
       <ScrollView
         className="flex-1"
         contentContainerStyle={{
-          padding: 16,
-          paddingTop: 32,
+          paddingVertical: 16,
           backgroundColor: "#F8FAFC",
         }}
       >
@@ -212,6 +211,8 @@ export default function Notes() {
                   justifyContent: "space-between",
                   alignItems: "center",
                   marginBottom: 16,
+                  padding: 16,
+                  backgroundColor: "#fff",
                 }}
               >
                 <View
@@ -255,7 +256,7 @@ export default function Notes() {
                 <AddRoomButton showText={false} size="sm" />
               </View>
 
-              <View style={{ gap: 12 }}>
+              <View style={{ gap: 12, paddingHorizontal: 16 }}>
                 {rooms?.map((room) => (
                   <RoomNoteListItem key={room.id} room={room} />
                 ))}

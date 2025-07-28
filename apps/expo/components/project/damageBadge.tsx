@@ -67,7 +67,7 @@ const DamageBadge = ({ lossType, style, textStyle }: DamageBadgeProps) => {
   const Icon = type?.icon as any; // Cast to any for React Native JSX compatibility
   return (
     <View
-      className="flex-row items-center rounded-full px-2 py-0.5"
+      className="flex-row items-center rounded px-2 py-0.5"
       style={[{ backgroundColor: type?.bgColor }, style]}
     >
       {Icon && (

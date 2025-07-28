@@ -16,9 +16,7 @@
   },
   "source_files": "lib/ios/**/*.{h,m}",
   "dependencies": {
-    "React": [
-
-    ]
+    "React": []
   },
   "frameworks": "UIKit"
 }

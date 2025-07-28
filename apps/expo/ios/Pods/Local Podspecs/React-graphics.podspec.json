@@ -30,29 +30,13 @@
     "CLANG_CXX_LANGUAGE_STANDARD": "c++20"
   },
   "dependencies": {
-    "glog": [
-
-    ],
-    "RCT-Folly/Fabric": [
-
-    ],
-    "React-jsi": [
-
-    ],
-    "React-jsiexecutor": [
-
-    ],
-    "React-utils": [
-
-    ],
-    "DoubleConversion": [
-
-    ],
-    "fast_float": [
-
-    ],
-    "fmt": [
-
-    ]
+    "glog": [],
+    "RCT-Folly/Fabric": [],
+    "React-jsi": [],
+    "React-jsiexecutor": [],
+    "React-utils": [],
+    "DoubleConversion": [],
+    "fast_float": [],
+    "fmt": []
   }
 }
